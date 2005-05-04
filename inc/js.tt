@@ -1,0 +1,12 @@
+<script>
+<!--
+function go(handler, run)
+{
+    document.f.run.value=run || document.f.run.value;
+    document.f.action = handler || document.f.action;
+    document.f.submit();
+    return true;
+}
+[% PROCESS js_extra.tt %]
+//-->
+</script>

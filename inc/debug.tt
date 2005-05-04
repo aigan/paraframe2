@@ -1,0 +1,77 @@
+ <hr />
+
+<h3>[% jump("me", me) %] Debug Values</h3>
+
+
+<h1>[% IF result.errcnt %]
+   [% IF result.errcnt == 1 %]
+      [% result.errcnt %] error
+   [% ELSE %]
+      [% result.errcnt %] errors
+   [% END %]
+[% ELSE %]
+   No errors
+[% END %]
+</h1>
+
+<ol>
+[% FOREACH part = result.part %]
+   <li>
+      <code>[% part.type %]</code>
+      <strong>--&gt;</strong><br>
+      <code>[% part.message | html_line_break %]</code>
+   </li>
+[% END %]
+</ol>
+
+<h4>Route</h4>
+<ol>
+[% FOREACH step = route %]
+<li>
+   [% step %]
+   [% IF loop.last %]
+      [% backstep %]
+      [% regret %]
+   [% END %]
+</li>
+[% END %]
+</ol>
+
+<h4>Params</h4>
+<div class="entry">
+<table>
+<tr><th>Name</th><th>Value</th></tr>
+[% FOREACH key = q.param %]
+   [% tr2 %]<td>[% key %]</td><td>
+   [% IF q.param(key).size > 1 %]
+      <ol>
+      [% FOREACH val = q.param(key) %]
+         <li>[% val %]
+      [% END %]
+      </ol>
+   [% ELSE %]
+      [% IF key == 'passwd' %]
+         ********
+      [% ELSIF key == 'debug_info' %]
+      [% ELSE %]
+         [% q.param(key) %]
+      [% END %]
+   [% END %]
+</td></tr>
+[% END %]
+</table>
+</div>
+
+
+<h4>Cookies</h4>
+<div class="entry">
+<table>
+<tr><th>Name</th><th>Value</th></tr>
+[% FOREACH key = q.cookie %]
+   [% tr2 %]<td>[% key %]</td><td>
+      [% q.cookie(key) %]
+</td></tr>
+[% END %]
+</table>
+</div>
+

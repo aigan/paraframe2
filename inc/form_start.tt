@@ -1,0 +1,12 @@
+
+[% # This will backtrack if next_template is set to $home %]
+[% # call default_template instead of plan_bactrack directly %]
+
+[% form_action = next_template || plan_backtrack || default_template || me %]
+<form name="f" action="[% form_action %]" method="post" enctype="multipart/form-data">
+
+<input type="hidden" name="run" value="[% next_action %]">
+<input type="hidden" name="selector" value="[% next_selector %]">
+[% UNLESS next_template %]
+<input type="hidden" name="destination" value="dynamic">
+[% END %]

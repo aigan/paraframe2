@@ -1,0 +1,9 @@
+<h1 align="center">Logga in</h1>
+
+<p align="center"><strong>[% message | html %]</strong></p>
+
+<table align="center">
+<tr><td>Namn </td><td><input name="username"></td></tr>
+<tr><td>Lösenord </td><td><input type="password" name="password"></td></tr>
+<tr><td colspan="2" align="right"><input type="submit" value="Logga in"></td></tr>
+</table>

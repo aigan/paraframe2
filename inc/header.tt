@@ -1,0 +1,19 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+
+    [% DEFAULT otitle = title %]
+    <title>[% PROCESS title.tt %]</title>
+    [% IF css %]<link rel="Stylesheet" href="$css" type="text/css" />[% END %]
+    [% IF favicon %]<link rel="shortcut icon" href="$favicon" type="image/x-icon" />[% END %]
+    [% IF description %]<meta name="description" content="[% description | html %]">[% END %]
+    [% IF keywords %]<meta name="keywords" content="[% keywords | html %]">[% END %]
+
+    [% PROCESS header_extra.tt %]
+
+    [% PROCESS js.tt %]
+  </head>
+
+  <body [% onload %][% IF body_class %] class="$body_class"[% END %]>
+
+[% PROCESS border_top.tt %]

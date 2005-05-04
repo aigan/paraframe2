@@ -1,0 +1,15 @@
+[%
+   FOREACH part = result.parts;
+      IF part.type;
+         IF part.type == 'alternatives';
+%]
+            <strong>[% part.message | html %]</strong>
+[%       ELSE;
+            box(part);
+         END;
+      ELSE;
+%]
+         <strong><pre>[% part.message | html %]</pre></strong>
+[%    END;
+   END;
+%]

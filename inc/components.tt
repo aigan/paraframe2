@@ -1,0 +1,117 @@
+[% MACRO box BLOCK %]
+   [% DEFAULT border='black' %]
+   [% DEFAULT bg='#AAAAFF' %]
+   [% DEFAULT width=3 %]
+   [% DEFAULT message='Unexplained situation' %]
+<table border=0 cellpadding=0 cellspacing=0 bgcolor="$border" align="center"><tr><td>
+<table border="$width" cellpadding=10><tr><td bgcolor="$bg" class="msg">
+   [% IF title %]<h1>$title.c</h1>[% END %]
+<pre>[% message | html %]</pre>
+[% IF context %]
+   <em>Context (line [% context_line %]):</em>
+   <pre>[% context | html %]</pre>
+[% END %]
+</table></table>
+[% END %]
+
+
+
+[% MACRO regret(label) BLOCK %]
+[% DEFAULT
+       	label = 'Ångra'
+	class = 'msg'
+%]
+   [% go(label, undef, 'skip_step', class=class) %]
+[% END %]
+
+
+
+[% MACRO backstep(label) BLOCK %]
+[% DEFAULT
+       	label = 'Backa'
+	class = 'msg'
+%]
+   [% go(label, undef, 'next_step', class=class) %]
+[% END %]
+
+
+
+[% MACRO hr BLOCK %]
+<hr width="5%">
+[% END %]
+
+
+
+[% MACRO checkbox(name, value, checked) BLOCK %]
+   [% DEFAULT value='t' %]
+  <input type="checkbox" name="$name" value="$value"
+     [%- IF q.param(name) -%]
+        [%- ' checked' IF  param_includes(name, value) -%]
+     [%- ELSIF checked -%]
+        [%- ' checked' IF  checked != 'f' -%]
+     [%- END -%]
+  >
+[% END %]
+
+
+
+[% MACRO radio(name, value, current) BLOCK %]
+  <input type="radio" name="$name" value="$value"
+     [%- IF q.param(name) %]
+        [% 'checked' IF  param_includes(name, value) %]
+     [% ELSIF current == value -%]
+        checked
+     [%- END -%]
+  >
+[% END %]
+
+
+
+[% MACRO select(name, value, data, valkey, tagkey, header) BLOCK %]
+  <select name="[% name|html %]">
+  [% IF valkey %]
+     [% DEFAULT tagkey = valkey -%]
+     [%- IF header %]<option value="">[% header|html %]</option>[% END -%]
+     [% FOREACH row=data %]
+        <option value="[% row.$valkey %]"
+           [%- 'selected' IF row.$valkey == value -%]
+        >[% row.$tagkey %]</option>
+     [%- END %]
+  [% ELSE %]
+     [% FOREACH key=data.keys.sort %]
+        <option value="[% key %]"
+           [%- 'selected' IF key == value -%]
+        >[% data.$key %]</option>
+     [% END %]
+  [% END %]
+  </select>
+[% END %]
+
+
+
+[% MACRO tr2 BLOCK %]
+   [% IF loop.count MOD 2 %]
+   <tr class="odd">
+   [% ELSE %]
+   <tr class="even">
+   [% END %]
+[% END %]
+
+
+
+[% MACRO sort(name, value, defdir) BLOCK;
+   direction = q.param('direction');
+   DEFAULT value = name;
+   DEFAULT defdir = 'asc';
+   IF order == value;
+      IF direction == 'asc';
+         direc = 'desc';
+      ELSE;
+	 direc = 'asc';
+      END;
+   ELSE;
+      direc = defdir;
+   END;
+   forward( name, me, order=value, direction=direc );
+   END;
+%]

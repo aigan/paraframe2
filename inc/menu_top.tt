@@ -1,0 +1,11 @@
+<p align="right">[ [% u.name %] 
+[% IF u.level %]
+   | [% jump('Logga ut', home, run='user_logout') %] 
+[% ELSE %]
+   | [% jump('Logga in', "login.tt") %] 
+[% END %]
+   | [% jump('Katalog', ".") %] 
+]</p>
+
+[% PROCESS headline.tt %]
+[% PROCESS info_box.tt %]

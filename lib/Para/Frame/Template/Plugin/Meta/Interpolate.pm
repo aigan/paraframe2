@@ -1,0 +1,71 @@
+package Para::Frame::Template::Plugin::Meta::Interpolate;
+
+=head1 NAME
+
+Para::Frame::Template::Plugin::Meta::Interpolate - Allow evaluation of META parameters
+
+=cut
+
+use Template::Plugin;
+use base "Template::Plugin";
+use strict;
+
+use Data::Dumper;
+use vars qw( $VERSION );
+
+BEGIN
+{
+    $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
+    warn "  Loading Para::Frame::Template::Plugin::Meta::Interpolate $VERSION\n";
+}
+
+=head1 DESCRIPTION
+
+If URL starts with a '-', the rest of value will be evaluated as a TT
+expression. (No expressions are normally allowed in META.)
+
+=cut
+
+#warn "$$: Compiling Para::Frame::Template::Plugin::Meta::Interpolate\n";
+
+sub new
+{
+    my( $self, $context, @params ) = @_;
+
+#    warn "$$: new Meta::Interpolate\n";
+    my $cfg = $context->config;
+    my $st = $cfg->{START_TAG} || '[%';
+    $st =~ s/\\//g;
+    my $et = $cfg->{END_TAG} || '%]';
+    $et =~ s/\\//g;
+
+    my $stash = $context->stash;
+    my $template = $stash->{'template'};
+
+    foreach my $key (keys %{$template})
+    {
+	next if $key =~ /^_/;
+	my $val = $template->{$key};
+	if( $val =~ /^-(.*)/ )
+	{
+	    my $src = $st.' '.$1.' '.$et;
+#	    warn "$$: Parsing $template->{$key} => $src\n";
+	    $val = $context->process( \$src, {} );
+	    $stash->set($key, $val);
+	}
+	else
+	{
+	    $stash->set($key, $val);
+	}
+    }
+
+    return $self;
+}
+
+1;
+
+=head1 SEE ALSO
+
+L<Para::Frame>, L<Para::Frame::Manual::Templates>, L<Para::Frame::TT::header>, L<Template::Plugin>
+
+=cut

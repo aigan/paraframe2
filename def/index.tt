@@ -1,0 +1,38 @@
+[% META otitle='Index över filer' %]
+
+
+<h1>Index $me</h1>
+
+[% USE fdir = Directory(dir) %]
+
+
+[% cnt = 1;
+   size = fdir.list.size / 3;
+   IF size < 10;
+      size = 20;
+   END;
+
+%]
+
+<table><tr><td valign="top"><table>
+<tr><td>
+   <a href=".."><img src="/icons/back.gif" border="0"></a>
+   <a href="..">Parent Directory</a>
+</td></tr>
+[% FOREACH item = fdir.list %]
+   [% UNLESS cnt % size %]</td></tr></table></td><td valign="top"><table>[% END %]
+   [% NEXT IF item.name.search('~$|CVS') %]
+
+   <tr><td>
+   [% IF item.isdir %]
+      <a href="$item.name/"><img src="/icons/folder.gif" border="0"></a>
+      <a href="$item.name/">[% item.name %]</a>
+   [% ELSE %]
+      <a href="$item.name"><img src="/icons/text.gif" border="0"></a>
+      <a href="$item.name">[% item.name %]</a>
+   [% END %]
+   </td></tr>
+
+   [% cnt = cnt + 1 %]
+[% END %]
+</table></td></tr></table>

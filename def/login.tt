@@ -1,0 +1,7 @@
+[% META
+	otitle = 'Logga in'
+	next_action = 'user_login'
+	focus = 'username'
+%]
+
+[% PROCESS login_box.tt %]

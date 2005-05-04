@@ -1,0 +1,7 @@
+[% META title="404 - File not found"
+	level = 0
+%]
+
+<p>
+The file you requested cannot be found.
+</p>
