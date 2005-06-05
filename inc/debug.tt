@@ -1,6 +1,6 @@
  <hr />
 
-<h3>[% jump("me", me) %] Debug Values</h3>
+<h3>[% reqnum %][% jump("me", me) %] Debug Values</h3>
 
 
 <h1>[% IF result.errcnt %]
