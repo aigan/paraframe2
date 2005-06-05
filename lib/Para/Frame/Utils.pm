@@ -43,7 +43,8 @@ use BerkeleyDB;
 BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    warn "  Loading ".__PACKAGE__." $VERSION\n";
+    warn "  Loading ".__PACKAGE__." $VERSION\n"
+	unless $Psi::QUIET; # houerly_active.pl
 }
 
 use base qw( Exporter );
@@ -681,7 +682,7 @@ sub dirsteps
 	$path =~ s/[^\/]+\/$//;
     }
 
-    warn "  Returning dirsteps @step\n";
+#    warn "  Returning dirsteps @step\n";
     return @step, '/';
 }
 

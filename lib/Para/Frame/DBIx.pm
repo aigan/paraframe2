@@ -122,7 +122,7 @@ sub select_list
 
     eval
     {
-	my $sth = $Para::dbh->prepare_cached( $st );
+	my $sth = $self->dbh->prepare_cached( $st );
 
 	my $pos = 0;
 	my $curtype = SQL_VARCHAR;
@@ -214,7 +214,7 @@ sub select_record
     die(['incomplete','no parameter to statement']) unless $st;
     $st = "select * ".$st if $st !~/^\s*select\s/i;
 
-#    warn "SQL: $st (@vals)\n";
+#    warn "SQL: $st (@vals)\n"; ### DEBUG
     my $sth = $self->dbh->prepare_cached( $st );
     $sth->execute( @vals ) or croak "$st (@vals)\n";
     $ref =  $sth->fetchrow_hashref
@@ -363,39 +363,78 @@ sub new
 		AutoCommit => 0,
 	    };
 
-	    eval
-	    {
-		$dbix->{'dbh'} = DBI->connect(@$connect);
-	    };
-	    if( $@ )
-	    {
-		warn "Problem connecting to DB using @$connect[0..1]";
-		throw( $@ );
-	    }
-
-	    Para::Frame->add_hook('done', sub{ $dbix->dbh->commit; $dbix->dbh->disconnect; });
-	    Para::Frame->add_hook('on_error_detect', sub
-				  {
-				      my( $typeref, $inforef ) = @_;
-				      if( $dbix->dbh->err() )
-				      {
-					  $$inforef .= "\n". $dbix->dbh->errstr();
-					  $$typeref ||= 'dbi';
-				      }
-				      elsif( DBI->err() )
-				      {
-					  $$inforef .= "\n". DBI->errstr();
-					  $$typeref ||= 'dbi';
-				      }
-				      
-				      warn "  ROLLBACK DB\n";
-				      $dbix->dbh->rollback();
-				  });
-
+	    $dbix->{'connect'} = $connect;
 	}
     }
 
+
+    Para::Frame->add_hook('done', sub{ $dbix->dbh->commit; $dbix->dbh->disconnect; });
+    Para::Frame->add_hook('on_fork', sub
+			  {
+			      warn "  Do not destroy DBH in child\n";
+			      $dbix->dbh->{'InactiveDestroy'} = 1;
+
+#			      warn "  Reconnecting to DB in child\n";
+#			      warn "    before: $dbix->{'dbh'}\n";
+#			      $dbix->connect; # Not needed
+#			      warn "    after : $dbix->{'dbh'}\n";
+			  });
+    Para::Frame->add_hook('on_error_detect', sub
+			  {
+			      my( $typeref, $inforef ) = @_;
+
+			      if( $Para::Frame::FORK )
+			      {
+				  die "In DBIx error hook during FORK\n";
+			      }
+				      
+#				      confess("-- rollback...");
+
+			      if( $dbix->dbh->err() )
+			      {
+				  $$inforef .= "\n". $dbix->dbh->errstr();
+				  $$typeref ||= 'dbi';
+			      }
+			      elsif( DBI->err() )
+			      {
+				  $$inforef .= "\n". DBI->errstr();
+				  $$typeref ||= 'dbi';
+			      }
+				      
+			      warn "  ROLLBACK DB\n";
+
+			      eval
+			      {
+				  $dbix->dbh->rollback();
+			      } or do
+			      {
+				  warn "  FAILED ROLLBACK!\n";
+			      };
+			  });
+
+
+    $dbix->connect;
+
     return $dbix;
+}
+
+sub connect
+{
+    my( $dbix ) = @_;
+
+    my $connect = $dbix->{'connect'} or return 0;
+
+    eval
+    {
+	$dbix->{'dbh'} = DBI->connect(@$connect);
+    };
+    if( $@ )
+    {
+	warn "Problem connecting to DB using @$connect[0..1]";
+	throw( $@ );
+    }
+
+    return 1;
 }
 
 sub dbh { $_[0]->{'dbh'} }

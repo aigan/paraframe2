@@ -292,7 +292,7 @@ sub check_backtrack
 {
     my( $route ) = @_;
 
-    warn "-- check for backtrack\n";
+#    warn "-- check for backtrack\n" if $DEBUG;
     my $req = $Para::Frame::REQ;
 
 
@@ -308,7 +308,7 @@ sub check_backtrack
     }
     else
     {
-	warn "-- no backtracking!\n";
+#	warn "-- no backtracking!\n" if $DEBUG;
 
 	# Remove last step if it's equal to curent place, including params
 	my $last_step = $route->{'route'}[-1];

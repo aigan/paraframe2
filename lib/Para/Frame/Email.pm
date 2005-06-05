@@ -241,7 +241,7 @@ sub send
       MX:
 	foreach my $mailhost ( @mailhost_list )
 	{
-	    warn "\tConnectiong to $mailhost\n";
+	    warn "\tConnecting to $mailhost\n";
 
 	    my $smtp = Net::SMTP->new($mailhost,
 				      Timeout => 60,

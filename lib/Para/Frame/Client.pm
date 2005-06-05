@@ -27,7 +27,8 @@ use Data::Dumper;
 BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    warn "  Loading Para::Frame::Client $VERSION\n";
+    warn "  Loading ".__PACKAGE__." $VERSION\n"
+	unless $Psi::QUIET;
 }
 
 use Para::Frame::Reload;
@@ -53,11 +54,9 @@ sub handler
 #    die $q->cookie;
 
 #    warn "$$: CGI obj created\n";
-    $SOCK = new IO::Socket::INET (
-				  PeerAddr => 'localhost',
-				  PeerPort => '7788',
-				  Proto => 'tcp',
-				  );
+
+    &connect;
+
 #    warn "$$: Socket obj created\n";
 
    unless( $SOCK )
@@ -197,6 +196,15 @@ sub send_to_server
 	die "LOST CONNECTION while sending $code\n";
     }
     return 1;
+}
+
+sub connect
+{
+    $SOCK = new IO::Socket::INET (
+				  PeerAddr => 'localhost',
+				  PeerPort => '7788',
+				  Proto => 'tcp',
+				  );
 }
 
 1;

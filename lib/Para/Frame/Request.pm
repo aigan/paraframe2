@@ -27,7 +27,9 @@ use Clone qw( clone );
 use File::stat;
 use File::Slurp;
 use File::Basename;
+use IO::File;
 use URI;
+use Carp qw(cluck);
 #use Cwd qw( abs_path );
 
 BEGIN
@@ -36,18 +38,23 @@ BEGIN
     warn "  Loading ".__PACKAGE__." $VERSION\n";
 }
 
+use Para::Frame::Client;
+
 use Para::Frame::Reload;
 use Para::Frame::Cookies;
 use Para::Frame::Session;
 use Para::Frame::Result;
+use Para::Frame::Child;
+use Para::Frame::Child::Result;
 use Para::Frame::Utils qw( create_dir chmod_file dirsteps uri2file compile throw );
 
-our $DEBUG = 2;
+our $DEBUG = undef;
 
 sub new
 {
-    my( $class, $client, $recordref ) = @_;
+    my( $class, $client, $recordref, $reqnum ) = @_;
 
+    $DEBUG = $Para::Frame::DEBUG;
 
     my( $value ) = thaw( $$recordref );
     my( $params, $env, $orig_uri, $orig_filename, $content_type ) = @$value;
@@ -81,6 +88,10 @@ sub new
 	ctype          => $content_type,
 	in_body        => 0,              ## flag then headers sent
 	page           => undef,          ## The generated page to output
+	childs         => 0,              ## counter in parent
+	in_yield       => 0,              ## inside a yield
+	child_result   => undef,          ## the child res if in child
+	reqnum         => $reqnum,        ## The request serial number
     }, $class;
 
     # Register $req
@@ -129,6 +140,11 @@ sub template_uri
 
     $template =~ s/\/index.tt$/\//;
     return $template;
+}
+
+sub in_yield
+{
+    return $_[0]->{'in_yield'};
 }
 
 #######################################################################
@@ -223,7 +239,9 @@ sub setup_jobs
 
 sub add_job
 {
-#    warn "Added the job @_\n";
+    warn "  Added the job $_[1] for $_[0]->{reqnum}\n"
+	if $DEBUG > 1;
+#    cluck;
 #    push @Para::Frame::JOBS, [@_];
     push @{ shift->{'jobs'} }, [@_];
 }
@@ -262,8 +280,6 @@ sub send_headers
 sub run_action
 {
     my( $req, $run ) = @_;
-
-    my $DEBUG = 1;
 
     return 1 if $run eq 'nop'; #shortcut
 
@@ -363,10 +379,25 @@ sub run_action
 	no strict 'refs';
 	$req->result->message( &{$actionroot.'::'.$c_run.'::handler'}($req) );
 	### Other info is stored in $req->result->{'info'}
+
+	if( $Para::Frame::FORK )
+	{
+	    warn "  Fork failed to return result\n";
+	    exit;
+	}
 	1;
     }
     or do
     {
+	if( $Para::Frame::FORK )
+	{
+	    my $result = $req->{'child_result'};
+	    $result->exception( $@ );
+	    warn "  Fork child got EXCEPTION: $@\n";
+	    $result->return;
+	    exit;
+	}
+
 	warn "  ACTION FAILED!\n" if $DEBUG;
 	warn $@ if $DEBUG > 2;
 	$req->result->exception;
@@ -386,12 +417,16 @@ sub after_jobs
 	unless( $req->result->errcnt )
 	{
 	    $req->add_job('run_action', $action);
+	    $req->add_job('after_jobs');
 	}
     }
 
     if( $req->in_last_job )
     {
 	# Check for each thing. If more jobs, stop and add a new after_jobs
+
+	### Waiting for children?
+	return if $req->{'childs'};
 
 	### Do pre backtrack stuff
 	### Do backtrack stuff
@@ -412,9 +447,11 @@ sub after_jobs
 
 	    return;
 	}
+	$req->add_job('after_jobs');
     }
 
-    $req->add_job('after_jobs');
+
+
     return 1;
 }
 
@@ -511,8 +548,6 @@ sub get_static
 sub find_template
 {
     my( $req, $template ) = @_;
-
-    my $DEBUG = 2;
 
     warn "  Finding template $template\n" if $DEBUG;
     my( $in );
@@ -615,7 +650,7 @@ sub find_template
 			    {
 				$data = load_compiled( $compfile );
 
-				warn "     Loading $compfile\n" if $DEBUG;
+				warn "      Loading $compfile\n" if $DEBUG;
 
 				# Save to memory cache (loadtime)
 				$Para::Frame::Cache::td{$filename} =
@@ -703,8 +738,27 @@ sub send_code
 {
     my $req = shift;
 
+    warn "Sending code: ".join("-", @_)."\n" if $DEBUG > 1;
+
+    if( $Para::Frame::FORK )
+    {
+	warn "  redirecting to parent\n";
+	my $code = shift;
+	my $client = $req->client;
+	my $val = $client . "\x00" . shift;
+	die "Too many args in send_code($code $val @_)" if @_;
+
+	&Para::Frame::Client::connect;
+	$Para::Frame::Client::SOCK or die "No socket";
+	&Para::Frame::Client::send_to_server($code, \$val);
+
+	# Keep open the SOCK to get response later
+#	undef $Para::Frame::Client::SOCK;
+	return;
+    }
+
     my $client = $req->client;
-    warn "Sending code: ".join("-", @_)."\n" if $DEBUG;
+#    warn "  to client $client\n";
     $client->send(join "\0", @_ );
     $client->send("\n");
 }
@@ -926,7 +980,74 @@ sub set_tt_params
 	'browser'         => $req->{'browser'},
 	'u'               => $Para::Frame::U,
 	'result'          => $req->{'result'},
+	'reqnum'          => $req->{'reqnum'},
     }, 1);
+}
+
+sub create_fork
+{
+    my( $req ) = @_;
+
+    my $sleep_count = 0;
+    my $pid;
+    my $fh = new IO::File;
+
+    do
+    {
+	$pid = open($fh, "-|");
+	unless( defined $pid )
+	{
+	    warn "  cannot fork: $!";
+	    die "bailing out" if $sleep_count++ > 6;
+	    sleep 1;
+	}
+    } until defined $pid;
+
+    if( $pid )
+    {
+	# parent
+	return $req->register_child( $pid, $fh );
+    }
+    else
+    {
+	# child
+	$Para::Frame::FORK = 1;
+ 	my $result = Para::Frame::Child::Result->new;
+	$req->{'child_result'} = $result;
+	Para::Frame->run_hook($req, 'on_fork', $result );
+	return $result;
+   }
+}
+
+sub register_child
+{
+    my( $req, $pid, $fh ) = @_;
+
+    return Para::Frame::Child->register( $req, $pid, $fh );
+}
+
+sub get_child_result
+{
+    my( $req, $child ) = @_;
+
+    my $result;
+    eval
+    {
+	$result = $child->get_results;
+    } or do
+    {
+	$req->result->exception;
+	return 0;
+    };
+
+#    warn Dumper $result;
+
+    foreach my $message ( $result->message )
+    {
+	$req->result->message( $message );
+    }
+
+    return 1;
 }
 
 

@@ -288,12 +288,15 @@ sub error
     if( $params->{'view_context'} )
     {
 	trim(\$context);
-	my @lines = split "\n", $context;
-	my $linecount = scalar @lines;
-	warn "Context: $context\n";
-	# Save last five rows
-	$params->{'context'} = join "\n", @lines[-5..-1];
-	$params->{'context_line'} = $linecount;
+	if( length $context )
+	{
+	    my @lines = split "\n", $context;
+	    my $linecount = scalar @lines;
+	    warn "Context: $context\n";
+	    # Save last five rows
+	    $params->{'context'} = join "\n", @lines[-5..-1];
+	    $params->{'context_line'} = $linecount;
+	}
     }
 
     push @{$self->{'part'}}, $params;

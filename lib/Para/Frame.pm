@@ -24,7 +24,7 @@ use Socket;
 use POSIX;
 use Time::HiRes qw( time );
 use Data::Dumper;
-use Carp;
+use Carp qw( cluck confess );
 use Template;
 
 BEGIN
@@ -41,6 +41,7 @@ use Para::Frame::Utils qw( throw uri2file );
 
 
 # Do not init variables here, since this will be redone each time code is updated
+our $SERVER     ;
 our $DEBUG      ;
 our @JOBS       ;
 our %REQUEST    ;
@@ -55,6 +56,8 @@ our %DATALENGTH ;
 our $CFG        ;
 our %HOOK       ;
 our $PARAMS     ;
+our %CHILD      ;
+our $LEVEL      ;
 
 sub startup
 {
@@ -66,27 +69,46 @@ sub startup
     Para::Frame::Widget->on_startup;
 
     my $port = $CFG->{'port'};
-    my $timeout = 5;
 
     # Set up the tcp server. Must do this before chroot.
-    my $server= IO::Socket::INET->new(
-	  LocalPort => $port,
-	  Proto    => 'tcp',
-	  Listen  => 10,
-	  Reuse  => 1,
-	 ) or (die "Cannot connect to socket $port: $@\n");
+    $SERVER= IO::Socket::INET->new(
+				   LocalPort => $port,
+				   Proto    => 'tcp',
+				   Listen  => 10,
+				   Reuse  => 1,
+				   )
+	or (die "Cannot connect to socket $port: $@\n");
 
     print("Connected to port $port.\n");
 
 
-    nonblock($server);
-    $SELECT = IO::Select->new($server);
+    nonblock($SERVER);
+    $SELECT = IO::Select->new($SERVER);
+
+    # Setup signal handling
+    $SIG{CHLD} = \&REAPER;
     
     print("Setup complete, accepting connections.\n");
 
 #    open STDERR, ">/tmp/paraframe.log" or die $!;
 
-  main_loop:
+    $LEVEL = 0;
+    main_loop();
+}
+
+sub main_loop
+{
+    my( $child ) = @_;
+
+    if( $child )
+    {
+	$LEVEL ++;
+    }
+    warn "Entering main_loop at level $LEVEL\n";
+
+
+    my $timeout = 5;
+
     while (1)
     {
 	# The algorithm was adopted from perlmoo by Joey Hess
@@ -108,11 +130,11 @@ sub startup
 	foreach $client ($SELECT->can_read( $timeout ))
 	{
 #	    warn "  Handle client $client\n";
-	    if ($client == $server)
+	    if ($client == $SERVER)
 	    {
 		# New connection.
 		my($iaddr, $address, $port, $peer_host);
-		$client = $server->accept;
+		$client = $SERVER->accept;
 		if(!$client)
 		{
 		    warn("Problem with accept(): $!");
@@ -127,21 +149,35 @@ sub startup
 	    }
 	    else
 	    {
+		$REQ = undef;
 		get_value( $client );
 	    }
 	}
 
 	### Do the jobs piled up
-	$timeout = 5;
+	#
+	$timeout = 5; # We change this if there are jobs to do
 	foreach my $req ( values %REQUEST )
 	{
-#	    warn "Look for jobs for session $s\n";
-	    if( my $job = shift @{$req->{'jobs'}} )
+#	    my $s = $req->s; ### DEBUG
+#	    warn "Look for jobs for session $s\n"; ### DEBUG
+
+	    if( $req->{'in_yield'} )
 	    {
-#		warn "  Found a job\n";
+		# Do not do jobs for a request that waits for a child
+	    }
+	    elsif( my $job = shift @{$req->{'jobs'}} )
+	    {
 		my( $cmd, @args ) = @$job;
-		swhich_req( $req );
+		warn "  Found a job ($cmd) in $req->{reqnum}\n"
+		    if $DEBUG > 1;
+		switch_req( $req );
 		$req->$cmd( @args );
+	    }
+	    elsif( $req->{'childs'} )
+	    {
+		# Stay open while waiting for child
+#		warn "  staying open...\n";
 	    }
 	    else
 	    {
@@ -152,12 +188,32 @@ sub startup
 
 	    $timeout = 0.001; ### Get the jobs done quick
 	}
+
+
+	### Waiting for a child?
+	#
+	if( $child )
+	{
+	    # exit loop if child done
+	    last unless $child->{'req'}{'childs'};
+
+#	    warn "Waiting for a child\n";
+#	    my $childs = $child->req->{'childs'};
+#	    warn "  childs: $childs\n";
+#	    sleep;
+	}
     }
+    warn "Exiting main_loop at level $LEVEL\n";
+    $LEVEL --;
 }
 
 
-sub swhich_req
+sub switch_req
 {
+    if( $_[0] ne $REQ )
+    {
+	warn "\nSwitching to req $_[0]->{reqnum}\n"; ### DEBUG
+    }
     $REQ = $_[0];
     $U   = $REQ->s->u;
     %ENV = %{$REQ->env}; # TODO: eliminate duplicate copy
@@ -169,6 +225,38 @@ sub get_value
 
     # Either we know we have something to read
     # or we are expecting an answer shortly
+
+    if( $Para::Frame::FORK )
+    {
+	warn "  Getting value inside a fork\n";
+	while( $_ = <$Para::Frame::Client::SOCK> )
+	{
+	    if( s/^([\w\-]{3,10})\0// )
+	    {
+		my $code = $1;
+		warn "$$:   Code $code\n";
+		chomp;
+		if( $code eq 'RESP' )
+		{
+		    my $val = $_;
+		    warn "  RESP ($val)\n";
+		    return $val;
+		}
+		else
+		{
+		    die "Unrecognized code: $code\n";
+		}
+	    }
+	    else
+	    {
+		die "Unrecognized response: $_\n";
+	    }
+	}
+
+	undef $Para::Frame::Client::SOCK;
+	return;
+    }
+
 
 #    warn "Waiting for client\n";
     my $time = time;
@@ -183,6 +271,8 @@ sub get_value
 	}
 	if( time > $time + $timeout )
 	{
+	    warn "Data timeout!!!";
+	    cluck "trace:";
 	    throw('action', "Data timeout while talking to client\n");
 	}
     }
@@ -242,11 +332,37 @@ sub get_value
 		}
 		elsif( $code eq 'RESP' )
 		{
-		    warn "RESP recieved\n";
 		    my $val = $INBUFFER{$client};
+		    warn "RESP recieved ($val)\n" if $DEBUG > 1;
 		    $INBUFFER{$client} = '';
 		    $DATALENGTH{$client} = 0;
 		    return $val;
+		}
+		elsif( $code eq 'URI2FILE' )
+		{
+		    # redirect request from child to client
+		    #
+		    my $val = $INBUFFER{$client};
+		    $val =~ s/^(.+?)\x00// or die "Faulty val: $val";
+		    my $caller_clientaddr = $1;
+
+		    warn "URI2FILE($val) recieved\n";
+#		    warn "  for $caller_clientaddr\n";
+#		    warn "  from $client\n";
+
+		    # Calling uri2file in the right $REQ
+		    my $current_req = $REQ;
+		    my $req = $REQUEST{ $caller_clientaddr } or
+			die "Client $caller_clientaddr not registred";
+		    switch_req( $req );
+		    my $file =  uri2file($val);
+		    switch_req( $current_req ) if $current_req;
+
+		    # Send response in calling $REQ
+		    warn "Returning answer $file\n";
+#		    $client->send(join "\0", 'URI2FILE', $file );
+		    $client->send(join "\0", 'RESP', $file );
+		    $client->send("\n");
 		}
 		else
 		{
@@ -284,11 +400,47 @@ sub close_callback
 
     # Someone disconnected or we want to close the i/o channel.
 
-    warn "  Closing down\n";
+    if( $reason )
+    {
+	warn "  Closing down ($reason)\n";
+    }
+    else
+    {
+	warn "  Closing down\n";
+    }
+
     delete $INBUFFER{$client};
     delete $REQUEST{$client};
+    undef $REQ;
     $SELECT->remove($client);
     close($client);
+}
+
+sub REAPER
+{
+    # Taken from example in perl doc
+
+    my $child_pid;
+    # If a second child dies while in the signal handler caused by the
+    # first death, we won't get another signal. So must loop here else
+    # we will leave the unreaped child as a zombie. And the next time
+    # two children die we get another zombie. And so on.
+
+    while (($child_pid = waitpid(-1, POSIX::WNOHANG)) > 0)
+    {
+	warn "  Child $child_pid exited with status $?\n";
+
+	if( my $child = delete $CHILD{$child_pid} )
+	{
+	    $child->deregister( $? );
+	}
+	else
+	{
+	    warn "    No object registerd with PID $child_pid\n";
+	    warn "      This may be Date::Manip...\n";
+	}
+    }
+    $SIG{CHLD} = \&REAPER;  # still loathe sysV
 }
 
 ##############################################
@@ -305,11 +457,11 @@ sub handle_request
     Para::Frame::Reload->check_for_updates;
 
     ### Create request
-    my $req = new Para::Frame::Request( $client, $recordref );
+    my $req = new Para::Frame::Request( $client, $recordref, $REQNUM );
 
     ### Register the request
     $REQUEST{ $client } = $req;
-    swhich_req( $req );
+    switch_req( $req );
 
     # Authenticate user identity
     $Para::Frame::CFG->{user_class}->authenticate_user;
@@ -334,6 +486,7 @@ sub add_hook
 
     # Validate hook label
     unless( $label =~ /^( on_error_detect |
+			  on_fork         |
 			  done            |
 			  user_login      |
 			  user_logout
@@ -367,7 +520,7 @@ sub run_hook
 	else
 	{
 	    $Para::Frame::hooks_running{"$hook"} ++;
-	    swhich_req( $req );
+	    switch_req( $req );
 	    &{$hook}(@_);
 	    $Para::Frame::hooks_running{"$hook"} --;
 	}
@@ -403,7 +556,7 @@ sub incpath_generator
     unless( $REQ->{'incpath'} )
     {
 	$REQ->{'incpath'} = [ map uri2file( $_."inc" )."/", @{$REQ->{'dirsteps'}} ];
-	warn "  Incpath: @{$REQ->{'incpath'}}\n";
+	warn "  Incpath: @{$REQ->{'incpath'}}\n" if $DEBUG > 3;
     }
     return $REQ->{'incpath'};
 }
@@ -435,7 +588,7 @@ sub configure
 	    $CFG->{$key} = [ @content ];
 	}
 
-	if( $DEBUG > 1 )
+	if( $DEBUG > 3 )
 	{
 	    warn "$key set to ".Dumper($CFG->{$key});
 	}

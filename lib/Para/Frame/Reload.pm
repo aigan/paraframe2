@@ -39,7 +39,8 @@ use vars qw( %COMPILED %INCS );
 BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    warn "  Loading ".__PACKAGE__." $VERSION\n";
+    warn "  Loading ".__PACKAGE__." $VERSION\n"
+	unless $Psi::QUIET; # houerly_active.pl
 }
 
 use Para::Frame::Utils qw( package_to_module module_to_package );

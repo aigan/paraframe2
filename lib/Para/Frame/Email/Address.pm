@@ -43,7 +43,7 @@ sub parse
 
     return $email_str_in if UNIVERSAL::isa($email_str_in, "Para::Frame::Email::Address");
 
-    warn "Parsing email string '$email_str_in'\n";
+    # warn "Parsing email string '$email_str_in'\n";
     my( $addr ) = Mail::Address->parse( $email_str_in );
 
     $addr or throw('email', "'$email_str_in' är inte en korrekt e-postadress\n");
