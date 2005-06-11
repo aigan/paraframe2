@@ -68,6 +68,25 @@ sub validate
 {
     my( $a ) = @_;
 
+    my $fork = $Para::Frame::REQ->create_fork;
+    if( $fork->in_child )
+    {
+	my $success = $a->_validate;
+	$fork->{'error_msg'} = $a->{'error_msg'};
+	$fork->{'success'} = $success;
+	$fork->return;
+    }
+    $fork->yield;
+
+    $a->{'error_msg'} = $fork->result->{'error_msg'};
+    throw('email', $a->{'error_msg'}) unless $fork->result->{'success'};
+    return 1;
+}
+
+sub _validate
+{
+    my( $a ) = @_;
+
     my $err_msg = "";
 
     my( $host ) = $a->host() or die;
@@ -116,7 +135,8 @@ sub validate
 	else
 	{
 	    $a->{'error_msg'} = $err_msg;
-	    throw('email', "$host finns inte");
+	    $a->{'error_msg'} = "$host finns inte";
+	    return 0;
 	}
     }
   MX:
@@ -156,7 +176,7 @@ sub validate
     }
     warn "\tAddress bad\n";
     $a->{'error_msg'} = $err_msg;
-    throw('email', $err_msg);
+    return 0;
 }
 
 sub error_msg
