@@ -282,7 +282,7 @@ sub error
     }
 
     $params->{'type'} ||= $type;
-    $params->{'title'} ||= "\u$type fel...";
+    $params->{'title'}{'c'} ||= "\u$type fel...";
     $params->{'message'} = $message;
 
     if( $params->{'view_context'} )
