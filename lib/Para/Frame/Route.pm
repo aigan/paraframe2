@@ -25,6 +25,7 @@ Para::Frame::Route - Backtracking and planning steps in a session
 use strict;
 use Data::Dumper;
 use URI;
+use Carp;
 
 BEGIN
 {
@@ -117,10 +118,10 @@ sub plan_backtrack
 
     if( my $step = $route->{'route'}[-1] )
     {
-	warn "  Next step is $step\n";
+	carp "  Next step is $step\n";
 	$step = URI->new($step) unless UNIVERSAL::isa($step, 'URI');
 #	my $uri = URI->new($step);
-	warn "  Plan backtrack to ".$step->path."\n";
+	warn "  !! Plan backtrack to ".$step->path."\n";
 	return $step->path . '?backtrack';
     }
 
@@ -135,7 +136,8 @@ sub plan_backtrack
   $route->plan_next( @urls )
 
 Insert a new step in the route.  The url should include all the params
-that will be set then we backtrack to this step.
+that will be set then we backtrack to this step. The step will be
+placed on the top of the stack.
 
 =cut
 
@@ -162,7 +164,7 @@ sub plan_next
 
 Insert a new step as the last step in the route.  The url should
 include all the params that will be set then we backtrack to this
-step.
+step. The step will be placed in the bottom of the stack.
 
 =cut
 
@@ -303,7 +305,7 @@ sub check_backtrack
 
     if( ($req->q->url_param('keywords')||'') eq 'backtrack' )
     {
-	warn "  !! Backtracking!\n";
+	warn "  !! Backtracking (because of uri keyword)\n";
 	$route->get_next;
     }
     else
