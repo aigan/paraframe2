@@ -31,6 +31,7 @@ use IO::File;
 use URI;
 use Carp qw(cluck);
 #use Cwd qw( abs_path );
+use Encode qw( is_utf8 );
 
 BEGIN
 {
@@ -46,7 +47,8 @@ use Para::Frame::Session;
 use Para::Frame::Result;
 use Para::Frame::Child;
 use Para::Frame::Child::Result;
-use Para::Frame::Utils qw( create_dir chmod_file dirsteps uri2file compile throw );
+use Para::Frame::Request::Ctype;
+use Para::Frame::Utils qw( create_dir chmod_file dirsteps uri2file compile throw idn_encode idn_decode );
 
 our $DEBUG = undef;
 
@@ -85,7 +87,7 @@ sub new
 	uri            => undef,
 	template       => undef,          ## if diffrent from URI
 	error_template => undef,          ## if diffrent from template
-	ctype          => $content_type,
+	ctype          => undef,          ## The response content-type
 	in_body        => 0,              ## flag then headers sent
 	page           => undef,          ## The generated page to output
 	childs         => 0,              ## counter in parent
@@ -104,6 +106,8 @@ sub new
     $req->{'browser'} = new HTTP::BrowserDetect($env->{'HTTP_USER_AGENT'}||undef);
     $req->{'result'}  = new Para::Frame::Result($req);  # Before Session
     $req->{'s'}       = new Para::Frame::Session($req);
+
+    $req->ctype( $content_type );
 
     $req->{'uri'} = $req->set_uri( $orig_uri );
 
@@ -125,7 +129,6 @@ sub uri { shift->{'uri'} }
 sub dir { shift->{'dir'} }
 sub me { shift->{'me'} } # same as uri, minus index.tt
 sub filename { uri2file(shift->template) }
-sub ctype { shift->{'ctype'} } # content type
 sub lang { undef }
 sub error_page_selected { $_[0]->{'error_template'} ? 1 : 0 }
 
@@ -176,7 +179,7 @@ sub set_template
 	$template .= "index.tt";
     }
   
-    $req->set_ctype("text/html") if $template =~ /\.tt$/;
+    $req->ctype->set("text/html") if $template =~ /\.tt$/;
 
     $req->{template} = $template;
 
@@ -190,17 +193,21 @@ sub set_error_template
     return $req->{'error_template'} = $req->set_template( $error_tt );
 }
 
-sub set_ctype
+sub ctype
 {
-    my( $req, $ctype ) = @_;
+    my( $req, $content_type ) = @_;
 
-    return $ctype if $ctype eq $req->{ctype};
+    unless( $req->{'ctype'} )
+    {
+	$req->{'ctype'} = Para::Frame::Request::Ctype->new();
+    }
 
-    warn "  Setting ctype to $ctype\n";
+    if( $content_type )
+    {
+	$req->{'ctype'}->set( $content_type );
+    }
 
-    $req->{ctype} = $ctype;
-    $req->send_code( 'AR-PUT', 'content_type', $ctype);
-    return $ctype;
+    return $req->{'ctype'};
 }
 
 
@@ -257,17 +264,19 @@ sub send_headers
 
     my $client = $req->client;
 
+    $req->ctype->commit;
+
     my %multiple; # Replace first, but add later headers
     foreach my $header ( @{$req->{'headers'}} )
     {
 	if( $multiple{$header->[0]} ++ )
 	{
-	    warn "Send header add @$header\n";
+	    warn "  Send header add @$header\n";
 	    $req->send_code( 'AT-PUT', 'add', @$header);
 	}
 	else
 	{
-	    warn "Send header_out @$header\n";
+	    warn "  Send header_out @$header\n";
 	    $req->send_code( 'AR-PUT', 'header_out', @$header);
 	}
     }
@@ -554,9 +563,12 @@ sub find_template
 
 
     my( $base_name, $path_full, $ext_full ) = fileparse( $template, qr{\..*} );
-    warn "  path: $path_full\n";
-    warn "  name: $base_name\n";
-    warn "  ext : $ext_full\n";
+    if( $DEBUG > 3 )
+      {
+	warn "  path: $path_full\n";
+	warn "  name: $base_name\n";
+	warn "  ext : $ext_full\n";
+      }
 
     my( $ext ) = $ext_full =~ m/^\.(.+)/; # Skip initial dot
 
@@ -897,8 +909,8 @@ sub send_output
 
     # Redirect if URL differs from template_url
 
-    warn "|| Sending output to ".$req->uri."\n";
-    warn "|| Sending the page ".$req->template_uri."\n";
+    warn "  ||Sending output to ".$req->uri."\n";
+    warn "  ||Sending the page ".$req->template_uri."\n";
 
     if( $req->uri ne $req->template_uri )
     {
@@ -906,8 +918,19 @@ sub send_output
     }
     else
     {
-	$req->send_headers;
-	$req->client->send( ${ $req->{'page'} } );
+	if( is_utf8( ${ $req->{'page'} } ) )
+	{
+	    $req->ctype->set_charset("UTF-8");
+	    $req->send_headers;
+	    binmode( $req->client, ':utf8');
+	    $req->client->send( ${ $req->{'page'} } );
+	    binmode( $req->client, ':bytes');
+	}
+	else
+	{
+	    $req->send_headers;
+	    $req->client->send( ${ $req->{'page'} } );
+	}
     }
 }
 
@@ -925,11 +948,35 @@ sub output_redirection
     my( $req, $uri_in ) = @_;
     $uri_in or die "URI missing";
 
-    my $uri = URI->new($uri_in, 'http');
-    $uri->host( $req->host_name );
-    $uri->port( $req->host_port );
-    $uri->scheme('http');
-    my $uri_out =  $uri->canonical->as_string;
+    my $uri_out;
+
+    # URI module doesn't support punycode. Bypass module if we
+    # redirect to specified domain
+    #
+    if( $uri_in =~ /^http:\/\/(.*?)(:|\/|$)/ )
+      {
+	my $host_in = $1;
+#	warn "  matched '$host_in' in '$uri_in'!\n";
+	my $host_out = idn_encode( $host_in );
+#	warn "  Encoded to '$host_out'\n";
+	if( $host_in ne $host_out )
+	  {
+	    $uri_in =~ s/$host_in/$host_out/;
+	  }
+
+	$uri_out = $uri_in;
+      }
+    else
+      {
+	my $uri = URI->new($uri_in, 'http');
+	$uri->host( idn_encode $req->http_host_name ) unless $uri->host;
+	$uri->port( $req->host_port ) unless $uri->port;
+	$uri->scheme('http');
+
+	$uri_out =  $uri->canonical->as_string;
+      }
+
+    warn "  --> Redirect to $uri_out\n";
 
     $req->send_code( 'AR-PUT', 'status', 302 ); # moved
     $req->send_code( 'AR-PUT', 'header_out', 'Pragma', 'no-cache' );
@@ -940,10 +987,22 @@ sub output_redirection
     $req->client->send( "Go to $uri_out\n" );
 }
 
+sub http_host_name
+{
+
+    # This is the host name the client requested. It tells with which
+    # of the alternatives names the site was requested
+
+#    warn "Host name: $ENV{SERVER_NAME}\n";
+    return idn_decode( $ENV{HTTP_HOST} );
+}
+
 sub host_name
 {
+    # This is the host name as given in the apache config.
+
 #    warn "Host name: $ENV{SERVER_NAME}\n";
-    return $ENV{SERVER_NAME};
+    return idn_decode( $ENV{SERVER_NAME} );
 }
 
 sub host_port
@@ -981,6 +1040,7 @@ sub set_tt_params
 	'u'               => $Para::Frame::U,
 	'result'          => $req->{'result'},
 	'reqnum'          => $req->{'reqnum'},
+	'req'             => $req,
     }, 1);
 }
 
@@ -1014,7 +1074,7 @@ sub create_fork
 	$Para::Frame::FORK = 1;
  	my $result = Para::Frame::Child::Result->new;
 	$req->{'child_result'} = $result;
-	Para::Frame->run_hook($req, 'on_fork', $result );
+	$req->run_hook('on_fork', $result );
 	return $result;
    }
 }
@@ -1048,6 +1108,11 @@ sub get_child_result
     }
 
     return 1;
+}
+
+sub run_hook
+{
+    Para::Frame->run_hook(@_);
 }
 
 
