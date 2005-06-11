@@ -368,17 +368,22 @@ sub new
     }
 
 
-    Para::Frame->add_hook('done', sub{ $dbix->dbh->commit; $dbix->dbh->disconnect; });
+    Para::Frame->add_hook('done', sub
+			  {
+			      $dbix->dbh->commit;
+			  });
+
+    Para::Frame->add_hook('before_switch_req', sub
+			  {
+			      $dbix->dbh->commit;
+			  });
+
     Para::Frame->add_hook('on_fork', sub
 			  {
 			      warn "  Do not destroy DBH in child\n";
 			      $dbix->dbh->{'InactiveDestroy'} = 1;
-
-#			      warn "  Reconnecting to DB in child\n";
-#			      warn "    before: $dbix->{'dbh'}\n";
-#			      $dbix->connect; # Not needed
-#			      warn "    after : $dbix->{'dbh'}\n";
 			  });
+
     Para::Frame->add_hook('on_error_detect', sub
 			  {
 			      my( $typeref, $inforef ) = @_;
