@@ -39,6 +39,7 @@ use CGI;
 use Digest::MD5  qw(md5_hex);
 use Time::Seconds;
 use BerkeleyDB;
+use IDNA::Punycode;
 
 BEGIN
 {
@@ -56,7 +57,8 @@ BEGIN
             catch create_file create_dir chmod_tree chmod_file
             chmod_dir package_to_module module_to_package dirsteps
             uri2file compile passwd_crypt deunicode paraframe_dbm_open
-            elapsed_time uri referer );
+            elapsed_time uri referer store_params clear_params
+            restore_params idn_encode idn_decode );
 
 }
 
@@ -880,6 +882,135 @@ sub referer
 
     warn "  Referer is ".$q->param('previous')." (".$q->referer.")\n";
     return $referer;
+}
+
+=head2 idn_decode
+
+decode international domain names with punycode
+
+=cut
+
+sub idn_decode
+{
+    my( $domain ) = @_;
+
+    if( $Para::Frame::Utils::TRANSCODED{ $domain } )
+    {
+	return $Para::Frame::Utils::TRANSCODED{ $domain };
+    }
+
+    warn "  Decoding domain '$domain'\n";
+
+    my @decoded;
+    foreach my $part ( split /\./, $domain )
+    {
+	if( $part =~ /^xn--(.*)/i )
+	{
+	    $part = decode_punycode($1);
+	}
+
+	push @decoded, $part;
+    }
+
+    return $Para::Frame::Utils::TRANSCODED{ $domain } = join '.', @decoded;
+}
+
+=head2 idn_encode
+
+encode international domain names with punycode
+
+=cut
+
+sub idn_encode
+{
+    my( $domain ) = @_;
+
+    warn "  Encoding domain '$domain'\n";
+
+    my $port = "";
+    if( $domain =~ s/(:\d+)$// )
+    {
+	$port = $1;
+    }
+
+    my @encoded;
+    foreach my $part ( split /\./, $domain )
+    {
+#	warn "  part $part\n";
+	if( $part =~ /[^A-Za-z0-9\-]/ )
+	{
+#	    warn "    encoding it\n";
+	    $part = "xn--".encode_punycode($part);
+	}
+
+	push @encoded, $part;
+    }
+
+    $domain = join '.', @encoded;
+    return $domain . $port;
+}
+
+=head2 store_params
+
+Returns a hash with all the CGI query params
+
+=cut
+
+sub store_params
+{
+    my $q = $Para::Frame::REQ->q;
+
+    my $state = {};
+    foreach my $key ( $q->param() )
+    {
+	$state->{ $key } = $q->param( $key );;
+    }
+    return $state;
+}
+
+=head2 clear_params
+
+  cleare_params(@list)
+  clear_params
+
+Clears the CGI query params given in list, or all params if no list
+given
+
+=cut
+
+sub clear_params
+{
+    if( @_ )
+    {
+	foreach( @_ )
+	{
+	    $Psi::query->delete( $_ );
+	}
+    }
+    else
+    {
+	$Psi::query->delete_all();
+    }
+}
+
+=head2 restore_params
+
+  restore_params(\%saved)
+
+Remove all the CGI query params and replace them with those in the
+hashref given.
+
+=cut
+
+sub restore_params
+{
+    my( $state ) = @_;
+
+    $Psi::query->delete_all();
+    foreach my $key ( keys %$state )
+    {
+	$Psi::query->param( $key, $state->{$key} );
+    }
 }
 
 1;
