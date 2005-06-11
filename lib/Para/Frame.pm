@@ -183,6 +183,7 @@ sub main_loop
 	    {
 		# All jobs done for now
 		warn "  All jobs done\n";
+		$req->run_hook('done');
 		close_callback($req->{'client'});
 	    }
 
@@ -213,10 +214,15 @@ sub switch_req
     if( $_[0] ne $REQ )
     {
 	warn "\nSwitching to req $_[0]->{reqnum}\n"; ### DEBUG
+
+	Para::Frame->run_hook(undef, 'before_switch_req');
+
+	if( $REQ = $_[0] )
+	{
+	    $U   = $REQ->s->u;
+	    %ENV = %{$REQ->env}; # TODO: eliminate duplicate copy
+	}
     }
-    $REQ = $_[0];
-    $U   = $REQ->s->u;
-    %ENV = %{$REQ->env}; # TODO: eliminate duplicate copy
 }
 
 sub get_value
@@ -484,12 +490,15 @@ sub add_hook
 {
     my( $class, $label, $code ) = @_;
 
+    warn "  add_hook $label from ".(caller)."\n" if $DEBUG > 2;
+
     # Validate hook label
-    unless( $label =~ /^( on_error_detect |
-			  on_fork         |
-			  done            |
-			  user_login      |
-			  user_logout
+    unless( $label =~ /^( on_error_detect   |
+			  on_fork           |
+			  done              |
+			  user_login        |
+			  user_logout       |
+			  before_switch_req 
 			  )$/x )
     {
 	die "No such hook: $label\n";
@@ -502,8 +511,18 @@ sub add_hook
 sub run_hook
 {
     my( $class, $req, $label ) = (shift, shift, shift);
-#    warn "run_hook for a ".ref($req)."\n";
+    if( $DEBUG > 2 )
+    {
+	if( $req )
+	{
+	    warn "  run_hook $label for $req->{reqnum}\n";
+	}
+	else
+	{
+	    warn "  run_hook $label\n";
+	}
 #    warn Dumper($hook, \@_);
+    }
 
     return unless $HOOK{$label};
 
@@ -520,7 +539,7 @@ sub run_hook
 	else
 	{
 	    $Para::Frame::hooks_running{"$hook"} ++;
-	    switch_req( $req );
+	    switch_req( $req ) if $req;
 	    &{$hook}(@_);
 	    $Para::Frame::hooks_running{"$hook"} --;
 	}
