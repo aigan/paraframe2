@@ -1,7 +1,5 @@
 <html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
-
     [% DEFAULT otitle = title %]
     <title>[% PROCESS title.tt %]</title>
     [% IF css %]<link rel="Stylesheet" href="$css" type="text/css" />[% END %]
