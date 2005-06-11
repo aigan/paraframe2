@@ -70,7 +70,7 @@ sub return
 
     warn "  Returning child result for $Para::Frame::REQ->{reqnum}\n";
 
-    $result->message( $message );
+    $result->message( $message ) if $message;
     my $data = safeFreeze $result;
     print $data;
     exit;  # don't forget this
