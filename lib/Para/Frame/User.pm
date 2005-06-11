@@ -161,9 +161,10 @@ sub authenticate_user
 
 	if( $DEBUG )
 	{
-	    warn sprintf("next_template was %s\n", $q->param('next_template'));
-	    warn sprintf("destination was %s\n", $q->param('destination'));
-	    warn sprintf("Setting next_tempalte to %s\n", $req->referer);
+	    warn sprintf("  next_template was %s\n",
+			 $q->param('next_template'));
+	    warn sprintf("  destination was %s\n",
+			 $q->param('destination'));
 	}
 
 	my $destination = $q->param('destination') || '';
@@ -171,6 +172,8 @@ sub authenticate_user
 	{
 	    $q->param('next_template', $req->referer);
 	}
+	warn sprintf("  Setting next_tempalte to %s\n",
+		     $q->param('next_template'));
 
 	return undef;
     }
