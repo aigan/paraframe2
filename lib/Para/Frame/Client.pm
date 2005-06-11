@@ -55,22 +55,36 @@ sub handler
 
 #    warn "$$: CGI obj created\n";
 
-    &connect;
+    my $port = $r->dir_config('port');
 
-#    warn "$$: Socket obj created\n";
-
-   unless( $SOCK )
+    unless( $port )
     {
 	my $errcode = 500;
-	my $error = "Can't find the Paraframe server";
+	my $error = "No port configured for communication with the Paraframe server";
 	$r->status_line( $errcode." ".$error );
 	$r->no_cache(1);
 	$r->send_http_header("text/html");
 	$r->print("<html><head><title>$error</title></head><body><h1>$error</h1>\n");
-	$r->print("<p>The backend server are probably not running</p>");
 	$r->print("</body></html>\n");
 	return 1;
-    };
+    }
+
+    &connect( $port );
+
+    warn "$$: Socket obj created on port $port\n";
+
+   unless( $SOCK )
+   {
+       my $errcode = 500;
+       my $error = "Can't find the Paraframe server";
+       $r->status_line( $errcode." ".$error );
+       $r->no_cache(1);
+       $r->send_http_header("text/html");
+       $r->print("<html><head><title>$error</title></head><body><h1>$error</h1>\n");
+       $r->print("<p>The backend server are probably not running</p>");
+       $r->print("</body></html>\n");
+       return 1;
+   };
 
     warn "$$: Established connection to server\n" if $DEBUG;
 
@@ -78,6 +92,7 @@ sub handler
     warn "$$: Got $reqline\n";
 
     my $ctype = $r->content_type || 'text/html'; # FIXME
+#    my $ctype = $r->content_type or die; # TEST
     if( $ctype =~ /^image/ )
     {
 	return 0;
@@ -200,9 +215,11 @@ sub send_to_server
 
 sub connect
 {
+    my( $port ) = @_;
+
     $SOCK = new IO::Socket::INET (
 				  PeerAddr => 'localhost',
-				  PeerPort => '7788',
+				  PeerPort => $port,
 				  Proto => 'tcp',
 				  );
 }
