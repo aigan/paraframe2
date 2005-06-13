@@ -34,7 +34,8 @@ BEGIN
     warn "  Loading ".__PACKAGE__." $VERSION\n";
 }
 
-use Para::Frame::Reload;
+#use Para::Frame::Reload; # This code is mingled with Time::Piece
+
 use Para::Frame::Utils qw( throw );
 
 sub import { shift; @_ = ('Time::Piece', @_); goto &Time::Piece::import }
