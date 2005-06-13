@@ -46,6 +46,8 @@ BEGIN
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
     warn "  Loading ".__PACKAGE__." $VERSION\n"
 	unless $Psi::QUIET; # houerly_active.pl
+
+#    $Exporter::Verbose = 1;
 }
 
 use base qw( Exporter );
@@ -63,6 +65,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
+
 
 our %URI2FILE;
 
@@ -762,7 +765,7 @@ sub passwd_crypt
 
     $ip =~ s/\.\d{1,3}$//; # accept changing ip within c-network
 
-    warn "  using REMOTE_ADDR $ip\n";
+    warn "  using REMOTE_ADDR $ip\n" if $Para::Frame::DEBUG;
     return md5_hex( $passwd, $ip );
 }
 
@@ -899,7 +902,7 @@ sub idn_decode
 	return $Para::Frame::Utils::TRANSCODED{ $domain };
     }
 
-    warn "  Decoding domain '$domain'\n";
+#    warn "  Decoding domain '$domain'\n";
 
     my @decoded;
     foreach my $part ( split /\./, $domain )
@@ -925,7 +928,7 @@ sub idn_encode
 {
     my( $domain ) = @_;
 
-    warn "  Encoding domain '$domain'\n";
+#    warn "  Encoding domain '$domain'\n";
 
     my $port = "";
     if( $domain =~ s/(:\d+)$// )
@@ -963,7 +966,7 @@ sub store_params
     my $state = {};
     foreach my $key ( $q->param() )
     {
-	$state->{ $key } = $q->param( $key );;
+	$state->{ $key } = $q->param( $key );
     }
     return $state;
 }

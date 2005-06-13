@@ -182,7 +182,7 @@ sub main_loop
 	    else
 	    {
 		# All jobs done for now
-		warn "  All jobs done\n";
+		warn "  All jobs done\n" if $DEBUG;
 		$req->run_hook('done');
 		close_callback($req->{'client'});
 	    }

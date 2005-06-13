@@ -34,7 +34,7 @@ BEGIN
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw passwd_crypt );
 
-our $DEBUG = 1;
+our $DEBUG = undef;
 
 =head1 SYNOPSIS
 
@@ -110,6 +110,8 @@ level less than or equal to her level.  Default is 0.
 sub new
 {
     my( $class ) = @_;
+
+    $DEBUG = $Para::Frame::DEBUG;
 
     $class->identify_user();
     $class->authenticate_user();
@@ -188,7 +190,7 @@ sub authenticate_user
     }
 
 
-    warn "[ $username ]\n";
+    warn "  [ $username ]\n";
 
     return 1;
 }

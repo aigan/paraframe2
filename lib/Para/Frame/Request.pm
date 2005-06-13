@@ -114,6 +114,10 @@ sub new
     # Initialize the route
     $req->{'s'}->route->init;
 
+    # Log som info
+    #
+    warn "  http://".$req->http_host_name."$orig_uri\n";
+
     return $req;
 }
 
@@ -158,7 +162,7 @@ sub set_uri
 
     die "not impelemnted" if $uri =~ /\?/;
 
-    warn "  setting URI to $uri\n";
+    warn "  setting URI to $uri\n" if $DEBUG;
     $req->{uri} = $uri;
     $req->set_template( $uri );
 
@@ -171,7 +175,7 @@ sub set_template
 
     # For setting a template diffrent from the URI
 
-    warn "  setting template to $template\n";
+    warn "  setting template to $template\n" if $DEBUG;
 
     if( -d uri2file( $template ) )
     {
@@ -281,7 +285,7 @@ sub send_headers
 	}
     }
 
-    warn "  Send newline\n";
+    warn "  Send newline\n" if $DEBUG;
     $client->send( "\n" );
     $req->{'in_body'} = 1;
 }
@@ -909,8 +913,11 @@ sub send_output
 
     # Redirect if URL differs from template_url
 
-    warn "  ||Sending output to ".$req->uri."\n";
-    warn "  ||Sending the page ".$req->template_uri."\n";
+    if( $DEBUG )
+    {
+	warn "  Sending output to ".$req->uri."\n";
+	warn "  Sending the page ".$req->template_uri."\n";
+    }
 
     if( $req->uri ne $req->template_uri )
     {
@@ -1022,7 +1029,7 @@ sub set_tt_params
     # Determine the directory
     my( $dir ) = $real_filename =~ /^(.*\/)/;
     $req->{'dir'} = $dir;
-    warn "  Setting dir to $dir\n";
+    warn "  Setting dir to $dir\n" if $DEBUG;
 
     # Special handling of index.tt
     my $me = $req->{'uri'};
