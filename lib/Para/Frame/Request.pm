@@ -29,7 +29,7 @@ use File::Slurp;
 use File::Basename;
 use IO::File;
 use URI;
-use Carp qw(cluck);
+use Carp qw(cluck croak);
 #use Cwd qw( abs_path );
 use Encode qw( is_utf8 );
 
@@ -84,6 +84,7 @@ sub new
 	browser        => undef,          ## browser detection object
 	result         => undef,
 	orig_uri       => $orig_uri,
+	orig_ctype     => $content_type,
 	uri            => undef,
 	template       => undef,          ## if diffrent from URI
 	error_template => undef,          ## if diffrent from template
@@ -96,23 +97,13 @@ sub new
 	reqnum         => $reqnum,        ## The request serial number
     }, $class;
 
-    # Register $req
-    $Para::Frame::REQ = $req;
-
     # Cache uri2file translation
-    uri2file( $orig_uri, $orig_filename);
+    uri2file( $orig_uri, $orig_filename, $req);
 
     $req->{'cookies'} = new Para::Frame::Cookies($req);
     $req->{'browser'} = new HTTP::BrowserDetect($env->{'HTTP_USER_AGENT'}||undef);
     $req->{'result'}  = new Para::Frame::Result($req);  # Before Session
     $req->{'s'}       = new Para::Frame::Session($req);
-
-    $req->ctype( $content_type );
-
-    $req->{'uri'} = $req->set_uri( $orig_uri );
-
-    # Initialize the route
-    $req->{'s'}->route->init;
 
     # Log som info
     #
@@ -200,6 +191,8 @@ sub set_error_template
 sub ctype
 {
     my( $req, $content_type ) = @_;
+
+    # Needs $REQ
 
     unless( $req->{'ctype'} )
     {
@@ -562,6 +555,8 @@ sub find_template
 {
     my( $req, $template ) = @_;
 
+#    my $DEBUG = 4;
+
     warn "  Finding template $template\n" if $DEBUG;
     my( $in );
 
@@ -590,7 +585,7 @@ sub find_template
 
 
     # TODO: Check for global templates with this name
-    my $global = $Para::Frame::ROOT . "/def/";
+    my $global = $Para::Frame::CFG->{'paraframe'}. "/def/";
 
     # Reasonable default?
     my $language = $req->lang || ['sv'];
@@ -1048,6 +1043,7 @@ sub set_tt_params
 	'result'          => $req->{'result'},
 	'reqnum'          => $req->{'reqnum'},
 	'req'             => $req,
+	'cfg'             => $Para::Frame::CFG,
     }, 1);
 }
 

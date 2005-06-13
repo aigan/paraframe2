@@ -32,8 +32,8 @@ BEGIN
 }
 
 use Para::Frame::Reload;
+use Para::Frame::Utils qw( debug );
 
-our $DEBUG = 1;
 our $SOCK;
 
 # $SIG{HUP} = sub { warn "Got a HUP\n"; };
@@ -47,7 +47,7 @@ sub handler
 
     $|=1;
 
-    warn "$$: Client started\n" if $DEBUG;
+    debug(1,"$$: Client started");
 
     my $q = new CGI;
 
@@ -86,7 +86,7 @@ sub handler
        return 1;
    };
 
-    warn "$$: Established connection to server\n" if $DEBUG;
+    debug(1,"$$: Established connection to server");
 
     my $reqline = $r->the_request;
     warn "$$: Got $reqline\n";
@@ -108,7 +108,7 @@ sub handler
 
     send_to_server('REQ', \$value);
 
-    warn "$$: Sent data to server\n" if $DEBUG;
+    debug(1,"$$: Sent data to server");
 
     my $in_body = 0;
     my $rows = 0;
@@ -194,7 +194,7 @@ sub handler
     }
 
     warn "$$: Returned $rows rows\n";
-    warn "$$: Response recieved\n\n\n" if $DEBUG;
+    debug(1,"$$: Response recieved\n\n\n");
 
     return 1;
 }
@@ -205,7 +205,7 @@ sub send_to_server
 
     my $length = length($$valref) + length($code) + 1;
 
-    warn "$$: Sending $length - $code - value\n" if $DEBUG;
+    debug(1,"$$: Sending $length - $code - value");
     unless( print $SOCK "$length\x00$code\x00" . $$valref )
     {
 	die "LOST CONNECTION while sending $code\n";

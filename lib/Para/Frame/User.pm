@@ -24,6 +24,7 @@ Para::Frame::User - Represents the user behind the request
 
 use strict;
 use Time::HiRes qw( time );
+use Carp qw( confess );
 
 BEGIN
 {

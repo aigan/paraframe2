@@ -60,7 +60,8 @@ BEGIN
             chmod_dir package_to_module module_to_package dirsteps
             uri2file compile passwd_crypt deunicode paraframe_dbm_open
             elapsed_time uri referer store_params clear_params
-            restore_params idn_encode idn_decode );
+            restore_params idn_encode idn_decode debug debug_in
+            debug_out);
 
 }
 
@@ -68,6 +69,8 @@ use Para::Frame::Reload;
 
 
 our %URI2FILE;
+our $INDENT = 0;
+
 
 =head1 FUNCTIONS
 
@@ -485,11 +488,8 @@ sub chmod_file
     my $fun = $fu->name;              # file user  name
     my $fgn = $fg->name;              # file group name
     my $run = $ru->name;              # run  user  name
-    my $rfg = getgrnam( $Para::Frame::GROUP );
-    my $rfgn = $rfg->name;
-
-    $rfg or die( "\nERROR: No GROUP found in Para::Frame::Config\n".
-		 "Config and install that first!\n");
+    my $pfg = getgrnam( $CFG->{'paraframe_group'} );
+    my $pfgn = $pfg->name;
 
     die "file '$file' not found" unless -e $file;
 
@@ -512,36 +512,36 @@ sub chmod_file
 		$msg .= "  Do not run as root !!!\n";
 	    }
 
-	    my( $f_mem, $r_mem ); # Is either member in $rfg?
-	    foreach my $gname ( @{ $rfg->members } )
+	    my( $f_mem, $r_mem ); # Is either member in $pfg?
+	    foreach my $gname ( @{ $pfg->members } )
 	    {
 		$f_mem ++ if $gname eq $fun;
 		$r_mem ++ if $gname eq $run;
 	    }
-	    $f_mem ++ if $fu->gid == $rfg->gid;
-	    $r_mem ++ if $ru->gid == $rfg->gid;
+	    $f_mem ++ if $fu->gid == $pfg->gid;
+	    $r_mem ++ if $ru->gid == $pfg->gid;
 
 	    if( $f_mem )
 	    {
-		$msg .= "  $fun belongs to group $rfgn\n";
+		$msg .= "  $fun belongs to group $pfgn\n";
 	    }
 	    else
 	    {
-		$msg .= "  $fun do NOT belong to group $rfgn\n";
+		$msg .= "  $fun do NOT belong to group $pfgn\n";
 	    }
 
 	    if( $r_mem )
 	    {
-		$msg .= "  $run belongs to group $rfgn\n";
+		$msg .= "  $run belongs to group $pfgn\n";
 	    }
 	    else
 	    {
-		$msg .= "  $run do NOT belong to group $rfgn\n";
+		$msg .= "  $run do NOT belong to group $pfgn\n";
 	    }
 
 	    if( $f_mem and not $r_mem )
 	    {
-		$msg .= "  Run as $fun or add $run to group $rfgn\n";
+		$msg .= "  Run as $fun or add $run to group $pfgn\n";
 	    }
 
 	    if( ($r_mem and not $f_mem) or ($fstat->mode & $mode ^ $mode) )
@@ -554,9 +554,9 @@ sub chmod_file
 	    die $msg . "\n";
     };
 
-    unless( $fstat->gid == $rfg->gid )
+    unless( $fstat->gid == $pfg->gid )
     {
-	unless( chown -1, $rfg->gid, $file )
+	unless( chown -1, $pfg->gid, $file )
 	{
 	    warn "Tried to change gid\n";
 	    &$report_error;
@@ -693,12 +693,12 @@ sub dirsteps
 
 sub uri2file
 {
-    my( $uri, $file ) = @_;
+    my( $uri, $file, $req ) = @_;
 
     # This will return file without '/' for dirs
 #    warn "  Get filename for uri $uri\n";
 
-    my $req = $Para::Frame::REQ;
+    $req ||= $Para::Frame::REQ;
     my $key = $req->host_name . $uri;
 
     if( $file )
@@ -1015,6 +1015,46 @@ sub restore_params
 	$Psi::query->param( $key, $state->{$key} );
     }
 }
+
+=head2 debug
+
+  debug($level, $message, $ident_delta)
+
+Output debug info
+
+=cut
+
+sub debug
+{
+    my( $level, $message, $delta ) = @_;
+
+    $delta ||= 0;
+    $INDENT += $delta;
+
+    unless( $message )
+    {
+	$message = $level;
+	$level = 0;
+    }
+
+    if( $Para::Frame::DEBUG >= $level )
+    {
+	chomp $message;
+	warn "  "x$IDENT . $message . "\n";
+    }
+}
+
+sub debug_in
+{
+    $INDENT ++;
+}
+
+sub debug_out
+{
+    $INDENT --;
+}
+
+
 
 1;
 

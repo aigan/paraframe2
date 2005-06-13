@@ -59,6 +59,9 @@ sub new
     }
     else # Create new session ID if no cookie active
     {
+	# REQNUM is actually the previous number, but it will be
+	# unique so that doesn't matter
+	#
 	$sid = time.'-'.$Para::Frame::REQNUM;
 	$req->cookies->add({ $SESSION_COOKIE_NAME => $sid });
 	$active = 1;
@@ -70,13 +73,11 @@ sub new
 	active => $active,
 	created => localtime,
 	latest  => localtime,
+	user    => undef,
     }, $class;
 
     # Register s
-    $Para::Frame::REQ->{'s'} = $s;
     $Para::Frame::SESSION{$sid} = $s;
-
-    $Para::Frame::CFG->{'user_class'}->identify_user(); # Will set $s->{user}
 
     # Create a route object for the session
     $s->{'route'} = Para::Frame::Route->new();
