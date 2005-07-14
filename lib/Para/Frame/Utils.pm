@@ -60,8 +60,7 @@ BEGIN
             chmod_dir package_to_module module_to_package dirsteps
             uri2file compile passwd_crypt deunicode paraframe_dbm_open
             elapsed_time uri referer store_params clear_params
-            restore_params idn_encode idn_decode debug debug_in
-            debug_out);
+            restore_params idn_encode idn_decode debug );
 
 }
 
@@ -69,7 +68,6 @@ use Para::Frame::Reload;
 
 
 our %URI2FILE;
-our $INDENT = 0;
 
 
 =head1 FUNCTIONS
@@ -488,7 +486,7 @@ sub chmod_file
     my $fun = $fu->name;              # file user  name
     my $fgn = $fg->name;              # file group name
     my $run = $ru->name;              # run  user  name
-    my $pfg = getgrnam( $CFG->{'paraframe_group'} );
+    my $pfg = getgrnam( $Para::Frame::CFG->{'paraframe_group'} );
     my $pfgn = $pfg->name;
 
     die "file '$file' not found" unless -e $file;
@@ -1028,32 +1026,35 @@ sub debug
 {
     my( $level, $message, $delta ) = @_;
 
+    return $Para::Frame::DEBUG unless defined $level;
+
     $delta ||= 0;
-    $INDENT += $delta;
+    $Para::Frame::INDENT += $delta;
 
     unless( $message )
     {
+	if( $level =~ /^-?\d$/ )
+	{
+	    $Para::Frame::INDENT += $level;
+	    return;
+	}
+
 	$message = $level;
+	$level = 0;
+    }
+
+    if( $level < 0 )
+    {
+	$Para::Frame::INDENT += $level;
 	$level = 0;
     }
 
     if( $Para::Frame::DEBUG >= $level )
     {
 	chomp $message;
-	warn "  "x$IDENT . $message . "\n";
+	warn "  "x$Para::Frame::INDENT . $message . "\n";
     }
 }
-
-sub debug_in
-{
-    $INDENT ++;
-}
-
-sub debug_out
-{
-    $INDENT --;
-}
-
 
 
 1;
