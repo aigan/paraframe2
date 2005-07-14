@@ -34,15 +34,15 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Config;
 use Para::Frame::Request;
 use Para::Frame::Widget;
-use Para::Frame::Utils qw( throw uri2file );
+use Para::Frame::Utils qw( throw uri2file debug );
 
 
 # Do not init variables here, since this will be redone each time code is updated
 our $SERVER     ;
 our $DEBUG      ;
+our $INDENT     ;
 our @JOBS       ;
 our %REQUEST    ;
 our $REQ        ;
@@ -90,8 +90,6 @@ sub startup
     
     print("Setup complete, accepting connections.\n");
 
-#    open STDERR, ">/tmp/paraframe.log" or die $!;
-
     $LEVEL = 0;
     main_loop();
 }
@@ -104,7 +102,7 @@ sub main_loop
     {
 	$LEVEL ++;
     }
-    warn "Entering main_loop at level $LEVEL\n";
+    warn "Entering main_loop at level $LEVEL\n" if $LEVEL;
 
 
     my $timeout = 5;
@@ -145,7 +143,7 @@ sub main_loop
 		$SELECT->add($client);
 		nonblock($client);
 
-		warn "\n\nNew client connected\n" if $DEBUG > 3;
+		debug(4,"\n\nNew client connected\n");
 	    }
 	    else
 	    {
@@ -169,8 +167,7 @@ sub main_loop
 	    elsif( my $job = shift @{$req->{'jobs'}} )
 	    {
 		my( $cmd, @args ) = @$job;
-		warn "  Found a job ($cmd) in $req->{reqnum}\n"
-		    if $DEBUG > 1;
+		debug(2,"Found a job ($cmd) in $req->{reqnum}");
 		switch_req( $req );
 		$req->$cmd( @args );
 	    }
@@ -182,7 +179,7 @@ sub main_loop
 	    else
 	    {
 		# All jobs done for now
-		warn "  All jobs done\n" if $DEBUG;
+		debug(1,"All jobs done");
 		$req->run_hook('done');
 		close_callback($req->{'client'});
 	    }
@@ -211,16 +208,31 @@ sub main_loop
 
 sub switch_req
 {
+    # $_[0] => the new $req
+    # $_[1] => force change (not used)
+
     if( $_[0] ne $REQ )
     {
-	warn "\nSwitching to req $_[0]->{reqnum}\n"; ### DEBUG
+	warn "\nSwitching to req $_[0]->{reqnum}\n"
+	    if $REQ; ### DEBUG
 
 	Para::Frame->run_hook(undef, 'before_switch_req');
 
+	$U = undef;
 	if( $REQ = $_[0] )
 	{
-	    $U   = $REQ->s->u;
+	    if( my $s = $REQ->s )
+	    {
+		$U   = $s->u;
+		$DEBUG  = $s->{'debug'};
+	    }
+
 	    %ENV = %{$REQ->env}; # TODO: eliminate duplicate copy
+	    $INDENT = $REQ->{'indent'};
+	}
+	else
+	{
+	    %ENV = undef;
 	}
     }
 }
@@ -234,7 +246,7 @@ sub get_value
 
     if( $Para::Frame::FORK )
     {
-	warn "  Getting value inside a fork\n";
+	debug(0,"Getting value inside a fork");
 	while( $_ = <$Para::Frame::Client::SOCK> )
 	{
 	    if( s/^([\w\-]{3,10})\0// )
@@ -287,7 +299,7 @@ sub get_value
     my $data='';
     my $rv = $client->recv($data,POSIX::BUFSIZ, 0);
 
-    warn "Read data...\n" if $DEBUG > 3;
+    debug(4,"Read data...");
 
     unless (defined $rv && length $data)
     {
@@ -300,12 +312,12 @@ sub get_value
     $INBUFFER{$client} .= $data;
     unless( $DATALENGTH{$client} )
     {
-	warn "Length of record?\n" if $DEBUG > 3;
+	debug(4,"Length of record?");
 	# Read the length of the data string
 	#
 	if( $INBUFFER{$client} =~ s/^(\d+)\x00// )
 	{
-	    warn "Setting length to $1\n" if $DEBUG > 3;
+	    debug(4,"Setting length to $1");
 	    $DATALENGTH{$client} = $1;
 	}
 	else
@@ -316,12 +328,12 @@ sub get_value
 
     if( $DATALENGTH{$client} )
     {
-	warn "End of record?\n" if $DEBUG > 3;
+	debug(4,"End of record?");
 	# Have we read the full record of data?
 	#
 	if( length $INBUFFER{$client} >= $DATALENGTH{$client} )
 	{
-	    warn "The whole length read\n" if $DEBUG > 3;
+	    debug(4,"The whole length read");
 
 	    if( $INBUFFER{$client} =~ s/^(\w+)\x00// )
 	    {
@@ -339,7 +351,7 @@ sub get_value
 		elsif( $code eq 'RESP' )
 		{
 		    my $val = $INBUFFER{$client};
-		    warn "RESP recieved ($val)\n" if $DEBUG > 1;
+		    debug(2,"RESP recieved ($val)");
 		    $INBUFFER{$client} = '';
 		    $DATALENGTH{$client} = 0;
 		    return $val;
@@ -449,6 +461,31 @@ sub REAPER
     $SIG{CHLD} = \&REAPER;  # still loathe sysV
 }
 
+use POSIX 'setsid';
+
+sub daemonize
+{
+    my $log = $CFG->{'logfile'};
+
+    chdir '/'                 or die "Can't chdir to /: $!";
+    open STDIN, '/dev/null'   or die "Can't read /dev/null: $!";
+    open STDOUT, '>/dev/null' or die "Can't write to /dev/null: $!";
+    defined(my $pid = fork)   or die "Can't fork: $!";
+    if( $pid ) # In parent
+    {
+	$Para::Frame::FORK = 1;
+	warn "Running in background\n";
+	exit;
+    }
+    setsid                    or die "Can't start a new session: $!";
+    open STDOUT, '>>', $log   or die "Can't append to $log: $!";
+    open STDERR, '>&STDOUT'   or die "Can't dup stdout: $!";
+
+    warn "\nStarted process $$ on ".scalar(localtime)."\n\n";
+}
+
+
+
 ##############################################
 # Handle the request
 #
@@ -462,15 +499,22 @@ sub handle_request
     ### Reload updated modules
     Para::Frame::Reload->check_for_updates;
 
-    ### Create request
+    ### Create request ($REQ not yet set)
     my $req = new Para::Frame::Request( $client, $recordref, $REQNUM );
 
     ### Register the request
     $REQUEST{ $client } = $req;
-    switch_req( $req );
+    switch_req( $req ); 
+    
+    ### Further initialization that requires $REQ
+    $req->ctype( $req->{'orig_ctype'} );
+    $req->{'uri'} = $req->set_uri( $req->{'orig_uri'} );
+    $req->{'s'}->route->init;
 
     # Authenticate user identity
-    $Para::Frame::CFG->{user_class}->authenticate_user;
+    my $user_class = $Para::Frame::CFG->{'user_class'};
+    $user_class->identify_user;     # Will set $s->{user}
+    $user_class->authenticate_user;
 
     ### Redirected from another page?
     if( my $page_result = $req->s->{'page_result'}{ $req->uri } )
@@ -490,7 +534,7 @@ sub add_hook
 {
     my( $class, $label, $code ) = @_;
 
-    warn "  add_hook $label from ".(caller)."\n" if $DEBUG > 2;
+    debug(3,"add_hook $label from ".(caller));
 
     # Validate hook label
     unless( $label =~ /^( on_error_detect   |
@@ -511,7 +555,7 @@ sub add_hook
 sub run_hook
 {
     my( $class, $req, $label ) = (shift, shift, shift);
-    if( $DEBUG > 2 )
+    if( debug > 2 )
     {
 	if( $req )
 	{
@@ -554,6 +598,7 @@ sub add_global_tt_params
     while( my($key, $val) = each %$params )
     {
 	$PARAMS->{$key} = $val;
+#	cluck("Add global TT param $key from ");
     }
 }
 
@@ -575,7 +620,7 @@ sub incpath_generator
     unless( $REQ->{'incpath'} )
     {
 	$REQ->{'incpath'} = [ map uri2file( $_."inc" )."/", @{$REQ->{'dirsteps'}} ];
-	warn "  Incpath: @{$REQ->{'incpath'}}\n" if $DEBUG > 3;
+	debug(4,"Incpath: @{$REQ->{'incpath'}}");
     }
     return $REQ->{'incpath'};
 }
@@ -588,7 +633,6 @@ sub configure
 
     # Init global variables
     #
-    $DEBUG      = 0;
     $REQNUM     = 0;
     $CFG        = {};
     $PARAMS     = {};
@@ -596,7 +640,11 @@ sub configure
     $CFG = $cfg_in; # Assign to global var
 
     ### Set main debug level
-    $DEBUG = $CFG->{'DEBUG'} || 0;
+    $DEBUG = $CFG->{'debug'} || 0;
+
+    $CFG->{'logfile'} ||= "/tmp/paraframe.log";
+    $CFG->{'paraframe'} ||= '/usr/local/paraframe';
+    $CFG->{'paraframe_group'} ||= 'staff';
 
     # Make appfmly and appback listrefs if they are not
     foreach my $key ('appfmly', 'appback')
@@ -615,7 +663,7 @@ sub configure
 
     my %th_config =
 	(
-	 INCLUDE_PATH => [ \&incpath_generator, $Para::Frame::ROOT."/inc" ],
+	 INCLUDE_PATH => [ \&incpath_generator, $CFG->{'paraframe'}."/inc" ],
 	 PRE_PROCESS => 'header_prepare.tt',
 	 POST_PROCESS => 'footer.tt',
 	 TRIM => 1,
@@ -631,20 +679,20 @@ sub configure
 	%th_config,
 	ABSOLUTE => 1, ### TEST
 	INTERPOLATE => 1,
-	COMPILE_DIR =>  $Para::Frame::ROOT.'/var/ttc/html',
+	COMPILE_DIR =>  $CFG->{'paraframe'}.'/var/ttc/html',
     };
 
     $CFG->{'th'}{'html_pre'} ||=
     {
 	%th_config,
-	COMPILE_DIR =>  $Para::Frame::ROOT.'/var/ttc/html_pre',
+	COMPILE_DIR =>  $CFG->{'paraframe'}.'/var/ttc/html_pre',
 	TAG_STYLE => 'star',
     };
 
     $CFG->{'th'}{'plain'} ||=
     {
 	INTERPOLATE => 1,
-	COMPILE_DIR => $Para::Frame::ROOT.'/var/ttc/plain',
+	COMPILE_DIR => $CFG->{'paraframe'}.'/var/ttc/plain',
 	FILTERS =>
 	{
 	    'uri' => sub { CGI::escape($_[0]) },
@@ -674,6 +722,7 @@ sub set_global_tt_params
     {
 	'dump'            => \&Dumper,
 	'warn'            => sub{ warn($_[0],"\n");"" },
+	'debug'           => sub{ debug(@_) },
 	'rand'            => sub{ int rand($_[0]) },
 	'uri'             => \&Para::Frame::Utils::uri,
 
