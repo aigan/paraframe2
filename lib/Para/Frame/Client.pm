@@ -114,10 +114,10 @@ sub handler
     my $rows = 0;
     while( $_ = <$SOCK> )
     {
-	if( $DEBUG > 4 )
+	if( debug > 4 )
 	{
 	    my $len = length( $_ );
-	    warn "$$: Got: '$_'[$len]\n";
+	    debug(1,"$$: Got: '$_'[$len]");
 	}
 
 	# Code size max 10 chars
