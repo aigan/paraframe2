@@ -556,7 +556,7 @@ sub chmod_file
     {
 	unless( chown -1, $pfg->gid, $file )
 	{
-	    warn "Tried to change gid\n";
+	    debug(0,"Tried to change gid");
 	    &$report_error;
 	}
     }
@@ -565,7 +565,7 @@ sub chmod_file
     {
 	unless( chmod $mode, $file )
 	{
-	    warn "Tried to chmod file\n";
+	    debug(0,"Tried to chmod file");
 	    &$report_error;
 	}
     }
@@ -731,7 +731,7 @@ sub compile
     my( $filename ) = @_;
 
     my $mtime = 0;
-    warn "  Compiling $filename\n";
+    debug(0,"Compiling $filename");
 
     unless( defined $Para::Frame::Reload::COMPILED{$filename} )
     {
@@ -746,7 +746,7 @@ sub compile
 
     if( $mtime > $Para::Frame::Reload::COMPILED{$filename} )
     {
-	warn "  New version of $filename detected !!!\n";
+	debug(0,"New version of $filename detected !!!");
 	delete $INC{$filename};
 	$Para::Frame::Reload::COMPILED{$filename} = $mtime;
     }
@@ -759,11 +759,11 @@ sub passwd_crypt
 {
     my( $passwd ) = @_;
 
-    my $ip = $Para::Frame::REQ->env->{REMOTE_ADDR} || '255.255.255.255';
+    my $ip = $Para::Frame::REQ->client_ip;
 
     $ip =~ s/\.\d{1,3}$//; # accept changing ip within c-network
 
-    warn "  using REMOTE_ADDR $ip\n" if $Para::Frame::DEBUG;
+    debug(1,"using REMOTE_ADDR $ip");
     return md5_hex( $passwd, $ip );
 }
 
@@ -881,7 +881,7 @@ sub referer
 	}
     }
 
-    warn "  Referer is ".$q->param('previous')." (".$q->referer.")\n";
+    debug(0,"Referer is ".$q->param('previous')." (".$q->referer.")");
     return $referer;
 }
 
@@ -1026,10 +1026,12 @@ sub debug
 {
     my( $level, $message, $delta ) = @_;
 
+    # Returns $message if given
+
     return $Para::Frame::DEBUG unless defined $level;
 
     $delta ||= 0;
-    $Para::Frame::INDENT += $delta;
+    $Para::Frame::INDENT += $delta if $delta < 0;
 
     unless( $message )
     {
@@ -1051,9 +1053,15 @@ sub debug
 
     if( $Para::Frame::DEBUG >= $level )
     {
+	my $prefix =  $Para::Frame::FORK ? "| $$: " : "";
+
 	chomp $message;
-	warn "  "x$Para::Frame::INDENT . $message . "\n";
+	warn $prefix . "  "x$Para::Frame::INDENT . $message . "\n";
     }
+
+    $Para::Frame::INDENT += $delta if $delta > 0;
+
+    return $message . "\n";
 }
 
 
