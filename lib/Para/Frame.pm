@@ -36,6 +36,7 @@ BEGIN
 use Para::Frame::Reload;
 use Para::Frame::Request;
 use Para::Frame::Widget;
+use Para::Frame::Time;
 use Para::Frame::Utils qw( throw uri2file debug );
 
 
@@ -102,7 +103,7 @@ sub main_loop
     {
 	$LEVEL ++;
     }
-    warn "Entering main_loop at level $LEVEL\n" if $LEVEL;
+    debug(0,"Entering main_loop at level $LEVEL",1) if $LEVEL;
 
 
     my $timeout = 5;
@@ -135,7 +136,7 @@ sub main_loop
 		$client = $SERVER->accept;
 		if(!$client)
 		{
-		    warn("Problem with accept(): $!");
+		    debug(0,"Problem with accept(): $!");
 		    next;
 		}
 		($port, $iaddr) = sockaddr_in(getpeername($client));
@@ -188,7 +189,7 @@ sub main_loop
 	}
 
 
-	### Waiting for a child?
+	### Waiting for a child? (*inside* a nested request)
 	#
 	if( $child )
 	{
@@ -200,8 +201,23 @@ sub main_loop
 #	    warn "  childs: $childs\n";
 #	    sleep;
 	}
+
+	### Are there any data to be read from childs?
+	#
+	my $child_data = '';
+	foreach my $child ( values %CHILD )
+	{
+#	    warn sprintf "--> Checking $child, reading %d bytes\n", POSIX::BUFSIZ;
+
+	    # Do a nonblocking read to get data. We try to read often
+	    # so that the buffer will not get full.
+
+	    $child->{'fh'}->read($child_data, POSIX::BUFSIZ);
+	    $child->{'data'} .= $child_data;
+	}
+
     }
-    warn "Exiting main_loop at level $LEVEL\n";
+    debug(0,"Exiting main_loop at level $LEVEL",-1);
     $LEVEL --;
 }
 
@@ -252,12 +268,12 @@ sub get_value
 	    if( s/^([\w\-]{3,10})\0// )
 	    {
 		my $code = $1;
-		warn "$$:   Code $code\n";
+		debug(0,"Code $code");
 		chomp;
 		if( $code eq 'RESP' )
 		{
 		    my $val = $_;
-		    warn "  RESP ($val)\n";
+		    debug(0,"RESP ($val)");
 		    return $val;
 		}
 		else
@@ -305,7 +321,7 @@ sub get_value
     {
 	# EOF from client.
 	close_callback($client,'eof');
-	warn "End of file\n";
+	debug(0,"End of file");
 	return undef;
     }
 
@@ -344,7 +360,7 @@ sub get_value
 		}
 		elsif( $code eq 'CANCEL' )
 		{
-		    warn "CANCEL client\n";
+		    debug(0,"CANCEL client");
 		    $DATALENGTH{$client} = 0;
 		    close_callback($client);
 		}
@@ -358,13 +374,13 @@ sub get_value
 		}
 		elsif( $code eq 'URI2FILE' )
 		{
-		    # redirect request from child to client
+		    # redirect request from child to client (via this parent)
 		    #
 		    my $val = $INBUFFER{$client};
 		    $val =~ s/^(.+?)\x00// or die "Faulty val: $val";
 		    my $caller_clientaddr = $1;
 
-		    warn "URI2FILE($val) recieved\n";
+		    debug(0,"URI2FILE($val) recieved");
 #		    warn "  for $caller_clientaddr\n";
 #		    warn "  from $client\n";
 
@@ -377,19 +393,19 @@ sub get_value
 		    switch_req( $current_req ) if $current_req;
 
 		    # Send response in calling $REQ
-		    warn "Returning answer $file\n";
+		    debug(0,"Returning answer $file");
 #		    $client->send(join "\0", 'URI2FILE', $file );
 		    $client->send(join "\0", 'RESP', $file );
 		    $client->send("\n");
 		}
 		else
 		{
-		    warn "Strange CODE: $code\n";
+		    debug(0,"Strange CODE: $code");
 		}
 	    }
 	    else
 	    {
-		warn "No code given: $INBUFFER{$client}\n";
+		debug(0,"No code given: $INBUFFER{$client}");
 	    }
 
 	    $INBUFFER{$client} = '';
@@ -420,11 +436,11 @@ sub close_callback
 
     if( $reason )
     {
-	warn "  Closing down ($reason)\n";
+	debug(0,"Done ($reason)");
     }
     else
     {
-	warn "  Closing down\n";
+	warn "Done\n";
     }
 
     delete $INBUFFER{$client};
@@ -446,7 +462,7 @@ sub REAPER
 
     while (($child_pid = waitpid(-1, POSIX::WNOHANG)) > 0)
     {
-	warn "  Child $child_pid exited with status $?\n";
+	warn "| Child $child_pid exited with status $?\n";
 
 	if( my $child = delete $CHILD{$child_pid} )
 	{
@@ -454,8 +470,8 @@ sub REAPER
 	}
 	else
 	{
-	    warn "    No object registerd with PID $child_pid\n";
-	    warn "      This may be Date::Manip...\n";
+	    warn "|   No object registerd with PID $child_pid\n";
+	    warn "|     This may be Date::Manip...\n";
 	}
     }
     $SIG{CHLD} = \&REAPER;  # still loathe sysV
@@ -505,7 +521,7 @@ sub handle_request
     ### Register the request
     $REQUEST{ $client } = $req;
     switch_req( $req ); 
-    
+ 
     ### Further initialization that requires $REQ
     $req->ctype( $req->{'orig_ctype'} );
     $req->{'uri'} = $req->set_uri( $req->{'orig_uri'} );
@@ -516,6 +532,17 @@ sub handle_request
     $user_class->identify_user;     # Will set $s->{user}
     $user_class->authenticate_user;
 
+    ### Debug info
+    my $t = localtime;
+    warn sprintf("  %s %s - %s\n  Sid %s - Uid %d - debug %d\n",
+		 $t->ymd,
+		 $t->hms('.'),
+		 $req->client_ip,
+		 $req->s->id,
+		 $req->s->u->uid,
+		 $req->{'debug'},
+		 );
+   
     ### Redirected from another page?
     if( my $page_result = $req->s->{'page_result'}{ $req->uri } )
     {
@@ -559,11 +586,11 @@ sub run_hook
     {
 	if( $req )
 	{
-	    warn "  run_hook $label for $req->{reqnum}\n";
+	    debug(0,"run_hook $label for $req->{reqnum}");
 	}
 	else
 	{
-	    warn "  run_hook $label\n";
+	    debug(0,"run_hook $label");
 	}
 #    warn Dumper($hook, \@_);
     }

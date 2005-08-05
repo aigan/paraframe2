@@ -36,6 +36,7 @@ BEGIN
 
 use Para::Frame::Reload;
 
+use Para::Frame::Utils qw( debug );
 use Para::Frame::Request;
 use Para::Frame::Child::Result;
 
@@ -49,13 +50,14 @@ sub register
 	pid      => $pid,
 	fh       => $fh,
 	status   => undef,
+	data     => "",
 	result   => undef,
     }, $class;
 
     $req->{'childs'} ++;
     $Para::Frame::CHILD{ $pid } = $child;
 
-    warn "  Registerd child $pid\n";
+    debug(0,"Registerd child $pid");
 
     return $child;
 }
@@ -122,11 +124,20 @@ sub get_results
 
     my $fh = $child->{'fh'};
 
-    my $data = read_file( $fh );
+    # Some data may already be here, since IO may get stuck otherwise
+    #
+    $child->{'data'} .= read_file( $fh,
+				   'binmode'=>1,
+				   ); # Undocumented flag
+    if( debug )
+    {
+	my $length = length $child->{'data'};
+	debug(1,"Got $length bytes of data");
+    }
 
     close($fh); # Should already be closed then kid exited
 
-    unless( $data )
+    unless( $child->{'data'} )
     {
 	my $pid = $child->pid;
 	my $status = $child->status;
@@ -134,10 +145,12 @@ sub get_results
     }
 
 #    warn "  got data: $data\n";
-    my( $result ) = thaw( $data );
+    my( $result ) = thaw( $child->{'data'} );
 #    warn "  result: $result\n"; ### DEBUG
 #    warn Dumper $result; ### DEBUG
     $child->{'result'} = $result;
+
+    delete $child->{'data'}; # We are finished with the raw data
 
     if( $@ = $result->exception )
     {
