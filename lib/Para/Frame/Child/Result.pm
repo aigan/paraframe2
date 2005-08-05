@@ -35,6 +35,7 @@ BEGIN
 
 use Para::Frame::Reload;
 
+use Para::Frame::Utils qw( debug );
 use Para::Frame::Request;
 
 sub new
@@ -68,10 +69,15 @@ sub return
 {
     my( $result, $message ) = @_;
 
-    warn "  Returning child result for $Para::Frame::REQ->{reqnum}\n";
+    debug(0,"Returning child result for $Para::Frame::REQ->{reqnum}");
 
     $result->message( $message ) if $message;
     my $data = safeFreeze $result;
+    if(debug)
+    {
+	my $length = length($data);
+	debug(1,"Returning $length bytes of data");
+    }
     print $data;
     exit;  # don't forget this
 }

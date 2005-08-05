@@ -35,7 +35,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw catch );
+use Para::Frame::Utils qw( throw catch debug );
 
 use base qw( Exporter );
 BEGIN
@@ -157,7 +157,7 @@ sub select_list
     };
     if( $@ )
     {
-	warn "---Select list error\n";
+	debug(0,"Select list error");
 	$@ =~ s/ at \/.*//;
 	my $error = catch($@);
 	my $info = $error->info;
@@ -380,7 +380,7 @@ sub new
 
     Para::Frame->add_hook('on_fork', sub
 			  {
-			      warn "  Do not destroy DBH in child\n";
+			      debug(0,"Do not destroy DBH in child");
 			      $dbix->dbh->{'InactiveDestroy'} = 1;
 			  });
 
@@ -406,14 +406,14 @@ sub new
 				  $$typeref ||= 'dbi';
 			      }
 				      
-			      warn "  ROLLBACK DB\n";
+			      debug(0,"ROLLBACK DB");
 
 			      eval
 			      {
 				  $dbix->dbh->rollback();
 			      } or do
 			      {
-				  warn "  FAILED ROLLBACK!\n";
+				  debug(0,"FAILED ROLLBACK!");
 			      };
 			  });
 
@@ -435,7 +435,7 @@ sub connect
     };
     if( $@ )
     {
-	warn "Problem connecting to DB using @$connect[0..1]";
+	debug(0,"Problem connecting to DB using @$connect[0..1]");
 	throw( $@ );
     }
 

@@ -33,9 +33,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw passwd_crypt );
-
-our $DEBUG = undef;
+use Para::Frame::Utils qw( throw passwd_crypt debug );
 
 =head1 SYNOPSIS
 
@@ -112,8 +110,6 @@ sub new
 {
     my( $class ) = @_;
 
-    $DEBUG = $Para::Frame::DEBUG;
-
     $class->identify_user();
     $class->authenticate_user();
 }
@@ -125,7 +121,7 @@ sub identify_user
     my $req = $Para::Frame::REQ;
     my $q = $req->q;
     $username ||= $q->cookie('username') || 'guest';
-    warn "  identifying $username\n" if $DEBUG;
+    debug(1,"identifying $username");
     my $u = $class->get( $username );
     unless( $u )
     {
@@ -148,8 +144,8 @@ sub authenticate_user
     $password_encrypted ||= $q->cookie('password') || "";
 
     my $username = $u->username;
-    warn "  authenticating $username\n" if $DEBUG;
-    warn "    with password $password_encrypted\n" if $DEBUG;
+    debug(1,"authenticating $username");
+    debug(1,"  with password $password_encrypted");
 
     if( $username eq 'guest' )
     {
@@ -162,7 +158,7 @@ sub authenticate_user
 
 	$class->logout;
 
-	if( $DEBUG )
+	if( debug )
 	{
 	    warn sprintf("  next_template was %s\n",
 			 $q->param('next_template'));
@@ -218,9 +214,9 @@ sub logout
     my $req = $Para::Frame::REQ;
 
     # Set the user of the session to guest
-    warn "  Logging out user\n" if $DEBUG;
+    debug(1,"Logging out user");
     $class->change_current_user( $class->get( 'guest' ) );
-    warn "  User are now ".$Para::Frame::U->name."\n" if $DEBUG;
+    debug(1,"User are now ".$Para::Frame::U->name);
 
     $req->cookies->add({'username' => 'guest'});
     $req->cookies->remove('password');
@@ -246,7 +242,7 @@ sub get # Reimplement this method
 sub change_current_user
 {
     $Para::Frame::U = $_[1];
-    $Para::Frame::REQ->s->{'user'} = $Para::Frame::U;
+    return $Para::Frame::REQ->s->{'user'} = $Para::Frame::U;
 }
 
 

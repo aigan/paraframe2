@@ -32,7 +32,6 @@ use Para::Frame::User;
 use Para::Frame::Route;
 
 our $SESSION_COOKIE_NAME = 'paraframe-sid';
-our $DEBUG = 1;
 
 sub new
 {
@@ -74,6 +73,7 @@ sub new
 	created => localtime,
 	latest  => localtime,
 	user    => undef,
+	debug   => $Para::Frame::CFG->{'debug'},
     }, $class;
 
     # Register s

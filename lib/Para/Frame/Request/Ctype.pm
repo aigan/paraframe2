@@ -26,14 +26,11 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-
-our $DEBUG = undef;
+use Para::Frame::Utils qw( debug );
 
 sub new
 {
     my( $class, $string ) = @_;
-
-    $DEBUG = $Para::Frame::DEBUG;
 
     my $ctype =  bless
     {
@@ -76,7 +73,7 @@ sub set
 	}
     }
 
-    warn "  Setting ctype to $string\n" if $DEBUG;
+    debug(1,"Setting ctype to $string");
 
     if( defined $ctype->{'ctype'} )
     {
@@ -135,7 +132,7 @@ sub commit
     if( $ctype->{'changed'} )
     {
 	my $string = $ctype->as_string;
-	warn "  Setting ctype string to $string\n" if $DEBUG;
+	debug(1,"Setting ctype string to $string");
 	$Para::Frame::REQ->send_code( 'AR-PUT', 'content_type', $string);
 	$ctype->{'changed'} = 0;
     }

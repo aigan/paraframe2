@@ -29,6 +29,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
+use Para::Frame::Utils qw( debug );
 
 sub new
 {
@@ -82,7 +83,7 @@ sub add
     {
 	my $val = $settings->{$key};
 
-	warn "  Add cookie $key: $val\n";
+	debug(1,"Add cookie $key: $val");
 
 	push @$cookies, $q->cookie( -name  => $key,
 				    -value => $val,

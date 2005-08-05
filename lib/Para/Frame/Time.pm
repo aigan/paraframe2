@@ -36,7 +36,7 @@ BEGIN
 
 #use Para::Frame::Reload; # This code is mingled with Time::Piece
 
-use Para::Frame::Utils qw( throw );
+use Para::Frame::Utils qw( throw debug );
 
 sub import { shift; @_ = ('Time::Piece', @_); goto &Time::Piece::import }
 
@@ -51,12 +51,11 @@ format C<%Y-%m-%d %H.%M>.
 sub get
 {
     my( $this, $time ) = @_;
-    my $DEBUG = 1;
 
     Date_Init("Language=English");
     Date_Init("Language=Swedish"); # Reset language
 
-    warn "Parsing date '$time'\n" if $DEBUG;
+    debug(1,"Parsing date '$time'");
 
     return undef unless $time;
 
@@ -70,16 +69,16 @@ sub get
 	$time =~ s/^(\d{4}-\d{2}-\d{2} \d{2})\.(\d{2})$/$1:$2:00/; # Make date more recognizable
 	$date = UnixDate($time, '%s');
     }
-    warn "  Epoch: $date\n" if $DEBUG;
+    debug(1,"Epoch: $date");
     unless( $date )
     {
  	# Try once more, in english
 	my $cur_lang = $Date::Manip::Cnf{'Language'};
-	warn "Trying in english...\n" if $DEBUG;
+	debug(1,"Trying in english...");
 	Date_Init("Language=English");
 
 	$date = UnixDate($time, '%s');
-	warn "    Epoch: $date\n" if $DEBUG;
+	debug(1,"Epoch: $date");
 
 	Date_Init("Language=$cur_lang"); # Reset language
 
@@ -90,7 +89,7 @@ sub get
 	}
     }
     my $to = localtime( $date );
-    warn "  Finaly: $to\n" if $DEBUG;
+    debug(1,"Finaly: $to");
     return $to;
 }
 
