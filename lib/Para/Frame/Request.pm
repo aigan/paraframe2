@@ -48,15 +48,11 @@ use Para::Frame::Result;
 use Para::Frame::Child;
 use Para::Frame::Child::Result;
 use Para::Frame::Request::Ctype;
-use Para::Frame::Utils qw( create_dir chmod_file dirsteps uri2file compile throw idn_encode idn_decode );
-
-our $DEBUG = undef;
+use Para::Frame::Utils qw( create_dir chmod_file dirsteps uri2file compile throw idn_encode idn_decode debug );
 
 sub new
 {
     my( $class, $client, $recordref, $reqnum ) = @_;
-
-    $DEBUG = $Para::Frame::DEBUG;
 
     my( $value ) = thaw( $$recordref );
     my( $params, $env, $orig_uri, $orig_filename, $content_type ) = @$value;
@@ -71,7 +67,7 @@ sub new
 
     my $req =  bless
     {
-	debug          => 0,              ## Debug level
+	indent         => 1,              ## debug indentation
 	client         => $client,
 	jobs           => [],             ## queue of actions to perform
 	headers        => [],             ## Headers to be sent to the client
@@ -153,7 +149,7 @@ sub set_uri
 
     die "not impelemnted" if $uri =~ /\?/;
 
-    warn "  setting URI to $uri\n" if $DEBUG;
+    debug(1,"setting URI to $uri");
     $req->{uri} = $uri;
     $req->set_template( $uri );
 
@@ -166,7 +162,7 @@ sub set_template
 
     # For setting a template diffrent from the URI
 
-    warn "  setting template to $template\n" if $DEBUG;
+    debug(1,"setting template to $template");
 
     if( -d uri2file( $template ) )
     {
@@ -243,8 +239,7 @@ sub setup_jobs
 
 sub add_job
 {
-    warn "  Added the job $_[1] for $_[0]->{reqnum}\n"
-	if $DEBUG > 1;
+    debug(2,"Added the job $_[1] for $_[0]->{reqnum}");
 #    cluck;
 #    push @Para::Frame::JOBS, [@_];
     push @{ shift->{'jobs'} }, [@_];
@@ -268,17 +263,17 @@ sub send_headers
     {
 	if( $multiple{$header->[0]} ++ )
 	{
-	    warn "  Send header add @$header\n";
+	    debug(2,"Send header add @$header");
 	    $req->send_code( 'AT-PUT', 'add', @$header);
 	}
 	else
 	{
-	    warn "  Send header_out @$header\n";
+	    debug(2,"Send header_out @$header");
 	    $req->send_code( 'AR-PUT', 'header_out', @$header);
 	}
     }
 
-    warn "  Send newline\n" if $DEBUG;
+    debug(1,"Send newline");
     $client->send( "\n" );
     $req->{'in_body'} = 1;
 }
@@ -298,7 +293,7 @@ sub run_action
 
     my( $c_run ) = $run =~ m/^([\w\-]+)$/
 	or die "bad chars in run: $run";
-    warn "  Will now require $c_run\n" if $DEBUG;
+    debug(1,"Will now require $c_run");
 
     # Only keep error if all tries failed
 
@@ -308,7 +303,7 @@ sub run_action
 	my $path = $tryroot;
 	$path =~ s/::/\//g;
 	my $file = "$path/${c_run}.pm";
-	warn "    testing $file\n" if $DEBUG > 1;
+	debug(2,"testing $file",1);
 	eval
 	{
 	    compile($file);
@@ -316,7 +311,7 @@ sub run_action
 	if( $@ )
 	{
 	    # What went wrong?
-	    warn "    $@\n" if $DEBUG > 2;
+	    debug(3,$@);
 
 	    if( $@ =~ /^Can\'t locate $file/ )
 	    {
@@ -341,14 +336,14 @@ sub run_action
 		}
 		else
 		{
-		    warn "Not matching BEGIN failed\n" if $DEBUG > 1;
+		    debug(2,"Not matching BEGIN failed");
 		    $info = $@;
 		}
 		push @{$errors{'compilation'}}, $info;
 	    }
 	    else
 	    {
-		warn "    Generic error in require $file\n" if $DEBUG;
+		debug(1,"Generic error in require $file");
 		push @{$errors{'compilation'}}, $@;
 	    }
 	    last; # HOLD IT
@@ -360,9 +355,11 @@ sub run_action
 	}
     }
 
+    debug(-1);
+
     if( not $actionroot )
     {
-	warn "    ACTION NOT LOADED!\n" if $DEBUG;
+	debug(1,"ACTION NOT LOADED!");
 
 	# Keep the error info from all failure
 	foreach my $type ( keys %errors )
@@ -381,7 +378,7 @@ sub run_action
     #
     eval
     {
-	warn "    using $actionroot\n" if $DEBUG > 1;
+	debug(2,"using $actionroot",1);
 	no strict 'refs';
 	$req->result->message( &{$actionroot.'::'.$c_run.'::handler'}($req) );
 	### Other info is stored in $req->result->{'info'}
@@ -399,17 +396,18 @@ sub run_action
 	{
 	    my $result = $req->{'child_result'};
 	    $result->exception( $@ );
-	    warn "  Fork child got EXCEPTION: $@\n";
+	    debug(0,"Fork child got EXCEPTION: $@");
 	    $result->return;
 	    exit;
 	}
 
-	warn "  ACTION FAILED!\n" if $DEBUG;
-	warn $@ if $DEBUG > 2;
+	debug(1,"ACTION FAILED!");
+	debug(3,$@,-1);
 	$req->result->exception;
 	return 0;
     };
 
+    debug(-1);
     return 1; # All OK
 }
 
@@ -432,7 +430,11 @@ sub after_jobs
 	# Check for each thing. If more jobs, stop and add a new after_jobs
 
 	### Waiting for children?
-	return if $req->{'childs'};
+	if( $req->{'childs'} )
+	{
+	    debug(0,"Waiting for childs");
+	    return;
+	}
 
 	### Do pre backtrack stuff
 	### Do backtrack stuff
@@ -472,11 +474,11 @@ sub error_backtrack
 
     if( $req->result->errcnt and not $req->error_page_selected )
     {
-	warn "  Backtracking to previuos page because of errors\n";
+	debug(0,"Backtracking to previuos page because of errors");
 	my $previous = $req->referer;
 	if( $previous )
 	{
-	    warn "    Previous is $previous\n" if $DEBUG;
+	    debug(1,"Previous is $previous");
 	    # TODO: forward to the URI instead
 	    $req->set_error_template( $previous );
 	}
@@ -495,6 +497,7 @@ sub add_params
 	{
 	    next if $param->{$key};
 	    $param->{$key} = $val;
+	    debug(4,"Add TT param $key");
 	}
     }
     else
@@ -502,6 +505,7 @@ sub add_params
 	while( my($key, $val) = each %$extra )
 	{
 	    $param->{$key} = $val;
+	    debug(4,"Add TT param $key");
 	}
      }
 }
@@ -555,19 +559,17 @@ sub find_template
 {
     my( $req, $template ) = @_;
 
-#    my $DEBUG = 4;
-
-    warn "  Finding template $template\n" if $DEBUG;
+    debug(1,"Finding template $template");
     my( $in );
 
 
     my( $base_name, $path_full, $ext_full ) = fileparse( $template, qr{\..*} );
-    if( $DEBUG > 3 )
-      {
-	warn "  path: $path_full\n";
-	warn "  name: $base_name\n";
-	warn "  ext : $ext_full\n";
-      }
+    if( debug > 3 )
+    {
+	debug(0,"path: $path_full");
+	debug(0,"name: $base_name");
+	debug(0,"ext : $ext_full");
+    }
 
     my( $ext ) = $ext_full =~ m/^\.(.+)/; # Skip initial dot
 
@@ -590,140 +592,151 @@ sub find_template
     # Reasonable default?
     my $language = $req->lang || ['sv'];
 
-	warn "    Check $ext\n" if $DEBUG > 2;
-	foreach my $path ( uri2file($path_full)."/", @step, $global )
+    debug(3,"Check $ext");
+    foreach my $path ( uri2file($path_full)."/", @step, $global )
+    {
+	die unless $path; # could be undef
+
+	# We look for both tt and html regardless of it the file was called as .html
+	debug(3,"Check $path",1);
+	die "dir_redirct failed" unless $base_name;
+
+	# Handle dirs
+	if( -d $path.$base_name.$ext_full )
 	{
-	    die unless $path; # could be undef
-
-	    # We look for both tt and html regardless of it the file was called as .html
-	    warn "      Check $path\n" if $DEBUG > 2;
-	    die "dir_redirct failed" unless $base_name;
-
-	    # Handle dirs
-	    if( -d $path.$base_name.$ext_full )
-	    {
-		die "Found a directory: $path$base_name$ext_full\nShould redirect";
-	    }
-
-
-	    # Find language specific template
-	    foreach my $lang ( map(".$_",@$language),'' )
-	    {
-		warn "        Check $lang\n" if $DEBUG > 2;
-		my $filename = $path.$base_name.$lang.$ext_full;
-		if( -r $filename )
-		{
-		    warn "  Using $filename\n" if $DEBUG;
-
-		    # Static file
-		    if( $ext ne 'tt' )
-		    {
-			warn "    As STATIC ($ext)\n";
-			return( $filename, $ext );
-		    }
-
-		    my $mod_time = stat( $filename )->mtime;
-		    my $params = $Para::Frame::CFG->{'th'}{'html'};
-		    my $compfile = $params->{ COMPILE_DIR }.$filename;
-		    my( $data, $ltime);
-
-		    # 1. Look in memory cache
-		    #
-		    if( my $rec = $Para::Frame::Cache::td{$filename} )
-		    {
-			warn "    Found in MEMORY\n" if $DEBUG;
-			( $data, $ltime) = @$rec;
-			if( $ltime <= $mod_time )
-			{
-			    warn "       To old!\n" if $DEBUG;
-			    warn "       ltime: $ltime\n";
-			    warn "    mod_time: $mod_time\n";
-			    undef $data;
-			}
-		    }
-
-		    # 2. Look for compiled file
-		    #
-		    unless( $data )
-		    {
-			if( -f $compfile )
-			{
-			    warn "    Found in COMPILED file\n" if $DEBUG;
-
-			    my $ltime = stat($compfile)->mtime;
-			    if( $ltime <= $mod_time )
-			    {
-				warn "       To old!\n" if $DEBUG;
-				warn "       ltime: $ltime\n";
-				warn "    mod_time: $mod_time\n";
-			    }
-			    else
-			    {
-				$data = load_compiled( $compfile );
-
-				warn "      Loading $compfile\n" if $DEBUG;
-
-				# Save to memory cache (loadtime)
-				$Para::Frame::Cache::td{$filename} =
-				  [$data, $ltime];
-			    }
-			}
-		    }
-
-		    # 3. Compile the template
-		    #
-		    unless( $data )
-		    {
-			eval
-			{
-			    warn "    Reading file\n" if $DEBUG;
-			    $mod_time = time; # The new time of reading file
-			    my $filetext = read_file( $filename );
-			    my $parser = Template::Config->parser($params);
-
-			    warn "    Parsing\n" if $DEBUG;
-			    my $parsedoc = $parser->parse( $filetext )
-			      or throw('template', "parse error:\nFile: $filename\n".
-				       $parser->error);
-
-			    $parsedoc->{ METADATA }{'name'} = $filename;
-			    $parsedoc->{ METADATA }{'modtime'} = $mod_time;
-
-			    warn "    Writing compiled file\n" if $DEBUG;
-			    create_dir(dirname $compfile);
-			    Template::Document->write_perl_file($compfile, $parsedoc);
-			    chmod_file($compfile);
-			    utime( $mod_time, $mod_time, $compfile );
-
-			    $data = Template::Document->new($parsedoc)
-			      or throw('template', $Template::Document::ERROR);
-
-			    # Save to memory cache
-			    $Para::Frame::Cache::td{$filename} =
-			      [$data, $mod_time];
-			    1;
-			} or do
-			{
-			    warn "  Error while compiling template $filename: $@";
-			    $req->result->exception;
-			    if( $template eq '/error.tt' )
-			    {
-				die( "Fatal template error for error.tt: ".
-				     $Para::Frame::th->{'html'}->error()."\n");
-			    }
-			    warn "   Using /error.tt\n" if $DEBUG;
-			    ($in) = $req->find_template('/error.tt');
-			    return( $in, 'tt' );
-			}
-		    }
-
-		    return( $data, $ext );
-		}
-	    }
+	    die "Found a directory: $path$base_name$ext_full\nShould redirect";
 	}
 
+
+	# Find language specific template
+	foreach my $lang ( map(".$_",@$language),'' )
+	{
+	    debug(3,"Check $lang",1);
+	    my $filename = $path.$base_name.$lang.$ext_full;
+	    if( -r $filename )
+	    {
+		debug(1,"Using $filename");
+
+		# Static file
+		if( $ext ne 'tt' )
+		{
+		    debug(1,"As STATIC ($ext)");
+		    debug(-2);
+		    return( $filename, $ext );
+		}
+
+		my $mod_time = stat( $filename )->mtime;
+		my $params = $Para::Frame::CFG->{'th'}{'html'};
+		my $compfile = $params->{ COMPILE_DIR }.$filename;
+		my( $data, $ltime);
+		
+		# 1. Look in memory cache
+		#
+		if( my $rec = $Para::Frame::Cache::td{$filename} )
+		{
+		    debug(1,"Found in MEMORY");
+		    ( $data, $ltime) = @$rec;
+		    if( $ltime <= $mod_time )
+		    {
+			if( debug )
+			{
+			    debug(0,"     To old!");
+			    debug(0,"     ltime: $ltime");
+			    debug(0,"  mod_time: $mod_time");
+			}
+			undef $data;
+		    }
+		}
+
+		# 2. Look for compiled file
+		#
+		unless( $data )
+		{
+		    if( -f $compfile )
+		    {
+			debug(1,"Found in COMPILED file");
+
+			my $ltime = stat($compfile)->mtime;
+			if( $ltime <= $mod_time )
+			{
+			    if( debug )
+			    {
+				debug(0,"     To old!");
+				debug(0,"     ltime: $ltime");
+				debug(0,"  mod_time: $mod_time");
+			    }
+			}
+			else
+			{
+			    $data = load_compiled( $compfile );
+
+			    debug(1,"Loading $compfile");
+
+			    # Save to memory cache (loadtime)
+			    $Para::Frame::Cache::td{$filename} =
+				[$data, $ltime];
+			}
+		    }
+		}
+
+		# 3. Compile the template
+		#
+		unless( $data )
+		{
+		    eval
+		    {
+			debug(1,"Reading file");
+			$mod_time = time; # The new time of reading file
+			my $filetext = read_file( $filename );
+			my $parser = Template::Config->parser($params);
+			
+			debug(1,"Parsing");
+			my $parsedoc = $parser->parse( $filetext )
+			    or throw('template', "parse error:\nFile: $filename\n".
+				     $parser->error);
+
+			$parsedoc->{ METADATA }{'name'} = $filename;
+			$parsedoc->{ METADATA }{'modtime'} = $mod_time;
+
+			debug(1,"Writing compiled file");
+			create_dir(dirname $compfile);
+			Template::Document->write_perl_file($compfile, $parsedoc);
+			chmod_file($compfile);
+			utime( $mod_time, $mod_time, $compfile );
+
+			$data = Template::Document->new($parsedoc)
+			    or throw('template', $Template::Document::ERROR);
+
+			# Save to memory cache
+			$Para::Frame::Cache::td{$filename} =
+			    [$data, $mod_time];
+			1;
+		    } or do
+		    {
+			debug(0,"Error while compiling template $filename: $@");
+			$req->result->exception;
+			if( $template eq '/error.tt' )
+			{
+			    die( "Fatal template error for error.tt: ".
+				 $Para::Frame::th->{'html'}->error()."\n");
+			}
+			debug(1,"Using /error.tt");
+			($in) = $req->find_template('/error.tt');
+			debug(-2);
+			return( $in, 'tt' );
+		    }
+		}
+
+		debug(-2);
+		return( $data, $ext );
+	    }
+	    debug(-1);
+	}
+	debug(-1);
+    }
+
     # If we can't find the filname
-    warn "Not found: $template\n";
+    debug(0,"Not found: $template");
     return( undef );
 }
 
@@ -749,17 +762,18 @@ sub send_code
 {
     my $req = shift;
 
-    warn "Sending code: ".join("-", @_)."\n" if $DEBUG > 1;
+    debug(2,"Sending code: ".join("-", @_));
 
     if( $Para::Frame::FORK )
     {
-	warn "  redirecting to parent\n";
+	debug(0,"redirecting to parent");
 	my $code = shift;
 	my $client = $req->client;
+	my $port = $client->sockport;
 	my $val = $client . "\x00" . shift;
 	die "Too many args in send_code($code $val @_)" if @_;
 
-	&Para::Frame::Client::connect;
+	&Para::Frame::Client::connect( $port );
 	$Para::Frame::Client::SOCK or die "No socket";
 	&Para::Frame::Client::send_to_server($code, \$val);
 
@@ -819,7 +833,7 @@ sub render_output
 	    or do
 	{
 
-	    warn "FALLBACK!\n";
+	    debug(0,"FALLBACK!");
 	    $req->result->exception();
 
 	    my $error = $Para::Frame::th->{'html'}->error;
@@ -845,28 +859,17 @@ sub render_output
 		}
 	    }
 
-	    warn $Para::Frame::th->{'html'}->error()."\n";
+	    debug(0,$Para::Frame::th->{'html'}->error());
 
 	    $req->set_error_template( $error_tt );
 
 	    return 0;
 
-#	    if( not $in )
-#	    {
-#		warn "Error page not found\n";
-#		$client->send( "<p>404: Error page not found: <code>$error_tt</code>\n" );
-#	    }
-#	    else
-#	    {
-#		$Para::Frame::th->{'html'}->process($in, $req->{'params'}, \$page )
-#		    or die( "Fatal template error for $in: ".
-#			    $Para::Frame::th->{'html'}->error()."\n");
-#	    }
 	};1
     }
 
 
-    if( $DEBUG > 1 )
+    if( debug > 1 )
     {
 	$page .= ( "<h2>Debug data</h2>\n" );
 #	$page .= (sprintf "<p>Using template %s med ext $ext\n", $in, $ext) if $in;
@@ -879,22 +882,6 @@ sub render_output
 	$page .= (sprintf "<tr><td>filename <td>%s\n", $req->filename);
 	$page .= (sprintf "<tr><td>Session ID <td>%s\n", $req->s->id);
         $page .= ("</table>\n");
-
-#	$page .= ("<pre>\n");
-#	foreach my $key ( $req->{q}->param() )
-#	{
-#	    my $value = $req->{q}->param($key);
-#	    $value =~ s/\x00/?/g;
-#	    $page .= ("   $key:\t$value\n");
-#	}
-#	foreach my $key ( keys %{$req->{env}} )
-#	{
-#	    $page .= ("   $key:\t$req->{env}{$key}\n");
-#	}
-#	$page .= ("</pre>\n");
-#
-#	$page .= ("<h2>Cookies</h2>");
-#	$page .= ($req->cookies->as_html);
     }
 
     $req->{'page'} = \$page;
@@ -908,10 +895,10 @@ sub send_output
 
     # Redirect if URL differs from template_url
 
-    if( $DEBUG )
+    if( debug )
     {
-	warn "  Sending output to ".$req->uri."\n";
-	warn "  Sending the page ".$req->template_uri."\n";
+	debug(1,"Sending output to ".$req->uri);
+	debug(1,"Sending the page ".$req->template_uri);
     }
 
     if( $req->uri ne $req->template_uri )
@@ -955,30 +942,30 @@ sub output_redirection
     # URI module doesn't support punycode. Bypass module if we
     # redirect to specified domain
     #
-    if( $uri_in =~ /^http:\/\/(.*?)(:|\/|$)/ )
-      {
+    if( $uri_in =~ /^ http:\/\/ (.*?) (: | \/ | $ ) /x )
+    {
 	my $host_in = $1;
 #	warn "  matched '$host_in' in '$uri_in'!\n";
 	my $host_out = idn_encode( $host_in );
 #	warn "  Encoded to '$host_out'\n";
 	if( $host_in ne $host_out )
-	  {
+	{
 	    $uri_in =~ s/$host_in/$host_out/;
-	  }
+	}
 
 	$uri_out = $uri_in;
-      }
+    }
     else
-      {
+    {
 	my $uri = URI->new($uri_in, 'http');
 	$uri->host( idn_encode $req->http_host_name ) unless $uri->host;
 	$uri->port( $req->host_port ) unless $uri->port;
 	$uri->scheme('http');
 
 	$uri_out =  $uri->canonical->as_string;
-      }
+    }
 
-    warn "  --> Redirect to $uri_out\n";
+    debug(0,"--> Redirect to $uri_out");
 
     $req->send_code( 'AR-PUT', 'status', 302 ); # moved
     $req->send_code( 'AR-PUT', 'header_out', 'Pragma', 'no-cache' );
@@ -997,6 +984,11 @@ sub http_host_name
 
 #    warn "Host name: $ENV{SERVER_NAME}\n";
     return idn_decode( $ENV{HTTP_HOST} );
+}
+
+sub client_ip
+{
+    return $_[0]->env->{REMOTE_ADDR} || $_[0]->{'client'}->peerhost;
 }
 
 sub host_name
@@ -1024,7 +1016,7 @@ sub set_tt_params
     # Determine the directory
     my( $dir ) = $real_filename =~ /^(.*\/)/;
     $req->{'dir'} = $dir;
-    warn "  Setting dir to $dir\n" if $DEBUG;
+    debug(1,"Setting dir to $dir");
 
     # Special handling of index.tt
     my $me = $req->{'uri'};
@@ -1044,6 +1036,7 @@ sub set_tt_params
 	'reqnum'          => $req->{'reqnum'},
 	'req'             => $req,
 	'cfg'             => $Para::Frame::CFG,
+	'home'            => $Para::Frame::CFG->{'webhome'},
     }, 1);
 }
 
@@ -1055,12 +1048,16 @@ sub create_fork
     my $pid;
     my $fh = new IO::File;
 
+#    $fh->autoflush(1);
+#    my $af = $fh->autoflush;
+#    warn "--> Autoflush is $af\n";
+
     do
     {
 	$pid = open($fh, "-|");
 	unless( defined $pid )
 	{
-	    warn "  cannot fork: $!";
+	    debug(0,"cannot fork: $!");
 	    die "bailing out" if $sleep_count++ > 6;
 	    sleep 1;
 	}
@@ -1068,12 +1065,19 @@ sub create_fork
 
     if( $pid )
     {
-	# parent
+	### --> parent
+
+	# Do not block on read, since we will try reading before all
+	# data are sent, so that the buffer will not get full
+	#
+	$fh->blocking(0);
+
 	return $req->register_child( $pid, $fh );
     }
     else
     {
-	# child
+	### --> child
+
 	$Para::Frame::FORK = 1;
  	my $result = Para::Frame::Child::Result->new;
 	$req->{'child_result'} = $result;
@@ -1127,7 +1131,7 @@ sub count
 
     $s->{cnt} ++;
     $s->{client}->send( sprintf( "<p>%8d: %4d</p>\n", $s->{env}{REMOTE_PORT}, $s->{cnt}));
-    warn "Count $s->{cnt}\n";
+    debug(0,"Count $s->{cnt}");
 
     $s->add_job("count") unless $s->{cnt} >= 5;
 }
