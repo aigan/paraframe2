@@ -1,0 +1,12 @@
+[% META title="Debug information"
+	next_action="debug_change"
+%]
+
+<p>Global debug level is [% cfg.debug %].
+
+<p>The session debug level is [% debug %].
+
+<p>Change session debug level to
+[% select('debuglevel', debug, {'0'=0, '1'=1, '2'=2, '3'=3, '4'=4, '5'=5}) %]
+[% submit("ändra") %]
+</p>

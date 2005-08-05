@@ -1,7 +1,12 @@
  <hr />
 
-<h3>[% reqnum %]: [%+ jump("me", me) %] Debug Values</h3>
+<h3>[% reqnum %]:
+    [%+ jump("me", me) %]
+    [% jump("Debug", "/debug.tt") %]
+    [%+ debug %]
+</h3>
 
+[% IF debug %]
 
 <h1>[% IF result.errcnt %]
    [% IF result.errcnt == 1 %]
@@ -75,3 +80,4 @@
 </table>
 </div>
 
+[% END %]
