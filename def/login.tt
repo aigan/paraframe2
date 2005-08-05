@@ -2,6 +2,7 @@
 	otitle = 'Logga in'
 	next_action = 'user_login'
 	focus = 'username'
+	default_template = '-"$home/"'
 %]
 
 [% PROCESS login_box.tt %]
