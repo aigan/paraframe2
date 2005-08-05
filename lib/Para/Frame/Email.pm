@@ -35,6 +35,7 @@ use Mail::Address;
 use MIME::Lite;
 use Net::DNS;
 use Net::SMTP;
+use Socket;
 use MIME::Words;
 use Crypt::OpenPGP;
 
@@ -47,7 +48,7 @@ BEGIN
 use Para::Frame::Reload;
 
 use Para::Frame::Request;
-use Para::Frame::Utils qw( throw );
+use Para::Frame::Utils qw( throw debug );
 
 sub new
 {
@@ -91,9 +92,13 @@ sub good
 {
     my( $e, $email ) = @_;
 
+    # scalar $e->good  # returns ref to array of strings of successful emails
+    # @list = $e->good # returns list of hashes of strings of successful emails
+    # $e->good( $email_str ) # returns true if email string recorded as positive
+
     if( $email )
     {
-	return $e->{'result'}{'good'}{$email};
+    	return $e->{'result'}{'good'}{$email};
     }
 
     return wantarray ? keys %{$e->{'result'}{'good'}} : $e->{'result'}{'good'};
@@ -120,7 +125,6 @@ sub send
 {
     my($e, $p_in ) = @_;
 
-    my $DEBUG = 1;
     my $err_msg = "";
     my $res = $e->{'result'} = {}; # Reset results
     my $p = $e->set( $p_in );
@@ -137,16 +141,16 @@ sub send
     my( $in, $ext ) = $req->find_template("/email/".$p->{'template'});
     if( not $in )
     {
-	$req->result->error('notfound', "Hittar inte e-postmallen ".$p->{'template'});
+	throw('notfound', "Hittar inte e-postmallen ".$p->{'template'});
     }
 
 
-    if( $DEBUG )
+    if( debug )
     {
 	#warn "try addresses: ".join(",", @try)."...\n";
 
 	my $providers =  $Para::Frame::th->{'plain'}->context->load_templates();
-	warn "Plain include path is: @{$providers->[0]->include_path()}\n";
+	debug(0,"Plain include path is: @{$providers->[0]->include_path()}");
     }
 
     my $data = "";
@@ -167,14 +171,16 @@ sub send
   TRY:
     foreach my $try ( @try )
     {
-	$try or warn "Empty email\n" and next;
-
+	$try or debug(0,"Empty email") and next;
 	my( $to_addr ) = Para::Frame::Email::Address->parse( $try );
 	unless( $to_addr )
 	{
+	    # Try to stringify
+	    $try = $try->as_string if ref $try;
+
 	    $res->{'bad'}{$try} ||= [];
 	    push @{$res->{'bad'}{$try}}, "Failed parsing";
-	    warn "Failed parsing $try\n";
+	    debug(0,"Failed parsing $try");
 	    next;
 	}
 	my $to_addr_str = $to_addr->address;
@@ -216,9 +222,9 @@ sub send
 	my( $host ) = $to_addr->host();
 	unless( $host )
 	{
-	    $res->{'bad'}{$try} ||= [];
-	    push @{$res->{'bad'}{$try}}, "Nu such host";
-	    warn "Nu such host: $try\n";
+	    $res->{'bad'}{$to_addr_str} ||= [];
+	    push @{$res->{'bad'}{$to_addr_str}}, "Nu such host";
+	    debug(0,"Nu such host: $to_addr_str");
 	    next;
 	}
 
@@ -230,66 +236,74 @@ sub send
 	}
 	unless( @mailhost_list )
 	{
-	    $err_msg .= "Domain $host do not accept email (No MX record)\n";
+	    $err_msg .= debug(0,"Domain $host do not accept email (No MX record)");
 	    unless( $host =~ /^mail\./ )
 	    {
 		push @mailhost_list, "mail.$host";
 	    }
 	    push @mailhost_list, $host;
-	    $err_msg .= "  But I'll try anyway (guessing mailserver)\n";
+	    $err_msg .= debug(0,"  But I'll try anyway (guessing mailserver)");
 	}
       MX:
 	foreach my $mailhost ( @mailhost_list )
 	{
-	    warn "\tConnecting to $mailhost\n";
+	    debug(0,"Connecting to $mailhost",1);
 
-	    my $smtp = Net::SMTP->new($mailhost,
-				      Timeout => 60,
-				      Debug   => 0,
-				     );
+	    my $smtp = Net::SMTP->new( Host    => $mailhost,
+				       Timeout => 60,
+				       Debug   => 0,
+				       );
+
+#	    # DEBUG (should nog happen)
+#	    if( $smtp and $smtp->domain eq 'paranormal.se' )
+#	    {
+#		undef $smtp;
+#	    }
+
 	  SEND:
-	  {
-	      if( $smtp )
-	      {
-		  warn "\tSending mail to $to_addr_str\n";
-		  $smtp->mail($from_addr_str) or last SEND;
-		  $smtp->to($to_addr_str) or last SEND;
-		  $smtp->data() or last SEND;
-		  $smtp->datasend($msg->as_string) or last SEND;
-		  $smtp->dataend() or last SEND;
-		  $smtp->quit() or last SEND;
+	    {
+		if( $smtp )
+		{
+		    warn sprintf "Connected to %s", $smtp->domain;
+		    
+		    debug(0,"Sending mail to $to_addr_str");
+		    $smtp->mail($from_addr_str) or last SEND;
+		    $smtp->to($to_addr_str) or last SEND;
+		    $smtp->data() or last SEND;
+		    $smtp->datasend($msg->as_string) or last SEND;
+		    $smtp->dataend() or last SEND;
+		    $smtp->quit() or last SEND;
 
-		  # Success!
-		  warn "Success\n";
-		  $res->{'good'}{$try} ||= [];
-		  push @{$res->{'good'}{$try}}, $smtp->message();
-		  last TRY;
-	      }
-	      warn "\tNo answer from $mailhost\n";
-	      $err_msg .= "No answer from mx $mailhost\n";
-	      next MX;
-	  }
+		    # Success!
+		    debug(0,"Success",-2);
+		    $res->{'good'}{$to_addr_str} ||= [];
+		    push @{$res->{'good'}{$to_addr_str}}, $smtp->message();
+		    last TRY;
+		}
+		$err_msg .= debug(0,"No answer from mx $mailhost",-1);
+		next MX;
+	    }
 
-	    $res->{'bad'}{$try} ||= [];
-	    push @{$res->{'bad'}{$try}}, $smtp->message();
-	    warn "$:: \tError response from $mailhost: ".$smtp->message()."\n";
-	    $err_msg .= "Error response from $mailhost: ".$smtp->message()."\n";
+	    $res->{'bad'}{$to_addr_str} ||= [];
+	    push @{$res->{'bad'}{$to_addr_str}}, $smtp->message();
+	    $err_msg .= debug(0,"Error response from $mailhost: ".$smtp->message());
+	    debug(-1);
 	}
-	warn "\tAddress bad\n";
+	debug(0,"Address bad");
     }
 
-    warn "Returning status. Error set to: $err_msg\n" if $DEBUG;
+    debug(1,"Returning status. Error set to: $err_msg");
 
     $e->{error_msg} = $err_msg;
 
     if( $res->{'good'} )
     {
-	warn "Returning success\n";
+	debug(0,"Returning success");
 	return 1;
     }
     else
     {
-	warn "Returning failure\n";
+	debug(0,"Returning failure");
 	return 0;
 	# throw('mail', $err_msg);
     }
@@ -326,7 +340,7 @@ sub pgpsign
 			       Clearsign  => 1,
 			      ) or die $pgp->errstr;
 
-    warn "Signing email\n";
+    debug(0,"Signing email");
     # Substitute the original data
     ${$_[0]} = $signature;
     return 1;
