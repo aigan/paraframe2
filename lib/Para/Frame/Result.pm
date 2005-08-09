@@ -99,92 +99,103 @@ error
 
 our $error_types =
 {
- 'dbi'        =>
- {
-  'title' =>
-  {
-   'c'   => 'Databasfel',
-  },
- },
- 'update'        =>
- {
-  'title'   =>
-  {
-   'c' => 'Problem med att spara uppgift',
-  },
- },
- 'incomplete' =>
- {
-  'title'   =>
-  {
-   'c' => 'Uppgifter saknas',
-  },
- },
- 'validation' =>
- {
-  'title'   =>
-  {
-   'c' => 'Fel vid kontroll',
-  },
- },
- 'alternatives' =>
- {
-  'title'   =>
-  {
-   'c' => 'Flera alternativ',
-  },
- },
- 'confirm' =>
- {
-  'title'   =>
-  {
-   'c' => 'Bekräfta uppgift',
-  },
- },
- 'template'   =>
- {
-  'title'   =>
-  {
-   'c' => 'Mallfel',
-  },
-  'view_context' => 1,
- },
- 'action'     =>
- {
-  'title'   =>
-  {
-   'c' => 'Försök misslyckades',
-  },
-  'view_context' => 1,
- },
- 'compilation' =>
- {
-  'title'   =>
-  {
-   'c' => 'Kompileringsfel',
-  },
- },
- 'notfound'     =>
- {
-  'title'   =>
-  {
-   'c' => 'Hittar inte',
-  },
- },
- 'denied'     =>
- {
-  'title'   =>
-  {
-   'c' => 'Access vägrad',
-  },
- },
- 'file'       =>
- {
-  'title' =>
-  {
-   'c' => 'Filfel',
-  },
- },
+    'dbi'        =>
+    {
+	'title' =>
+	{
+	    'c'   => 'Databasfel',
+	},
+	'border'  => 'red',
+	'bg'      => 'AAAAAA',
+    },
+    'update'        =>
+    {
+	'title'   =>
+	{
+	    'c' => 'Problem med att spara uppgift',
+	},
+	'border'  => 'red',
+	'bg'      => 'AAAAAA',
+    },
+    'incomplete' =>
+    {
+	'title'   =>
+	{
+	    'c' => 'Uppgifter saknas',
+	},
+	'bg'      => 'yellow',
+    },
+    'validation' =>
+    {
+	'title'   =>
+	{
+	    'c' => 'Fel vid kontroll',
+	},
+	'bg'      => 'yellow',
+    },
+    'alternatives' =>
+    {
+	'title'   =>
+	{
+	    'c' => 'Flera alternativ',
+	},
+    },
+    'confirm' =>
+    {
+	'title'   =>
+	{
+	    'c' => 'Bekräfta uppgift',
+	},
+	'bg'      => 'yellow',
+    },
+    'template'   =>
+    {
+	'title'   =>
+	{
+	    'c' => 'Mallfel',
+	},
+	'view_context' => 1,
+    },
+    'action'     =>
+    {
+	'title'   =>
+	{
+	    'c' => 'Försök misslyckades',
+	},
+	'bg'      => 'red',
+	'view_context' => 1,
+    },
+    'compilation' =>
+    {
+	'title'   =>
+	{
+	    'c' => 'Kompileringsfel',
+	},
+	'bg'      => 'yellow',
+	'border'  => 'red',
+    },
+    'notfound'     =>
+    {
+	'title'   =>
+	{
+	    'c' => 'Hittar inte',
+	},
+	'bg'      => 'red',
+    },
+    'denied'     =>
+    {
+	'title'   =>
+	{
+	    'c' => 'Access vägrad',
+	},
+    },
+    'file'       =>
+    {
+	'title' =>
+	{
+	    'c' => 'Mallfil saknas',
+	},
+    },
 };
 
 
@@ -194,23 +205,42 @@ sub new
     my $self =
     {
 	part => [],
-	errcnt => 0,
+#	errcnt => 0,
 	info => {},
 	main => undef,
         req => $req,
     };
 
-    return bless $self, $class;
+    bless($self, $class);
+
+    # Add info about compilation errors
+    foreach my $module ( keys %Para::Frame::Result::COMPILE_ERROR )
+    {
+#	warn " --> Reporting compile error for $module\n";
+	my $errmsg = $Para::Frame::Result::COMPILE_ERROR{$module};
+	$self->error('compilation', "$module\n\n$errmsg");
+    }
+
+    # Do not count these compile errors, since that would halt
+    # everything. We only want to draw atention to the problem but
+    # still enable usage
+    #
+    $self->{errcnt} = 0;
+
+
+    return $self;
 }
 
 sub message
 {
-    my( $self, $message ) = @_;
+    my( $self, @messages ) = @_;
 
-    $message =~ s/(\n\r?)+$//;
-    return unless length $message;
-
-    push @{$self->{'part'}}, {'message' => $message};
+    foreach my $msg ( @messages )
+    {
+	$msg =~ s/(\n\r?)+$//;
+	next unless length $msg;
+	push @{$self->{'part'}}, {'message' => $msg};
+    }
 }
 
 sub exception
