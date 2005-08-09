@@ -24,7 +24,7 @@ use Socket;
 use POSIX;
 use Time::HiRes qw( time );
 use Data::Dumper;
-use Carp qw( cluck confess );
+use Carp qw( cluck confess carp );
 use Template;
 
 BEGIN
@@ -229,18 +229,31 @@ sub switch_req
 
     if( $_[0] ne $REQ )
     {
-	warn "\nSwitching to req $_[0]->{reqnum}\n"
-	    if $REQ; ### DEBUG
+	if( $REQ )
+	{
+	    warn "\nSwitching to req $_[0]->{reqnum}\n";
+
+	    if( $REQ->{'s'} )
+	    {
+		# Store template error data (undocumented)
+		$REQ->{'s'}{'template_error'} =
+		    $Para::Frame::th->{'html'}{ _ERROR };
+	    }
+	}
 
 	Para::Frame->run_hook(undef, 'before_switch_req');
 
 	$U = undef;
 	if( $REQ = $_[0] )
 	{
-	    if( my $s = $REQ->s )
+	    if( my $s = $REQ->{'s'} )
 	    {
 		$U   = $s->u;
 		$DEBUG  = $s->{'debug'};
+
+		# Retrieve template error data (undocumented)
+		$Para::Frame::th->{'html'}{ _ERROR } =
+		    $s->{'template_error'};
 	    }
 
 	    %ENV = %{$REQ->env}; # TODO: eliminate duplicate copy
@@ -534,13 +547,14 @@ sub handle_request
 
     ### Debug info
     my $t = localtime;
-    warn sprintf("  %s %s - %s\n  Sid %s - Uid %d - debug %d\n",
+    my $s = $req->s;
+    warn sprintf("# %s %s - %s\n# Sid %s - Uid %d - debug %d\n",
 		 $t->ymd,
 		 $t->hms('.'),
 		 $req->client_ip,
-		 $req->s->id,
-		 $req->s->u->uid,
-		 $req->{'debug'},
+		 $s->id,
+		 $s->u->id,
+		 $s->{'debug'},
 		 );
    
     ### Redirected from another page?
@@ -555,6 +569,10 @@ sub handle_request
     {
 	$req->setup_jobs;
     }
+
+    ### Clean up used globals
+    # (undocumented)
+    $s->{'template_error'} = $Para::Frame::th->{'html'}{ _ERROR } = '';
 }
 
 sub add_hook
@@ -564,11 +582,12 @@ sub add_hook
     debug(3,"add_hook $label from ".(caller));
 
     # Validate hook label
-    unless( $label =~ /^( on_error_detect   |
-			  on_fork           |
-			  done              |
-			  user_login        |
-			  user_logout       |
+    unless( $label =~ /^( on_error_detect    |
+			  on_fork            |
+			  done               |
+			  user_login         |
+			  before_user_logout |
+			  after_user_logout  |
 			  before_switch_req 
 			  )$/x )
     {
@@ -584,6 +603,11 @@ sub run_hook
     my( $class, $req, $label ) = (shift, shift, shift);
     if( debug > 2 )
     {
+	unless( $label )
+	{
+	    carp "Hook label missing";
+	}
+
 	if( $req )
 	{
 	    debug(0,"run_hook $label for $req->{reqnum}");
@@ -611,6 +635,7 @@ sub run_hook
 	{
 	    $Para::Frame::hooks_running{"$hook"} ++;
 	    switch_req( $req ) if $req;
+#	    warn "about to run coderef $hook with params @_"; ## DEBUG
 	    &{$hook}(@_);
 	    $Para::Frame::hooks_running{"$hook"} --;
 	}
