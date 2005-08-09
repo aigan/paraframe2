@@ -201,7 +201,7 @@ sub jump
     elsif( not defined $class_val )
     {
 	# Mark as selected if link goes to current page
-	if( $Para::Frame::REQ->me eq $template and not $attr->{'run'} )
+	if( $Para::Frame::REQ->template_uri eq $template and not $attr->{'run'} )
 	{
 	    $extra .= " class=\"same_place\"";
 	}
