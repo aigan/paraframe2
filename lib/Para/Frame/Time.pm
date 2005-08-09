@@ -27,6 +27,7 @@ use strict;
 use Time::Piece;
 use Date::Manip;
 use Carp qw( cluck );
+use Data::Dumper;
 
 BEGIN
 {
@@ -38,7 +39,17 @@ BEGIN
 
 use Para::Frame::Utils qw( throw debug );
 
-sub import { shift; @_ = ('Time::Piece', @_); goto &Time::Piece::import }
+sub import
+{
+    # Initiate Date::Manip
+    Date_Init("Language=English");
+    Date_Init("Language=Swedish"); # Reset language
+
+    # Pretend to be Time::Piece
+    shift;
+    @_ = ('Time::Piece', @_);
+    goto &Time::Piece::import;
+}
 
 
 =head1 DESCRIPTION
@@ -52,8 +63,7 @@ sub get
 {
     my( $this, $time ) = @_;
 
-    Date_Init("Language=English");
-    Date_Init("Language=Swedish"); # Reset language
+    return $time if UNIVERSAL::isa $time, "Time::Piece";
 
     debug(1,"Parsing date '$time'");
 
