@@ -8,5 +8,7 @@
 
 <p>Change session debug level to
 [% select('debuglevel', debug, {'0'=0, '1'=1, '2'=2, '3'=3, '4'=4, '5'=5}) %]
-[% submit("ändra") %]
+[% submit %]
 </p>
+
+<p>[% go("Terminate server", home, "server_terminate") %]
