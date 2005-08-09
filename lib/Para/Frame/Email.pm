@@ -121,9 +121,49 @@ sub error_msg
     return $_[0]->{error_msg} || "";
 }
 
+sub send_in_fork
+{
+    my( $e, $p_in ) = @_;
+
+    $e = $e->new unless ref $e;
+    $p_in ||= {};
+
+    my $msg = delete( $p_in->{'return_message'} ) || "Email delivered";
+
+    my $fork = $Para::Frame::REQ->create_fork;
+    if( $fork->in_child )
+    {
+	$e->send( $p_in ) or throw('email', $e->error_msg);
+	$fork->return($msg);
+    }
+
+    return $fork;
+}
+
+sub send_in_background
+{
+    die "fixme";
+}
+
+sub send_by_proxy
+{
+    my( $e, $p_in ) = @_;
+
+    # Let another program do the sending. We will not know if it realy
+    # succeeded.
+
+    $e = $e->new unless ref $e;
+    $p_in ||= {};
+    $p_in->{'by_proxy'} = 1;
+
+    return $e->send($p_in);
+}
+
 sub send
 {
     my($e, $p_in ) = @_;
+
+    $e = $e->new unless ref $e;
 
     my $err_msg = "";
     my $res = $e->{'result'} = {}; # Reset results
@@ -134,10 +174,13 @@ sub send
     $p->{'subject'}  or die "No subject selected\n";
     $p->{'to'}       or die "No reciever for this email?\n";
 
+    my $req = $Para::Frame::REQ;
+
+    $p->{'host'} ||= $req->host;
+
     # List of addresses to try. Quit after first success
     my @try = ref $p->{'to'} eq 'ARRAY' ? @{$p->{'to'}} : $p->{'to'};
 
-    my $req = $Para::Frame::REQ;
     my( $in, $ext ) = $req->find_template("/email/".$p->{'template'});
     if( not $in )
     {
@@ -219,6 +262,28 @@ sub send
 	}
 
 
+	# Should we send this by proxy?
+	#
+	if( $p->{'by_proxy'} )
+	{
+	    if( $msg->send_by_sendmail( FromSender => $to_addr_str ) )
+	    {
+		# Success!
+		debug(0,"Success");
+		$res->{'good'}{$to_addr_str} ||= [];
+		push @{$res->{'good'}{$to_addr_str}}, "succeeded";
+		last TRY;
+	    }
+	    else
+	    {
+		$res->{'bad'}{$to_addr_str} ||= [];
+		push @{$res->{'bad'}{$to_addr_str}}, "failed";
+		$err_msg .= debug(0,"Faild to send mail to $to_addr_str");
+		next TRY;
+	    }
+	}
+
+
 	my( $host ) = $to_addr->host();
 	unless( $host )
 	{
@@ -264,7 +329,7 @@ sub send
 	    {
 		if( $smtp )
 		{
-		    warn sprintf "Connected to %s", $smtp->domain;
+		    debug(0,sprintf("Connected to %s", $smtp->domain));
 		    
 		    debug(0,"Sending mail to $to_addr_str");
 		    $smtp->mail($from_addr_str) or last SEND;
