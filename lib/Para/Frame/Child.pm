@@ -109,6 +109,7 @@ sub yield
     my( $child ) = @_;
 
     # Do other things until we get the result from the child
+    # Returns the child result obj
 
     my $req = $child->req;
     $req->{'in_yield'} ++;
@@ -116,6 +117,7 @@ sub yield
     $req->{'in_yield'} --;
     
     Para::Frame::switch_req( $req );
+    return $child->{'result'};
 }
 
 sub get_results
@@ -207,6 +209,34 @@ sub in_child
 sub in_parent
 {
     return 1;
+}
+
+sub failed
+{
+    my( $child ) = @_;
+
+    if( $child->result->exception )
+    {
+	return 1;
+    }
+    else
+    {
+	return 0;
+    }
+}
+
+sub succeeded
+{
+    my( $child ) = @_;
+
+    if( $child->result->exception )
+    {
+	return 0;
+    }
+    else
+    {
+	return 1;
+    }
 }
 
 1;
