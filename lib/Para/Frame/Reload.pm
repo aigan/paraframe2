@@ -245,6 +245,9 @@ sub reload
 	warn map "* $_\n", split /\n/, $@;
 	warn "*************************\n";
 
+	# Set a global error state
+	$Para::Frame::Result::COMPILE_ERROR{$module} = $@;
+
 	$COMPILED{$module} = $mtime; # Do not try again
 	return 0;
     }
@@ -257,6 +260,9 @@ sub reload
     {
 	Para::Frame::Reload->call_import($pkgname);
     }
+
+    # Remove eventual global error state
+    delete $Para::Frame::Result::COMPILE_ERROR{$module};
 
     $COMPILED{$module} = $mtime;
 }
