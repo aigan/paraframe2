@@ -36,34 +36,56 @@ BEGIN
 use Para::Frame;
 use Para::Frame::Reload;
 use Para::Frame::Request;
-use Para::Frame::Utils qw( throw uri referer );
+use Para::Frame::Utils qw( throw uri referer debug );
 
 =head1 DESCRIPTION
 
-For conditional planning inside a page, use param plan, like:
+For conditional planning inside a page, use param plan_next, like:
 
   [% jump('Do that', there, plan_next=uri(me, id=id)) %]
 
-This will first "do that there" and then done, continue with $me.
+This will first "do that there" and then done, continue with $me. If
+the 'there' page has a defined next_template META, that will be done
+first. But if no such template is given, or there just are an
+default_template META, the next submit will follow the route.
 
-The plan will only be added to the route if the link is selected.
-In a form, the plan can be modified by javascript
+Backtracking can also be done by running the action 'backtrack' or
+'next_step'.
 
-For unconditional planning of later steps, call function plan_next
+The plan will only be added to the route if the link is selected.  In
+a form, the plan_next field can be modified by javascript. Use a
+hidden field for that, like
+
+  [% hidden('plan_next', uri(me, id=id) ) %]
+
+Several steps can be added by just adding up several plan_next hidden
+fields.
+
+The steps can be set up during the generation of the page, from TT, by
+calling the function plan_next(). 
 
 Select the action L<Para::Frame::Action::mark> for bookmarking the
 current page, calling it with all the properties, except the call for
 C<mark>.
 
-
-=head3 TODO
-
-There is a lot left to document.  There is many ways to use routes.
-
 Use the html form fields C<step_add_params> or C<step_replace_params>
 for selecting what values from the submitted form should be passed to
 the previous step.
 
+You can also modify the route from actions and other places. Mostly
+you will be adding steps.
+
+The [% regret(label) %] macro will create a button that will submit
+the form and run the action skip_step().
+
+The [% backstep(label) %] macro will create a button that will submit
+the form and run the action next_step().
+
+The backtrack action can be called to request a backtrack, rather than
+any of the other methods given above.
+
+'plan_after' can be used in place of plan_next to put a step in the
+bottom of the route stack, rather than on top.
 
 =head2 Exported objects
 
@@ -87,7 +109,7 @@ the previous step.
 sub on_startup
 {
     # Called during compilation
-    warn "  Importing Route global TT params\n";
+    debug(1,"Importing Route global TT params");
 
     Para::Frame->add_global_tt_params({
 	'plan_backtrack'  => sub{ $Para::Frame::REQ->s->route->plan_backtrack(@_) },
@@ -118,10 +140,9 @@ sub plan_backtrack
 
     if( my $step = $route->{'route'}[-1] )
     {
-	carp "  Next step is $step\n";
 	$step = URI->new($step) unless UNIVERSAL::isa($step, 'URI');
 #	my $uri = URI->new($step);
-	warn "  !! Plan backtrack to ".$step->path."\n";
+	debug(1,"!!Plan backtrack to ".$step->path);
 	return $step->path . '?backtrack';
     }
 
@@ -149,7 +170,7 @@ sub plan_next
     foreach my $url ( @$urls )
     {
 	$url = URI->new($url) unless UNIVERSAL::isa($url, 'URI');
-	warn "  !! New step in route: $url\n";
+	debug(1,"!!New step in route: $url");
 #	warn "  !! New step in route\n";
 	push @{$route->{'route'}}, $url->as_string;
     }
@@ -160,7 +181,7 @@ sub plan_next
 
 =head2 plan_after
 
-  $route->plan_afterplan_next( @urls )
+  $route->plan_after( @urls )
 
 Insert a new step as the last step in the route.  The url should
 include all the params that will be set then we backtrack to this
@@ -176,7 +197,7 @@ sub plan_after
     foreach my $url ( @$urls )
     {
 	$url = URI->new($url) unless UNIVERSAL::isa($url, 'URI');
-	warn "  !! New last step in route: $url\n";
+	debug(1,"!!New last step in route: $url");
 	unshift @{$route->{'route'}}, $url->as_string;
     }
 }
@@ -228,7 +249,7 @@ sub clear
 Sets up the route for the present request.  Should be called once from
 the application handler.
 
-Adds the tempalte methods and calls $route->check_add().
+Calls $route->check_add().
 
 =cut
 
@@ -272,7 +293,7 @@ sub check_add
 	$route->plan_after(\@plan_url);
     }
 
-    warn "  Route has ".$route->steps." steps\n" if $route->steps;
+    debug(1,"Route has ".$route->steps." steps") if $route->steps;
 }
 
 
@@ -305,31 +326,35 @@ sub check_backtrack
 
     if( ($req->q->url_param('keywords')||'') eq 'backtrack' )
     {
-	warn "  !! Backtracking (because of uri keyword)\n";
+	debug(1,"!!Backtracking (because of uri keyword)");
 	$route->get_next;
     }
     else
     {
 #	warn "-- no backtracking!\n" if $DEBUG;
 
-	# Remove last step if it's equal to curent place, including params
-	my $last_step = $route->{'route'}[-1];
-	$last_step = URI->new($last_step) unless UNIVERSAL::isa($last_step, 'URI');
+      CHECK:
+	{
+	    # Remove last step if it's equal to curent place, including params
+	    my $last_step = $route->{'route'}[-1];
+	    $last_step = URI->new($last_step) unless UNIVERSAL::isa($last_step, 'URI');
 
 #	my $lsp = $last_step->path;
 #	my $qsp = $req->uri;
 #	warn "-- comparing $lsp to $qsp\n";
 
-	if( $last_step->path eq $req->template_uri )
-	{
+	    if( $last_step->path eq $req->template_uri )
+	    {
 #	    my $lsq = $last_step->query;
 #	    my $qsq = $req->q->query_string;
 #	    warn "-- comparing $lsq to $qsq\n";
 
-	    if( $last_step->query eq $req->q->query_string )
-	    {
-		warn "-- Removing a step, since it's equal to this one\n";
-		pop @{$route->{'route'}};
+		if( $last_step->query eq $req->q->query_string )
+		{
+		    debug(1,"--Removing a step, since it's equal to this one");
+		    pop @{$route->{'route'}};
+		    redo CHECK; # More steps to remove?
+		}
 	    }
 	}
 
@@ -369,7 +394,7 @@ sub bookmark
 
     if( $q->param )
     {
-	warn "  !! Puts a bookmark with query params\n";
+	debug(1,"!!Puts a bookmark with query params");
 	my @pairs;
 	foreach my $key ( $q->param )
 	{
@@ -439,7 +464,9 @@ sub get_next
 	###  DANGER  DANGER  DANGER
 	# init() is not a public method
 #	debug_query("DELETED");
-	warn "Initiating query with string $query\n";
+	debug(1,"Initiating query with string $query");
+	$ENV{QUERY_STRING} = $query;
+	delete $q->{'.url_param'};
 	$q->init($query);
 
 	foreach my $key ( keys %args_replace )
@@ -455,13 +482,14 @@ sub get_next
 
 #	debug_query("AFTER");
 
-	$req->set_uri( $step->path );
+	$req->set_template( $step->path );
+	$req->setup_jobs; # Takes care of any run keys in query string
 
-	warn "  !!  Initiated new query\n";
+	debug(1,"!!  Initiated new query");
     }
     else
     {
-	warn "  !!  No more steps in route\n";
+	debug(1,"!!  No more steps in route");
     }
 }
 
@@ -486,17 +514,17 @@ sub skip_step
     my $q = $req->q;
     my $dest;
 
-    warn "  !!  called skip_step\n";
+    debug(1,"!!  called skip_step");
 
     if( my $step = pop @{$route->{'route'}} )
     {
-	warn "  !!    back step one\n";
+	debug(1,"!!    back step one");
 
 	# Use the second step if existing
 	#
 	if( @{$route->{'route'}} )
 	{
-	    warn "  !!    back step two\n";
+	    debug(1,"!!    back step two");
 	    return $route->get_next;
 	}
 
@@ -507,10 +535,10 @@ sub skip_step
 	###  DANGER  DANGER  DANGER
 	# init() is not a public method
 	$q->init($query);
-	warn "  !!    Initiated new query\n";
+	debug(1,"!!    Initiated new query");
 
 	$dest = $q->param('previous') || '';
-	warn "  !!    Destination set to $dest\n";
+	debug(1,"!!    Destination set to $dest");
 
 	$route->clear_special_params;
     }
@@ -518,12 +546,12 @@ sub skip_step
     {
 	$route->clear_special_params;
 
-	warn "  !!  No more steps in route\n";
+	debug(1,"!!  No more steps in route");
     }
 
     $dest ||= $route->default || $req->app->home;
 
-    $req->forward($dest);
+    $req->set_template($dest);
 }
 
 sub clear_special_params
@@ -546,18 +574,24 @@ sub steps
     return scalar( @{$route->{'route'}} );
 }
 
+sub default
+{
+    return $_[0]->{'default'};
+}
+
 sub debug_query
 {
     ### DEBUG
     my $req = $Para::Frame::REQ;
     my $q = $req->q;
-    warn("@_\n");
+    debug(1,@_);
+    debug(1,"url_param is ".$q->url_param('keywords'));
     foreach my $key ( $q->param )
     {
-	warn "\t$key\n";
+	debug(1,"  $key");
 	foreach my $val ( $q->param($key) )
 	{
-	    warn "\t\t$val\n";
+	    debug(1,"    $val");
 	}
     }
  }
