@@ -18,13 +18,11 @@ package Para::Frame::Action::user_logout;
 
 use strict;
 
-use Para::Member;
-
 sub handler
 {
     my( $req ) = @_;
 
-    Para::Member->logout;
+    $Para::Frame::U->logout;
 
     return "Du har nu loggat ut\n";
 }
