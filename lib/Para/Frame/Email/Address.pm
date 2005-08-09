@@ -23,6 +23,11 @@ Para::Frame::Email::Address
 =cut
 
 use strict;
+use Net::DNS;
+use Net::SMTP;
+use Mail::Address;
+use Carp qw( carp confess );
+use Data::Dumper;
 
 BEGIN
 {
@@ -30,21 +35,38 @@ BEGIN
     warn "  Loading ".__PACKAGE__." $VERSION\n";
 }
 
-use Net::DNS;
-use Net::SMTP;
-use Mail::Address;
-
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw );
+use Para::Frame::Utils qw( throw reset_hashref );
+
+use overload '""' => \&as_string;
+use overload 'eq' => \&equals;
 
 sub parse
 {
     my( $class, $email_str_in ) = @_;
 
-    return $email_str_in if UNIVERSAL::isa($email_str_in, "Para::Frame::Email::Address");
+    # OBS: Should not be called as a constructor by subclasses
+    if( $class eq "Para::Member::Email::Address" )
+    {
+	confess "check this";
+    }
 
-    # warn "Parsing email string '$email_str_in'\n";
-    my( $addr ) = Mail::Address->parse( $email_str_in );
+    # May change the object class belonging
+    return $email_str_in
+	if UNIVERSAL::isa($email_str_in, $class);
+
+    my $addr;
+    if( UNIVERSAL::isa $email_str_in, "Para::Frame::Email::Address" )
+    {
+	# We are upgrading to a superclass
+	die "check this";
+	$addr = $email_str_in->{'addr'};
+    }
+    else
+    {
+	# Retrieve first in list
+	( $addr ) = Mail::Address->parse( $email_str_in );
+    }
 
     $addr or throw('email', "'$email_str_in' är inte en korrekt e-postadress\n");
 
@@ -63,6 +85,21 @@ sub as_string { $_[0]->{addr}->address }
 sub address { $_[0]->{addr}->address }
 
 sub host { $_[0]->{addr}->host }
+
+sub format { carp "deprecated" }
+
+# sub update
+# {
+#     my( $a, $a_in ) = @_;
+# 
+#     my $a_new = $a->parse( $a_in );
+# 
+#     reset_hashref( $a );
+# 
+#     $a->{'addr'} = $a_new->{'addr'};
+# 
+#     return $a;    
+# }
 
 sub validate
 {
