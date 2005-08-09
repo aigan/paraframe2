@@ -73,7 +73,7 @@ sub set
 	}
     }
 
-    debug(1,"Setting ctype to $string");
+    debug(3,"Setting ctype to $string");
 
     if( defined $ctype->{'ctype'} )
     {
@@ -132,7 +132,7 @@ sub commit
     if( $ctype->{'changed'} )
     {
 	my $string = $ctype->as_string;
-	debug(1,"Setting ctype string to $string");
+	debug(3,"Setting ctype string to $string");
 	$Para::Frame::REQ->send_code( 'AR-PUT', 'content_type', $string);
 	$ctype->{'changed'} = 0;
     }
