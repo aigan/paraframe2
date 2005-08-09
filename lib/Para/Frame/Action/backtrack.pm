@@ -23,11 +23,9 @@ sub handler
 {
     my( $req ) = @_;
 
-    my $route = $req->s->route;
-
     # Flag for backtracking
     $req->{'q'} = CGI->new('backtrack');
-    warn "  !! Setting query string to ".$req->q->query_string."\n";
+    warn "  !!Setting query string to ".$req->q->query_string."\n";
     return "";
 }
 
