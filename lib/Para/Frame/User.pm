@@ -121,7 +121,7 @@ sub identify_user
     my $req = $Para::Frame::REQ;
     my $q = $req->q;
     $username ||= $q->cookie('username') || 'guest';
-    debug(1,"identifying $username");
+    debug(3,"identifying $username");
     my $u = $class->get( $username );
     unless( $u )
     {
@@ -144,8 +144,8 @@ sub authenticate_user
     $password_encrypted ||= $q->cookie('password') || "";
 
     my $username = $u->username;
-    debug(1,"authenticating $username");
-    debug(1,"  with password $password_encrypted");
+    debug(3,"authenticating $username");
+    debug(3,"  with password $password_encrypted");
 
     if( $username eq 'guest' )
     {
@@ -187,7 +187,7 @@ sub authenticate_user
     }
 
 
-    warn "  [ $username ]\n";
+    warn "# $username\n";
 
     return 1;
 }
@@ -214,15 +214,18 @@ sub logout
     my $req = $Para::Frame::REQ;
 
     # Set the user of the session to guest
-    debug(1,"Logging out user");
+    debug(2,"Logging out user");
+    Para::Frame->run_hook($req, 'before_user_logout', $Para::Frame::U)
+	unless $Para::Frame::U->level == 0;
     $class->change_current_user( $class->get( 'guest' ) );
-    debug(1,"User are now ".$Para::Frame::U->name);
+    debug(3,"User are now ".$Para::Frame::U->name);
 
     $req->cookies->add({'username' => 'guest'});
     $req->cookies->remove('password');
 
     # Do not run hook if we are on guest level
-    Para::Frame->run_hook('user_logout') unless $Para::Frame::U->level == 0;
+    Para::Frame->run_hook($req, 'after_user_logout')
+	unless $Para::Frame::U->level == 0;
 }
 
 sub get # Reimplement this method
