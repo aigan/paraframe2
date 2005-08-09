@@ -1,8 +1,8 @@
  <hr />
 
 <h3>[% reqnum %]:
-    [%+ jump("me", me) %]
-    [% jump("Debug", "/debug.tt") %]
+    [%+ go("Reload", me, 'nop') %]
+    [%+ go("Debug", "/debug.tt", 'mark') %]
     [%+ debug %]
 </h3>
 
