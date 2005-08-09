@@ -29,7 +29,7 @@ use File::Slurp;
 use File::Basename;
 use IO::File;
 use URI;
-use Carp qw(cluck croak);
+use Carp qw(cluck croak carp);
 #use Cwd qw( abs_path );
 use Encode qw( is_utf8 );
 
@@ -86,7 +86,7 @@ sub new
 	error_template => undef,          ## if diffrent from template
 	ctype          => undef,          ## The response content-type
 	in_body        => 0,              ## flag then headers sent
-	page           => undef,          ## The generated page to output
+	page           => undef,          ## Ref to the generated page
 	childs         => 0,              ## counter in parent
 	in_yield       => 0,              ## inside a yield
 	child_result   => undef,          ## the child res if in child
@@ -103,7 +103,7 @@ sub new
 
     # Log som info
     #
-    warn "  http://".$req->http_host_name."$orig_uri\n";
+    warn "# http://".$req->http_host_name."$orig_uri\n";
 
     return $req;
 }
@@ -118,7 +118,6 @@ sub cookies { shift->{'cookies'} }
 sub result { shift->{'result'} }
 sub uri { shift->{'uri'} }
 sub dir { shift->{'dir'} }
-sub me { shift->{'me'} } # same as uri, minus index.tt
 sub filename { uri2file(shift->template) }
 sub lang { undef }
 sub error_page_selected { $_[0]->{'error_template'} ? 1 : 0 }
@@ -149,7 +148,7 @@ sub set_uri
 
     die "not impelemnted" if $uri =~ /\?/;
 
-    debug(1,"setting URI to $uri");
+    debug(3,"setting URI to $uri");
     $req->{uri} = $uri;
     $req->set_template( $uri );
 
@@ -162,7 +161,7 @@ sub set_template
 
     # For setting a template diffrent from the URI
 
-    debug(1,"setting template to $template");
+    debug(3,"setting template to $template");
 
     if( -d uri2file( $template ) )
     {
@@ -231,6 +230,7 @@ sub setup_jobs
     }
     # We will not execute later actions if one of them fail
     $req->{'actions'} = $actions;
+#    warn "Actions are now ".Dumper($actions);
 
     $req->add_job('after_jobs');
 }
@@ -263,17 +263,17 @@ sub send_headers
     {
 	if( $multiple{$header->[0]} ++ )
 	{
-	    debug(2,"Send header add @$header");
+	    debug(3,"Send header add @$header");
 	    $req->send_code( 'AT-PUT', 'add', @$header);
 	}
 	else
 	{
-	    debug(2,"Send header_out @$header");
+	    debug(3,"Send header_out @$header");
 	    $req->send_code( 'AR-PUT', 'header_out', @$header);
 	}
     }
 
-    debug(1,"Send newline");
+    debug(2,"Send newline");
     $client->send( "\n" );
     $req->{'in_body'} = 1;
 }
@@ -293,7 +293,7 @@ sub run_action
 
     my( $c_run ) = $run =~ m/^([\w\-]+)$/
 	or die "bad chars in run: $run";
-    debug(1,"Will now require $c_run");
+    debug(2,"Will now require $c_run");
 
     # Only keep error if all tries failed
 
@@ -303,7 +303,7 @@ sub run_action
 	my $path = $tryroot;
 	$path =~ s/::/\//g;
 	my $file = "$path/${c_run}.pm";
-	debug(2,"testing $file",1);
+	debug(3,"testing $file",1);
 	eval
 	{
 	    compile($file);
@@ -336,14 +336,14 @@ sub run_action
 		}
 		else
 		{
-		    debug(2,"Not matching BEGIN failed");
+		    debug(3,"Not matching BEGIN failed");
 		    $info = $@;
 		}
 		push @{$errors{'compilation'}}, $info;
 	    }
 	    else
 	    {
-		debug(1,"Generic error in require $file");
+		debug(2,"Generic error in require $file");
 		push @{$errors{'compilation'}}, $@;
 	    }
 	    last; # HOLD IT
@@ -359,7 +359,7 @@ sub run_action
 
     if( not $actionroot )
     {
-	debug(1,"ACTION NOT LOADED!");
+	debug(3,"ACTION NOT LOADED!");
 
 	# Keep the error info from all failure
 	foreach my $type ( keys %errors )
@@ -378,7 +378,7 @@ sub run_action
     #
     eval
     {
-	debug(2,"using $actionroot",1);
+	debug(3,"using $actionroot",1);
 	no strict 'refs';
 	$req->result->message( &{$actionroot.'::'.$c_run.'::handler'}($req) );
 	### Other info is stored in $req->result->{'info'}
@@ -401,8 +401,8 @@ sub run_action
 	    exit;
 	}
 
-	debug(1,"ACTION FAILED!");
-	debug(3,$@,-1);
+	debug(0,"ACTION FAILED!");
+	debug(1,$@,-1);
 	$req->result->exception;
 	return 0;
     };
@@ -432,7 +432,7 @@ sub after_jobs
 	### Waiting for children?
 	if( $req->{'childs'} )
 	{
-	    debug(0,"Waiting for childs");
+	    debug(2,"Waiting for childs");
 	    return;
 	}
 
@@ -440,7 +440,12 @@ sub after_jobs
 	### Do backtrack stuff
 	$req->s->route->check_backtrack;
 	### Do last job stuff
+    }
 
+    # Backtracking could have added more jobs
+    #
+    if( $req->in_last_job )
+    {
 	### handle error
 	$req->error_backtrack;
 
@@ -474,11 +479,11 @@ sub error_backtrack
 
     if( $req->result->errcnt and not $req->error_page_selected )
     {
-	debug(0,"Backtracking to previuos page because of errors");
+	debug(2,"Backtracking to previuos page because of errors");
 	my $previous = $req->referer;
 	if( $previous )
 	{
-	    debug(1,"Previous is $previous");
+	    debug(3,"Previous is $previous");
 	    # TODO: forward to the URI instead
 	    $req->set_error_template( $previous );
 	}
@@ -559,7 +564,7 @@ sub find_template
 {
     my( $req, $template ) = @_;
 
-    debug(1,"Finding template $template");
+    debug(3,"Finding template $template");
     my( $in );
 
 
@@ -592,13 +597,13 @@ sub find_template
     # Reasonable default?
     my $language = $req->lang || ['sv'];
 
-    debug(3,"Check $ext");
+    debug(4,"Check $ext");
     foreach my $path ( uri2file($path_full)."/", @step, $global )
     {
 	die unless $path; # could be undef
 
 	# We look for both tt and html regardless of it the file was called as .html
-	debug(3,"Check $path",1);
+	debug(4,"Check $path",1);
 	die "dir_redirct failed" unless $base_name;
 
 	# Handle dirs
@@ -611,16 +616,16 @@ sub find_template
 	# Find language specific template
 	foreach my $lang ( map(".$_",@$language),'' )
 	{
-	    debug(3,"Check $lang",1);
+	    debug(4,"Check $lang",1);
 	    my $filename = $path.$base_name.$lang.$ext_full;
 	    if( -r $filename )
 	    {
-		debug(1,"Using $filename");
+		debug(3,"Using $filename");
 
 		# Static file
 		if( $ext ne 'tt' )
 		{
-		    debug(1,"As STATIC ($ext)");
+		    debug(3,"As STATIC ($ext)");
 		    debug(-2);
 		    return( $filename, $ext );
 		}
@@ -634,11 +639,11 @@ sub find_template
 		#
 		if( my $rec = $Para::Frame::Cache::td{$filename} )
 		{
-		    debug(1,"Found in MEMORY");
+		    debug(3,"Found in MEMORY");
 		    ( $data, $ltime) = @$rec;
 		    if( $ltime <= $mod_time )
 		    {
-			if( debug )
+			if( debug > 3 )
 			{
 			    debug(0,"     To old!");
 			    debug(0,"     ltime: $ltime");
@@ -654,12 +659,12 @@ sub find_template
 		{
 		    if( -f $compfile )
 		    {
-			debug(1,"Found in COMPILED file");
+			debug(3,"Found in COMPILED file");
 
 			my $ltime = stat($compfile)->mtime;
 			if( $ltime <= $mod_time )
 			{
-			    if( debug )
+			    if( debug > 3 )
 			    {
 				debug(0,"     To old!");
 				debug(0,"     ltime: $ltime");
@@ -670,7 +675,7 @@ sub find_template
 			{
 			    $data = load_compiled( $compfile );
 
-			    debug(1,"Loading $compfile");
+			    debug(3,"Loading $compfile");
 
 			    # Save to memory cache (loadtime)
 			    $Para::Frame::Cache::td{$filename} =
@@ -685,12 +690,12 @@ sub find_template
 		{
 		    eval
 		    {
-			debug(1,"Reading file");
+			debug(3,"Reading file");
 			$mod_time = time; # The new time of reading file
 			my $filetext = read_file( $filename );
 			my $parser = Template::Config->parser($params);
 			
-			debug(1,"Parsing");
+			debug(3,"Parsing");
 			my $parsedoc = $parser->parse( $filetext )
 			    or throw('template', "parse error:\nFile: $filename\n".
 				     $parser->error);
@@ -698,7 +703,7 @@ sub find_template
 			$parsedoc->{ METADATA }{'name'} = $filename;
 			$parsedoc->{ METADATA }{'modtime'} = $mod_time;
 
-			debug(1,"Writing compiled file");
+			debug(3,"Writing compiled file");
 			create_dir(dirname $compfile);
 			Template::Document->write_perl_file($compfile, $parsedoc);
 			chmod_file($compfile);
@@ -713,14 +718,14 @@ sub find_template
 			1;
 		    } or do
 		    {
-			debug(0,"Error while compiling template $filename: $@");
+			debug(2,"Error while compiling template $filename: $@");
 			$req->result->exception;
 			if( $template eq '/error.tt' )
 			{
 			    die( "Fatal template error for error.tt: ".
 				 $Para::Frame::th->{'html'}->error()."\n");
 			}
-			debug(1,"Using /error.tt");
+			debug(2,"Using /error.tt");
 			($in) = $req->find_template('/error.tt');
 			debug(-2);
 			return( $in, 'tt' );
@@ -736,7 +741,7 @@ sub find_template
     }
 
     # If we can't find the filname
-    debug(0,"Not found: $template");
+    debug(1,"Not found: $template");
     return( undef );
 }
 
@@ -762,11 +767,11 @@ sub send_code
 {
     my $req = shift;
 
-    debug(2,"Sending code: ".join("-", @_));
+    debug(3,"Sending code: ".join("-", @_));
 
     if( $Para::Frame::FORK )
     {
-	debug(0,"redirecting to parent");
+	debug(2,"redirecting to parent");
 	my $code = shift;
 	my $client = $req->client;
 	my $port = $client->sockport;
@@ -834,6 +839,7 @@ sub render_output
 	{
 
 	    debug(0,"FALLBACK!");
+	    $req->result->message("During the processing of\n$template");
 	    $req->result->exception();
 
 	    my $error = $Para::Frame::th->{'html'}->error;
@@ -859,7 +865,7 @@ sub render_output
 		}
 	    }
 
-	    debug(0,$Para::Frame::th->{'html'}->error());
+	    debug(1,$Para::Frame::th->{'html'}->error());
 
 	    $req->set_error_template( $error_tt );
 
@@ -895,10 +901,10 @@ sub send_output
 
     # Redirect if URL differs from template_url
 
-    if( debug )
+    if( debug > 2 )
     {
-	debug(1,"Sending output to ".$req->uri);
-	debug(1,"Sending the page ".$req->template_uri);
+	debug(0,"Sending output to ".$req->uri);
+	debug(0,"Sending the page ".$req->template_uri);
     }
 
     if( $req->uri ne $req->template_uri )
@@ -926,6 +932,13 @@ sub send_output
 sub forward
 {
     my( $req, $uri ) = @_;
+
+    # Should only be called AFTER the page has been generated
+
+    # To request a forward, just set the set_template($uri) before the
+    # page is generated.
+
+    croak "forward() called without a generated page" unless $req->{'page'};
 
     $uri ||= $req->template_uri;
     $req->output_redirection($uri);
@@ -965,7 +978,7 @@ sub output_redirection
 	$uri_out =  $uri->canonical->as_string;
     }
 
-    debug(0,"--> Redirect to $uri_out");
+    debug(2,"--> Redirect to $uri_out");
 
     $req->send_code( 'AR-PUT', 'status', 302 ); # moved
     $req->send_code( 'AR-PUT', 'header_out', 'Pragma', 'no-cache' );
@@ -1005,6 +1018,20 @@ sub host_port
     return $ENV{SERVER_PORT};
 }
 
+sub host
+{
+    my $port = host_port();
+
+    if( $port == 80 )
+    {
+	return host_name();
+    }
+    else
+    {
+	return sprintf "%s:%d", host_name(), $port;
+    }
+}
+
 sub set_tt_params
 {
     my( $req ) = @_;
@@ -1016,18 +1043,13 @@ sub set_tt_params
     # Determine the directory
     my( $dir ) = $real_filename =~ /^(.*\/)/;
     $req->{'dir'} = $dir;
-    debug(1,"Setting dir to $dir");
-
-    # Special handling of index.tt
-    my $me = $req->{'uri'};
-    $me =~ s/\bindex.tt$//;
-    $req->{'me'} = $me; #store
+    debug(3,"Setting dir to $dir");
 
     # Keep alredy defined params
     $req->add_params({
 	'q'               => $req->{'q'},
 	'ENV'             => $req->env,
-	'me'              => $me,
+	'me'              => $req->template_uri,
 	'filename'        => $real_filename,
 	'dir'             => $dir,
 	'browser'         => $req->{'browser'},
