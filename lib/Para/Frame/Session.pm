@@ -68,12 +68,13 @@ sub new
 
     $s =  bless
     {
-	sid => $sid,
-	active => $active,
-	created => localtime,
-	latest  => localtime,
-	user    => undef,
-	debug   => $Para::Frame::CFG->{'debug'},
+	sid            => $sid,
+	active         => $active,
+	created        => localtime,
+	latest         => localtime,
+	user           => undef,
+	debug          => $Para::Frame::CFG->{'debug'},
+	template_error => '', # Default
     }, $class;
 
     # Register s
@@ -97,9 +98,9 @@ sub after_request
 
 sub register_result_page
 {
-    my( $s, $uri, $headers, $page ) = @_;
+    my( $s, $uri, $headers, $page_ref ) = @_;
     # URI should only be the path part
-    $s->{'page_result'}{$uri} = [ $headers, $page ];
+    $s->{'page_result'}{$uri} = [ $headers, $page_ref ];
 }
 
 sub id
