@@ -24,7 +24,7 @@ Para::Frame::Utils - Utility functions for ParaFrame and applications
 
 use strict;
 use POSIX qw(locale_h strftime);
-use Carp qw(carp croak cluck confess);
+use Carp qw(carp croak cluck confess shortmess);
 use locale;
 use Date::Manip;
 use File::stat;
@@ -60,7 +60,7 @@ BEGIN
             chmod_dir package_to_module module_to_package dirsteps
             uri2file compile passwd_crypt deunicode paraframe_dbm_open
             elapsed_time uri referer store_params clear_params
-            restore_params idn_encode idn_decode debug );
+            restore_params idn_encode idn_decode debug reset_hashref );
 
 }
 
@@ -91,12 +91,14 @@ sub trim
     if( ref $ref )
     {
 	return undef unless defined $$ref;
-	return $$ref =~ s/(^\s+|\s+$)//g;
+	$$ref =~ s/( ^ \s+ | \s+ $ )//gx;
+	return $$ref;
     }
     else
     {
 	return undef unless defined $ref;
-	return $ref =~ s/(^\s+|\s+$)//g;
+	$ref =~ s/( ^ \s+ | \s+ $ )//gx;
+	return $ref;
     }
 }
 
@@ -632,7 +634,7 @@ sub uri
 
     my $req = $Para::Frame::REQ;
 
-    throw('compilation', "Too many args for plan()")
+    throw('compilation', shortmess "Too many args for uri")
 	if $attr and not ref $attr;
 
     $template ||= $Para::Frame::CFG->{'apphome'};
@@ -655,6 +657,8 @@ sub uri
     }
     my $query = join '&', @parts;
     $query and $query = '?'.$query;
+
+#    warn "Returning URI $template.$query\n";
     return $template.$query;
 }
 
@@ -763,7 +767,7 @@ sub passwd_crypt
 
     $ip =~ s/\.\d{1,3}$//; # accept changing ip within c-network
 
-    debug(1,"using REMOTE_ADDR $ip");
+    debug(4,"using REMOTE_ADDR $ip");
     return md5_hex( $passwd, $ip );
 }
 
@@ -867,7 +871,7 @@ Returns the referer, using the best method
 
 =cut
 
-sub referer
+sub referer ()
 {
     my $req = $Para::Frame::REQ;
     my $q = $req->q;
@@ -964,8 +968,11 @@ sub store_params
     my $state = {};
     foreach my $key ( $q->param() )
     {
-	$state->{ $key } = $q->param( $key );
+	# $key could have many values
+	$state->{ $key } = [ $q->param( $key ) ];
     }
+
+#    warn "Returning state :".Dumper($state);
     return $state;
 }
 
@@ -981,16 +988,18 @@ given
 
 sub clear_params
 {
+    my $q = $Para::Frame::REQ->q;
+
     if( @_ )
     {
 	foreach( @_ )
 	{
-	    $Psi::query->delete( $_ );
+	    $q->delete( $_ );
 	}
     }
     else
     {
-	$Psi::query->delete_all();
+	$q->delete_all();
     }
 }
 
@@ -1007,10 +1016,12 @@ sub restore_params
 {
     my( $state ) = @_;
 
-    $Psi::query->delete_all();
+    my $q = $Para::Frame::REQ->q;
+
+    $q->delete_all();
     foreach my $key ( keys %$state )
     {
-	$Psi::query->param( $key, $state->{$key} );
+	$q->param( $key, @{ $state->{$key} } );
     }
 }
 
@@ -1062,6 +1073,26 @@ sub debug
     $Para::Frame::INDENT += $delta if $delta > 0;
 
     return $message . "\n";
+}
+
+sub reset_hashref
+{
+    my( $hashref, $params ) = @_;
+
+    $params ||= {};
+
+    foreach my $key ( keys %$hashref )
+    {
+	debug(1,"  Removing $key from hash");
+	delete $hashref->{$key};
+    }
+
+    foreach my $key ( keys %$params )
+    {
+	$hashref->{$key} = $params->{$key};
+    }
+
+    return $hashref;
 }
 
 
