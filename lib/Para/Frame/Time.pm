@@ -24,6 +24,7 @@ Para::Frame::Time
 
 # Override Time::Piece with some new things
 use strict;
+use POSIX qw(locale_h strftime);
 use Time::Piece;
 use Date::Manip;
 use Carp qw( cluck );
@@ -35,19 +36,27 @@ BEGIN
     warn "  Loading ".__PACKAGE__." $VERSION\n";
 }
 
+our @EXPORT_OK = qw(internet_date date now ); #for docs only
+
 #use Para::Frame::Reload; # This code is mingled with Time::Piece
 
 use Para::Frame::Utils qw( throw debug );
 
 sub import
 {
+    my $class = shift;
+
     # Initiate Date::Manip
     Date_Init("Language=English");
     Date_Init("Language=Swedish"); # Reset language
 
+    #Export functions like Exporter do
+    my $callpkg = caller();
+    no strict 'refs'; # Symbolic refs
+    *{"$callpkg\::$_"} = \&{"$class\::$_"} foreach @_;
+
     # Pretend to be Time::Piece
-    shift;
-    @_ = ('Time::Piece', @_);
+    @_ = ('Time::Piece'); # Do not forward @_
     goto &Time::Piece::import;
 }
 
@@ -56,6 +65,14 @@ sub import
 
 Modification of L<Time::Piece>, it automaticly strinigifies to the
 format C<%Y-%m-%d %H.%M>.
+
+=cut
+
+=head2 get
+
+  Para::Frame::Time->get( $any_type_of_date )
+
+Parses everything and returns object
 
 =cut
 
@@ -102,6 +119,53 @@ sub get
     debug(1,"Finaly: $to");
     return $to;
 }
+
+=head2 now
+
+  now() # Exportable
+
+Same as the overloaded localtime(), except that it works even in list
+context
+
+=cut
+
+sub now
+{
+    return scalar localtime;
+}
+
+=head2 date
+
+  date($any_string) #exportable
+
+Same as Para::Frame::Time->get()
+
+=cut
+
+sub date
+{
+    return Para::Frame::Time->get(@_);
+}
+
+
+=head2 internet_date
+
+  internet_date()
+  internet_date($time)
+
+Returns a date in a format suitable for use in SMTP or HTTP headers.
+
+=cut
+
+sub internet_date
+{
+    my $old = setlocale(LC_TIME);
+    setlocale(LC_TIME, "C");
+    my $res = strftime('%a, %d %b %Y %T %z', localtime($_[0]));
+    setlocale(LC_TIME, $old);
+    return $res;
+}
+
 
 ### New methods
 
