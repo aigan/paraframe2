@@ -131,7 +131,8 @@ sub slider
     my $min     = $attr->{'min'}  || 0;
     my $max     = $attr->{'max'}    || 100;
     my $number  = $attr->{'number'}    || 6;
-    my $current = $Para::Frame::REQ->q->param($field) || $attr->{'current'} || 0;
+    my $default = $attr->{'default'}; # Could be undef
+    my $current = $Para::Frame::REQ->q->param($field) || $attr->{'current'} || $default;
 
     my @val = ();
     my( @checked ) = ('')x$number;
@@ -156,9 +157,9 @@ sub slider
 
 =head2 jump
 
-  jump( $label, $handler, %attrs )
+  jump( $label, $template, %attrs )
 
-Draw a link to $handler with text $label and query params %attrs.
+Draw a link to $template with text $label and query params %attrs.
 
 A 'target' attribute will set the target frame for the link.
 
@@ -172,7 +173,7 @@ menues.
 
 Default $label = '???'
 
-Default $handler = '', witch would be the current handler
+Default $template = '', witch would be the current template
 
 =cut
 
@@ -187,6 +188,10 @@ sub jump
     if( my $val = delete $attr->{'target'} )
     {
 	$extra .= " target=\"$val\"";
+    }
+    if( my $val = delete $attr->{'id'} )
+    {
+	$extra .= " id=\"$val\"";
     }
     if( my $val = delete $attr->{'onClick'} )
     {
@@ -276,15 +281,15 @@ sub submit
 
 =head2 go
 
-  go( $label, $handler, $run, %attrs )
+  go( $label, $template, $run, %attrs )
 
-Draw a form submit button with text $label.  Sets handler to $handler
+Draw a form submit button with text $label.  Sets template to $template
 and runs action $run.  %attrs specifies form fields to be set to
 specified values.
 
 Default $label = '???'
 
-Default $handler is previously set next_handler
+Default $template is previously set next_template
 
 Default $run = 'nop'
 
@@ -298,14 +303,15 @@ submit. (not implemented)
 
 sub go
 {
-    my( $label, $handler, $run, $attr ) = @_;
+    my( $label, $template, $run, $attr ) = @_;
 
     die "Too many args for go()" if $attr and not ref $attr;
 
     $label = '???' unless length $label;
-    $handler ||= '';
+    $template ||= '';
     $run ||= 'nop';
     $attr ||= {};
+    $attr->{'class'} ||= 'msg';
 
     my $extra = "";
     if( my $val = delete $attr->{'target'} )
@@ -318,7 +324,7 @@ sub go
     }
 
     my $query = join '', map sprintf("document.f.$_.value='%s';", $attr->{$_}), keys %$attr;
-    return "<input type=\"button\" value=\"$label\" onClick=\"${query}go('$handler', '$run')\" $extra>";
+    return "<input type=\"button\" value=\"$label\" onClick=\"${query}go('$template', '$run')\" $extra>";
 }
 
 sub go_js
@@ -338,15 +344,15 @@ sub go_js
 
 =head2 forward
 
-  forward( $label, $handler, %attrs )
+  forward( $label, $template, %attrs )
 
-Draw a link to $handler with text $label and query params %attrs as
+Draw a link to $template with text $label and query params %attrs as
 well as all the query params.  Params set in %attrs overide the
-previous value.  Also sets param 'previous' to current handler.
+previous value.  Also sets param 'previous' to current template.
 
 Default $label = '???'
 
-Default $handler = '' which would be the current handler
+Default $template = '' which would be the current template
 
 =cut
 
@@ -453,27 +459,27 @@ sub preserve_data
 
 =head2 alfanum_bar
 
-  alfanum_bar( $handler, $field )
+  alfanum_bar( $template, $field )
 
-Draws a alfanumerical bar, each letter being a link to $handler with
+Draws a alfanumerical bar, each letter being a link to $template with
 the letter as value for field $field.
 
 =cut
 
 sub alfanum_bar
 {
-    my( $handler, $name, $attr ) = @_;
+    my( $template, $name, $attr ) = @_;
 
     die "Too many args for alfanum_bar()" if $attr and not ref $attr;
-    die "handler attrib missing" unless $handler;
+    die "template attrib missing" unless $template;
     die "name attrib missing" unless $name;
 
     use locale;
     use POSIX qw(locale_h);
     setlocale(LC_ALL, "sv_SE");
 
-    my $text = join(' | ', map "<a href=\"$handler?$name=$_\">\U$_</a>", 'a'..'z','å','ä','ö');
-    $text = "| <a href=\"$handler?$name=\">0-9</a> | ".$text." |";
+    my $text = join(' | ', map "<a href=\"$template?$name=$_\">\U$_</a>", 'a'..'z','å','ä','ö');
+    $text = "| <a href=\"$template?$name=\">0-9</a> | ".$text." |";
 
 #    return "\Uåke ärlansson\n";
     return $text;
