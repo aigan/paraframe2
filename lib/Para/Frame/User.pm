@@ -256,6 +256,13 @@ sub username { $_[0]->{'username'} }
 sub uid      { $_[0]->{'uid'} }
 sub level    { $_[0]->{'level'} }
 
+
+# Shortcuts
+#
+sub session { $Para::Frame::REQ->s }
+sub s       { $Para::Frame::REQ->s }
+sub route   { $Para::Frame::REQ->s->route }
+
 1;
 
 =head1 SEE ALSO
