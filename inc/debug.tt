@@ -8,6 +8,12 @@
 
 [% IF debug %]
 
+[%
+   TRY; PROCESS "app_debug.tt";
+   CATCH file; END;
+%]
+
+
 <h1>[% IF result.errcnt %]
    [% IF result.errcnt == 1 %]
       [% result.errcnt %] error
@@ -37,6 +43,7 @@
    [% IF loop.last %]
       [% backstep %]
       [% regret %]
+      [% remove_step %]
    [% END %]
 </li>
 [% END %]
