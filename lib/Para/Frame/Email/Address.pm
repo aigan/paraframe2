@@ -86,7 +86,12 @@ sub address { $_[0]->{addr}->address }
 
 sub host { $_[0]->{addr}->host }
 
-sub format { carp "deprecated" }
+sub format { $_[0]->{addr}->format }
+
+sub name
+{
+    return shift->{addr}->phrase(@_);
+}
 
 # sub update
 # {
