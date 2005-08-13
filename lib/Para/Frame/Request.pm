@@ -62,6 +62,12 @@ sub new
     delete $env->{'MOD_PERL'};
 
     %ENV = %$env;     # To make CGI happy
+
+    # Turn back and make $env a ref to the actual %ENV symbol table
+    # entry. This keeps them synced
+    #
+    $env = \%ENV;
+
     my $q = new CGI($params);
     $q->cookie('password'); # Should cache all cookies
 
@@ -121,6 +127,7 @@ sub dir { shift->{'dir'} }
 sub filename { uri2file(shift->template) }
 sub lang { undef }
 sub error_page_selected { $_[0]->{'error_template'} ? 1 : 0 }
+sub error_page_not_selected { $_[0]->{'error_template'} ? 0 : 1 }
 
 sub template
 {
@@ -484,8 +491,9 @@ sub error_backtrack
 	if( $previous )
 	{
 	    debug(3,"Previous is $previous");
-	    # TODO: forward to the URI instead
-	    $req->set_error_template( $previous );
+
+	    # Do not regard this as an error template
+	    $req->set_template( $previous );
 	}
     }
 }
@@ -521,12 +529,21 @@ sub referer
 
     # Returns the path part
 
+    # Explicit caller_page could be given
+    if( my $uri = $req->q->param('caller_page') )
+    {
+	return URI->new($uri)->path;
+    }
+
     # The actual referer is more acurate in this order
     if( my $uri = $req->q->referer )
     {
 	return URI->new($uri)->path;
     }
 
+    # This could be confusing if several browser windows uses the same
+    # session
+    #
     return $req->s->referer;
 }
 
@@ -907,7 +924,8 @@ sub send_output
 	debug(0,"Sending the page ".$req->template_uri);
     }
 
-    if( $req->uri ne $req->template_uri )
+    if( $req->error_page_not_selected and
+	$req->uri ne $req->template_uri )
     {
 	$req->forward();
     }
@@ -1032,36 +1050,6 @@ sub host
     }
 }
 
-sub set_tt_params
-{
-    my( $req ) = @_;
-
-    # Real filename
-    my $real_filename = $req->filename;
-    $real_filename or die "No filename given: ".Dumper($req);
-
-    # Determine the directory
-    my( $dir ) = $real_filename =~ /^(.*\/)/;
-    $req->{'dir'} = $dir;
-    debug(3,"Setting dir to $dir");
-
-    # Keep alredy defined params
-    $req->add_params({
-	'q'               => $req->{'q'},
-	'ENV'             => $req->env,
-	'me'              => $req->template_uri,
-	'filename'        => $real_filename,
-	'dir'             => $dir,
-	'browser'         => $req->{'browser'},
-	'u'               => $Para::Frame::U,
-	'result'          => $req->{'result'},
-	'reqnum'          => $req->{'reqnum'},
-	'req'             => $req,
-	'cfg'             => $Para::Frame::CFG,
-	'home'            => $Para::Frame::CFG->{'webhome'},
-    }, 1);
-}
-
 sub create_fork
 {
     my( $req ) = @_;
@@ -1144,19 +1132,36 @@ sub run_hook
     Para::Frame->run_hook(@_);
 }
 
-
-#### TEST job
-
-sub count
+sub set_tt_params
 {
-    my( $s ) = @_;
+    my( $req ) = @_;
 
-    $s->{cnt} ++;
-    $s->{client}->send( sprintf( "<p>%8d: %4d</p>\n", $s->{env}{REMOTE_PORT}, $s->{cnt}));
-    debug(0,"Count $s->{cnt}");
+    # Real filename
+    my $real_filename = $req->filename;
+    $real_filename or die "No filename given: ".Dumper($req);
 
-    $s->add_job("count") unless $s->{cnt} >= 5;
+    # Determine the directory
+    my( $dir ) = $real_filename =~ /^(.*\/)/;
+    $req->{'dir'} = $dir;
+    debug(3,"Setting dir to $dir");
+
+    # Keep alredy defined params  # Static within a request
+    $req->add_params({
+	'q'               => $req->{'q'},
+	'ENV'             => $req->env,
+	'me'              => $req->template_uri,
+	'filename'        => $real_filename,
+	'dir'             => $dir,
+	'browser'         => $req->{'browser'},
+	'u'               => $Para::Frame::U,
+	'result'          => $req->{'result'},
+	'reqnum'          => $req->{'reqnum'},
+	'req'             => $req,
+
+	# Is allowed to change between requests
+	'site'            => $Para::Frame::CFG->{'site'},
+	'home'            => $Para::Frame::CFG->{'site'}{'webhome'},
+    }, 1);
 }
-
 
 1;
