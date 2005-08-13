@@ -25,6 +25,7 @@ Para::Frame::Route - Backtracking and planning steps in a session
 use strict;
 use Data::Dumper;
 use URI;
+use URI::QueryParam;
 use Carp;
 
 BEGIN
@@ -36,7 +37,7 @@ BEGIN
 use Para::Frame;
 use Para::Frame::Reload;
 use Para::Frame::Request;
-use Para::Frame::Utils qw( throw uri referer debug );
+use Para::Frame::Utils qw( throw uri debug );
 
 =head1 DESCRIPTION
 
@@ -116,6 +117,7 @@ sub on_startup
 	'plan'            => sub{ $Para::Frame::REQ->s->route->plan_next(@_) },
 	'plan_next'       => sub{ $Para::Frame::REQ->s->route->plan_next(@_) },
 	'plan_after'      => sub{ $Para::Frame::REQ->s->route->plan_after(@_) },
+	'default_step'    => sub{ $Para::Frame::REQ->s->route->default },
 	'route'           => sub{ $Para::Frame::REQ->s->route->{'route'} },
     });
 }
@@ -146,7 +148,7 @@ sub plan_backtrack
 	return $step->path . '?backtrack';
     }
 
-    return $route->{'default'} || undef;
+    return undef;
 }
 
 
@@ -167,12 +169,19 @@ sub plan_next
     my( $route, $urls ) = @_;
 
     $urls = [$urls] unless UNIVERSAL::isa($urls, 'ARRAY');
+    my $referer = $Para::Frame::REQ->referer;
     foreach my $url ( @$urls )
     {
 	$url = URI->new($url) unless UNIVERSAL::isa($url, 'URI');
+
+	# Used in skip_step...
+	$url->query_param_append('caller_page' => $referer )
+	    unless $url->query_param('caller_page');
+
 	debug(1,"!!New step in route: $url");
-#	warn "  !! New step in route\n";
-	push @{$route->{'route'}}, $url->as_string;
+
+	next if $route->{'route'}[-1] and $url->eq($route->{'route'}[-1]);
+	push @{$route->{'route'}}, $url;
     }
 }
 
@@ -194,11 +203,19 @@ sub plan_after
     my( $route, $urls ) = @_;
 
     $urls = [$urls] unless UNIVERSAL::isa($urls, 'ARRAY');
+    my $referer = $Para::Frame::REQ->referer;
     foreach my $url ( @$urls )
     {
 	$url = URI->new($url) unless UNIVERSAL::isa($url, 'URI');
+
+	# Used in skip_step...
+	$url->query_param_append('caller_page' => $referer )
+	    unless $url->query_param('caller_page');
+
 	debug(1,"!!New last step in route: $url");
-	unshift @{$route->{'route'}}, $url->as_string;
+
+	next if $route->{'route'}[0] and $url->eq($route->{'route'}[0]);
+	unshift @{$route->{'route'}}, $url;
     }
 }
 
@@ -221,12 +238,8 @@ sub new
 {
     my( $class ) = @_;
 
-    my $route = bless
-    {
-	route => [],
-	default => undef,
-    }, $class;
-
+    my $route = bless {}, $class;
+    $route->clear;
     return $route;
 }
 
@@ -235,7 +248,7 @@ sub clear
     my( $route ) = @_;
 
     $route->{'route'} = [];
-    $route->{'default'} = undef;
+    $route->{'default'} = $Para::Frame::CFG->{'site'}{'last_step'};
     return 1;
 }
 
@@ -307,7 +320,7 @@ Called after each action in the request, if sessions are used.
 
 This will check if a backtrack was requested, by an earlier use of
 C<$route->plan_backtrack>.  If a backtrack was requested, takes a step
-back by calling C<$route->next_step>.
+back by calling C<$route->get_next>.
 
 =cut
 
@@ -420,6 +433,8 @@ sub bookmark
 
 Take the next step in the route. That is; one step back.
 
+This is the method used by the next_step action.
+
 Set upp all the params for that step.  The query param
 C<step_replace_params> can be repeated, each param naming the name of
 antoher param given, that sould replace the corresponding param in the
@@ -458,16 +473,7 @@ sub get_next
 	    $args_add{$key} = [ $q->param($key) ];
 	}
 
-#	debug_query("BEFORE");
-
-	$q->delete_all;
-	###  DANGER  DANGER  DANGER
-	# init() is not a public method
-#	debug_query("DELETED");
-	debug(1,"Initiating query with string $query");
-	$ENV{QUERY_STRING} = $query;
-	delete $q->{'.url_param'};
-	$q->init($query);
+	$route->replace_query( $q, $query );
 
 	foreach my $key ( keys %args_replace )
 	{
@@ -500,9 +506,15 @@ sub get_next
 
   $route->skip_step
 
-Going back, but skipping one step in the route.  Just jumping one step
-or taking the step for initial param values but uses it for finding
-the previous template.
+Going back to the referer page of the request setting up the next step in
+the route. Giving that page the params that the next step would get,
+except the special params like run(), et al. Removes that step from
+the route.
+
+The step could have an explicit caller_page that would be used in
+place of the referer page.
+
+Using run='mark' will make make the referer the same page as the step.
 
 =cut
 
@@ -520,25 +532,40 @@ sub skip_step
     {
 	debug(1,"!!    back step one");
 
-	# Use the second step if existing
-	#
-	if( @{$route->{'route'}} )
+	$step = URI->new($step) unless UNIVERSAL::isa($step, 'URI');
+
+	my $caller_page = URI->new($step->query_param('caller_page'))
+	    or die "caller_page missing from $step";
+
+#	warn " -- Got caller $caller_page from $step\n";
+
+	# Check if previous steps has the same caller. Remove them as
+	# well in that case.
+
+      CHECK:
+	while( my $next_step = @{$route->{'route'}}[-1] )
 	{
-	    debug(1,"!!    back step two");
-	    return $route->get_next;
+	    $next_step = URI->new($next_step)
+		unless UNIVERSAL::isa($next_step, 'URI');
+
+	    my $previous_caller =
+		URI->new($next_step->query_param('caller_page'))
+		or die "caller_page missing from $step";
+	    if( $previous_caller->eq( $caller_page ) )
+	    {
+		pop @{$route->{'route'}};
+		next CHECK;
+	    }
+	    last CHECK;
 	}
 
-	$step = URI->new($step) unless UNIVERSAL::isa($step, 'URI');
-	my $query = $step->query;
+	# Now setup the params for the caller
 
-	$q->delete_all;
-	###  DANGER  DANGER  DANGER
-	# init() is not a public method
-	$q->init($query);
-	debug(1,"!!    Initiated new query");
+	$route->replace_query( $q, $step->query );
 
-	$dest = $q->param('previous') || '';
-	debug(1,"!!    Destination set to $dest");
+	$dest = $q->param('caller_page')
+	    or die "no caller_page for this step";
+	debug(1,"!!  Destination set to $dest");
 
 	$route->clear_special_params;
     }
@@ -549,10 +576,33 @@ sub skip_step
 	debug(1,"!!  No more steps in route");
     }
 
-    $dest ||= $route->default || $req->app->home;
+    $dest ||= $route->default || $Para::Frame::CFG->{'site'}{'webhome'};
 
     $req->set_template($dest);
 }
+
+
+#######################################################################
+
+=head2 remove_step
+
+  $route->remove_step
+
+Remove next step in the route. Do not change uri or query params
+
+=cut
+
+sub remove_step
+{
+    my( $route ) = @_;
+
+    if( my $step = pop @{$route->{'route'}} )
+    {
+	debug(1,"!!removed next step");
+    }
+}
+
+
 
 sub clear_special_params
 {
@@ -567,6 +617,17 @@ sub clear_special_params
     $q->delete('destination');
 }
 
+
+#######################################################################
+
+=head2 steps
+
+  $route->steps
+
+Return the number of steps in route
+
+=cut
+
 sub steps
 {
     my( $route ) = @_;
@@ -574,9 +635,38 @@ sub steps
     return scalar( @{$route->{'route'}} );
 }
 
+
+#######################################################################
+
+=head2 default
+
+  $route->default
+
+Returns the default template to use after the last step
+
+=cut
+
 sub default
 {
     return $_[0]->{'default'};
+}
+
+sub replace_query
+{
+    my( $this, $q, $query_string ) = @_;
+
+    ###  DANGER  DANGER  DANGER
+    # init() is not a public method
+    debug(1,"Initiating query with string $query_string");
+
+    $ENV{QUERY_STRING} = $query_string;
+    $q->delete_all;
+    delete $q->{'.url_param'};
+#    warn Dumper \%ENV;
+    $q->init($query_string);
+
+#    warn Dumper $q;
+    return $q;
 }
 
 sub debug_query
