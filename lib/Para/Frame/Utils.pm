@@ -23,7 +23,6 @@ Para::Frame::Utils - Utility functions for ParaFrame and applications
 =cut
 
 use strict;
-use POSIX qw(locale_h strftime);
 use Carp qw(carp croak cluck confess shortmess);
 use locale;
 use Date::Manip;
@@ -55,12 +54,13 @@ BEGIN
 {
     @Para::Frame::Utils::EXPORT_OK
 
-      = qw( trim maxof minof internet_date make_passwd random throw
+      = qw( trim maxof minof make_passwd random throw
             catch create_file create_dir chmod_tree chmod_file
             chmod_dir package_to_module module_to_package dirsteps
             uri2file compile passwd_crypt deunicode paraframe_dbm_open
-            elapsed_time uri referer store_params clear_params
-            restore_params idn_encode idn_decode debug reset_hashref );
+            elapsed_time uri store_params clear_params
+            restore_params idn_encode idn_decode debug reset_hashref
+	    inflect );
 
 }
 
@@ -140,25 +140,6 @@ sub minof
 	$min = $val if $val < $min;
     }
     return $min;
-}
-
-
-=head2 internet_date
-
-  internet_date()
-  internet_date($time)
-
-Returns a date in a format suitable for use in SMTP or HTTP headers.
-
-=cut
-
-sub internet_date
-{
-    my $old = setlocale(LC_TIME);
-    setlocale(LC_TIME, "C");
-    my $res = strftime('%a, %d %b %Y %T %z', localtime($_[0]));
-    setlocale(LC_TIME, $old);
-    return $res;
 }
 
 
@@ -863,31 +844,6 @@ sub elapsed_time
     return $str;
 }
 
-=head2 referer
-
-  referer()
-
-Returns the referer, using the best method
-
-=cut
-
-sub referer ()
-{
-    my $req = $Para::Frame::REQ;
-    my $q = $req->q;
-    my $referer = $q->param('previous');
-
-    unless( $referer )
-    {
-	if( $referer = $q->referer )
-	{
-	    $referer =~ s!^https?://[^\/]*/!/!;
-	}
-    }
-
-    debug(0,"Referer is ".$q->param('previous')." (".$q->referer.")");
-    return $referer;
-}
 
 =head2 idn_decode
 
@@ -1095,6 +1051,43 @@ sub reset_hashref
     return $hashref;
 }
 
+sub inflect # inflection = böjning
+{
+    my( $number, $none, $one, $many ) = @_;
+
+    # Support calling with or without the $none option
+
+    if( $many )
+    {
+	# If called with %d, interpolate the number
+	$many =~ s/\%d/$number/;
+    }
+    else
+    {
+	$many = $one;
+
+	# If called with %d, interpolate the number
+	$many =~ s/\%d/$number/;
+
+	$one = $none;
+	$none = $many;
+    }
+
+
+    if( $number == 0 )
+    {
+	return $none;
+    }
+    elsif( $number == 1 )
+    {
+	return $one;
+    }
+    else
+    {
+	# Also for negative numbers
+	return $many;
+    }
+}
 
 1;
 
