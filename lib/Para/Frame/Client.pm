@@ -32,9 +32,11 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( debug );
+use Para::Frame::Utils;
 
 our $SOCK;
+
+our $DEBUG = 0;
 
 # $SIG{HUP} = sub { warn "Got a HUP\n"; };
 # $SIG{INT} = sub { warn "Got a INT\n"; };
@@ -47,7 +49,7 @@ sub handler
 
     $|=1;
 
-    debug(1,"$$: Client started");
+    warn "$$: Client started\n" if $DEBUG;
 
     my $q = new CGI;
 
@@ -71,7 +73,7 @@ sub handler
 
     &connect( $port );
 
-    warn "$$: Socket obj created on port $port\n";
+    warn "$$: Socket obj created on port $port\n" if $DEBUG;
 
    unless( $SOCK )
    {
@@ -86,10 +88,10 @@ sub handler
        return 1;
    };
 
-    debug(1,"$$: Established connection to server");
+    warn "$$: Established connection to server\n" if $DEBUG;
 
     my $reqline = $r->the_request;
-    warn "$$: Got $reqline\n";
+    warn "$$: Got $reqline\n" if $DEBUG;
 
     my $ctype = $r->content_type || 'text/html'; # FIXME
 #    my $ctype = $r->content_type or die; # TEST
@@ -108,36 +110,36 @@ sub handler
 
     send_to_server('REQ', \$value);
 
-    debug(1,"$$: Sent data to server");
+    warn "$$: Sent data to server\n" if $DEBUG;
 
     my $in_body = 0;
     my $rows = 0;
     while( $_ = <$SOCK> )
     {
-	if( debug > 4 )
+	if( $DEBUG > 4 )
 	{
 	    my $len = length( $_ );
-	    debug(1,"$$: Got: '$_'[$len]");
+	    warn "$$: Got: '$_'[$len]\n";
 	}
 
 	# Code size max 10 chars
 	if( s/^([\w\-]{3,10})\0// )
 	{
 	    my $code = $1;
-	    warn "$$:   Code $code\n";
+	    warn "$$:   Code $code\n" if $DEBUG;
 	    chomp;
 	    # Apache Request command execution
 	    if( $code eq 'AR-PUT' )
 	    {
 		my( $cmd, @vals ) = split(/\0/, $_);
-		warn "$$: AR-PUT $cmd with @vals\n";
+		warn "$$: AR-PUT $cmd with @vals\n" if $DEBUG;
 		$r->$cmd( @vals );
 	    }
 	    # Get filename for this URI
 	    elsif( $code eq 'URI2FILE' )
 	    {
 		my $uri = $_;
-		warn "$$: URI2FILE $uri\n";
+		warn "$$: URI2FILE $uri\n" if $DEBUG;
 		my $sr = $r->lookup_uri($uri);
 		my $file = $sr->filename;
 		send_to_server( 'RESP', \$file );
@@ -146,7 +148,7 @@ sub handler
 	    elsif( $code eq 'AR-GET' )
 	    {
 		my( $cmd, @vals ) = split(/\0/, $_);
-		warn "$$: AR-GET $cmd with @vals\n";
+		warn "$$: AR-GET $cmd with @vals\n" if $DEBUG;
 		my $res =  $r->$cmd( @vals );
 		send_to_server( 'RESP', \$res );
 	    }
@@ -154,7 +156,7 @@ sub handler
 	    elsif( $code eq 'AT-PUT' )
 	    {
 		my( $cmd, @vals ) = split(/\0/, $_);
-		warn "$$: AT-PUT $cmd with @vals\n";
+		warn "$$: AT-PUT $cmd with @vals\n" if $DEBUG;
 		my $h = $r->headers_out;
 		$h->$cmd( @vals );
 	    }
@@ -172,7 +174,7 @@ sub handler
 	    }
 	    else
 	    {
-		warn "$$: Output the http headers\n";
+		warn "$$: Output the http headers\n" if $DEBUG;
 		my $content_type = $r->content_type;
 		unless( $content_type )
 		{
@@ -185,7 +187,7 @@ sub handler
 			$content_type = "text/plain";
 		    }
 		}
-		warn "$$: Content type appears to be $content_type\n";
+		warn "$$: Content type appears to be $content_type\n" if $DEBUG;
 
 		$r->send_http_header($content_type);
 		$in_body = 1;
@@ -193,8 +195,8 @@ sub handler
 	}
     }
 
-    warn "$$: Returned $rows rows\n";
-    debug(1,"$$: Response recieved\n\n\n");
+    warn "$$: Returned $rows rows\n" if $DEBUG;
+    warn "$$: Response recieved\n\n\n" if $DEBUG;
 
     return 1;
 }
@@ -205,7 +207,7 @@ sub send_to_server
 
     my $length = length($$valref) + length($code) + 1;
 
-    debug(1,"$$: Sending $length - $code - value");
+    warn "$$: Sending $length - $code - value\n" if $DEBUG;
     unless( print $SOCK "$length\x00$code\x00" . $$valref )
     {
 	die "LOST CONNECTION while sending $code\n";
