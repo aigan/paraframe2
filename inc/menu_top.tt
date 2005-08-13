@@ -1,6 +1,6 @@
 <p align="right">[ [% u.name %] 
 [% IF u.level %]
-   | [% jump('Logga ut', home, run='user_logout') %] 
+   | [% jump('Logga ut', site.logout_page, run='user_logout') %] 
 [% ELSE %]
    | [% jump('Logga in', "login.tt") %] 
 [% END %]
