@@ -22,6 +22,7 @@ use IO::Socket 1.18;
 use IO::Select;
 use Socket;
 use POSIX;
+use Text::Autoformat; #exports autoformat()
 use Time::HiRes qw( time );
 use Data::Dumper;
 use Carp qw( cluck confess carp );
@@ -204,9 +205,10 @@ sub main_loop
 
 	### Are there any data to be read from childs?
 	#
-	my $child_data = '';
 	foreach my $child ( values %CHILD )
 	{
+	    my $child_data = ''; # We must init for each child!
+
 #	    warn sprintf "--> Checking $child, reading %d bytes\n", POSIX::BUFSIZ;
 
 	    # Do a nonblocking read to get data. We try to read often
@@ -239,6 +241,9 @@ sub switch_req
 		$REQ->{'s'}{'template_error'} =
 		    $Para::Frame::th->{'html'}{ _ERROR };
 	    }
+
+	    # Detatch %ENV
+	    $REQ->{'env'} = {%ENV};
 	}
 
 	Para::Frame->run_hook(undef, 'before_switch_req');
@@ -256,7 +261,10 @@ sub switch_req
 		    $s->{'template_error'};
 	    }
 
-	    %ENV = %{$REQ->env}; # TODO: eliminate duplicate copy
+	    # Attach %ENV
+	    %ENV = %{$REQ->{'env'}};
+	    $REQ->{'env'} = \%ENV;
+
 	    $INDENT = $REQ->{'indent'};
 	}
 	else
@@ -490,11 +498,11 @@ sub REAPER
     $SIG{CHLD} = \&REAPER;  # still loathe sysV
 }
 
-use POSIX 'setsid';
-
 sub daemonize
 {
     my $log = $CFG->{'logfile'};
+
+    # TODO: Add a watchdog process using Watchdog::Process
 
     chdir '/'                 or die "Can't chdir to /: $!";
     open STDIN, '/dev/null'   or die "Can't read /dev/null: $!";
@@ -506,7 +514,7 @@ sub daemonize
 	warn "Running in background\n";
 	exit;
     }
-    setsid                    or die "Can't start a new session: $!";
+    POSIX::setsid             or die "Can't start a new session: $!";
     open STDOUT, '>>', $log   or die "Can't append to $log: $!";
     open STDERR, '>&STDOUT'   or die "Can't dup stdout: $!";
 
@@ -698,6 +706,22 @@ sub configure
     $CFG->{'paraframe'} ||= '/usr/local/paraframe';
     $CFG->{'paraframe_group'} ||= 'staff';
 
+
+    # Site pages
+
+    # Since one server can serve many websites, there should be a
+    # on_site_change() hook for updating environment data (global
+    # variables) for the specific site. The basic site dependant
+    # configuration data are grouped in {'site'} subhash. You may want
+    # to replace it depending on what site is requested
+
+    my $site = $CFG->{'site'} ||= {};
+
+    $site->{'webhome'}     ||= ''; # URL path to website home
+    $site->{'last_step'};        # Default to undef
+    $site->{'login_page'}  ||= $site->{'last_step'} || $site->{'webhome'}.'/';
+    $site->{'logout_page'} ||= $site->{'webhome'}.'/';
+
     # Make appfmly and appback listrefs if they are not
     foreach my $key ('appfmly', 'appback')
     {
@@ -749,7 +773,7 @@ sub configure
 	{
 	    'uri' => sub { CGI::escape($_[0]) },
 	    'lf'  => sub { $_[0] =~ s/\r\n/\n/g; $_[0] },
-#	    'autoformat' => sub { autoformat($_[0]) },
+	    'autoformat' => sub { autoformat($_[0]) },
 	},
     };
 
@@ -772,6 +796,7 @@ sub set_global_tt_params
 
     my $params =
     {
+	'cfg'             => $Para::Frame::CFG,
 	'dump'            => \&Dumper,
 	'warn'            => sub{ warn($_[0],"\n");"" },
 	'debug'           => sub{ debug(@_) },
