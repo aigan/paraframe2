@@ -19,7 +19,7 @@ package Para::Frame::Action::mark;
 use strict;
 use Data::Dumper;
 
-use Para::Frame::Utils qw( uri referer store_params);
+use Para::Frame::Utils qw( uri store_params);
 
 sub handler
 {
@@ -31,7 +31,7 @@ sub handler
     my @run = $q->param('run');
     $q->delete('run');
 
-    $route->bookmark( uri referer, store_params );
+    $route->bookmark( uri $req->referer, store_params );
 
     $q->param('run', grep {$_ ne 'mark'} @run );
     
