@@ -15,6 +15,21 @@
 [% END %]
 
 
+[% MACRO step(label, template, run) BLOCK %]
+   [% IF template %]
+      [% go(label, template, run) %]
+      [%+ backstep %]
+   [% ELSE %]
+      [% submit(label) %]
+      [% IF form_action %]
+         [%+ backstep %]
+      [% END %]
+   [% END %]
+   [% IF route.size %]
+      [%+ regret %]
+   [% END %]
+[% END %]
+
 
 [% MACRO regret(label) BLOCK %]
 [% DEFAULT
@@ -26,9 +41,19 @@
 
 
 
+[% MACRO remove_step(label) BLOCK %]
+[% DEFAULT
+       	label = 'Ta bort steg'
+	class = 'msg'
+%]
+   [% go(label, me, 'remove_step', class=class) %]
+[% END %]
+
+
+
 [% MACRO backstep(label) BLOCK %]
 [% DEFAULT
-       	label = 'Backa'
+       	label = 'Hoppa över'
 	class = 'msg'
 %]
    [% go(label, undef, 'next_step', class=class) %]
