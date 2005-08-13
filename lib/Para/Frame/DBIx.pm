@@ -378,10 +378,18 @@ sub new
 			      $dbix->dbh->commit;
 			  });
 
+    # I tried to just setting InactiveDestroy. But several processes
+    # can't share a dbh. Multiple requests/multiple forsk may/will
+    # result in errors like "message type 0x43 arrived from server
+    # while idle" and "message type 0x5a arrived from server while
+    # idle". Solve this by reconnecting in forks. TODO: reconnect on
+    # demand instead of always
+
     Para::Frame->add_hook('on_fork', sub
 			  {
 			      debug(0,"Do not destroy DBH in child");
 			      $dbix->dbh->{'InactiveDestroy'} = 1;
+			      $dbix->connect();
 			  });
 
     Para::Frame->add_hook('on_error_detect', sub
