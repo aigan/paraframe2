@@ -468,18 +468,49 @@ the letter as value for field $field.
 
 sub alfanum_bar
 {
-    my( $template, $name, $attr ) = @_;
+    my( $template, $name, $part, $attr ) = @_;
 
     die "Too many args for alfanum_bar()" if $attr and not ref $attr;
     die "template attrib missing" unless $template;
     die "name attrib missing" unless $name;
 
+    my $q = $Para::Frame::REQ->q;
+
+    $attr ||= {};
+    $part ||= '';
+    my $extra = '';
+#    if( $part )
+#    {
+#	$extra = '&no_robots=1';
+#    }
+
+    my @keep_params = @{ $attr->{'keep_params'}||[] };
+    delete $attr->{'keep_params'};
+    @keep_params = $q->param('keep_params')
+	unless @keep_params;
+#	warn "keep_params are @keep_params\n"; ### DEBUG
+    foreach my $key ( @keep_params )
+    {
+	next if $key eq 'offset';
+	next if $key eq 'part';
+	
+	$attr->{$key} = $q->param($key)
+	    unless defined $attr->{$key} and length $attr->{$key};
+	delete $attr->{$key} unless $attr->{$key}; # Only if TRUE
+    }
+
     use locale;
     use POSIX qw(locale_h);
     setlocale(LC_ALL, "sv_SE");
 
-    my $text = join(' | ', map "<a href=\"$template?$name=$_\">\U$_</a>", 'a'..'z','å','ä','ö');
+    my $text = join(' | ', map "<a href=\"$template?$name=$part$_$extra\">\U$_</a>", 'a'..'z','å','ä','ö');
     $text = "| <a href=\"$template?$name=\">0-9</a> | ".$text." |";
+    $text =~ s/å/&aring;/g;
+    $text =~ s/ä/&auml;/g;
+    $text =~ s/ö/&ouml;/g;
+    $text =~ s/Å/&Aring;/g;
+    $text =~ s/Ä/&Auml;/g;
+    $text =~ s/Ö/&Ouml;/g;
 
 #    return "\Uåke ärlansson\n";
     return $text;
