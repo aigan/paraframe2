@@ -89,6 +89,7 @@ sub new
 	orig_ctype     => $content_type,
 	uri            => undef,
 	template       => undef,          ## if diffrent from URI
+	template_uri   => undef,          ## if diffrent from URI
 	error_template => undef,          ## if diffrent from template
 	ctype          => undef,          ## The response content-type
 	in_body        => 0,              ## flag then headers sent
@@ -136,10 +137,7 @@ sub template
 
 sub template_uri
 {
-    my $template = $_[0]->template;
-
-    $template =~ s/\/index.tt$/\//;
-    return $template;
+    return $_[0]->{'template_uri'} || $_[0]->{'uri'};
 }
 
 sub in_yield
@@ -168,17 +166,43 @@ sub set_template
 
     # For setting a template diffrent from the URI
 
-    debug(3,"setting template to $template");
+    my $template_uri = $template;
 
-    if( -d uri2file( $template ) )
+    # Apache can possibly be rewriting the name of the file...
+
+    my $file = uri2file( $template );
+    debug(3,"The template $template represents the file $file");
+    if( -d $file )
     {
-	$template .= "/" unless $template =~ /\/$/;
+	debug(3,"  It's a dir!");
+	unless( $template =~ /\/$/ )
+	{
+	    $template .= "/";
+	    $template_uri .= "/";
+	}
 	$template .= "index.tt";
     }
+    else
+    {
+#	# Don't change template...
+#
+#	my( $tname, $tpath, $text ) = fileparse( $template, qr{\..*} );
+#	my( $fname, $fpath, $fext ) = fileparse( $file,     qr{\..*} );
+#
+#	# Change the name but not the path
+#
+#	if( $tname ne $fname )
+#	{
+#	    $template = $tpath . $fname . $fext;
+#	}
+    }
   
+    debug(3,"setting template to $template");
+
     $req->ctype->set("text/html") if $template =~ /\.tt$/;
 
-    $req->{template} = $template;
+    $req->{template}     = $template;
+    $req->{template_uri} = $template_uri;
 
     return $template;
 }
@@ -614,14 +638,14 @@ sub find_template
     # Reasonable default?
     my $language = $req->lang || ['sv'];
 
-    debug(4,"Check $ext");
+    debug(4,"Check $ext",1);
     foreach my $path ( uri2file($path_full)."/", @step, $global )
     {
 	die unless $path; # could be undef
 
 	# We look for both tt and html regardless of it the file was called as .html
 	debug(4,"Check $path",1);
-	die "dir_redirct failed" unless $base_name;
+	die "dir_redirect failed" unless $base_name;
 
 	# Handle dirs
 	if( -d $path.$base_name.$ext_full )
@@ -633,7 +657,7 @@ sub find_template
 	# Find language specific template
 	foreach my $lang ( map(".$_",@$language),'' )
 	{
-	    debug(4,"Check $lang",1);
+	    debug(4,"Check $lang");
 	    my $filename = $path.$base_name.$lang.$ext_full;
 	    if( -r $filename )
 	    {
