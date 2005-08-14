@@ -39,6 +39,7 @@ use Digest::MD5  qw(md5_hex);
 use Time::Seconds;
 use BerkeleyDB;
 use IDNA::Punycode;
+use Time::HiRes;
 
 BEGIN
 {
@@ -60,7 +61,7 @@ BEGIN
             uri2file compile passwd_crypt deunicode paraframe_dbm_open
             elapsed_time uri store_params clear_params
             restore_params idn_encode idn_decode debug reset_hashref
-	    inflect );
+	    inflect timediff );
 
 }
 
@@ -1087,6 +1088,13 @@ sub inflect # inflection = böjning
 	# Also for negative numbers
 	return $many;
     }
+}
+
+sub timediff
+{
+    my $ts = $Para::Frame::timediff_timestamp;
+    $Para::Frame::timediff_timestamp = Time::HiRes::time();
+    return sprintf "%20s: %2.2f\n", $_[0], Time::HiRes::time() - $ts;
 }
 
 1;
