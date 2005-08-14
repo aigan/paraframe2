@@ -35,7 +35,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw catch debug );
+use Para::Frame::Utils qw( throw catch debug timediff );
 
 use base qw( Exporter );
 BEGIN
@@ -114,44 +114,14 @@ sub select_list
 	@vals = @{$vals[0]};
     }
 
-
     my $ref;
     throw('incomplete','no parameter to statement') unless $st;
     $st = "select * ".$st if $st !~/^\s*select\s/i;
 
-
     eval
     {
 	my $sth = $self->dbh->prepare_cached( $st );
-
-	my $pos = 0;
-	my $curtype = SQL_VARCHAR;
-	my @type;
-	my @value;
-	foreach my $val ( @vals )
-	{
-	    if( ref $val )
-	    {
-		$curtype = SQL_INTEGER;
-	    }
-	    else
-	    {
-		$type[$pos] = $curtype;
-		$pos ++;
-		$value[$pos] = $val;
-		$curtype = SQL_VARCHAR;
-	    }
-	}
-	$type[$pos] = $curtype;
-
-	for( my $pos=1; $pos <= $#value; $pos++ )
-	{
-#	    warn " -> Bind param $pos to $value[$pos] as $type[$pos]\n";
-	    $sth->bind_param($pos, $value[$pos], $type[$pos]);
-	}
-
-
-	$sth->execute;
+	$sth->execute(@vals);
 	$ref =  $sth->fetchall_arrayref({});
 	$sth->finish;
     };
