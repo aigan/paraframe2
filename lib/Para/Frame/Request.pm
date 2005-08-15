@@ -170,6 +170,14 @@ sub set_template
 
     # Apache can possibly be rewriting the name of the file...
 
+    # The template to file translation is used for getting the
+    # directory of the templates. But we assume that the URI
+    # represents an actual file, regardless of the uri2file
+    # translation. If the translation goes to another file, that file
+    # will be ignored and the file named like that in the URI will be
+    # used.
+
+
     my $file = uri2file( $template );
     debug(3,"The template $template represents the file $file");
     if( -d $file )
@@ -180,6 +188,11 @@ sub set_template
 	    $template .= "/";
 	    $template_uri .= "/";
 	}
+	$template .= "index.tt";
+    }
+    elsif( $template =~ /\/$/ )
+    {
+	# Template indicates a dir. Make it so
 	$template .= "index.tt";
     }
     else
