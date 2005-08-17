@@ -463,6 +463,7 @@ sub get_next
 	my %args_replace;
 	foreach my $key ( $q->param('step_replace_params') )
 	{
+	    warn "    replacing param $key with ".$q->param($key)."\n";
 	    $args_replace{$key} = [ $q->param($key) ];
 	}
 

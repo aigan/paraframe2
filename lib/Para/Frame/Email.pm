@@ -121,6 +121,14 @@ sub error_msg
     return $_[0]->{error_msg} || "";
 }
 
+=head2 send_in_fork
+
+  $e->send_in_fork(\%params)
+
+
+
+=cut
+
 sub send_in_fork
 {
     my( $e, $p_in ) = @_;
