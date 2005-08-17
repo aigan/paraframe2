@@ -24,7 +24,7 @@ Para::Frame::Result - Holds the results of actions and exceptions
 
 use strict;
 use Data::Dumper;
-use Carp;
+use Carp qw( carp shortmess croak );
 use Clone qw( clone );
 use Template::Exception;
 
@@ -35,7 +35,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( trim );
+use Para::Frame::Utils qw( trim debug );
 
 =head1 DESCRIPTION
 
@@ -239,6 +239,14 @@ sub message
     {
 	$msg =~ s/(\n\r?)+$//;
 	next unless length $msg;
+
+	if( $msg eq '1' ) # sanity check
+	{
+	    $self->error('action', shortmess "Message '1' not helpful");
+	    next;
+	}
+
+	debug(3, shortmess "Adding result message '$msg'");
 	push @{$self->{'part'}}, {'message' => $msg};
     }
 }
