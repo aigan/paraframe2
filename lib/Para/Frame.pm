@@ -596,6 +596,7 @@ sub add_hook
 			  user_login         |
 			  before_user_logout |
 			  after_user_logout  |
+			  after_db_connect   |
 			  before_switch_req 
 			  )$/x )
     {
