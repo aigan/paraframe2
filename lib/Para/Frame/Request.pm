@@ -482,7 +482,8 @@ sub after_jobs
 
 	### Do pre backtrack stuff
 	### Do backtrack stuff
-	$req->s->route->check_backtrack;
+	$req->error_backtrack or
+	    $req->s->route->check_backtrack;
 	### Do last job stuff
     }
 
@@ -490,9 +491,6 @@ sub after_jobs
     #
     if( $req->in_last_job )
     {
-	### handle error
-	$req->error_backtrack;
-
 	## TODO: redirect if requested uri ends in /index.tt
 	if( $req->render_output )
 	{
@@ -532,7 +530,9 @@ sub error_backtrack
 	    # Do not regard this as an error template
 	    $req->set_template( $previous );
 	}
+	return 1;
     }
+    return 0;
 }
 
 sub add_params
