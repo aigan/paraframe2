@@ -766,6 +766,86 @@ sub filefield
 
 #######################################################################
 
+=head2 css_header
+
+  css_header( \%attrs )
+
+Draws a css header
+
+Example:
+    $attrs =
+     {
+      persistent => [ "/css/default.css" ],
+      alternate =>
+      {
+       light => [ "/css/light.css" ],
+       blue => [ "/css/blue.css" ],
+      },
+      default => 'blue',
+     };
+
+=cut
+
+sub css_header
+{
+    my( $p ) = @_;
+
+    return "" unless $p;
+
+    unless( ref $p )
+    {
+	$p =
+	{
+	    'persistent' => [ $p ],
+	};
+    }
+
+    my $default = $Para::Frame::U->style || $p->{'default'};
+    my $persistent = $p->{'persistent'} || [];
+    my $alternate = $p->{'alternate'} || {};
+    $persistent = [$persistent] unless ref $persistent;
+
+    if( not $default )
+    {
+	# Just take any of them as a default
+	foreach my $key ( keys %$alternate )
+	{
+	    $default = $key;
+	    last;
+	}
+    }
+
+    my $out = "";
+
+    foreach my $style ( @$persistent )
+    {
+	$out .= "<link rel=\"Stylesheet\" href=\"$style\" type=\"text/css\">\n";
+    }
+
+    if( $default )
+    {
+	foreach my $style ( @{$alternate->{$default}} )
+	{
+	    $out .= "<link rel=\"Stylesheet\" title=\"$default\" href=\"$style\" type=\"text/css\">\n";
+	}
+    }
+
+    foreach my $title ( keys %$alternate )
+    {
+	next if $title eq $default;
+	foreach my $style ( @{$alternate->{$title}} )
+	{
+	    $out .= "<link rel=\"alternate stylesheet\" title=\"$title\" href=\"$style\" type=\"text/css\">\n";
+	}
+    }    
+
+    return $out;
+}
+
+
+
+#######################################################################
+
 =head2 confirm_simple
 
   confirm_simple()
@@ -874,6 +954,7 @@ sub on_startup
 	'input'           => \&input,
 	'textarea'        => \&textarea,
 	'filefield'       => \&filefield,
+	'css_header'      => \&css_header,
     };
 
     Para::Frame->add_global_tt_params( $params );
