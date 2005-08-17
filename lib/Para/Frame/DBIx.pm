@@ -120,7 +120,7 @@ sub select_list
 
     eval
     {
-	my $sth = $self->dbh->prepare_cached( $st );
+	my $sth = $self->dbh->prepare( $st );
 	$sth->execute(@vals);
 	$ref =  $sth->fetchall_arrayref({});
 	$sth->finish;
@@ -181,11 +181,11 @@ sub select_record
     }
 
     my $ref;
-    die(['incomplete','no parameter to statement']) unless $st;
+    throw('incomplete','no parameter to statement') unless $st;
     $st = "select * ".$st if $st !~/^\s*select\s/i;
 
 #    warn "SQL: $st (@vals)\n"; ### DEBUG
-    my $sth = $self->dbh->prepare_cached( $st );
+    my $sth = $self->dbh->prepare( $st );
     $sth->execute( @vals ) or croak "$st (@vals)\n";
     $ref =  $sth->fetchrow_hashref
 	or throw('dbi',$st."(@vals)\nFound ".$sth->rows()." rows\n");
@@ -234,10 +234,10 @@ sub select_possible_record
     }
 
     my $ref;
-    die(['incomplete','no parameter to statement']) unless $statement;
+    throw('incomplete','no parameter to statement') unless $statement;
     $statement = "select * ".$statement if $statement !~/^\s*select\s/i;
 
-    my $sth = $self->dbh->prepare_cached( $statement )
+    my $sth = $self->dbh->prepare( $statement )
 	or croak $statement;
     $sth->execute( @vals );
     $ref =  $sth->fetchrow_hashref;
@@ -292,7 +292,7 @@ sub select_key
 
     $st = "select * ".$st if $st !~/^\s*select\s/i;
 
-    my $sth = $self->dbh->prepare_cached( $st );
+    my $sth = $self->dbh->prepare( $st );
     $sth->execute( @vals );
     my $rh = {};
     while( my $r = $sth->fetchrow_hashref )
@@ -309,6 +309,8 @@ sub new
 {
     my( $class, $params ) = @_;
 
+    $params ||= {};
+
     my $dbix = bless {}, $class;
 
     Para::Frame->add_global_tt_params({
@@ -318,24 +320,23 @@ sub new
 	'select_possible_record'   => sub{ $dbix->select_possible_record(@_) },
     });
 
-    if( $params and ref $params eq 'HASH' )
+    if( my $connect = $params->{'connect'} )
     {
-	if( my $connect = $params->{'connect'} )
+	$connect = [$connect] unless ref $connect eq 'ARRAY';
+
+	# Default DBI options
+	$connect->[3] ||= 
 	{
-	    $connect = [$connect] unless ref $connect eq 'ARRAY';
+	    RaiseError => 1,
+	    ShowErrorStatement => 1,
+	    PrintError => 0,
+	    AutoCommit => 0,
+	};
 
-	    # Default DBI options
-	    $connect->[3] ||= 
-	    {
-		RaiseError => 1,
-		ShowErrorStatement => 1,
-		PrintError => 0,
-		AutoCommit => 0,
-	    };
-
-	    $dbix->{'connect'} = $connect;
-	}
+	$dbix->{'connect'} = $connect;
     }
+
+    $dbix->{'bind_dbh'} = $params->{'bind_dbh'};
 
 
     Para::Frame->add_hook('done', sub
@@ -417,6 +418,13 @@ sub connect
 	throw( $@ );
     }
 
+    if( $dbix->{'bind_dbh'} )
+    {
+	${ $dbix->{'bind_dbh'} } = $dbix->{'dbh'};
+    }
+
+    Para::Frame->run_hook( $Para::Frame::REQ, 'after_db_connect', $dbix);
+
     return 1;
 }
 
@@ -426,12 +434,17 @@ sub get_nextval
 {
     my( $self, $seq ) = @_;
 
-    my $sth = $self->dbh->prepare_cached( "select nextval(?)" );
+    my $sth = $self->dbh->prepare( "select nextval(?)" );
     $sth->execute( $seq ) or croak "Faild to get next from $seq\n";
     my( $id ) = $sth->fetchrow_array;
     $sth->finish;
 
     $id or throw ('sql', "Failed to get nextval\n");
+}
+
+sub equals
+{
+    return $_[0] eq $_[1];
 }
 
 ############ functions
