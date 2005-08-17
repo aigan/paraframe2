@@ -7,6 +7,21 @@ function go(handler, run)
     document.f.submit();
     return true;
 }
+function showhide(whichLayer)
+{
+    if(document.getElementById)
+    {
+        var style2 = document.getElementById(whichLayer).style;
+        if( style2.display == 'block' )
+        {
+            style2.display = 'none';
+        }
+        else
+        {
+            style2.display = 'block';
+        }
+    }
+}
 [% PROCESS js_extra.tt %]
 //-->
 </script>
