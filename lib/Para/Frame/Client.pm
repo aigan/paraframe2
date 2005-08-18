@@ -114,12 +114,14 @@ sub handler
 
     my $in_body = 0;
     my $rows = 0;
+    my $chars = 0;
     while( $_ = <$SOCK> )
     {
 	if( $DEBUG > 4 )
 	{
-	    my $len = length( $_ );
-	    warn "$$: Got: '$_'[$len]\n";
+#	    my $len = length( $_ );
+#	    warn "$$: Got: '$_'[$len]\n";
+	    $chars += length( $_ );
 	}
 
 	# Code size max 10 chars
@@ -169,7 +171,13 @@ sub handler
 	{
 	    if( $in_body )
 	    {
-		$r->print( $_ ) or ( send_to_server("CANCEL") ) and last;
+		unless( $r->print( $_ ) )
+		{
+		    warn "$$: Faild to print '$_' after row $rows\n";
+		    warn "$$:   Sending CANCEL to server\n";
+		    send_to_server("CANCEL");
+		    last;
+		}
 		$rows ++;
 	    }
 	    else
@@ -196,6 +204,7 @@ sub handler
     }
 
     warn "$$: Returned $rows rows\n" if $DEBUG;
+    warn "$$: Thats $chars chars of data\n" if $DEBUG > 4;
     warn "$$: Response recieved\n\n\n" if $DEBUG;
 
     return 1;
