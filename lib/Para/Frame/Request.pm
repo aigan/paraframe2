@@ -968,20 +968,78 @@ sub send_output
     }
     else
     {
+	my $charcnt = 0;
 	if( is_utf8( ${ $req->{'page'} } ) )
 	{
 	    $req->ctype->set_charset("UTF-8");
 	    $req->send_headers;
 	    binmode( $req->client, ':utf8');
-	    $req->client->send( ${ $req->{'page'} } );
+	    debug(4,"Transmitting in utf8 mode");
+	    $req->send_in_chunks( $req->{'page'} );
 	    binmode( $req->client, ':bytes');
 	}
 	else
 	{
 	    $req->send_headers;
-	    $req->client->send( ${ $req->{'page'} } );
+	   $req->send_in_chunks( $req->{'page'} );
 	}
     }
+}
+
+sub send_in_chunks
+{
+    my( $req, $dataref ) = @_;
+
+    my $client = $req->client;
+    my $length = length($$dataref);
+    debug(4,"Sending ".length($$dataref)." bytes of data to client");
+    my $sent = 0;
+    my $errcnt = 0;
+    if( $length > 64000 )
+    {
+	my $chunk = 16384; # POSIX::BUFSIZ * 2
+	for( my $i=0; $i<$length; $i+= $chunk )
+	{
+	    debug(4,"  Transmitting chunk from $i\n");
+	    my $res = $client->send( substr $$dataref, $i, $chunk );
+	    if( $res )
+	    {
+		$sent += $res;
+	    }
+	    else
+	    {
+		debug(1,"  Failed to send chunk $i\n  Tries to recover...",1);
+
+		$errcnt++;
+		$req->yield;
+
+		if( $errcnt >= 100 )
+		{
+		    debug(0,"Got over 100 failures to send chunk $i");
+		    last;
+		}
+		debug(-1);
+		redo;
+	    }
+	}
+    }
+    else
+    {
+	$sent = $client->send( $$dataref );
+    }
+    debug(4,"Transmitted $sent chars to client");
+
+    return $sent;
+}
+
+sub yield
+{
+    my( $req ) = @_;
+
+    $req->{'in_yield'} ++;
+    Para::Frame::main_loop( 1 );
+    $req->{'in_yield'} --;
+    Para::Frame::switch_req( $req );
 }
 
 sub forward
