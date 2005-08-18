@@ -194,6 +194,11 @@ sub main_loop
 	#
 	if( $child )
 	{
+
+	    # This could be a simple yield and not a child, then just
+	    # exit now
+	    last unless ref $child;
+
 	    # exit loop if child done
 	    last unless $child->{'req'}{'childs'};
 
