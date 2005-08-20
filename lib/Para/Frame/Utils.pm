@@ -726,8 +726,12 @@ sub compile
 
     if( my $realfilename = $INC{ $filename } )
     {
-	$mtime = stat($realfilename)->mtime
-	  or die "Lost contact with $realfilename";
+	my $stat;
+	unless( $stat = stat($realfilename) )
+	{
+	    die "Can't locate $filename";
+	}
+	$mtime = $stat->mtime or die;
     }
 
     if( $mtime > $Para::Frame::Reload::COMPILED{$filename} )
