@@ -1025,7 +1025,29 @@ sub send_in_chunks
     }
     else
     {
-	$sent = $client->send( $$dataref );
+	while(1)
+	{
+	    $sent = $client->send( $$dataref );
+	    if( $sent )
+	    {
+		last;
+	    }
+	    else
+	    {
+		debug(1,"  Failed to send data to client\n  Tries to recover...",1);
+
+		$errcnt++;
+		$req->yield;
+
+		if( $errcnt >= 10 )
+		{
+		    debug(0,"Got over 10 failures to send $length chars of data");
+		    last;
+		}
+		debug(-1);
+		redo;
+	    }
+	}
     }
     debug(4,"Transmitted $sent chars to client");
 
