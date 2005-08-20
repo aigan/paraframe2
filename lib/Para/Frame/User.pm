@@ -125,7 +125,7 @@ sub identify_user
     my $u = $class->get( $username );
     unless( $u )
     {
-	$req->result->exception('validation', "Medlemmen $username existerar inte");
+	$req->result->message("Användaren $username existerar inte");
 	$u = $class->identify_user( 'guest' );
     }
 
