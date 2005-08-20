@@ -222,7 +222,7 @@ sub send
   TRY:
     foreach my $try ( @try )
     {
-	$try or debug(0,"Empty email") and next;
+	$try or debug(0,"Empty reciever email address") and next;
 	my( $to_addr ) = Para::Frame::Email::Address->parse( $try );
 	unless( $to_addr )
 	{
