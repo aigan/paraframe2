@@ -82,7 +82,7 @@ sub new
 	's'            => undef,          ## Session object
 	lang           => undef,          ## Chosen language
 	params         => clone($Para::Frame::PARAMS), ## template data
-	redrict        => undef,          ## redirect to other server
+	redrict        => undef,          ## ... to other server (unused?)
 	browser        => undef,          ## browser detection object
 	result         => undef,
 	orig_uri       => $orig_uri,
@@ -91,6 +91,7 @@ sub new
 	template       => undef,          ## if diffrent from URI
 	template_uri   => undef,          ## if diffrent from URI
 	error_template => undef,          ## if diffrent from template
+	referer        => $q->referer,    ## The referer of this page
 	ctype          => undef,          ## The response content-type
 	in_body        => 0,              ## flag then headers sent
 	page           => undef,          ## Ref to the generated page
@@ -572,8 +573,14 @@ sub referer
 	return URI->new($uri)->path;
     }
 
-    # The actual referer is more acurate in this order
+    # The query could have been changed by route
     if( my $uri = $req->q->referer )
+    {
+	return URI->new($uri)->path;
+    }
+
+    # The actual referer is more acurate in this order
+    if( my $uri = $req->referer )
     {
 	return URI->new($uri)->path;
     }
@@ -581,7 +588,13 @@ sub referer
     # This could be confusing if several browser windows uses the same
     # session
     #
-    return $req->s->referer;
+    return $req->s->referer if $req->s->referer;
+
+    return $Para::Frame::CFG->{'site'}{'last_step'} if
+	$Para::Frame::CFG->{'site'}{'last_step'};
+
+    # Last try. Should always be defined
+    return $Para::Frame::CFG->{'site'}{'webhome'}.'/';
 }
 
 #############################################
