@@ -602,6 +602,8 @@ sub add_hook
 			  before_user_logout |
 			  after_user_logout  |
 			  after_db_connect   |
+			  before_db_commit   |
+			  after_db_rollback  |
 			  before_switch_req 
 			  )$/x )
     {
