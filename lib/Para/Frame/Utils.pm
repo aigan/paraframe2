@@ -1044,7 +1044,7 @@ sub reset_hashref
 
     foreach my $key ( keys %$hashref )
     {
-	debug(1,"  Removing $key from hash");
+	debug(2,"  Removing $key from hash");
 	delete $hashref->{$key};
     }
 
