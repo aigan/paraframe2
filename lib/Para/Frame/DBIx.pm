@@ -341,12 +341,12 @@ sub new
 
     Para::Frame->add_hook('done', sub
 			  {
-			      $dbix->dbh->commit;
+			      $dbix->commit;
 			  });
 
     Para::Frame->add_hook('before_switch_req', sub
 			  {
-			      $dbix->dbh->commit;
+			      $dbix->commit;
 			  });
 
     # I tried to just setting InactiveDestroy. But several processes
@@ -389,7 +389,7 @@ sub new
 
 			      eval
 			      {
-				  $dbix->dbh->rollback();
+				  $dbix->rollback();
 			      } or do
 			      {
 				  debug(0,"FAILED ROLLBACK!");
@@ -426,6 +426,22 @@ sub connect
     Para::Frame->run_hook( $Para::Frame::REQ, 'after_db_connect', $dbix);
 
     return 1;
+}
+
+sub commit
+{
+    my( $dbix ) = @_;
+
+    Para::Frame->run_hook( $Para::Frame::REQ, 'before_db_commit', $dbix);
+    $dbix->dbh->commit;
+}
+
+sub rollback
+{
+    my( $dbix ) = @_;
+
+    $dbix->dbh->rollback;
+    Para::Frame->run_hook( $Para::Frame::REQ, 'after_db_rollback', $dbix);
 }
 
 sub dbh { $_[0]->{'dbh'} }
