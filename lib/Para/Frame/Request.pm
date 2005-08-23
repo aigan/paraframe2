@@ -565,6 +565,12 @@ sub referer
 {
     my( $req ) = @_;
 
+    #
+    # TODO: test recovery from runaway processes
+    # test recursive $req->referer
+    #
+
+
     # Returns the path part
 
     # Explicit caller_page could be given
@@ -580,7 +586,7 @@ sub referer
     }
 
     # The actual referer is more acurate in this order
-    if( my $uri = $req->referer )
+    if( my $uri = $req->{'referer'} )
     {
 	return URI->new($uri)->path;
     }
