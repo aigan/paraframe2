@@ -965,7 +965,7 @@ sub on_reload
     # This will bind the newly compiled code in the params hash,
     # replacing the old code
 
-    $_[0]->on_startup;
+    $_[0]->on_configure;
 }
 
 
