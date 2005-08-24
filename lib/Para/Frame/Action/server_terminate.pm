@@ -31,9 +31,11 @@ sub handler
 	throw("denied", "Neeeeej! Vill inte!");
     }
 
-    warn "--> Terminating server by request!\n\n";
-
-    exit;
+    warn "Terminating server by request!\n";
+    print "TERMINATE\n";
+    sleep 10; # Waiting to die
+    warn "No watchdog? Try to exit by myself...\n";
+    exit;     # Tired of waiting...
 }
 
 1;
