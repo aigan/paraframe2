@@ -35,6 +35,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
+use Para::Frame::Watchdog;
 use Para::Frame::Request;
 use Para::Frame::Widget;
 use Para::Frame::Time;
@@ -61,14 +62,12 @@ our $PARAMS     ;
 our %CHILD      ;
 our $LEVEL      ;
 
+# STDOUT goes to the watchdog. Use well defined messages!
+# STDERR goes to the log
+
 sub startup
 {
     my( $class ) = @_;
-
-    # Start up other classes
-    #
-    Para::Frame::Route->on_startup;
-    Para::Frame::Widget->on_startup;
 
     my $port = $CFG->{'port'};
 
@@ -81,8 +80,8 @@ sub startup
 				   )
 	or (die "Cannot connect to socket $port: $@\n");
 
-    print("Connected to port $port.\n");
-
+    
+    warn "Connected to port $port\n";
 
     nonblock($SERVER);
     $SELECT = IO::Select->new($SERVER);
@@ -90,10 +89,17 @@ sub startup
     # Setup signal handling
     $SIG{CHLD} = \&REAPER;
     
-    print("Setup complete, accepting connections.\n");
+    Para::Frame->run_hook(undef, 'on_startup');
+
+    warn "Setup complete, accepting connections\n";
 
     $LEVEL = 0;
     main_loop();
+}
+
+sub watchdog_startup
+{
+    Para::Frame::Watchdog->startup();
 }
 
 sub main_loop
@@ -104,8 +110,9 @@ sub main_loop
     {
 	$LEVEL ++;
     }
-    debug(0,"Entering main_loop at level $LEVEL",1) if $LEVEL;
 
+    debug(0,"Entering main_loop at level $LEVEL",1) if $LEVEL;
+    print "MAINLOOP $LEVEL\n";
 
     my $timeout = 5;
 
@@ -347,7 +354,7 @@ sub get_value
     {
 	# EOF from client.
 	close_callback($client,'eof');
-	debug(0,"End of file");
+	debug(2,"End of file");
 	return undef;
     }
 
@@ -424,6 +431,15 @@ sub get_value
 		    $client->send(join "\0", 'RESP', $file );
 		    $client->send("\n");
 		}
+		elsif( $code eq 'PING' )
+		{
+		    debug(2,"PING recieved");
+		    $INBUFFER{$client} = '';
+		    $DATALENGTH{$client} = 0;
+		    $client->send("PONG\n");
+		    debug(3,"Sent PONG as response");
+		    return 1;
+		}
 		else
 		{
 		    debug(0,"Strange CODE: $code");
@@ -462,7 +478,7 @@ sub close_callback
 
     if( $reason )
     {
-	debug(0,"Done ($reason)");
+	debug(2,"Done ($reason)");
     }
     else
     {
@@ -525,7 +541,6 @@ sub daemonize
 
     warn "\nStarted process $$ on ".scalar(localtime)."\n\n";
 }
-
 
 
 ##############################################
@@ -595,7 +610,8 @@ sub add_hook
     debug(3,"add_hook $label from ".(caller));
 
     # Validate hook label
-    unless( $label =~ /^( on_error_detect    |
+    unless( $label =~ /^( on_startup         |
+			  on_error_detect    |
 			  on_fork            |
 			  done               |
 			  user_login         |
@@ -709,6 +725,8 @@ sub configure
 
     ### Set main debug level
     $DEBUG = $CFG->{'debug'} || 0;
+    $Para::Frame::Client::DEBUG = $DEBUG;
+
 
     $CFG->{'logfile'} ||= "/tmp/paraframe.log";
     $CFG->{'paraframe'} ||= '/usr/local/paraframe';
@@ -796,6 +814,11 @@ sub configure
     $CFG->{'user_class'} ||= 'Para::Frame::User';
 
     $class->set_global_tt_params;
+
+    # Configure other classes
+    #
+    Para::Frame::Route->on_configure;
+    Para::Frame::Widget->on_configure;
 }
 
 sub set_global_tt_params
