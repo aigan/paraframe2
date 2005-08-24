@@ -931,7 +931,7 @@ sub confirm_simple
 
 #### Methods
 
-sub on_startup
+sub on_configure
 {
     my( $class ) = @_;
 

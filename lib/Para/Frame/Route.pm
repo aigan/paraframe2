@@ -105,9 +105,9 @@ bottom of the route stack, rather than on top.
 =head1 METHODS
 
 =cut
+    ;
 
-
-sub on_startup
+sub on_configure
 {
     # Called during compilation
     debug(1,"Importing Route global TT params");
