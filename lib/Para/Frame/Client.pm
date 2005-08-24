@@ -35,8 +35,9 @@ use Para::Frame::Reload;
 use Para::Frame::Utils;
 
 our $SOCK;
+our $r;
 
-our $DEBUG = 0;
+our $DEBUG = 1;
 
 # $SIG{HUP} = sub { warn "Got a HUP\n"; };
 # $SIG{INT} = sub { warn "Got a INT\n"; };
@@ -45,7 +46,7 @@ our $DEBUG = 0;
 
 sub handler
 {
-    my( $r ) = @_;
+    ( $r ) = @_;
 
     $|=1;
 
@@ -61,34 +62,9 @@ sub handler
 
     unless( $port )
     {
-	my $errcode = 500;
-	my $error = "No port configured for communication with the Paraframe server";
-	$r->status_line( $errcode." ".$error );
-	$r->no_cache(1);
-	$r->send_http_header("text/html");
-	$r->print("<html><head><title>$error</title></head><body><h1>$error</h1>\n");
-	$r->print("</body></html>\n");
+	print_error_page("No port configured for communication with the Paraframe server");
 	return 1;
     }
-
-    &connect( $port );
-
-    warn "$$: Socket obj created on port $port\n" if $DEBUG;
-
-   unless( $SOCK )
-   {
-       my $errcode = 500;
-       my $error = "Can't find the Paraframe server";
-       $r->status_line( $errcode." ".$error );
-       $r->no_cache(1);
-       $r->send_http_header("text/html");
-       $r->print("<html><head><title>$error</title></head><body><h1>$error</h1>\n");
-       $r->print("<p>The backend server are probably not running</p>");
-       $r->print("</body></html>\n");
-       return 1;
-   };
-
-    warn "$$: Established connection to server\n" if $DEBUG;
 
     my $reqline = $r->the_request;
     warn "$$: Got $reqline\n" if $DEBUG;
@@ -108,10 +84,133 @@ sub handler
 
     my $value = freeze [ $params,  \%ENV, $r->uri, $r->filename, $ctype ];
 
-    send_to_server('REQ', \$value);
+    my $try = 0;
+    while()
+    {
+	$try ++;
 
-    warn "$$: Sent data to server\n" if $DEBUG;
+	connect_to_server( $port );
+	unless( $SOCK )
+	{
+	    print_error_page("Can't find the Paraframe server",
+			     "The backend server are probably not running");
+	    last;
+	}
 
+	my $rows = 0;
+	if( send_to_server('REQ', \$value) )
+	{
+	    warn "$$: Sent data to server\n" if $DEBUG;
+	    $rows = get_response();
+	}
+
+	if( $rows )
+	{
+	    warn "$$: Returned $rows rows\n" if $DEBUG;
+	    last;
+	}
+	else
+	{
+	    warn "$$: Got no result on try $try\n" if $DEBUG;
+
+	    if( $try >= 3 )
+	    {
+		print_error_page("Paraframe failed to respond",
+				 "I tried three times...");
+		last;
+	    }
+
+	    sleep 1; # Give server time to recover
+	    warn "$$: Trying again...\n" if $DEBUG;
+	}
+    }
+
+    warn "$$: Done\n\n" if $DEBUG;
+
+    return 1;
+}
+
+sub send_to_server
+{
+    my( $code, $valref ) = @_;
+
+    $valref ||= \ "1";
+    my $length = length($$valref) + length($code) + 1;
+
+    warn "$$: Sending $length - $code - value\n" if $DEBUG > 3;
+    unless( print $SOCK "$length\x00$code\x00" . $$valref )
+    {
+	die "LOST CONNECTION while sending $code\n";
+    }
+    return 1;
+}
+
+sub connect_to_server
+{
+    my( $port ) = @_;
+    
+    # Retry a couple of times
+
+    my @cfg =
+	(
+	 PeerAddr => 'localhost',
+	 PeerPort => $port,
+	 Proto    => 'tcp',
+	 Timeout  => 5,
+	 );
+
+    $SOCK = IO::Socket::INET->new(@cfg);
+
+    my $try = 1;
+    while( not $SOCK )
+    {
+	$try ++;
+	warn "$$:   Trying again to connect to server ($try)\n" if $DEBUG;
+
+	$SOCK = IO::Socket::INET->new(@cfg);
+
+	last if $SOCK;
+
+	if( $try >= 20 )
+	{
+	    warn "$$:   Giving up!\n";
+	    return undef;
+	}
+
+	sleep 1;
+    }
+
+    warn "$$: Established connection on port $port\n" if $DEBUG > 2;
+    return $SOCK;
+}
+
+sub print_error_page
+{
+    my( $error, $explain ) = @_;
+
+    $error ||= "Unexplaind error";
+    $explain ||= "";
+    chomp $explain;
+    
+    warn "$$: Returning error: $error\n" if $DEBUG;
+
+    my $errcode = 500;
+    $r->status_line( $errcode." ".$error );
+    $r->no_cache(1);
+    $r->send_http_header("text/html");
+    $r->print("<html><head><title>$error</title></head><body><h1>$error</h1>\n");
+    foreach my $row ( split /\n/, $explain )
+    {
+	$r->print("<p>$row</p>");
+	warn "$$:   $row\n" if $DEBUG;
+    }
+    $r->print("</body></html>\n");
+    return 1;
+}
+
+
+sub get_response
+{
     my $in_body = 0;
     my $rows = 0;
     my $chars = 0;
@@ -203,36 +302,9 @@ sub handler
 	}
     }
 
-    warn "$$: Returned $rows rows\n" if $DEBUG;
-    warn "$$: Thats $chars chars of data\n" if $DEBUG > 4;
-    warn "$$: Response recieved\n\n\n" if $DEBUG;
+    warn "$$: Got $chars chars of data\n" if $DEBUG > 4;
 
-    return 1;
-}
-
-sub send_to_server
-{
-    my( $code, $valref ) = @_;
-
-    my $length = length($$valref) + length($code) + 1;
-
-    warn "$$: Sending $length - $code - value\n" if $DEBUG;
-    unless( print $SOCK "$length\x00$code\x00" . $$valref )
-    {
-	die "LOST CONNECTION while sending $code\n";
-    }
-    return 1;
-}
-
-sub connect
-{
-    my( $port ) = @_;
-
-    $SOCK = new IO::Socket::INET (
-				  PeerAddr => 'localhost',
-				  PeerPort => $port,
-				  Proto => 'tcp',
-				  );
+    return $rows;
 }
 
 1;
