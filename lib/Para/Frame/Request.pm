@@ -158,6 +158,11 @@ sub set_uri
     $req->{uri} = $uri;
     $req->set_template( $uri );
 
+    if( $uri eq '/test/die.tt' ) # Special testing URI
+    {
+	die if $Para::Frame::U->level == 42;
+    }
+
     return $uri;
 }
 
@@ -840,6 +845,8 @@ sub send_code
 {
     my $req = shift;
 
+    # To get a response, use get_cmd_val()
+
     debug(3,"Sending code: ".join("-", @_));
 
     if( $Para::Frame::FORK )
@@ -851,9 +858,9 @@ sub send_code
 	my $val = $client . "\x00" . shift;
 	die "Too many args in send_code($code $val @_)" if @_;
 
-	&Para::Frame::Client::connect( $port );
+	Para::Frame::Client::connect_to_server( $port );
 	$Para::Frame::Client::SOCK or die "No socket";
-	&Para::Frame::Client::send_to_server($code, \$val);
+	Para::Frame::Client::send_to_server($code, \$val);
 
 	# Keep open the SOCK to get response later
 #	undef $Para::Frame::Client::SOCK;
