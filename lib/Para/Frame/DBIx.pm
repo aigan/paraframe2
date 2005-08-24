@@ -397,7 +397,8 @@ sub new
 			  });
 
 
-    $dbix->connect;
+    # Use the on_startup hook
+    # $dbix->connect;
 
     return $dbix;
 }
@@ -411,6 +412,7 @@ sub connect
     eval
     {
 	$dbix->{'dbh'} = DBI->connect(@$connect);
+	debug(1,"Connected to DB $connect->[0]");
     };
     if( $@ )
     {
@@ -421,6 +423,7 @@ sub connect
     if( $dbix->{'bind_dbh'} )
     {
 	${ $dbix->{'bind_dbh'} } = $dbix->{'dbh'};
+	debug(2,"  Bound dbh");
     }
 
     Para::Frame->run_hook( $Para::Frame::REQ, 'after_db_connect', $dbix);
