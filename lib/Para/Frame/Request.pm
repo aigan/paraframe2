@@ -52,10 +52,10 @@ use Para::Frame::Utils qw( create_dir chmod_file dirsteps uri2file compile throw
 
 sub new
 {
-    my( $class, $client, $recordref, $reqnum ) = @_;
+    my( $class, $reqnum, $client, $recordref ) = @_;
 
     my( $value ) = thaw( $$recordref );
-    my( $params, $env, $orig_uri, $orig_filename, $content_type ) = @$value;
+    my( $params, $env, $orig_uri, $orig_filename, $content_type, $dirconfig ) = @$value;
 
     # Modify $env for non-mod_perl mode
     $env->{'REQUEST_METHOD'} = 'GET';
@@ -82,7 +82,7 @@ sub new
 	's'            => undef,          ## Session object
 	lang           => undef,          ## Chosen language
 	params         => clone($Para::Frame::PARAMS), ## template data
-	redrict        => undef,          ## ... to other server (unused?)
+	redirect       => undef,          ## ... to other server
 	browser        => undef,          ## browser detection object
 	result         => undef,
 	orig_uri       => $orig_uri,
@@ -93,8 +93,10 @@ sub new
 	error_template => undef,          ## if diffrent from template
 	referer        => $q->referer,    ## The referer of this page
 	ctype          => undef,          ## The response content-type
+	dirconfig      => $dirconfig,     ## Apache $r->dir_config
 	in_body        => 0,              ## flag then headers sent
 	page           => undef,          ## Ref to the generated page
+	page_sender    => undef,          ## The mode of sending the page
 	childs         => 0,              ## counter in parent
 	in_yield       => 0,              ## inside a yield
 	child_result   => undef,          ## the child res if in child
@@ -116,6 +118,39 @@ sub new
     return $req;
 }
 
+=head2 new_minimal
+
+Used for background jobs, without a calling browser client
+
+=cut
+
+sub new_minimal
+{
+    my( $class, $reqnum ) = @_;
+
+    %ENV = ();
+    my( $env ) = \%ENV;
+
+    my $req =  bless
+    {
+	indent         => 1,              ## debug indentation
+	jobs           => [],             ## queue of actions to perform
+	env            => $env,
+	's'            => undef,          ## Session object
+	lang           => undef,          ## Chosen language
+	result         => undef,
+	childs         => 0,              ## counter in parent
+	in_yield       => 0,              ## inside a yield
+	child_result   => undef,          ## the child res if in child
+	reqnum         => $reqnum,        ## The request serial number
+    }, $class;
+
+    $req->{'result'}  = new Para::Frame::Result($req);  # Before Session
+    $req->{'s'}       = Para::Frame::Session->new_minimal($req);
+
+    return $req;
+}
+
 #######################################################################
 
 sub q { shift->{'q'} }
@@ -130,6 +165,12 @@ sub filename { uri2file(shift->template) }
 sub lang { undef }
 sub error_page_selected { $_[0]->{'error_template'} ? 1 : 0 }
 sub error_page_not_selected { $_[0]->{'error_template'} ? 0 : 1 }
+
+# Is this request a client req or a bg server job?
+sub is_from_client
+{
+    return 1 if $_[0]->{'client'};
+}
 
 sub template
 {
@@ -171,6 +212,9 @@ sub set_template
     my( $req, $template ) = @_;
 
     # For setting a template diffrent from the URI
+
+    # template param should NOT include the http://hostname part
+    # TODO: tecken.se uses set_tempalte to redirect to another domain
 
     my $template_uri = $template;
 
@@ -266,10 +310,14 @@ sub setup_jobs
     $req->{'section'}  ||= [$q->param('section')];
 
     # Custom renderer?
-    $req->{'renderer'} ||= $q->param('renderer');
+    $req->{'renderer'} ||= $q->param('renderer') || undef;
 
     # Setup actions
     my $actions = [];
+    if( $req->{'dirconfig'}{'action'} )
+    {
+	push @$actions, $req->{'dirconfig'}{'action'};
+    }
     foreach my $run_str ( $q->param('run') )
     {
 	foreach my $run ( split /&/, $run_str )
@@ -284,8 +332,6 @@ sub setup_jobs
 
     $req->add_job('after_jobs');
 }
-
-
 
 sub add_job
 {
@@ -326,6 +372,24 @@ sub send_headers
     debug(2,"Send newline");
     $client->send( "\n" );
     $req->{'in_body'} = 1;
+}
+
+sub run_code
+{
+    my( $req, $coderef ) = (shift, shift );
+    # Add this job to run given code
+
+    my $res;
+    eval
+    {
+	$res = &{$coderef}($req, @_) ;
+    } or do
+    {
+	debug(0,"RUN CODE FAILED");
+	debug(0,$@);
+	return 0;
+    };
+    return $res;
 }
 
 sub run_action
@@ -498,7 +562,34 @@ sub after_jobs
     if( $req->in_last_job )
     {
 	## TODO: redirect if requested uri ends in /index.tt
-	if( $req->render_output )
+
+	if( $req->error_page_not_selected and $req->{'redirect'} )
+	{
+	    $req->cookies->add_to_header;
+ 
+	    $req->output_redirection( $req->{'redirect'} );
+
+	    $req->s->after_request( $req );
+
+	    return;
+	}
+
+
+	my $render_result = 0;
+
+	if( $req->{'renderer'} )
+	{
+	    # Using custom renderer
+	    $render_result = &{$req->{'renderer'}}( $req );
+
+	    # TODO: Handle error...
+	}
+	else
+	{
+	    $render_result = $req->render_output;
+	}
+
+	if( $render_result )
 	{
 	    $req->cookies->add_to_header;
  
@@ -510,8 +601,6 @@ sub after_jobs
 	}
 	$req->add_job('after_jobs');
     }
-
-
 
     return 1;
 }
@@ -994,8 +1083,27 @@ sub send_output
     }
     else
     {
-	my $charcnt = 0;
-	if( is_utf8( ${ $req->{'page'} } ) )
+	# If not set, find out best way to send page
+	if( $req->{'page_sender'} )
+	{
+	    unless( $req->{'page_sender'} =~ /^(utf8|bytes)$/ )
+	    {
+		debug "Page sender $req->{page_sender} not recogized";
+	    }
+	}
+	else
+	{
+	    if( is_utf8  ${ $req->{'page'} } )
+	    {
+		$req->{'page_sender'} = 'utf8';
+	    }
+	    else
+	    {
+		$req->{'page_sender'} = 'bytes';
+	    }
+	}
+
+	if( $req->{'page_sender'} eq 'utf8' )
 	{
 	    $req->ctype->set_charset("UTF-8");
 	    $req->send_headers;
@@ -1004,10 +1112,10 @@ sub send_output
 	    $req->send_in_chunks( $req->{'page'} );
 	    binmode( $req->client, ':bytes');
 	}
-	else
+	else # Default
 	{
 	    $req->send_headers;
-	   $req->send_in_chunks( $req->{'page'} );
+	    $req->send_in_chunks( $req->{'page'} );
 	}
     }
 }
@@ -1031,13 +1139,14 @@ sub send_in_chunks
 	    if( $res )
 	    {
 		$sent += $res;
+		$errcnt = 0;
 	    }
 	    else
 	    {
 		debug(1,"  Failed to send chunk $i\n  Tries to recover...",1);
 
 		$errcnt++;
-		$req->yield;
+		$req->yield( 0.9 );
 
 		if( $errcnt >= 100 )
 		{
@@ -1063,7 +1172,7 @@ sub send_in_chunks
 		debug(1,"  Failed to send data to client\n  Tries to recover...",1);
 
 		$errcnt++;
-		$req->yield;
+		$req->yield( 1.2 );
 
 		if( $errcnt >= 10 )
 		{
@@ -1082,10 +1191,10 @@ sub send_in_chunks
 
 sub yield
 {
-    my( $req ) = @_;
+    my( $req, $wait ) = @_;
 
     $req->{'in_yield'} ++;
-    Para::Frame::main_loop( 1 );
+    Para::Frame::main_loop( 1, $wait );
     $req->{'in_yield'} --;
     Para::Frame::switch_req( $req );
 }
@@ -1116,7 +1225,7 @@ sub output_redirection
     # URI module doesn't support punycode. Bypass module if we
     # redirect to specified domain
     #
-    if( $uri_in =~ /^ http:\/\/ (.*?) (: | \/ | $ ) /x )
+    if( $uri_in =~ /^ https?:\/\/ (.*?) (: | \/ | $ ) /x )
     {
 	my $host_in = $1;
 #	warn "  matched '$host_in' in '$uri_in'!\n";
