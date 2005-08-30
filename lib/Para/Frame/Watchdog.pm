@@ -41,10 +41,11 @@ our $MSGTYPE;              # Type of messages from server
 our $CHECKTIME;            # Time of last proc check
 our $CPU_TIME;             # user + system time
 our $CPU_USAGE;            # Aproximate avarage usage
+our $LIMIT_MEMORY_CLEAR;   # When to send memory message
 
 use constant INTERVAL_CONNECTION_CHECK => 60;
 use constant INTERVAL_MAIN_LOOP        => 10;
-use constant LIMIT_MEMORY              => 500;
+use constant LIMIT_MEMORY              => 750;
 use constant TIMEOUT_SERVER_STARTUP    => 15;
 use constant TIMEOUT_CONNECTION_CHECK  => 60;
 use constant LIMIT_CONNECTION_TRIES    => 3;
@@ -68,7 +69,6 @@ sub startup
 
     startup_in_fork();
 
-    debug 1, "  Going in to main loop, watching $PID";
     my $last_connection_check = time;
     while()
     {
@@ -109,7 +109,7 @@ sub check_process
 	my $usage = $cpu_delta/$sys_delta/10; # Get percent
 	$CPU_USAGE = ($CPU_USAGE * 2 + $usage ) / 3;
 
-	if( debug > 1 or $CPU_USAGE > 30 or $size > 200 )
+	if( debug > 1 or $CPU_USAGE > 30 or $size > $LIMIT_MEMORY_CLEAR )
 	{
 	    debug sprintf( "Serverstat %.2d%% (%.2d%%) %5d MB",
 			   $usage, $CPU_USAGE, $size );
@@ -120,11 +120,17 @@ sub check_process
     $CHECKTIME = $sys_time;
     
     # Kill if server uses more than LIMIT_MEMORY MB of memory
-    if( $size > LIMIT_MEMORY )
+    if( $size > $LIMIT_MEMORY_CLEAR  )
+    {
+	debug "Sening memory notice to server";
+	send_to_server('MEMORY', \$size );
+	$LIMIT_MEMORY_CLEAR = $size;
+    }
+    elsif( $size > LIMIT_MEMORY )
     {
 	debug "Server using to much memory";
 	debug "  Restarting...";
-	terminate_server();
+	restart_server();
     }
 
 }
@@ -146,13 +152,17 @@ sub wait_for_server_setup
 
 sub check_server_report
 {
-    my( $type, @args ) = get_server_message();
-
-    if( $type eq 'TERMINATE' )
+    while()
     {
-	debug "Got request to terminate server";
-	terminate_server();
-	exit 0;
+	my( $type, @args ) = get_server_message();
+	
+	if( $type eq 'TERMINATE' )
+	{
+	    debug "Got request to terminate server";
+	    terminate_server();
+	    exit 0;
+	}
+	last unless $type;
     }
 }
 
@@ -160,6 +170,12 @@ sub terminate_server
 {
     kill 'TERM', $PID; ## Terminate server
     debug 1,"  Sent TERM to $PID";
+}
+
+sub restart_server
+{
+    kill 'HUP', $PID; ## Terminate server
+    debug 1,"  Sent HUP to $PID";
 }
 
 sub get_server_message
@@ -193,8 +209,8 @@ sub get_server_message
 	my( @args ) = $argstring =~ m/$argformat/;
 	if( defined $+ ) # Did we match?
 	{
-	    debug 1, "Server repored $type\n";
-	    debug 2, "  returning args @args";
+	    debug 3, "Server repored $type\n";
+	    debug 4, "  returning args @args";
 	    return $type, @args;
 	}
 	else
@@ -208,7 +224,7 @@ sub get_server_message
 
 sub check_connection
 {
-    debug 1, "  Checking connection\n";
+    debug 2, "  Checking connection\n";
     my $port = $Para::Frame::CFG->{'port'};
     my $try = 0;
     $DO_CONNECTION_CHECK = 0;
@@ -217,13 +233,10 @@ sub check_connection
     while()
     {
 	$try ++;
-	debug 2, "  Check $try";
-	Para::Frame::Client::connect_to_server( $port );
-	my $sock = $Para::Frame::Client::SOCK or
-	    die "Failed to connect to server\n";
-	my $select = IO::Select->new($sock);
+	debug 3, "  Check $try";
 
-	Para::Frame::Client::send_to_server('PING');
+	my $sock = send_to_server('PING');
+	my $select = IO::Select->new($sock);
 
 	# Waiting for the response in TIMEOUT_CONNECTION_CHECK seconds
 	my $waited     = 0;
@@ -234,7 +247,7 @@ sub check_connection
 		my $resp = $sock->getline;
 		if( $resp eq "PONG\n" )
 		{
-		    debug 3, "    Working!\n";
+		    debug 4, "    Working!\n";
 		    last CONNECTION_TRY;
 		}
 		else
@@ -269,8 +282,7 @@ sub on_crash
 {
     $CRASHCOUNTER ++;
     $CRASHTIME = now();
-    debug "Got crash $CRASHCOUNTER at $CRASHTIME";
-    debug 1, "  Restarting paraframe";
+    debug "Restart $CRASHCOUNTER at $CRASHTIME";
     
     startup_in_fork();
 }
@@ -289,6 +301,7 @@ sub startup_in_fork
 
     $CPU_TIME  = undef;
     $CHECKTIME = undef;
+    $LIMIT_MEMORY_CLEAR = int( LIMIT_MEMORY/2 );
 
     do
     {
@@ -319,6 +332,8 @@ sub startup_in_fork
 
     # schedule connection check (must be done outside REAPER)
     $DO_CONNECTION_CHECK ++;
+
+    debug "Watching $PID";
 }
 
 sub REAPER
@@ -337,7 +352,14 @@ sub REAPER
 
 	if( $child_pid == $PID )
 	{
-	    on_crash();
+	    if( $? == 15 )
+	    {
+		debug "Server got a TERM signal. I will not restart it";
+	    }
+	    else
+	    {
+		on_crash();
+	    }
 	}
 	else
 	{
@@ -394,6 +416,18 @@ sub get_procinfo
     }
 
     return $p;
+}
+
+sub send_to_server
+{
+    my( $code, $valref ) = @_;
+
+    my $port = $Para::Frame::CFG->{'port'};
+    Para::Frame::Client::connect_to_server( $port );
+    my $sock = $Para::Frame::Client::SOCK or
+	die "Failed to connect to server\n";
+    Para::Frame::Client::send_to_server($code, $valref);
+    return $sock;
 }
 
 sub configure
