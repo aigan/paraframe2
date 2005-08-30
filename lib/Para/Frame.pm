@@ -27,6 +27,7 @@ use Time::HiRes qw( time );
 use Data::Dumper;
 use Carp qw( cluck confess carp );
 use Template;
+use Sys::CpuLoad;
 
 BEGIN
 {
@@ -41,6 +42,12 @@ use Para::Frame::Widget;
 use Para::Frame::Time;
 use Para::Frame::Utils qw( throw uri2file debug );
 
+use constant TIMEOUT_LONG  =>   5;
+use constant TIMEOUT_SHORT =>   0.001;
+use constant BGJOB_MAX     =>   3;      # At most
+use constant BGJOB_MED     =>  60 *  5; # Even if no visitors
+use constant BGJOB_MIN     =>  60 * 15; # At least this often
+use constant BGJOB_CPU     =>   0.5;
 
 # Do not init variables here, since this will be redone each time code is updated
 our $SERVER     ;
@@ -61,6 +68,8 @@ our %HOOK       ;
 our $PARAMS     ;
 our %CHILD      ;
 our $LEVEL      ;
+our $BGJOBDATE  ;
+our $BGJOBNR    ;
 
 # STDOUT goes to the watchdog. Use well defined messages!
 # STDERR goes to the log
@@ -88,7 +97,7 @@ sub startup
 
     # Setup signal handling
     $SIG{CHLD} = \&REAPER;
-    
+
     Para::Frame->run_hook(undef, 'on_startup');
 
     warn "Setup complete, accepting connections\n";
@@ -104,7 +113,11 @@ sub watchdog_startup
 
 sub main_loop
 {
-    my( $child ) = @_;
+    my( $child, $timeout ) = @_;
+
+    # Optional $timeout params used for convaying how much in a hurry
+    # the yielding party is. Espacially, if it's waiting for something
+    # and realy want to give that something some time
 
     if( $child )
     {
@@ -114,7 +127,7 @@ sub main_loop
     debug(0,"Entering main_loop at level $LEVEL",1) if $LEVEL;
     print "MAINLOOP $LEVEL\n";
 
-    my $timeout = 5;
+    $timeout ||= $LEVEL ? TIMEOUT_SHORT : TIMEOUT_LONG;
 
     while (1)
     {
@@ -163,7 +176,7 @@ sub main_loop
 
 	### Do the jobs piled up
 	#
-	$timeout = 5; # We change this if there are jobs to do
+	$timeout = TIMEOUT_LONG; # We change this if there are jobs to do
 	foreach my $req ( values %REQUEST )
 	{
 #	    my $s = $req->s; ### DEBUG
@@ -188,12 +201,20 @@ sub main_loop
 	    else
 	    {
 		# All jobs done for now
-		debug(1,"All jobs done");
+		debug(2,"All jobs done");
 		$req->run_hook('done');
 		close_callback($req->{'client'});
 	    }
 
-	    $timeout = 0.001; ### Get the jobs done quick
+	    $timeout = TIMEOUT_SHORT; ### Get the jobs done quick
+	}
+
+	### Do background jobs if no req jobs waiting
+	#
+	unless( values %REQUEST )
+	{
+	    add_background_jobs() and
+		$timeout = TIMEOUT_SHORT;
 	}
 
 
@@ -201,7 +222,6 @@ sub main_loop
 	#
 	if( $child )
 	{
-
 	    # This could be a simple yield and not a child, then just
 	    # exit now
 	    last unless ref $child;
@@ -231,7 +251,7 @@ sub main_loop
 	}
 
     }
-    debug(0,"Exiting main_loop at level $LEVEL",-1);
+    debug(0,"Exiting  main_loop at level $LEVEL",-1);
     $LEVEL --;
 }
 
@@ -440,6 +460,15 @@ sub get_value
 		    debug(3,"Sent PONG as response");
 		    return 1;
 		}
+		elsif( $code eq 'MEMORY' )
+		{
+		    debug(2,"MEMORY recieved");
+		    my $size = $INBUFFER{$client};
+		    $INBUFFER{$client} = '';
+		    $DATALENGTH{$client} = 0;
+		    Para::Frame->run_hook(undef, 'on_memory', $size);
+		    return 1;
+		}
 		else
 		{
 		    debug(0,"Strange CODE: $code");
@@ -485,11 +514,19 @@ sub close_callback
 	warn "Done\n";
     }
 
-    delete $INBUFFER{$client};
-    delete $REQUEST{$client};
-    undef $REQ;
-    $SELECT->remove($client);
-    close($client);
+    if( $client )
+    {
+	delete $REQUEST{$client};
+	delete $INBUFFER{$client};
+	undef $REQ;
+	$SELECT->remove($client);
+	close($client);
+    }
+    else # This is a bg job
+    {
+	delete $REQUEST{'background'};
+	undef $REQ;
+    }
 }
 
 sub REAPER
@@ -543,6 +580,67 @@ sub daemonize
 }
 
 
+sub add_background_jobs
+{
+
+    # Add background jobs to do unless the load is too high, uless we
+    # waited too long anyway
+
+    # Return if BG jobs already running
+    return if $REQUEST{'background'};
+
+    # Return it hasn't passed BGJOB_MAX secs since last time
+    my $last_time = $BGJOBDATE ||= time;
+    my $delta = time - $last_time;
+    return if $delta < BGJOB_MAX;
+
+    # Return if CPU load is over BGJOB_CPU
+    my $sysload;
+    if( $delta < BGJOB_MIN ) # unless a long time has passed
+    {
+	$sysload = Sys::CpuLoad::load;
+	return if $sysload > BGJOB_CPU;
+    }
+
+    # Return if we had no visitors unless BGJOB_MED secs passed
+    $BGJOBNR ||= -1;
+    if( $BGJOBNR == $REQNUM )
+    {
+	return if $delta < BGJOB_MED;
+    }
+    
+    $REQNUM ++;
+    warn "\n\nHandling request number $REQNUM (in background)\n";
+    my $req = Para::Frame::Request->new_minimal($REQNUM);
+
+    ### Register the request
+    $REQUEST{'background'} = $req;
+    switch_req( $req );
+    my $user_class = $Para::Frame::CFG->{'user_class'};
+    my $bg_user = &{ $Para::Frame::CFG->{'bg_user_code'} };
+    $user_class->change_current_user($bg_user);
+
+    ### Debug info
+    if( debug > 2 )
+    {
+	my $t = localtime;
+	my $s = $req->s;
+	warn sprintf("# %s %s - localhost\n# Sid %s - Uid %d - debug %d\n",
+		     $t->ymd,
+		     $t->hms('.'),
+		     $s->id,
+		     $s->u->id,
+		     $s->{'debug'},
+		     );
+    }
+   
+ 
+    Para::Frame->run_hook($req, 'add_background_jobs', $delta, $sysload);
+
+    $BGJOBDATE = time;
+    $BGJOBNR   = $REQNUM;
+}
+
 ##############################################
 # Handle the request
 #
@@ -557,7 +655,7 @@ sub handle_request
     Para::Frame::Reload->check_for_updates;
 
     ### Create request ($REQ not yet set)
-    my $req = new Para::Frame::Request( $client, $recordref, $REQNUM );
+    my $req = new Para::Frame::Request( $REQNUM, $client, $recordref );
 
     ### Register the request
     $REQUEST{ $client } = $req;
@@ -611,6 +709,7 @@ sub add_hook
 
     # Validate hook label
     unless( $label =~ /^( on_startup         |
+			  on_memory          |
 			  on_error_detect    |
 			  on_fork            |
 			  done               |
@@ -620,7 +719,8 @@ sub add_hook
 			  after_db_connect   |
 			  before_db_commit   |
 			  after_db_rollback  |
-			  before_switch_req 
+			  before_switch_req  |
+			  add_background_jobs
 			  )$/x )
     {
 	die "No such hook: $label\n";
@@ -812,6 +912,8 @@ sub configure
     $CFG->{'port'} ||= 7788;
 
     $CFG->{'user_class'} ||= 'Para::Frame::User';
+
+    $CFG->{'bg_user_code'} ||= sub{ $CFG->{'user_class'}->get('guest') };
 
     $class->set_global_tt_params;
 
