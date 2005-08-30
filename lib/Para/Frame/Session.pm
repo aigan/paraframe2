@@ -86,6 +86,31 @@ sub new
     return $s;
 }
 
+sub new_minimal
+{
+    my( $class, $req ) = @_;
+
+    # Used for background jobs, not bound to a browser client
+
+    my $sid = time.'-'.$Para::Frame::REQNUM;
+
+    my $s =  bless
+    {
+	sid            => $sid,
+	active         => 1,
+	created        => localtime,
+	latest         => localtime,
+	user           => undef,
+	debug          => $Para::Frame::CFG->{'debug'},
+	template_error => '', # Default
+    }, $class;
+
+    # Register s
+    $Para::Frame::SESSION{$sid} = $s;
+
+    return $s;
+}
+
 sub after_request
 {
     my( $s, $req ) = @_;
