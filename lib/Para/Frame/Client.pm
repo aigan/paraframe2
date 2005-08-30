@@ -58,7 +58,9 @@ sub handler
 
 #    warn "$$: CGI obj created\n";
 
-    my $port = $r->dir_config('port');
+    my $dirconfig = $r->dir_config;
+
+    my $port = $dirconfig->{'port'};
 
     unless( $port )
     {
@@ -82,7 +84,7 @@ sub handler
 	$params->{$key} = $q->param_fetch($key);
     }
 
-    my $value = freeze [ $params,  \%ENV, $r->uri, $r->filename, $ctype ];
+    my $value = freeze [ $params,  \%ENV, $r->uri, $r->filename, $ctype, $dirconfig ];
 
     my $try = 0;
     while()
