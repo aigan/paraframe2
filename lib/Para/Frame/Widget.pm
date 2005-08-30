@@ -205,10 +205,13 @@ sub jump
     }
     elsif( not defined $class_val )
     {
-	# Mark as selected if link goes to current page
-	if( $Para::Frame::REQ->template_uri eq $template and not $attr->{'run'} )
+	if( $Para::Frame::REQ->is_from_client )
 	{
-	    $extra .= " class=\"same_place\"";
+	    # Mark as selected if link goes to current page
+	    if( $Para::Frame::REQ->template_uri eq $template and not $attr->{'run'} )
+	    {
+		$extra .= " class=\"same_place\"";
+	    }
 	}
     }
 
@@ -216,8 +219,11 @@ sub jump
 	my $q = $Para::Frame::REQ->q;
 	my @keep_params = @{ $attr->{'keep_params'}||[] };
 	delete $attr->{'keep_params'};
-	@keep_params = $q->param('keep_params')
-	    unless @keep_params;
+	if( $q )
+	{
+	    @keep_params = $q->param('keep_params')
+		unless @keep_params;
+	}
 #	warn "keep_params are @keep_params\n"; ### DEBUG
 	foreach my $key ( @keep_params )
 	{
