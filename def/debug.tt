@@ -12,3 +12,8 @@
 </p>
 
 <p>[% go("Terminate server", home, "server_terminate") %]
+
+[%
+   TRY; PROCESS "app_debug_pagepart.tt";
+   CATCH file; END;
+%]

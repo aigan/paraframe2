@@ -1010,6 +1010,7 @@ sub debug
 	if( $level =~ /^-?\d$/ )
 	{
 	    $Para::Frame::INDENT += $level;
+#	    carp "Ident $level";
 	    return;
 	}
 
@@ -1031,6 +1032,7 @@ sub debug
 	warn $prefix . "  "x$Para::Frame::INDENT . $message . "\n";
     }
 
+#    carp "Ident $delta" if $delta > 0;
     $Para::Frame::INDENT += $delta if $delta > 0;
 
     return $message . "\n";
