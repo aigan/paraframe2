@@ -470,7 +470,9 @@ sub equals
 
 sub pgbool
 {
-    $_[0] ? 't' : 'f';
+    return 'f' unless $_[0];
+    return 'f' if $_[0] eq 'f';
+    return 't';
 }
 
 #########################
