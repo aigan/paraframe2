@@ -82,7 +82,7 @@ sub get
 
     return $time if UNIVERSAL::isa $time, "Time::Piece";
 
-    debug(1,"Parsing date '$time'");
+    debug(3,"Parsing date '$time'");
 
     return undef unless $time;
 
@@ -96,7 +96,7 @@ sub get
 	$time =~ s/^(\d{4}-\d{2}-\d{2} \d{2})\.(\d{2})$/$1:$2:00/; # Make date more recognizable
 	$date = UnixDate($time, '%s');
     }
-    debug(1,"Epoch: $date");
+    debug(5,"Epoch: $date");
     unless( $date )
     {
  	# Try once more, in english
@@ -116,7 +116,7 @@ sub get
 	}
     }
     my $to = localtime( $date );
-    debug(1,"Finaly: $to");
+    debug(4,"Finaly: $to");
     return $to;
 }
 
