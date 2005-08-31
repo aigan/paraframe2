@@ -43,13 +43,13 @@ our $CPU_TIME;             # user + system time
 our $CPU_USAGE;            # Aproximate avarage usage
 our $LIMIT_MEMORY_CLEAR;   # When to send memory message
 
-use constant INTERVAL_CONNECTION_CHECK => 60;
-use constant INTERVAL_MAIN_LOOP        => 10;
-use constant LIMIT_MEMORY              => 750;
-use constant TIMEOUT_SERVER_STARTUP    => 15;
-use constant TIMEOUT_CONNECTION_CHECK  => 60;
-use constant LIMIT_CONNECTION_TRIES    => 3;
-use constant TIMEOUT_CREATE_FORK       => 5;
+use constant INTERVAL_CONNECTION_CHECK =>  60;
+use constant INTERVAL_MAIN_LOOP        =>  10;
+use constant LIMIT_MEMORY              => 100;
+use constant TIMEOUT_SERVER_STARTUP    =>  15;
+use constant TIMEOUT_CONNECTION_CHECK  =>  60;
+use constant LIMIT_CONNECTION_TRIES    =>   3;
+use constant TIMEOUT_CREATE_FORK       =>   5;
 
 sub debug; # Use special version of debug
 
@@ -267,7 +267,7 @@ sub check_connection
 	    }
 
 	    debug "  Timeout while waiting for ping response";
-	    terminate_server();
+	    restart_server();
 	    last CONNECTION_TRY;
 	}
 
