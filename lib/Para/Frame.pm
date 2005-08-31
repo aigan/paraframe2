@@ -102,6 +102,11 @@ sub startup
 
     warn "Setup complete, accepting connections\n";
 
+#    # Store a symbol table obj for analysis
+#    use Devel::Symdump;
+#    $Para::symdump = Devel::Symdump->rnew;
+
+
     $LEVEL = 0;
     main_loop();
 }
