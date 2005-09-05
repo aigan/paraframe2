@@ -36,6 +36,7 @@ BEGIN
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw catch debug timediff );
+use Para::Frame::Time qw( date );
 
 use base qw( Exporter );
 BEGIN
@@ -393,6 +394,8 @@ sub new
 			      } or do
 			      {
 				  debug(0,"FAILED ROLLBACK!");
+				  debug $@;
+				  debug $dbix->dbh->errstr;
 			      };
 			  });
 
@@ -465,6 +468,96 @@ sub equals
 {
     return $_[0] eq $_[1];
 }
+
+sub save_record
+{
+    my( $dbix, $param ) = @_;
+
+    my $rec_new = $param->{'rec_new'} or die;
+    my $types = $param->{'types'} || {};
+    my $rec_old = $param->{'rec_old'};
+    my $table = $param->{'table'} or die;
+    my $key = $param->{'key'} || $table;
+    my $keyval = $param->{'keyval'} or die;
+    my $fields_to_check = $param->{'fields_to_check'} || [keys %$rec_new];
+    my $on_update = $param->{'on_update'} || undef;
+
+    $key = [$key] unless ref $key;
+    $keyval = [$keyval] unless ref $keyval;
+
+
+    my( @fields, @values );
+    my %fields_added;
+
+    foreach my $field ( @$fields_to_check )
+    {
+	my $type = $types->{$field} || 'string';
+
+	if( $type eq 'string' )
+	{
+	    if( ($rec_new->{ $field }||'') ne ($rec_old->{ $field }||'') )
+	    {
+		$fields_added{ $field } ++;
+		push @fields, $field;
+		push @values, $rec_new->{ $field };
+		debug(1,"  field $field differ");
+	    }
+	}
+	elsif( $type eq 'boolean' )
+	{
+	    if( pgbool($rec_new->{ $field }) ne pgbool($rec_old->{ $field }) )
+	    {
+		$fields_added{ $field } ++;
+		push @fields, $field;
+		push @values, pgbool( $rec_new->{ $field } );
+		debug(1,"  field $field differ");
+	    }
+	}
+	elsif( $type eq 'date' )
+	{
+	    # Dates can be written in many formats. We will assume that if
+	    # the date has changed from what the DB returns, it's not the
+	    # same date. That keeps us from bothering about the format
+
+	    if( ($rec_new->{ $field }||'') ne ($rec_old->{ $field }||'') )
+	    {
+		$fields_added{ $field } ++;
+		push @fields, $field;
+		push @values, date( $rec_new->{ $field } )->cdate;
+		debug(1,"  field $field differ");
+	    }
+	}
+	else
+	{
+	    throw('action', "Type $type not recoginzed");
+	}
+    }
+
+    if( @fields )
+    {
+	if( $on_update )
+	{
+	    foreach my $field ( keys %$on_update )
+	    {
+		next if $fields_added{ $field };
+		push @fields, $field;
+		push @values, $on_update->{$field};		
+	    }
+	}
+
+	my $where = join ' and ', map "$_=?", @$key;
+
+	my $statement = "update $table set ".
+	    join( ', ', map("$_=?", @fields)) .
+	    " where $where";
+	debug(4,"Executing statement $statement");
+	my $sth = $dbix->dbh->prepare( $statement );
+	$sth->execute( @values, @$keyval );
+    }
+
+    return scalar @fields; # The number of changes
+}
+
 
 ############ functions
 
