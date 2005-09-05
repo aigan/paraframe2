@@ -61,7 +61,7 @@ BEGIN
             uri2file compile passwd_crypt deunicode paraframe_dbm_open
             elapsed_time uri store_params clear_params
             restore_params idn_encode idn_decode debug reset_hashref
-	    inflect timediff );
+	    inflect timediff extract_query_params );
 
 }
 
@@ -1101,6 +1101,19 @@ sub timediff
     my $ts = $Para::Frame::timediff_timestamp;
     $Para::Frame::timediff_timestamp = Time::HiRes::time();
     return sprintf "%20s: %2.2f\n", $_[0], Time::HiRes::time() - $ts;
+}
+
+sub extract_query_params
+{
+    my $q = $Para::Frame::REQ->q;
+    my $rec = {};
+
+    foreach my $key (@_)
+    {
+	$rec->{$key} = $q->param($key);
+    }
+
+    return $rec;
 }
 
 1;
