@@ -459,20 +459,14 @@ sub get_value
 		elsif( $code eq 'PING' )
 		{
 		    debug(2,"PING recieved");
-		    $INBUFFER{$client} = '';
-		    $DATALENGTH{$client} = 0;
 		    $client->send("PONG\n");
 		    debug(3,"Sent PONG as response");
-		    return 1;
 		}
 		elsif( $code eq 'MEMORY' )
 		{
 		    debug(2,"MEMORY recieved");
 		    my $size = $INBUFFER{$client};
-		    $INBUFFER{$client} = '';
-		    $DATALENGTH{$client} = 0;
 		    Para::Frame->run_hook(undef, 'on_memory', $size);
-		    return 1;
 		}
 		else
 		{
@@ -599,6 +593,10 @@ sub add_background_jobs
     my $delta = time - $last_time;
     return if $delta < BGJOB_MAX;
 
+    # Cache cleanup could safely be done here
+    Para::Frame->run_hook(undef, 'busy_background_job', $delta);
+
+
     # Return if CPU load is over BGJOB_CPU
     my $sysload;
     if( $delta < BGJOB_MIN ) # unless a long time has passed
@@ -617,6 +615,9 @@ sub add_background_jobs
     $REQNUM ++;
     warn "\n\nHandling request number $REQNUM (in background)\n";
     my $req = Para::Frame::Request->new_minimal($REQNUM);
+
+    ### Reload updated modules
+    Para::Frame::Reload->check_for_updates;
 
     ### Register the request
     $REQUEST{'background'} = $req;
@@ -713,19 +714,20 @@ sub add_hook
     debug(3,"add_hook $label from ".(caller));
 
     # Validate hook label
-    unless( $label =~ /^( on_startup         |
-			  on_memory          |
-			  on_error_detect    |
-			  on_fork            |
-			  done               |
-			  user_login         |
-			  before_user_logout |
-			  after_user_logout  |
-			  after_db_connect   |
-			  before_db_commit   |
-			  after_db_rollback  |
-			  before_switch_req  |
-			  add_background_jobs
+    unless( $label =~ /^( on_startup          |
+			  on_memory           |
+			  on_error_detect     |
+			  on_fork             |
+			  done                |
+			  user_login          |
+			  before_user_logout  |
+			  after_user_logout   |
+			  after_db_connect    |
+			  before_db_commit    |
+			  after_db_rollback   |
+			  before_switch_req   |
+			  busy_background_job |
+			  add_background_jobs 
 			  )$/x )
     {
 	die "No such hook: $label\n";
@@ -766,15 +768,19 @@ sub run_hook
     {
 	if( $Para::Frame::hooks_running{"$hook"} )
 	{
-	    warn "Avoided running $hook again\n";
+	    warn "Avoided running $label hook $hook again\n";
 	}
 	else
 	{
 	    $Para::Frame::hooks_running{"$hook"} ++;
 	    switch_req( $req ) if $req;
 #	    warn "about to run coderef $hook with params @_"; ## DEBUG
-	    &{$hook}(@_);
+	    eval
+	    {
+		&{$hook}(@_);
+	    };
 	    $Para::Frame::hooks_running{"$hook"} --;
+	    die $@ if $@;
 	}
     }
     return 1;
