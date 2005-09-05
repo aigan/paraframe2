@@ -48,7 +48,7 @@ use Para::Frame::Result;
 use Para::Frame::Child;
 use Para::Frame::Child::Result;
 use Para::Frame::Request::Ctype;
-use Para::Frame::Utils qw( create_dir chmod_file dirsteps uri2file compile throw idn_encode idn_decode debug );
+use Para::Frame::Utils qw( create_dir chmod_file dirsteps uri2file compile throw idn_encode idn_decode debug catch );
 
 sub new
 {
@@ -385,8 +385,10 @@ sub run_code
 	$res = &{$coderef}($req, @_) ;
     } or do
     {
+	my $err = catch($@);
 	debug(0,"RUN CODE FAILED");
-	debug(0,$@);
+	debug(0,$err->as_string);
+	Para::Frame->run_hook($req, 'on_error_detect', $err->type_info );
 	return 0;
     };
     return $res;
