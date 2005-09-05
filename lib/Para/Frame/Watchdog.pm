@@ -45,7 +45,7 @@ our $LIMIT_MEMORY_CLEAR;   # When to send memory message
 
 use constant INTERVAL_CONNECTION_CHECK =>  60;
 use constant INTERVAL_MAIN_LOOP        =>  10;
-use constant LIMIT_MEMORY              => 100;
+use constant LIMIT_MEMORY              => 800;
 use constant TIMEOUT_SERVER_STARTUP    =>  15;
 use constant TIMEOUT_CONNECTION_CHECK  =>  60;
 use constant LIMIT_CONNECTION_TRIES    =>   3;
@@ -301,7 +301,7 @@ sub startup_in_fork
 
     $CPU_TIME  = undef;
     $CHECKTIME = undef;
-    $LIMIT_MEMORY_CLEAR = int( LIMIT_MEMORY/2 );
+    $LIMIT_MEMORY_CLEAR = int( LIMIT_MEMORY/1.1 );
 
     do
     {
