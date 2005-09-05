@@ -32,6 +32,13 @@ sub handler
     }
 
     warn "Terminating server by request!\n";
+
+    my $page = "<h1>Server terminated</h1><p><a href='/'>Back home</a>\n";
+
+    $req->send_headers;
+    $req->send_in_chunks( \$page );
+
+
     print "TERMINATE\n";
     sleep 10; # Waiting to die
     warn "No watchdog? Try to exit by myself...\n";
