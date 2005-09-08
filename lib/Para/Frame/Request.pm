@@ -29,7 +29,7 @@ use File::Slurp;
 use File::Basename;
 use IO::File;
 use URI;
-use Carp qw(cluck croak carp);
+use Carp qw(cluck croak carp confess );
 #use Cwd qw( abs_path );
 use Encode qw( is_utf8 );
 
@@ -212,6 +212,9 @@ sub set_template
     my( $req, $template ) = @_;
 
     # For setting a template diffrent from the URI
+
+    # To forward to a page not handled by the paraframe, use
+    # redirect()
 
     # template param should NOT include the http://hostname part
     # TODO: tecken.se uses set_tempalte to redirect to another domain
@@ -563,7 +566,7 @@ sub after_jobs
     #
     if( $req->in_last_job )
     {
-	## TODO: redirect if requested uri ends in /index.tt
+	## TODO: forward if requested uri ends in /index.tt
 
 	if( $req->error_page_not_selected and $req->{'redirect'} )
 	{
@@ -622,6 +625,12 @@ sub error_backtrack
 	my $previous = $req->referer;
 	if( $previous )
 	{
+	    # It must be a template
+	    unless( $previous =~ /\.tt/ )
+	    {
+		$previous = "/error.tt";
+	    }
+
 	    debug(3,"Previous is $previous");
 
 	    # Do not regard this as an error template
@@ -1070,7 +1079,7 @@ sub send_output
 {
     my( $req ) = @_;
 
-    # Redirect if URL differs from template_url
+    # Forward if URL differs from template_url
 
     if( debug > 2 )
     {
@@ -1210,11 +1219,27 @@ sub forward
     # To request a forward, just set the set_template($uri) before the
     # page is generated.
 
-    croak "forward() called without a generated page" unless $req->{'page'};
+    # To forward to a page not handled by the paraframe, use
+    # redirect()
+
+    confess "forward() called without a generated page" unless $req->{'page'};
 
     $uri ||= $req->template_uri;
     $req->output_redirection($uri);
     $req->s->register_result_page($uri, $req->{'headers'}, $req->{'page'});
+}
+
+sub redirect
+{
+    my( $req, $uri ) = @_;
+
+    # This is for redirecting to a page  not handled by the paraframe
+
+    # The actual redirection will be done then all the jobs are
+    # finished. Error in the jobs could result in a redirection to an
+    # error page instead.
+
+    $req->{'redirect'} = $uri;
 }
 
 sub output_redirection
