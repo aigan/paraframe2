@@ -70,6 +70,8 @@ use Para::Frame::Reload;
 
 our %URI2FILE;
 
+our %TEST; ### DEBUG
+
 
 =head1 FUNCTIONS
 
@@ -1034,6 +1036,11 @@ sub debug
 
 #    carp "Ident $delta" if $delta > 0;
     $Para::Frame::INDENT += $delta if $delta > 0;
+
+#    if( $message =~ /^arc2 (\d+)/ )
+#    {
+#	confess if $TEST{$1}++ > 10;
+#    }
 
     return $message . "\n";
 }
