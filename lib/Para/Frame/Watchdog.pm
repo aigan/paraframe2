@@ -46,7 +46,7 @@ our $LIMIT_MEMORY_CLEAR;   # When to send memory message
 use constant INTERVAL_CONNECTION_CHECK =>  60;
 use constant INTERVAL_MAIN_LOOP        =>  10;
 use constant LIMIT_MEMORY              => 800;
-use constant TIMEOUT_SERVER_STARTUP    =>  15;
+use constant TIMEOUT_SERVER_STARTUP    =>  45;
 use constant TIMEOUT_CONNECTION_CHECK  =>  60;
 use constant LIMIT_CONNECTION_TRIES    =>   3;
 use constant TIMEOUT_CREATE_FORK       =>   5;
@@ -209,8 +209,8 @@ sub get_server_message
 	my( @args ) = $argstring =~ m/$argformat/;
 	if( defined $+ ) # Did we match?
 	{
-	    debug 3, "Server repored $type\n";
-	    debug 4, "  returning args @args";
+	    debug 4, "Server reported $type\n";
+	    debug 5, "  returning args @args";
 	    return $type, @args;
 	}
 	else
@@ -224,7 +224,7 @@ sub get_server_message
 
 sub check_connection
 {
-    debug 2, "  Checking connection\n";
+    debug 4, "  Checking connection\n";
     my $port = $Para::Frame::CFG->{'port'};
     my $try = 0;
     $DO_CONNECTION_CHECK = 0;
@@ -233,7 +233,7 @@ sub check_connection
     while()
     {
 	$try ++;
-	debug 3, "  Check $try";
+	debug 4, "  Check $try";
 
 	my $sock = send_to_server('PING');
 	my $select = IO::Select->new($sock);
