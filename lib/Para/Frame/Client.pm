@@ -182,7 +182,7 @@ sub connect_to_server
 	sleep 1;
     }
 
-    warn "$$: Established connection on port $port\n" if $DEBUG > 2;
+    warn "$$: Established connection on port $port\n" if $DEBUG > 3;
     return $SOCK;
 }
 

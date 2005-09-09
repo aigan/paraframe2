@@ -129,7 +129,7 @@ sub main_loop
 	$LEVEL ++;
     }
 
-    debug(0,"Entering main_loop at level $LEVEL",1) if $LEVEL;
+    debug(4,"Entering main_loop at level $LEVEL",1) if $LEVEL;
     print "MAINLOOP $LEVEL\n";
 
     $timeout ||= $LEVEL ? TIMEOUT_SHORT : TIMEOUT_LONG;
@@ -256,7 +256,7 @@ sub main_loop
 	}
 
     }
-    debug(0,"Exiting  main_loop at level $LEVEL",-1);
+    debug(4,"Exiting  main_loop at level $LEVEL",-1);
     $LEVEL --;
 }
 
@@ -379,7 +379,7 @@ sub get_value
     {
 	# EOF from client.
 	close_callback($client,'eof');
-	debug(2,"End of file");
+	debug(4,"End of file");
 	return undef;
     }
 
@@ -425,7 +425,7 @@ sub get_value
 		elsif( $code eq 'RESP' )
 		{
 		    my $val = $INBUFFER{$client};
-		    debug(2,"RESP recieved ($val)");
+		    debug(4,"RESP recieved ($val)");
 		    $INBUFFER{$client} = '';
 		    $DATALENGTH{$client} = 0;
 		    return $val;
@@ -438,7 +438,7 @@ sub get_value
 		    $val =~ s/^(.+?)\x00// or die "Faulty val: $val";
 		    my $caller_clientaddr = $1;
 
-		    debug(0,"URI2FILE($val) recieved");
+		    debug(2,"URI2FILE($val) recieved");
 #		    warn "  for $caller_clientaddr\n";
 #		    warn "  from $client\n";
 
@@ -451,16 +451,16 @@ sub get_value
 		    switch_req( $current_req ) if $current_req;
 
 		    # Send response in calling $REQ
-		    debug(0,"Returning answer $file");
+		    debug(2,"Returning answer $file");
 #		    $client->send(join "\0", 'URI2FILE', $file );
 		    $client->send(join "\0", 'RESP', $file );
 		    $client->send("\n");
 		}
 		elsif( $code eq 'PING' )
 		{
-		    debug(2,"PING recieved");
+		    debug(4,"PING recieved");
 		    $client->send("PONG\n");
-		    debug(3,"Sent PONG as response");
+		    debug(4,"Sent PONG as response");
 		}
 		elsif( $code eq 'MEMORY' )
 		{
@@ -506,7 +506,7 @@ sub close_callback
 
     if( $reason )
     {
-	debug(2,"Done ($reason)");
+	debug(4,"Done ($reason)");
     }
     else
     {
@@ -711,7 +711,7 @@ sub add_hook
 {
     my( $class, $label, $code ) = @_;
 
-    debug(3,"add_hook $label from ".(caller));
+    debug(4,"add_hook $label from ".(caller));
 
     # Validate hook label
     unless( $label =~ /^( on_startup          |
@@ -740,7 +740,7 @@ sub add_hook
 sub run_hook
 {
     my( $class, $req, $label ) = (shift, shift, shift);
-    if( debug > 2 )
+    if( debug > 3 )
     {
 	unless( $label )
 	{
