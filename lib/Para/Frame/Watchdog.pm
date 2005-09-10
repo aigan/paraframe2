@@ -129,7 +129,7 @@ sub check_process
 	my $usage = $cpu_delta/$sys_delta/10; # Get percent
 	$CPU_USAGE = ($CPU_USAGE * 2 + $usage ) / 3;
 
-	if( debug > 1 or $CPU_USAGE > 30 or $size > $LIMIT_MEMORY_CLEAR )
+	if( debug > 2 or $CPU_USAGE > 30 or $size > $LIMIT_MEMORY_CLEAR )
 	{
 	    debug sprintf( "Serverstat %.2d%% (%.2d%%) %5d MB",
 			   $usage, $CPU_USAGE, $size );
