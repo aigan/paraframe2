@@ -42,7 +42,7 @@ use Crypt::OpenPGP;
 BEGIN
 {
     $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    warn "  Loading ".__PACKAGE__." $VERSION\n";
+    print "  Loading ".__PACKAGE__." $VERSION\n";
 }
 
 use Para::Frame::Reload;

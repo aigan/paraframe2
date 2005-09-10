@@ -36,7 +36,7 @@ use Encode qw( is_utf8 );
 BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    warn "  Loading ".__PACKAGE__." $VERSION\n";
+    print "  Loading ".__PACKAGE__." $VERSION\n";
 }
 
 use Para::Frame::Client;

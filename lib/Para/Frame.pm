@@ -32,7 +32,7 @@ use Sys::CpuLoad;
 BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    warn "  Loading ".__PACKAGE__." $VERSION\n";
+    print "  Loading ".__PACKAGE__." $VERSION\n";
 }
 
 use Para::Frame::Reload;
@@ -40,7 +40,7 @@ use Para::Frame::Watchdog;
 use Para::Frame::Request;
 use Para::Frame::Widget;
 use Para::Frame::Time;
-use Para::Frame::Utils qw( throw uri2file debug );
+use Para::Frame::Utils qw( throw uri2file debug create_file chmod_file );
 
 use constant TIMEOUT_LONG  =>   5;
 use constant TIMEOUT_SHORT =>   0.001;
@@ -70,6 +70,9 @@ our %CHILD      ;
 our $LEVEL      ;
 our $BGJOBDATE  ;
 our $BGJOBNR    ;
+our $TERMINATE  ;
+our $IN_STARTUP;           # True until we reach the watchdog loop
+our $ACTIVE_PIDFILE;       # The PID indicated by existing pidfile
 
 # STDOUT goes to the watchdog. Use well defined messages!
 # STDERR goes to the log
@@ -102,18 +105,15 @@ sub startup
 
     warn "Setup complete, accepting connections\n";
 
-#    # Store a symbol table obj for analysis
-#    use Devel::Symdump;
-#    $Para::symdump = Devel::Symdump->rnew;
-
-
-    $LEVEL = 0;
-    main_loop();
+    $LEVEL      = 0;
+    $TERMINATE  = 0;
+    $IN_STARTUP = 0;
 }
 
 sub watchdog_startup
 {
     Para::Frame::Watchdog->startup();
+    Para::Frame::Watchdog->watch_loop();
 }
 
 sub main_loop
@@ -238,6 +238,31 @@ sub main_loop
 #	    my $childs = $child->req->{'childs'};
 #	    warn "  childs: $childs\n";
 #	    sleep;
+	}
+	else
+	{
+	    if( $TERMINATE )
+	    {
+		# Exit asked to and nothing is in flux
+		if( not keys %REQUEST and not keys %CHILD )
+		{
+		    if( $TERMINATE eq 'HUP' )
+		    {
+			# Make watchdog restart us
+			exit 1;
+		    }
+		    elsif( $TERMINATE eq 'TERM' )
+		    {
+			# No restart
+			exit 0;
+		    }
+		    else
+		    {
+			debug "Termination code $TERMINATE not recognized";
+			$TERMINATE = 0;
+		    }
+		}
+	    }
 	}
 
 	### Are there any data to be read from childs?
@@ -468,6 +493,16 @@ sub get_value
 		    my $size = $INBUFFER{$client};
 		    Para::Frame->run_hook(undef, 'on_memory', $size);
 		}
+		elsif( $code eq 'HUP' )
+		{
+		    debug(0,"HUP recieved");
+		    $TERMINATE = 'HUP';
+		}
+		elsif( $code eq 'TERM' )
+		{
+		    debug(0,"TERM recieved");
+		    $TERMINATE = 'TERM';
+		}
 		else
 		{
 		    debug(0,"Strange CODE: $code");
@@ -557,25 +592,62 @@ sub REAPER
 
 sub daemonize
 {
-    my $log = $CFG->{'logfile'};
+    my( $class, $run_watchdog ) = @_;
 
-    # TODO: Add a watchdog process using Watchdog::Process
+    # Detatch AFTER watchdog started sucessfully
+
+    my $parent_pid = $$;
+
+    $SIG{CHLD} = sub
+    {
+	warn "Error during daemonize\n";
+	exit 1;
+    };
+    $SIG{USR1} = sub
+    {
+	warn "Running in background\n" if $DEBUG > 3;
+	exit 0;
+    };
 
     chdir '/'                 or die "Can't chdir to /: $!";
-    open STDIN, '/dev/null'   or die "Can't read /dev/null: $!";
-    open STDOUT, '>/dev/null' or die "Can't write to /dev/null: $!";
     defined(my $pid = fork)   or die "Can't fork: $!";
     if( $pid ) # In parent
     {
-	$Para::Frame::FORK = 1;
-	warn "Running in background\n";
+#	open STDIN, '/dev/null'   or die "Can't read /dev/null: $!";
+#	open STDOUT, '>/dev/null' or die "Can't write to /dev/null: $!";
+	while(1)
+	{
+	    # Waiting for signal from child
+	    sleep 2;
+	    warn "---- Waiting for ready signal\n" if $DEBUG > 1;
+	}
 	exit;
     }
-    POSIX::setsid             or die "Can't start a new session: $!";
-    open STDOUT, '>>', $log   or die "Can't append to $log: $!";
-    open STDERR, '>&STDOUT'   or die "Can't dup stdout: $!";
 
-    warn "\nStarted process $$ on ".scalar(localtime)."\n\n";
+    # Reset signal handlers for the child
+    $SIG{CHLD} = 'DEFAULT';
+    $SIG{USR1} = 'DEFAULT';
+
+    if( $run_watchdog )
+    {
+	Para::Frame::Watchdog->startup(1);
+	open_logfile();
+	POSIX::setsid             or die "Can't start a new session: $!";
+	write_pidfile();
+	kill 'USR1', $parent_pid; # Signal parent
+	Para::Frame::Watchdog->watch_loop();
+    }
+    else
+    {
+	warn "\n\nStarted process $$ on ".scalar(localtime)."\n\n";
+	Para::Frame->startup();
+	open_logfile();
+	POSIX::setsid             or die "Can't start a new session: $!";
+	write_pidfile();
+	kill 'USR1', $parent_pid; # Signal parent
+	warn "\n\nStarted process $$ on ".scalar(localtime)."\n\n";
+	Para::Frame::main_loop();
+    }
 }
 
 
@@ -587,6 +659,7 @@ sub add_background_jobs
 
     # Return if BG jobs already running
     return if $REQUEST{'background'};
+    return if $TERMINATE;
 
     # Return it hasn't passed BGJOB_MAX secs since last time
     my $last_time = $BGJOBDATE ||= time;
@@ -820,6 +893,45 @@ sub incpath_generator
     return $REQ->{'incpath'};
 }
 
+sub write_pidfile
+{
+    my( $pid ) = @_;
+    $pid ||= $$;
+    my $pidfile = $Para::Frame::CFG->{'pidfile'};
+#    warn "Writing pidfile: $pidfile\n";
+    create_file( $pidfile, "$pid\n",
+		 {
+		     do_not_chmod_dir => 1,
+		 });
+    $ACTIVE_PIDFILE = $pid;
+}
+
+sub remove_pidfile
+{
+    my $pidfile = $Para::Frame::CFG->{'pidfile'};
+    unlink $pidfile or warn "Failed to remove $pidfile: $!\n";
+}
+
+END
+{
+    if( $ACTIVE_PIDFILE and $ACTIVE_PIDFILE == $$ )
+    {
+	remove_pidfile();
+	undef $ACTIVE_PIDFILE;
+    }
+}
+
+
+sub open_logfile
+{
+    my $log = $CFG->{'logfile'};
+
+    open STDOUT, '>>', $log   or die "Can't append to $log: $!";
+    open STDERR, '>&STDOUT'   or die "Can't dup stdout: $!";
+
+    chmod_file($log);
+}
+
 sub configure
 {
     my( $class, $cfg_in ) = @_;
@@ -838,8 +950,10 @@ sub configure
     $DEBUG = $CFG->{'debug'} || 0;
     $Para::Frame::Client::DEBUG = $DEBUG;
 
+    $CFG->{'dir_var'} ||= '/var';
+    $CFG->{'dir_log'} ||= $CFG->{'dir_var'}."/log";
+    $CFG->{'dir_run'} ||= $CFG->{'dir_var'}."/run";
 
-    $CFG->{'logfile'} ||= "/tmp/paraframe.log";
     $CFG->{'paraframe'} ||= '/usr/local/paraframe';
     $CFG->{'paraframe_group'} ||= 'staff';
 
@@ -921,6 +1035,11 @@ sub configure
     }
 
     $CFG->{'port'} ||= 7788;
+
+    $CFG->{'pidfile'} ||= $CFG->{'dir_run'} .
+	"/parframe_" . $CFG->{'port'} . ".pid";
+    $CFG->{'logfile'} ||= $CFG->{'dir_log'} .
+	"/paraframe_" . $CFG->{'port'} . ".log";
 
     $CFG->{'user_class'} ||= 'Para::Frame::User';
 

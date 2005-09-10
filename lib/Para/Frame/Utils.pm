@@ -40,11 +40,12 @@ use Time::Seconds;
 use BerkeleyDB;
 use IDNA::Punycode;
 use Time::HiRes;
+use Unicode::MapUTF8;
 
 BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    warn "  Loading ".__PACKAGE__." $VERSION\n"
+    print "  Loading ".__PACKAGE__." $VERSION\n"
 	unless $Psi::QUIET; # houerly_active.pl
 
 #    $Exporter::Verbose = 1;
@@ -348,7 +349,7 @@ All created dirs is chmod and chgrp to ritframe standard.
 
 sub create_dir
 {
-    my( $dir ) = @_;
+    my( $dir, $params ) = @_;
 
 #    warn "Gor dir: '$dir'\n";
     if( -e $dir )
@@ -367,11 +368,11 @@ sub create_dir
 	{
 	    die "$parent is not a directory";
 	}
-	create_dir( $parent );
+	create_dir( $parent, $params );
     }
     if( -d $dir )
     {
-	chmod_dir( $dir );
+	chmod_dir( $dir, $params );
     }
     else
     {
@@ -380,7 +381,7 @@ sub create_dir
 	    die "$dir is not a directory";
 	}
 	mkdir $dir, 02770;
-	chmod_dir( $dir );
+	chmod_dir( $dir, $params );
     }
 }
 
@@ -398,16 +399,16 @@ All created files is chmod and chgrp to ritframe standard.
 
 sub create_file
 {
-    my( $file, $content ) = @_;
+    my( $file, $content, $params ) = @_;
 
     my $parent = dirname $file;
-    create_dir($parent);
+    create_dir($parent, $params);
 
     open( FILE, ">", $file) or die "Could not create file $file: $!\n";
     print FILE $content;
     close FILE;
 
-    chmod_file( $file );
+    chmod_file( $file, $params );
 }
 
 
@@ -421,14 +422,14 @@ Chmod and chgrp all files in dir tree to ritframe standard.
 
 sub chmod_tree
 {
-    my( $dir, $skip_re, $skip_h ) = @_;
+    my( $dir, $skip_re, $skip_h, $params ) = @_;
 
 #    warn "Chmod tree $dir\n"; ### DEBUG
     $dir = abs_path($dir);
     $skip_h ||= {};
     return if $skip_h->{$dir} ++;
 
-    chmod_dir( $dir );
+    chmod_dir( $dir, $params );
 
     my $d = new IO::Dir $dir;
     foreach my $entry (  File::Spec->no_upwards( $d->read ) )
@@ -437,11 +438,11 @@ sub chmod_tree
 
 	if( -d $file )
 	{
-	    chmod_tree( $file, $skip_re, $skip_h );
+	    chmod_tree( $file, $skip_re, $skip_h, $params );
 	}
 	else
 	{
-	    chmod_file( $file );
+	    chmod_file( $file, $params );
 	}
     }
     $d->close;
@@ -458,8 +459,13 @@ Chmod and chgrp file to ritframe standard.
 
 sub chmod_file
 {
-    my( $file, $mode ) = @_;
+    my( $file, $mode, $params ) = @_;
 
+    if( ref $mode )
+    {
+	$params = $mode;
+	$mode = undef;
+    }
     $mode ||= 0660;
 
     confess unless $file;
@@ -568,8 +574,10 @@ Chmod and chgrp dir to ritframe standard.
 
 sub chmod_dir
 {
-    my( $dir ) = @_;
+    my( $dir, $params ) = @_;
 
+    $params ||= {};
+    return if $params->{'do_not_chmod_dir'};
     chmod_file( $dir, 02770 );
 }
 
@@ -1001,7 +1009,7 @@ sub debug
     my( $level, $message, $delta ) = @_;
 
     # Returns $message if given
-
+    return "" if $Para::Frame::IN_STARTUP and $Para::Frame::QUIET_STARTUP and $level;
     return $Para::Frame::DEBUG unless defined $level;
 
     $delta ||= 0;

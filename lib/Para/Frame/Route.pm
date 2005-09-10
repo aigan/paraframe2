@@ -31,7 +31,7 @@ use Carp;
 BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    warn "  Loading ".__PACKAGE__." $VERSION\n";
+    print "  Loading ".__PACKAGE__." $VERSION\n";
 }
 
 use Para::Frame;
@@ -110,7 +110,6 @@ bottom of the route stack, rather than on top.
 sub on_configure
 {
     # Called during compilation
-    debug(1,"Importing Route global TT params");
 
     Para::Frame->add_global_tt_params({
 	'plan_backtrack'  => sub{ $Para::Frame::REQ->s->route->plan_backtrack(@_) },

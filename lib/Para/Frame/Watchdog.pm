@@ -22,13 +22,15 @@ use IO::Select;
 use POSIX;
 use Proc::ProcessTable;
 use Time::HiRes;
+use Carp;
+
 BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    warn "  Loading ".__PACKAGE__." $VERSION\n";
+    print "  Loading ".__PACKAGE__." $VERSION\n";
 }
 
-use Para::Frame::Utils;
+use Para::Frame::Utils qw( chmod_file );
 use Para::Frame::Time qw( now );
 use Para::Frame::Client;
 
@@ -42,6 +44,7 @@ our $CHECKTIME;            # Time of last proc check
 our $CPU_TIME;             # user + system time
 our $CPU_USAGE;            # Aproximate avarage usage
 our $LIMIT_MEMORY_CLEAR;   # When to send memory message
+our $USE_LOGFILE;          # Redirects STDERR to logfile
 
 use constant INTERVAL_CONNECTION_CHECK =>  60;
 use constant INTERVAL_MAIN_LOOP        =>  10;
@@ -58,17 +61,34 @@ sub debug; # Use special version of debug
 
 sub startup
 {
-    debug "\n\nStarting\n";
+    my( $class, $use_logfile )  = @_;
+    
+    configure($use_logfile);
 
-    configure();
+    debug 1, "\n\nStarted process $$ on ".scalar(localtime)."\n\n";
 
     # Setup signal handling
     # This will be redefined in the fork
     #
     $SIG{CHLD} = \&REAPER;
 
-    startup_in_fork();
+    $SIG{TERM} = sub
+    {
+	terminate_server();
+	exit 0;
+    };
 
+    $SIG{USR1} = sub
+    {
+	restart_server();
+    };
+
+    startup_in_fork();
+}
+
+sub watch_loop
+{
+    $Para::Frame::IN_STARTUP = 0; # Startup succeeded
     my $last_connection_check = time;
     while()
     {
@@ -86,7 +106,7 @@ sub startup
 	sleep INTERVAL_MAIN_LOOP;
     }
     debug "escaped watchdog main loop";
-    die "bailing out";
+    exit 1;
 }
 
 sub check_process
@@ -141,12 +161,12 @@ sub wait_for_server_setup
     unless( $type )
     {
 	debug "Server failed to reach main loop";
-	die "bailing out";
+	exit 1;
     }
     if( $type ne 'MAINLOOP' )
     {
 	debug "Expected MAINLOOP message";
-	die "bailing out";
+	exit 1;
     }
 }
 
@@ -168,14 +188,46 @@ sub check_server_report
 
 sub terminate_server
 {
-    kill 'TERM', $PID; ## Terminate server
-    debug 1,"  Sent TERM to $PID";
+    send_to_server('TERM');
+    debug 1,"  Sent soft TERM to $PID";
+
+    # Waiting for server to TERM
+    my $signal_time = time;
+    while( kill 0, $PID )
+    {
+	if( time > $signal_time + TIMEOUT_CONNECTION_CHECK + TIMEOUT_CREATE_FORK )
+	{
+	    kill 'KILL', $PID; ## Terminate server
+	    debug 1,"  Sent hard KILL to $PID";
+	}
+	elsif( time > $signal_time + TIMEOUT_CONNECTION_CHECK )
+	{
+	    kill 'TERM', $PID; ## Terminate server
+	    debug 1,"  Sent hard TERM to $PID";
+
+	}
+	sleep 1;
+    }
 }
 
 sub restart_server
 {
-    kill 'HUP', $PID; ## Terminate server
-    debug 1,"  Sent HUP to $PID";
+    my $pid = $PID; # $PID will change on new fork
+    send_to_server('HUP');
+    debug 1,"  Sent soft HUP to $PID";
+
+    # Waiting for server to HUP
+    my $signal_time = time;
+    while( $pid == $PID )
+    {
+	if( time > $signal_time + TIMEOUT_CONNECTION_CHECK )
+	{
+	    kill 'HUP', $PID; ## Terminate server
+	    debug 1,"  Sent hard HUP to $PID";
+	    last;
+	}
+	sleep 1;
+    }
 }
 
 sub get_server_message
@@ -273,7 +325,8 @@ sub check_connection
 
 	if( $try >= LIMIT_CONNECTION_TRIES )
 	{
-	    die "Tried $try times; Bailing out";
+	    debug "Tried $try times";
+	    exit 1;
 	}
     }
 }
@@ -293,6 +346,7 @@ sub startup_in_fork
 
     my $sleep_count = 0;
     my $fh = new IO::File;
+#    my $write_fh = new IO::File;  # Alternative top open -|
 
     # Do not expect exceptions during forking...
     # Make these undef in the server fork:
@@ -303,13 +357,18 @@ sub startup_in_fork
     $CHECKTIME = undef;
     $LIMIT_MEMORY_CLEAR = int( LIMIT_MEMORY/1.1 );
 
+    # Must autoflush STDOUT
+    select STDOUT; $|=1;
+
     do
     {
 	$PID = open($fh, "-|");
+#	pipe( $fh, $write_fh );
+#	$PID = fork;
 	unless( defined $PID )
 	{
 	    debug(0,"cannot fork: $!");
-	    die "bailing out" if $sleep_count++ >= TIMEOUT_CREATE_FORK;
+	    exit 1 if $sleep_count++ >= TIMEOUT_CREATE_FORK;
 	    sleep 1;
 	}
     } until defined $PID;
@@ -318,9 +377,18 @@ sub startup_in_fork
     {
 	### --> child
 
-	warn "Started paraframe in child\n";
+#	open STDOUT, ">&", $write_fh; ### DEBUG
+
+	# Reset signal handlers
+	$SIG{CHLD} = 'DEFAULT';
+	$SIG{USR1} = 'DEFAULT';
+	$SIG{TERM} = 'DEFAULT';
+
 	Para::Frame->startup();
-	die "Got outside main_loop";
+	open_logfile() if $USE_LOGFILE;
+	Para::Frame::main_loop();
+	debug "Got outside main_loop";
+	exit 1;
     }
 
     # Better setting global $FH after the forking
@@ -333,7 +401,7 @@ sub startup_in_fork
     # schedule connection check (must be done outside REAPER)
     $DO_CONNECTION_CHECK ++;
 
-    debug "Watching $PID";
+    debug 1, "Watching $PID";
 }
 
 sub REAPER
@@ -352,19 +420,39 @@ sub REAPER
 
 	if( $child_pid == $PID )
 	{
-	    if( $? == 15 )
+	    if( $? == 0 )
+	    {
+		debug "Server shut down whithout problems";
+	    }
+	    elsif( $? == 15 )
 	    {
 		debug "Server got a TERM signal. I will not restart it";
 	    }
+	    elsif( $? == 9 )
+	    {
+		debug "Server got a KILL signal. I will not restart it";
+	    }
+	    elsif( $? == 25088 )
+	    {
+		debug "Another process is using this port";
+		exit $?;
+	    }
 	    else
 	    {
+		if( $Para::Frame::IN_STARTUP )
+		{
+		    debug "Server failed to reach main loop";
+		    exit 1;
+		}
+
 		on_crash();
 	    }
 	}
 	else
 	{
 	    debug "Expected $PID\n";
-	    die "I don't know about that child ($child_pid)!\n";
+	    debug "I don't know about that child ($child_pid)!";
+	    exit 1;
 	}
     }
     $SIG{CHLD} = \&REAPER;  # still loathe sysV
@@ -374,11 +462,13 @@ sub debug
 {
     my( $level, $message ) = @_;
 
+#    Carp::cluck;
     return $Para::Frame::DEBUG unless defined $level;
 
     unless( $message )
     {
 	$message = $level;
+	$level = 0;
     }
 
     if( $Para::Frame::DEBUG >= $level )
@@ -392,7 +482,7 @@ sub debug
 	warn $prespace . $prefix . $message . "\n";
     }
     
-    return 1;
+    return "";
 }
 
 sub get_procinfo
@@ -424,23 +514,50 @@ sub send_to_server
 
     my $port = $Para::Frame::CFG->{'port'};
     Para::Frame::Client::connect_to_server( $port );
-    my $sock = $Para::Frame::Client::SOCK or
-	die "Failed to connect to server\n";
+    my $sock = $Para::Frame::Client::SOCK;
+    unless( $sock )
+    {
+	debug "Failed to connect to server";
+	exit 1;
+    }
     Para::Frame::Client::send_to_server($code, $valref);
     return $sock;
 }
 
+sub open_logfile
+{
+    my $log = $Para::Frame::CFG->{'logfile'};
+
+    open STDERR, '>>', $log   or die "Can't append to $log: $!";
+    warn "\nStarted process $$ on ".scalar(localtime)."\n\n";
+
+    chmod_file($log);
+}
+
 sub configure
 {
+    $USE_LOGFILE = shift;
+
     $CRASHCOUNTER = 0;
     $DO_CONNECTION_CHECK = 0;
+    $Para::Frame::IN_STARTUP = 1;
     
     # Message label and format of the arguments
     $MSGTYPE =
     {
         MAINLOOP => qr/^(\d+)$/,
 	TERMINATE => 0,
+	Loading => qw/(.*)/,
     };
+}
+
+END
+{
+    if( $PID )
+    {
+	# In watchdog
+	debug("Closing down paraframe\n\n");
+    }
 }
 
 1;
