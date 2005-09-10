@@ -245,6 +245,7 @@ sub get # Reimplement this method
 sub change_current_user
 {
     $Para::Frame::U = $_[1];
+    return $Para::Frame::U unless $Para::Frame::REQ;
     return $Para::Frame::REQ->s->{'user'} = $Para::Frame::U;
 }
 
