@@ -1055,7 +1055,7 @@ sub render_output
     }
 
 
-    if( debug > 1 )
+    if( debug > 3 )
     {
 	$page .= ( "<h2>Debug data</h2>\n" );
 #	$page .= (sprintf "<p>Using template %s med ext $ext\n", $in, $ext) if $in;
