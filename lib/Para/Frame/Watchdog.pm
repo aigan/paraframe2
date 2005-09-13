@@ -43,12 +43,13 @@ our $MSGTYPE;              # Type of messages from server
 our $CHECKTIME;            # Time of last proc check
 our $CPU_TIME;             # user + system time
 our $CPU_USAGE;            # Aproximate avarage usage
-our $LIMIT_MEMORY_CLEAR;   # When to send memory message
+our $MEMORY_CLEAR_TIME;    # When to send memory message
 our $USE_LOGFILE;          # Redirects STDERR to logfile
 
 use constant INTERVAL_CONNECTION_CHECK =>  60;
 use constant INTERVAL_MAIN_LOOP        =>  10;
 use constant LIMIT_MEMORY              => 800;
+use constant LIMIT_MEMORY_NOTICE       => 750;
 use constant TIMEOUT_SERVER_STARTUP    =>  45;
 use constant TIMEOUT_CONNECTION_CHECK  =>  60;
 use constant LIMIT_CONNECTION_TRIES    =>   3;
@@ -129,7 +130,7 @@ sub check_process
 	my $usage = $cpu_delta/$sys_delta/10; # Get percent
 	$CPU_USAGE = ($CPU_USAGE * 2 + $usage ) / 3;
 
-	if( debug > 2 or $CPU_USAGE > 30 or $size > $LIMIT_MEMORY_CLEAR )
+	if( debug > 2 or $CPU_USAGE > 30 or $size > LIMIT_MEMORY_NOTICE )
 	{
 	    debug sprintf( "Serverstat %.2d%% (%.2d%%) %5d MB",
 			   $usage, $CPU_USAGE, $size );
@@ -140,19 +141,19 @@ sub check_process
     $CHECKTIME = $sys_time;
     
     # Kill if server uses more than LIMIT_MEMORY MB of memory
-    if( $size > $LIMIT_MEMORY_CLEAR  )
-    {
-	debug "Sening memory notice to server";
-	send_to_server('MEMORY', \$size );
-	$LIMIT_MEMORY_CLEAR = $size;
-    }
-    elsif( $size > LIMIT_MEMORY )
+    if( $size > LIMIT_MEMORY )
     {
 	debug "Server using to much memory";
 	debug "  Restarting...";
 	restart_server();
     }
-
+    elsif( $size > LIMIT_MEMORY_NOTICE and
+	   time > $MEMORY_CLEAR_TIME + TIMEOUT_CONNECTION_CHECK  )
+    {
+	debug "Sening memory notice to server";
+	send_to_server('MEMORY', \$size );
+	$MEMORY_CLEAR_TIME = time;
+    }
 }
 
 sub wait_for_server_setup
@@ -212,21 +213,44 @@ sub terminate_server
 
 sub restart_server
 {
+    my( $hard ) = @_;
+
     my $pid = $PID; # $PID will change on new fork
     send_to_server('HUP');
     debug 1,"  Sent soft HUP to $PID";
 
     # Waiting for server to HUP
     my $signal_time = time;
+    my $grace_time = $hard ? 0 : TIMEOUT_CONNECTION_CHECK;
+
     while( $pid == $PID )
     {
-	if( time > $signal_time + TIMEOUT_CONNECTION_CHECK )
+	sleep 2;
+	if( time > $signal_time + $grace_time + 30 )
+	{
+	    kill 'KILL', $pid;  ## Terminate server
+	    debug 1,"  Sent hard KILL to $pid";
+	    last;
+	}
+	elsif( time > $signal_time + $grace_time + 20 )
+	{
+	    kill 'TERM', $pid;  ## Terminate server
+	    debug 1,"  Sent hard TERM to $pid";	    
+	    last;
+	}
+	elsif( time > $signal_time + $grace_time )
 	{
 	    kill 'HUP', $PID; ## Terminate server
 	    debug 1,"  Sent hard HUP to $PID";
-	    last;
 	}
-	sleep 1;
+    }
+
+    unless( $pid == $PID )
+    {
+	# We sent a TERM or KILL
+	debug "Restarting from outside reaper";
+	sleep 5;
+	startup_in_fork();
     }
 }
 
@@ -319,7 +343,7 @@ sub check_connection
 	    }
 
 	    debug "  Timeout while waiting for ping response";
-	    restart_server();
+	    restart_server(1); # Do hard restart. No extra waiting
 	    last CONNECTION_TRY;
 	}
 
@@ -355,7 +379,6 @@ sub startup_in_fork
 
     $CPU_TIME  = undef;
     $CHECKTIME = undef;
-    $LIMIT_MEMORY_CLEAR = int( LIMIT_MEMORY/1.1 );
 
     # Must autoflush STDOUT
     select STDOUT; $|=1;
@@ -541,13 +564,14 @@ sub configure
     $CRASHCOUNTER = 0;
     $DO_CONNECTION_CHECK = 0;
     $Para::Frame::IN_STARTUP = 1;
-    
+    $MEMORY_CLEAR_TIME = 0;
+
     # Message label and format of the arguments
     $MSGTYPE =
     {
         MAINLOOP => qr/^(\d+)$/,
 	TERMINATE => 0,
-	Loading => qw/(.*)/,
+	'  Loading' => qr/(.*)/,
     };
 }
 
