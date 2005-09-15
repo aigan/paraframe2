@@ -39,6 +39,7 @@ our $FH;                   # Server file-handle
 our $CRASHCOUNTER;         # Number of crashes
 our $CRASHTIME;
 our $DO_CONNECTION_CHECK;
+our $HARD_RESTART;
 our $MSGTYPE;              # Type of messages from server 
 our $CHECKTIME;            # Time of last proc check
 our $CPU_TIME;             # user + system time
@@ -48,7 +49,7 @@ our $USE_LOGFILE;          # Redirects STDERR to logfile
 
 use constant INTERVAL_CONNECTION_CHECK =>  60;
 use constant INTERVAL_MAIN_LOOP        =>  10;
-use constant LIMIT_MEMORY              => 800;
+use constant LIMIT_MEMORY              => 850;
 use constant LIMIT_MEMORY_NOTICE       => 750;
 use constant TIMEOUT_SERVER_STARTUP    =>  45;
 use constant TIMEOUT_CONNECTION_CHECK  =>  60;
@@ -147,6 +148,12 @@ sub check_process
 	debug "  Restarting...";
 	restart_server();
     }
+    elsif( $size > (LIMIT_MEMORY + LIMIT_MEMORY_NOTICE )/2 )
+    {
+	debug "Server using to much memory";
+	send_to_server('HUP');
+	debug 1,"  Sent soft HUP to $PID";
+    }
     elsif( $size > LIMIT_MEMORY_NOTICE and
 	   time > $MEMORY_CLEAR_TIME + TIMEOUT_CONNECTION_CHECK  )
     {
@@ -222,35 +229,40 @@ sub restart_server
     # Waiting for server to HUP
     my $signal_time = time;
     my $grace_time = $hard ? 0 : TIMEOUT_CONNECTION_CHECK;
+    my $sent = '';
 
     while( $pid == $PID )
     {
 	sleep 2;
-	if( time > $signal_time + $grace_time + 30 )
+	if( $sent eq 'kill' )
 	{
+	    debug "Waiting for restart of server";
+	    sleep 10;
+	}
+	elsif( time > $signal_time + $grace_time + 30 )
+	{
+	    next if $sent eq 'KILL';
+	    $sent = 'KILL';
+	    $HARD_RESTART = 1;
 	    kill 'KILL', $pid;  ## Terminate server
 	    debug 1,"  Sent hard KILL to $pid";
 	    last;
 	}
 	elsif( time > $signal_time + $grace_time + 20 )
 	{
+	    next if $sent eq 'TERM';
+	    $sent = 'TERM';
+	    $HARD_RESTART = 1;
 	    kill 'TERM', $pid;  ## Terminate server
 	    debug 1,"  Sent hard TERM to $pid";	    
-	    last;
 	}
 	elsif( time > $signal_time + $grace_time )
 	{
+	    next if $sent eq 'HUP';
+	    $sent = 'HUP';
 	    kill 'HUP', $PID; ## Terminate server
 	    debug 1,"  Sent hard HUP to $PID";
 	}
-    }
-
-    unless( $pid == $PID )
-    {
-	# We sent a TERM or KILL
-	debug "Restarting from outside reaper";
-	sleep 5;
-	startup_in_fork();
     }
 }
 
@@ -359,6 +371,11 @@ sub on_crash
 {
     $CRASHCOUNTER ++;
     $CRASHTIME = now();
+    if( $HARD_RESTART )
+    {
+	debug "There was a request for a hard restart";
+	$HARD_RESTART = 0;
+    }
     debug "Restart $CRASHCOUNTER at $CRASHTIME";
     
     startup_in_fork();
@@ -447,11 +464,11 @@ sub REAPER
 	    {
 		debug "Server shut down whithout problems";
 	    }
-	    elsif( $? == 15 )
+	    elsif( $? == 15 and not $HARD_RESTART )
 	    {
 		debug "Server got a TERM signal. I will not restart it";
 	    }
-	    elsif( $? == 9 )
+	    elsif( $? == 9 and not $HARD_RESTART )
 	    {
 		debug "Server got a KILL signal. I will not restart it";
 	    }
@@ -565,6 +582,7 @@ sub configure
     $DO_CONNECTION_CHECK = 0;
     $Para::Frame::IN_STARTUP = 1;
     $MEMORY_CLEAR_TIME = 0;
+    $HARD_RESTART = 0;
 
     # Message label and format of the arguments
     $MSGTYPE =
