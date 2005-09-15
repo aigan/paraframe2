@@ -37,7 +37,7 @@ use CGI;
 BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "  Loading ".__PACKAGE__." $VERSION\n";
+    print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
 use Para::Frame::Reload;
@@ -935,6 +935,67 @@ sub confirm_simple
     throw('incomplete', 'Confirm');
 }
 
+=head2 inflect
+
+  inflect( $number, $one, $many )
+  inflect( $number, $none, $one, $many )
+
+If called without $none, it will use $many for $none.
+
+Replaces %d with the $number.
+
+Uses $many for negative numbers
+
+=head3 example
+
+  inflect( 1, "no things", "a thing", "%d things")
+
+returns "a thing"
+
+  inflect(0, "a thing", "%d things")
+
+returns "0 things"
+
+=cut
+
+sub inflect # inflection = böjning
+{
+    my( $number, $none, $one, $many ) = @_;
+
+    # Support calling with or without the $none option
+
+    if( $many )
+    {
+	# If called with %d, interpolate the number
+	$many =~ s/\%d/$number/;
+    }
+    else
+    {
+	$many = $one;
+
+	# If called with %d, interpolate the number
+	$many =~ s/\%d/$number/;
+
+	$one = $none;
+	$none = $many;
+    }
+
+
+    if( $number == 0 )
+    {
+	return $none;
+    }
+    elsif( $number == 1 )
+    {
+	return $one;
+    }
+    else
+    {
+	# Also for negative numbers
+	return $many;
+    }
+}
+
 #### Methods
 
 sub on_configure
@@ -961,6 +1022,7 @@ sub on_configure
 	'textarea'        => \&textarea,
 	'filefield'       => \&filefield,
 	'css_header'      => \&css_header,
+	'inflect'         => \&inflect,
     };
 
     Para::Frame->add_global_tt_params( $params );
