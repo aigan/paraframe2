@@ -45,7 +45,7 @@ use Unicode::MapUTF8;
 BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "  Loading ".__PACKAGE__." $VERSION\n"
+    print "Loading ".__PACKAGE__." $VERSION\n"
 	unless $Psi::QUIET; # houerly_active.pl
 
 #    $Exporter::Verbose = 1;
@@ -62,7 +62,7 @@ BEGIN
             uri2file compile passwd_crypt deunicode paraframe_dbm_open
             elapsed_time uri store_params clear_params
             restore_params idn_encode idn_decode debug reset_hashref
-	    inflect timediff extract_query_params );
+	    inflect timediff extract_query_params fqdn );
 
 }
 
@@ -72,7 +72,7 @@ use Para::Frame::Reload;
 our %URI2FILE;
 
 our %TEST; ### DEBUG
-
+our $FQDN; # See fqdn()
 
 =head1 FUNCTIONS
 
@@ -707,7 +707,7 @@ sub uri2file
 
 #    warn "    From client\n";
     $req->send_code( 'URI2FILE', $uri );
-    $file = Para::Frame::get_value( $req->client );
+    $file = Para::Frame::get_value( $req );
 
     $URI2FILE{ $key } = $file;
     return $file;
@@ -1073,44 +1073,6 @@ sub reset_hashref
     return $hashref;
 }
 
-sub inflect # inflection = böjning
-{
-    my( $number, $none, $one, $many ) = @_;
-
-    # Support calling with or without the $none option
-
-    if( $many )
-    {
-	# If called with %d, interpolate the number
-	$many =~ s/\%d/$number/;
-    }
-    else
-    {
-	$many = $one;
-
-	# If called with %d, interpolate the number
-	$many =~ s/\%d/$number/;
-
-	$one = $none;
-	$none = $many;
-    }
-
-
-    if( $number == 0 )
-    {
-	return $none;
-    }
-    elsif( $number == 1 )
-    {
-	return $one;
-    }
-    else
-    {
-	# Also for negative numbers
-	return $many;
-    }
-}
-
 sub timediff
 {
     my $ts = $Para::Frame::timediff_timestamp;
@@ -1130,6 +1092,29 @@ sub extract_query_params
 
     return $rec;
 }
+
+=head2 fqdn
+
+Gets the FQDN (fully qualified domain name). That is the hostname
+followed by the domain name.  Tha availible perl modules fails for
+me. ( Sys::Hostname and Net::Domain )
+
+=cut
+
+sub fqdn
+{
+    unless( $FQDN )
+    {
+	local $ENV{PATH} = '/usr/bin:/bin:/usr/sbin:/sbin'; # Paranoia.
+
+	$FQDN = `(hostname  --fqdn) 2>/dev/null`;
+
+	# remove garbage
+	$FQDN =~ tr/\0\r\n//d;
+    }
+    return $FQDN;
+}
+
 
 1;
 
