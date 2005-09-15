@@ -32,11 +32,13 @@ use URI;
 use Carp qw(cluck croak carp confess );
 #use Cwd qw( abs_path );
 use Encode qw( is_utf8 );
+use LWP::UserAgent;
+use HTTP::Request;
 
 BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "  Loading ".__PACKAGE__." $VERSION\n";
+    print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
 use Para::Frame::Client;
@@ -60,6 +62,12 @@ sub new
     # Modify $env for non-mod_perl mode
     $env->{'REQUEST_METHOD'} = 'GET';
     delete $env->{'MOD_PERL'};
+
+    if( $Para::Frame::REQ )
+    {
+	# Detatch previous %ENV
+	$Para::Frame::REQ->{'env'} = {%ENV};
+    }
 
     %ENV = %$env;     # To make CGI happy
 
@@ -101,6 +109,7 @@ sub new
 	in_yield       => 0,              ## inside a yield
 	child_result   => undef,          ## the child res if in child
 	reqnum         => $reqnum,        ## The request serial number
+	wait           => 0,              ## Asked to wait?
     }, $class;
 
     # Cache uri2file translation
@@ -111,9 +120,12 @@ sub new
     $req->{'result'}  = new Para::Frame::Result($req);  # Before Session
     $req->{'s'}       = new Para::Frame::Session($req);
 
-    # Log som info
+    # Log some info
     #
     warn "# http://".$req->http_host_name."$orig_uri\n";
+
+    warn "Req for $req->{'env'}{'HTTP_HOST'}\n";
+
 
     return $req;
 }
@@ -126,13 +138,20 @@ Used for background jobs, without a calling browser client
 
 sub new_minimal
 {
-    my( $class, $reqnum ) = @_;
+    my( $class, $reqnum, $bg_client ) = @_;
+
+    if( $Para::Frame::REQ )
+    {
+	# Detatch previous %ENV
+	$Para::Frame::REQ->{'env'} = {%ENV};
+    }
 
     %ENV = ();
     my( $env ) = \%ENV;
 
     my $req =  bless
     {
+	client         => $bg_client,     ## Just the unique name
 	indent         => 1,              ## debug indentation
 	jobs           => [],             ## queue of actions to perform
 	env            => $env,
@@ -143,6 +162,7 @@ sub new_minimal
 	in_yield       => 0,              ## inside a yield
 	child_result   => undef,          ## the child res if in child
 	reqnum         => $reqnum,        ## The request serial number
+	wait           => 0,              ## Asked to wait?
     }, $class;
 
     $req->{'result'}  = new Para::Frame::Result($req);  # Before Session
@@ -169,7 +189,7 @@ sub error_page_not_selected { $_[0]->{'error_template'} ? 0 : 1 }
 # Is this request a client req or a bg server job?
 sub is_from_client
 {
-    return 1 if $_[0]->{'client'};
+    return $_[0]->{'q'} ? 1 : 0;
 }
 
 sub template
@@ -339,9 +359,13 @@ sub setup_jobs
 sub add_job
 {
     debug(2,"Added the job $_[1] for $_[0]->{reqnum}");
-#    cluck;
-#    push @Para::Frame::JOBS, [@_];
     push @{ shift->{'jobs'} }, [@_];
+}
+
+sub add_background_job
+{
+    debug(2,"Added the background job $_[1] for $_[0]->{reqnum}");
+    push @Para::Frame::BGJOBS_PENDING, [@_];
 }
 
 sub add_header
@@ -386,7 +410,8 @@ sub run_code
     eval
     {
 	$res = &{$coderef}($req, @_) ;
-    } or do
+    };
+    if( $@ )
     {
 	my $err = catch($@);
 	debug(0,"RUN CODE FAILED");
@@ -396,6 +421,36 @@ sub run_code
     };
     return $res;
 }
+
+# This concept is flawed...
+#
+# sub run_code_as_user
+# {
+#     my( $req, $user ) = (shift, shift );
+# 
+#     # Save the original request, because it may be needed if the real
+#     # request is a background job. But support just giving the
+#     # username
+# 
+#     if( ref $user eq 'Para::Frame::Request' )
+#     {
+# 	my $original_request = $user;
+# 
+# 	$user = $req->s->u;
+# 	$req->{'original_request'} = $original_request;
+#     }
+# 
+#     # The code should not let other jobs for the same request run
+#     # while this job is running, since it then would run with the
+#     # wrong user and maby the wrong original_request, in case this is
+#     # a background request.
+# 
+#     $user->become_temporary_user($user);
+#     my $res = $req->run_code(@_);
+#     $user->revert_from_temporary_user();
+#     delete $req->{'original_request'};
+#     return $res;
+# }
 
 sub run_action
 {
@@ -953,8 +1008,9 @@ sub send_code
     {
 	debug(2,"redirecting to parent");
 	my $code = shift;
+	my $port = $Para::Frame::CFG->{'port'};
 	my $client = $req->client;
-	my $port = $client->sockport;
+	debug(3,"  to $client");
 	my $val = $client . "\x00" . shift;
 	die "Too many args in send_code($code $val @_)" if @_;
 
@@ -963,14 +1019,102 @@ sub send_code
 	Para::Frame::Client::send_to_server($code, \$val);
 
 	# Keep open the SOCK to get response later
-#	undef $Para::Frame::Client::SOCK;
 	return;
     }
 
     my $client = $req->client;
-#    warn "  to client $client\n";
-    $client->send(join "\0", @_ );
-    $client->send("\n");
+    if( $client =~ /^background/ )
+    {
+
+	# We need to access Apache. We will now act as a browser in
+	# order to give ouerself a client to send this command
+	# to. This will be ... entertaining...
+
+	debug "The $client will now considering starting an UA";
+	
+
+	# Use existing
+	$req->{'wait_for_active_reqest'} ||= 0;
+	unless( $req->{'wait_for_active_reqest'} ++ )
+	{
+	    debug "  Prepare for starting UA\n";
+
+	    my $origreq = $req->{'original_request'};
+
+	    # Find out which website to use
+	    my( $webhost, $webport );
+	    if( $origreq )
+	    {
+		$webhost = $origreq->{'env'}{'HTTP_HOST'};
+	    }
+	    else
+	    {
+		$webhost = $Para::Frame::CFG->{'site'}{'webhost'};
+	    }
+
+	    my $webpath = $Para::Frame::CFG->{'site'}{'loopback'};
+	    my $query = "run=wait_for_req&req=$client";
+	    my $url = "http://$webhost$webpath?$query";
+
+	    my $ua = LWP::UserAgent->new;
+	    my $lwpreq = HTTP::Request->new(GET => $url);
+
+	    # Do the request in a fork. Let that req message us in the
+	    # action wait_for_req
+
+	    my $fork = $req->create_fork;
+	    if( $fork->in_child )
+	    {
+		debug "About to GET $url";
+		my $res = $ua->request($lwpreq);
+		debug "  GOT result: $res";
+		$fork->return( $res );
+	    }
+	}
+
+	# Wait for the $ua to connect and give us it's $req
+	while( not $req->{'active_reqest'} )
+	{
+	    debug 3, "Got an active_reqest yet?";
+	    $req->yield(1); # Give it some time to connect
+	}
+
+	# Got it! Now send the message
+	#
+	debug 3, "We got an active request for $client";
+	my $client = $req->{'active_reqest'}->client;
+	debug 3, "  Using $client";
+
+	$client->send(join "\0", @_ );
+	$client->send("\n");
+
+	# Set up release code
+	$req->add_job('release_active_request');
+    }
+    else
+    {
+	$client->send(join "\0", @_ );
+	$client->send("\n");
+    }
+}
+
+sub release_active_request
+{
+    my( $req ) = @_;
+
+    $req->{'wait_for_active_reqest'} --;
+
+    if( $req->{'wait_for_active_reqest'} )
+    {
+	debug "More jobs for active request";
+    }
+    else
+    {
+        debug "Releasing active_request";
+
+	$req->{'active_reqest'}{'wait'} --;
+	delete $req->{'active_reqest'};
+    }
 }
 
 sub get_cmd_val
@@ -978,7 +1122,7 @@ sub get_cmd_val
     my $req = shift;
 
     $req->send_code( 'AR-GET', @_ );
-    return Para::Frame::get_value( $req->client );
+    return Para::Frame::get_value( $req );
 }
 
 sub render_output
@@ -1400,7 +1544,14 @@ sub get_child_result
 
     foreach my $message ( $result->message )
     {
-	$req->result->message( $message );
+	if( $req->is_from_client )
+	{
+	    $req->result->message( $message );
+	}
+	else
+	{
+	    debug $message;
+	}
     }
 
     return 1;
