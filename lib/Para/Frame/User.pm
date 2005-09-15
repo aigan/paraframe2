@@ -29,7 +29,7 @@ use Carp qw( confess );
 BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "  Loading ".__PACKAGE__." $VERSION\n";
+    print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
 use Para::Frame::Reload;
@@ -248,6 +248,23 @@ sub change_current_user
     return $Para::Frame::U unless $Para::Frame::REQ;
     return $Para::Frame::REQ->s->{'user'} = $Para::Frame::U;
 }
+
+sub become_temporary_user
+{
+    $Para::Frame::REQ->{'real_user'} = $Para::Frame::U;
+    return $_[0]->change_current_user( $_[1] );
+}
+
+sub revert_from_temporary_user
+{
+    if( my $ru = delete $Para::Frame::REQ->{'real_user'} )
+    {
+	return $_[0]->change_current_user( $ru );
+    }
+    return $Para::Frame::U;
+}
+
+
 
 
 # Create accessors
