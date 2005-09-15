@@ -32,7 +32,7 @@ use Sys::CpuLoad;
 BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "  Loading ".__PACKAGE__." $VERSION\n";
+    print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
 use Para::Frame::Reload;
@@ -40,14 +40,14 @@ use Para::Frame::Watchdog;
 use Para::Frame::Request;
 use Para::Frame::Widget;
 use Para::Frame::Time;
-use Para::Frame::Utils qw( throw uri2file debug create_file chmod_file );
+use Para::Frame::Utils qw( throw uri2file debug create_file chmod_file fqdn );
 
 use constant TIMEOUT_LONG  =>   5;
 use constant TIMEOUT_SHORT =>   0.001;
 use constant BGJOB_MAX     =>   3;      # At most
 use constant BGJOB_MED     =>  60 *  5; # Even if no visitors
 use constant BGJOB_MIN     =>  60 * 15; # At least this often
-use constant BGJOB_CPU     =>   0.5;
+use constant BGJOB_CPU     =>   1.5;
 
 # Do not init variables here, since this will be redone each time code is updated
 our $SERVER     ;
@@ -70,6 +70,7 @@ our %CHILD      ;
 our $LEVEL      ;
 our $BGJOBDATE  ;
 our $BGJOBNR    ;
+our @BGJOBS_PENDING;       # New jobs to be added in background
 our $TERMINATE  ;
 our $IN_STARTUP;           # True until we reach the watchdog loop
 our $ACTIVE_PIDFILE;       # The PID indicated by existing pidfile
@@ -157,6 +158,10 @@ sub main_loop
 #	    warn "  Handle client $client\n";
 	    if ($client == $SERVER)
 	    {
+		# Accept connection even if we should $TERMINATE since
+		# it could be communication for finishing existing
+		# requests
+
 		# New connection.
 		my($iaddr, $address, $port, $peer_host);
 		$client = $SERVER->accept;
@@ -170,11 +175,11 @@ sub main_loop
 		$SELECT->add($client);
 		nonblock($client);
 
-		debug(4,"\n\nNew client connected\n");
+		debug(4,"\n\nNew client connected");
 	    }
 	    else
 	    {
-		$REQ = undef;
+		switch_req(undef);
 		get_value( $client );
 	    }
 	}
@@ -184,29 +189,44 @@ sub main_loop
 	$timeout = TIMEOUT_LONG; # We change this if there are jobs to do
 	foreach my $req ( values %REQUEST )
 	{
-#	    my $s = $req->s; ### DEBUG
-#	    warn "Look for jobs for session $s\n"; ### DEBUG
-
 	    if( $req->{'in_yield'} )
 	    {
 		# Do not do jobs for a request that waits for a child
+		debug 4, "In_yield: $req->{reqnum}";
+	    }
+	    elsif( $req->{'wait'} )
+	    {
+		# Waiting for something else to finish...
+		debug 4, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
 	    }
 	    elsif( my $job = shift @{$req->{'jobs'}} )
 	    {
 		my( $cmd, @args ) = @$job;
-		debug(2,"Found a job ($cmd) in $req->{reqnum}");
 		switch_req( $req );
+		debug(2,"Found a job ($cmd) in $req->{reqnum}");
 		$req->$cmd( @args );
 	    }
 	    elsif( $req->{'childs'} )
 	    {
 		# Stay open while waiting for child
-#		warn "  staying open...\n";
+		if( debug >= 4 )
+		{
+		    debug "$req->{reqnum} stays open, waiting for $req->{'childs'} childs";
+		    foreach my $child ( values %CHILD )
+		    {
+			my $creq = $child->req;
+			my $creqnum = $creq->{'reqnum'};
+			my $cclient = $creq->client;
+			my $cpid = $child->pid;
+			debug "  Req $creqnum $cclient has a child with pid $cpid";
+		    }
+		}
 	    }
 	    else
 	    {
 		# All jobs done for now
 		debug(2,"All jobs done");
+		die Dumper $req unless ref $req eq 'Para::Frame::Request'; ### DEBUG
 		$req->run_hook('done');
 		close_callback($req->{'client'});
 	    }
@@ -218,7 +238,7 @@ sub main_loop
 	#
 	unless( values %REQUEST )
 	{
-	    add_background_jobs() and
+	    add_background_jobs_conditional() and
 		$timeout = TIMEOUT_SHORT;
 	}
 
@@ -244,7 +264,10 @@ sub main_loop
 	    if( $TERMINATE )
 	    {
 		# Exit asked to and nothing is in flux
-		if( not keys %REQUEST and not keys %CHILD )
+		if( not keys %REQUEST and
+		    not keys %CHILD   and
+		    not @BGJOBS_PENDING
+		    )
 		{
 		    if( $TERMINATE eq 'HUP' )
 		    {
@@ -289,14 +312,11 @@ sub main_loop
 sub switch_req
 {
     # $_[0] => the new $req
-    # $_[1] => force change (not used)
 
     if( $_[0] ne $REQ )
     {
 	if( $REQ )
 	{
-	    warn "\nSwitching to req $_[0]->{reqnum}\n";
-
 	    if( $REQ->{'s'} )
 	    {
 		# Store template error data (undocumented)
@@ -309,6 +329,18 @@ sub switch_req
 	}
 
 	Para::Frame->run_hook(undef, 'before_switch_req');
+
+	if( $_[0] and $REQ )
+	{
+	    if( $Para::Frame::FORK )
+	    {
+		warn "\nSwitching to req $_[0]->{reqnum} in FORK\n";
+	    }
+	    else
+	    {
+		warn "\nSwitching to req $_[0]->{reqnum}\n";
+	    }
+	}
 
 	$U = undef;
 	if( $REQ = $_[0] )
@@ -345,18 +377,18 @@ sub get_value
 
     if( $Para::Frame::FORK )
     {
-	debug(0,"Getting value inside a fork");
+	debug(2,"Getting value inside a fork");
 	while( $_ = <$Para::Frame::Client::SOCK> )
 	{
 	    if( s/^([\w\-]{3,10})\0// )
 	    {
 		my $code = $1;
-		debug(0,"Code $code");
+		debug(1,"Code $code");
 		chomp;
 		if( $code eq 'RESP' )
 		{
 		    my $val = $_;
-		    debug(0,"RESP ($val)");
+		    debug(1,"RESP ($val)");
 		    return $val;
 		}
 		else
@@ -375,9 +407,40 @@ sub get_value
     }
 
 
+    if( ref $client eq 'Para::Frame::Request' )
+    {
+	my $req = $client;
+	$client = $req->client;
+	if( $client =~ /^background/ )
+	{
+	    if( my $areq = $req->{'active_reqest'} )
+	    {
+		debug 4, "  Getting value from active_request for $client";
+		$client = $areq->client;
+		debug 4, "    $client";
+	    }
+	    else
+	    {
+		die "We cant get a value without an active request ($client)\n";
+		# Unless it's a fork... (handled above)
+	    }
+	}
+    }
+
 #    warn "Waiting for client\n";
+    if( debug >= 3 )
+    {
+	debug 3, "Get value from $client";
+	if( my $req = $REQUEST{$client} )
+	{
+	    my $reqnum = $req->{'reqnum'};
+	    debug 3, "  Req $reqnum";
+	}
+    }
+    
+
     my $time = time;
-    my $timeout = 3;
+    my $timeout = 5;
   WAITE:
     while(1)
     {
@@ -389,7 +452,7 @@ sub get_value
 	if( time > $time + $timeout )
 	{
 	    warn "Data timeout!!!";
-	    cluck "trace:";
+	    cluck "trace for $client";
 	    throw('action', "Data timeout while talking to client\n");
 	}
     }
@@ -477,6 +540,10 @@ sub get_value
 
 		    # Send response in calling $REQ
 		    debug(2,"Returning answer $file");
+#		    debug "  to $client";
+
+
+
 #		    $client->send(join "\0", 'URI2FILE', $file );
 		    $client->send(join "\0", 'RESP', $file );
 		    $client->send("\n");
@@ -541,25 +608,29 @@ sub close_callback
 
     if( $reason )
     {
+#	debug(4,"Done $client $REQUEST{$client}{'reqnum'} ($reason)");
 	debug(4,"Done ($reason)");
     }
     else
     {
+#	warn "Done $client $REQUEST{$client}{'reqnum'}\n";
 	warn "Done\n";
     }
 
-    if( $client )
+    if( $client =~ /^background/ )
+    {
+	# Releasing active request
+	delete $REQUEST{$client}{'active_reqest'};
+	delete $REQUEST{$client};
+	switch_req(undef);
+    }
+    else
     {
 	delete $REQUEST{$client};
 	delete $INBUFFER{$client};
-	undef $REQ;
+	switch_req(undef);
 	$SELECT->remove($client);
 	close($client);
-    }
-    else # This is a bg job
-    {
-	delete $REQUEST{'background'};
-	undef $REQ;
     }
 }
 
@@ -651,14 +722,12 @@ sub daemonize
 }
 
 
-sub add_background_jobs
+sub add_background_jobs_conditional
 {
 
     # Add background jobs to do unless the load is too high, uless we
     # waited too long anyway
 
-    # Return if BG jobs already running
-    return if $REQUEST{'background'};
     return if $TERMINATE;
 
     # Return it hasn't passed BGJOB_MAX secs since last time
@@ -667,6 +736,7 @@ sub add_background_jobs
     return if $delta < BGJOB_MAX;
 
     # Cache cleanup could safely be done here
+    # But nothing that requires a $req
     Para::Frame->run_hook(undef, 'busy_background_job', $delta);
 
 
@@ -685,36 +755,80 @@ sub add_background_jobs
 	return if $delta < BGJOB_MED;
     }
     
-    $REQNUM ++;
-    warn "\n\nHandling request number $REQNUM (in background)\n";
-    my $req = Para::Frame::Request->new_minimal($REQNUM);
-
     ### Reload updated modules
     Para::Frame::Reload->check_for_updates;
 
-    ### Register the request
-    $REQUEST{'background'} = $req;
-    switch_req( $req );
-    my $user_class = $Para::Frame::CFG->{'user_class'};
-    my $bg_user = &{ $Para::Frame::CFG->{'bg_user_code'} };
-    $user_class->change_current_user($bg_user);
+    add_background_jobs($delta, $sysload);
+}
 
-    ### Debug info
-    if( debug > 2 )
+sub add_background_jobs
+{
+    my( $delta, $sysload ) = @_;
+
+    $REQNUM ++;
+    warn "\n\nHandling request number $REQNUM (in background)\n";
+    my $client = "background-$REQNUM";
+    my $req = Para::Frame::Request->new_minimal($REQNUM, $client);
+
+    ### Register the request
+    $REQUEST{$client} = $req;
+    switch_req( $req );
+
+    my $bg_user;
+    my $user_class = $Para::Frame::CFG->{'user_class'};
+
+    # Make sure the user is the same for all jobs in a request
+
+    # Add pending jobs set up with $req->add_background_job
+    #
+    if( @BGJOBS_PENDING )
     {
-	my $t = localtime;
-	my $s = $req->s;
-	warn sprintf("# %s %s - localhost\n# Sid %s - Uid %d - debug %d\n",
-		     $t->ymd,
-		     $t->hms('.'),
-		     $s->id,
-		     $s->u->id,
-		     $s->{'debug'},
-		     );
+	my $job = shift @BGJOBS_PENDING;
+	my $original_request = shift @$job;
+	my $reqnum = $original_request->{'reqnum'};
+	$bg_user = $original_request->s->u;
+	$user_class->change_current_user($bg_user);
+
+	# Make sure the original request is the same for all jobs in
+	# each background request
+
+	$req->{'original_request'} = $original_request;
+	$req->add_job('run_code', @$job);
+
+	for( my $i=0; $i<=$#BGJOBS_PENDING; $i++ )
+	{
+	    if( $BGJOBS_PENDING[$i][0]{'reqnum'} == $reqnum )
+	    {
+		my $job = splice @BGJOBS_PENDING, $i, 1;
+		shift @$job;
+		$req->add_job('run_code', @$job);
+
+		# This may have been the last item in the list
+		$i--;
+	    }
+	}
     }
-   
- 
-    Para::Frame->run_hook($req, 'add_background_jobs', $delta, $sysload);
+    elsif( not $TERMINATE )
+    {
+	$bg_user = &{ $Para::Frame::CFG->{'bg_user_code'} };
+	$user_class->change_current_user($bg_user);
+
+	### Debug info
+	if( debug > 2 )
+	{
+	    my $t = localtime;
+	    my $s = $req->s;
+	    warn sprintf("# %s %s - localhost\n# Sid %s - Uid %d - debug %d\n",
+			 $t->ymd,
+			 $t->hms('.'),
+			 $s->id,
+			 $s->u->id,
+			 $s->{'debug'},
+			 );
+	}
+
+	Para::Frame->run_hook($req, 'add_background_jobs', $delta, $sysload);
+    }
 
     $BGJOBDATE = time;
     $BGJOBNR   = $REQNUM;
@@ -943,6 +1057,7 @@ sub configure
     $REQNUM     = 0;
     $CFG        = {};
     $PARAMS     = {};
+    
 
     $CFG = $cfg_in; # Assign to global var
 
@@ -972,6 +1087,8 @@ sub configure
     $site->{'last_step'};        # Default to undef
     $site->{'login_page'}  ||= $site->{'last_step'} || $site->{'webhome'}.'/';
     $site->{'logout_page'} ||= $site->{'webhome'}.'/';
+    $site->{'webhost'}     ||= fqdn(); # include port (www.abc.se:81)
+    $site->{'loopback'}    ||= $site->{'logout_page'};
 
     # Make appfmly and appback listrefs if they are not
     foreach my $key ('appfmly', 'appback')
