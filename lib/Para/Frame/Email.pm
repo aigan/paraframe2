@@ -42,7 +42,7 @@ use Crypt::OpenPGP;
 BEGIN
 {
     $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "  Loading ".__PACKAGE__." $VERSION\n";
+    print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
 use Para::Frame::Reload;
@@ -62,6 +62,7 @@ sub new
 	    'u'        => $req->s->u,
 	    'q'        => $req->q,
 	    'date'     => sub{ date(@_) },
+	    'host'     => $req->host,
 	},
     }, $class;
 
@@ -125,8 +126,6 @@ sub error_msg
 
   $e->send_in_fork(\%params)
 
-
-
 =cut
 
 sub send_in_fork
@@ -150,7 +149,15 @@ sub send_in_fork
 
 sub send_in_background
 {
-    die "fixme";
+    my( $e, $p_in ) = @_;
+    my $req = $Para::Frame::REQ;
+
+    $e = $e->new($p_in) unless ref $e;
+
+    $req->add_background_job(sub{
+	$e->send_in_fork() or throw('email', $e->error_msg);
+    });
+    return 1;
 }
 
 sub send_by_proxy
@@ -177,14 +184,13 @@ sub send
     my $res = $e->{'result'} = {}; # Reset results
     my $p = $e->set( $p_in );
 
+
     $p->{'template'} or die "No template selected\n";
     $p->{'from'}     or die "No from selected\n";
     $p->{'subject'}  or die "No subject selected\n";
     $p->{'to'}       or die "No reciever for this email?\n";
 
     my $req = $Para::Frame::REQ;
-
-    $p->{'host'} ||= $req->host;
 
     # List of addresses to try. Quit after first success
     my @try = ref $p->{'to'} eq 'ARRAY' ? @{$p->{'to'}} : $p->{'to'};
@@ -204,8 +210,12 @@ sub send
 	debug(0,"Plain include path is: @{$providers->[0]->include_path()}");
     }
 
+
+    # Clone params for protection from change
+    my %params = %$p;
+
     my $data = "";
-    $Para::Frame::th->{'plain'}->process($in, $p, \$data) or
+    $Para::Frame::th->{'plain'}->process($in, \%params, \$data) or
 	throw('template', "Template error: ".$Para::Frame::th->{'plain'}->error );
 
     if( $p->{'pgpsign'} )
