@@ -23,7 +23,7 @@ use FreezeThaw qw( thaw );
 BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "  Loading ".__PACKAGE__." $VERSION\n";
+    print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
 use Para::Frame::Reload;
