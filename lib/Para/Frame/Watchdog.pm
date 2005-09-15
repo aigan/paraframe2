@@ -27,7 +27,7 @@ use Carp;
 BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "  Loading ".__PACKAGE__." $VERSION\n";
+    print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
 use Para::Frame::Utils qw( chmod_file );
@@ -283,7 +283,7 @@ sub get_server_message
 	my $argformat = $MSGTYPE->{$type};
 	unless( defined $argformat )
 	{
-	    debug "---> Got unrecognized server report: $report";
+	    debug "---> Got unrecognized server report: $report ($type)";
 	    return undef;
 	}
 
@@ -589,7 +589,7 @@ sub configure
     {
         MAINLOOP => qr/^(\d+)$/,
 	TERMINATE => 0,
-	'  Loading' => qr/(.*)/,
+	'Loading' => qr/(.*)/,
     };
 }
 
