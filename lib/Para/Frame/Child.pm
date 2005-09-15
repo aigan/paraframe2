@@ -31,7 +31,7 @@ use Data::Dumper;
 BEGIN
 {
     $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "  Loading ".__PACKAGE__." $VERSION\n";
+    print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
 use Para::Frame::Reload;
@@ -99,7 +99,10 @@ sub deregister
 
     if( $req->{'childs'} <= 0 )
     {
-	$req->add_job('after_jobs');
+	if( $req->is_from_client )
+	{
+	    $req->add_job('after_jobs');
+	}
     }
 
 }
