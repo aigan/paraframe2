@@ -41,6 +41,8 @@ use BerkeleyDB;
 use IDNA::Punycode;
 use Time::HiRes;
 use Unicode::MapUTF8;
+use LWP::UserAgent;
+use HTTP::Request;
 
 BEGIN
 {
@@ -62,7 +64,7 @@ BEGIN
             uri2file compile passwd_crypt deunicode paraframe_dbm_open
             elapsed_time uri store_params clear_params
             restore_params idn_encode idn_decode debug reset_hashref
-	    inflect timediff extract_query_params fqdn );
+	    inflect timediff extract_query_params fqdn retrieve_from_url );
 
 }
 
@@ -1114,6 +1116,50 @@ sub fqdn
     }
     return $FQDN;
 }
+
+=head2 retrieve_from_url
+
+    retrieve_from_url( $url );
+
+Gets the page/file in a fork.
+
+Returns the page content on success or throws an action exception with
+an explanation.
+
+=cut
+
+sub retrieve_from_url
+{
+    my( $url ) = @_;
+
+    # We are doing this in the background and returns the result then
+    # done.
+
+    my $req = $Para::Frame::REQ;
+
+    my $ua = LWP::UserAgent->new;
+    my $lwpreq = HTTP::Request->new(GET => $url);
+
+    my $fork = $req->create_fork;
+    if( $fork->in_child )
+    {
+#	$fork->return("NAME=\"lat\" VALUE=\"11.9443\" NAME=\"long\" VALUE=\"57.7188\"");
+	debug "About to GET $url";
+	my $res = $ua->request($lwpreq);
+	if( $res->is_success )
+	{
+	    $fork->return( $res->content );
+	}
+	else
+	{
+	    my $message = $res->message;
+	    throw('action', "Failed to retrieve '$url' content: $message");
+	}
+    }
+
+    return $fork->yield->message; # Returns the result from fork
+}
+
 
 
 1;
