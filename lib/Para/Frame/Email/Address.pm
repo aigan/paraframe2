@@ -40,6 +40,7 @@ use Para::Frame::Utils qw( throw reset_hashref );
 
 use overload '""' => \&as_string;
 use overload 'eq' => \&equals;
+use overload 'ne' => sub{ not &equals(@_) };
 
 sub parse
 {
