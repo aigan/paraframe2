@@ -505,10 +505,7 @@ sub alfanum_bar
 	delete $attr->{$key} unless $attr->{$key}; # Only if TRUE
     }
 
-    use locale;
-    use POSIX qw(locale_h);
-    setlocale(LC_ALL, "sv_SE");
-
+    # locale should have been set previously!
     my $text = join(' | ', map "<a href=\"$template?$name=$part$_$extra\">\U$_</a>", 'a'..'z','å','ä','ö');
     $text = "| <a href=\"$template?$name=\">0-9</a> | ".$text." |";
     $text =~ s/å/&aring;/g;
