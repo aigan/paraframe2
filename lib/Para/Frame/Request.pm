@@ -416,7 +416,8 @@ sub run_code
 	my $err = catch($@);
 	debug(0,"RUN CODE FAILED");
 	debug(0,$err->as_string);
-	Para::Frame->run_hook($req, 'on_error_detect', $err->type_info );
+	Para::Frame->run_hook($req, 'on_error_detect',
+			      \ $err->type, \ $err->info );
 	return 0;
     };
     return $res;
