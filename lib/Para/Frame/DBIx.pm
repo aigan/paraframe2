@@ -25,7 +25,6 @@ Para::Frame::DBIx - Wrapper module for DBI
 use strict;
 use DBI qw(:sql_types);
 use Carp;
-use locale;
 use Data::Dumper;
 
 BEGIN
@@ -372,6 +371,8 @@ sub new
 			      {
 				  die "In DBIx error hook during FORK\n";
 			      }
+
+			      $typeref ||= \ "";
 				      
 #				      confess("-- rollback...");
 
@@ -493,6 +494,8 @@ sub save_record
     {
 	my $type = $types->{$field} || 'string';
 
+#	debug(3, "Checking field $field ($type)");
+
 	if( $type eq 'string' )
 	{
 	    if( ($rec_new->{ $field }||'') ne ($rec_old->{ $field }||'') )
@@ -500,6 +503,30 @@ sub save_record
 		$fields_added{ $field } ++;
 		push @fields, $field;
 		push @values, $rec_new->{ $field };
+		debug(1,"  field $field differ");
+	    }
+	}
+	elsif( $type eq 'integer' )
+	{
+	    # We can usually use type string for integers
+
+	    if( ($rec_new->{ $field }||'') != ($rec_old->{ $field }||'') )
+	    {
+		$fields_added{ $field } ++;
+		push @fields, $field;
+		push @values, int( $rec_new->{ $field } );
+		debug(1,"  field $field differ");
+	    }
+	}
+	elsif( $type eq 'float' )
+	{
+	    # We can usually use type string for floats
+
+	    if( ($rec_new->{ $field }||'') != ($rec_old->{ $field }||'') )
+	    {
+		$fields_added{ $field } ++;
+		push @fields, $field;
+		push @values, + $rec_new->{ $field };
 		debug(1,"  field $field differ");
 	    }
 	}
@@ -524,6 +551,28 @@ sub save_record
 		$fields_added{ $field } ++;
 		push @fields, $field;
 		push @values, date( $rec_new->{ $field } )->cdate;
+		debug(1,"  field $field differ");
+	    }
+	}
+	elsif( $type eq 'email' )
+	{
+	    my $new = $rec_new->{ $field } || '';
+	    if( $new and not ref $new )
+	    {
+		$new = Para::Frame::Email::Address->parse( $new );
+	    }
+	    
+	    my $old = $rec_old->{ $field } || '';
+	    if( $old and not ref $old )
+	    {
+		$old = Para::Frame::Email::Address->parse( $old );
+	    }
+
+	    if( $new ne $old )
+	    {
+		$fields_added{ $field } ++;
+		push @fields, $field;
+		push @values, $new->as_string;
 		debug(1,"  field $field differ");
 	    }
 	}
