@@ -5,6 +5,8 @@ package Para::Frame::Child::Result;
 # DESCRIPTION
 #   Paranormal.se framework Child process result class
 #
+# We are in the PARENT looking on the result of the child
+#
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
