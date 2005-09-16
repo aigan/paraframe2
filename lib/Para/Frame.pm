@@ -21,7 +21,7 @@ use strict;
 use IO::Socket 1.18;
 use IO::Select;
 use Socket;
-use POSIX;
+use POSIX qw( locale_h );
 use Text::Autoformat; #exports autoformat()
 use Time::HiRes qw( time );
 use Data::Dumper;
@@ -1058,6 +1058,10 @@ sub configure
     $CFG        = {};
     $PARAMS     = {};
     
+
+    # Init locale
+    setlocale(LC_ALL, "sv_SE");
+    setlocale(LC_NUMERIC, "C");
 
     $CFG = $cfg_in; # Assign to global var
 
