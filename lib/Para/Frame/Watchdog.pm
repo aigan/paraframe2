@@ -376,7 +376,7 @@ sub on_crash
 	debug "There was a request for a hard restart";
 	$HARD_RESTART = 0;
     }
-    debug "Restart $CRASHCOUNTER at $CRASHTIME";
+    debug "\n\n\nRestart $CRASHCOUNTER at $CRASHTIME\n\n\n";
     
     startup_in_fork();
 }
