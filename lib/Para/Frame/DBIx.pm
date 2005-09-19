@@ -24,7 +24,7 @@ Para::Frame::DBIx - Wrapper module for DBI
 
 use strict;
 use DBI qw(:sql_types);
-use Carp;
+use Carp qw( carp croak shortmess );
 use Data::Dumper;
 
 BEGIN
@@ -34,7 +34,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw catch debug timediff );
+use Para::Frame::Utils qw( throw catch debug timediff package_to_module );
 use Para::Frame::Time qw( date );
 
 use base qw( Exporter );
@@ -105,7 +105,7 @@ dbi : DBI returned error
 
 sub select_list
 {
-    my( $self, $st, @vals ) = @_;
+    my( $dbix, $st, @vals ) = @_;
     #
     # Return list or records
 
@@ -120,23 +120,12 @@ sub select_list
 
     eval
     {
-	my $sth = $self->dbh->prepare( $st );
-	$sth->execute(@vals);
+	my $sth = $dbix->dbh->prepare( $st );
+	$sth->execute($dbix->format_value_list(@vals));
 	$ref =  $sth->fetchall_arrayref({});
 	$sth->finish;
     };
-    if( $@ )
-    {
-	debug(0,"Select list error");
-	$@ =~ s/ at \/.*//;
-	my $error = catch($@);
-	my $info = $error->info;
-	my( $package, $filename, $line ) = caller();
-	$info .= "\nCalled by $package at line $line\n";
-	my $values = join ", ", @vals;
-	throw('dbi', "$st;\nValues: $values\n$info");
-    }
-
+    report_error("Select list",\@vals);
     return $ref;
 }
 
@@ -171,7 +160,7 @@ dbi : no records was found
 
 sub select_record
 {
-    my( $self, $st, @vals ) = @_;
+    my( $dbix, $st, @vals ) = @_;
     #
     # Return list or records
 
@@ -184,13 +173,15 @@ sub select_record
     throw('incomplete','no parameter to statement') unless $st;
     $st = "select * ".$st if $st !~/^\s*select\s/i;
 
-#    warn "SQL: $st (@vals)\n"; ### DEBUG
-    my $sth = $self->dbh->prepare( $st );
-    $sth->execute( @vals ) or croak "$st (@vals)\n";
-    $ref =  $sth->fetchrow_hashref
-	or throw('dbi',$st."(@vals)\nFound ".$sth->rows()." rows\n");
-    $sth->finish;
-
+    eval
+    {
+	my $sth = $dbix->dbh->prepare( $st );
+	$sth->execute( $dbix->format_value_list(@vals) ) or croak "$st (@vals)\n";
+	$ref =  $sth->fetchrow_hashref
+	    or die "Found ".$sth->rows()." rows\nSQL: $st";
+	$sth->finish;
+    };
+    report_error("Select record",\@vals);
     return $ref;
 }
 
@@ -224,7 +215,7 @@ dbi : DBI returned error
 
 sub select_possible_record
 {
-    my( $self, $statement, @vals ) = @_;
+    my( $dbix, $statement, @vals ) = @_;
     #
     # Return list or records
 
@@ -237,12 +228,14 @@ sub select_possible_record
     throw('incomplete','no parameter to statement') unless $statement;
     $statement = "select * ".$statement if $statement !~/^\s*select\s/i;
 
-    my $sth = $self->dbh->prepare( $statement )
-	or croak $statement;
-    $sth->execute( @vals );
-    $ref =  $sth->fetchrow_hashref;
-    $sth->finish;
-
+    eval
+    {
+	my $sth = $dbix->dbh->prepare( $statement );
+	$sth->execute( $dbix->format_value_list(@vals) );
+	$ref =  $sth->fetchrow_hashref;
+	$sth->finish;
+    };
+    report_error("Select possible record",\@vals);
     return $ref;
 }
 
@@ -281,7 +274,7 @@ dbi : DBI returned error
 
 sub select_key
 {
-    my( $self, $keyf, $st, @vals ) = @_;
+    my( $dbix, $keyf, $st, @vals ) = @_;
     #
     # Return ref to hash of records
 
@@ -291,16 +284,19 @@ sub select_key
     }
 
     $st = "select * ".$st if $st !~/^\s*select\s/i;
-
-    my $sth = $self->dbh->prepare( $st );
-    $sth->execute( @vals );
     my $rh = {};
-    while( my $r = $sth->fetchrow_hashref )
-    {
-	$rh->{$r->{$keyf}} = $r;
-    }
-    $sth->finish;
 
+    eval
+    {
+	my $sth = $dbix->dbh->prepare( $st );
+	$sth->execute( $dbix->format_value_list(@vals) );
+	while( my $r = $sth->fetchrow_hashref )
+	{
+	    $rh->{$r->{$keyf}} = $r;
+	}
+	$sth->finish;
+    };
+    report_error("Select key",\@vals);
     return $rh;
 }
 
@@ -338,6 +334,14 @@ sub new
 
     $dbix->{'bind_dbh'} = $params->{'bind_dbh'};
 
+
+    $dbix->{'datetime_formatter'} =
+	$params->{'datetime_formatter'} ||
+	'DateTime::Format::Pg';
+    my $formatter_module = package_to_module($dbix->{'datetime_formatter'});
+    require $formatter_module;
+
+   
 
     Para::Frame->add_hook('done', sub
 			  {
@@ -455,9 +459,9 @@ sub dbh { $_[0]->{'dbh'} }
 
 sub get_nextval
 {
-    my( $self, $seq ) = @_;
+    my( $dbix, $seq ) = @_;
 
-    my $sth = $self->dbh->prepare( "select nextval(?)" );
+    my $sth = $dbix->dbh->prepare( "select nextval(?)" );
     $sth->execute( $seq ) or croak "Faild to get next from $seq\n";
     my( $id ) = $sth->fetchrow_array;
     $sth->finish;
@@ -470,22 +474,369 @@ sub equals
     return $_[0] eq $_[1];
 }
 
+sub format_datetime
+{
+    my( $dbix, $time ) = @_;
+    return undef unless $time;
+    $time = Para::Frame::Time->get( $time );
+    return $dbix->{'datetime_formatter'}->format_datetime($time);
+}
+
+sub update
+{
+    my( $dbix, $table, $set, $where ) = @_;
+
+    die "expected hashref" unless ref $set and ref $where;
+
+    my( @set_fields, @where_fields, @values );
+
+    foreach my $key ( keys %$set )
+    {
+	push @set_fields, $key;
+	push @values, $dbix->format_value( undef, $set->{$key} );
+    }
+
+    foreach my $key ( keys %$where )
+    {
+	push @where_fields, $key;
+	push @values, $dbix->format_value( undef, $where->{$key} );
+    }
+
+    my $setstr   = join ",", map "$_=?", @set_fields;
+    my $wherestr = join ",", map "$_=?", @where_fields;
+    my $st = "update $table set $setstr where $wherestr";
+    my $sth;
+
+    eval
+    {
+	$sth = $dbix->dbh->prepare($st);
+	$sth->execute( @values );
+	debug "SQL: $st\nValues: ".join ", ",map defined($_)?"'$_'":'<undef>', @values;
+	$sth->finish;
+	die "Nothing updated" unless $sth->rows;
+    };
+    report_error("Update",\@values);
+    return $sth->rows;
+}
+
+=head2 insert
+
+  $dbix->insert( $table, \%rec )
+  $dbix->insert( \%params )
+
+Insert a row in a table in $dbix
+
+Params are:
+  table = name of table
+  rec   = hashref of field/value pairs
+  types = definition of field types
+
+The values will be automaticly formatted for the database. types, if
+existing, helps in this formatting.
+
+Returns numer of rows inserted
+
+=cut
+
+sub insert
+{
+    my( $dbix, $table, $rec ) = @_;
+
+    my $types;
+
+    unless($rec)
+    {
+	my $p = $table;
+
+	$table = $p->{'table'};
+	$rec   = $p->{'rec'};
+	$types = $p->{'types'};
+    }
+
+    $types ||= {};
+
+    die "expected hashref" unless ref $rec;
+
+    my( @fields, @places, @values );
+
+    foreach my $key ( keys %$rec )
+    {
+	push @fields, $key;
+	push @places, '?';
+	push @values, $dbix->format_value( $types->{$key}, $rec->{$key} );
+    }
+
+    my $fieldstr = join ",", @fields;
+    my $placestr = join ",", @places;
+    my $st = "insert into $table ($fieldstr) values ($placestr)";
+    my $sth;
+
+    eval
+    {
+	$sth = $dbix->dbh->prepare($st);
+	$sth->execute( @values );
+	$sth->finish;
+    };
+    report_error("Insert",\@values);
+    return $sth->rows;
+}
+
+=head2 insert_wrapper
+
+High level for adding a record
+
+=cut
+
+sub insert_wrapper
+{
+    my( $dbix, $params ) = @_;
+
+    my $rec_in  = $params->{'rec'} || {};
+    my $map     = $params->{'map'} || {};
+    my $parser  = $params->{'parser'} || {};
+    my $types   = $params->{'types'} || {};
+    my $table   = $params->{'table'} or croak "table missing";
+    my $uexists = $params->{'unless_exists'};
+    my $rfield  = $params->{'return_field'};
+
+    $rfield = $map->{$rfield} || $rfield;
+    
+    my $rec = {};
+    foreach my $key ( keys %$rec_in )
+    {
+	my $field = $map->{$key} || $key;
+	my $value = $rec_in->{$key};
+	if( my $parser = $parser->{ $field } )
+	{
+	    debug "Value for $field is $value";
+	    $value = &$parser( $value );
+	}
+	if( my $type = $types->{$field} )
+	{
+#	    unless( validate($value, $type) )
+#	    {
+#		throw 'validation', "Param $param doesn't match $type";
+#	    }
+	}
+
+	# Be careful of multiple settings due to mapping
+
+	$rec->{$field} = $value;
+    }
+
+    if( $uexists )
+    {
+	my( @fields, @values );
+	$uexists = [$uexists] unless ref $uexists;
+	foreach my $key (@$uexists)
+	{
+	    my $field = $map->{$key} || $key;
+	    push @fields, $field;
+	    push @values, $rec->{$field};
+	}
+	my $where_str = join " and ",map "$_=?",@fields;
+	my $st = "from $table where $where_str";
+	if( my $orec = $dbix->select_possible_record($st,@values) )
+	{
+	    if( $rfield )
+	    {
+		debug 3, "Returning field $rfield: $orec->{$rfield}";
+		return $orec->{$rfield};
+	    }
+	    return 0;
+	}
+    }
+
+    $dbix->insert({
+	table => $table,
+	rec   => $rec,
+	types => $types,
+    });
+
+    if( $rfield )
+    {
+	debug 3, "Returning field $rfield: $rec->{$rfield}";
+	return $rec->{$rfield};
+    }
+    return 1;
+}
+
+
+
+=head2 update_wrapper
+
+High level for updating a record
+
+=cut
+
+sub update_wrapper
+{
+    my( $dbix, $params ) = @_;
+
+    my $rec_in    =
+	$params->{'rec'} ||
+	$params->{'rec_new'} or croak "rec_new missing";
+    my $rec_old   =
+	$params->{'rec_old'} or croak "rec_old missing";
+    my $map       = $params->{'map'} || {};
+    my $parser    = $params->{'parser'} || {};
+    my $types     = $params->{'types'} || {};
+    my $table     = $params->{'table'} or croak "table missing";
+    my $key       = $params->{'key'} or croak "key missing";
+    my $on_update = $params->{'on_update'};
+    
+    my $rec_new = {};
+    foreach my $key ( keys %$rec_in )
+    {
+	my $field = $map->{$key} || $key;
+	my $value = $rec_in->{$key};
+	if( my $parser = $parser->{ $field } )
+	{
+	    debug "Value for $field is $value";
+	    $value = &$parser( $value );
+	}
+	if( my $type = $types->{$field} )
+	{
+#	    unless( validate($value, $type) )
+#	    {
+#		throw 'validation', "Param $param doesn't match $type";
+#	    }
+	}
+
+	# Be careful of multiple settings due to mapping
+
+	$rec_new->{$field} = $value;
+    }
+
+    return $dbix->save_record({
+	rec_new => $rec_new,
+	rec_old => $rec_old,
+	table => $table,
+	key => $key,
+	types => $types,
+	on_update => $on_update,
+    });
+    
+}
+
+
+
+sub format_value_list
+{
+    my( $dbix ) = shift;
+
+    my @res;
+    foreach(@_)
+    {
+	debug 4, "Formatting ".(defined($_)?$_:'<undef>');
+	if( not ref $_ )
+	{
+	    push @res, $_;
+	}
+	elsif( $_->isa('DateTime') )
+	{
+	    push @res, $dbix->format_datetime( $_ );
+	}
+	elsif( $_->can('id') )
+	{
+	    push @res, $_->id;
+	}
+	else
+	{
+	    push @res, "$_"; # Stringify
+	}
+    }
+    return @res;
+}
+
+
+sub format_value
+{
+    my( $dbix, $type, $val ) = @_;
+
+    my $valstr = defined $val?$val:'<undef>';
+
+    if( $type )
+    {
+	debug 2, "Formatting $type $valstr";
+
+	if( $type eq 'string' )
+	{
+	    if( not ref $val )
+	    {
+		return $val;
+	    }
+	}
+	elsif( $type eq 'boolean' )
+	{
+	    return pgbool( $val );
+	}
+	elsif( $type eq 'date' )
+	{
+	    return $dbix->format_datetime( $val );
+	}
+	else
+	{
+	    throw 'validation', "Type $type not handled";
+	}
+	throw 'validation', "Value $valstr not a $type";
+    }
+    else
+    {
+	debug 3, "Formatting $valstr";
+
+	if( not ref $val )
+	{
+	    return $val;
+	}
+	elsif( $val->isa('DateTime') )
+	{
+	    return $dbix->format_datetime( $val );
+	}
+	elsif( $val->can('id') )
+	{
+	    return $val->id;
+	}
+	else
+	{
+	    debug "Trying to stringify $valstr";
+	    return "$val"; # Stringify
+	}
+    }
+}
+
+
 sub save_record
 {
     my( $dbix, $param ) = @_;
 
-    my $rec_new = $param->{'rec_new'} or die;
+    my $rec_new = $param->{'rec_new'} or croak "rec_new missing";
     my $types = $param->{'types'} || {};
-    my $rec_old = $param->{'rec_old'};
-    my $table = $param->{'table'} or die;
+    my $rec_old = $param->{'rec_old'} or croak "rec_old missing";
+    my $table = $param->{'table'} or croak "table missing";
     my $key = $param->{'key'} || $table;
-    my $keyval = $param->{'keyval'} or die;
+    my $keyval = $param->{'keyval'};
     my $fields_to_check = $param->{'fields_to_check'} || [keys %$rec_new];
     my $on_update = $param->{'on_update'} || undef;
 
-    $key = [$key] unless ref $key;
-    $keyval = [$keyval] unless ref $keyval;
+    if( ref $key eq 'HASH' )
+    {
+	my $keyhash = $key;
+	$key = [];
+	$keyval = [];
+	foreach my $key ( keys %$keyhash )
+	{
+	    push @$key, $key;
+	    push @$keyval, $keyhash->{$key};
+	}
+    }
+    else
+    {
+	$keyval or croak "keyval missing";
 
+	$key = [$key] unless ref $key;
+	$keyval = [$keyval] unless ref $keyval;
+    }
 
     my( @fields, @values );
     my %fields_added;
@@ -493,76 +844,89 @@ sub save_record
     foreach my $field ( @$fields_to_check )
     {
 	my $type = $types->{$field} || 'string';
+	my $new = $rec_new->{ $field };
+	my $old = $rec_old->{ $field };
+	next if not $new and not $old;
 
-#	debug(3, "Checking field $field ($type)");
+	debug(3, "Checking field $field ($type)");
 
 	if( $type eq 'string' )
 	{
-	    if( ($rec_new->{ $field }||'') ne ($rec_old->{ $field }||'') )
+#	    my $new = $dbix->format_value( undef, $rec_new->{ $field } );
+#	    my $old = $dbix->format_value( undef, $rec_old->{ $field } );
+
+	    if( (defined $new and not defined $old) or
+		(defined $old and not defined $new) or
+		( $new ne $old ) )
 	    {
 		$fields_added{ $field } ++;
 		push @fields, $field;
-		push @values, $rec_new->{ $field };
-		debug(1,"  field $field differ");
+		push @values, $new;
+		debug(1,"  field $field differ: '$new' != '$old'");
 	    }
 	}
 	elsif( $type eq 'integer' )
 	{
 	    # We can usually use type string for integers
 
-	    if( ($rec_new->{ $field }||'') != ($rec_old->{ $field }||'') )
+	    if( (defined $new and not defined $old) or
+		(defined $old and not defined $new) or
+		( $new != $old )
+		)
 	    {
 		$fields_added{ $field } ++;
 		push @fields, $field;
-		push @values, int( $rec_new->{ $field } );
-		debug(1,"  field $field differ");
+		push @values, $new;
+		debug(1,"  field $field differ: '$new' != '$old'");
 	    }
 	}
 	elsif( $type eq 'float' )
 	{
 	    # We can usually use type string for floats
 
-	    if( ($rec_new->{ $field }||'') != ($rec_old->{ $field }||'') )
+	    if( ($new||'') != ($old||'') )
 	    {
 		$fields_added{ $field } ++;
 		push @fields, $field;
-		push @values, + $rec_new->{ $field };
+		push @values, + $new;
 		debug(1,"  field $field differ");
 	    }
 	}
 	elsif( $type eq 'boolean' )
 	{
-	    if( pgbool($rec_new->{ $field }) ne pgbool($rec_old->{ $field }) )
+	    if( pgbool($new) ne pgbool($old) )
 	    {
 		$fields_added{ $field } ++;
 		push @fields, $field;
-		push @values, pgbool( $rec_new->{ $field } );
+		push @values, pgbool( $new );
 		debug(1,"  field $field differ");
 	    }
 	}
 	elsif( $type eq 'date' )
 	{
-	    # Dates can be written in many formats. We will assume that if
-	    # the date has changed from what the DB returns, it's not the
-	    # same date. That keeps us from bothering about the format
-
-	    if( ($rec_new->{ $field }||'') ne ($rec_old->{ $field }||'') )
+	    $new = date( $new ) if $new;
+	    $old = date( $old ) if $old;
+	    
+	    if( (defined $new and not defined $old) or
+		(defined $old and not defined $new) or
+		( not $new->equals( $old ) )
+		)
 	    {
 		$fields_added{ $field } ++;
 		push @fields, $field;
-		push @values, date( $rec_new->{ $field } )->cdate;
+		push @values, $dbix->format_datetime( $rec_new->{ $field } );
 		debug(1,"  field $field differ");
 	    }
 	}
 	elsif( $type eq 'email' )
 	{
-	    my $new = $rec_new->{ $field } || '';
+	    $new ||= '';
 	    if( $new and not ref $new )
 	    {
 		$new = Para::Frame::Email::Address->parse( $new );
 	    }
 	    
-	    my $old = $rec_old->{ $field } || '';
+	    $old ||= '';
 	    if( $old and not ref $old )
 	    {
 		$old = Para::Frame::Email::Address->parse( $old );
@@ -600,8 +964,12 @@ sub save_record
 	    join( ', ', map("$_=?", @fields)) .
 	    " where $where";
 	debug(4,"Executing statement $statement");
-	my $sth = $dbix->dbh->prepare( $statement );
-	$sth->execute( @values, @$keyval );
+	eval
+	{
+	    my $sth = $dbix->dbh->prepare( $statement );
+	    $sth->execute( @values, @$keyval );
+	};
+	report_error("Save record",[@values,@$keyval]);
     }
 
     return scalar @fields; # The number of changes
@@ -609,6 +977,24 @@ sub save_record
 
 
 ############ functions
+
+# TODO: Replace pgbool with dbbool, dependant on the db used
+
+sub report_error
+{
+    my( $title, $vals ) = @_;
+    if( $@ )
+    {
+	debug(0,"DBIx $title error");
+	$@ =~ s/ at \/.*//;
+	my $error = catch($@);
+	my $info = $error->info;
+	chomp $info;
+	my $at = "...".shortmess();
+	my $values = join ", ",map defined($_)?"'$_'":'<undef>', @$vals;
+	throw('dbi', "$info\nValues: $values\n$at");
+    }
+}
 
 sub pgbool
 {
