@@ -3,7 +3,10 @@ package Para::Frame::Time;
 #=====================================================================
 #
 # DESCRIPTION
-#   Paranormal.se framework Request class
+#   Paranormal.se framework Time class
+#
+# Parses with Date::Manip and returns a modified Time::Piece object
+# Also supports returning DateTime objects
 #
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
@@ -24,11 +27,13 @@ Para::Frame::Time
 
 # Override Time::Piece with some new things
 use strict;
-use POSIX qw(locale_h strftime);
-use Time::Piece;
-use Date::Manip;
+#use POSIX qw(locale_h);
 use Carp qw( cluck );
 use Data::Dumper;
+use Date::Manip;
+use DateTime;
+use DateTime::Duration;
+use DateTime::Span;
 
 BEGIN
 {
@@ -36,7 +41,11 @@ BEGIN
     print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
-our @EXPORT_OK = qw(internet_date date now ); #for docs only
+use base qw( DateTime );
+
+our $TZ; # Default Timezone, set in Para::Frame->configure
+
+our @EXPORT_OK = qw(internet_date date now timespan duration ); #for docs only
 
 #use Para::Frame::Reload; # This code is mingled with Time::Piece
 
@@ -54,16 +63,12 @@ sub import
     my $callpkg = caller();
     no strict 'refs'; # Symbolic refs
     *{"$callpkg\::$_"} = \&{"$class\::$_"} foreach @_;
-
-    # Pretend to be Time::Piece
-    @_ = ('Time::Piece'); # Do not forward @_
-    goto &Time::Piece::import;
 }
 
 
 =head1 DESCRIPTION
 
-Modification of L<Time::Piece>, it automaticly strinigifies to the
+Subclass to L<DateTime>, it automaticly strinigifies to the
 format C<%Y-%m-%d %H.%M>.
 
 =cut
@@ -80,11 +85,11 @@ sub get
 {
     my( $this, $time ) = @_;
 
-    return $time if UNIVERSAL::isa $time, "Time::Piece";
-
-    debug(3,"Parsing date '$time'");
+    return $time if UNIVERSAL::isa $time, "DateTime";
 
     return undef unless $time;
+
+    debug(3,"Parsing date '$time'");
 
     my $date;
     if( $time =~ /^\d{7,}$/ )
@@ -115,7 +120,9 @@ sub get
 	    throw('validation', "Time format '$time' not recognized");
 	}
     }
-    my $to = localtime( $date );
+    my $to = $this->from_epoch( epoch => $date,
+				time_zone => $TZ,
+				);
     debug(4,"Finaly: $to");
     return $to;
 }
@@ -124,16 +131,15 @@ sub get
 
   now() # Exportable
 
-Same as the overloaded localtime(), except that it works even in list
-context
+Returns obj representing current time
 
 =cut
 
 sub now
 {
-    return scalar localtime;
+    Para::Frame::Time->SUPER::now();
 }
-
+  
 =head2 date
 
   date($any_string) #exportable
@@ -148,6 +154,56 @@ sub date
 }
 
 
+=head2 timespan
+
+  timespan($from, $to) #exportable
+
+Returns a DateTime::Span object.
+
+Use undef value for setting either $from or $to to infinity
+
+This returns a closed span, including its end-dates.
+
+For other options, use DateTime::Span directly
+
+=cut
+
+sub timespan
+{
+    my( $from_in, $to_in ) = @_;
+
+    my @args;
+
+    if( $from_in )
+    {
+	my $from = Para::Frame::Time->get($from_in);
+	push @args, ( start => $from );
+    }
+
+    if( $to_in )
+    {
+	my $to = Para::Frame::Time->get($to_in);
+	push @args, ( end => $to );
+    }
+
+    return Para::Frame::Time->from_datetimes( @args );
+}
+
+
+=head2 duration
+
+  duration( %params ) #exportable
+
+Returns a DateTime::Duration object.
+
+=cut
+
+sub duration
+{
+    return DateTime::Duration->new( @_ );
+}
+
+
 =head2 internet_date
 
   internet_date()
@@ -159,46 +215,49 @@ Returns a date in a format suitable for use in SMTP or HTTP headers.
 
 sub internet_date
 {
-    my $old = setlocale(LC_TIME);
-    setlocale(LC_TIME, "C");
-    my $res = strftime('%a, %d %b %Y %T %z', localtime($_[0]));
-    setlocale(LC_TIME, $old);
+#    my $old = setlocale(LC_TIME);
+#    setlocale(LC_TIME, "C");
+    my $res = strftime('%a, %d %b %Y %T %z', Para::Frame::Time->get($_[0]));
+#    setlocale(LC_TIME, $old);
     return $res;
 }
 
-
-### New methods
-
-package Time::Piece;
-
-BEGIN
+sub cdate
 {
-    $^W = 0; # Ignore warning about redefine overload
+
+    # TODO: Remove me. This is not realy a cdate format. Used for
+    # fromatting dates for the DB. Change to use the specific dbix
+    # datetime_format function
+
+    $_[0]->strftime('%Y-%m-%d %H:%M:%S');
+ }
+
+sub format_datetime
+{
+    $_[0]->strftime('%Y-%m-%d %H.%M' )
 }
 
-use Date::Manip;
-use overload '""' => \&stamp;
-
-#use vars qw( @ISA );
-#push @ISA, qw( Para::Frame::Literal );
-
-
-sub stamp { shift->strftime('%Y-%m-%d %H.%M' ) }
+sub stamp
+{
+    $_[0]->format_datetime;
+}
 
 sub desig
 {
-    return $_[0]->stamp;
+    $_[0]->format_datetime;
 }
 
+sub plain
+{
+    $_[0]->format_datetime;
+}
 
 sub sysdesig
 {
-    return sprintf("Date %s", $_[0]->stamp);
+    return sprintf("Date %s", $_[0]->format_datetime);
 }
 
 sub defined { 1 }
-
-sub plain { $_[0]->stamp }
 
 #######################################################################
 
@@ -210,7 +269,7 @@ Returns a unique predictable id representing this object
 
 sub syskey
 {
-    return sprintf("time:%d", UnixDate(shift, '%s'));
+    return $_[0]->iso8601;
 }
 
 
@@ -233,6 +292,39 @@ sub equals
 
 
 ######################################################################
+
+
+
+# Change overload behaviour in DateTime::Duration
+{
+    no warnings;
+    package DateTime::Duration;
+
+    sub _compare_overload
+    {
+	my( $d1, $d2, $rev ) = @_;
+	($d1, $d2) = ($d2, $d1) if $rev;
+	return DateTime::Duration->compare( $d1, $d2 );
+    }
+}
+
+# Add overload for stringify in DateTime::Span
+{
+    package DateTime::Span;
+
+    use overload (
+		  '""' => '_stringify_overload',
+		  );
+
+    sub _stringify_overload
+    {
+	my $start = $_[0]->start;
+	my $end   = $_[0]->end;
+
+	return "$start - $end";
+    }
+}
+
 
 1;
 
