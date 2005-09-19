@@ -28,6 +28,7 @@ use Data::Dumper;
 use Carp qw( cluck confess carp );
 use Template;
 use Sys::CpuLoad;
+use DateTime::TimeZone;
 
 BEGIN
 {
@@ -39,7 +40,7 @@ use Para::Frame::Reload;
 use Para::Frame::Watchdog;
 use Para::Frame::Request;
 use Para::Frame::Widget;
-use Para::Frame::Time;
+use Para::Frame::Time qw( now );
 use Para::Frame::Utils qw( throw uri2file debug create_file chmod_file fqdn );
 
 use constant TIMEOUT_LONG  =>   5;
@@ -313,6 +314,9 @@ sub switch_req
 {
     # $_[0] => the new $req
 
+    $_[0] ||= '';
+    $REQ  ||= '';
+
     if( $_[0] ne $REQ )
     {
 	if( $REQ )
@@ -363,7 +367,7 @@ sub switch_req
 	}
 	else
 	{
-	    %ENV = undef;
+	    undef %ENV;
 	}
     }
 }
@@ -710,13 +714,13 @@ sub daemonize
     }
     else
     {
-	warn "\n\nStarted process $$ on ".scalar(localtime)."\n\n";
+	warn "\n\nStarted process $$ on ".now()."\n\n";
 	Para::Frame->startup();
 	open_logfile();
 	POSIX::setsid             or die "Can't start a new session: $!";
 	write_pidfile();
 	kill 'USR1', $parent_pid; # Signal parent
-	warn "\n\nStarted process $$ on ".scalar(localtime)."\n\n";
+	warn "\n\nStarted process $$ on ".now()."\n\n";
 	Para::Frame::main_loop();
     }
 }
@@ -816,7 +820,7 @@ sub add_background_jobs
 	### Debug info
 	if( debug > 2 )
 	{
-	    my $t = localtime;
+	    my $t = now();
 	    my $s = $req->s;
 	    warn sprintf("# %s %s - localhost\n# Sid %s - Uid %d - debug %d\n",
 			 $t->ymd,
@@ -865,7 +869,7 @@ sub handle_request
     $user_class->authenticate_user;
 
     ### Debug info
-    my $t = localtime;
+    my $t = now();
     my $s = $req->s;
     warn sprintf("# %s %s - %s\n# Sid %s - Uid %d - debug %d\n",
 		 $t->ymd,
@@ -1057,7 +1061,7 @@ sub configure
     $REQNUM     = 0;
     $CFG        = {};
     $PARAMS     = {};
-    
+    $INDENT     = 0;
 
     # Init locale
     setlocale(LC_ALL, "sv_SE");
@@ -1076,6 +1080,12 @@ sub configure
     $CFG->{'paraframe'} ||= '/usr/local/paraframe';
     $CFG->{'paraframe_group'} ||= 'staff';
 
+    # $Para::Frame::Time::TZ is set at startup from:
+    #
+    $CFG->{'time_zone'} ||= "local";
+    $Para::Frame::Time::TZ =
+	DateTime::TimeZone->new( name => $CFG->{'time_zone'} );
+
 
     # Site pages
 
@@ -1088,7 +1098,7 @@ sub configure
     my $site = $CFG->{'site'} ||= {};
 
     $site->{'webhome'}     ||= ''; # URL path to website home
-    $site->{'last_step'};        # Default to undef
+#   $site->{'last_step'};    # Default to undef
     $site->{'login_page'}  ||= $site->{'last_step'} || $site->{'webhome'}.'/';
     $site->{'logout_page'} ||= $site->{'webhome'}.'/';
     $site->{'webhost'}     ||= fqdn(); # include port (www.abc.se:81)
