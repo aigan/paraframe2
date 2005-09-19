@@ -25,12 +25,8 @@ Para::Frame::Widget - Common template widgets
 use strict;
 use Carp;
 use Template 2;
-use locale;
-use POSIX qw(locale_h strftime);
 use Data::Dumper;
 use IO::File;
-use Time::Piece;
-use Date::Manip;
 use Clone qw( clone );
 use CGI;
 
