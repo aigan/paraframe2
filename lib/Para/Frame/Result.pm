@@ -278,7 +278,7 @@ sub exception
 	$error = undef;
     }
 
-    my $info = ref($@) ? $@->[1] : $error ? $error->info() : $@;
+    $info  ||= ref($@) ? $@->[1] : $error ? $error->info() : $@;
     my $type = ref($@) ? $@->[0] : $error ? $error->type() : undef;
     my $context = $error ? $error->text() : undef;
 
@@ -323,7 +323,7 @@ sub error
     $params->{'title'}{'c'} ||= "\u$type fel...";
     $params->{'message'} = $message;
 
-    if( $params->{'view_context'} )
+    if( $params->{'view_context'} and $context )
     {
 	trim(\$context);
 	if( length $context )
