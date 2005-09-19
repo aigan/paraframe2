@@ -23,7 +23,6 @@ Para::Frame::User - Represents the user behind the request
 =cut
 
 use strict;
-use Time::HiRes qw( time );
 use Carp qw( confess );
 
 BEGIN
@@ -272,7 +271,7 @@ sub revert_from_temporary_user
 sub name     { $_[0]->{'name'} }
 sub username { $_[0]->{'username'} }
 sub uid      { $_[0]->{'uid'} }
-sub level    { $_[0]->{'level'} }
+sub level    { $_[0]->{'level'}||0 }
 sub style    { undef }
 
 # Shortcuts
