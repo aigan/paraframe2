@@ -1019,11 +1019,11 @@ sub debug
 
     unless( $message )
     {
-	if( $level =~ /^-?\d$/ )
+	# Stupid regexp didn't take /^-?\d$/ !!!
+	if( $level =~ /^(\d|-\d)$/ )
 	{
 	    $Para::Frame::INDENT += $level;
-#	    carp "Ident $level";
-	    return;
+	    return "";
 	}
 
 	$message = $level;
@@ -1041,7 +1041,10 @@ sub debug
 	my $prefix =  $Para::Frame::FORK ? "| $$: " : "";
 
 	chomp $message;
-	warn $prefix . "  "x$Para::Frame::INDENT . $message . "\n";
+	foreach(split /\n/, $message)
+	{
+	    warn $prefix . "  "x$Para::Frame::INDENT . $_ . "\n";
+	}
     }
 
 #    carp "Ident $delta" if $delta > 0;
@@ -1160,6 +1163,23 @@ sub retrieve_from_url
     return $fork->yield->message; # Returns the result from fork
 }
 
+
+=head2 validate
+
+  validate( $value, $type )
+
+Validate that a value is of the specified type
+
+Returns true if validate and false otherwise
+
+=cut
+
+sub validate
+{
+    my( $value, $type ) = @_;
+
+    die "not implemented";
+}
 
 
 1;
