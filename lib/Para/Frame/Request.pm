@@ -17,12 +17,11 @@ package Para::Frame::Request;
 #=====================================================================
 
 use strict;
-use CGI qw( :all );
+use CGI qw( -compile );
 use CGI::Cookie;
 use FreezeThaw qw( thaw );
 use Data::Dumper;
 use HTTP::BrowserDetect;
-use Time::Piece;
 use Clone qw( clone );
 use File::stat;
 use File::Slurp;
@@ -30,7 +29,6 @@ use File::Basename;
 use IO::File;
 use URI;
 use Carp qw(cluck croak carp confess );
-#use Cwd qw( abs_path );
 use Encode qw( is_utf8 );
 use LWP::UserAgent;
 use HTTP::Request;
@@ -455,7 +453,7 @@ sub run_code
 
 sub run_action
 {
-    my( $req, $run ) = @_;
+    my( $req, $run, @args ) = @_;
 
     return 1 if $run eq 'nop'; #shortcut
 
@@ -491,6 +489,7 @@ sub run_action
 	    if( $@ =~ /^Can\'t locate $file/ )
 	    {
 		push @{$errors{'notfound'}}, "$c_run hittades inte under $tryroot";
+		debug(-1);
 		next; # Try next
 	    }
 	    elsif( $@ =~ /^Can\'t locate (.*?) in \@INC/ )
@@ -521,16 +520,18 @@ sub run_action
 		debug(2,"Generic error in require $file");
 		push @{$errors{'compilation'}}, $@;
 	    }
+	    debug(-1);
 	    last; # HOLD IT
 	}
 	else
 	{
 	    $actionroot = $tryroot;
+	    debug(-1);
 	    last; # Success!
 	}
+	debug(-1);
     }
 
-    debug(-1);
 
     if( not $actionroot )
     {
@@ -555,7 +556,7 @@ sub run_action
     {
 	debug(3,"using $actionroot",1);
 	no strict 'refs';
-	$req->result->message( &{$actionroot.'::'.$c_run.'::handler'}($req) );
+	$req->result->message( &{$actionroot.'::'.$c_run.'::handler'}($req, @args) );
 	### Other info is stored in $req->result->{'info'}
 
 	if( $Para::Frame::FORK )
