@@ -27,7 +27,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Time;
+use Para::Frame::Time qw( now );
 use Para::Frame::User;
 use Para::Frame::Route;
 
@@ -38,6 +38,8 @@ sub new
     my( $class, $req ) = @_;
 
     my( $s, $sid, $active );
+
+    my $now = now();
 
     # Each user can have more than one session
     # An explicit logout creates a new session
@@ -50,7 +52,7 @@ sub new
 	# Session still alive?
 	if( $s = $Para::Frame::SESSION{$sid} )
 	{
-	    $s->{'latest'} = localtime;
+	    $s->{'latest'} = $now;
 	    return $s;
 	}
 
@@ -70,8 +72,8 @@ sub new
     {
 	sid            => $sid,
 	active         => $active,
-	created        => localtime,
-	latest         => localtime,
+	created        => $now,
+	latest         => $now,
 	user           => undef,
 	debug          => $Para::Frame::CFG->{'debug'},
 	template_error => '', # Default
@@ -93,13 +95,14 @@ sub new_minimal
     # Used for background jobs, not bound to a browser client
 
     my $sid = time.'-'.$Para::Frame::REQNUM;
+    my $now = now();
 
     my $s =  bless
     {
 	sid            => $sid,
 	active         => 1,
-	created        => localtime,
-	latest         => localtime,
+	created        => $now,
+	latest         => $now,
 	user           => undef,
 	debug          => $Para::Frame::CFG->{'debug'},
 	template_error => '', # Default

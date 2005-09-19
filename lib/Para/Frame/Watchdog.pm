@@ -67,7 +67,7 @@ sub startup
     
     configure($use_logfile);
 
-    debug 1, "\n\nStarted process $$ on ".scalar(localtime)."\n\n";
+    debug 1, "\n\nStarted process $$ on ".now()."\n\n";
 
     # Setup signal handling
     # This will be redefined in the fork
@@ -183,6 +183,7 @@ sub check_server_report
     while()
     {
 	my( $type, @args ) = get_server_message();
+	last unless $type;
 	
 	if( $type eq 'TERMINATE' )
 	{
@@ -190,7 +191,6 @@ sub check_server_report
 	    terminate_server();
 	    exit 0;
 	}
-	last unless $type;
     }
 }
 
@@ -569,7 +569,7 @@ sub open_logfile
     my $log = $Para::Frame::CFG->{'logfile'};
 
     open STDERR, '>>', $log   or die "Can't append to $log: $!";
-    warn "\nStarted process $$ on ".scalar(localtime)."\n\n";
+    warn "\nStarted process $$ on ".now()."\n\n";
 
     chmod_file($log);
 }
