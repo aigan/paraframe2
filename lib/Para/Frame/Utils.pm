@@ -58,13 +58,14 @@ BEGIN
 {
     @Para::Frame::Utils::EXPORT_OK
 
-      = qw( trim maxof minof make_passwd random throw
-            catch create_file create_dir chmod_tree chmod_file
-            chmod_dir package_to_module module_to_package dirsteps
-            uri2file compile passwd_crypt deunicode paraframe_dbm_open
-            elapsed_time uri store_params clear_params
-            restore_params idn_encode idn_decode debug reset_hashref
-	    inflect timediff extract_query_params fqdn retrieve_from_url );
+      = qw( trim maxof minof make_passwd random throw catch
+            create_file create_dir chmod_tree chmod_file chmod_dir
+            package_to_module module_to_package dirsteps uri2file
+            compile passwd_crypt deunicode paraframe_dbm_open
+            elapsed_time uri store_params clear_params restore_params
+            idn_encode idn_decode debug reset_hashref inflect timediff
+            extract_query_params fqdn retrieve_from_url get_from_fork
+            );
 
 }
 
@@ -382,7 +383,7 @@ sub create_dir
 	{
 	    die "$dir is not a directory";
 	}
-	mkdir $dir, 02770;
+	mkdir $dir, 0700;
 	chmod_dir( $dir, $params );
     }
 }
@@ -424,7 +425,7 @@ Chmod and chgrp all files in dir tree to ritframe standard.
 
 sub chmod_tree
 {
-    my( $dir, $skip_re, $skip_h, $params ) = @_;
+    my( $dir, $params, $skip_re, $skip_h ) = @_;
 
 #    warn "Chmod tree $dir\n"; ### DEBUG
     $dir = abs_path($dir);
@@ -440,7 +441,7 @@ sub chmod_tree
 
 	if( -d $file )
 	{
-	    chmod_tree( $file, $skip_re, $skip_h, $params );
+	    chmod_tree( $file, $params, $skip_re, $skip_h );
 	}
 	else
 	{
@@ -463,17 +464,30 @@ sub chmod_file
 {
     my( $file, $mode, $params ) = @_;
 
+    $params ||= {};
+
     if( ref $mode )
     {
 	$params = $mode;
 	$mode = undef;
     }
-    $mode ||= 0660;
+
+    unless( $mode )
+    {
+	if( -d $file )
+	{
+	    $mode = $params->{'dirmode'} || $params->{'mode'} || 02770;
+	}
+	else
+	{
+	    $mode = $params->{'filemode'} || $params->{'mode'} || 0660;
+	}
+    }
 
     confess unless $file;
 #    warn "Fix file $file\n"; ### DEBUG
 
-    my $fstat = stat($file);
+    my $fstat = stat($file) or die "Could not stat $file: $!";
     my $fu = getpwuid( $fstat->uid ); # file user  obj
     my $fg = getgrgid( $fstat->gid ); # file group obj
     my $ru = getpwuid( $> );          # run  user  obj
@@ -482,8 +496,15 @@ sub chmod_file
     my $run = $ru->name;              # run  user  name
     my $pfg = getgrnam( $Para::Frame::CFG->{'paraframe_group'} );
     my $pfgn = $pfg->name;
+    my $fmode = $fstat->mode & 07777; # mask of filetype
 
     die "file '$file' not found" unless -e $file;
+
+    if( $fstat->gid == $pfg->gid and
+	not $fmode ^ $mode & $mode )
+    {
+	return; # No change needed
+    }
 
     # Yes. The sub &report_error is defined here. It's meant to only
     # be used by chmod_file, and will inherit all the variables
@@ -495,7 +516,7 @@ sub chmod_file
 	    $msg .= "  $!\n\n";
 	    $msg .= "  The file is owned by $fun\n";
 	    $msg .= "  The file is in group $fgn\n";
-	    $msg .= sprintf("  The file has mode %lo\n", $fstat->mode & 07777);
+	    $msg .= sprintf("  The file has mode %lo\n", $fmode);
 	    $msg .= "  \n";
 	    $msg .= "  You are running as user $run\n";
 
@@ -504,6 +525,8 @@ sub chmod_file
 		$msg .= "  Do not run as root !!!\n";
 	    }
 
+	    # $f_mem = file is member in paraframe group
+	    # $r_mem = user is member in paraframe group
 	    my( $f_mem, $r_mem ); # Is either member in $pfg?
 	    foreach my $gname ( @{ $pfg->members } )
 	    {
@@ -515,7 +538,7 @@ sub chmod_file
 
 	    if( $f_mem )
 	    {
-		$msg .= "  $fun belongs to group $pfgn\n";
+#		$msg .= "  $fun belongs to group $pfgn\n";
 	    }
 	    else
 	    {
@@ -524,27 +547,43 @@ sub chmod_file
 
 	    if( $r_mem )
 	    {
-		$msg .= "  $run belongs to group $pfgn\n";
+#		$msg .= "  $run belongs to group $pfgn\n";
 	    }
 	    else
 	    {
 		$msg .= "  $run do NOT belong to group $pfgn\n";
 	    }
 
-	    if( $f_mem and not $r_mem )
+	    if( not $r_mem )
 	    {
 		$msg .= "  Run as $fun or add $run to group $pfgn\n";
 	    }
 
-	    if( ($r_mem and not $f_mem) or ($fstat->mode & $mode ^ $mode) )
+	    if( $fgn ne $pfgn )
 	    {
-		$msg .= "  Change owner of file to $run.  As root:\n";
-		$msg .= "  chown -R $run $file\n";
+		$msg .= "  Change group of file to $pfgn.  As root:\n";
+		$msg .= "  chgrp $pfgn $file\n";
+	    }
+
+	    if( $fmode ^ $mode & $mode )
+	    {
+		$msg .= sprintf "  Change mode of file to 0%o.  As root:\n", $mode;
+		$msg .= sprintf "  chmod 0%o $file\n", $mode;
+	    }
+
+	    if( $fgn ne $pfgn or $fmode ^ $mode & $mode )
+	    {
+		$msg .= "  Or if you want us to take care of if; as root:\n";
+		my $dir = $file;
+		$dir =~ s/\/[^\/]*$/\//;
+		$msg .= "  chown -R $run $dir\n";
 	    }
 
 
 	    die $msg . "\n";
     };
+
+    &$report_error if $> == 0; # Do not run as root
 
     unless( $fstat->gid == $pfg->gid )
     {
@@ -555,8 +594,9 @@ sub chmod_file
 	}
     }
 
-    if( $fstat->mode & $mode ^ $mode ) # Is some of the bits missing?
+    if( $fmode ^ $mode & $mode ) # Is some of the bits missing?
     {
+#    debug( sprintf "Tries to chmod file %s from 0%o to 0%o because we differ by %o", $file, $fmode,  $mode,($fmode ^ $mode & $mode));
 	unless( chmod $mode, $file )
 	{
 	    debug(0,"Tried to chmod file");
@@ -580,7 +620,7 @@ sub chmod_dir
 
     $params ||= {};
     return if $params->{'do_not_chmod_dir'};
-    chmod_file( $dir, 02770 );
+    chmod_file( $dir, $params );
 }
 
 
@@ -702,7 +742,7 @@ sub uri2file
 	return $URI2FILE{ $key } = $file;
     }
 
-    if( my $file = $URI2FILE{ $key } )
+    if( $file = $URI2FILE{ $key } )
     {
 	return $file;
     }
@@ -1160,6 +1200,31 @@ sub retrieve_from_url
 	}
     }
 
+    return $fork->yield->message; # Returns the result from fork
+}
+
+=head2 get_from_fork
+
+  get_from_fork(sub{ my_code })
+
+Run given coderef in a fork an retrieve the results
+
+=cut
+
+sub get_from_fork
+{
+    my( $coderef ) = @_;
+
+    my $req = $Para::Frame::REQ;
+
+    debug "About to fork";
+    my $fork = $req->create_fork;
+    if( $fork->in_child )
+    {
+	debug "in child";
+	$fork->return(&$coderef);
+    }
+    debug "In parent: yield";
     return $fork->yield->message; # Returns the result from fork
 }
 
