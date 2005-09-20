@@ -271,7 +271,7 @@ sub revert_from_temporary_user
 sub name     { $_[0]->{'name'} }
 sub username { $_[0]->{'username'} }
 sub uid      { $_[0]->{'uid'} }
-sub level    { $_[0]->{'level'}||0 }
+sub level    { $_[0]->{'level'} }
 sub style    { undef }
 
 # Shortcuts
