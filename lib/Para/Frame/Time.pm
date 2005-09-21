@@ -47,10 +47,10 @@ our $TZ; # Default Timezone, set in Para::Frame->configure
 
 our @EXPORT_OK = qw(internet_date date now timespan duration ); #for docs only
 
-#use Para::Frame::Reload; # This code is mingled with Time::Piece
-
+use Para::Frame::Reload; # This code is mingled with DateTime...
 use Para::Frame::Utils qw( throw debug );
 
+no warnings 'redefine';
 sub import
 {
     my $class = shift;
@@ -137,7 +137,7 @@ Returns obj representing current time
 
 sub now
 {
-    Para::Frame::Time->SUPER::now();
+    Para::Frame::Time->SUPER::now(time_zone => $TZ);
 }
   
 =head2 date
@@ -254,7 +254,7 @@ sub plain
 
 sub sysdesig
 {
-    return sprintf("Date %s", $_[0]->format_datetime);
+    return sprintf("Date %s", $_[0]->strftime('%Y-%m-%d %H.%M.%S %z' ));
 }
 
 sub defined { 1 }
@@ -291,10 +291,9 @@ sub equals
 }
 
 
-######################################################################
-
-
-
+############################################################
+############################################################
+#
 # Change overload behaviour in DateTime::Duration
 {
     no warnings;
@@ -308,23 +307,64 @@ sub equals
     }
 }
 
+############################################################
+############################################################
+#
 # Add overload for stringify in DateTime::Span
+
+package DateTime::Span;
+    
+use overload
+    (
+    '""' => '_stringify_overload',
+    '<=>' => '_compare_overload',
+    );
+
+sub _stringify_overload
 {
-    package DateTime::Span;
+    my $start = $_[0]->start;
+    my $end   = $_[0]->end;
+    
+    return "$start - $end";
+}
 
-    use overload (
-		  '""' => '_stringify_overload',
-		  );
+sub _compare_overload
+{
+    my( $s1, $s2, $rev ) = @_;
 
-    sub _stringify_overload
+    if( $rev )
     {
-	my $start = $_[0]->start;
-	my $end   = $_[0]->end;
-
-	return "$start - $end";
+	if( $s2->isa('DateTime::Span') )
+	{
+	    return DateTime::Duration->compare($s2->duration,
+					       $s1->duration,
+					       $s1->start );
+	}
+	else
+	{
+	    return DateTime::Duration->compare($s2,
+					       $s1->duration,
+					       $s1->start );
+	}
+    }
+    else
+    {
+	if( $s2->isa('DateTime::Span') )
+	{
+	    return DateTime::Duration->compare($s1->duration,
+					       $s2->duration,
+					       $s1->start );
+	}
+	else
+	{
+	    return DateTime::Duration->compare($s1->duration,
+					       $s2,
+					       $s1->start );
+	}
     }
 }
 
+############################################################
 
 1;
 
