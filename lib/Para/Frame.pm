@@ -226,7 +226,6 @@ sub main_loop
 	    else
 	    {
 		# All jobs done for now
-		debug(2,"All jobs done");
 		die Dumper $req unless ref $req eq 'Para::Frame::Request'; ### DEBUG
 		$req->run_hook('done');
 		close_callback($req->{'client'});
@@ -313,6 +312,7 @@ sub main_loop
 sub switch_req
 {
     # $_[0] => the new $req
+    # $_[1] => true if this is a new request
 
     $_[0] ||= '';
     $REQ  ||= '';
@@ -334,15 +334,15 @@ sub switch_req
 
 	Para::Frame->run_hook(undef, 'before_switch_req');
 
-	if( $_[0] and $REQ )
+	if( $_[0] and not $_[1] )
 	{
-	    if( $Para::Frame::FORK )
+	    if( $REQ )
 	    {
-		warn "\nSwitching to req $_[0]->{reqnum} in FORK\n";
+		warn sprintf "\n$_[0]->{reqnum} Switching to req (from $REQ->{reqnum})\n", ;
 	    }
 	    else
 	    {
-		warn "\nSwitching to req $_[0]->{reqnum}\n";
+		warn sprintf "\n$_[0]->{reqnum} Switching to req\n", ;
 	    }
 	}
 
@@ -613,12 +613,12 @@ sub close_callback
     if( $reason )
     {
 #	debug(4,"Done $client $REQUEST{$client}{'reqnum'} ($reason)");
-	debug(4,"Done ($reason)");
+	debug(4, "Done ($reason)");
     }
     else
     {
 #	warn "Done $client $REQUEST{$client}{'reqnum'}\n";
-	warn "Done\n";
+	warn "$REQUEST{$client}{reqnum} Done\n";
     }
 
     if( $client =~ /^background/ )
@@ -770,13 +770,13 @@ sub add_background_jobs
     my( $delta, $sysload ) = @_;
 
     $REQNUM ++;
-    warn "\n\nHandling request number $REQNUM (in background)\n";
+    warn "\n\n$REQNUM Handling new request (in background)\n";
     my $client = "background-$REQNUM";
     my $req = Para::Frame::Request->new_minimal($REQNUM, $client);
 
     ### Register the request
     $REQUEST{$client} = $req;
-    switch_req( $req );
+    switch_req( $req, 1 );
 
     my $bg_user;
     my $user_class = $Para::Frame::CFG->{'user_class'};
@@ -846,7 +846,7 @@ sub handle_request
     my( $client, $recordref ) = @_;
 
     $REQNUM ++;
-    warn "\n\nHandling request number $REQNUM\n";
+    warn "\n\n$REQNUM Handling new request\n";
 
     ### Reload updated modules
     Para::Frame::Reload->check_for_updates;
@@ -856,7 +856,7 @@ sub handle_request
 
     ### Register the request
     $REQUEST{ $client } = $req;
-    switch_req( $req ); 
+    switch_req( $req, 1 ); 
  
     ### Further initialization that requires $REQ
     $req->ctype( $req->{'orig_ctype'} );
