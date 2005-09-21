@@ -827,7 +827,9 @@ sub paraframe_dbm_open
 
     tie( %db, 'BerkeleyDB::Hash',
 	 -Filename => $db_file,
-	 -Flags    => DB_CREATE )
+	 -Flags    => DB_CREATE,
+	 -ErrFile  => '/tmp/psi_dbm_error.log',
+	 )
 	or die "Cannot open file '$db_file': $! $BerkeleyDB::Error\n";
 
     return \%db;
