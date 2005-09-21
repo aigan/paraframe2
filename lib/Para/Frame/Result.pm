@@ -36,6 +36,7 @@ BEGIN
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( trim debug );
+use Para::Frame::Result::Part;
 
 =head1 DESCRIPTION
 
@@ -139,6 +140,8 @@ our $error_types =
 	{
 	    'c' => 'Flera alternativ',
 	},
+	'no_backtrack' => 1,
+	'hide'    => 1,
     },
     'confirm' =>
     {
@@ -147,6 +150,7 @@ our $error_types =
 	    'c' => 'Bekräfta uppgift',
 	},
 	'bg'      => 'yellow',
+	'no_backtrack' => 1,
     },
     'template'   =>
     {
@@ -173,6 +177,7 @@ our $error_types =
 	},
 	'bg'      => 'yellow',
 	'border'  => 'red',
+	'no_backtrack' => 1,
     },
     'notfound'     =>
     {
@@ -205,7 +210,8 @@ sub new
     my $self =
     {
 	part => [],
-#	errcnt => 0,
+	errcnt => 0,
+	backtrack => 0,
 	info => {},
 	main => undef,
         req => $req,
@@ -221,11 +227,11 @@ sub new
 	$self->error('compilation', "$module\n\n$errmsg");
     }
 
-    # Do not count these compile errors, since that would halt
-    # everything. We only want to draw atention to the problem but
-    # still enable usage
-    #
-    $self->{errcnt} = 0;
+#    # Do not count these compile errors, since that would halt
+#    # everything. We only want to draw atention to the problem but
+#    # still enable usage
+#    #
+#    $self->{errcnt} = 0;
 
 
     return $self;
@@ -240,14 +246,11 @@ sub message
 	$msg =~ s/(\n\r?)+$//;
 	next unless length $msg;
 
-	if( $msg eq '1' ) # sanity check
-	{
-	    $self->error('action', shortmess "Message '1' not helpful");
-	    next;
-	}
-
 	debug(3, shortmess "Adding result message '$msg'");
-	push @{$self->{'part'}}, {'message' => $msg};
+
+	push @{$self->{'part'}}, Para::Frame::Result::Part->new({
+	    'message' => $msg,
+	});
     }
 }
 
@@ -296,11 +299,7 @@ sub exception
 	die Dumper( $info );
     }
 
-    $self->error($type, $info, $context);
-
-#    warn("Error: ".Dumper($self)."\n");
-
-   return 1;
+    return $self->error($type, $info, $context);
 }
 
 sub error
@@ -337,11 +336,13 @@ sub error
 	}
     }
 
-    push @{$self->{'part'}}, $params;
-    $self->{'errcnt'}++;
-#    $self->{'type'} ||= $type;
+    my $part = Para::Frame::Result::Part->new($params);
 
-    return undef;
+    push @{$self->{'part'}}, $part;
+    $self->{'backtrack'}++ unless $params->{'no_backtrack'};
+    $self->{'errcnt'}++;
+
+    return $part;
 }
 
 sub errcnt
@@ -349,15 +350,54 @@ sub errcnt
     return $_[0]->{'errcnt'};
 }
 
+sub backtrack
+{
+    return $_[0]->{'backtrack'};
+}
+
 sub parts
 {
     return $_[0]->{'part'};
 }
 
-sub type
+sub find
 {
-    croak "deprecated";
-#    return $_[0]->{'type'};
+    my( $self, $type ) = @_;
+    # Find first part of type $type and return it
+    foreach my $part ( @{$self->{'parts'}} )
+    {
+	next unless $part->{'type'};
+	return $part if $part->{'type'} eq $type;
+    }
+    return undef;
+}
+
+sub hide_part
+{
+    my( $self, $type ) = @_;
+
+    # Hide all parts of given type
+    # Hide all errors if no type given
+
+    debug 4, "Hiding parts of type $type";
+
+    foreach my $part ( @{$self->{'part'}} )
+    {
+	next unless $part->{'type'};
+	if( $type )
+	{
+	    if( $part->{'type'} eq $type )
+	    {
+		$part->{'hide'}=1;
+	    }
+	}
+	else
+	{
+	    $part->{'hide'}=1;
+	}
+    }
+    return undef;
+    
 }
 
 1;
