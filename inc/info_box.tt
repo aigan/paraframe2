@@ -1,14 +1,12 @@
 [%
    FOREACH part = result.parts;
+      NEXT IF part.hide;
       IF part.type;
-         IF part.type == 'alternatives';
-%]
-            <strong>[% part.message | html %]</strong>
-[%       ELSE;
-            box(part);
-         END;
-      ELSE;
-%]
+         IF part.prefix_message; %]
+            <strong><pre>[% part.prefix_message | html %]</pre></strong>
+[%       END;
+         box(part);
+      ELSE; %]
          <strong><pre>[% part.message | html %]</pre></strong>
 [%    END;
    END;
