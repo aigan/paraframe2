@@ -1,15 +1,15 @@
-[% MACRO box BLOCK %]
-   [% DEFAULT border='black' %]
-   [% DEFAULT bg='#AAAAFF' %]
-   [% DEFAULT width=3 %]
-   [% DEFAULT message='Unexplained situation' %]
-<table border=0 cellpadding=0 cellspacing=0 bgcolor="$border" align="center"><tr><td>
-<table border="$width" cellpadding=10><tr><td bgcolor="$bg" class="msg">
-   [% IF title %]<h1>$title.c</h1>[% END %]
-<pre>[% message | html %]</pre>
-[% IF context %]
-   <em>Context (line [% context_line %]):</em>
-   <pre>[% context | html %]</pre>
+[% MACRO box(part) BLOCK %]
+   [% DEFAULT part.border='black' %]
+   [% DEFAULT part.bg='#AAAAFF' %]
+   [% DEFAULT part.width=3 %]
+   [% DEFAULT part.message='Unexplained situation' %]
+<table border=0 cellpadding=0 cellspacing=0 bgcolor="$part.border" align="center"><tr><td>
+<table border="$part.width" cellpadding=10><tr><td bgcolor="$part.bg" class="msg">
+   [% IF part.title %]<h1>$part.title.c</h1>[% END %]
+<pre>[% part.message | html %]</pre>
+[% IF part.context %]
+   <em>Context (line [% part.context_line %]):</em>
+   <pre>[% part.context | html %]</pre>
 [% END %]
 </table></table>
 [% END %]
