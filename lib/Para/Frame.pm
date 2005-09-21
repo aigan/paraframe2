@@ -226,7 +226,7 @@ sub main_loop
 	    else
 	    {
 		# All jobs done for now
-		die Dumper $req unless ref $req eq 'Para::Frame::Request'; ### DEBUG
+		confess "req not a req ".Dumper $req unless ref $req eq 'Para::Frame::Request'; ### DEBUG
 		$req->run_hook('done');
 		close_callback($req->{'client'});
 	    }
@@ -272,11 +272,13 @@ sub main_loop
 		    if( $TERMINATE eq 'HUP' )
 		    {
 			# Make watchdog restart us
+			debug "Executing HUP now";
 			exit 1;
 		    }
 		    elsif( $TERMINATE eq 'TERM' )
 		    {
 			# No restart
+			debug "Executing TERM now";
 			exit 0;
 		    }
 		    else

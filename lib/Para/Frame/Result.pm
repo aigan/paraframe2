@@ -24,7 +24,7 @@ Para::Frame::Result - Holds the results of actions and exceptions
 
 use strict;
 use Data::Dumper;
-use Carp qw( carp shortmess croak );
+use Carp qw( carp shortmess croak confess );
 use Clone qw( clone );
 use Template::Exception;
 
@@ -296,7 +296,7 @@ sub exception
 #    warn "Exception defined: $type\n";
     if( $type eq 'undef' )
     {
-	die Dumper( $info );
+	confess Dumper( $info, \@_ );
     }
 
     return $self->error($type, $info, $context);

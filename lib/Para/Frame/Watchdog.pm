@@ -152,7 +152,7 @@ sub check_process
     {
 	debug "Server using to much memory";
 	send_to_server('HUP');
-	debug 1,"  Sent soft HUP to $PID";
+	debug "  Sent soft HUP to $PID";
     }
     elsif( $size > LIMIT_MEMORY_NOTICE and
 	   time > $MEMORY_CLEAR_TIME + TIMEOUT_CONNECTION_CHECK  )
@@ -341,7 +341,7 @@ sub check_connection
 		else
 		{
 		    chomp $resp;
-		    debug "    Got response '$resp'";
+		    debug "Got response '$resp' on PING";
 		    last;
 		}
 	    }
