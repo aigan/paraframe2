@@ -122,9 +122,6 @@ sub new
     #
     warn "# http://".$req->http_host_name."$orig_uri\n";
 
-    warn "Req for $req->{'env'}{'HTTP_HOST'}\n";
-
-
     return $req;
 }
 
@@ -421,36 +418,6 @@ sub run_code
     return $res;
 }
 
-# This concept is flawed...
-#
-# sub run_code_as_user
-# {
-#     my( $req, $user ) = (shift, shift );
-# 
-#     # Save the original request, because it may be needed if the real
-#     # request is a background job. But support just giving the
-#     # username
-# 
-#     if( ref $user eq 'Para::Frame::Request' )
-#     {
-# 	my $original_request = $user;
-# 
-# 	$user = $req->s->u;
-# 	$req->{'original_request'} = $original_request;
-#     }
-# 
-#     # The code should not let other jobs for the same request run
-#     # while this job is running, since it then would run with the
-#     # wrong user and maby the wrong original_request, in case this is
-#     # a background request.
-# 
-#     $user->become_temporary_user($user);
-#     my $res = $req->run_code(@_);
-#     $user->revert_from_temporary_user();
-#     delete $req->{'original_request'};
-#     return $res;
-# }
-
 sub run_action
 {
     my( $req, $run, @args ) = @_;
@@ -676,7 +643,7 @@ sub error_backtrack
 {
     my( $req ) = @_;
 
-    if( $req->result->errcnt and not $req->error_page_selected )
+    if( $req->result->backtrack and not $req->error_page_selected )
     {
 	debug(2,"Backtracking to previuos page because of errors");
 	my $previous = $req->referer;
@@ -1165,8 +1132,8 @@ sub render_output
 	{
 
 	    debug(0,"FALLBACK!");
-	    $req->result->message("During the processing of\n$template");
-	    $req->result->exception();
+	    my $part = $req->result->exception();
+	    $part->prefix_message("During the processing of\n$template");
 
 	    my $error = $Para::Frame::th->{'html'}->error;
 
@@ -1179,11 +1146,20 @@ sub render_output
 		    ## TODO: Check if error is a 404 or TT error
 		    $error_tt = '/page_part_not_found.tt';
 		}
-		elsif( $error->type eq 'denied' and $req->s->u->level == 0 )
+		elsif( $error->type eq 'denied' )
 		{
-		    # Ask to log in
-		    $error_tt = "/login.tt";
-		    $req->s->route->bookmark;
+		    if( $req->s->u->level == 0 )
+		    {
+			# Ask to log in
+			$error_tt = "/login.tt";
+			$req->result->hide_part('denied');
+			$req->s->route->bookmark;
+		    }
+		    else
+		    {
+			$error_tt = "/denied.tt";
+			$req->s->route->plan_next($req->referer);
+		    }
 		}
 		else
 		{
@@ -1197,7 +1173,7 @@ sub render_output
 
 	    return 0;
 
-	};1
+	};
     }
 
 
