@@ -823,12 +823,16 @@ sub paraframe_dbm_open
 {
     my( $db_file ) = @_;
 
-    my %db;
+    my $env = BerkeleyDB::Env->new(
+				   -ErrFile  => '/tmp/psi_dbm_error.log',
+				   );
 
+
+    my %db;
     tie( %db, 'BerkeleyDB::Hash',
 	 -Filename => $db_file,
 	 -Flags    => DB_CREATE,
-	 -ErrFile  => '/tmp/psi_dbm_error.log',
+	 -Env      => $env,
 	 )
 	or die "Cannot open file '$db_file': $! $BerkeleyDB::Error\n";
 
