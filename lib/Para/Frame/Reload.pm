@@ -258,7 +258,9 @@ sub reload
     }
     elsif( $pkgname->can('import') )
     {
+#	warn "============ call_import\n";
 	Para::Frame::Reload->call_import($pkgname);
+#	warn "============ call_import done\n";
     }
 
     # Remove eventual global error state
@@ -302,6 +304,7 @@ sub call_import
                             sub on_reload__$importsubname
 			    {
                                 shift \@_;
+                                #warn \"+++++++++++++++ in on_reload__$importsubname\\n\";
 				&{\$Para::Frame::Reload::IMPORTS{\'$module\'}}(\'$pkgname\', \@_);
 			    };
                             ";
@@ -314,6 +317,7 @@ sub call_import
 			my $args = $called->{$callerpkg};
 			warn "          Calling the callback sub with @$args\n" if $DEBUG;
 			no strict 'refs';
+                        local ($^W) = 0 ; # Disable redefine warnings
 			&{$coderef}( $callerpkg, @$args );
 #			$callerpkg->"on_reload__$importsubname"(@$args);
 			warn "          DONE\n" if $DEBUG;
