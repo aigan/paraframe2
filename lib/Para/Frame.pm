@@ -196,7 +196,7 @@ sub main_loop
 	    if( $req->{'in_yield'} )
 	    {
 		# Do not do jobs for a request that waits for a child
-		debug 4, "In_yield: $req->{reqnum}";
+		debug 6, "In_yield: $req->{reqnum}";
 	    }
 	    elsif( $req->{'wait'} )
 	    {
@@ -1021,7 +1021,8 @@ sub incpath_generator
     unless( $REQ->{'incpath'} )
     {
 	$REQ->{'incpath'} = [ map uri2file( $_."inc" )."/", @{$REQ->{'dirsteps'}} ];
-	debug(0,"Incpath: @{$REQ->{'incpath'}}");
+	push @{$REQ->{'incpath'}}, $CFG->{'paraframe'}."/inc";
+#	debug(0,"Incpath: @{$REQ->{'incpath'}}");
     }
     return $REQ->{'incpath'};
 }
@@ -1127,7 +1128,7 @@ sub configure
 
     my %th_config =
 	(
-	 INCLUDE_PATH => [ \&incpath_generator, $CFG->{'paraframe'}."/inc" ],
+	 INCLUDE_PATH => [ \&incpath_generator ],
 	 PRE_PROCESS => 'header_prepare.tt',
 	 POST_PROCESS => 'footer.tt',
 	 TRIM => 1,
