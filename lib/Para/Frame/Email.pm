@@ -60,7 +60,7 @@ sub new
 	    'u'        => $req->s->u,
 	    'q'        => $req->q,
 	    'date'     => sub{ date(@_) },
-	    'host'     => $req->host,
+	    'site'     => $req->site,
 	},
     }, $class;
 
@@ -175,6 +175,13 @@ sub send_by_proxy
 sub send
 {
     my($e, $p_in ) = @_;
+
+    # DEBUG...
+    unless( $Para::SITE_CFG->{'send_email'} )
+    {
+	debug "Not sending any email right now...";
+	return 0;
+    }
 
     $e = $e->new unless ref $e;
 
