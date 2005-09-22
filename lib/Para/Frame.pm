@@ -76,6 +76,7 @@ our @BGJOBS_PENDING;       # New jobs to be added in background
 our $TERMINATE  ;
 our $IN_STARTUP;           # True until we reach the watchdog loop
 our $ACTIVE_PIDFILE;       # The PID indicated by existing pidfile
+our $REAPER_FAILSAFE;      # Testing...
 
 # STDOUT goes to the watchdog. Use well defined messages!
 # STDERR goes to the log
@@ -306,8 +307,11 @@ sub main_loop
 
 	    $child->{'fh'}->read($child_data, POSIX::BUFSIZ);
 	    $child->{'data'} .= $child_data;
-	}
 
+
+
+#	    &REAPER; # In case we missed something...
+	}
     }
     debug(4,"Exiting  main_loop at level $LEVEL",-1);
     $LEVEL --;
@@ -319,8 +323,7 @@ sub switch_req
     # $_[0] => the new $req
     # $_[1] => true if this is a new request
 
-    $_[0] ||= '';
-    $REQ  ||= '';
+    no warnings 'uninitialized';
 
     if( $_[0] ne $REQ )
     {
@@ -662,6 +665,8 @@ sub REAPER
     # first death, we won't get another signal. So must loop here else
     # we will leave the unreaped child as a zombie. And the next time
     # two children die we get another zombie. And so on.
+
+    warn "In reaper\n";
 
     while (($child_pid = waitpid(-1, POSIX::WNOHANG)) > 0)
     {
