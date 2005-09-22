@@ -80,9 +80,7 @@ sub return
 	my $length = length($data);
 	debug(1,"Returning $length bytes of data");
     }
-    warn "before print\n";
     print $data;
-    warn "after print\n";
     exit;  # don't forget this
 }
 
