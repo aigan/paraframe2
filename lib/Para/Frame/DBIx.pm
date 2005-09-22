@@ -862,6 +862,8 @@ sub save_record
 		$fields_added{ $field } ++;
 		push @fields, $field;
 		push @values, $new;
+		$new ||= '<undef>';
+		$old ||= '<undef>';
 		debug(1,"  field $field differ: '$new' != '$old'");
 	    }
 	}
@@ -877,6 +879,8 @@ sub save_record
 		$fields_added{ $field } ++;
 		push @fields, $field;
 		push @values, $new;
+		$new ||= '<undef>';
+		$old ||= '<undef>';
 		debug(1,"  field $field differ: '$new' != '$old'");
 	    }
 	}
@@ -884,7 +888,9 @@ sub save_record
 	{
 	    # We can usually use type string for floats
 
-	    if( ($new||'') != ($old||'') )
+	    if( (defined $new and not defined $old) or
+		(defined $old and not defined $new) or
+		( $new != $old ) )
 	    {
 		$fields_added{ $field } ++;
 		push @fields, $field;
