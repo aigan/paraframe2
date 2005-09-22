@@ -735,7 +735,7 @@ sub uri2file
 #    warn "  Get filename for uri $uri\n";
 
     $req ||= $Para::Frame::REQ;
-    my $key = $req->host_name . $uri;
+    my $key = $req->host . $uri;
 
     if( $file )
     {
@@ -921,6 +921,8 @@ sub idn_decode
 {
     my( $domain ) = @_;
 
+    cluck "Domain missing" unless $domain;
+
     if( $Para::Frame::Utils::TRANSCODED{ $domain } )
     {
 	return $Para::Frame::Utils::TRANSCODED{ $domain };
@@ -1058,6 +1060,10 @@ Output debug info
 sub debug
 {
     my( $level, $message, $delta ) = @_;
+
+    # Initialize here since DEBUG may be called before configure
+    $Para::Frame::DEBUG  ||= 0;
+    $Para::Frame::INDENT ||= 0;
 
     # Returns $message if given
     return "" if $Para::Frame::IN_STARTUP and $Para::Frame::QUIET_STARTUP and $level;
