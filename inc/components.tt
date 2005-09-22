@@ -92,20 +92,23 @@
 
 
 
-[% MACRO select(name, value, data, valkey, tagkey, header) BLOCK %]
+[% MACRO select(name, current, data, valkey, tagkey, header) BLOCK %]
+   [%- IF q.param(name) %]
+      [% current = q.param(name) %]
+   [% END %]
   <select name="[% name|html %]">
   [% IF valkey %]
      [% DEFAULT tagkey = valkey -%]
      [%- IF header %]<option value="">[% header|html %]</option>[% END -%]
-     [% FOREACH row=data %]
+     [% FOREACH row IN data %]
         <option value="[% row.$valkey %]"
-           [%- 'selected' IF row.$valkey == value -%]
+           [%- 'selected' IF row.$valkey == current -%]
         >[% row.$tagkey %]</option>
      [%- END %]
   [% ELSE %]
-     [% FOREACH key=data.keys.sort %]
+     [% FOREACH key IN data.keys.sort %]
         <option value="[% key %]"
-           [%- 'selected' IF key == value -%]
+           [%- 'selected' IF key == current -%]
         >[% data.$key %]</option>
      [% END %]
   [% END %]
