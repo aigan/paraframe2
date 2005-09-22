@@ -1021,7 +1021,7 @@ sub incpath_generator
     unless( $REQ->{'incpath'} )
     {
 	$REQ->{'incpath'} = [ map uri2file( $_."inc" )."/", @{$REQ->{'dirsteps'}} ];
-	debug(4,"Incpath: @{$REQ->{'incpath'}}");
+	debug(0,"Incpath: @{$REQ->{'incpath'}}");
     }
     return $REQ->{'incpath'};
 }
