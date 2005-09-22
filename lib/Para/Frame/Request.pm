@@ -1509,7 +1509,14 @@ sub host # Inkludes port if not :80
 {
     my( $req ) = @_;
 
-    return $req->site->webhost;
+    if( $ENV{SERVER_NAME} )
+    {
+	return $req->host_from_env;
+    }
+    else
+    {
+	return $req->site->webhost;
+    }
 }
 
 sub create_fork
