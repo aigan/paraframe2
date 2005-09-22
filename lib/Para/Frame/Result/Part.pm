@@ -224,7 +224,7 @@ sub type
 	debug "Setting part type to $type";
 	$part->{'type'} = $type;
     }
-    return $part->{'type'} || $part->error_type;
+    return $part->{'type'} || $part->error_type || "";
 }
 
 sub error
@@ -277,6 +277,40 @@ sub message
     push @message, @{$part->{'message'}};
 
     return join "\n", @message;
+}
+
+sub hide
+{
+    my( $part, $bool ) = @_;
+
+    if( defined $bool )
+    {
+	if( $bool eq '1' )
+	{
+	    $part->{'hide'} = 1;
+	}
+	elsif( $bool eq '0' )
+	{
+	    $part->{'hide'} = 0;
+	}
+	elsif( $bool eq '' )
+	{
+	    $part->{'hide'} = undef;
+	}
+	else
+	{
+	    croak "should only be set with 1, 0 or ''";
+	}
+    }
+
+    if( defined $part->{'hide'} )
+    {
+	return $part->{'hide'};
+    }
+    else
+    {
+	return $ERROR_TYPE->{ $part->type }{'hide'};
+    }
 }
 
 sub border
