@@ -46,7 +46,7 @@ BEGIN
 use Para::Frame::Reload;
 
 use Para::Frame::Request;
-use Para::Frame::Utils qw( throw debug );
+use Para::Frame::Utils qw( throw debug inflect );
 
 sub new
 {
@@ -234,6 +234,7 @@ sub send
     my $from_addr_str = $from_addr->address;
 
 
+    my @tried = ();
   TRY:
     foreach my $try ( @try )
     {
@@ -250,6 +251,7 @@ sub send
 	    next;
 	}
 	my $to_addr_str = $to_addr->address;
+	push @tried, $to_addr_str;
 
 	my $msg;
 
@@ -378,6 +380,17 @@ sub send
 	    debug(-1);
 	}
 	debug(0,"Address bad");
+    }
+
+    if( $err_msg )
+    {
+	my $cnt = @tried;
+	$err_msg .= "Tried ".inflect($cnt, "1 e-mail address", "%d e-mail addresses")."\n";
+    }
+
+    unless( @tried )
+    {
+	$err_msg .= "No working e-mail found\n";
     }
 
     debug(1,"Returning status. Error set to: $err_msg");
