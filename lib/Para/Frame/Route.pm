@@ -247,7 +247,6 @@ sub clear
     my( $route ) = @_;
 
     $route->{'route'} = [];
-    $route->{'default'} = $Para::Frame::REQ->site->last_step;
     return 1;
 }
 
@@ -648,7 +647,7 @@ Returns the default template to use after the last step
 
 sub default
 {
-    return $_[0]->{'default'};
+    return $Para::Frame::REQ->site->last_step;
 }
 
 sub replace_query
