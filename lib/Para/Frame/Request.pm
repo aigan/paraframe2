@@ -598,20 +598,16 @@ sub after_jobs
     {
 	## TODO: forward if requested uri ends in /index.tt
 
+	# Redirection requestd?
 	if( $req->error_page_not_selected and $req->{'redirect'} )
 	{
 	    $req->cookies->add_to_header;
- 
-	    $req->output_redirection( $req->{'redirect'} );
-
-	    $req->s->after_request( $req );
-
-	    return;
+ 	    $req->output_redirection( $req->{'redirect'} );
+	    return $req->done;
 	}
 
 
 	my $render_result = 0;
-
 	if( $req->{'renderer'} )
 	{
 	    # Using custom renderer
@@ -624,26 +620,37 @@ sub after_jobs
 	    $render_result = $req->render_output;
 	}
 
-	if( $render_result )
+	# The renderer may have set a redirection page
+	if( $req->{'redirect'} )
 	{
 	    $req->cookies->add_to_header;
- 
-	    $req->send_output;
-
-	    $req->s->after_request( $req );
-
-	    # Redundant shortcut
-	    unless( $req->{'wait'} or $req->{'childs'} )
-	    {
-		$req->run_hook('done');
-		Para::Frame::close_callback($req->{'client'});
-	    }
-	    return;
+ 	    $req->output_redirection( $req->{'redirect'} );
+	    return $req->done;
+	}
+	elsif( $render_result )
+	{
+	    $req->cookies->add_to_header;
+ 	    $req->send_output;
+	    return $req->done;
 	}
 	$req->add_job('after_jobs');
     }
 
     return 1;
+}
+
+sub done
+{
+    my( $req ) = @_;
+    $req->s->after_request( $req );
+
+    # Redundant shortcut
+    unless( $req->{'wait'} or $req->{'childs'} )
+    {
+	$req->run_hook('done');
+	Para::Frame::close_callback($req->{'client'});
+    }
+    return;
 }
 
 sub in_last_job
