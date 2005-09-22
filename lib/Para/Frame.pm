@@ -25,7 +25,7 @@ use POSIX qw( locale_h );
 use Text::Autoformat; #exports autoformat()
 use Time::HiRes qw( time );
 use Data::Dumper;
-use Carp qw( cluck confess carp );
+use Carp qw( cluck confess carp croak );
 use Template;
 use Sys::CpuLoad;
 use DateTime::TimeZone;
@@ -57,6 +57,7 @@ our $INDENT     ;
 our @JOBS       ;
 our %REQUEST    ;
 our $REQ        ;
+our $REQ_LAST   ;  # Remeber last $REQ beyond a undef $REQ
 our $U          ;
 our $REQNUM     ;
 our %SESSION    ;
@@ -342,7 +343,7 @@ sub switch_req
 	    {
 		warn sprintf "\n$_[0]->{reqnum} Switching to req (from $REQ->{reqnum})\n", ;
 	    }
-	    else
+	    elsif( $_[0] ne $REQ_LAST )
 	    {
 		warn sprintf "\n$_[0]->{reqnum} Switching to req\n", ;
 	    }
@@ -366,6 +367,8 @@ sub switch_req
 	    $REQ->{'env'} = \%ENV;
 
 	    $INDENT = $REQ->{'indent'};
+
+	    $REQ_LAST = $REQ; # To remember even then $REQ is undef
 	}
 	else
 	{
@@ -1090,21 +1093,12 @@ sub configure
 
 
     # Site pages
+    #
+    unless( Para::Frame::Site->get('default') )
+    {
+	croak "No default site registred";
+    }
 
-    # Since one server can serve many websites, there should be a
-    # on_site_change() hook for updating environment data (global
-    # variables) for the specific site. The basic site dependant
-    # configuration data are grouped in {'site'} subhash. You may want
-    # to replace it depending on what site is requested
-
-    my $site = $CFG->{'site'} ||= {};
-
-    $site->{'webhome'}     ||= ''; # URL path to website home
-#   $site->{'last_step'};    # Default to undef
-    $site->{'login_page'}  ||= $site->{'last_step'} || $site->{'webhome'}.'/';
-    $site->{'logout_page'} ||= $site->{'webhome'}.'/';
-    $site->{'webhost'}     ||= fqdn(); # include port (www.abc.se:81)
-    $site->{'loopback'}    ||= $site->{'logout_page'};
 
     # Make appfmly and appback listrefs if they are not
     foreach my $key ('appfmly', 'appback')
