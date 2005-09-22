@@ -819,6 +819,8 @@ sub save_record
     my $fields_to_check = $param->{'fields_to_check'} || [keys %$rec_new];
     my $on_update = $param->{'on_update'} || undef;
 
+    my $req = $Para::Frame::REQ;
+
     if( ref $key eq 'HASH' )
     {
 	my $keyhash = $key;
@@ -926,24 +928,38 @@ sub save_record
 	}
 	elsif( $type eq 'email' )
 	{
-	    $new ||= '';
-	    if( $new and not ref $new )
+	    eval
 	    {
-		$new = Para::Frame::Email::Address->parse( $new );
-	    }
-	    
-	    $old ||= '';
-	    if( $old and not ref $old )
+		$new ||= '';
+		if( $new and not ref $new )
+		{
+		    $new = Para::Frame::Email::Address->parse( $new );
+		}
+		
+		$old ||= '';
+		if( $old and not ref $old )
+		{
+		    $old = Para::Frame::Email::Address->parse( $old );
+		}
+		
+		if( $new ne $old )
+		{
+		    $fields_added{ $field } ++;
+		    push @fields, $field;
+		    push @values, $new->as_string;
+		    debug(1,"  field $field differ");
+		}
+	    };
+	    if( $@ )
 	    {
-		$old = Para::Frame::Email::Address->parse( $old );
-	    }
-
-	    if( $new ne $old )
-	    {
-		$fields_added{ $field } ++;
-		push @fields, $field;
-		push @values, $new->as_string;
-		debug(1,"  field $field differ");
+		if( $req->is_from_client )
+		{
+		    die $@;
+		}
+		else
+		{
+		    debug $@;
+		}
 	    }
 	}
 	else
