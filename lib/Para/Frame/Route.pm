@@ -247,7 +247,7 @@ sub clear
     my( $route ) = @_;
 
     $route->{'route'} = [];
-    $route->{'default'} = $Para::Frame::CFG->{'site'}{'last_step'};
+    $route->{'default'} = $Para::Frame::REQ->site->last_step;
     return 1;
 }
 
@@ -576,7 +576,7 @@ sub skip_step
 	debug(1,"!!  No more steps in route");
     }
 
-    $dest ||= $route->default || $Para::Frame::CFG->{'site'}{'webhome'};
+    $dest ||= $route->default || $req->site->webhome;
 
     $req->set_template($dest);
 }
