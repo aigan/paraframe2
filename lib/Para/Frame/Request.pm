@@ -632,6 +632,12 @@ sub after_jobs
 
 	    $req->s->after_request( $req );
 
+	    # Redundant shortcut
+	    unless( $req->{'wait'} or $req->{'childs'} )
+	    {
+		$req->run_hook('done');
+		Para::Frame::close_callback($req->{'client'});
+	    }
 	    return;
 	}
 	$req->add_job('after_jobs');
