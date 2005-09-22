@@ -48,6 +48,7 @@ use Para::Frame::Result;
 use Para::Frame::Child;
 use Para::Frame::Child::Result;
 use Para::Frame::Request::Ctype;
+use Para::Frame::Site;
 use Para::Frame::Utils qw( create_dir chmod_file dirsteps uri2file compile throw idn_encode idn_decode debug catch );
 
 sub new
@@ -108,11 +109,13 @@ sub new
 	child_result   => undef,          ## the child res if in child
 	reqnum         => $reqnum,        ## The request serial number
 	wait           => 0,              ## Asked to wait?
+	site           => undef,          ## The site for the request
     }, $class;
 
     # Cache uri2file translation
     uri2file( $orig_uri, $orig_filename, $req);
 
+    $req->{'site'}    = Para::Frame::Site->get( $req->host_from_env );
     $req->{'cookies'} = new Para::Frame::Cookies($req);
     $req->{'browser'} = new HTTP::BrowserDetect($env->{'HTTP_USER_AGENT'}||undef);
     $req->{'result'}  = new Para::Frame::Result($req);  # Before Session
@@ -120,7 +123,7 @@ sub new
 
     # Log some info
     #
-    warn "# http://".$req->http_host_name."$orig_uri\n";
+    warn "# http://".$req->http_host."$orig_uri\n";
 
     return $req;
 }
@@ -158,8 +161,10 @@ sub new_minimal
 	child_result   => undef,          ## the child res if in child
 	reqnum         => $reqnum,        ## The request serial number
 	wait           => 0,              ## Asked to wait?
+	site           => undef,          ## The site for the request
     }, $class;
 
+    $req->{'site'}    = Para::Frame::Site->get();
     $req->{'result'}  = new Para::Frame::Result($req);  # Before Session
     $req->{'s'}       = Para::Frame::Session->new_minimal($req);
 
@@ -725,11 +730,10 @@ sub referer
     #
     return $req->s->referer if $req->s->referer;
 
-    return $Para::Frame::CFG->{'site'}{'last_step'} if
-	$Para::Frame::CFG->{'site'}{'last_step'};
+    return $req->site->last_step if $req->site->last_step;
 
     # Last try. Should always be defined
-    return $Para::Frame::CFG->{'site'}{'webhome'}.'/';
+    return $req->site->webhome.'/';
 }
 
 #############################################
@@ -1011,17 +1015,14 @@ sub send_code
 	    my $origreq = $req->{'original_request'};
 
 	    # Find out which website to use
-	    my( $webhost, $webport );
 	    if( $origreq )
 	    {
-		$webhost = $origreq->{'env'}{'HTTP_HOST'};
-	    }
-	    else
-	    {
-		$webhost = $Para::Frame::CFG->{'site'}{'webhost'};
+		$req->{'site'} = $origreq->{'site'};
 	    }
 
-	    my $webpath = $Para::Frame::CFG->{'site'}{'loopback'};
+	    my $webhost = $req->site->webhost;
+	    my $webpath = $req->site->loopback;
+
 	    my $query = "run=wait_for_req&req=$client";
 	    my $url = "http://$webhost$webpath?$query";
 
@@ -1390,8 +1391,8 @@ sub output_redirection
     else
     {
 	my $uri = URI->new($uri_in, 'http');
-	$uri->host( idn_encode $req->http_host_name ) unless $uri->host;
-	$uri->port( $req->host_port ) unless $uri->port;
+	$uri->host( idn_encode $req->http_host ) unless $uri->host;
+	$uri->port( $req->http_port ) unless $uri->port;
 	$uri->scheme('http');
 
 	$uri_out =  $uri->canonical->as_string;
@@ -1408,14 +1409,20 @@ sub output_redirection
     $req->client->send( "Go to $uri_out\n" );
 }
 
-sub http_host_name
+sub http_host
 {
 
     # This is the host name the client requested. It tells with which
     # of the alternatives names the site was requested
 
-#    warn "Host name: $ENV{SERVER_NAME}\n";
     return idn_decode( $ENV{HTTP_HOST} );
+}
+
+sub http_port
+{
+    my $host = $_[0]->http_host or return undef;
+    $host =~ m/:(\d+)$/;
+    return $1 || 80;
 }
 
 sub client_ip
@@ -1423,32 +1430,32 @@ sub client_ip
     return $_[0]->env->{REMOTE_ADDR} || $_[0]->{'client'}->peerhost;
 }
 
-sub host_name
+sub site
+{
+    return $_[0]->{'site'} ||= Para::Frame::Site->get();
+}
+
+sub host_from_env
 {
     # This is the host name as given in the apache config.
+    my $port = $ENV{SERVER_PORT};
 
-#    warn "Host name: $ENV{SERVER_NAME}\n";
-    return idn_decode( $ENV{SERVER_NAME} );
-}
-
-sub host_port
-{
-#    warn "Host port: $ENV{SERVER_PORT}\n";
-    return $ENV{SERVER_PORT};
-}
-
-sub host
-{
-    my $port = host_port();
-
+    cluck "No host info" unless $port;
     if( $port == 80 )
     {
-	return host_name();
+	return $ENV{SERVER_NAME};
     }
     else
     {
-	return sprintf "%s:%d", host_name(), $port;
+	return sprintf "%s:%d", $ENV{SERVER_NAME}, $port;
     }
+}
+
+sub host # Inkludes port if not :80
+{
+    my( $req ) = @_;
+
+    return $req->site->webhost;
 }
 
 sub create_fork
@@ -1567,8 +1574,8 @@ sub set_tt_params
 	'req'             => $req,
 
 	# Is allowed to change between requests
-	'site'            => $Para::Frame::CFG->{'site'},
-	'home'            => $Para::Frame::CFG->{'site'}{'webhome'},
+	'site'            => $req->site,
+	'home'            => $req->site->webhome,
     }, 1);
 }
 
