@@ -5,7 +5,7 @@ package Para::Frame::Child;
 # DESCRIPTION
 #   Paranormal.se framework Child process class
 #
-# We are in the CHILD
+# We are in the PARENT, looking at the child result
 #
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
