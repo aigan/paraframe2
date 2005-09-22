@@ -731,10 +731,12 @@ sub uri2file
 {
     my( $uri, $file, $req ) = @_;
 
+    # $req is for usage BEFORE global $REQ is set
+
     # This will return file without '/' for dirs
 #    warn "  Get filename for uri $uri\n";
 
-    $req ||= $Para::Frame::REQ;
+    $req ||= $Para::Frame::REQ or confess;
     my $key = $req->host . $uri;
 
     if( $file )
