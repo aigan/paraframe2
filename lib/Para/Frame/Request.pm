@@ -112,10 +112,11 @@ sub new
 	site           => undef,          ## The site for the request
     }, $class;
 
+    $req->{'site'}    = Para::Frame::Site->get( $req->host_from_env );
+
     # Cache uri2file translation
     uri2file( $orig_uri, $orig_filename, $req);
 
-    $req->{'site'}    = Para::Frame::Site->get( $req->host_from_env );
     $req->{'cookies'} = new Para::Frame::Cookies($req);
     $req->{'browser'} = new HTTP::BrowserDetect($env->{'HTTP_USER_AGENT'}||undef);
     $req->{'result'}  = new Para::Frame::Result($req);  # Before Session
@@ -353,7 +354,7 @@ sub setup_jobs
     $req->{'actions'} = $actions;
 #    warn "Actions are now ".Dumper($actions);
 
-    $req->add_job('after_jobs');
+    $req->after_jobs;
 }
 
 sub add_job
