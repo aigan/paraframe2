@@ -1160,6 +1160,7 @@ sub render_output
 		{
 		    ## TODO: Check if error is a 404 or TT error
 		    $error_tt = '/page_part_not_found.tt';
+		    debug $error->as_string();
 		}
 		elsif( $error->type eq 'denied' )
 		{
