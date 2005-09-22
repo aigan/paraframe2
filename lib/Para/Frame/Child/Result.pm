@@ -5,7 +5,7 @@ package Para::Frame::Child::Result;
 # DESCRIPTION
 #   Paranormal.se framework Child process result class
 #
-# We are in the PARENT looking on the result of the child
+# We are in the CHILD, setting up the response
 #
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
@@ -80,7 +80,9 @@ sub return
 	my $length = length($data);
 	debug(1,"Returning $length bytes of data");
     }
+    warn "before print\n";
     print $data;
+    warn "after print\n";
     exit;  # don't forget this
 }
 
