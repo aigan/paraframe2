@@ -751,6 +751,7 @@ sub uri2file
     $req->send_code( 'URI2FILE', $uri );
     $file = Para::Frame::get_value( $req );
 
+    debug(4, "Storing URI2FILE in key $key");
     $URI2FILE{ $key } = $file;
     return $file;
 }
