@@ -189,7 +189,9 @@ sub main_loop
 	### Do the jobs piled up
 	#
 	$timeout = TIMEOUT_LONG; # We change this if there are jobs to do
-	foreach my $req ( values %REQUEST )
+	# List may change during iteration by close_callback...
+	my @requests = values %REQUEST;
+	foreach my $req ( @requests )
 	{
 	    if( $req->{'in_yield'} )
 	    {
