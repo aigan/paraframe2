@@ -40,7 +40,7 @@ name that is considered to consist of the apache servern name,
 followed by ":$port" if $port != 80. This is what $req->host
 returns. (It does NOT include 'http://')
 
-$req->http_host_name gives the name used in the request, in the same
+$req->http_host gives the name used in the request, in the same
 format.
 
 =cut
