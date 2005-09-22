@@ -511,7 +511,15 @@ sub get_value
 		my( $code ) = $1;
 		if( $code eq 'REQ' )
 		{
-		    handle_request( $client, \$INBUFFER{$client} );
+		    my $record = $INBUFFER{$client};
+
+		    # Clear BUFFER so that we can recieve more from
+		    # same place.
+
+		    $INBUFFER{$client} = '';
+		    $DATALENGTH{$client} = 0;
+
+		    handle_request( $client, \$record );
 		}
 		elsif( $code eq 'CANCEL' )
 		{
