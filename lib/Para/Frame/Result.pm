@@ -25,7 +25,7 @@ Para::Frame::Result - Holds the results of actions and exceptions
 use strict;
 use Data::Dumper;
 use Carp qw( carp shortmess croak confess );
-use Clone qw( clone );
+#use Clone qw( clone );
 use Template::Exception;
 
 BEGIN
@@ -53,160 +53,12 @@ data in an apropriate subhash.  Example:
 
 The info hash is accessed in the template as C<result.info>.
 
-=head1 Exceptions
-
-=head2 dbi
-
-Database or SQL error
-
-=head2 update
-
-Problem occured while trying to store data in the DB.
-
-=head2 incomplete
-
-Some required field in a HTML form was left blank
-
-=head2 validation
-
-A value given in a HTML form was invalid
-
-=head2 confirm
-
-Ask for confirmation of something.  (deprecated)
-
-=head2 template
-
-Format or execution error in the template page
-
-=head2 action
-
-Generic error while executing an action
-
-=head2 compilation
-
-A cimpilation error of Perl code
-
-=head2 notfound
-
-A page (template) or object was requested but not found
-
-=head2 file
-
-Error during file manipulation.  This could be a filesystem permission
-error
 
 =cut
 
-our $error_types =
-{
-    'dbi'        =>
-    {
-	'title' =>
-	{
-	    'c'   => 'Databasfel',
-	},
-	'border'  => 'red',
-	'bg'      => 'AAAAAA',
-    },
-    'update'        =>
-    {
-	'title'   =>
-	{
-	    'c' => 'Problem med att spara uppgift',
-	},
-	'border'  => 'red',
-	'bg'      => 'AAAAAA',
-    },
-    'incomplete' =>
-    {
-	'title'   =>
-	{
-	    'c' => 'Uppgifter saknas',
-	},
-	'bg'      => 'yellow',
-    },
-    'validation' =>
-    {
-	'title'   =>
-	{
-	    'c' => 'Fel vid kontroll',
-	},
-	'bg'      => 'yellow',
-    },
-    'alternatives' =>
-    {
-	'title'   =>
-	{
-	    'c' => 'Flera alternativ',
-	},
-	'no_backtrack' => 1,
-	'hide'    => 1,
-    },
-    'confirm' =>
-    {
-	'title'   =>
-	{
-	    'c' => 'Bekräfta uppgift',
-	},
-	'bg'      => 'yellow',
-	'no_backtrack' => 1,
-    },
-    'template'   =>
-    {
-	'title'   =>
-	{
-	    'c' => 'Mallfel',
-	},
-	'view_context' => 1,
-    },
-    'action'     =>
-    {
-	'title'   =>
-	{
-	    'c' => 'Försök misslyckades',
-	},
-	'bg'      => 'red',
-	'view_context' => 1,
-    },
-    'compilation' =>
-    {
-	'title'   =>
-	{
-	    'c' => 'Kompileringsfel',
-	},
-	'bg'      => 'yellow',
-	'border'  => 'red',
-	'no_backtrack' => 1,
-    },
-    'notfound'     =>
-    {
-	'title'   =>
-	{
-	    'c' => 'Hittar inte',
-	},
-	'bg'      => 'red',
-    },
-    'denied'     =>
-    {
-	'title'   =>
-	{
-	    'c' => 'Access vägrad',
-	},
-    },
-    'file'       =>
-    {
-	'title' =>
-	{
-	    'c' => 'Mallfil saknas',
-	},
-    },
-};
-
-
 sub new
 {
-    my( $class, $req ) = @_;
+    my( $class ) = @_;
     my $self =
     {
 	part => [],
@@ -214,7 +66,6 @@ sub new
 	backtrack => 0,
 	info => {},
 	main => undef,
-        req => $req,
     };
 
     bless($self, $class);
@@ -289,7 +140,7 @@ sub exception
 
     ## on_error_detect
     #
-    Para::Frame->run_hook($self->{'req'}, 'on_error_detect', \$type, \$info );
+    Para::Frame->run_hook($Para::Frame::REQ, 'on_error_detect', \$type, \$info );
 
     $type ||= 'action';
 
@@ -299,47 +150,27 @@ sub exception
 	confess Dumper( $info, \@_ );
     }
 
-    return $self->error($type, $info, $context);
+    return $self->error($type, $info, \$context);
 }
 
 sub error
 {
-    my( $self, $type, $message, $context ) = @_;
+    my( $self, $type, $message, $contextref ) = @_;
 
     $message =~ s/(\n\r?)+$//;
-#    chomp($message);
+    unless( ref $contextref )
+    {
+	$contextref = \ "$contextref";
+    }
+
+    my $error = Template::Exception->new( $type, $message, $contextref );
 
     $@ = undef; # Clear out error info
 
-    my $params = clone( $error_types->{$type} ) || {};
-
-    unless( $type )
-    {
-	$params->{'view_context'} = 1;
-    }
-
-    $params->{'type'} ||= $type;
-    $params->{'title'}{'c'} ||= "\u$type fel...";
-    $params->{'message'} = $message;
-
-    if( $params->{'view_context'} and $context )
-    {
-	trim(\$context);
-	if( length $context )
-	{
-	    my @lines = split "\n", $context;
-	    my $linecount = scalar @lines;
-	    warn "Context: $context\n";
-	    # Save last five rows
-	    $params->{'context'} = join "\n", @lines[-5..-1];
-	    $params->{'context_line'} = $linecount;
-	}
-    }
-
-    my $part = Para::Frame::Result::Part->new($params);
+    my $part = Para::Frame::Result::Part->new($error);
 
     push @{$self->{'part'}}, $part;
-    $self->{'backtrack'}++ unless $params->{'no_backtrack'};
+    $self->{'backtrack'}++ unless $part->no_backtrack;
     $self->{'errcnt'}++;
 
     return $part;
@@ -398,6 +229,18 @@ sub hide_part
     }
     return undef;
     
+}
+
+sub as_string
+{
+    my( $result ) = @_;
+
+    my $out = "";
+    foreach my $part (@{ $result->parts })
+    {
+	$out .= $part->as_string . "\n";
+    }
+    return $out;
 }
 
 1;
