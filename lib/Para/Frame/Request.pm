@@ -167,7 +167,7 @@ sub new_minimal
 
     $req->{'site'}    = Para::Frame::Site->get();
     $req->{'result'}  = new Para::Frame::Result;  # Before Session
-    $req->{'s'}       = Para::Frame::Session->new_minimal($req);
+    $req->{'s'}       = Para::Frame::Session->new_minimal();
 
     return $req;
 }
@@ -655,7 +655,7 @@ sub done
     $req->s->after_request( $req );
 
     # Redundant shortcut
-    unless( $req->{'wait'} or $req->{'childs'} )
+    unless( $req->{'wait'} or $req->{'childs'} or @{$_[0]->{'jobs'}} )
     {
 	$req->run_hook('done');
 	Para::Frame::close_callback($req->{'client'});

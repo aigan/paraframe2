@@ -214,17 +214,17 @@ sub hide_part
 
     foreach my $part ( @{$self->{'part'}} )
     {
-	next unless $part->{'type'};
+	next unless $part->type;
 	if( $type )
 	{
-	    if( $part->{'type'} eq $type )
+	    if( $part->type eq $type )
 	    {
-		$part->{'hide'}=1;
+		$part->hide(1);
 	    }
 	}
 	else
 	{
-	    $part->{'hide'}=1;
+	    $part->hide(1);
 	}
     }
     return undef;
