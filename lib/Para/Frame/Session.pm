@@ -90,7 +90,7 @@ sub new
 
 sub new_minimal
 {
-    my( $class, $req ) = @_;
+    my( $class ) = @_;
 
     # Used for background jobs, not bound to a browser client
 
