@@ -106,7 +106,7 @@ sub get
 
     no warnings 'uninitialized';
 
-    debug "Looking up site $name";
+    debug 3, "Looking up site $name";
     return $DATA{$name} || $DATA{'default'} or
 	croak "Either site $name or default is registred";
 }
