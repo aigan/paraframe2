@@ -119,7 +119,7 @@ sub new
 
     $req->{'cookies'} = new Para::Frame::Cookies($req);
     $req->{'browser'} = new HTTP::BrowserDetect($env->{'HTTP_USER_AGENT'}||undef);
-    $req->{'result'}  = new Para::Frame::Result($req);  # Before Session
+    $req->{'result'}  = new Para::Frame::Result;  # Before Session
     $req->{'s'}       = new Para::Frame::Session($req);
 
     # Log some info
@@ -166,7 +166,7 @@ sub new_minimal
     }, $class;
 
     $req->{'site'}    = Para::Frame::Site->get();
-    $req->{'result'}  = new Para::Frame::Result($req);  # Before Session
+    $req->{'result'}  = new Para::Frame::Result;  # Before Session
     $req->{'s'}       = Para::Frame::Session->new_minimal($req);
 
     return $req;
@@ -234,8 +234,18 @@ sub set_template
 
     # For setting a template diffrent from the URI
 
+    if( UNIVERSAL::isa $template, 'URI' )
+    {
+	$template = $template->path;
+    }
+
     # To forward to a page not handled by the paraframe, use
     # redirect()
+
+    if( $template =~ /^http/ )
+    {
+	croak "Tried to set a template to $template";
+    }
 
     # template param should NOT include the http://hostname part
     # TODO: tecken.se uses set_tempalte to redirect to another domain
@@ -668,16 +678,15 @@ sub error_backtrack
 	my $previous = $req->referer;
 	if( $previous )
 	{
+	    $req->set_template( $previous );
+
 	    # It must be a template
-	    unless( $previous =~ /\.tt/ )
+	    unless( $req->template =~ /\.tt/ )
 	    {
 		$previous = "/error.tt";
 	    }
 
 	    debug(3,"Previous is $previous");
-
-	    # Do not regard this as an error template
-	    $req->set_template( $previous );
 	}
 	return 1;
     }
@@ -724,26 +733,31 @@ sub referer
     # Explicit caller_page could be given
     if( my $uri = $req->q->param('caller_page') )
     {
+	debug "Referer from caller_page";
 	return URI->new($uri)->path;
     }
 
     # The query could have been changed by route
     if( my $uri = $req->q->referer )
     {
+	debug "Referer from current http req ($uri)";
 	return URI->new($uri)->path;
     }
 
     # The actual referer is more acurate in this order
     if( my $uri = $req->{'referer'} )
     {
+	debug "Referer from original http req";
 	return URI->new($uri)->path;
     }
 
     # This could be confusing if several browser windows uses the same
     # session
     #
+    debug "Referer from session";
     return $req->s->referer if $req->s->referer;
 
+    debug "Referer from default value";
     return $req->site->last_step if $req->site->last_step;
 
     # Last try. Should always be defined
@@ -784,7 +798,7 @@ sub find_template
 {
     my( $req, $template ) = @_;
 
-    debug(3,"Finding template $template");
+    debug(0,"Finding template $template");
     my( $in );
 
 
@@ -939,6 +953,7 @@ sub find_template
 		    } or do
 		    {
 			debug(2,"Error while compiling template $filename: $@");
+			# FIXME
 			$req->result->exception;
 			if( $template eq '/error.tt' )
 			{
@@ -1158,9 +1173,20 @@ sub render_output
 	    {
 		if( $error->type eq 'file' )
 		{
-		    ## TODO: Check if error is a 404 or TT error
-		    $error_tt = '/page_part_not_found.tt';
-		    debug $error->as_string();
+#		    debug $error->as_string();
+		    if( $error->info =~ /not found/ )
+		    {
+			debug "Subtemplate not found";
+			$error_tt = '/page_part_not_found.tt';
+			my $incpathstring = join "", map "- $_\n", @{$req->{'incpath'}};
+			$part->add_message("Include path is\n$incpathstring");
+		    }
+		    else
+		    {
+			debug "Other template error";
+			$part->type('template');
+			$error_tt = '/error.tt';
+		    }
 		}
 		elsif( $error->type eq 'denied' )
 		{
@@ -1183,15 +1209,28 @@ sub render_output
 		}
 	    }
 
+
 	    debug(1,$Para::Frame::th->{'html'}->error());
 
+	    # Avoid recursive failure
+	    if( $template eq $error_tt )
+	    {
+		$page .= "<p>500: Failure to render failure page\n";
+		$page .= "<pre>\n";
+		$page .= $req->result->as_string;
+		$page .= "</pre>\n";
+
+		$req->{'page'} = \$page;
+		return 1;
+	    }
+
+
 	    $req->set_error_template( $error_tt );
-
 	    return 0;
-
 	};
     }
 
+#	warn Dumper $req->result;
 
     if( debug > 3 )
     {
