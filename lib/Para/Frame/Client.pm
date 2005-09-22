@@ -37,7 +37,7 @@ use Para::Frame::Utils;
 our $SOCK;
 our $r;
 
-our $DEBUG = 1;
+our $DEBUG = 0;
 
 # $SIG{HUP} = sub { warn "Got a HUP\n"; };
 # $SIG{INT} = sub { warn "Got a INT\n"; };
