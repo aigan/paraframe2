@@ -101,7 +101,11 @@ sub deregister
 
     if( $req->{'childs'} <= 0 )
     {
-	if( $req->is_from_client )
+	# Only if set from after_jobs().
+	# If we got here AFTER after_jobs, add it
+	#
+	my $on_last_child_done = $req->{'on_last_child_done'} || 0;
+	if( $on_last_child_done eq "after_jobs" )
 	{
 	    $req->add_job('after_jobs');
 	}
