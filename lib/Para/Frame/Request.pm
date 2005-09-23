@@ -1399,9 +1399,14 @@ sub forward
     # To forward to a page not handled by the paraframe, use
     # redirect()
 
-    confess "forward() called without a generated page" unless $req->{'page'};
-
     $uri ||= $req->template_uri;
+
+    unless( $uri =~ /\.html$/ )
+    {
+	cluck "forward() called without a generated page" unless $req->{'page'};
+	$uri = "/error.tt";
+    }
+
     $req->output_redirection($uri);
     $req->s->register_result_page($uri, $req->{'headers'}, $req->{'page'});
 }
