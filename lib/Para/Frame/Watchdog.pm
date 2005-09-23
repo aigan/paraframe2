@@ -148,12 +148,14 @@ sub check_process
 	debug "  Restarting...";
 	restart_server();
     }
-    elsif( $size > (LIMIT_MEMORY + LIMIT_MEMORY_NOTICE )/2 )
+    elsif( $size > (LIMIT_MEMORY + LIMIT_MEMORY_NOTICE )/2 and
+	   time > $MEMORY_CLEAR_TIME + TIMEOUT_CONNECTION_CHECK )
     {
 	debug "Server using to much memory";
 	send_to_server('HUP');
 	debug "  Sent soft HUP to $PID";
-    }
+ 	$MEMORY_CLEAR_TIME = time;
+   }
     elsif( $size > LIMIT_MEMORY_NOTICE and
 	   time > $MEMORY_CLEAR_TIME + TIMEOUT_CONNECTION_CHECK  )
     {
