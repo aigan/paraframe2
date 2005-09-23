@@ -295,6 +295,7 @@ sub set_template
     }
   
     debug(3,"setting template to $template");
+    debug(3,"setting template_uri to $template_uri");
 
     $req->ctype->set("text/html") if $template =~ /\.tt$/;
 
@@ -1416,9 +1417,17 @@ sub forward
 
     $uri ||= $req->template_uri;
 
-    unless( $uri =~ /\.html$/ )
+    if( not $req->{'page'} )
     {
-	cluck "forward() called without a generated page" unless $req->{'page'};
+	cluck "forward() called without a generated page";
+	unless( $uri =~ /\.html$/ )
+	{
+	    $uri = "/error.tt";
+	}
+    }
+    elsif( $uri =~ /\.html$/ )
+    {
+	cluck "Forward to html page";
 	$uri = "/error.tt";
     }
 
