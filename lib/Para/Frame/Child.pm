@@ -108,6 +108,9 @@ sub deregister
 	if( $on_last_child_done eq "after_jobs" )
 	{
 	    $req->add_job('after_jobs');
+
+	    # Reset. Other forks may be done later
+	    $req->{'on_last_child_done'} = 0;
 	}
     }
 

@@ -594,6 +594,9 @@ sub after_jobs
 	if( $req->{'childs'} )
 	{
 	    debug(2,"Waiting for childs");
+
+	    # Remember to come back then done
+	    $req->{'on_last_child_done'} = "after_jobs";
 	    return;
 	}
 
