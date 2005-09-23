@@ -363,8 +363,6 @@ sub setup_jobs
     # We will not execute later actions if one of them fail
     $req->{'actions'} = $actions;
 #    warn "Actions are now ".Dumper($actions);
-
-    $req->after_jobs;
 }
 
 sub add_job
@@ -579,8 +577,11 @@ sub after_jobs
     {
 	unless( $req->result->errcnt )
 	{
-	    $req->add_job('run_action', $action);
-	    $req->add_job('after_jobs');
+	    $req->run_action($action);
+	    if( @{$req->{'actions'}} )
+	    {
+		$req->add_job('after_jobs');
+	    }
 	}
     }
 
@@ -657,9 +658,20 @@ sub done
     # Redundant shortcut
     unless( $req->{'wait'} or
 	    $req->{'childs'} or
-	    @{$req->{'jobs'}} or
-	    @{$req->{'actions'}} )
+	    @{$req->{'jobs'}} )
     {
+#	warn "\nFinishing up $req->{reqnum}\n";
+#
+#	warn "wait\n" if $req->{'wait'};
+#	warn "in_yield\n" if $req->{'in_yield'};
+#
+#	my $njobs = scalar @{$req->{'jobs'}};
+#	warn "jobs: $njobs\n";
+#	my $nactions = scalar @{$req->{'actions'}};
+#	warn "actions: $nactions\n";
+#
+#	warn "childs\n" if $req->{'childs'};
+
 	$req->run_hook('done');
 	Para::Frame::close_callback($req->{'client'});
     }
