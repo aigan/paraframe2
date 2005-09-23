@@ -655,7 +655,10 @@ sub done
     $req->s->after_request( $req );
 
     # Redundant shortcut
-    unless( $req->{'wait'} or $req->{'childs'} or @{$_[0]->{'jobs'}} )
+    unless( $req->{'wait'} or
+	    $req->{'childs'} or
+	    @{$req->{'jobs'}} or
+	    @{$req->{'actions'}} )
     {
 	$req->run_hook('done');
 	Para::Frame::close_callback($req->{'client'});
