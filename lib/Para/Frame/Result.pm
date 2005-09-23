@@ -59,38 +59,39 @@ The info hash is accessed in the template as C<result.info>.
 sub new
 {
     my( $class ) = @_;
-    my $self =
+
+
+    my $result = bless
     {
 	part => [],
 	errcnt => 0,
 	backtrack => 0,
 	info => {},
 	main => undef,
-    };
+	hide_part => {},
+    }, $class;
 
-    bless($self, $class);
 
     # Add info about compilation errors
     foreach my $module ( keys %Para::Frame::Result::COMPILE_ERROR )
     {
-#	warn " --> Reporting compile error for $module\n";
 	my $errmsg = $Para::Frame::Result::COMPILE_ERROR{$module};
-	$self->error('compilation', "$module\n\n$errmsg");
+	$result->error('compilation', "$module\n\n$errmsg");
     }
 
 #    # Do not count these compile errors, since that would halt
 #    # everything. We only want to draw atention to the problem but
 #    # still enable usage
 #    #
-#    $self->{errcnt} = 0;
+#    $result->{errcnt} = 0;
 
 
-    return $self;
+    return $result;
 }
 
 sub message
 {
-    my( $self, @messages ) = @_;
+    my( $result, @messages ) = @_;
 
     foreach my $msg ( @messages )
     {
@@ -99,7 +100,7 @@ sub message
 
 	debug(3, shortmess "Adding result message '$msg'");
 
-	push @{$self->{'part'}}, Para::Frame::Result::Part->new({
+	push @{$result->{'part'}}, Para::Frame::Result::Part->new({
 	    'message' => $msg,
 	});
     }
@@ -107,9 +108,9 @@ sub message
 
 sub exception
 {
-    my( $self, $explicit, $info, $output ) = @_;
+    my( $result, $explicit, $info, $output ) = @_;
 
-#    warn("Input is ".Dumper($self, $explicit, $@)."\n");
+#    warn("Input is ".Dumper($result, $explicit, $@)."\n");
 
     if( $info )
     {
@@ -150,12 +151,12 @@ sub exception
 	confess Dumper( $info, \@_ );
     }
 
-    return $self->error($type, $info, \$context);
+    return $result->error($type, $info, \$context);
 }
 
 sub error
 {
-    my( $self, $type, $message, $contextref ) = @_;
+    my( $result, $type, $message, $contextref ) = @_;
 
     $message =~ s/(\n\r?)+$//;
     unless( ref $contextref )
@@ -169,9 +170,15 @@ sub error
 
     my $part = Para::Frame::Result::Part->new($error);
 
-    push @{$self->{'part'}}, $part;
-    $self->{'backtrack'}++ unless $part->no_backtrack;
-    $self->{'errcnt'}++;
+    if( $result->{'hide_part'}{'hide_all'} or
+	$result->{'hide_part'}{$type} )
+    {
+	$part->hide(1);
+    }
+
+    push @{$result->{'part'}}, $part;
+    $result->{'backtrack'}++ unless $part->no_backtrack;
+    $result->{'errcnt'}++;
 
     return $part;
 }
@@ -193,9 +200,9 @@ sub parts
 
 sub find
 {
-    my( $self, $type ) = @_;
+    my( $result, $type ) = @_;
     # Find first part of type $type and return it
-    foreach my $part ( @{$self->{'parts'}} )
+    foreach my $part ( @{$result->{'parts'}} )
     {
 	next unless $part->{'type'};
 	return $part if $part->{'type'} eq $type;
@@ -205,30 +212,32 @@ sub find
 
 sub hide_part
 {
-    my( $self, $type ) = @_;
+    my( $result, $type ) = @_;
 
     # Hide all parts of given type
     # Hide all errors if no type given
 
     debug 4, "Hiding parts of type $type";
 
+    $type ||= 'hide_all';
+
+    # For hiding future errors
+    $result->{'hide_part'}{$type} = 1;
+
     foreach my $part ( @{$self->{'part'}} )
     {
-	next unless $part->type;
-	if( $type )
-	{
-	    if( $part->type eq $type )
-	    {
-		$part->hide(1);
-	    }
-	}
-	else
+ 	next unless $part->type;
+ 	if( $type eq 'hide_all' )
+ 	{
+ 	    $part->hide(1);
+ 	}
+ 	elsif( $part->type eq $type )
 	{
 	    $part->hide(1);
-	}
-    }
+ 	}
+     }
+
     return undef;
-    
 }
 
 sub as_string
