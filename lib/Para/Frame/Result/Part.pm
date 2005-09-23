@@ -162,6 +162,7 @@ our $ERROR_TYPE =
 	    'c' => 'Hittar inte',
 	},
 	'bg'      => 'red',
+	'no_backtrack' => 1,
     },
     'denied'     =>
     {
