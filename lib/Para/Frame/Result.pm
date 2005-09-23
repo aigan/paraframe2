@@ -224,7 +224,7 @@ sub hide_part
     # For hiding future errors
     $result->{'hide_part'}{$type} = 1;
 
-    foreach my $part ( @{$self->{'part'}} )
+    foreach my $part ( @{$result->{'part'}} )
     {
  	next unless $part->type;
  	if( $type eq 'hide_all' )
