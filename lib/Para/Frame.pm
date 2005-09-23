@@ -911,6 +911,7 @@ sub handle_request
     else
     {
 	$req->setup_jobs;
+	$req->after_jobs;
     }
 
     ### Clean up used globals
