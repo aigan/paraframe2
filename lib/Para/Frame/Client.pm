@@ -206,6 +206,20 @@ sub print_error_page
 	$r->print("<p>$row</p>");
 	warn "$$:   $row\n" if $DEBUG;
     }
+
+    my $origuri = $r->uri;
+    my $host = $r->hostname;
+    $r->print("<p>Try to get <a href=\"$origuri\">$host$origuri</a> again</p>\n");
+
+### Special for paranormal.se...
+    if( $host eq "paranormal.se" )
+    {
+	$r->print("<p>You may want to try <a href=\"http://old.paranormal.se$origuri\">http://old.paranormal.se$origuri</a> instead</p>\n");
+    }
+
+
+
+
     $r->print("</body></html>\n");
     return 1;
 }
