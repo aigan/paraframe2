@@ -23,6 +23,7 @@ use POSIX;
 use Proc::ProcessTable;
 use Time::HiRes;
 use Carp;
+use Data::Dumper;
 
 BEGIN
 {
@@ -247,7 +248,7 @@ sub restart_server
 	    $sent = 'KILL';
 	    $HARD_RESTART = 1;
 	    kill 'KILL', $pid;  ## Terminate server
-	    debug 1,"  Sent hard KILL to $pid";
+	    debug "  Sent hard KILL to $pid";
 	    last;
 	}
 	elsif( time > $signal_time + $grace_time + 20 )
@@ -256,14 +257,14 @@ sub restart_server
 	    $sent = 'TERM';
 	    $HARD_RESTART = 1;
 	    kill 'TERM', $pid;  ## Terminate server
-	    debug 1,"  Sent hard TERM to $pid";	    
+	    debug "  Sent hard TERM to $pid";	    
 	}
 	elsif( time > $signal_time + $grace_time )
 	{
 	    next if $sent eq 'HUP';
 	    $sent = 'HUP';
 	    kill 'HUP', $PID; ## Terminate server
-	    debug 1,"  Sent hard HUP to $PID";
+	    debug "  Sent hard HUP to $PID";
 	}
     }
 }
@@ -426,6 +427,7 @@ sub startup_in_fork
 	$SIG{USR1} = 'DEFAULT';
 	$SIG{TERM} = 'DEFAULT';
 
+	kill_competition();
 	Para::Frame->startup();
 	open_logfile() if $USE_LOGFILE;
 	Para::Frame::main_loop();
@@ -458,7 +460,7 @@ sub REAPER
 
     while (($child_pid = waitpid(-1, POSIX::WNOHANG)) > 0)
     {
-	debug 1, "Child $child_pid exited with status $?";
+	debug "Child $child_pid exited with status $?";
 
 	if( $child_pid == $PID )
 	{
@@ -484,7 +486,7 @@ sub REAPER
 		if( $Para::Frame::IN_STARTUP )
 		{
 		    debug "Server failed to reach main loop";
-		    exit 1;
+		    exit $?;
 		}
 
 		on_crash();
@@ -576,6 +578,160 @@ sub open_logfile
     chmod_file($log);
 }
 
+sub kill_competition
+{
+
+    # Kills all processes using the same port.  If not root (and we
+    # should not be), it lists processes by the same user.
+
+    my $port = $Para::Frame::CFG->{'port'};
+    my $proclist = get_lsof({port => $port });
+
+    if( @$proclist )
+    {
+	debug "Found a process using our port: $port";
+
+	my @pids;
+	foreach my $p ( @$proclist )
+	{
+	    my $pid = $p->{pid};
+	    debug "Killing pid $pid: $p->{command}";
+	    kill 9, $pid;
+	    push @pids, $pid;
+	}
+
+	foreach my $pid ( @pids )
+	{
+	    while( kill 0, $pid )
+	    {
+		debug "  waiting for $pid to exit";
+		sleep 1;
+	    }
+	}
+
+	return scalar @$proclist;
+    }
+    return 0;
+}
+
+sub get_lsof
+{
+    my( $args ) = @_;
+
+    $args ||= {};
+
+    my @params = "-FRucT";
+
+    if( $args->{'port'} )
+    {
+	push @params, "-i", ":".$args->{'port'};
+    }
+    else
+    {
+	warn Dumper $args;
+	die "not implemented";
+    }
+
+    my $cmdline = join " ", 'lsof', '-V', @params;
+
+    my $rec = {};
+    my @list;
+
+
+    my %parser =
+	(
+	 p => qr/^\d+$/,
+	 R => qr/^\d+$/,
+	 c => qr/.*/,
+	 u => qr/^\d+$/,
+	 T => qr/^(ST|QR|QS)=/,
+	 );
+
+    my %fields =
+	(
+	 p => 'pid',
+	 R => 'ppid',
+	 c => 'command',
+	 u => 'uid',
+	 T =>
+	 {
+	     QR => 'read_queue_size',
+	     QS => 'send_queue_size',
+	     ST => 'connection_state',
+	 },
+	 );
+
+    debug 2, "Reading from $cmdline\n";
+    open(STATUS, "$cmdline 2>&1 |")
+	or die "can't fork $cmdline: $!\n";
+    while(<STATUS>)
+    {
+	chomp;
+
+	my $field  = substr $_, 0,1,'';
+
+	unless( $parser{$field} )
+	{
+	    warn "$field$_\n";
+	    last;
+	}
+
+	unless( $_ =~ m/$parser{$field}/ )
+	{
+	    warn "$field$_\n";
+	    last;
+	}
+
+	if( $field eq 'p' )
+	{
+	    if( $rec->{'pid'} )
+	    {
+		push @list, $rec;
+	    }
+	    $rec = {};
+	}
+
+	if( $field eq 'T' )
+	{
+	    my( $type, $info ) = split /=/, $_;
+	    $rec->{$fields{'T'}{$type}} = $info;
+	}
+	else
+	{
+	    $rec->{$fields{$field}} = $_;
+	}
+    }
+    close STATUS;
+
+    if( $rec->{'pid'} )
+    {
+	push @list, $rec;
+    }
+
+
+    if( $! )
+    {
+	debug "bad result: $!\n";
+    }
+
+    if( $? == -1 )
+    {
+	debug "failed to execute: $!\n";
+    }
+    elsif( $? & 127 )
+    {
+	debug "child died with signal %d, %s coredump\n",
+	($? & 127),  ($? & 128) ? 'with' : 'without';
+    }
+    elsif( $? )
+    {
+	my $exit =  $? >> 8;
+	debug "child exited with value $exit\n";
+    }
+
+    return \@list;
+}
+
 sub configure
 {
     $USE_LOGFILE = shift;
@@ -603,5 +759,6 @@ END
 	debug("Closing down paraframe\n\n");
     }
 }
+
 
 1;
