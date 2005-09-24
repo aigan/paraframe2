@@ -764,6 +764,9 @@ sub add_background_jobs_conditional
     Para::Frame->run_hook(undef, 'busy_background_job', $delta);
 
 
+    return unless $CFG->{'do_bgjob'};
+
+
     # Return if CPU load is over BGJOB_CPU
     my $sysload;
     if( $delta < BGJOB_MIN ) # unless a long time has passed
@@ -1084,6 +1087,8 @@ sub configure
     $CFG        = {};
     $PARAMS     = {};
     $INDENT     = 0;
+
+    $ENV{PATH} = "/usr/bin:/bin";
 
     # Init locale
     setlocale(LC_ALL, "sv_SE");
