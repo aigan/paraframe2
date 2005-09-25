@@ -97,6 +97,7 @@ sub new
 	uri            => undef,
 	template       => undef,          ## if diffrent from URI
 	template_uri   => undef,          ## if diffrent from URI
+	moved_temporarily => 0,           ## ... or permanently?
 	error_template => undef,          ## if diffrent from template
 	referer        => $q->referer,    ## The referer of this page
 	ctype          => undef,          ## The response content-type
@@ -118,7 +119,11 @@ sub new
     uri2file( $orig_uri, $orig_filename, $req);
 
     $req->{'cookies'} = new Para::Frame::Cookies($req);
-    $req->{'browser'} = new HTTP::BrowserDetect($env->{'HTTP_USER_AGENT'}||undef);
+
+    if( $env->{'HTTP_USER_AGENT'} )
+    {
+	$req->{'browser'} = new HTTP::BrowserDetect($env->{'HTTP_USER_AGENT'});
+    }
     $req->{'result'}  = new Para::Frame::Result;  # Before Session
     $req->{'s'}       = new Para::Frame::Session($req);
 
@@ -214,11 +219,14 @@ sub set_uri
 {
     my( $req, $uri ) = @_;
 
+    # Only used by Para::Frame to set uri from original uri. Never
+    # changes from that original uri.
+
     die "not impelemnted" if $uri =~ /\?/;
 
     debug(3,"setting URI to $uri");
     $req->{uri} = $uri;
-    $req->set_template( $uri );
+    $req->set_template( $uri, 1 );
 
     if( $uri eq '/test/die.tt' ) # Special testing URI
     {
@@ -230,7 +238,7 @@ sub set_uri
 
 sub set_template
 {
-    my( $req, $template ) = @_;
+    my( $req, $template, $always_move ) = @_;
 
     # For setting a template diffrent from the URI
 
@@ -244,11 +252,10 @@ sub set_template
 
     if( $template =~ /^http/ )
     {
+	# template param should NOT include the http://hostname part
 	croak "Tried to set a template to $template";
     }
 
-    # template param should NOT include the http://hostname part
-    # TODO: tecken.se uses set_tempalte to redirect to another domain
 
     my $template_uri = $template;
 
@@ -261,6 +268,14 @@ sub set_template
     # will be ignored and the file named like that in the URI will be
     # used.
 
+
+    # We want to tell browsers/spiders if any redirection is a
+    # permanent or temporary one. Assume it's a temporary one unless
+    # $always_move is given. But if just one move is of temporary
+    # nature, keep that value. This will only be used if we are ending
+    # up redirecting to another page.
+
+    $req->{'moved_temporarily'} ||= 1 unless $always_move;
 
     my $file = uri2file( $template );
     debug(3,"The template $template represents the file $file");
@@ -1400,8 +1415,10 @@ sub yield
 {
     my( $req, $wait ) = @_;
 
+    # The reqnum param is just for getting it in backtrace
+
     $req->{'in_yield'} ++;
-    Para::Frame::main_loop( 1, $wait );
+    Para::Frame::main_loop( 1, $wait, $req->{'reqnum'} );
     $req->{'in_yield'} --;
     Para::Frame::switch_req( $req );
 }
@@ -1434,19 +1451,21 @@ sub forward
 	$uri = "/error.tt";
     }
 
-    $req->output_redirection($uri);
+    $req->output_redirection($uri );
     $req->s->register_result_page($uri, $req->{'headers'}, $req->{'page'});
 }
 
 sub redirect
 {
-    my( $req, $uri ) = @_;
+    my( $req, $uri, $permanently ) = @_;
 
     # This is for redirecting to a page  not handled by the paraframe
 
     # The actual redirection will be done then all the jobs are
     # finished. Error in the jobs could result in a redirection to an
     # error page instead.
+
+    $req->{'moved_temporarily'} ||= 1 unless $permanently;
 
     $req->{'redirect'} = $uri;
 }
@@ -1455,6 +1474,8 @@ sub output_redirection
 {
     my( $req, $uri_in ) = @_;
     $uri_in or die "URI missing";
+
+    # Default to temporary move.
 
     my $uri_out;
 
@@ -1486,13 +1507,29 @@ sub output_redirection
 
     debug(2,"--> Redirect to $uri_out");
 
-    $req->send_code( 'AR-PUT', 'status', 302 ); # moved
-    $req->send_code( 'AR-PUT', 'header_out', 'Pragma', 'no-cache' );
-    $req->send_code( 'AR-PUT', 'header_out', 'Cache-Control', 'no-cache' );
+    my $moved_permanently = $req->{'moved_temporarily'} ? 0 : 1;
+
+    if( $moved_permanently )
+    {
+	debug "MOVED PERMANENTLY";
+	$req->send_code( 'AR-PUT', 'status', 301 );
+	$req->send_code( 'AR-PUT', 'header_out', 'Cache-Control', 'public' );
+    }
+    else # moved temporarily
+    {
+	$req->send_code( 'AR-PUT', 'status', 302 );
+	$req->send_code( 'AR-PUT', 'header_out', 'Pragma', 'no-cache' );
+	$req->send_code( 'AR-PUT', 'header_out', 'Cache-Control', 'no-cache' );
+    }
     $req->send_code( 'AR-PUT', 'header_out', 'Location', $uri_out );
+    
+    my $page = "Go to $uri_out\n";
+    my $length = length( $page );
+
+    $req->send_code( 'AR-PUT', 'header_out', 'Content-Length', $length );
     $req->send_code( 'AR-PUT', 'send_http_header', 'text/plain' );
     $req->client->send( "\n" );
-    $req->client->send( "Go to $uri_out\n" );
+    $req->client->send( $page );
 }
 
 sub http_host
@@ -1638,6 +1675,97 @@ sub get_child_result
 sub run_hook
 {
     Para::Frame->run_hook(@_);
+}
+
+sub debug_data
+{
+    my( $req ) = @_;
+
+    my $out = "";
+    my $reqnum = $req->{'reqnum'};
+    $out .= "This is request $reqnum\n";
+
+    $out .= $req->s->debug_data;
+
+    if( $req->is_from_client )
+    {
+	$out = "Orig uri: $req->{orig_uri}";
+
+	if( my $redirect = $req->{'redirect'} )
+	{
+	    $out .= "Redirect is set to $redirect\n";
+	}
+
+	if( my $browser = $req->env->{'HTTP_USER_AGENT'} )
+	{
+	    $out .= "Browser is $browser\n";
+	}
+
+	if( my $errtmpl = $req->{'error_template'} )
+	{
+	    $out .= "Error template is set to $errtmpl";
+	}
+
+	if( my $referer = $req->referer )
+	{
+	    $out .= "Referer is $referer\n"
+	}
+
+	if( $req->{'in_body'} )
+	{
+	    $out .= "We have already sent the http header\n"
+	}
+
+    }
+
+    if( my $chldnum = $req->{'childs'} )
+    {
+	$out .= "This request waits for $chldnum children\n";
+
+	foreach my $child ( values %Para::Frame::CHILD )
+	{
+	    my $creq = $child->req;
+	    my $creqnum = $creq->{'reqnum'};
+	    my $cclient = $creq->client;
+	    my $cpid = $child->pid;
+	    $out .= "  Req $creqnum $cclient has a child with pid $cpid";
+	}
+    }
+
+    if( $req->{'in_yield'} )
+    {
+	$out .= "This request is in yield now\n";
+    }
+
+    if( $req->{'wait'} )
+    {
+	$out .= "This request waits for something\n";
+    }
+
+    if( my $jobcnt = @{ $req->{'jobs'} } )
+    {
+	$out .= "Has $jobcnt jobs\n";
+	foreach my $job ( @{ $req->{'jobs'} } )
+	{
+	    my( $cmd, @args ) = @$job;
+	    $out .= "  $cmd with args @args\n";
+	}
+    }
+
+    if( my $acnt = @{ $req->{'actions'} } )
+    {
+	$out .= "Has $acnt a\n";
+	foreach my $action ( @{ $req->{'actions'} } )
+	{
+	    $out .= "  $action\n";
+	}
+    }
+
+    if( $req->result )
+    {
+	$out .= "Result:\n".$req->result->as_string;
+    }
+
 }
 
 sub set_tt_params
