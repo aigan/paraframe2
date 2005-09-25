@@ -481,10 +481,10 @@ sub alfanum_bar
     $attr ||= {};
     $part ||= '';
     my $extra = '';
-#    if( $part )
-#    {
-#	$extra = '&no_robots=1';
-#    }
+    if( $part )
+    {
+	$extra = ' rel="nofollow"';
+    }
 
     my @keep_params = @{ $attr->{'keep_params'}||[] };
     delete $attr->{'keep_params'};
@@ -502,7 +502,7 @@ sub alfanum_bar
     }
 
     # locale should have been set previously!
-    my $text = join(' | ', map "<a href=\"$template?$name=$part$_$extra\">\U$_</a>", 'a'..'z','å','ä','ö');
+    my $text = join(' | ', map "<a href=\"$template?$name=$part$_\"$extra>\U$_</a>", 'a'..'z','å','ä','ö');
     $text = "| <a href=\"$template?$name=\">0-9</a> | ".$text." |";
     $text =~ s/å/&aring;/g;
     $text =~ s/ä/&auml;/g;
