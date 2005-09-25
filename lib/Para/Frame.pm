@@ -1107,6 +1107,9 @@ sub configure
     $CFG->{'paraframe'} ||= '/usr/local/paraframe';
     $CFG->{'paraframe_group'} ||= 'staff';
 
+    $CFG->{'approot'} or die "approot missing in config\n";
+    $CFG->{'ttcdir'} ||= $CFG->{'approot'} . "/var/ttc";
+
     # $Para::Frame::Time::TZ is set at startup from:
     #
     $CFG->{'time_zone'} ||= "local";
@@ -1155,20 +1158,20 @@ sub configure
 	%th_config,
 	ABSOLUTE => 1, ### TEST
 	INTERPOLATE => 1,
-	COMPILE_DIR =>  $CFG->{'paraframe'}.'/var/ttc/html',
+	COMPILE_DIR =>  $CFG->{'ttcdir'}.'/html',
     };
 
     $CFG->{'th'}{'html_pre'} ||=
     {
 	%th_config,
-	COMPILE_DIR =>  $CFG->{'paraframe'}.'/var/ttc/html_pre',
+	COMPILE_DIR =>  $CFG->{'ttcdir'}.'/html_pre',
 	TAG_STYLE => 'star',
     };
 
     $CFG->{'th'}{'plain'} ||=
     {
 	INTERPOLATE => 1,
-	COMPILE_DIR => $CFG->{'paraframe'}.'/var/ttc/plain',
+	COMPILE_DIR => $CFG->{'ttcdir'}.'/plain',
 	FILTERS =>
 	{
 	    'uri' => sub { CGI::escape($_[0]) },
