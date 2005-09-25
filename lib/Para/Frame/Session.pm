@@ -151,4 +151,18 @@ sub route
     return $_[0]->{'route'};
 }
 
+sub debug_data
+{
+    my( $s ) = @_;
+
+    my $out = "";
+
+    $out .= "Session id: $s->{'sid'}\n";
+    $out .= "Session created $s->{'created'}\n";
+    $out .= "Debug level is $s->{'debug'}\n";
+    my $udesig = $s->u->desig;
+    $out .= "User is $udesig\n";
+    return $out;
+}
+
 1;
