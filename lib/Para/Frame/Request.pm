@@ -1689,7 +1689,7 @@ sub debug_data
 
     if( $req->is_from_client )
     {
-	$out = "Orig uri: $req->{orig_uri}";
+	$out .= "Orig uri: $req->{orig_uri}\n";
 
 	if( my $redirect = $req->{'redirect'} )
 	{
@@ -1703,7 +1703,7 @@ sub debug_data
 
 	if( my $errtmpl = $req->{'error_template'} )
 	{
-	    $out .= "Error template is set to $errtmpl";
+	    $out .= "Error template is set to $errtmpl\n";
 	}
 
 	if( my $referer = $req->referer )
@@ -1728,7 +1728,7 @@ sub debug_data
 	    my $creqnum = $creq->{'reqnum'};
 	    my $cclient = $creq->client;
 	    my $cpid = $child->pid;
-	    $out .= "  Req $creqnum $cclient has a child with pid $cpid";
+	    $out .= "  Req $creqnum $cclient has a child with pid $cpid\n";
 	}
     }
 
