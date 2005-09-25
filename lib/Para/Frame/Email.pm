@@ -46,7 +46,8 @@ BEGIN
 use Para::Frame::Reload;
 
 use Para::Frame::Request;
-use Para::Frame::Utils qw( throw debug inflect );
+use Para::Frame::Utils qw( throw debug );
+use Para::Frame::Widget;
 
 sub new
 {
@@ -385,7 +386,7 @@ sub send
     if( $err_msg )
     {
 	my $cnt = @tried;
-	$err_msg .= "Tried ".inflect($cnt, "1 e-mail address", "%d e-mail addresses")."\n";
+	$err_msg .= "Tried ".Para::Frame::Widget::inflect($cnt, "1 e-mail address", "%d e-mail addresses")."\n";
     }
 
     unless( @tried )

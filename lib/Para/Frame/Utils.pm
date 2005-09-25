@@ -63,7 +63,7 @@ BEGIN
             package_to_module module_to_package dirsteps uri2file
             compile passwd_crypt deunicode paraframe_dbm_open
             elapsed_time uri store_params clear_params restore_params
-            idn_encode idn_decode debug reset_hashref inflect timediff
+            idn_encode idn_decode debug reset_hashref timediff
             extract_query_params fqdn retrieve_from_url get_from_fork
             );
 
