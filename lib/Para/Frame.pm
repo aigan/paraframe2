@@ -1116,6 +1116,9 @@ sub configure
     $Para::Frame::Time::TZ =
 	DateTime::TimeZone->new( name => $CFG->{'time_zone'} );
 
+    $CFG->{'umask'} ||= 0007;
+    umask($CFG->{'umask'});
+
 
     # Site pages
     #

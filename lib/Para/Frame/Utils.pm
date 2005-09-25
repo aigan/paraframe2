@@ -420,6 +420,7 @@ sub create_file
   chmod_tree( $dir );
 
 Chmod and chgrp all files in dir tree to ritframe standard.
+Chgrp file 
 
 =cut
 
@@ -431,6 +432,8 @@ sub chmod_tree
     $dir = abs_path($dir);
     $skip_h ||= {};
     return if $skip_h->{$dir} ++;
+
+#    warn Dumper $params;
 
     chmod_dir( $dir, $params );
 
@@ -454,9 +457,15 @@ sub chmod_tree
 
 =head2 chmod_file
 
-  chmod_file( $filename )
+  chmod_file( $filename, $mode, \%params )
+  chmod_file( $filename, \%params )
 
-Chmod and chgrp file to ritframe standard.
+Chgrp file according to $Para::Frame::CFG->{'paraframe_group'}.
+Chmod file, using umask on 02777 for dirs and 0666 for files.
+
+Using umask on $mode or $params{mode} if given
+
+Using $params{umask} if given
 
 =cut
 
@@ -466,21 +475,26 @@ sub chmod_file
 
     $params ||= {};
 
+    my $orig_umask = umask;
+
     if( ref $mode )
     {
 	$params = $mode;
 	$mode = undef;
     }
 
+    my $new_umask = $params->{'umask'};
+    my $umask = defined $new_umask ? $new_umask : $orig_umask;
+
     unless( $mode )
     {
 	if( -d $file )
 	{
-	    $mode = $params->{'dirmode'} || $params->{'mode'} || 02770;
+	    $mode = $params->{'dirmode'} || $params->{'mode'} || 02777;
 	}
 	else
 	{
-	    $mode = $params->{'filemode'} || $params->{'mode'} || 0660;
+	    $mode = $params->{'filemode'} || $params->{'mode'} || 0666;
 	}
     }
 
@@ -500,6 +514,18 @@ sub chmod_file
 
     die "file '$file' not found" unless -e $file;
 
+    # Apply umask on $mode
+    #
+    $mode = $mode & ~ $umask;
+
+#    debug(sprintf     "orig umask is 0%.4o", $orig_umask);
+#    if( defined $new_umask )
+#    {
+#	debug(sprintf "umask set to  0%.4o", $new_umask);
+#    }
+#    debug(sprintf     "mode set to   0%.4o", $mode);
+
+
     if( $fstat->gid == $pfg->gid and
 	not $fmode ^ $mode & $mode )
     {
@@ -516,7 +542,7 @@ sub chmod_file
 	    $msg .= "  $!\n\n";
 	    $msg .= "  The file is owned by $fun\n";
 	    $msg .= "  The file is in group $fgn\n";
-	    $msg .= sprintf("  The file has mode %lo\n", $fmode);
+	    $msg .= sprintf("  The file has mode 0%.4o\n", $fmode);
 	    $msg .= "  \n";
 	    $msg .= "  You are running as user $run\n";
 
@@ -561,14 +587,14 @@ sub chmod_file
 
 	    if( $fgn ne $pfgn )
 	    {
-		$msg .= "  Change group of file to $pfgn.  As root:\n";
+		$msg .= "  Change group of file to $pfgn. As root:\n";
 		$msg .= "  chgrp $pfgn $file\n";
 	    }
 
 	    if( $fmode ^ $mode & $mode )
 	    {
-		$msg .= sprintf "  Change mode of file to 0%o.  As root:\n", $mode;
-		$msg .= sprintf "  chmod 0%o $file\n", $mode;
+		$msg .= sprintf "  Change mode of file to 0%.4o.  As root:\n", $mode;
+		$msg .= sprintf "  chmod 0%.4o $file\n", $mode;
 	    }
 
 	    if( $fgn ne $pfgn or $fmode ^ $mode & $mode )
@@ -597,11 +623,15 @@ sub chmod_file
     if( $fmode ^ $mode & $mode ) # Is some of the bits missing?
     {
 #    debug( sprintf "Tries to chmod file %s from 0%o to 0%o because we differ by %o", $file, $fmode,  $mode,($fmode ^ $mode & $mode));
+
+	umask $new_umask if defined $new_umask;
 	unless( chmod $mode, $file )
 	{
+	    umask $orig_umask if defined $new_umask;
 	    debug(0,"Tried to chmod file");
 	    &$report_error;
 	}
+	umask $orig_umask if defined $new_umask;
     }
 }
 
