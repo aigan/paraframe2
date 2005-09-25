@@ -11,6 +11,8 @@
 [% submit %]
 </p>
 
+<p>[% go("Reload server", home, "server_reload") %]
+
 <p>[% go("Terminate server", home, "server_terminate") %]
 
 [%
