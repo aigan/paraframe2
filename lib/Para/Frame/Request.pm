@@ -1114,9 +1114,9 @@ sub send_code
 
 	# Got it! Now send the message
 	#
-	debug 3, "We got an active request for $client";
+	debug "We got an active request for $client";
 	my $client = $req->{'active_reqest'}->client;
-	debug 3, "  Using $client";
+	debug "  Using $client";
 
 	$client->send(join "\0", @_ );
 	$client->send("\n");
