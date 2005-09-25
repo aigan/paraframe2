@@ -466,6 +466,12 @@ sub get_value
 	if( time > $time + $timeout )
 	{
 	    warn "Data timeout!!!";
+
+	    if( my $req = $REQUEST{$client} )
+	    {
+		debug $req->debug_data;
+	    }
+	    
 	    cluck "trace for $client";
 	    throw('action', "Data timeout while talking to client\n");
 	}
