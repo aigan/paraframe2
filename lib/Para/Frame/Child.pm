@@ -123,9 +123,11 @@ sub yield
     # Do other things until we get the result from the child
     # Returns the child result obj
 
+    # The reqnum param is just for getting it in backtrace
+
     my $req = $child->req;
     $req->{'in_yield'} ++;
-    Para::Frame::main_loop( $child );
+    Para::Frame::main_loop( $child, undef, $req->{'reqnum'} );
     $req->{'in_yield'} --;
     
     Para::Frame::switch_req( $req );
