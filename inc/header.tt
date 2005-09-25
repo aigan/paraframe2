@@ -5,7 +5,8 @@
     [%+ css_header(css) %]
     [% IF favicon %]<link rel="shortcut icon" href="$favicon" type="image/x-icon" />[% END %]
     [% IF description %]<meta name="description" content="[% description | html %]">[% END %]
-    [% IF keywords %]<meta name="keywords" content="[% keywords | html %]">[% END %]
+    [% IF keywords %]<meta name="keywords" content="[% keywords | html %]">[% END +%]
+    <meta name="robots" content="[% IF no_robots_index;'no';END %]index,[% IF no_robots_follow;'no';END %]follow">
 
     [% PROCESS header_extra.tt %]
 
