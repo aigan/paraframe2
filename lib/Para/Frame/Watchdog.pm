@@ -672,13 +672,13 @@ sub get_lsof
 
 	unless( $parser{$field} )
 	{
-	    warn "$field$_\n";
+	    get_lsof_parse_message("$field$_");
 	    last;
 	}
 
 	unless( $_ =~ m/$parser{$field}/ )
 	{
-	    warn "$field$_\n";
+	    get_lsof_parse_message("$field$_");
 	    last;
 	}
 
@@ -726,10 +726,29 @@ sub get_lsof
     elsif( $? )
     {
 	my $exit =  $? >> 8;
-	debug "child exited with value $exit\n";
+	if( $exit > 1 )
+	{
+	    debug "child exited with value $exit\n";
+	}
     }
 
     return \@list;
+}
+
+sub get_lsof_parse_message
+{
+    my( $msg ) = @_;
+
+    if( $msg =~ /Internet address not located/ )
+    {
+	# All good!
+	debug 2, $msg;
+    }
+    else
+    {
+	# Could be bad!
+	debug $msg;
+    }
 }
 
 sub configure

@@ -420,7 +420,7 @@ sub connect
     eval
     {
 	$dbix->{'dbh'} = DBI->connect(@$connect);
-	debug(1,"Connected to DB $connect->[0]");
+	debug(2,"Connected to DB $connect->[0]");
     };
     if( $@ )
     {
