@@ -1447,8 +1447,13 @@ sub forward
     }
     elsif( $uri =~ /\.html$/ )
     {
-	cluck "Forward to html page";
-	$uri = "/error.tt";
+	debug "Forward to html page: $uri";
+	my $referer = $req->referer;
+	debug "  Referer is $referer";
+	debug "  Cancelling forwarding";
+	$req->{template_uri} = $req->uri;
+	$req->send_output;
+	return;
     }
 
     $req->output_redirection($uri );
