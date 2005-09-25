@@ -86,6 +86,11 @@ sub startup
 	restart_server();
     };
 
+    $SIG{HUP} = sub
+    {
+	restart_server();
+    };
+
     startup_in_fork();
 }
 
@@ -426,6 +431,7 @@ sub startup_in_fork
 	$SIG{CHLD} = 'DEFAULT';
 	$SIG{USR1} = 'DEFAULT';
 	$SIG{TERM} = 'DEFAULT';
+	$SIG{HUP}  = 'DEFAULT';
 
 	kill_competition();
 	Para::Frame->startup();
@@ -586,15 +592,22 @@ sub kill_competition
 
     my $port = $Para::Frame::CFG->{'port'};
     my $proclist = get_lsof({port => $port });
+    my $ppid = getppid();
 
     if( @$proclist )
     {
-	debug "Found a process using our port: $port";
-
 	my @pids;
 	foreach my $p ( @$proclist )
 	{
 	    my $pid = $p->{pid};
+	    next if $pid == $ppid;
+	    next if $pid == $$;
+
+	    unless( @pids ) # say once...
+	    {
+		debug "Found a process using our port: $port";
+	    }
+
 	    debug "Killing pid $pid: $p->{command}";
 	    kill 9, $pid;
 	    push @pids, $pid;
