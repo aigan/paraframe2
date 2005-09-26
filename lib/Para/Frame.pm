@@ -26,7 +26,6 @@ use Text::Autoformat; #exports autoformat()
 use Time::HiRes qw( time );
 use Data::Dumper;
 use Carp qw( cluck confess carp croak );
-use Template;
 use Sys::CpuLoad;
 use DateTime::TimeZone;
 
@@ -40,6 +39,7 @@ use Para::Frame::Reload;
 use Para::Frame::Watchdog;
 use Para::Frame::Request;
 use Para::Frame::Widget;
+use Para::Frame::Burner;
 use Para::Frame::Time qw( now );
 use Para::Frame::Utils qw( throw uri2file debug create_file chmod_file fqdn );
 
@@ -199,6 +199,12 @@ sub main_loop
 		# Do not do jobs for a request that waits for a child
 		debug 6, "In_yield: $req->{reqnum}";
 	    }
+	    elsif( $req->{'cancel'} )
+	    {
+		debug "  cancelled by request";
+		$req->run_hook('done');
+		close_callback($req->{'client'});
+	    }
 	    elsif( $req->{'wait'} )
 	    {
 		# Waiting for something else to finish...
@@ -329,18 +335,11 @@ sub switch_req
     {
 	if( $REQ )
 	{
-	    if( $REQ->{'s'} )
-	    {
-		# Store template error data (undocumented)
-		$REQ->{'s'}{'template_error'} =
-		    $Para::Frame::th->{'html'}{ _ERROR };
-	    }
-
 	    # Detatch %ENV
 	    $REQ->{'env'} = {%ENV};
 	}
 
-	Para::Frame->run_hook(undef, 'before_switch_req');
+	Para::Frame->run_hook($REQ, 'before_switch_req');
 
 	if( $_[0] and not $_[1] )
 	{
@@ -361,10 +360,6 @@ sub switch_req
 	    {
 		$U   = $s->u;
 		$DEBUG  = $s->{'debug'};
-
-		# Retrieve template error data (undocumented)
-		$Para::Frame::th->{'html'}{ _ERROR } =
-		    $s->{'template_error'};
 	    }
 
 	    # Attach %ENV
@@ -535,8 +530,31 @@ sub get_value
 		elsif( $code eq 'CANCEL' )
 		{
 		    debug(0,"CANCEL client");
-		    $DATALENGTH{$client} = 0;
-		    close_callback($client);
+		    my $req = $REQUEST{ $client };
+		    unless( $req )
+		    {
+			debug "  Req not registred";
+			return;
+		    }
+		    if( $req->{'in_yield'} )
+		    {
+			$req->{'cancel'} = 1;
+			debug "  winding up yield";
+			foreach my $child ( values %CHILD )
+			{
+			    my $creq = $child->req;
+			    my $cpid = $child->pid;
+			    if( $creq->{'reqnum'} == $req->{'reqnum'} )
+			    {
+				kill 9, $child->pid;
+			    }
+			}
+		    }
+		    else
+		    {
+			$DATALENGTH{$client} = 0;
+			close_callback($client);
+		    }
 		}
 		elsif( $code eq 'RESP' )
 		{
@@ -924,8 +942,6 @@ sub handle_request
     }
 
     ### Clean up used globals
-    # (undocumented)
-    $s->{'template_error'} = $Para::Frame::th->{'html'}{ _ERROR } = '';
 }
 
 sub add_hook
@@ -1016,30 +1032,6 @@ sub add_global_tt_params
 	$PARAMS->{$key} = $val;
 #	cluck("Add global TT param $key from ");
     }
-}
-
-sub add_tt_filters
-{
-    my( $class, $type, $params, $dynamic ) = @_;
-
-    my $context = $Para::Frame::th->{$type}->context;
-    $dynamic ||= 0;
-
-    foreach my $name ( keys %$params )
-    {
-	$context->define_filter( $name, $params->{$name}, $dynamic );
-    }
-}
-
-sub incpath_generator
-{
-    unless( $REQ->{'incpath'} )
-    {
-	$REQ->{'incpath'} = [ map uri2file( $_."inc" )."/", @{$REQ->{'dirsteps'}} ];
-	push @{$REQ->{'incpath'}}, $CFG->{'paraframe'}."/inc";
-#	debug(0,"Incpath: @{$REQ->{'incpath'}}");
-    }
-    return $REQ->{'incpath'};
 }
 
 sub write_pidfile
@@ -1149,36 +1141,17 @@ sub configure
 	}
     }
 
-    my %th_config =
-	(
-	 INCLUDE_PATH => [ \&incpath_generator ],
-	 PRE_PROCESS => 'header_prepare.tt',
-	 POST_PROCESS => 'footer.tt',
-	 TRIM => 1,
-	 PRE_CHOMP => 1,
-	 POST_CHOMP => 1,
-	 RECURSION => 1,
-	 PLUGIN_BASE => 'Para::Frame::Template::Plugin',
-	 );
-
-
-    $CFG->{'th'}{'html'} ||=
-    {
-	%th_config,
-	ABSOLUTE => 1, ### TEST
+    $CFG->{'th'}{'html'} ||= Para::Frame::Burner->new({
 	INTERPOLATE => 1,
 	COMPILE_DIR =>  $CFG->{'ttcdir'}.'/html',
-    };
+    });
 
-    $CFG->{'th'}{'html_pre'} ||=
-    {
-	%th_config,
+    $CFG->{'th'}{'html_pre'} ||= Para::Frame::Burner->new({
 	COMPILE_DIR =>  $CFG->{'ttcdir'}.'/html_pre',
 	TAG_STYLE => 'star',
-    };
+    });
 
-    $CFG->{'th'}{'plain'} ||=
-    {
+    $CFG->{'th'}{'plain'} ||= Para::Frame::Burner->new({
 	INTERPOLATE => 1,
 	COMPILE_DIR => $CFG->{'ttcdir'}.'/plain',
 	FILTERS =>
@@ -1187,13 +1160,7 @@ sub configure
 	    'lf'  => sub { $_[0] =~ s/\r\n/\n/g; $_[0] },
 	    'autoformat' => sub { autoformat($_[0]) },
 	},
-    };
-
-    foreach my $ttype (keys %{$CFG->{'th'}})
-    {
-	$Para::Frame::th->{$ttype} =
-	    Template->new(%{$CFG->{'th'}{$ttype}});
-    }
+    });
 
     $CFG->{'port'} ||= 7788;
 
