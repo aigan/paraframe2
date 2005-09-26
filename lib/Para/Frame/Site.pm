@@ -120,12 +120,28 @@ sub loopback    { $_[0]->{'loopback'} }
 
 sub host        { $_[0]->{'webhost'} } # Same as webhost
 
+sub backup_host { $_[0]->{'backup_host'} }
+
 sub host_without_port
 {
     my $webhost = $_[0]->{'webhost'};
 
     $webhost =~ s/:\d+$//;
     return $webhost;
+}
+
+sub host_with_port
+{
+    my $host = $_[0]->{'webhost'};
+
+    if( $host =~ /:\d+$/ )
+    {
+	return $host;
+    }
+    else
+    {
+	return $host.":80";
+    }
 }
 
 sub port
