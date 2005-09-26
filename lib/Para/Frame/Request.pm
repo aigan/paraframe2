@@ -22,7 +22,6 @@ use CGI::Cookie;
 use FreezeThaw qw( thaw );
 use Data::Dumper;
 use HTTP::BrowserDetect;
-use Clone qw( clone );
 use File::stat;
 use File::Slurp;
 use File::Basename;
@@ -32,6 +31,7 @@ use Carp qw(cluck croak carp confess );
 use Encode qw( is_utf8 );
 use LWP::UserAgent;
 use HTTP::Request;
+use Template::Document;
 
 BEGIN
 {
@@ -88,7 +88,6 @@ sub new
 	env            => $env,
 	's'            => undef,          ## Session object
 	lang           => undef,          ## Chosen language
-	params         => clone($Para::Frame::PARAMS), ## template data
 	redirect       => undef,          ## ... to other server
 	browser        => undef,          ## browser detection object
 	result         => undef,
@@ -111,7 +110,15 @@ sub new
 	reqnum         => $reqnum,        ## The request serial number
 	wait           => 0,              ## Asked to wait?
 	site           => undef,          ## The site for the request
+	cancel         => undef,          ## True if we should abort
     }, $class;
+
+    my $ttparams = {};    ## template data
+    foreach( keys %$Para::Frame::PARAMS )
+    {
+	$ttparams->{$_} = $Para::Frame::PARAMS->{$_};
+    }
+    $req->{'params'} = $ttparams;
 
     $req->{'site'}    = Para::Frame::Site->get( $req->host_from_env );
 
@@ -494,6 +501,7 @@ sub run_action
 		    my $source_file = $1;
 		    my $source_line = $2;
 
+		    # Propagate error if no match
 		    $source_file =~ /((?:\/[^\/]+){1,4})$/ or die;
 		    my $part_path = $1;
 		    $part_path =~ s/^\///;
@@ -809,7 +817,7 @@ sub get_static
     my( $req, $in, $pageref ) = @_;
 
     my $client = $req->client;
-    $pageref or die;
+    $pageref or die "No pageref given";
     my $page = "";
 
     unless( ref $in )
@@ -853,7 +861,8 @@ sub find_template
     # Not absolute path?
     if( $template !~ /^\// )
     {
-	die "not implemented ($template)";
+	cluck "not implemented ($template)";
+	$template = '/'.$template;
     }
 
     # Also used by &Para::Frame::incpath_generator
@@ -872,7 +881,11 @@ sub find_template
     debug(4,"Check $ext",1);
     foreach my $path ( uri2file($path_full)."/", @step, $global )
     {
-	die unless $path; # could be undef
+	unless( $path )
+	{
+	    cluck "path undef (@step)";
+	    next;
+	}
 
 	# We look for both tt and html regardless of it the file was called as .html
 	debug(4,"Check $path",1);
@@ -903,8 +916,11 @@ sub find_template
 		}
 
 		my $mod_time = stat( $filename )->mtime;
-		my $params = $Para::Frame::CFG->{'th'}{'html'};
-		my $compfile = $params->{ COMPILE_DIR }.$filename;
+		my $burner = $Para::Frame::CFG->{'th'}{'html'};
+		my $compdir = $burner->compile_dir;
+		my $compfile = $compdir.$filename;
+		debug "Compdir: $compdir";
+
 		my( $data, $ltime);
 		
 		# 1. Look in memory cache
@@ -965,7 +981,7 @@ sub find_template
 			debug(3,"Reading file");
 			$mod_time = time; # The new time of reading file
 			my $filetext = read_file( $filename );
-			my $parser = Template::Config->parser($params);
+			my $parser = $burner->parser;
 			
 			debug(3,"Parsing");
 			my $parsedoc = $parser->parse( $filetext )
@@ -1202,7 +1218,8 @@ sub render_output
     }
     else
     {
-	$Para::Frame::th->{'html'}->process($in, $req->{'params'}, \$page)
+	my $burner = $Para::Frame::CFG->{'th'}{'html'};
+	$burner->burn($in, $req->{'params'}, \$page)
 	    or do
 	{
 
@@ -1210,7 +1227,7 @@ sub render_output
 	    my $part = $req->result->exception();
 	    $part->prefix_message("During the processing of\n$template");
 
-	    my $error = $Para::Frame::th->{'html'}->error;
+	    my $error = $burner->error;
 
 	    ### Use error page template
 	    my $error_tt = $req->template; # Could have changed
@@ -1255,7 +1272,7 @@ sub render_output
 	    }
 
 
-	    debug(1,$Para::Frame::th->{'html'}->error());
+	    debug(1,$burner->error());
 
 	    # Avoid recursive failure
 	    if( ($template eq $error_tt) and ($error_tt eq '/error.tt') )
@@ -1374,62 +1391,78 @@ sub send_in_chunks
     debug(4,"Sending ".length($$dataref)." bytes of data to client");
     my $sent = 0;
     my $errcnt = 0;
-    if( $length > 64000 )
+
+    eval
     {
-	my $chunk = 16384; # POSIX::BUFSIZ * 2
-	for( my $i=0; $i<$length; $i+= $chunk )
+	if( $length > 64000 )
 	{
-	    debug(4,"  Transmitting chunk from $i\n");
-	    my $res = $client->send( substr $$dataref, $i, $chunk );
-	    if( $res )
+	    my $chunk = 16384; # POSIX::BUFSIZ * 2
+	    for( my $i=0; $i<$length; $i+= $chunk )
 	    {
-		$sent += $res;
-		$errcnt = 0;
-	    }
-	    else
-	    {
-		debug(1,"  Failed to send chunk $i\n  Tries to recover...",1);
-
-		$errcnt++;
-		$req->yield( 0.9 );
-
-		if( $errcnt >= 100 )
+		debug(4,"  Transmitting chunk from $i\n");
+		my $res = $client->send( substr $$dataref, $i, $chunk );
+		if( $res )
 		{
-		    debug(0,"Got over 100 failures to send chunk $i");
-		    last;
+		    $sent += $res;
+		    $errcnt = 0;
 		}
-		debug(-1);
-		redo;
+		else
+		{
+		    debug(1,"  Failed to send chunk $i\n  Tries to recover...",1);
+		    
+		    $errcnt++;
+		    $req->yield( 0.9 );
+		    
+		    if( $errcnt >= 100 )
+		    {
+			debug(0,"Got over 100 failures to send chunk $i");
+			last;
+		    }
+		    debug(-1);
+		    redo;
+		}
 	    }
 	}
-    }
-    else
-    {
-	while(1)
+	else
 	{
-	    $sent = $client->send( $$dataref );
-	    if( $sent )
+	    while(1)
 	    {
-		last;
-	    }
-	    else
-	    {
-		debug(1,"  Failed to send data to client\n  Tries to recover...",1);
-
-		$errcnt++;
-		$req->yield( 1.2 );
-
-		if( $errcnt >= 10 )
+		$sent = $client->send( $$dataref );
+		if( $sent )
 		{
-		    debug(0,"Got over 10 failures to send $length chars of data");
 		    last;
 		}
-		debug(-1);
-		redo;
+		else
+		{
+		    debug(1,"  Failed to send data to client\n  Tries to recover...",1);
+		    
+		    $errcnt++;
+		    $req->yield( 1.2 );
+		    
+		    if( $errcnt >= 10 )
+		    {
+			debug(0,"Got over 10 failures to send $length chars of data");
+			last;
+		    }
+		    debug(-1);
+		    redo;
+		}
 	    }
 	}
+	debug(4,"Transmitted $sent chars to client");
+    };
+    if( $@ )
+    {
+	my $err = catch($@);
+	unless( $Para::Frame::REQUEST{$client} )
+	{
+	    return 0;
+	}
+
+	debug "Faild to transmit to client";
+	debug $err->as_string;
+	return 0;
     }
-    debug(4,"Transmitted $sent chars to client");
 
     return $sent;
 }
