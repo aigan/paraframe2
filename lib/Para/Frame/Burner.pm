@@ -92,6 +92,9 @@ sub new
 	    }
 	    else
 	    {
+		# It may already have been noted
+		return if $error->type eq $$typeref;
+
 		$$typeref ||= $error->type;
 		$$inforef .= "\n". $error->info;
 		$$contextref ||= $error->text;
@@ -108,10 +111,10 @@ sub new
 
 sub th
 {
-#    return $_[0]->{'used'}{$Para::Frame::REQ} ||= $_[0]->new_th();
-    my $th = $_[0]->{'used'}{$Para::Frame::REQ} ||= $_[0]->new_th();
-    debug "Using $th";
-    return $th;
+    return $_[0]->{'used'}{$Para::Frame::REQ} ||= $_[0]->new_th();
+#    my $th = $_[0]->{'used'}{$Para::Frame::REQ} ||= $_[0]->new_th();
+#    debug "Using $th";
+#    return $th;
 }
 
 sub new_th
