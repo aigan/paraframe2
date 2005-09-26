@@ -25,6 +25,7 @@ Para::Frame::Result - Representing an individual result as part of the Result ob
 use strict;
 use Data::Dumper;
 use Carp qw( carp shortmess croak );
+use Template::Exception;
 
 BEGIN
 {
