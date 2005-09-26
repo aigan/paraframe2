@@ -43,6 +43,7 @@ use Time::HiRes;
 use Unicode::MapUTF8;
 use LWP::UserAgent;
 use HTTP::Request;
+use Template::Exception;
 
 BEGIN
 {
