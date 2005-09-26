@@ -71,6 +71,8 @@ sub deregister
     $child->status( $status ) if defined $status;
     my $req = $child->req;
 
+    return if $req->{'cancel'};
+
     if( $req->in_yield )
     {
 	# Used yield. Let main_loop return control to the request
