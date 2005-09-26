@@ -208,11 +208,11 @@ sub send
     }
 
 
+    my $burner = $Para::Frame::CFG->{'th'}{'plain'};
+
     if( debug )
     {
-	#warn "try addresses: ".join(",", @try)."...\n";
-
-	my $providers =  $Para::Frame::th->{'plain'}->context->load_templates();
+	my $providers =  $burner->providers;
 	debug(0,"Plain include path is: @{$providers->[0]->include_path()}");
     }
 
@@ -221,8 +221,7 @@ sub send
     my %params = %$p;
 
     my $data = "";
-    $Para::Frame::th->{'plain'}->process($in, \%params, \$data) or
-	throw('template', "Template error: ".$Para::Frame::th->{'plain'}->error );
+    $burner->burn( $in, \%params, \$data ) or throw($burner->error);
 
     if( $p->{'pgpsign'} )
     {
