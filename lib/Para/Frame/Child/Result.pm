@@ -80,7 +80,11 @@ sub return
 	my $length = length($data);
 	debug(1,"Returning $length bytes of data");
     }
-    print $data;
+    my $res = print $data;
+    unless( $res )
+    {
+	debug "Faild to send data";
+    }
     exit;  # don't forget this
 }
 
