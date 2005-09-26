@@ -18,7 +18,7 @@ package Para::Frame::Site;
 
 =head1 NAME
 
-Para::Frame::User - Represents a particular website
+Para::Frame::Site - Represents a particular website
 
 =head1 DESCRIPTION
 
