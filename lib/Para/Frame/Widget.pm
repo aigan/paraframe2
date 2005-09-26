@@ -24,7 +24,6 @@ Para::Frame::Widget - Common template widgets
 
 use strict;
 use Carp;
-use Template 2;
 use Data::Dumper;
 use IO::File;
 use Clone qw( clone );
