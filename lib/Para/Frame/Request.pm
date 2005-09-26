@@ -217,21 +217,16 @@ sub in_yield
 
 sub set_uri
 {
-    my( $req, $uri ) = @_;
+    my( $req, $uri_in ) = @_;
 
     # Only used by Para::Frame to set uri from original uri. Never
     # changes from that original uri.
 
-    die "not impelemnted" if $uri =~ /\?/;
+    my $uri = URI->new($uri_in);
 
     debug(3,"setting URI to $uri");
     $req->{uri} = $uri;
     $req->set_template( $uri, 1 );
-
-    if( $uri eq '/test/die.tt' ) # Special testing URI
-    {
-	die if $Para::Frame::U->level == 42;
-    }
 
     return $uri;
 }
@@ -756,40 +751,49 @@ sub referer
 {
     my( $req ) = @_;
 
-    #
+    # Returns the LOCAL referer. Just the path part. If the referer
+    # was from another website, fall back to default
+
     # TODO: test recovery from runaway processes
     # test recursive $req->referer
-    #
-
 
     # Returns the path part
 
-    # Explicit caller_page could be given
-    if( my $uri = $req->q->param('caller_page') )
+  TRY:
     {
-	debug "Referer from caller_page";
-	return URI->new($uri)->path;
-    }
+	# Explicit caller_page could be given
+	if( my $uri = $req->q->param('caller_page') )
+	{
+	    debug "Referer from caller_page";
+	    return $uri; # This is a path
+	}
 
-    # The query could have been changed by route
-    if( my $uri = $req->q->referer )
-    {
-	debug "Referer from current http req ($uri)";
-	return URI->new($uri)->path;
-    }
+	# The query could have been changed by route
+	if( my $uri = $req->q->referer )
+	{
+	    $uri = URI->new($uri);
+	    last if $uri->host_port ne $req->host_with_port;
 
-    # The actual referer is more acurate in this order
-    if( my $uri = $req->{'referer'} )
-    {
-	debug "Referer from original http req";
-	return URI->new($uri)->path;
-    }
+	    debug "Referer from current http req ($uri)";
+	    return $uri->path;
+	}
 
-    # This could be confusing if several browser windows uses the same
-    # session
-    #
-    debug "Referer from session";
-    return $req->s->referer if $req->s->referer;
+	# The actual referer is more acurate in this order
+	if( my $uri = $req->{'referer'} )
+	{
+	    $uri = URI->new($uri);
+	    last if $uri->host_port ne $req->host_with_port;
+
+	    debug "Referer from original http req";
+	    return $uri->path;
+	}
+
+	# This could be confusing if several browser windows uses the same
+	# session
+	#
+	debug "Referer from session";
+	return $req->s->referer if $req->s->referer;
+    }
 
     debug "Referer from default value";
     return $req->site->last_step if $req->site->last_step;
@@ -991,8 +995,9 @@ sub find_template
 			$req->result->exception;
 			if( $template eq '/error.tt' )
 			{
-			    die( "Fatal template error for error.tt: ".
-				 $Para::Frame::th->{'html'}->error()."\n");
+			    $req->{'error_template'} = $template;
+			    $req->{'page'} = $req->fallback_error_page;
+			    return undef;
 			}
 			debug(2,"Using /error.tt");
 			($in) = $req->find_template('/error.tt');
@@ -1175,6 +1180,12 @@ sub render_output
 
     if( not $in )
     {
+	# Maby we have a fallback page generated
+	return 1 if $req->{'page'};
+    }
+
+    if( not $in )
+    {
 	( $in, $ext ) = $req->find_template( '/page_not_found.tt' );
 	$Para::Frame::REQ->result->error('notfound', "Hittar inte sidan $template\n");
     }
@@ -1247,14 +1258,9 @@ sub render_output
 	    debug(1,$Para::Frame::th->{'html'}->error());
 
 	    # Avoid recursive failure
-	    if( $template eq $error_tt )
+	    if( ($template eq $error_tt) and ($error_tt eq '/error.tt') )
 	    {
-		$page .= "<p>500: Failure to render failure page\n";
-		$page .= "<pre>\n";
-		$page .= $req->result->as_string;
-		$page .= "</pre>\n";
-
-		$req->{'page'} = \$page;
+		$req->{'page'} = $req->fallback_error_page;
 		return 1;
 	    }
 
@@ -1284,6 +1290,23 @@ sub render_output
     $req->{'page'} = \$page;
 
     return 1;
+}
+
+sub fallback_error_page
+{
+    my( $req ) = @_;
+
+    my $page = "";
+    $page .= "<p>500: Failure to render failure page\n";
+    $page .= "<pre>\n";
+    $page .= $req->result->as_string;
+    $page .= "</pre>\n";
+    if( my $backup = $req->site->backup_host )
+    {
+	my $path = $req->uri->path;
+	$page .= "<p>Try to get the page from  <a href=\"http://$backup$path\">$backup</a> instead</p>\n"
+	}
+    return \$page;
 }
 
 sub send_output
@@ -1590,6 +1613,30 @@ sub host # Inkludes port if not :80
     else
     {
 	return $req->site->webhost;
+    }
+}
+
+sub host_without_port
+{
+    my( $req ) = @_;
+
+    my $host = $req->host;
+    $host =~ s/:\d+$//;
+    return $host;
+}
+
+sub host_with_port
+{
+    my( $req ) = @_;
+
+    my $host = $req->host;
+    if( $host =~ /:\d+$/ )
+    {
+	return $host;
+    }
+    else
+    {
+	return $host.":80";
     }
 }
 
