@@ -536,10 +536,9 @@ sub get_value
 			debug "  Req not registred";
 			return;
 		    }
-		    if( $req->{'in_yield'} )
+		    if( $req->{'childs'} )
 		    {
-			$req->{'cancel'} = 1;
-			debug "  winding up yield";
+			debug "  Killing req childs";
 			foreach my $child ( values %CHILD )
 			{
 			    my $creq = $child->req;
@@ -549,6 +548,11 @@ sub get_value
 				kill 9, $child->pid;
 			    }
 			}
+		    }
+		    if( $req->{'in_yield'} )
+		    {
+			$req->{'cancel'} = 1;
+			debug "  winding up yield";
 		    }
 		    else
 		    {
