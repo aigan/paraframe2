@@ -362,7 +362,7 @@ sub new
 
     Para::Frame->add_hook('on_fork', sub
 			  {
-			      debug(0,"Do not destroy DBH in child");
+			      debug(2,"Do not destroy DBH in child");
 			      $dbix->dbh->{'InactiveDestroy'} = 1;
 			      $dbix->connect();
 			  });
