@@ -108,13 +108,13 @@ sub message
 
 sub exception
 {
-    my( $result, $explicit, $info, $output ) = @_;
+    my( $result, $explicit, $info, $text ) = @_;
 
 #    warn("Input is ".Dumper($result, $explicit, $@)."\n");
 
     if( $info )
     {
-	$explicit = Template::Exception->new($explicit, $info, $output);
+	$explicit = Template::Exception->new($explicit, $info, $text);
     }
 
     $@ = $explicit if $explicit;
@@ -125,23 +125,14 @@ sub exception
 	$@ = $@->[1]; # $@->[0] is probably 'undef'
     }
 
-#    warn("Exception: ".Dumper($@, \@_)."\n");
-    my $error = $Para::Frame::th->{'html'}->error();
-    if( $error and not UNIVERSAL::isa($error, 'Template::Exception') )
-    {
-	$@ = $error;
-	$error = undef;
-    }
-
-    $info  ||= ref($@) ? $@->[1] : $error ? $error->info() : $@;
-    my $type = ref($@) ? $@->[0] : $error ? $error->type() : undef;
-    my $context = $error ? $error->text() : undef;
+    $info  ||= ref($@) ? $@->[1] : $@;
+    my $type = ref($@) ? $@->[0] : undef;
 
     $type = undef if $type and $type eq 'undef';
 
     ## on_error_detect
     #
-    Para::Frame->run_hook($Para::Frame::REQ, 'on_error_detect', \$type, \$info );
+    Para::Frame->run_hook($Para::Frame::REQ, 'on_error_detect', \$type, \$info, \$text );
 
     $type ||= 'action';
 
@@ -151,7 +142,7 @@ sub exception
 	confess Dumper( $info, \@_ );
     }
 
-    return $result->error($type, $info, \$context);
+    return $result->error($type, $info, \$text);
 }
 
 sub error
