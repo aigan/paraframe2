@@ -461,7 +461,6 @@ sub get_next
 	my %args_replace;
 	foreach my $key ( $q->param('step_replace_params') )
 	{
-	    warn "    replacing param $key with ".$q->param($key)."\n";
 	    $args_replace{$key} = [ $q->param($key) ];
 	}
 
@@ -476,11 +475,13 @@ sub get_next
 
 	foreach my $key ( keys %args_replace )
 	{
+	    debug "replacing param $key with ".$q->param($key);
 	    $q->param( $key, @{ $args_replace{$key} } );
 	}
 
 	foreach my $key ( keys %args_add )
 	{
+	    debug "adding to param $key with ".$q->param($key);
 	    my @vals = $q->param( $key );
 	    $q->param( $key, @{ $args_add{$key} }, @vals );
 	}
@@ -489,6 +490,7 @@ sub get_next
 
 	$req->set_template( $step->path );
 	$req->setup_jobs; # Takes care of any run keys in query string
+	$req->add_job('after_jobs');
 
 	debug(1,"!!  Initiated new query");
     }

@@ -75,6 +75,7 @@ sub new
 
 	if( my $error = $burner->error() )
 	{
+	    return unless $error;
 	    if( not UNIVERSAL::isa($error, 'Template::Exception') )
 	    {
 		$$inforef .= "\n". $error;

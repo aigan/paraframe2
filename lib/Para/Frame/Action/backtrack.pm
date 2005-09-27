@@ -19,12 +19,20 @@ package Para::Frame::Action::backtrack;
 use strict;
 use CGI;
 
+use Para::Frame::Utils qw( store_params add_params );
+
 sub handler
 {
     my( $req ) = @_;
 
     # Flag for backtracking
+
+    my $state = store_params();
+
     $req->{'q'} = CGI->new('backtrack');
+    
+    add_params( $state );
+
     warn "  !!Setting query string to ".$req->q->query_string."\n";
     return "";
 }

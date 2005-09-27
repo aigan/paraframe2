@@ -112,6 +112,7 @@ sub exception
 
 #    warn("Input is ".Dumper($result, $explicit, $@)."\n");
 
+    $text ||= "";
     unless( ref $text )
     {
 	$text = \ "$text";
@@ -127,6 +128,7 @@ sub exception
     # Check if the info part is in fact the exception object
     if(  ref($@) and ref($@->[1]) eq 'ARRAY' )
     {
+	debug "Removing first part: ".Dumper( $@->[0]);
 	$@ = $@->[1]; # $@->[0] is probably 'undef'
     }
 
@@ -139,6 +141,7 @@ sub exception
     #
     Para::Frame->run_hook($Para::Frame::REQ, 'on_error_detect', \$type, \$info, $text );
 
+    $type = undef if $type and $type eq 'undef';
     $type ||= 'action';
 
 #    warn "Exception defined: $type\n";
