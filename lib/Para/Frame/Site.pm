@@ -151,6 +151,13 @@ sub port
     return $1 || 80;
 }
 
+sub appfmly
+{
+    my( $site ) = @_;
+    my $family = $site->{'appfmly'};
+    return ref $family ? $family : [$family];
+}
+
 1;
 
 =head1 SEE ALSO
