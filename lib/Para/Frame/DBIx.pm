@@ -826,10 +826,10 @@ sub save_record
 	my $keyhash = $key;
 	$key = [];
 	$keyval = [];
-	foreach my $key ( keys %$keyhash )
+	foreach my $f ( keys %$keyhash )
 	{
-	    push @$key, $key;
-	    push @$keyval, $keyhash->{$key};
+	    push @$key, $f;
+	    push @$keyval, $keyhash->{$f};
 	}
     }
     else
@@ -921,9 +921,10 @@ sub save_record
 		)
 	    {
 		$fields_added{ $field } ++;
+		my $val = $dbix->format_datetime( $rec_new->{ $field } );
 		push @fields, $field;
-		push @values, $dbix->format_datetime( $rec_new->{ $field } );
-		debug(1,"  field $field differ");
+		push @values, $val;
+		debug(1,"  field $field differ. New is $val");
 	    }
 	}
 	elsif( $type eq 'email' )
@@ -975,8 +976,10 @@ sub save_record
 	    foreach my $field ( keys %$on_update )
 	    {
 		next if $fields_added{ $field };
+		my $type = $types->{$field};
+		my $value = $dbix->format_value($type, $on_update->{$field});
 		push @fields, $field;
-		push @values, $on_update->{$field};		
+		push @values, $value;
 	    }
 	}
 
