@@ -198,7 +198,9 @@ sub burn
 
 sub error
 {
-    return $_[0]->th->error;
+    my $th = $_[0]->{'used'}{$Para::Frame::REQ};
+    return undef unless $th;
+    return $th->error;
 }
 
 sub incpath_generator
