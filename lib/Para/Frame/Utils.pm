@@ -63,10 +63,10 @@ BEGIN
             create_file create_dir chmod_tree chmod_file chmod_dir
             package_to_module module_to_package dirsteps uri2file
             compile passwd_crypt deunicode paraframe_dbm_open
-            elapsed_time uri store_params clear_params restore_params
-            idn_encode idn_decode debug reset_hashref timediff
-            extract_query_params fqdn retrieve_from_url get_from_fork
-            );
+            elapsed_time uri store_params clear_params add_params
+            restore_params idn_encode idn_decode debug reset_hashref
+            timediff extract_query_params fqdn retrieve_from_url
+            get_from_fork );
 
 }
 
@@ -1061,6 +1061,26 @@ sub clear_params
     }
 }
 
+=head2 add_params
+
+  add_params(\%saved)
+
+Adds to the CGI query with the params given in the hashref.
+
+=cut
+
+sub add_params
+{
+    my( $state ) = @_;
+
+    my $q = $Para::Frame::REQ->q;
+
+    foreach my $key ( keys %$state )
+    {
+	$q->param( $key, @{ $state->{$key} } );
+    }
+}
+
 =head2 restore_params
 
   restore_params(\%saved)
@@ -1075,12 +1095,8 @@ sub restore_params
     my( $state ) = @_;
 
     my $q = $Para::Frame::REQ->q;
-
     $q->delete_all();
-    foreach my $key ( keys %$state )
-    {
-	$q->param( $key, @{ $state->{$key} } );
-    }
+    add_params($state);
 }
 
 =head2 debug
