@@ -1743,12 +1743,12 @@ sub register_child
 
 sub get_child_result
 {
-    my( $req, $child ) = @_;
+    my( $req, $child, $length ) = @_;
 
     my $result;
     eval
     {
-	$result = $child->get_results;
+	$result = $child->get_results( $length );
     } or do
     {
 	$req->result->exception;
