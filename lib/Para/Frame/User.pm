@@ -160,9 +160,11 @@ sub authenticate_user
 	if( debug )
 	{
 	    warn sprintf("  next_template was %s\n",
-			 $q->param('next_template'));
+			 $q->param('next_template'))
+		if $q->param('next_template');
 	    warn sprintf("  destination was %s\n",
-			 $q->param('destination'));
+			 $q->param('destination'))
+		if $q->param('destination');
 	}
 
 	my $destination = $q->param('destination') || '';
