@@ -1075,7 +1075,7 @@ sub send_code
 	my $code = shift;
 	my $port = $Para::Frame::CFG->{'port'};
 	my $client = $req->client;
-	debug("  to $client");
+	debug(3, "  to $client");
 	my $val = $client . "\x00" . shift;
 	die "Too many args in send_code($code $val @_)" if @_;
 
