@@ -340,10 +340,35 @@ sub main_loop
 	    {
 		my $cpid = $child->pid;
 		my $length = length( $child_data );
-		debug "Read $length bytes from $cpid";
+#		debug "Read $length bytes from $cpid";
 
 		my $tlength = length( $child->{'data'} );
-		debug "  Total of $tlength bytes read";
+#		debug "  Total of $tlength bytes read";
+
+		if( $child->{'data'} =~ /^(\d{1,5})\0/ )
+		{
+		    # Expected length
+		    my $elength = length($1)+$1+2;
+#		    debug "  Expecting $elength bytes";
+		    if( $tlength == $elength )
+		    {
+			# Whole string recieved!
+#			debug "  All data retrieved";
+			unless( $child->{'done'} ++ )
+			{
+			    # Avoid double deregister
+			    $child->deregister(undef,$1);
+			    delete $CHILD{$cpid};
+#			    debug "  Killing $cpid";
+			    kill 9, $cpid;
+			}
+		    }
+		}
+		else
+		{
+		    debug "Got '$child->{data}'";
+		}
+
 	    }
 
 #	    &REAPER; # In case we missed something...
@@ -736,12 +761,14 @@ sub REAPER
 
 	if( my $child = delete $CHILD{$child_pid} )
 	{
-	    $child->deregister( $? );
+	    $child->deregister( $? )
+		unless $child->{'done'};
 	}
 	else
 	{
 	    warn "|   No object registerd with PID $child_pid\n";
-	    warn "|     This may be Date::Manip...\n";
+	    warn "|     This may be a child already handled\n";
+	    warn "|     Or some third party thing like Date::Manip...\n";
 	}
     }
     $SIG{CHLD} = \&REAPER;  # still loathe sysV
@@ -931,7 +958,7 @@ sub handle_request
     my( $client, $recordref ) = @_;
 
     $REQNUM ++;
-    warn "\n\n$REQNUM Handling new request\n";
+    warn "\n\n$REQNUM Handling new request ($client)\n";
 
     ### Reload updated modules
     Para::Frame::Reload->check_for_updates;
