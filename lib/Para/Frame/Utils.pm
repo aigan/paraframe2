@@ -1266,14 +1266,14 @@ sub get_from_fork
 
     my $req = $Para::Frame::REQ;
 
-    debug "About to fork";
+#    debug "About to fork";
     my $fork = $req->create_fork;
     if( $fork->in_child )
     {
-	debug "in child";
+#	debug "in child";
 	$fork->return(&$coderef);
     }
-    debug "In parent: yield";
+#    debug "In parent: yield";
     return $fork->yield->message; # Returns the result from fork
 }
 
