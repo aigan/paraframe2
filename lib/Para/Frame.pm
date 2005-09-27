@@ -1206,12 +1206,27 @@ sub configure
 	}
     }
 
+    my %th_default =
+	(
+	 INCLUDE_PATH => [ \&Para::Frame::Burner::incpath_generator ],
+	 PRE_PROCESS => 'header_prepare.tt',
+	 POST_PROCESS => 'footer.tt',
+	 TRIM => 1,
+	 PRE_CHOMP => 1,
+	 POST_CHOMP => 1,
+	 RECURSION => 1,
+	 PLUGIN_BASE => 'Para::Frame::Template::Plugin',
+	 ABSOLUTE => 1,
+	 );
+
     $CFG->{'th'}{'html'} ||= Para::Frame::Burner->new({
+	%th_default,
 	INTERPOLATE => 1,
 	COMPILE_DIR =>  $CFG->{'ttcdir'}.'/html',
     });
 
     $CFG->{'th'}{'html_pre'} ||= Para::Frame::Burner->new({
+	%th_default,
 	COMPILE_DIR =>  $CFG->{'ttcdir'}.'/html_pre',
 	TAG_STYLE => 'star',
     });

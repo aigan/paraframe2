@@ -45,32 +45,21 @@ sub new
 
     my $burner = bless {}, $class;
 
-    my %th_default =
-	(
-	 INCLUDE_PATH => [ \&incpath_generator ],
-	 PRE_PROCESS => 'header_prepare.tt',
-	 POST_PROCESS => 'footer.tt',
-	 TRIM => 1,
-	 PRE_CHOMP => 1,
-	 POST_CHOMP => 1,
-	 RECURSION => 1,
-	 PLUGIN_BASE => 'Para::Frame::Template::Plugin',
-	 ABSOLUTE => 1,
-	 );
 
     my $config = {};
 
-    foreach my $key ( keys %th_default )
-    {
-	$config->{$key} = $th_default{$key};
-    }
+#    my %th_default = ();
+#    foreach my $key ( keys %th_default )
+#    {
+#	$config->{$key} = $th_default{$key};
+#    }
 
     foreach my $key ( keys %$config_in )
     {
 	$config->{$key} = $config_in->{$key};
     }
 
-    $burner->{'config_in'} = $config_in;
+#    $burner->{'config_in'} = $config_in;
     $burner->{'config'} = $config;
 
     $burner->{'free'} = [];

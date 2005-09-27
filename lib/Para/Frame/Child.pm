@@ -171,7 +171,8 @@ sub get_results
 
     unless( $length )
     {
-	$length =~ /^(\d{1,5})\0/;
+	$child->{'data'} =~ /^(\d{1,5})\0/;
+	$length = $1;
     }
     # Length of prefix
     my $plength = length( $length ) + 1;
