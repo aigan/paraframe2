@@ -927,7 +927,7 @@ sub find_template
 		my $burner = $Para::Frame::CFG->{'th'}{'html'};
 		my $compdir = $burner->compile_dir;
 		my $compfile = $compdir.$filename;
-		debug "Compdir: $compdir";
+		debug 4, "Compdir: $compdir";
 
 		my( $data, $ltime);
 		
