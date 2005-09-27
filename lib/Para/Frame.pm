@@ -219,8 +219,20 @@ sub main_loop
 	    }
 	    elsif( $req->{'childs'} )
 	    {
+#		if( $REAPER_FAILSAFE )
+#		{
+#		    debug "FAILSAFE REAPING";
+#		    &REAPER if $REAPER_FAILSAFE > time;
+#		    $REAPER_FAILSAFE = 0;
+#		}
+#		else
+#		{
+#		    $REAPER_FAILSAFE = time + 3;
+#		}
+
 		# Stay open while waiting for child
 		if( debug >= 4 )
+#		if(1)
 		{
 		    debug "$req->{reqnum} stays open, waiting for $req->{'childs'} childs";
 		    foreach my $child ( values %CHILD )
@@ -264,10 +276,20 @@ sub main_loop
 	    # exit loop if child done
 	    last unless $child->{'req'}{'childs'};
 
+#	    ### DEBUG
 #	    warn "Waiting for a child\n";
 #	    my $childs = $child->req->{'childs'};
 #	    warn "  childs: $childs\n";
-#	    sleep;
+#		if( $REAPER_FAILSAFE )
+#		{
+#		    debug "FAILSAFE REAPING";
+#		    &REAPER if $REAPER_FAILSAFE > time;
+#		    $REAPER_FAILSAFE = 0;
+#		}
+#		else
+#		{
+#		    $REAPER_FAILSAFE = time + 3;
+#		}
 	}
 	else
 	{
@@ -439,11 +461,15 @@ sub get_value
 #    warn "Waiting for client\n";
     if( debug >= 3 )
     {
-	debug 3, "Get value from $client";
+	debug "Get value from $client";
 	if( my $req = $REQUEST{$client} )
 	{
 	    my $reqnum = $req->{'reqnum'};
-	    debug 3, "  Req $reqnum";
+	    debug "  Req $reqnum";
+	}
+	else
+	{
+	    debug "  Not a Req (yet?)";
 	}
     }
     
@@ -694,7 +720,7 @@ sub REAPER
     # we will leave the unreaped child as a zombie. And the next time
     # two children die we get another zombie. And so on.
 
-    warn "In reaper\n";
+    warn "| In reaper\n";
 
     while (($child_pid = waitpid(-1, POSIX::WNOHANG)) > 0)
     {
