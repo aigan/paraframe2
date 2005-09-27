@@ -881,13 +881,13 @@ In an action:
 
 sub confirm_simple
 {
-    my( $widg, $headline, $text, $button_name ) = @_;
+    my( $headline, $text, $button_name ) = @_;
 
     $headline ||= 'Är du säker?';
     $text ||= '';
     $button_name ||= 'Ja';
 
-    my $req = Para::Frame::Request->obj;
+    my $req = $Para::Frame::REQ;
     my $q = $req->q;
 
     foreach my $confirmed ( $q->param('confirmed') )
@@ -899,9 +899,9 @@ sub confirm_simple
     ## Set up route, confirmation data and throw exception
 
     $req->s->route->bookmark;
-    $req->set_template('confirm.tt');
+    $req->set_error_template('/confirm.tt');
     my $result = $req->result;
-    my $home = $req->app->home;
+    my $home = $req->site->home;
 
 #    my @actions = @{ $req->{'actions'} };
 #    unshift @actions, $req->{'this_action'} if $req->{'this_action'};
