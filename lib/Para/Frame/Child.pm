@@ -54,6 +54,7 @@ sub register
 	status   => undef,
 	data     => "",
 	result   => undef,
+	done     => undef,
     }, $class;
 
     $req->{'childs'} ++;
@@ -66,8 +67,9 @@ sub register
 
 sub deregister
 {
-    my( $child, $status ) = @_;
+    my( $child, $status, $length ) = @_;
 
+    $child->{'done'} = 1; # Taken care of now
     $child->status( $status ) if defined $status;
     my $req = $child->req;
 
@@ -81,7 +83,7 @@ sub deregister
 	Para::Frame::switch_req( $req );
 	eval
 	{
-	    $child->get_results();
+	    $child->get_results($length);
 	} or do
 	{
 	    $req->result->exception;
@@ -96,7 +98,7 @@ sub deregister
 	# request. Things are set up for the job to be done later, in
 	# order and in context.
 
-	$req->add_job('get_child_result', $child);
+	$req->add_job('get_child_result', $child, $length);
     }
 
     $req->{'childs'} --;
@@ -138,22 +140,27 @@ sub yield
 
 sub get_results
 {
-    my( $child ) = @_;
+    my( $child, $length ) = @_;
 
-    my $fh = $child->{'fh'};
-
-    # Some data may already be here, since IO may get stuck otherwise
-    #
-    $child->{'data'} .= read_file( $fh,
-				   'binmode'=>1,
-				   ); # Undocumented flag
-    if( debug )
+    # If not all read
+    unless( $length )
     {
-	my $length = length $child->{'data'};
-	debug(1,"Got $length bytes of data");
+	my $fh = $child->{'fh'};
+
+	# Some data may already be here, since IO may get stuck otherwise
+	#
+	$child->{'data'} .= read_file( $fh,
+				       'binmode'=>1,
+				       ); # Undocumented flag
+	close($fh); # Should already be closed then kid exited
     }
 
-    close($fh); # Should already be closed then kid exited
+    chomp $child->{'data'}; # Remove last \n
+    my $tlength = length $child->{'data'};
+    if( debug )
+    {
+	debug(2,"Got $tlength bytes of data");
+    }
 
     unless( $child->{'data'} )
     {
@@ -162,11 +169,22 @@ sub get_results
 	die "Child $pid didn't return the result (status $status)\n";
     }
 
+    unless( $length )
+    {
+	$length =~ /^(\d{1,5})\0/;
+    }
+    # Length of prefix
+    my $plength = length( $length ) + 1;
+    
+#    debug "Data length is $length bytes";
+
+
 #    warn "  got data: $data\n";
-    my( $result ) = thaw( $child->{'data'} );
+    my( $result ) = thaw( substr $child->{'data'}, $plength );
 #    warn "  result: $result\n"; ### DEBUG
 #    warn Dumper $result; ### DEBUG
     $child->{'result'} = $result;
+
 
     delete $child->{'data'}; # We are finished with the raw data
 
