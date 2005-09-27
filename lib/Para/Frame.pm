@@ -336,7 +336,15 @@ sub main_loop
 	    $child->{'fh'}->read($child_data, POSIX::BUFSIZ);
 	    $child->{'data'} .= $child_data;
 
+	    if( $child_data )
+	    {
+		my $cpid = $child->pid;
+		my $length = length( $child_data );
+		debug "Read $length bytes from $cpid";
 
+		my $tlength = length( $child->{'data'} );
+		debug "  Total of $tlength bytes read";
+	    }
 
 #	    &REAPER; # In case we missed something...
 	}
