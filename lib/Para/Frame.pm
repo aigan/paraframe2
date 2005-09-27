@@ -45,10 +45,10 @@ use Para::Frame::Utils qw( throw uri2file debug create_file chmod_file fqdn );
 
 use constant TIMEOUT_LONG  =>   5;
 use constant TIMEOUT_SHORT =>   0.001;
-use constant BGJOB_MAX     =>   3;      # At most
+use constant BGJOB_MAX     =>   8;      # At most
 use constant BGJOB_MED     =>  60 *  5; # Even if no visitors
 use constant BGJOB_MIN     =>  60 * 15; # At least this often
-use constant BGJOB_CPU     =>   1.5;
+use constant BGJOB_CPU     =>   0.8;
 
 # Do not init variables here, since this will be redone each time code is updated
 our $SERVER     ;
