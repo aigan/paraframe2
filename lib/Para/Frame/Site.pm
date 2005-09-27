@@ -105,6 +105,9 @@ sub get
 }
 
 sub webhome     { $_[0]->{'webhome'} || '' }
+sub home        { $_[0]->webhome }
+
+
 sub last_step   { $_[0]->{'last_step'} } # default to undef
 sub login_page
 {
