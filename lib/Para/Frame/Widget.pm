@@ -29,6 +29,8 @@ use IO::File;
 use Clone qw( clone );
 use CGI;
 
+use locale;
+
 BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
