@@ -66,19 +66,12 @@ sub _new
     
     my $site = bless $params, $class;
 
-    $site->{'webhome'}     ||= ''; # URL path to website home
-#    $site->{'last_step'};    # Default to undef
-    $site->{'login_page'}  ||= $site->{'last_step'} || $site->{'webhome'}.'/';
-    $site->{'logout_page'} ||= $site->{'webhome'}.'/';
-    $site->{'webhost'}     ||= fqdn(); # include port (www.abc.se:81)
-    $site->{'loopback'}    ||= $site->{'logout_page'};
-
-    if( $site->{'webhost'} =~ /^http/ )
+    if( $site->webhost =~ /^http/ )
     {
 	croak "Do not include http in webhost";
     }
 
-    if( $site->{'webhome'} =~ /\/$/ )
+    if( $site->webhome =~ /\/$/ )
     {
 	croak "Do not end webhome wit a '/'";
     }
@@ -111,14 +104,31 @@ sub get
 	croak "Either site $name or default is registred";
 }
 
-sub webhome     { $_[0]->{'webhome'} }
-sub last_step   { $_[0]->{'last_step'} }
-sub login_page  { $_[0]->{'login_page'} }
-sub logout_page { $_[0]->{'logout_page'} }
-sub webhost     { $_[0]->{'webhost'} }
+sub webhome     { $_[0]->{'webhome'} || '' }
+sub last_step   { $_[0]->{'last_step'} } # default to undef
+sub login_page
+{
+    return
+	$_[0]->{'login_page'} ||
+	$_[0]->{'last_step'}  ||
+	$_[0]->webhome.'/';
+}
+
+sub logout_page
+{
+    return $_[0]->{'logout_page'} ||
+	$_[0]->webhome.'/';
+}
+
+
+sub webhost
+{
+    return $_[0]->{'webhost'} || fqdn();
+}
+
 sub loopback    { $_[0]->{'loopback'} }
 
-sub host        { $_[0]->{'webhost'} } # Same as webhost
+sub host        { $_[0]->webhost }
 
 sub backup_host { $_[0]->{'backup_host'} }
 
