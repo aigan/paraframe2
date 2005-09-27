@@ -591,6 +591,8 @@ sub after_jobs
 {
     my( $req ) = @_;
 
+    debug 4, "In after_jobs";
+
     # Take a planned action unless an error has been encountered
     if( my $action = shift @{ $req->{'actions'} } )
     {
@@ -609,7 +611,13 @@ sub after_jobs
 	# Check for each thing. If more jobs, stop and add a new after_jobs
 
 	### Waiting for children?
-	if( $req->{'childs'} )
+	if( $req->{'wait'} )
+	{
+	    # Waiting for something else to finish...
+	    debug "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
+	    $req->add_job('after_jobs');
+	}
+	elsif( $req->{'childs'} )
 	{
 	    debug(2,"Waiting for childs");
 
@@ -1059,15 +1067,15 @@ sub send_code
 
     # To get a response, use get_cmd_val()
 
-    debug(3,"Sending code: ".join("-", @_));
+    debug(3, "Sending code: ".join("-", @_));
 
     if( $Para::Frame::FORK )
     {
-	debug(2,"redirecting to parent");
+	debug("redirecting to parent");
 	my $code = shift;
 	my $port = $Para::Frame::CFG->{'port'};
 	my $client = $req->client;
-	debug(3,"  to $client");
+	debug("  to $client");
 	my $val = $client . "\x00" . shift;
 	die "Too many args in send_code($code $val @_)" if @_;
 
@@ -1136,11 +1144,18 @@ sub send_code
 	# Got it! Now send the message
 	#
 	debug "We got an active request for $client";
-	my $client = $req->{'active_reqest'}->client;
-	debug "  Using $client";
+	my $aclient = $req->{'active_reqest'}->client;
+	if( debug )
+	{
+	    if( my $areq = $Para::Frame::REQUEST{$aclient} )
+	    {
+		my $areqnum = $areq->{'reqnum'};
+		debug "  Req $areqnum";
+	    }
+	}
 
-	$client->send(join "\0", @_ );
-	$client->send("\n");
+	$aclient->send(join "\0", @_ );
+	$aclient->send("\n");
 
 	# Set up release code
 	$req->add_job('release_active_request');
