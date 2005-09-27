@@ -112,6 +112,11 @@ sub exception
 
 #    warn("Input is ".Dumper($result, $explicit, $@)."\n");
 
+    unless( ref $text )
+    {
+	$text = \ "$text";
+    }
+
     if( $info )
     {
 	$explicit = Template::Exception->new($explicit, $info, $text);
@@ -132,7 +137,7 @@ sub exception
 
     ## on_error_detect
     #
-    Para::Frame->run_hook($Para::Frame::REQ, 'on_error_detect', \$type, \$info, \$text );
+    Para::Frame->run_hook($Para::Frame::REQ, 'on_error_detect', \$type, \$info, $text );
 
     $type ||= 'action';
 
@@ -142,7 +147,7 @@ sub exception
 	confess Dumper( $info, \@_ );
     }
 
-    return $result->error($type, $info, \$text);
+    return $result->error($type, $info, $text);
 }
 
 sub error
