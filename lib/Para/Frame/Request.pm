@@ -457,7 +457,10 @@ sub run_action
     return 1 if $run eq 'nop'; #shortcut
 
     my $actionroots = [$Para::Frame::CFG->{'appbase'}."::Action"];
-    foreach my $family ( @{$Para::Frame::CFG->{'appfmly'}} )
+
+    my $appfmly = $req->site->appfmly;
+
+    foreach my $family ( @$appfmly )
     {
 	push @$actionroots, "${family}::Action";
     }
