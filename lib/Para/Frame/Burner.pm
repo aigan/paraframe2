@@ -112,12 +112,12 @@ sub new_th
 {
     if( my $th = pop(@{$_[0]->{'free'}}) )
     {
-	debug "TH retrieved from stack";
+	debug 1, "TH retrieved from stack";
 	return $th;
     }
     else
     {
-	debug "TH created from config";
+	debug 1, "TH created from config";
 #	debug "  for $Para::Frame::REQ";
 	return Template->new($_[0]->{config});
     }
@@ -131,7 +131,7 @@ sub free_th
     my( $th ) = delete $burner->{'used'}{$req};
     if( $th )
     {
-	debug "TH released to stack";
+	debug 1, "TH released to stack";
 	$th->{ _ERROR } = '';
 	push @{$burner->{'free'}}, $th;
     }

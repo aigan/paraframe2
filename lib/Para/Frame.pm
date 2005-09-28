@@ -958,7 +958,7 @@ sub handle_request
     my( $client, $recordref ) = @_;
 
     $REQNUM ++;
-    warn "\n\n$REQNUM Handling new request ($client)\n";
+    warn "\n\n$REQNUM Handling new request\n";
 
     ### Reload updated modules
     Para::Frame::Reload->check_for_updates;
@@ -991,6 +991,7 @@ sub handle_request
 		 $s->u->id,
 		 $s->{'debug'},
 		 );
+    warn "# $client\n" if debug();
    
     ### Redirected from another page?
     if( my $page_result = $req->s->{'page_result'}{ $req->uri } )
