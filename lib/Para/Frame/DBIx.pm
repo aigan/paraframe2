@@ -309,13 +309,6 @@ sub new
 
     my $dbix = bless {}, $class;
 
-    Para::Frame->add_global_tt_params({
-	'select_list'              => sub{ $dbix->select_list(@_) },
-	'select_record'            => sub{ $dbix->select_record(@_) },
-	'select_key'               => sub{ $dbix->select_key(@_) },
-	'select_possible_record'   => sub{ $dbix->select_possible_record(@_) },
-    });
-
     if( my $connect = $params->{'connect'} )
     {
 	$connect = [$connect] unless ref $connect eq 'ARRAY';
@@ -330,6 +323,17 @@ sub new
 	};
 
 	$dbix->{'connect'} = $connect;
+    }
+
+    if( $params->{'import_tt_params'} )
+    {
+	debug "Adding global params for dbix $dbix->{connect}[0]";
+	Para::Frame->add_global_tt_params({
+	    'select_list'              => sub{ $dbix->select_list(@_) },
+	    'select_record'            => sub{ $dbix->select_record(@_) },
+	    'select_key'               => sub{ $dbix->select_key(@_) },
+	    'select_possible_record'   => sub{ $dbix->select_possible_record(@_) },
+	});
     }
 
     $dbix->{'bind_dbh'} = $params->{'bind_dbh'};
