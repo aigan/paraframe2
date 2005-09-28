@@ -54,7 +54,7 @@ use constant LIMIT_MEMORY              => 900;
 use constant LIMIT_MEMORY_NOTICE       => 700;
 use constant TIMEOUT_SERVER_STARTUP    =>  45;
 use constant TIMEOUT_CONNECTION_CHECK  =>  60;
-use constant LIMIT_CONNECTION_TRIES    =>   3;
+use constant LIMIT_CONNECTION_TRIES    =>   5;
 use constant TIMEOUT_CREATE_FORK       =>   5;
 
 sub debug; # Use special version of debug
