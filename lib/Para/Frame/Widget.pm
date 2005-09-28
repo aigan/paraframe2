@@ -800,10 +800,15 @@ sub css_header
 	};
     }
 
-    my $default = $Para::Frame::U->style || $p->{'default'};
+    my $default = $Para::Frame::U->style || $p->{'default'} || 'default';
     my $persistent = $p->{'persistent'} || [];
     my $alternate = $p->{'alternate'} || {};
     $persistent = [$persistent] unless ref $persistent;
+
+    unless( $alternate->{$default} )
+    {
+	$default = $p->{'default'};
+    }
 
     if( not $default )
     {
