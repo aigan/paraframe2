@@ -37,6 +37,7 @@ our $SOCK;
 our $r;
 
 our $DEBUG = 0;
+our $BACKUP_PORT;
 
 # $SIG{HUP} = sub { warn "Got a HUP\n"; };
 # $SIG{INT} = sub { warn "Got a INT\n"; };
@@ -58,8 +59,11 @@ sub handler
 #    warn "$$: CGI obj created\n";
 
     my $dirconfig = $r->dir_config;
-
     my $port = $dirconfig->{'port'};
+    if( $BACKUP_PORT )
+    {
+	$port = $BACKUP_PORT;
+    }
 
     unless( $port )
     {
@@ -197,6 +201,17 @@ sub print_error_page
 
     my $dirconfig = $r->dir_config;
     my $path = $r->uri;
+
+    unless( $BACKUP_PORT )
+    {
+	if( $BACKUP_PORT = $dirconfig->{'backup_port'} )
+	{
+	    handler($r);
+	    $BACKUP_PORT = 0;
+	    return;
+	}
+    }
+
     if( my $host = $dirconfig->{'backup_redirect'} )
     {
 	my $uri_out = "http://$host$path";
