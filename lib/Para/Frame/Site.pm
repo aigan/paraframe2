@@ -181,6 +181,11 @@ sub appfmly
     return $family;
 }
 
+sub params
+{
+    return $_[0]->{'params'};
+}
+
 1;
 
 =head1 SEE ALSO
