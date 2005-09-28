@@ -113,12 +113,8 @@ sub new
 	cancel         => undef,          ## True if we should abort
     }, $class;
 
-    my $ttparams = {};    ## template data
-    foreach( keys %$Para::Frame::PARAMS )
-    {
-	$ttparams->{$_} = $Para::Frame::PARAMS->{$_};
-    }
-    $req->{'params'} = $ttparams;
+    my %ttparams = %$Para::Frame::PARAMS;
+    $req->{'params'} = \%ttparams;
 
     $req->{'site'}    = Para::Frame::Site->get( $req->host_from_env );
 
@@ -188,6 +184,7 @@ sub new_minimal
 
 sub q { shift->{'q'} }
 sub s { shift->{'s'} }
+sub session { shift->{'s'} }
 sub env { shift->{'env'} }
 sub client { shift->{'client'} }
 sub cookies { shift->{'cookies'} }
@@ -1883,6 +1880,12 @@ sub set_tt_params
     my( $dir ) = $real_filename =~ /^(.*\/)/;
     $req->{'dir'} = $dir;
     debug(3,"Setting dir to $dir");
+
+    # Add local site params
+    if( $req->site->params )
+    {
+	$req->add_params($req->site->params);
+    }
 
     # Keep alredy defined params  # Static within a request
     $req->add_params({
