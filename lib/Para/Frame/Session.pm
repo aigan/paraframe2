@@ -141,6 +141,11 @@ sub u
     return $_[0]->{'user'};
 }
 
+sub user
+{
+    return $_[0]->{'user'};
+}
+
 sub referer
 {
     return $_[0]->{'referer'};
