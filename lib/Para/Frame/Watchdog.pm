@@ -50,8 +50,8 @@ our $USE_LOGFILE;          # Redirects STDERR to logfile
 
 use constant INTERVAL_CONNECTION_CHECK =>  60;
 use constant INTERVAL_MAIN_LOOP        =>  10;
-use constant LIMIT_MEMORY              => 850;
-use constant LIMIT_MEMORY_NOTICE       => 750;
+use constant LIMIT_MEMORY              => 900;
+use constant LIMIT_MEMORY_NOTICE       => 700;
 use constant TIMEOUT_SERVER_STARTUP    =>  45;
 use constant TIMEOUT_CONNECTION_CHECK  =>  60;
 use constant LIMIT_CONNECTION_TRIES    =>   3;
