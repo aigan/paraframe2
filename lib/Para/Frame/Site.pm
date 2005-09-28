@@ -168,7 +168,17 @@ sub appfmly
 {
     my( $site ) = @_;
     my $family = $site->{'appfmly'};
-    return ref $family ? $family : [$family];
+    unless( ref $family )
+    {
+	my @list = ();
+	if( $family )
+	{
+	    push @list, $family;
+	}
+	return $site->{'appfmly'} = \@list;
+    }
+
+    return $family;
 }
 
 1;
