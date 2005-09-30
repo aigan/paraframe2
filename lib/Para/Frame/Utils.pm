@@ -36,7 +36,7 @@ use IO::Dir;
 use Data::Dumper;
 use CGI;
 use Digest::MD5  qw(md5_hex);
-use Time::Seconds;
+use Time::Seconds qw( ONE_MONTH ONE_DAY ONE_HOUR ONE_MINUTE );
 use BerkeleyDB;
 use IDNA::Punycode;
 use Time::HiRes;
@@ -44,6 +44,7 @@ use Unicode::MapUTF8;
 use LWP::UserAgent;
 use HTTP::Request;
 use Template::Exception;
+use DateTime::Duration;
 
 BEGIN
 {
@@ -879,6 +880,16 @@ sub paraframe_dbm_open
 sub elapsed_time
 {
     my( $secs ) = @_;
+
+    if( UNIVERSAL::isa($secs, 'DateTime::Duration') )
+    {
+	my $deltas = $secs->deltas;
+	$secs = 0;
+	$secs += $deltas->{'months'}  * ONE_MONTH;
+	$secs += $deltas->{'days'}    * ONE_DAY;
+	$secs += $deltas->{'minutes'} * ONE_MINUTE;
+	$secs += $deltas->{'seconds'};
+    }
 
     my $c = Time::Seconds->new($secs);
     my $str;
