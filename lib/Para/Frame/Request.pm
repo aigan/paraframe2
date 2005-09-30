@@ -1218,6 +1218,7 @@ sub render_output
     if( not $in )
     {
 	( $in, $ext ) = $req->find_template( '/page_not_found.tt' );
+	$req->send_code( 'AR-PUT', 'status', 404 );
 	$Para::Frame::REQ->result->error('notfound', "Hittar inte sidan $template\n");
     }
 
@@ -1279,6 +1280,11 @@ sub render_output
 			$error_tt = "/denied.tt";
 			$req->s->route->plan_next($req->referer);
 		    }
+		}
+		elsif( $error->type eq 'notfound' )
+		{
+		    $error_tt = "/page_not_found.tt";
+		    $req->send_code( 'AR-PUT', 'status', 404 );
 		}
 		else
 		{
