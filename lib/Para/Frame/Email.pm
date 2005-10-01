@@ -27,7 +27,6 @@ use Carp;
 use locale;
 use Data::Dumper;
 use IO::File;
-use Clone qw( clone );
 use vars qw( $VERSION );
 use Mail::Address;
 use MIME::Lite;
