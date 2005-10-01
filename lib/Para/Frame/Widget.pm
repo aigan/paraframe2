@@ -26,7 +26,6 @@ use strict;
 use Carp;
 use Data::Dumper;
 use IO::File;
-use Clone qw( clone );
 use CGI;
 
 use locale;
