@@ -55,7 +55,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw debug );
+use Para::Frame::Utils qw( throw debug fqdn );
 
 our %DATA; # hostname -> siteobj
 
@@ -85,9 +85,10 @@ sub add
 
     my $site = $this->_new( $params );
 
-    debug "Registring site $site->{webhost}";
+    my $webhost = $site->webhost;
+    debug "Registring site $webhost";
 
-    $DATA{ $site->{'webhost'} } = $site;
+    $DATA{ $webhost } = $site;
     $DATA{'default'} ||= $site;
 
     return $site;
