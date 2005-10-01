@@ -1,0 +1,78 @@
+NAME
+    Para::Frame - Web site framework and application server
+
+
+DESCRIPTION
+    Para::Frame is a system to use for dynamic web sites. It runs as a
+    backend daemon taking page requests from a Apache mod_perl client
+    and returns a HTTP response.
+
+    
+
+    This system differs from other alternatives. Try it out and see if
+    it matches your way of thinking.
+
+    The URL paths represents information you want to GET. Each type of
+    information has it's own tempalte file and the URL path directs
+    you to that template.  If you want to SET data, you use 'actions'
+    in form of separate Perl modules
+
+it's done in 'actions'
+    that are completely separate from 
+
+
+
+    It aims for making life simple, with defaults for everything. But
+    it is a collection of a lot of things that could be useful in
+    creating a dynamic web site.
+
+    This framework uses the Template Toolkit for building pages.
+
+    
+
+    There is a lot of web site framework and application server
+
+
+    Wraf implements a RDF API that hopes to realize the Semantic
+    Web. The framework uses RDF for data, user interface, modules and
+    object methods. It uses interfaces to other sources in order to
+    integrate all data in one enviroment, regardless of storage form.
+
+
+DOCUMENTATION
+    The documentation is far from complete and not up to date.  Send
+    any question to the mailinglist rdf@uxn.nu.  Look for comments in
+    the source and notes in the ./doc directory.
+
+
+PREREQUISITIES
+    Perl v5.6 with modules Template v2, Time::Hires, CGI, FreezeThaw, DBI,
+    DBD::Pg and URI.  PostgreSQL.  Apache v1.3 with mod_usertrack.
+
+
+INSTALL
+    The test program bin/serv1.pl will look for the libraries in
+    ../lib (relative to the current directory).  Create the databases
+    wraf_v01a in PostgreSQL and initiate it with the tables in
+    doc/rdf.sql  Do not 'make install'.  See doc/INSTALL for details.
+
+
+TEST EXAMPLE
+    Make the CGI program cgi-bin/client.cgi executable from a webserver.
+    Start ./serv1.pl in bin and be amazed at the amount of work needed
+    for a simple stupid list of names.  Use cgi-bin/demo.html as a
+    starting point.
+
+
+DEVELOPMENT
+    The homepage for Wraf is http://www.uxn.nu/wraf/ there you can
+    find the developers mailinglist and more background information.
+    Please send any comments to the developer mailinglist.
+
+
+COPYRIGHT
+    Copyright (C) 2000-2001 Jonas Liljegren. All Rights Reserved.
+
+    This module is free software; you can redistribute it and/or
+    modify it under the same terms as Perl itself.
+

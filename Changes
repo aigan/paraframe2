@@ -1,0 +1,841 @@
+2005-09-30  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm: expand elapsed_time()
+
+2005-09-28  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Watchdog.pm:
+	Trie to connect more times than the times the client tries to complete the request, since the error may be related to the specific request.
+
+	* lib/Para/Frame/Burner.pm, lib/Para/Frame.pm: less debug
+
+	* lib/Para/Frame/Widget.pm: make sure the default css exists
+
+	* lib/Para/Frame/Watchdog.pm:
+	adjust memory levels. (giving more time to act on HUP)
+
+	* lib/Para/Frame/Site.pm: accessor for $_[0]->{'params'};
+
+	* lib/Para/Frame/Session.pm: added user() as alias for u()
+
+	* lib/Para/Frame/Request.pm: - copy params more efficiently
+	- add sexxion() as alias for s()
+	- add params from $req->site->params
+
+	* lib/Para/Frame/DBIx.pm:
+	explicitly state if you want the tt params imported
+
+	* inc/title.tt: escape html
+
+	* lib/Para/Frame/Client.pm: introduce backup_port
+
+	* lib/Para/Frame/Site.pm: bugfix
+
+2005-09-27  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm: bgjobs less often
+
+	* lib/Para/Frame/DBIx.pm: bugfixes
+
+	* lib/Para/Frame/Action/backtrack.pm: bugfix
+
+	* def/confirm.tt, lib/Para/Frame/Widget.pm:
+	Made confirm_simple() work, with its template
+
+	* lib/Para/Frame/Utils.pm: added add_params()
+
+	* lib/Para/Frame/Site.pm: add home() as alias for webhome()
+
+	* lib/Para/Frame/Route.pm, lib/Para/Frame/Result.pm, lib/Para/Frame/Burner.pm:
+	bugfix
+
+	* lib/Para/Frame/Site.pm:
+	use programatic defaults rather than just at creation
+
+	* lib/Para/Frame/Site.pm: added appfmly()
+
+	* lib/Para/Frame/Request.pm: appfmly bleongs to Site
+
+	* lib/Para/Frame/Widget.pm: locales for едц
+
+	* lib/Para/Frame/Child.pm, lib/Para/Frame/Burner.pm, lib/Para/Frame.pm:
+	bugfix
+
+	* lib/Para/Frame/Child/Result.pm:
+	make child message length prefix of message
+
+	* lib/Para/Frame/Result.pm: bugfix
+
+	* lib/Para/Frame/Request.pm: forward length of child data
+
+	* lib/Para/Frame/Child.pm: prefix child message with data length
+
+	* lib/Para/Frame.pm:
+	Quickly close child then all data recieved. Trying to avoid stalled or missing CHLD signals
+
+	* lib/Para/Frame/User.pm: avoid undef warning
+
+	* lib/Para/Frame/Request.pm: less debug
+
+	* lib/Para/Frame.pm: debug
+
+	* lib/Para/Frame/Request.pm: less debug
+
+	* lib/Para/Frame/Burner.pm: Do not init unless needed
+
+	* lib/Para/Frame.pm: adjusted debug
+
+	* lib/Para/Frame/Utils.pm: less debug
+
+	* lib/Para/Frame/Request.pm: bugfix: Make req wait if asked to
+
+	* lib/Para/Frame/Burner.pm: adjust debug
+
+2005-09-26  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Result/Part.pm: added use of Template::Exception
+
+	* lib/Para/Frame/Child/Result.pm: check that we could send data ok
+
+	* lib/Para/Frame/Widget.pm: not using Template in this module
+
+	* lib/Para/Frame/Utils.pm: add use Template::Exception
+
+	* lib/Para/Frame/Site.pm: docfix
+
+	* lib/Para/Frame/Result.pm:
+	moved retrieval of error info from TT to Bruner class
+
+	* lib/Para/Frame/Burner.pm: do not add info note if already added
+
+	* lib/Para/Frame/Request.pm: - Removed use of Clone, that segfaulted...
+	- added message on dies
+	- using Burner
+	- handeling CANCEL in send_in_chunks()
+
+	* lib/Para/Frame/Email.pm: use Bruner
+
+	* lib/Para/Frame/DBIx.pm: less debug
+
+	* lib/Para/Frame.pm: remove childs of cancelling req
+
+	* lib/Para/Frame/Child.pm: handle CANCEL while waiting for childs
+
+	* lib/Para/Frame.pm: - Handle CANCEL in yield
+	- use Bruner
+	- moved add_tt_filters to Para::Frame::Burner->add_filters
+
+	* lib/Para/Frame/Burner.pm: Handles TT objects for processing templates
+
+	* lib/Para/Frame/Site.pm: added host_with_port()
+
+	* lib/Para/Frame/Request.pm: - $req->uri() returns a URI object
+	- $req->redirect() gives the local referer and not an external one
+	- the new fallback_error_page() returns an error page that may direct to a backup host
+	- added host_without_port() and host_with_port()
+
+	* lib/Para/Frame/Client.pm: redirect to backup on failure
+
+2005-09-25  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm, lib/Para/Frame/Utils.pm, lib/Para/Frame/Email.pm:
+	bugfix
+
+	* lib/Para/Frame/Request.pm: debugging background send_code
+
+	* lib/Para/Frame/Request.pm: bugfix
+
+	* lib/Para/Frame/Action/server_reload.pm: action for reloading server
+
+	* def/debug.tt: added button for reloading server
+
+	* lib/Para/Frame/Watchdog.pm: bugfix
+
+	* lib/Para/Frame/Session.pm: added debug_data()
+
+	* lib/Para/Frame/Request.pm: - more debug
+	- use moved permanently for some cases
+
+	* lib/Para/Frame/Child.pm: add debug for backtrace
+
+	* lib/Para/Frame.pm: more debug on failures. Calling $req->debug_data
+
+	* lib/Para/Frame/Widget.pm: dont follow sublinks
+
+	* lib/Para/Frame/Utils.pm, lib/Para/Frame.pm: fix filemodes
+
+	* inc/header.tt: add a robots metadata field
+
+	* lib/Para/Frame/Watchdog.pm, lib/Para/Frame/DBIx.pm: less debug
+
+	* lib/Para/Frame.pm: use locale var dir for each daemon
+
+2005-09-24  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Watchdog.pm:
+	added kill_competition() for killing processes using our port
+
+	* lib/Para/Frame.pm: - moved from $SITE_CFG
+	- set $ENV{PATH}
+
+2005-09-23  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Client.pm: fallback page...
+
+	* lib/Para/Frame/Child.pm, lib/Para/Frame/Request.pm, lib/Para/Frame/Result.pm:
+	bugfix
+
+	* lib/Para/Frame/Result/Part.pm: do not backtrack on pagge not found...
+
+	* lib/Para/Frame/Watchdog.pm: do not send HUP too often...
+
+	* lib/Para/Frame/Result.pm:
+	- hide_part() now hides both past and future errors
+	- rename $self to $result
+
+	* lib/Para/Frame/Request.pm: bugfix. Hopefully
+
+	* lib/Para/Frame/Request.pm: Eliminating some steps in after_jobs()
+
+	* lib/Para/Frame.pm: eliminate some steps in after_jobs()
+
+	* lib/Para/Frame/Request.pm: looking for bugfix
+
+	* lib/Para/Frame/Utils.pm: do not use the errorfile for now...
+
+	* lib/Para/Frame/Request.pm:
+	Tried to handle forward without generated page
+
+2005-09-22  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm: do not make $REQ = ''!
+
+	* lib/Para/Frame/Site.pm: less debug
+
+	* lib/Para/Frame/Result/Part.pm: added hide()
+
+	* lib/Para/Frame/Child/Result.pm: less debug
+
+	* lib/Para/Frame/Utils.pm: added note
+
+	* lib/Para/Frame/Session.pm: $req not needed
+
+	* lib/Para/Frame/Result.pm, lib/Para/Frame/Request.pm: bugfix
+
+	* lib/Para/Frame/Utils.pm: added debug
+
+	* lib/Para/Frame/Request.pm:
+	use given host name if known, rather than the site hostname that could be the default
+
+	* lib/Para/Frame/DBIx.pm:
+	downgrade email error in save() if request not from client
+
+	* lib/Para/Frame/Result/Part.pm: expanded class with a lot of things
+
+	* lib/Para/Frame/Child/Result.pm: docfix
+
+	* lib/Para/Frame/Site.pm: docfx
+
+	* lib/Para/Frame/Result.pm: Moving more to Result::Part
+
+	* lib/Para/Frame/Request.pm:
+	- supporting sending URI obj to set_template()
+	- better handling of TT processing exceptions
+	- catch recursive processing failure
+
+	* lib/Para/Frame/Email.pm: Gives a little more explanation
+
+	* lib/Para/Frame/Child.pm: docfix
+
+	* lib/Para/Frame.pm: let incpath_generator() give the whole path
+
+	* inc/components.tt:
+	introducing nostep macro, for templates not containging a form
+
+	* lib/Para/Frame.pm, lib/Para/Frame/Request.pm: debug
+
+	* lib/Para/Frame/Request.pm:
+	- added done() for finishing up a request and close callback if possible
+	- support redirection from inside a template
+
+	* inc/components.tt: bugfix
+
+	* lib/Para/Frame/Request.pm: A shortcut to gain som speedup
+
+	* lib/Para/Frame.pm: bugfix
+
+	* lib/Para/Frame/Request.pm:
+	Go directly to after_jobs(). Problably much faster...
+
+	* lib/Para/Frame/Client.pm: less debug
+
+	* lib/Para/Frame.pm, lib/Para/Frame/Route.pm: bugfix
+
+	* lib/Para/Frame/Utils.pm: - Introducing Para::Frame::Site
+	- initialize debug() on use
+
+	* lib/Para/Frame/Route.pm: Introducing Para::Frame::Site
+
+	* lib/Para/Frame/Request.pm: - Introducing Para::Frame::Site
+	- renamed http_host_name() to http_host()
+	- removed host_name() and host_port()
+	- added http_port() site() host_from_env()
+	- host() now uses site()
+
+	* lib/Para/Frame/Email.pm:
+	allow us to halt email delivery during testing
+
+	* lib/Para/Frame/DBIx.pm: avoid undef warnings
+
+	* lib/Para/Frame.pm: - Introducing Para::Frame::Site
+	- Added $REQ_LAST for debug
+
+	* lib/Para/Frame/Site.pm: Introducing Para::Frame::Site
+
+2005-09-21  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Watchdog.pm: added debug
+
+	* lib/Para/Frame/Utils.pm: removed debug
+
+	* lib/Para/Frame/Result.pm, lib/Para/Frame.pm: added debug
+
+	* lib/Para/Frame/Utils.pm: debug
+
+	* lib/Para/Frame/Utils.pm: test errfile for DB
+
+	* lib/Para/Frame/Utils.pm: log to errfile
+
+	* lib/Para/Frame/Result/Part.pm: Represent a part of a request result
+
+	* lib/Para/Frame/Time.pm: - now() now uses correct time zone
+	- sysdesig() displays more details
+	- overload <=> in DateTime::Span
+
+	* lib/Para/Frame/Result.pm:
+	- now uses a Para::Frame::Result::Part class
+	- property no_backtrack used for not going back to previous page on exception
+	- property hide used for not displaying exception in standard info_box
+	- added backtrack() for telling if we should bactrack to previous page
+	- added find() for finding a part with specific type
+	- added hide_part() for hiding parts of spcific type
+
+	* lib/Para/Frame/Request.pm: better handling of denied exception
+
+	* lib/Para/Frame/Reload.pm: disable warnings on reload
+
+	* lib/Para/Frame.pm: better debug
+
+	* inc/info_box.tt: tweaking...
+
+	* inc/components.tt: changed to use object
+
+	* def/denied.tt: template used then page or action was denied
+
+2005-09-20  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm: - Set default mode for dirs to 02770
+	- set default mode for files to 0660
+	- bugfix chmod_file()
+	- added function get_from_fork()
+
+	* lib/Para/Frame/User.pm: revert unneded default
+
+2005-09-19  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: remove modules not used
+
+	* lib/Para/Frame/Watchdog.pm: use now()
+
+	* lib/Para/Frame/Utils.pm: - bugfix for debug()
+	- plan on using validate()
+
+	* lib/Para/Frame/User.pm: Added default for level just in case...
+
+	* lib/Para/Frame/Time.pm: Moved from Time::Pice to DateTime
+
+	* lib/Para/Frame/Session.pm: use now()
+
+	* lib/Para/Frame/Result.pm: bugfix
+
+	* lib/Para/Frame/Request.pm: - remove usage of Time::Pece
+	- compile all CGI code on startup
+	- debug bugfix
+	- support sending more params to run_action
+
+	* lib/Para/Frame/Email.pm: remove old modules
+
+	* lib/Para/Frame/DBIx.pm:
+	- generalize error handling with report_error()
+	- added format_datetime() update() insert() insert_wrapper() update_wrapper() format_value_list() format_value()
+	- expanded save_record()
+
+	* lib/Para/Frame.pm: use now()
+
+2005-09-16  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Email/Address.pm: added 'ne' overload
+
+	* lib/Para/Frame/Child/Result.pm: docs
+
+	* lib/Para/Frame/Widget.pm: moved locale setting to global config
+
+	* lib/Para/Frame/Watchdog.pm: add spacing on restart
+
+	* lib/Para/Frame/Utils.pm: added retrieve_from_url()
+
+	* lib/Para/Frame/Request.pm: bugfix
+
+	* lib/Para/Frame/DBIx.pm:
+	extended save_record() for integer, float and email
+
+	* lib/Para/Frame/Child.pm: docs
+
+	* lib/Para/Frame.pm: moved locale setting to global config (here)
+
+2005-09-15  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Ctype.pm, lib/Para/Frame/Email/Address.pm, lib/Para/Frame/Child/Result.pm:
+	indentation
+
+	* lib/Para/Frame/Action/wait_for_req.pm: initial version
+
+	* lib/Para/Frame/Widget.pm: - indentation
+	- moved inflect() to this module from Utils
+
+	* lib/Para/Frame/Watchdog.pm: - indentation
+
+	* lib/Para/Frame/Utils.pm: - indentation
+	- added fqdn()
+	- moved inflect to Widget
+
+	* lib/Para/Frame/User.pm: - indentation
+	- moved become_temporary_user() and revert_from_temporary_user() to this place
+
+	* lib/Para/Frame/Time.pm, lib/Para/Frame/Session.pm, lib/Para/Frame/Route.pm, lib/Para/Frame/Result.pm:
+	indentation
+
+	* lib/Para/Frame/Request.pm: - indentation
+	- %ENV bugfixes
+	- support background jobs
+
+	* lib/Para/Frame/Reload.pm: indentation
+
+	* lib/Para/Frame/Email.pm: - indentation
+	- bugfixes
+
+	* lib/Para/Frame/DBIx.pm, lib/Para/Frame/Cookies.pm, lib/Para/Frame/Client.pm:
+	- indentation
+
+	* lib/Para/Frame/Child.pm: - indentation
+	- support background jobs
+
+	* lib/Para/Frame.pm: - indentation
+	- Do bgjobs under higher server load
+	- introduce $req->{'wait'}
+	- more debug
+	- split up add_background_jobs() to be used from add_background_jobs_conditional
+	- support background jobs in IPC
+
+	* lib/Para/Frame/Watchdog.pm: - Global flag for hard restart
+	- Larger difference between LIMIT_MEMORY_NOTICE and LIMIT_MEMORY
+
+2005-09-13  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Watchdog.pm: - Do not send memory notices to often
+	- Realy restart srver if memory limit is reached
+	- Make sure to realy terminate the server if restarting it
+
+2005-09-10  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/User.pm: There may not be an active request...
+
+	* lib/Para/Frame/Request.pm: less debug
+
+	* lib/Para/Frame/Watchdog.pm: adjust debug level
+
+	* lib/Para/Frame.pm, lib/Para/Frame/Action/server_terminate.pm, lib/Para/Frame/Child.pm, lib/Para/Frame/Child/Result.pm, lib/Para/Frame/Client.pm, lib/Para/Frame/Cookies.pm, lib/Para/Frame/DBIx.pm, lib/Para/Frame/Email.pm, lib/Para/Frame/Email/Address.pm, lib/Para/Frame/Reload.pm, lib/Para/Frame/Request.pm, lib/Para/Frame/Request/Ctype.pm, lib/Para/Frame/Result.pm, lib/Para/Frame/Route.pm, lib/Para/Frame/Session.pm, lib/Para/Frame/Time.pm, lib/Para/Frame/User.pm, lib/Para/Frame/Utils.pm, lib/Para/Frame/Watchdog.pm, lib/Para/Frame/Widget.pm:
+	Introduced pidfile. Changed I/O for process control
+
+2005-09-09  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm: temporary debug stuff
+
+	* lib/Para/Frame/Watchdog.pm: give startup more time
+
+	* lib/Para/Frame/Client.pm, lib/Para/Frame.pm: adjust debug levels
+
+2005-09-08  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: - buggfix in error_backtrack()
+	- added redirect() method
+	- comments about forward() vs redirect()
+
+2005-09-05  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/server_terminate.pm:
+	Print out special page on server termination
+
+	* lib/Para/Frame/Watchdog.pm: larger memory limit
+
+	* lib/Para/Frame/Utils.pm: add extract_query_params()
+
+	* lib/Para/Frame/Request.pm: use hook on_error_detect in run_code()
+
+	* lib/Para/Frame/DBIx.pm:
+	- add save_record(), used by Topic and Arctype
+	- add debug on roolback failure
+
+	* lib/Para/Frame.pm: - added busy_background_job hook
+	- check_for_updates() for background jobs
+	- put hook running in evals
+
+2005-08-31  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Watchdog.pm:
+	user restart_server() instead of terminate_server() for restart
+
+	* lib/Para/Frame.pm: Just debug
+
+2005-08-30  jonas <jonas@paranormal.se>
+
+	* def/debug.tt, lib/Para/Frame/Utils.pm: Work with watchdog and paynova
+
+	* lib/Para/Frame/Widget.pm: support background jobs
+
+	* lib/Para/Frame/Watchdog.pm:
+	added restart_server(), send_to_server() and memory checking
+
+	* lib/Para/Frame/Time.pm: less debug
+
+	* lib/Para/Frame/Session.pm: added new_minimal()
+
+	* lib/Para/Frame/Request.pm: added new_minimal() and run_code()
+
+	* lib/Para/Frame/DBIx.pm: expanded pgbool()
+
+	* lib/Para/Frame/Client.pm: Added dirconfig
+
+	* lib/Para/Frame.pm: added background_jobs()
+
+2005-08-24  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: bugfix
+
+	* lib/Para/Frame/Watchdog.pm:
+	New module for makeing sure that the server is running like it should
+
+	* lib/Para/Frame/Action/server_terminate.pm:
+	terminate by sending code to Watchdog
+
+	* lib/Para/Frame/Widget.pm, lib/Para/Frame/Route.pm:
+	renamed on_startup to on_configure
+
+	* lib/Para/Frame/Request.pm:
+	renamed Para::Frame::Client::connect to Para::Frame::Client::connect_to_server
+
+	* lib/Para/Frame/DBIx.pm: doesn not connect from new() anymore
+
+	* lib/Para/Frame/Client.pm: - Tries several times before giving up
+	- refactoring
+
+	* lib/Para/Frame.pm: added use of Watchdog
+
+2005-08-23  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: bugfix: call $req->{'referer'}
+
+2005-08-22  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm:
+	Store referer in request in order to get the actual referer in cases of nested requests in the session
+
+	* lib/Para/Frame/Utils.pm: less debug
+
+	* lib/Para/Frame/DBIx.pm:
+	added methods commit() and rollback() that will call hooks before_db_commit and after_db_rollback
+
+	* lib/Para/Frame.pm: added hooks before_db_commit and after_db_rollback
+
+2005-08-20  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm: bugfix
+
+	* lib/Para/Frame/User.pm:
+	Make nonexistent user in cookie a warning instead of a fatal error
+
+	* lib/Para/Frame/Request.pm: check for succes in sending small pages
+
+	* lib/Para/Frame/Email.pm: debug
+
+	* lib/Para/Frame/Action/user_login.pm:
+	moved user_login from paranormal and modified
+
+2005-08-18  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm:
+	- added send_in_chunks() for sending data and make sure it got sent correctly
+	- added yield() for taking a break and do something else for an instant
+
+	* lib/Para/Frame/Client.pm: added some more debug
+
+	* lib/Para/Frame.pm: Support yielding without a child waiting
+
+2005-08-17  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Email.pm, lib/Para/Frame/Route.pm: Stable version
+
+	* lib/Para/Frame/User.pm: added a style() method
+
+	* lib/Para/Frame/Widget.pm: adds a css_header() widget
+
+	* lib/Para/Frame/Result.pm: some debug
+
+	* lib/Para/Frame/Request.pm:
+	Do not backtrack in path if a error backtrack was done
+
+	* lib/Para/Frame/DBIx.pm: replace prepare_cached() with prepare()
+
+	* lib/Para/Frame.pm: adds a after_db_connect() hook
+
+	* inc/js.tt: adds a showhide() js toggle funtion
+
+	* inc/header.tt: calls css_header() for generating css header
+
+	* inc/form_start.tt:  - added META param form_enctype
+	 - added META param onsubmit
+	 - added META param next_template_target
+
+2005-08-15  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: clarify template translation process
+
+2005-08-14  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: expanded alfanum_bar() to take subselects
+
+	* lib/Para/Frame/Utils.pm: added timediff() function
+
+	* lib/Para/Frame/Request.pm:
+	separate $req->{template} from $req->{template_uri}. Adding doc explaing the situation
+
+	* lib/Para/Frame/DBIx.pm:
+	Speed up SQL execution by removing some unessesary setup code
+
+2005-08-13  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Email/Address.pm: added format() and name()
+
+	* lib/Para/Frame/Action/remove_step.pm: initial version
+
+	* lib/Para/Frame/Action/mark.pm: uses $req->referer now
+
+	* lib/Para/Frame/Widget.pm: minor changes
+
+	* lib/Para/Frame/Utils.pm: - internet_date() moved to Para::Frame::Time
+	- referer() removed
+	- added inflect()
+
+	* lib/Para/Frame/User.pm: added some shortcuts
+
+	* lib/Para/Frame/Time.pm: - add docs
+	- export now(), date() and internet_date()
+
+	* lib/Para/Frame/Request.pm: - extend referer()
+	- put set_tt_params last
+
+	* lib/Para/Frame/Route.pm: - add default step
+	- clean up skip_step logic
+	- refactoring
+	- add docs
+
+	* lib/Para/Frame/DBIx.pm: bugfix: reconnect on fork
+
+	* lib/Para/Frame/Client.pm: Do not use global debug value
+
+	* lib/Para/Frame.pm: - Adds autoformat filter to text_plain
+	- bugfix for reading data from child
+	- Keep %ENV updated on req change
+	- add {'site'} subhash in %CFG
+	- export \%CFG ad cfg in template
+
+	* inc/menu_top.tt: Add default logout page
+
+	* inc/form_start.tt: Add another default step in route
+
+	* inc/form_start.tt: put in another destination option (route.default)
+
+	* inc/debug.tt: - add remove_step button
+	- Include separate app_debug template
+
+	* inc/components.tt:
+	new macro step() adds a couple of route buttons in group
+
+	* def/page_part_not_found.tt: preserve data
+
+	* def/page_not_found.tt: Preserve data
+
+	* def/login.tt: set default login page to site.login_page
+
+	* def/error.tt:
+	Preserve data on error in order to get form reload to work
+
+2005-08-09  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Ctype.pm: less debug
+
+	* lib/Para/Frame/Email/Address.pm:
+	- use overloading to stringify address and allow 'eq'
+	- Some trickery to keep the classes while using subclasses
+
+	* lib/Para/Frame/Action/user_logout.pm: bugfix
+
+	* lib/Para/Frame/Action/mark.pm:
+	now also stores the query params in the bookmark
+
+	* lib/Para/Frame/Action/backtrack.pm: minor cleanup
+
+	* lib/Para/Frame/Widget.pm: use $req->template_uri instead of $req->me
+
+	* lib/Para/Frame/Utils.pm: - trim() bugfix
+	- debugging
+	- referer() bugfix
+	- added hashref() method
+
+	* lib/Para/Frame/User.pm:
+	- split hook to use before_user_logout() and after_user_logout()
+	- less debugg
+
+	* lib/Para/Frame/Time.pm: - moved Date_Init to import()
+	- optimizing
+
+	* lib/Para/Frame/Session.pm: minor cleanup
+
+	* lib/Para/Frame/Route.pm: - much more documentation
+	- Now automaticly remove all equal steps adactent to each other
+	- bugfixes
+	- added default() method
+	- warn -> debug()
+
+	* lib/Para/Frame/Request.pm: - removed the me() method
+	- less debugging
+	- added check in forward() method
+	- added host() method
+	- TT function me() now interface to template_uri()
+
+	* lib/Para/Frame/Reload.pm:
+	Set global variable with compile errors so that they can be reported
+
+	* lib/Para/Frame/Result.pm:
+	- Give back the error types their colour coding
+	- Report compilation errors set by  Para::Frame::Reolod
+
+	* lib/Para/Frame/Email.pm:
+	added methods send_in_fork() and send_by_proxy()
+
+	* lib/Para/Frame/Child.pm: Added failed() method
+
+	* lib/Para/Frame.pm:
+	- keep html template obj error status within request
+	- change hoop user_logout to before_user_logout() and after_user_logout()
+
+	* inc/debug.tt: try to keep HTML form state
+
+	* def/debug.tt, lib/Para/Frame/Action/server_terminate.pm:
+	web interface for terminating server
+
+2005-08-05  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Ctype.pm, lib/Para/Frame/Child/Result.pm:
+	debug
+
+	* lib/Para/Frame/Utils.pm: - debug
+	- debug() now marks up forks more clearly
+
+	* lib/Para/Frame/User.pm, lib/Para/Frame/Time.pm, lib/Para/Frame/Session.pm:
+	debug
+
+	* lib/Para/Frame/Request.pm: - add client_ip()
+	- debug
+
+	* lib/Para/Frame/Email.pm: - debug
+	- use $from_addr_str in good/bad result hashes
+
+	* lib/Para/Frame/DBIx.pm, lib/Para/Frame/Cookies.pm: debug
+
+	* lib/Para/Frame.pm, lib/Para/Frame/Child.pm:
+	Bugfix: keep reading result form forks in order to keep the IF buffer from filling up
+
+	* def/login.tt: default to home page after login
+
+	* def/debug.tt, inc/debug.tt, lib/Para/Frame/Action/debug_change.pm:
+	Better debugging
+
+2005-07-14  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm: debug changes
+
+	* lib/Para/Frame/Client.pm: debug usage
+
+	* lib/Para/Frame/Utils.pm: debug handling changes
+
+2005-06-13  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Client.pm, lib/Para/Frame/Config.pm, lib/Para/Frame/Request.pm, lib/Para/Frame/Session.pm, lib/Para/Frame/User.pm, lib/Para/Frame/Utils.pm:
+	Session and user handling. Moved things to $Para::Frame::CFG
+
+	* lib/Para/Frame/Request/Ctype.pm, lib/Para/Frame/Utils.pm, lib/Para/Frame/User.pm:
+	less debug
+
+	* lib/Para/Frame/Time.pm: no reload
+
+	* lib/Para/Frame.pm, lib/Para/Frame/Request.pm: less debug
+
+	* lib/Para/Frame/Reload.pm: Much better Reload handling
+
+2005-06-11  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Ctype.pm: set or modify content-type
+
+	* lib/Para/Frame/Email/Address.pm: use forking
+
+	* lib/Para/Frame/Child/Result.pm: minor fix
+
+	* lib/Para/Frame/Utils.pm: add punycode functions
+
+	* lib/Para/Frame/User.pm: add debug
+
+	* lib/Para/Frame/Route.pm: - add debug
+	- add docs
+
+	* lib/Para/Frame/Result.pm: bugfix
+
+	* lib/Para/Frame/Request.pm: add content-type code
+
+	* lib/Para/Frame/DBIx.pm: fix commit
+
+	* lib/Para/Frame/Client.pm: connect to specified port
+
+	* lib/Para/Frame.pm: misc changes
+
+	* inc/header.tt: let the http headers be in the http header
+
+	* inc/env.tt: display environment
+
+	* inc/debug.tt: layout fix
+
+2005-06-05  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm, lib/Para/Frame/Child.pm, lib/Para/Frame/Child/Result.pm, lib/Para/Frame/Client.pm, lib/Para/Frame/DBIx.pm, lib/Para/Frame/Email.pm, lib/Para/Frame/Email/Address.pm, lib/Para/Frame/Reload.pm, lib/Para/Frame/Request.pm, lib/Para/Frame/Result.pm, lib/Para/Frame/Route.pm, lib/Para/Frame/Utils.pm:
+	Mainly work with forked jobs
+
+	* inc/debug.tt: show the request serial number
+
+2005-05-04  jonas <jonas@paranormal.se>
+
+	* def/env.tt, def/error.tt, def/index.tt, def/login.tt, def/page_not_found.tt, def/page_part_not_found.tt, inc/border_bottom.tt, inc/border_top.tt, inc/components.tt, inc/debug.tt, inc/footer.tt, inc/form_start.tt, inc/header.tt, inc/header_extra.tt, inc/header_prepare.tt, inc/headline.tt, inc/info_box.tt, inc/js.tt, inc/js_extra.tt, inc/login_box.tt, inc/menu_top.tt, inc/pagify.tt, inc/title.tt, lib/Para/Frame.pm, lib/Para/Frame/Action/backtrack.pm, lib/Para/Frame/Action/mark.pm, lib/Para/Frame/Action/next_step.pm, lib/Para/Frame/Action/skip_step.pm, lib/Para/Frame/Action/user_logout.pm, lib/Para/Frame/Client.pm, lib/Para/Frame/Config.pm, lib/Para/Frame/Cookies.pm, lib/Para/Frame/DBIx.pm, lib/Para/Frame/Email.pm, lib/Para/Frame/Email/Address.pm, lib/Para/Frame/Reload.pm, lib/Para/Frame/Request.pm, lib/Para/Frame/Result.pm, lib/Para/Frame/Route.pm, lib/Para/Frame/Session.pm, lib/Para/Frame/Template/Plugin/Meta/Interpolate.pm, lib/Para/Frame/Time.pm, lib/Para/Frame/User.pm, lib/Para/Frame/Utils.pm, lib/Para/Frame/Widget.pm:
+	Imported from initial development tree
+
+	* def/env.tt, def/error.tt, def/index.tt, def/login.tt, def/page_not_found.tt, def/page_part_not_found.tt, inc/border_bottom.tt, inc/border_top.tt, inc/components.tt, inc/debug.tt, inc/footer.tt, inc/form_start.tt, inc/header.tt, inc/header_extra.tt, inc/header_prepare.tt, inc/headline.tt, inc/info_box.tt, inc/js.tt, inc/js_extra.tt, inc/login_box.tt, inc/menu_top.tt, inc/pagify.tt, inc/title.tt, lib/Para/Frame.pm, lib/Para/Frame/Action/backtrack.pm, lib/Para/Frame/Action/mark.pm, lib/Para/Frame/Action/next_step.pm, lib/Para/Frame/Action/skip_step.pm, lib/Para/Frame/Action/user_logout.pm, lib/Para/Frame/Client.pm, lib/Para/Frame/Config.pm, lib/Para/Frame/Cookies.pm, lib/Para/Frame/DBIx.pm, lib/Para/Frame/Email.pm, lib/Para/Frame/Email/Address.pm, lib/Para/Frame/Reload.pm, lib/Para/Frame/Request.pm, lib/Para/Frame/Result.pm, lib/Para/Frame/Route.pm, lib/Para/Frame/Session.pm, lib/Para/Frame/Template/Plugin/Meta/Interpolate.pm, lib/Para/Frame/Time.pm, lib/Para/Frame/User.pm, lib/Para/Frame/Utils.pm, lib/Para/Frame/Widget.pm:
+	New file.
+
