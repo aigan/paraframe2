@@ -7,72 +7,66 @@ DESCRIPTION
     backend daemon taking page requests from a Apache mod_perl client
     and returns a HTTP response.
 
-    
+    The URLs in the site corresponds to templates for displaying
+    information. Operations on the data is put in perl modules
+    separated from the templates.
 
-    This system differs from other alternatives. Try it out and see if
-    it matches your way of thinking.
+    Para::Frame handles multitasking within the process, enabeling you
+    to keep your initialized objects in memory with no need to sync
+    with the DB for each request.
 
-    The URL paths represents information you want to GET. Each type of
-    information has it's own tempalte file and the URL path directs
-    you to that template.  If you want to SET data, you use 'actions'
-    in form of separate Perl modules
+    The session data lives in memory. No need to save it in an
+    external format.
 
-it's done in 'actions'
-    that are completely separate from 
+    Para::Frame uses "routes" for planning things to do in a session,
+    taking care of which page to display next, depending on form
+    actions.  Integrated with exception handling.
 
+    One Para::Frame daemon can handle many sites on the same
+    server. It uses the Apache configuration for handling URL to file
+    translation.
 
+    You can have any number of Para::Frame daemons running in
+    parallell on the same server. Maby using one for development, one
+    for the stable version and one backup in case of failure. You can
+    easily configure the site to use a backup daemon as a last resort.
 
-    It aims for making life simple, with defaults for everything. But
-    it is a collection of a lot of things that could be useful in
-    creating a dynamic web site.
+    A Watchdog makes sure that the system works. It pings the daemon
+    in regular intervals and restarts it if locks up or if the memory
+    limit is reached. The restart is done by forking.
 
-    This framework uses the Template Toolkit for building pages.
-
-    
-
-    There is a lot of web site framework and application server
-
-
-    Wraf implements a RDF API that hopes to realize the Semantic
-    Web. The framework uses RDF for data, user interface, modules and
-    object methods. It uses interfaces to other sources in order to
-    integrate all data in one enviroment, regardless of storage form.
+    There are tons of useful functions.
 
 
 DOCUMENTATION
-    The documentation is far from complete and not up to date.  Send
-    any question to the mailinglist rdf@uxn.nu.  Look for comments in
-    the source and notes in the ./doc directory.
+    Far from complete. Don't be afraid of reading the source.
 
 
 PREREQUISITIES
-    Perl v5.6 with modules Template v2, Time::Hires, CGI, FreezeThaw, DBI,
-    DBD::Pg and URI.  PostgreSQL.  Apache v1.3 with mod_usertrack.
+    Perl v5.6 and Apache with mod_perl. I'm using DBD::Pg but others
+    should mosly work.
+
+    This module is the oposite of minimalist. It includes lots of
+    other modules. Your experience of installing CPAN modules will
+    come to good use.
 
 
 INSTALL
-    The test program bin/serv1.pl will look for the libraries in
-    ../lib (relative to the current directory).  Create the databases
-    wraf_v01a in PostgreSQL and initiate it with the tables in
-    doc/rdf.sql  Do not 'make install'.  See doc/INSTALL for details.
 
-
-TEST EXAMPLE
-    Make the CGI program cgi-bin/client.cgi executable from a webserver.
-    Start ./serv1.pl in bin and be amazed at the amount of work needed
-    for a simple stupid list of names.  Use cgi-bin/demo.html as a
-    starting point.
+    You are not meant to install Para::Frame among your Perl
+    libraries.  Copy the ditribution to /usr/local/paraframe
+    See INSTALL for details.
 
 
 DEVELOPMENT
-    The homepage for Wraf is http://www.uxn.nu/wraf/ there you can
-    find the developers mailinglist and more background information.
-    Please send any comments to the developer mailinglist.
+    The homepage for Para::Frame is http://frame.para.se/ there you
+    can find the developers mailinglist and more background
+    information.  Please send any comments to the developer
+    mailinglist.
 
 
 COPYRIGHT
-    Copyright (C) 2000-2001 Jonas Liljegren. All Rights Reserved.
+    Copyright (C) 2004-2005 Jonas Liljegren. All Rights Reserved.
 
     This module is free software; you can redistribute it and/or
     modify it under the same terms as Perl itself.
-

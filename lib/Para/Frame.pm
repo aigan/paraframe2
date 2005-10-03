@@ -16,7 +16,13 @@ package Para::Frame;
 #
 #=====================================================================
 
-use 5.006;
+=head1 NAME
+
+Para::Frame - Web application framework
+
+=cut
+
+use 5.008;
 use strict;
 use IO::Socket 1.18;
 use IO::Select;
@@ -31,7 +37,8 @@ use DateTime::TimeZone;
 
 BEGIN
 {
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
+    our $CVSVERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
+    our $VERSION = "1.00"; # Paraframe version
     print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
@@ -80,6 +87,62 @@ our $REAPER_FAILSAFE;      # Testing...
 
 # STDOUT goes to the watchdog. Use well defined messages!
 # STDERR goes to the log
+
+=head1 DESCRIPTION
+
+Para::Frame is a system to use for dynamic web sites. It runs as a
+backend daemon taking page requests from a Apache mod_perl client and
+returns a HTTP response.
+
+
+=over
+
+
+=item L<Para::Frame::Overview>
+
+Overview and Introduction
+
+
+=item L<Para::Frame::Template::Overview>
+
+The default ParaFrame TT components
+
+
+=item L<Para::Frame::Template::Meta>
+
+The page META information
+
+
+=item L<Para::Frame::Template::Index>
+
+Template creation and modification
+
+
+=back
+
+=head1 QUICKSTART
+
+In httpd.conf :
+
+   <Perl>
+      unshift @INC, '/usr/local/paraframe/lib';
+   </Perl>
+   PerlModule Para::Frame::Client
+
+In .htaccess :
+
+   AddHandler perl-script tt
+   PerlHandler Para::Frame::Client
+   ErrorDocument 404 /page_not_found.tt
+   PerlSetVar port 7788
+
+In some/public/file.tt :
+
+   [% META title="Hello world" %]
+   <p>This is a simple template</p>
+
+=cut
+
 
 sub startup
 {
@@ -1301,3 +1364,13 @@ sub set_global_tt_params
 
 #########################################################
 
+
+=head1 AUTHOR
+
+Jonas Liljegren E<lt>jonas@paranormal.seE<gt>
+
+=head1 SEE ALSO
+
+L<Template>
+
+=cut

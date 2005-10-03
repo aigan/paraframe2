@@ -1,0 +1,136 @@
+=head1 NAME
+
+Para::Frame::Template::Components - Template creation and modification
+
+=head1 DESCRIPTION
+
+The respective object is defined in their source pods.
+
+=head1 Page generation
+
+See L<Para::Frame::Template::Overview>
+
+=head1 Exported objects
+
+This is some of the exported objects.
+
+=head2 Form widgets
+
+=over
+
+=item L<slider|Para::Frame::Widget/slider>
+
+Draws a series of radiobuttons representing a range of numerical
+values.
+
+=item L<input|Para::Frame::Widget/input>
+
+Draws a input field widget.
+
+=item L<radio|Para::Frame::Template::Components/radio>
+
+Draws a radiobutton.
+
+=item L<checkbox|Para::Frame::Template::Components/checkbox>
+
+Draws a checkbox.
+
+=item  L<textarea|Para::Frame::Widget/textarea>
+
+Draws a textarea.
+
+=item L<select|Para::Frame::Template::Components/select>
+
+Draws a dropdown menu from a list of records (from a DB).
+
+=back
+
+
+=head2 Data manipulation
+
+=over
+
+=item L<hidden|Para::Frame::Widget/hidden>
+
+Inserts a hidden form field.
+
+=item L<preserve_data|Para::Frame::Widget/preserve_data>
+
+Preserves most query params EXCEPT those mentioned
+
+=item L<plan_backtrack|Para::Frame::Route/plan_backtrack>
+
+Pops the URL from the top of the route stack and returns it.
+
+=item L<rowlist|Para::Frame::Widget/rowlist>
+
+Returns a list of values.  One entry for each nonempty row in the
+text.
+
+=item L<list2block|Para::Frame::Widget/list2block>
+
+This is the inverse of rowlist.  Returns a textblock created from a
+list of values.
+
+=back
+
+=head2 Navigation widgets
+
+=over
+
+=item L<submit|Para::Frame::Template::Components/submit>
+
+Draw a form submit button.
+
+=item L<go|Para::Frame::Widget/go>
+
+Draw a form submit button with custom next_handler and next_action.
+
+=item L<jump|Para::Frame::Widget/jump>
+
+Draw a link.
+
+=item L<forward|Para::Frame::Widget/forward>
+
+Draw a link, keeping all curent params.
+
+=item L<plan_next|Para::Frame::Route/plan_next>
+
+Insert a new step in the route.
+
+=item L<alfanum_bar|Para::Frame::Widget/alfanum_bar>
+
+Draws a alfanumerical link bar.
+
+=back
+
+=head2 Other widgets
+
+=over
+
+=item L<hr|Para::Frame::Template::Components/hr>
+
+Creates a small hr.
+
+=back
+
+
+=head2 Modules exporting objects
+
+Just some of them...
+
+=over
+
+=item L<Para::Frame::Request/set_ritframe_params>
+
+=item L<Para::Frame::DBIx/"Exported objects">
+
+=item L<Para::Frame::Widget>
+
+=back
+
+=head1 SEE ALSO
+
+L<Para::Frame>, L<Para::Frame::Template::Overview>
+
+=cut

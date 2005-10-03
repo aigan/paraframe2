@@ -1,0 +1,98 @@
+=head1 NAME
+
+Para::Frame::Template::Meta - Common TT html header
+
+=head1 META parameters
+
+=head2 title
+
+Sets HTML title and a H1 with the value.
+
+
+=head2 otitle
+
+Only sets HTML title with the value.
+
+
+=head2 level
+
+Access level for viewing the page.
+
+The user level is set by L<Para::Frame::User>.
+
+Example:  [% META title="Hello" level=4 %]
+
+Default value: 0
+
+
+=head2 focus
+
+Sets focus on form field with specified name.
+
+
+=head2 next_template
+
+Set default next page to view after form submit.
+
+The value can be any sort of URL.  Used to set form.f.action.
+
+Default template determined by L<Para::Frame::Route/plan_backtrack>
+in case of form submit with next_handler being false.
+
+
+=head2 default_template
+
+Set default next page to view after form submit.
+
+The value can be any sort of URL.  Used to set form.f.action.
+
+This will be used if both L</next_handler> and
+L<Para::Frame::Route/plan_backtrack> returns undef.
+
+
+=head2 next_action
+
+Set default action to be taken after form submit, before viewing the
+next page.
+
+Stored in form field 'run'.
+
+Multiple actions can be taken by concatenating them with '&'.  Each
+action value consist of [\w-] and will in turn invoke
+&Para::Frame::Action::<action>::handler()
+
+Later actions will be aborted if a previous action makes an exception.
+
+
+=head2 css
+
+The cascading stylesheet to use for this page.
+
+
+=head2 favicon
+
+The favicon to use for this page
+
+
+=head2 description
+
+The description of the page (for search engines)
+
+
+=head2 keywords
+
+The keywords for the page (for search engines)
+
+This is given as a string
+
+
+=head2 body_class
+
+The class of the HTML body (for CSS)
+
+
+=head1 SEE ALSO
+
+L<Para::Frame>
+
+=cut

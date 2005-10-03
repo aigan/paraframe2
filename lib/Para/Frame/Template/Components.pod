@@ -1,0 +1,73 @@
+=head1 NAME
+
+Rit::Frame::Template::Components - Common template macro widgets
+
+=head1 DESCRIPTION
+
+These macros are defined in C<inc/html/c/components.tt> and can be
+replaced by a custom implementation by a file with the same name in
+your TT path.
+
+Widgets can be implemented either as exported objects (functions /
+methods / variables) or as templates for inclusion or defined template
+macros.
+
+These are the standard widgets defined as TT macros.  See also the
+standard L<Rit::Frame::Widget> module.
+
+
+=head2 radio
+
+  radio( $field, $value, $current )
+
+Draws a radiobutton with fied name $field and value $value.
+
+The radiobutton is selected if the query param $field == $value or
+$current == $value, in turn.
+
+
+=head2 checkbox
+
+  checkbox( $field, $value, $checked )
+
+Draws a checkbox with field name $field and value $value.
+
+The checkbox is checked if query param $field == $value or $checked is
+true.  'f', '0', '' and undef is considered false.
+
+
+=head2 select
+
+  select( $field, $current, @data, $valkey, $tagkey, $header )
+  select( $field, $current, %data )
+
+Draws a dropdown menu from a list of records (from a DB).
+
+=head3 First version
+
+The select field has the name $field.  @data is the list of records
+returned from select_list().  $valkey is the field name holding the
+values and $tagkey is the field holding the lables used in the
+dropdown.  $current is the current value used for determining which
+item to select.
+
+If $header is defiend, it's a label first in the list without a value.
+
+=head3 Second version
+
+%data is a hashref. The select will consist of all the keys and
+values, sorted on the keys. $current value will be selected.  $field
+is the name of fhe field.
+
+
+=head2 hr
+
+Creates a small hr.
+
+
+
+=head1 SEE ALSO
+
+L<Rit::Frame>
+
+=cut

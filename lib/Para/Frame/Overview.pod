@@ -1,0 +1,75 @@
+=head1 NAME
+
+Para::Frame::Manual::Overview - Overview and Introduction
+
+=head1 DESCRIPTION
+
+=head3 Design philosophy
+
+=head3 Execution path
+
+1. Apache gets the request from a browser client
+
+1.1. Apache looks in the translated path, finds a .htaccess directing
+the request to Para::Frame::Client
+
+1.2. Para::Frame::Client looks for the C<port> configuration. Packs the
+request data and sends it to the socket at the port.
+
+2. Para::Frame catches the request in C<main_loop()>, retrieve the data
+in C<get_value()> and calls C<handle_request()>
+
+2.1. C<Para::Frame::Reload-E<gt>check_for_updates()> and reloads any updated
+code found.
+
+2.2. A new C<Para::Frame::Request> object is created from the request
+data.
+
+2.3. The user class is used for C<identify_user> and
+C<authenticate_user>.
+
+2.4. If this was a redirection and the page already has been
+generated, sends teh page and stops here.
+
+2.5. C<$req-E<gt>setup_jobs> determine the actions requested
+
+3. C<$req-E<gt>after_jobs> looks for things to do for the request
+
+3.1 Take a planned action unless an error has been encountered. If
+there are more actions planned, go back to point 3.
+
+3.2 If an error occured, plan to redisplay the previous page
+
+3.3 Render the page to be sent back by calling C<$req-E<gt>render_output>
+
+3.4 Send the resulting page
+
+3.4.1 If the page chosen doesn't match the original URI, redirect the
+browser to the right URI. The next request stops at point 2.4.
+
+3.4.2. Sends the HTTP headers
+
+3.4.3. Sends the generated page
+
+4. Finishing up and closing the connection
+
+=head3 Implementation layers
+
+=head3 Module layout
+
+=head3 Configuration
+
+=head3 Reserved names
+
+=head3 Object heiarcy
+
+  User --> Session --> Request
+
+The left object has a longer life than the right.  Each pair in the
+heiarchy has a one to many relationships.
+
+=head1 SEE ALSO
+
+L<Para::Frame>
+
+=cut

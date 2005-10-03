@@ -1,0 +1,234 @@
+head1 NAME
+
+Para::Frame::Template::Overview - The default RitFrame TT components
+
+=head1 DESCRIPTION
+
+This page documents most of the templates used.
+
+The page is built by several template parts.  Each part can be
+replaced by a custom implementation.  All the standard parts can be
+found in C<inc/html/c/> and/or the language specific dirs.
+
+To override a part of the header or footer for a specific part of
+the web site, create a C<inc> directory in that part.
+
+To insert extra parts; copy one of the parts and insert an extra
+include in your desired place.
+
+L<Meta::Interpolate|Para::Frame::Template::Plugin::Meta::Interpolate>
+is a TT plugin.  C<app_components.tt> is the place for the app to
+define it's own TT components that should be loaded by every page.
+
+
+=head1 OVERVIEW
+
+These are the parts called:
+
+=over
+
+=item L</header_prepare.tt>
+
+=over
+
+=item L<Para::Frame::Template::Plugin::Meta::Interpolate>
+
+=item L<components.tt|Para::Frame::Template::Components>
+
+=item L</app_components.tt>
+
+=item L</header.tt>
+
+=over
+
+=item <html><head><title>
+
+=item L</title.tt>
+
+=item </title>
+
+=item L<Para::Frame::css_header>
+
+=item favicon, description, keywords, robots
+
+=item L</header_extra.tt>
+
+=item L</js.tt>
+
+=item </head><body>
+
+=item L</border_top.tt>
+
+=over
+
+=item L</form_start.tt>
+
+=over
+
+=item <form>
+
+=item The "run" hidden form field
+
+=back
+
+=item L</menu_top.tt>
+
+=over
+
+=item The default menu
+
+=item L</headline.tt>
+
+=item L</info_box.tt>
+
+=back
+
+=back
+
+=back
+
+=back
+
+=back
+
+B</your/selected/template.tt>
+
+=over
+
+=item L</footer.tt>
+
+=over
+
+=item L</border_bottom.tt>
+
+=item </form>
+
+=item L</debug.tt>
+
+=item </body></html>
+
+=back
+
+=back
+
+
+=head2 header_prepare.tt
+
+This part doesn't return any HTML.
+
+Sets up some of the template variables.
+
+Check to see that you are authorized to access the selected page.
+
+Processes C<app_components.tt> if it's found.
+
+
+=head2 app_components.tt
+
+This is the place to put your global TT blocks, TT macros and TT
+variables.  RitFrame default is empty.
+
+
+=head2 title.tt
+
+Just C<[% otitle %]>.  Replace this template if you want to compute
+the page (head) title in some other way.
+
+
+=head2 header_extra.tt
+
+Replace this template to add custom fields to the HTML HEAD.  It could
+be additional CSS, javascript or anything else.  But see if what you
+want can be done by META params to the L<Para::Frame::Template::header>.
+
+
+=head2 js.tt
+
+This is the RitFrame standard javascript functions used for the HTML
+form and site navigation.
+
+
+=head2 border_top.tt
+
+Replace this template to give your site its design.  It should contain
+all the body HTML to be placed before the main content of each page.
+Insert calls to add your own menues et al.
+
+Your C<border_top.tt> template should include these three parts in the
+order and place of your desire, mixed in with your custom HTML code:
+
+  [% PROCESS form_start.tt %]
+  [% PROCESS headline.tt %]
+  [% PROCESS info_box.tt %]
+
+The default template includes L</form_start.tt> and L</top_menu.tt>.
+
+You may want to insert a separate HTML form section in the top of the
+page.  That should be done before the L</form_start.tt>, that starts
+the main RitFrame standard form.
+
+=head2 menu_top.tt
+
+The default C<top_,emu.tt> is language specific, outputs a simple menu
+that let's you log in.  This is followed by the inclusion of
+L</headline.tt> and L</info_box.tt>.
+
+You may want to replace this tempalte with your own version, or bypass
+this template eniarly by not calling it in your replacement for
+L</border_top.tt>.
+
+This template may change name or dissapear in a future version.
+
+
+=head2 headline.tt
+
+This template just outputs a C<E<lt>h1E<gt>[% title %]E<lt>/h1E<gt>>
+if that variable exists.  Replace this template if you want to do
+special manipulation or formatting of the title as given in the META
+directive.
+
+
+=head2 info_box.tt
+
+This tempalte outputs the resulting messages from performed actions
+and any error messages encounterd.
+
+
+=head2 footer.tt
+
+Output the last part of the HTML page, including L</border_bottom.tt>
+corresponding to L</border_top.tt>.  L</debug.tt> is included last in
+the page.
+
+Replace this template if you want to add special conditions for
+displaying the debug template or if you want to add an extra HTML form
+after the main RitFrame standard form.
+
+
+=head2 border_bottom.tt
+
+This corresponds to L</border_top.tt>.
+
+Replace this template to give your site its design.  It should contain
+all the body HTML to be placed before the end of the HTML BODY, but
+inside the main RitFrame standard form.
+
+The default template is empty.
+
+
+=head2 debug.tt
+
+Outputs some debug data.
+
+Lists the query parameters as they are at the time of generating this
+part.  They could have been changed by RitFrame, the Actions or during the process of the template.
+
+Outputs the active route and lists the parts generated in this request
+response.
+
+
+=head1 SEE ALSO
+
+L<Para::Frame>
+
+=cut
