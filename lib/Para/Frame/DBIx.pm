@@ -377,7 +377,8 @@ sub new
 
 			      if( $Para::Frame::FORK )
 			      {
-				  die "In DBIx error hook during FORK\n";
+				  debug "In DBIx error hook during FORK\n";
+				  return;
 			      }
 
 			      $typeref ||= \ "";
