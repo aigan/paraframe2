@@ -688,6 +688,7 @@ sub update_wrapper
     my $table     = $params->{'table'} or croak "table missing";
     my $key       = $params->{'key'} or croak "key missing";
     my $on_update = $params->{'on_update'};
+    my $copy_data = $params->{'copy_data'};
     
     my $rec_new = {};
     foreach my $key ( keys %$rec_in )
@@ -712,7 +713,7 @@ sub update_wrapper
 	$rec_new->{$field} = $value;
     }
 
-    return $dbix->save_record({
+    my $res = $dbix->save_record({
 	rec_new => $rec_new,
 	rec_old => $rec_old,
 	table => $table,
@@ -720,7 +721,17 @@ sub update_wrapper
 	types => $types,
 	on_update => $on_update,
     });
-    
+
+    if( $res and $copy_data )
+    {
+	foreach my $field ( keys %$rec_new )
+	{
+	    $copy_data->{$field} = $rec_new->{$field};
+	    debug 4, "Setting $field to $rec_new->{$field}";
+	}
+    }
+
+    return $res;
 }
 
 
@@ -876,6 +887,7 @@ sub save_record
 	elsif( $type eq 'integer' )
 	{
 	    # We can usually use type string for integers
+	    $new = int($new) if $new;
 
 	    if( (defined $new and not defined $old) or
 		(defined $old and not defined $new) or
