@@ -7,7 +7,6 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
 	      'NAME'	       => 'Para::Frame',
 	      'PMLIBDIRS'      => [],
-#	      'INST_LIB'       => 'lib',
 	      'SKIP'           => ['all','install'],
  	      'VERSION_FROM'   => 'lib/Para/Frame.pm', # finds $VERSION
 	      'ABSTRACT_FROM'  => 'lib/Para/Frame.pm',
@@ -51,6 +50,8 @@ WriteMakefile(
 		  'IDNA::Punycode'      => 0.02,
 		  'Unicode::MapUTF8'    => 1.09,
 		  'Proc::ProcessTable'  => 0.39,
+		  'Test::More'          => 0.61,
+		  'Test::Warn'          => 0.08,
 	      },
 	      'dist'          =>
 	      {
