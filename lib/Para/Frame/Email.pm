@@ -293,7 +293,7 @@ sub send
 	    if( $msg->send_by_sendmail( FromSender => $to_addr_str ) )
 	    {
 		# Success!
-		debug(0,"Success");
+		debug(2,"Success");
 		$res->{'good'}{$to_addr_str} ||= [];
 		push @{$res->{'good'}{$to_addr_str}}, "succeeded";
 		last TRY;
@@ -364,7 +364,7 @@ sub send
 		    $smtp->quit() or last SEND;
 
 		    # Success!
-		    debug(0,"Success",-2);
+		    debug(2,"Success",-2);
 		    $res->{'good'}{$to_addr_str} ||= [];
 		    push @{$res->{'good'}{$to_addr_str}}, $smtp->message();
 		    last TRY;
@@ -398,12 +398,12 @@ sub send
 
     if( $res->{'good'} )
     {
-	debug(0,"Returning success");
+	debug(1,"Returning success");
 	return 1;
     }
     else
     {
-	debug(0,"Returning failure");
+	debug(1,"Returning failure");
 	return 0;
 	# throw('mail', $err_msg);
     }
