@@ -28,10 +28,12 @@
 
 
 [% MACRO nostep(label) BLOCK %]
-   [% DEFAULT step='Fortsätt' %]
-   [%+ backstep(label) %]
+   [% DEFAULT label='Fortsätt med nästa sak' %]
    [% IF route.size %]
-      [%+ regret %]
+      [%+ backstep(label) %]
+      [%+ regret('Hoppa över nästa sak') %]
+   [% ELSE %]
+      [%+ backstep(label) %]
    [% END %]
 [% END %]
 
