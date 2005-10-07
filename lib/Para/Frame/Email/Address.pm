@@ -89,9 +89,29 @@ sub host { $_[0]->{addr}->host }
 
 sub format { $_[0]->{addr}->format }
 
+sub format_human
+{
+    my( $a ) = @_;
+    if( $a->name )
+    {
+	return sprintf "%s <%s>", $a->name, $a->address;
+    }
+    else
+    {
+	return $a->address;
+    }
+}
+
 sub name
 {
-    return shift->{addr}->phrase(@_);
+    return shift->{addr}->name(@_);
+}
+
+
+sub desig
+{
+    my( $a ) = @_;
+    return $a->name || $a->address;
 }
 
 # sub update
@@ -249,6 +269,19 @@ sub equals
     }
 
     return $a->as_string eq $a2_as_string;
+}
+
+
+sub on_configure
+{
+    my( $class ) = @_;
+
+    my $params =
+    {
+	'email'         => sub{ $class->parse(@_) },
+    };
+
+    Para::Frame->add_global_tt_params( $params );
 }
 
 ######################################################################
