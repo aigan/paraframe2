@@ -230,7 +230,7 @@ sub send
     my( $from_addr ) = Para::Frame::Email::Address->parse( $p->{'from'} );
     $from_addr or
       thtow('mail', "Failed to parse address $p->{'from'}\n");
-    my $from_addr_str = $from_addr->address;
+#    my $from_addr_str = $from_addr->address;
 
 
     my @tried = ();
@@ -249,8 +249,8 @@ sub send
 	    debug(0,"Failed parsing $try");
 	    next;
 	}
-	my $to_addr_str = $to_addr->address;
-	push @tried, $to_addr_str;
+#	my $to_addr_str = $to_addr->address;
+	push @tried, $to_addr->address;
 
 	my $msg;
 
@@ -258,8 +258,8 @@ sub send
 	if( $p->{'pgpsign'} )
 	{
 	    $msg = MIME::Lite->new(
-	      From     => $from_addr_str,
-	      To       => $to_addr_str,
+	      From     => $from_addr->format,
+	      To       => $to_addr->format,
 	      Subject  => $p->{'subject'},
 	      Type     => 'TEXT',
 	      Data     => $data,
@@ -270,8 +270,8 @@ sub send
 	else
 	{
 	    $msg = MIME::Lite->new(
-	      From     => encode_mimewords($from_addr_str),
-	      To       => encode_mimewords($to_addr_str),
+	      From     => encode_mimewords($from_addr->format),
+	      To       => encode_mimewords($to_addr->format),
 	      Subject  => encode_mimewords($p->{'subject'}),
 	      Type     => 'TEXT',
 	      Data     => $data,
@@ -290,7 +290,8 @@ sub send
 	#
 	if( $p->{'by_proxy'} )
 	{
-	    if( $msg->send_by_sendmail( FromSender => $to_addr_str ) )
+	    my $to_addr_str = $to_addr->address;
+	    if( $msg->send_by_sendmail( FromSender => $from_addr->address ) )
 	    {
 		# Success!
 		debug(2,"Success");
@@ -311,6 +312,7 @@ sub send
 	my( $host ) = $to_addr->host();
 	unless( $host )
 	{
+	    my $to_addr_str = $to_addr->address;
 	    $res->{'bad'}{$to_addr_str} ||= [];
 	    push @{$res->{'bad'}{$to_addr_str}}, "Nu such host";
 	    debug(0,"Nu such host: $to_addr_str");
@@ -349,6 +351,8 @@ sub send
 #		undef $smtp;
 #	    }
 
+	    my $to_addr_str = $to_addr->address;
+
 	  SEND:
 	    {
 		if( $smtp )
@@ -356,7 +360,7 @@ sub send
 		    debug(0,sprintf("Connected to %s", $smtp->domain));
 		    
 		    debug(0,"Sending mail to $to_addr_str");
-		    $smtp->mail($from_addr_str) or last SEND;
+		    $smtp->mail($from_addr->address) or last SEND;
 		    $smtp->to($to_addr_str) or last SEND;
 		    $smtp->data() or last SEND;
 		    $smtp->datasend($msg->as_string) or last SEND;
