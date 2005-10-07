@@ -447,6 +447,8 @@ sub get_next
 {
     my( $route ) = @_;
 
+    my $req = $Para::Frame::REQ;
+
     if( my $step = pop @{$route->{'route'}} )
     {
 #	warn "  Next step is $step\n";
@@ -454,7 +456,6 @@ sub get_next
 	my $query = $step->query || '';
 #	warn "    step query is $query\n";
 
-	my $req = $Para::Frame::REQ;
 	my $q = $req->q;
 
 	# Modify step withe these params
@@ -496,6 +497,8 @@ sub get_next
     }
     else
     {
+	$req->set_template($route->default);
+
 	debug(1,"!!  No more steps in route");
     }
 }
