@@ -1323,6 +1323,7 @@ sub configure
     #
     Para::Frame::Route->on_configure;
     Para::Frame::Widget->on_configure;
+    Para::Frame::Email::Address->on_configure;
 }
 
 sub set_global_tt_params
