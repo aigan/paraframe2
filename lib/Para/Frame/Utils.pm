@@ -60,7 +60,7 @@ BEGIN
 {
     @Para::Frame::Utils::EXPORT_OK
 
-      = qw( trim maxof minof make_passwd random throw catch
+      = qw( in trim make_passwd random throw catch
             create_file create_dir chmod_tree chmod_file chmod_dir
             package_to_module module_to_package dirsteps uri2file
             compile passwd_crypt deunicode paraframe_dbm_open
@@ -86,6 +86,27 @@ our $FQDN; # See fqdn()
 
 #######################################################################
 
+=head2 in
+
+  trim($string, @list)
+
+Returns true if C<$string> is a part of C<@list> using string
+comparsion
+
+=cut
+
+sub in ($@)
+{
+    my( $target ) = shift;
+
+    for( my $i=0; $i <= $#_; $i++ )
+    {
+	return 1 if $target eq $_[$i];
+    }
+    return 0;
+}
+
+
 =head2 trim
 
   trim(\$string)
@@ -109,46 +130,6 @@ sub trim
 	$ref =~ s/( ^ \s+ | \s+ $ )//gx;
 	return $ref;
     }
-}
-
-
-=head2 maxof
-
-  maxof( @list )
-
-Returns the numerical largest element.
-
-=cut
-
-sub maxof
-{
-    my $max = shift;
-
-    while( my $val = shift )
-    {
-	$max = $val if $val > $max;
-    }
-    return $max;
-}
-
-
-=head2 minof
-
-  minof( @list )
-
-Returns the numerical smallest element.
-
-=cut
-
-sub minof
-{
-    my $min = shift;
-
-    while( my $val = shift )
-    {
-	$min = $val if $val < $min;
-    }
-    return $min;
 }
 
 
