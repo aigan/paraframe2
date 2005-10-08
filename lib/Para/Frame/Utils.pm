@@ -45,6 +45,7 @@ use LWP::UserAgent;
 use HTTP::Request;
 use Template::Exception;
 use DateTime::Duration;
+use URI;
 
 BEGIN
 {
@@ -663,6 +664,30 @@ sub module_to_package
 }
 
 
+=head2 uri_path
+
+  uri_path()
+  uri_path($url)
+
+Returns the absolute path for the C<$url>. Defaults to the current
+template.
+
+=cut
+
+sub uri_path
+{
+    my( $template ) = @_;
+
+    my $req = $Para::Frame::REQ;
+
+    $template ||= $req->template_uri;
+    unless( $template =~ /^\// )
+    {
+	$template = URI->new_abs($template, $req->template_uri)->path;
+    }
+    return $template;
+}
+
 =head2 uri
 
   uri()
@@ -685,6 +710,7 @@ sub uri
 	if $attr and not ref $attr;
 
     $template ||= $Para::Frame::CFG->{'apphome'};
+
     my $extra = "";
     my @parts = ();
     foreach my $key ( keys %$attr )
