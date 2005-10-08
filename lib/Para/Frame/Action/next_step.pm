@@ -23,10 +23,10 @@ sub handler
     my( $req ) = @_;
 
     my $route = $req->s->route;
+    my $break_path = $req->q->param('break_path');
+    $route->get_next($break_path);
 
-    $route->get_next;
-
-    return "Backar ett steg";
+    return $req->change->report;
 }
 
 1;
