@@ -15,17 +15,39 @@
    [% IF template %]
       [% go(label, template, run) %]
       [%+ backstep %]
-   [% ELSE %]
-      [% submit(label) %]
-      [% IF form_action %]
-         [%+ backstep %]
+      [% IF route.size %]
+         [%+ regret %]
       [% END %]
+   [% ELSIF next_action %]
+      [% actionstep(label) %]
+   [% ELSE %]
+      [% nostep(label) %]
    [% END %]
+[% END %]
+
+[% MACRO search(label) BLOCK %]
+   [% DEFAULT label='Sök' %]
+   [% submit(label) %]
+   [%+ backstep('Fortsätt med nästa sak', 1) %]
    [% IF route.size %]
       [%+ regret %]
    [% END %]
 [% END %]
 
+[% MACRO actionstep(label) BLOCK %]
+   [% UNLESS label %]
+      [% IF uri_path(form_action) == me %]
+         [% label = "Spara" %]
+      [% ELSE %]
+         [% label = "Spara och fortsätt" %]
+      [% END %]
+   [% END %]
+   [% submit(label) %]
+   [%+ backstep %]
+   [% IF route.size %]
+      [%+ regret %]
+   [% END %]
+[% END %]
 
 [% MACRO nostep(label) BLOCK %]
    [% DEFAULT label='Fortsätt med nästa sak' %]
@@ -40,7 +62,7 @@
 
 [% MACRO regret(label) BLOCK %]
 [% DEFAULT
-       	label = 'Ångra'
+       	label = 'Backa'
 	class = 'msg'
 %]
    [% go(label, undef, 'skip_step', class=class) %]
@@ -58,12 +80,15 @@
 
 
 
-[% MACRO backstep(label) BLOCK %]
+[% MACRO backstep(label, break_path) BLOCK %]
 [% DEFAULT
        	label = 'Hoppa över'
 	class = 'msg'
 %]
    [% go(label, undef, 'next_step', class=class) %]
+   [% IF break_path %]
+      [% hidden('break_path', break_path) %]
+   [% END %]
 [% END %]
 
 
