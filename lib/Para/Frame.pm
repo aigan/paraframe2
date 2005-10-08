@@ -1338,6 +1338,7 @@ sub set_global_tt_params
 	'debug'           => sub{ debug(@_) },
 	'rand'            => sub{ int rand($_[0]) },
 	'uri'             => \&Para::Frame::Utils::uri,
+	'uri_path'        => \&Para::Frame::Utils::uri_path,
 
 	'selectorder'     => \&Para::Frame::Widget::selectorder,
 	'slider'          => \&Para::Frame::Widget::slider,
