@@ -749,7 +749,8 @@ sub uri2file
     # This will return file without '/' for dirs
 #    warn "  Get filename for uri $uri\n";
 
-    $req ||= $Para::Frame::REQ or confess;
+    $req ||= $Para::Frame::REQ;
+    confess($req) unless UNIVERSAL::isa($req, "Para::Frame::Request");
     my $key = $req->host . $uri;
 
     if( $file )
