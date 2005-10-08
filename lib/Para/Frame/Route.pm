@@ -445,7 +445,7 @@ The template is set to that of the step.
 
 sub get_next
 {
-    my( $route ) = @_;
+    my( $route, $break_path ) = @_;
 
     my $req = $Para::Frame::REQ;
 
@@ -495,11 +495,25 @@ sub get_next
 
 	debug(1,"!!  Initiated new query");
     }
+    elsif( $break_path )
+    {
+	debug(1,"!!  No more steps in route");
+	debug 1, "!!    Using default step, breaking path";
+	$req->set_template($route->default);
+    }
     else
     {
-	$req->set_template($route->default);
-
 	debug(1,"!!  No more steps in route");
+	if( $req->template_uri ne $req->referer )
+	{
+	    debug 1, "!!    Using selected template";
+	}
+	else
+	{
+	    debug 1, "!!    Using default step";
+	    $req->set_template($route->default);
+	}
+
     }
 }
 
@@ -510,10 +524,10 @@ sub get_next
 
   $route->skip_step
 
-Going back to the referer page of the request setting up the next step in
-the route. Giving that page the params that the next step would get,
-except the special params like run(), et al. Removes that step from
-the route.
+Going back to the referer page of the request that set up the next
+step in the route. Giving that page the params that the next step
+would get, except the special params like run(), et al. Removes that
+step from the route.
 
 The step could have an explicit caller_page that would be used in
 place of the referer page.
@@ -543,25 +557,26 @@ sub skip_step
 
 #	warn " -- Got caller $caller_page from $step\n";
 
-	# Check if previous steps has the same caller. Remove them as
-	# well in that case.
-
-      CHECK:
-	while( my $next_step = @{$route->{'route'}}[-1] )
-	{
-	    $next_step = URI->new($next_step)
-		unless UNIVERSAL::isa($next_step, 'URI');
-
-	    my $previous_caller =
-		URI->new($next_step->query_param('caller_page'))
-		or die "caller_page missing from $step";
-	    if( $previous_caller->eq( $caller_page ) )
-	    {
-		pop @{$route->{'route'}};
-		next CHECK;
-	    }
-	    last CHECK;
-	}
+#	# Why should we do this?!
+#
+#	# Check if previous steps has the same caller. Remove them as
+#	# well in that case.
+#      CHECK:
+#	while( my $next_step = @{$route->{'route'}}[-1] )
+#	{
+#	    $next_step = URI->new($next_step)
+#		unless UNIVERSAL::isa($next_step, 'URI');
+#
+#	    my $previous_caller =
+#		URI->new($next_step->query_param('caller_page'))
+#		or die "caller_page missing from $step";
+#	    if( $previous_caller->eq( $caller_page ) )
+#	    {
+#		pop @{$route->{'route'}};
+#		next CHECK;
+#	    }
+#	    last CHECK;
+#	}
 
 	# Now setup the params for the caller
 
