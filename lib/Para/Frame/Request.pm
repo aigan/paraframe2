@@ -49,6 +49,7 @@ use Para::Frame::Child;
 use Para::Frame::Child::Result;
 use Para::Frame::Request::Ctype;
 use Para::Frame::Site;
+use Para::Frame::Change;
 use Para::Frame::Utils qw( create_dir chmod_file dirsteps uri2file compile throw idn_encode idn_decode debug catch );
 
 sub new
@@ -111,6 +112,7 @@ sub new
 	wait           => 0,              ## Asked to wait?
 	site           => undef,          ## The site for the request
 	cancel         => undef,          ## True if we should abort
+	change         => undef,
     }, $class;
 
     my %ttparams = %$Para::Frame::PARAMS;
@@ -195,6 +197,11 @@ sub filename { uri2file(shift->template) }
 sub lang { undef }
 sub error_page_selected { $_[0]->{'error_template'} ? 1 : 0 }
 sub error_page_not_selected { $_[0]->{'error_template'} ? 0 : 1 }
+
+sub change
+{
+    return $_[0]->{'change'} ||= Para::Frame::Change->new();
+}
 
 # Is this request a client req or a bg server job?
 sub is_from_client
