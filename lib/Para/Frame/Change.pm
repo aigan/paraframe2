@@ -25,7 +25,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw );
+use Para::Frame::Utils qw( throw debug );
 
 sub new
 {
@@ -48,7 +48,7 @@ sub reset
     $change->{'errors'} = 0;
     $change->{'errmsg'} = "";
     $change->{'changes'} = 0;
-    $change->{'message'} = "\n";
+    $change->{'message'} = "";
 
     return $change;
 }
@@ -67,6 +67,7 @@ sub note
     my( $change, $msg ) = @_;
     $msg =~ s/\n?$/\n/; # Add if missing
     $change->{'message'} .=  $msg;
+    debug "Adding note: $msg";
     return 1;
 }
 
@@ -105,14 +106,14 @@ sub report
 
     $errtype ||= 'validation';
 
-    if( $change->changes )
+    if( length( $change->{'message'} ) )
     {
-	$Para::Frame::REQ->result->message( $change->message );
+	$Para::Frame::REQ->result->message( $change->{'message'} );
     }
 
-    if( $change->errors )
+    if( $change->{'errors'} )
     {
-	throw($errtype, $change->errmsg );
+	throw($errtype, $change->{'errmsg'} );
     }
 
     $change->reset;
