@@ -134,8 +134,7 @@ sub exception
 
     $info  ||= ref($@) ? $@->[1] : $@;
     my $type = ref($@) ? $@->[0] : undef;
-
-    $type = undef if $type and $type eq 'undef';
+    $type ||= 'undef';
 
     ## on_error_detect
     #
