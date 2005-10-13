@@ -1,0 +1,19 @@
+[%
+	a = result.info.alternatives;
+%]
+
+<h1>[% a.title | html %]</h1>
+
+<p>[% result.find('alternatives').message | html | html_para %]</p>
+
+<table>
+[% FOREACH part = a.list %]
+   [% tr2 %][% a.rowformat(part) %]</tr>
+[% END %]
+</table>
+
+[% view = a.view %]
+[% DEFAULT view = me %]
+[% DEFAULT class='msg' %]
+<p>[% go('Backa', '/', 'skip_step', class=class) +%]
+[%+ go('Hoppa över', undef, 'skip_step&skip_step', class=class) %]
