@@ -788,7 +788,7 @@ sub referer
 	if( my $uri = $req->q->param('caller_page') )
 	{
 	    debug "Referer from caller_page";
-	    return $uri; # This is a path
+	    return URI->new($uri)->path;
 	}
 
 	# The query could have been changed by route
@@ -815,7 +815,7 @@ sub referer
 	# session
 	#
 	debug "Referer from session";
-	return $req->s->referer if $req->s->referer;
+	return $req->s->referer->path if $req->s->referer;
     }
 
     debug "Referer from default value";
@@ -823,6 +823,56 @@ sub referer
 
     # Last try. Should always be defined
     return $req->site->webhome.'/';
+}
+
+sub referer_query
+{
+    my( $req ) = @_;
+
+  TRY:
+    {
+	# Explicit caller_page could be given
+	if( my $uri = $req->q->param('caller_page') )
+	{
+	    debug "Referer query from caller_page";
+	    return URI->new($uri)->query;
+	}
+
+	# The query could have been changed by route
+	if( my $uri = $req->q->referer )
+	{
+	    $uri = URI->new($uri);
+	    last if $uri->host_port ne $req->host_with_port;
+
+	    if( my $query = $uri->query )
+	    {
+		debug "Referer query from current http req ($query)";
+		return $query;
+	    }
+	}
+
+	# The actual referer is more acurate in this order
+	if( my $uri = $req->{'referer'} )
+	{
+	    $uri = URI->new($uri);
+	    last if $uri->host_port ne $req->host_with_port;
+
+	    if( my $query = $uri->query )
+	    {
+		debug "Referer query from original http req";
+		return $query;
+	    }
+	}
+
+	# This could be confusing if several browser windows uses the same
+	# session
+	#
+	debug "Referer query from session";
+	return $req->s->referer->query if $req->s->referer;
+    }
+
+    debug "Referer query from default value";
+    return {};
 }
 
 #############################################
