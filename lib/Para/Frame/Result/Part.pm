@@ -136,6 +136,7 @@ our $ERROR_TYPE =
 	},
 	'bg'      => 'yellow',
 	'no_backtrack' => 1,
+	'hide'    => 1,
     },
     'action'     =>
     {
