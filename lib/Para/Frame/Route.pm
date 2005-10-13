@@ -37,7 +37,7 @@ BEGIN
 use Para::Frame;
 use Para::Frame::Reload;
 use Para::Frame::Request;
-use Para::Frame::Utils qw( throw uri debug );
+use Para::Frame::Utils qw( throw uri debug store_params );
 
 =head1 DESCRIPTION
 
@@ -169,12 +169,15 @@ sub plan_next
 
     $urls = [$urls] unless UNIVERSAL::isa($urls, 'ARRAY');
     my $referer = $Para::Frame::REQ->referer;
+    my $caller_uri = URI->new( $referer );
+    $caller_uri->query($Para::Frame::REQ->referer_query);
+
     foreach my $url ( @$urls )
     {
 	$url = URI->new($url) unless UNIVERSAL::isa($url, 'URI');
 
 	# Used in skip_step...
-	$url->query_param_append('caller_page' => $referer )
+	$url->query_param_append('caller_page' => $caller_uri )
 	    unless $url->query_param('caller_page');
 
 	debug(1,"!!New step in route: $url");
@@ -203,12 +206,15 @@ sub plan_after
 
     $urls = [$urls] unless UNIVERSAL::isa($urls, 'ARRAY');
     my $referer = $Para::Frame::REQ->referer;
+    my $caller_uri = URI->new( $referer );
+    $caller_uri->query($Para::Frame::REQ->referer_query);
+
     foreach my $url ( @$urls )
     {
 	$url = URI->new($url) unless UNIVERSAL::isa($url, 'URI');
 
 	# Used in skip_step...
-	$url->query_param_append('caller_page' => $referer )
+	$url->query_param_append('caller_page' => $caller_uri )
 	    unless $url->query_param('caller_page');
 
 	debug(1,"!!New last step in route: $url");
@@ -326,7 +332,6 @@ sub check_backtrack
 {
     my( $route ) = @_;
 
-#    warn "-- check for backtrack\n" if $DEBUG;
     my $req = $Para::Frame::REQ;
 
 
@@ -334,7 +339,7 @@ sub check_backtrack
     return if $req->error_page_selected;
 
     # The CGI module doesn't handle query data in URL after a form POST
-
+    debug "-- check for backtrack";
     if( ($req->q->url_param('keywords')||'') eq 'backtrack' )
     {
 	debug(1,"!!Backtracking (because of uri keyword)");
@@ -525,9 +530,9 @@ sub get_next
   $route->skip_step
 
 Going back to the referer page of the request that set up the next
-step in the route. Giving that page the params that the next step
-would get, except the special params like run(), et al. Removes that
-step from the route.
+step in the route. Giving that page the params it recieved then it was
+called before, except the special params like run(), et al. Removes
+that step from the route.
 
 The step could have an explicit caller_page that would be used in
 place of the referer page.
@@ -579,11 +584,13 @@ sub skip_step
 #	}
 
 	# Now setup the params for the caller
+	
+	
+	debug "Got $caller_page";
 
-	$route->replace_query( $q, $step->query );
+	$route->replace_query( $q, $caller_page->query );
 
-	$dest = $q->param('caller_page')
-	    or die "no caller_page for this step";
+	$dest = $caller_page->path;
 	debug(1,"!!  Destination set to $dest");
 
 	$route->clear_special_params;
