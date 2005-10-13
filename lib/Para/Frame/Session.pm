@@ -30,6 +30,7 @@ use Para::Frame::Reload;
 use Para::Frame::Time qw( now );
 use Para::Frame::User;
 use Para::Frame::Route;
+use Para::Frame::Utils qw( store_params );
 
 our $SESSION_COOKIE_NAME = 'paraframe-sid';
 
@@ -121,7 +122,8 @@ sub after_request
     # This is the uri of the previous request. Not necessarily the
     # referer of the next request.
 
-    $s->{'referer'} = $req->template_uri;
+    $s->{'referer'} = URI->new($req->template_uri);
+    $s->{'referer'}->query_form(store_params());
 }
 
 sub register_result_page
