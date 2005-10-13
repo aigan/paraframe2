@@ -36,6 +36,16 @@ BEGIN
     print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
+use base qw( Exporter );
+BEGIN
+{
+    @Para::Frame::Widget::EXPORT_OK
+
+      = qw( slider jump submit go go_js forward forward_url preserve_data alfanum_bar rowlist list2block selectorder param_includes hidden input textarea filefield css_header confirm_simple inflect  );
+
+}
+
+
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( trim throw );
 
@@ -907,11 +917,6 @@ sub confirm_simple
     my $result = $req->result;
     my $home = $req->site->home;
 
-#    my @actions = @{ $req->{'actions'} };
-#    unshift @actions, $req->{'this_action'} if $req->{'this_action'};
-#    pop @actions; # Last action always a nop!
-#    my $run = join('&', @actions );
-
     $result->{'info'}{'confirm'} =
     {
      title => $headline,
@@ -919,10 +924,6 @@ sub confirm_simple
      button =>
      [
       [ $button_name, undef, 'backtrack',
-#      {
-#       confirmed => $headline,
-#       step_add_params => 'confirmed',
-#      }
       ],
       ['Backa', undef, 'skip_step'],
      ],
@@ -930,7 +931,7 @@ sub confirm_simple
 
     $q->append(-name=>'confirmed',-values=>[$headline]);
     $q->append(-name=>'step_add_params',-values=>['confirmed']);
-    throw('incomplete', 'Confirm');
+    throw('confirm', $headline);
 }
 
 =head2 inflect
