@@ -200,11 +200,14 @@ sub find
 {
     my( $result, $type ) = @_;
     # Find first part of type $type and return it
-    foreach my $part ( @{$result->{'parts'}} )
+    debug "Finding part of type $type";
+    foreach my $part ( @{$result->parts} )
     {
-	next unless $part->{'type'};
-	return $part if $part->{'type'} eq $type;
+	debug "  checking part ".$part->as_string;
+	next unless $part->type;
+	return $part if $part->type eq $type;
     }
+    debug "  No such part";
     return undef;
 }
 
