@@ -197,7 +197,7 @@ sub main_loop
     }
 
     debug(4,"Entering main_loop at level $LEVEL",1) if $LEVEL;
-    print "MAINLOOP $LEVEL\n";
+    print "MAINLOOP $LEVEL\n" unless $Para::Frame::FORK;
 
     $timeout ||= $LEVEL ? TIMEOUT_SHORT : TIMEOUT_LONG;
 
@@ -408,7 +408,7 @@ sub main_loop
 		my $tlength = length( $child->{'data'} );
 #		debug "  Total of $tlength bytes read";
 
-		if( $child->{'data'} =~ /^(\d{1,5})\0/ )
+		if( $child->{'data'} =~ /^(\d{1,8})\0/ )
 		{
 		    # Expected length
 		    my $elength = length($1)+$1+2;
