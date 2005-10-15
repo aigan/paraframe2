@@ -909,6 +909,7 @@ sub add_background_jobs_conditional
     # Return it hasn't passed BGJOB_MAX secs since last time
     my $last_time = $BGJOBDATE ||= time;
     my $delta = time - $last_time;
+
     return if $delta < BGJOB_MAX;
 
     # Cache cleanup could safely be done here
@@ -923,7 +924,7 @@ sub add_background_jobs_conditional
     my $sysload;
     if( $delta < BGJOB_MIN ) # unless a long time has passed
     {
-	$sysload = Sys::CpuLoad::load;
+	$sysload = (Sys::CpuLoad::load)[1];
 	return if $sysload > BGJOB_CPU;
     }
 
