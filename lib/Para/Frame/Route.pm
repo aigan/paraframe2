@@ -339,7 +339,7 @@ sub check_backtrack
     return if $req->error_page_selected;
 
     # The CGI module doesn't handle query data in URL after a form POST
-    debug "-- check for backtrack";
+#    debug "-- check for backtrack";
     if( ($req->q->url_param('keywords')||'') eq 'backtrack' )
     {
 	debug(1,"!!Backtracking (because of uri keyword)");
