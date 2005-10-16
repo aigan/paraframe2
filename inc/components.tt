@@ -18,7 +18,7 @@
       [% IF route.size %]
          [%+ regret %]
       [% END %]
-   [% ELSIF next_action %]
+   [% ELSIF next_action or next_template %]
       [% actionstep(label) %]
    [% ELSE %]
       [% nostep(label) %]
