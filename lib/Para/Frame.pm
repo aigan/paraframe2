@@ -208,8 +208,6 @@ sub main_loop
 
 	# I could also use IO::Multiplex or Net::Server::Multiplex or POE
 
-
-
 #	    warn "...\n";
 	#    my $t0 = [gettimeofday];
 
@@ -260,7 +258,7 @@ sub main_loop
 	    if( $req->{'in_yield'} )
 	    {
 		# Do not do jobs for a request that waits for a child
-		debug 6, "In_yield: $req->{reqnum}";
+		debug 5, "In_yield: $req->{reqnum}";
 	    }
 	    elsif( $req->{'cancel'} )
 	    {
@@ -903,7 +901,6 @@ sub add_background_jobs_conditional
 
     # Add background jobs to do unless the load is too high, uless we
     # waited too long anyway
-
     return if $TERMINATE;
 
     # Return it hasn't passed BGJOB_MAX secs since last time
