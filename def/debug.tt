@@ -8,12 +8,15 @@
 
 <p>Change session debug level to
 [% select('debuglevel', debug, {'0'=0, '1'=1, '2'=2, '3'=3, '4'=4, '5'=5}) %]
-[% submit %]
 </p>
 
-<p>[% go("Reload server", home, "server_reload") %]
+<p>Change global debug level to
+[% select('debuglevel-global', cfg.debug, {'0'=0, '1'=1, '2'=2, '3'=3, '4'=4, '5'=5}) %]
+</p>
 
-<p>[% go("Terminate server", home, "server_terminate") %]
+<p>[% step +%]
+[%+ go("Reload server", home, "server_reload") +%]
+[%+ go("Terminate server", home, "server_terminate") %]
 
 [%
    TRY; PROCESS "app_debug_pagepart.tt";

@@ -29,15 +29,24 @@ sub handler
     my $level = $q->param('debuglevel');
     $level = $s->{'debug'} unless defined $level;
 
-    warn "  Request to change debug level from $s->{'debug'} to $level\n";
+    my $txt = "";
 
     if( $level != $s->{'debug'} )
     {
 	$Para::Frame::DEBUG = $s->{'debug'} = $level;
-	return "Changed session debug level to $level";
+	$txt .= "Changed session debug level to $level\n";
+    }
+
+    my $global_level = $q->param('debuglevel-global');
+    $global_level = $Para::Frame::CFG->{'debug'} unless defined $global_level;
+
+    if( $global_level != $Para::Frame::CFG->{'debug'} )
+    {
+	$Para::Frame::CFG->{'debug'} = $global_level;
+	$txt .= "Changed global debug level to $global_level\n";
     }
     
-    return "";
+    return $txt;
 }
 
 1;
