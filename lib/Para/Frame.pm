@@ -148,6 +148,14 @@ sub startup
 {
     my( $class ) = @_;
 
+    # Site pages
+    #
+    unless( Para::Frame::Site->get('default') )
+    {
+	croak "No default site registred";
+    }
+
+
     my $port = $CFG->{'port'};
 
     # Set up the tcp server. Must do this before chroot.
@@ -1243,14 +1251,6 @@ sub configure
 
     $CFG->{'umask'} ||= 0007;
     umask($CFG->{'umask'});
-
-
-    # Site pages
-    #
-    unless( Para::Frame::Site->get('default') )
-    {
-	croak "No default site registred";
-    }
 
 
     # Make appfmly and appback listrefs if they are not
