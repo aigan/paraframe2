@@ -1,4 +1,5 @@
 Changes
+def/alternatives.tt
 def/confirm.tt
 def/debug.tt
 def/denied.tt
@@ -8,6 +9,7 @@ def/index.tt
 def/login.tt
 def/page_not_found.tt
 def/page_part_not_found.tt
+inc/alternatives_box.tt
 inc/border_bottom.tt
 inc/border_top.tt
 inc/components.tt
@@ -41,6 +43,7 @@ lib/Para/Frame/Action/user_login.pm
 lib/Para/Frame/Action/user_logout.pm
 lib/Para/Frame/Action/wait_for_req.pm
 lib/Para/Frame/Burner.pm
+lib/Para/Frame/Change.pm
 lib/Para/Frame/Child.pm
 lib/Para/Frame/Child/Result.pm
 lib/Para/Frame/Client.pm
