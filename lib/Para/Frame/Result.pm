@@ -106,6 +106,25 @@ sub message
     }
 }
 
+=head2 exception
+
+  $result->exception()
+  $result->exception($error)
+  $result->exception($type, $info, $text)
+
+If called with no params, uses $@ as $error.
+
+If called with more than one params, creates an $error object with
+type $type, info $info and text $text.  $text can be undef.
+
+returns the generated Para::Frame::Result::Part.
+
+If $error is a Part, just returns it.
+
+For other errors, adds parts to result and returns one of them.
+
+=cut
+
 sub exception
 {
     my( $result, $explicit, $info, $text ) = @_;
@@ -126,10 +145,18 @@ sub exception
     $@ = $explicit if $explicit;
 
     # Check if the info part is in fact the exception object
-    if(  ref($@) and ref($@->[1]) eq 'ARRAY' )
+    if( ref($@) )
     {
-	debug "Removing first part: ".Dumper( $@->[0]);
-	$@ = $@->[1]; # $@->[0] is probably 'undef'
+	if( ref($@) eq 'Para::Frame::Result::Part' )
+	{
+	    # This exception has already been registred
+	    return $@;
+	}
+	elsif( ref($@->[1]) eq 'ARRAY' )
+	{
+	    debug "Removing first part: ".Dumper( $@->[0]);
+	    $@ = $@->[1]; # $@->[0] is probably 'undef'
+	}
     }
 
     $info  ||= ref($@) ? $@->[1] : $@;
