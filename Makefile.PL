@@ -19,6 +19,7 @@ WriteMakefile(
 		  'Carp'                => 1.04,
 		  'Sys::CpuLoad'        => 0.02,
 		  'DateTime::TimeZone'  => 0.37,
+	          'DateTime::Format::Pg'=> 0.08,
 		  'Template'            => 2.14,
 		  'FreezeThaw'          => 0.43,
 		  'File::Slurp'         => 0.00,
