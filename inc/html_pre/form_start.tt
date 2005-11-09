@@ -1,0 +1,23 @@
+
+[*
+   # This will backtrack if next_template is set to $home
+   # call default_template instead of plan_bactrack directly
+*]
+[% form_action = next_template || plan_backtrack || default_template || default_step || me %]
+[* DEFAULT form_enctype = "multipart/form-data" *]
+
+[%
+form_extra = "";
+IF template.onsubmit;
+   form_extra = "$form_extra onsubmit='${template.onsubmit}'";
+END;
+IF template.next_template_target;
+   form_extra = "$form_extra target='${template.next_action_target}'";
+END;
+%]
+<form name="f" action="[% form_action %]" method="post" enctype="[* form_enctype *]"[% form_extra %]>
+
+<input type="hidden" name="run" value="[% next_action %]">
+[% UNLESS next_template %]
+<input type="hidden" name="destination" value="dynamic">
+[% END %]
