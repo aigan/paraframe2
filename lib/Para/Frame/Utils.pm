@@ -502,13 +502,15 @@ sub chmod_file
     #
     $mode = $mode & ~ $umask;
 
-#    debug(sprintf     "orig umask is 0%.4o", $orig_umask);
-#    if( defined $new_umask )
-#    {
-#	debug(sprintf "umask set to  0%.4o", $new_umask);
-#    }
-#    debug(sprintf     "mode set to   0%.4o", $mode);
-
+    if( debug() > 1 )
+    {
+	debug(sprintf     "orig umask is 0%.4o", $orig_umask);
+	if( defined $new_umask )
+	{
+	    debug(sprintf "umask set to  0%.4o", $new_umask);
+	}
+	debug(sprintf     "mode set to   0%.4o", $mode);
+    }
 
     if( $fstat->gid == $pfg->gid and
 	not $fmode ^ $mode & $mode )
@@ -739,6 +741,15 @@ sub uri
 
 ###########################################
 
+=head2 dirsteps
+
+  dirsteps( $path, $base )
+
+C<$base> is the website URL home path. Returns a list with all dirs
+from C<$path> to the dir before C<$base>
+
+=cut
+
 sub dirsteps
 {
     my( $path, $base ) = @_;
@@ -756,14 +767,16 @@ sub dirsteps
 
     my @step = ();
 
-    while( length( $path ) > 1 )
+    my $length = length( $base ) || 0;
+
+    while( length( $path ) > $length )
     {
-	push @step, $base . $path;
+	push @step, $path;
 	$path =~ s/[^\/]+\/$//;
     }
 
-#    warn "  Returning dirsteps @step\n";
-    return @step, '/';
+#    warn "  Returning dirsteps @step with base $base\n";
+    return @step;
 }
 
 sub uri2file
@@ -1332,6 +1345,12 @@ sub validate
 
 
 1;
+
+
+# maxof minof: use List::Util
+
+
+
 
 =head1 SEE ALSO
 
