@@ -24,7 +24,7 @@ use Data::Dumper;
 use HTTP::BrowserDetect;
 use File::stat;
 use File::Slurp;
-use File::Basename;
+use File::Basename; # exports fileparse, basename, dirname
 use IO::File;
 use URI;
 use Carp qw(cluck croak carp confess );
@@ -132,6 +132,8 @@ sub new
     $req->{'result'}  = new Para::Frame::Result;  # Before Session
     $req->{'s'}       = new Para::Frame::Session($req);
 
+    $req->set_language;
+
     # Log some info
     #
     warn "# http://".$req->http_host."$orig_uri\n";
@@ -182,6 +184,7 @@ sub new_minimal
     return $req;
 }
 
+
 #######################################################################
 
 sub q { shift->{'q'} }
@@ -194,7 +197,8 @@ sub result { shift->{'result'} }
 sub uri { shift->{'uri'} }
 sub dir { shift->{'dir'} }
 sub filename { uri2file(shift->template) }
-sub lang { undef }
+sub lang { $_[0]->{'lang'} }
+sub language { $_[0]->{'lang'} }
 sub error_page_selected { $_[0]->{'error_template'} ? 1 : 0 }
 sub error_page_not_selected { $_[0]->{'error_template'} ? 0 : 1 }
 
@@ -223,6 +227,78 @@ sub in_yield
 {
     return $_[0]->{'in_yield'};
 }
+
+##############################################
+# Set language
+#
+sub set_language
+{
+    my( $req, $language ) = @_;
+
+    debug "Decide on a language";
+
+    my $string = $language
+              || $req->q->param('lang')
+	      || $req->q->cookie('lang')
+              || $req->env->{HTTP_ACCEPT_LANGUAGE}
+              || '';
+
+    debug "  Lang prefs are $string";
+
+    my $site_languages = $req->site->languages;
+
+    unless( @$site_languages )
+    {
+	$req->{'lang'} = ['en'];
+	return;
+    }
+
+    my %priority;
+
+    foreach my $alt ( split /,\s*/, $string )
+    {
+	my( $code, @info ) = split /\s*;\s*/, $alt;
+	my $q;
+	foreach my $pair ( @info )
+	{
+	    my( $key, $value ) = split /\s*=\s*/, $pair;
+	    $q = $value if $key eq 'q';
+	}
+	$q ||= 1;
+
+	push @{$priority{$q}}, $code;
+    }
+
+    my %accept = map { $_, 1 } @$site_languages;
+
+#    warn "Acceptable choices are: ".Dumper(\%accept)."\n";
+
+    my @alternatives;
+    foreach my $prio ( sort {$b <=> $a} keys %priority )
+    {
+	foreach my $lang ( @{$priority{$prio}} )
+	{
+	    push @alternatives, $lang if $accept{$lang};
+	}
+    }
+
+    ## Add default lang, if not already there
+    my @defaults = $site_languages->[0];
+    foreach my $lang ( @$site_languages )
+    {
+	unless( grep {$_ eq $lang} @alternatives )
+	{
+	    push @alternatives, $lang;
+	}
+    }
+
+    $req->send_code( 'AR-PUT', 'header_out', 'Vary', 'negotiate,accept-language' );
+    $req->send_code( 'AR-PUT', 'header_out', 'Content-Language', $alternatives[0] );
+
+    $req->{'lang'} = \@alternatives;
+    debug "Lang priority is: @alternatives";
+}
+
 
 #######################################################################
 
@@ -314,7 +390,7 @@ sub set_template
 #	    $template = $tpath . $fname . $fext;
 #	}
     }
-  
+
     debug(3,"setting template to $template");
     debug(3,"setting template_uri to $template_uri");
 
@@ -324,6 +400,16 @@ sub set_template
     $req->{template_uri} = $template_uri;
 
     return $template;
+}
+
+sub set_dirsteps
+{
+    my( $req, $path_full ) = @_;
+
+    $path_full ||= dirname( $req->template ) . "/";
+    warn "Setting dirsteps for $path_full\n";
+    undef $req->{'incpath'};
+    return $req->{'dirsteps'} = [ dirsteps( $path_full, $req->site->home ) ];
 }
 
 sub set_error_template
@@ -460,7 +546,9 @@ sub run_action
 
     return 1 if $run eq 'nop'; #shortcut
 
-    my $actionroots = [$Para::Frame::CFG->{'appbase'}."::Action"];
+    my $site = $req->site;
+
+    my $actionroots = [$site->appbase."::Action"];
 
     my $appfmly = $req->site->appfmly;
 
@@ -916,6 +1004,8 @@ sub find_template
     debug(0,"Finding template $template");
     my( $in );
 
+    my $site = $req->site;
+
 
     my( $base_name, $path_full, $ext_full ) = fileparse( $template, qr{\..*} );
     if( debug > 3 )
@@ -934,21 +1024,21 @@ sub find_template
 	$template = '/'.$template;
     }
 
-    # Also used by &Para::Frame::incpath_generator
-    $req->{'dirsteps'} = [ dirsteps( $path_full ) ];
+    # Also used by &Para::Frame::Burner::paths
+    $req->set_dirsteps( $path_full );
 
     # uri2file returns file without '/' for dirs
     my( @step ) = map uri2file( $_."def" )."/", @{$req->{'dirsteps'}};
 
 
-    # TODO: Check for global templates with this name
+    my @backdefs = map $_."/def/", @{$site->appback};
     my $global = $Para::Frame::CFG->{'paraframe'}. "/def/";
 
     # Reasonable default?
     my $language = $req->lang || ['sv'];
 
     debug(4,"Check $ext",1);
-    foreach my $path ( uri2file($path_full)."/", @step, $global )
+    foreach my $path ( uri2file($path_full)."/", @step, @backdefs, $global )
     {
 	unless( $path )
 	{
@@ -957,7 +1047,7 @@ sub find_template
 	}
 
 	# We look for both tt and html regardless of it the file was called as .html
-	debug(4,"Check $path",1);
+	debug(1,"Check $path",1);
 	die "dir_redirect failed" unless $base_name;
 
 	# Handle dirs
@@ -991,7 +1081,7 @@ sub find_template
 		debug 4, "Compdir: $compdir";
 
 		my( $data, $ltime);
-		
+
 		# 1. Look in memory cache
 		#
 		if( my $rec = $Para::Frame::Cache::td{$filename} )
@@ -1051,7 +1141,7 @@ sub find_template
 			$mod_time = time; # The new time of reading file
 			my $filetext = read_file( $filename );
 			my $parser = $burner->parser;
-			
+
 			debug(3,"Parsing");
 			my $parsedoc = $parser->parse( $filetext )
 			    or throw('template', "parse error:\nFile: $filename\n".
@@ -1390,6 +1480,51 @@ sub render_output
 
     return 1;
 }
+
+sub precompile_page
+{
+    my( $original_req, $srcdir, $file, $dest, $language, $type ) = @_;
+
+    my $req = Para::Frame::new_background( $original_req->client );
+    warn "\n$Para::Frame::REQNUM Precompiling $file\n";
+
+    $req->{'lang'} = [$language] if $language;
+    $type ||= 'html_pre';
+
+    my $destfile = uri2file( $dest );
+
+    warn "$srcdir$file -> $destfile in $type ($language)\n";
+
+    $req->set_uri( $dest );
+    $req->set_dirsteps();
+
+    my $fh = new IO::File;
+    $fh->open( "$srcdir$file" ) or die "Failed to open '$file': $!\n";
+
+    $req->set_tt_params;
+#    warn "    Processing $file to $dest in $type $language\n";
+
+    my $burner = $Para::Frame::CFG->{'th'}{$type};
+    my $res = $burner->burn($fh, $req->{'params'}, $destfile );
+    $fh->close;
+    my $error = $burner->error;
+
+    Para::Frame::switch_req( $original_req );
+
+    unless( $res )
+    {
+	my $part = $original_req->result->exception($error);
+	if( $error->info =~ /not found/ )
+	{
+	    debug "Subtemplate not found";
+	    my $incpathstring = join "", map "- $_\n", @{$req->{'incpath'}};
+	    $part->add_message("Include path is\n$incpathstring");
+	}
+
+	die $part;
+    }
+}
+
 
 sub fallback_error_page
 {
