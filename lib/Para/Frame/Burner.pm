@@ -191,7 +191,6 @@ sub burn
 {
 #    my( $burner ) = shift;
 #    return $burner->th->process(@_);
-    warn "Burning...\n";
     return shift->th->process(@_);
 }
 
