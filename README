@@ -50,6 +50,8 @@ PREREQUISITIES
     other modules. Your experience of installing CPAN modules will
     come to good use.
 
+    Also requires lsof
+
 
 INSTALL
 
