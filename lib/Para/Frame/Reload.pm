@@ -109,7 +109,7 @@ BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
     print "Loading ".__PACKAGE__." $VERSION\n"
-	unless $Psi::QUIET; # houerly_active.pl
+	unless $ENV{'MOD_PERL'};
 }
 
 our $DEBUG = 0;
