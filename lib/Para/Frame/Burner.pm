@@ -56,12 +56,20 @@ sub new
 
     foreach my $key ( keys %$config_in )
     {
+	next if $key eq 'type';
 	$config->{$key} = $config_in->{$key};
     }
 
-#    $burner->{'config_in'} = $config_in;
-    $burner->{'config'} = $config;
+    unless( $config_in->{'INCLUDE_PATH'} )
+    {
+	$config->{'INCLUDE_PATH'} = [ $burner ];
+    }
 
+
+    $burner->{'type'} = $config_in->{'type'} or
+      croak "No type given for burner";
+
+    $burner->{'config'} = $config;
     $burner->{'free'} = [];
     $burner->{'used'} = {};
 
@@ -183,6 +191,7 @@ sub burn
 {
 #    my( $burner ) = shift;
 #    return $burner->th->process(@_);
+    warn "Burning...\n";
     return shift->th->process(@_);
 }
 
@@ -190,19 +199,65 @@ sub error
 {
     my $th = $_[0]->{'used'}{$Para::Frame::REQ};
     return undef unless $th;
-    return $th->error;
+    my $error = $th->error;
+#    warn Dumper $error;
+    $error = Template::Exception->new('template',$error) unless ref $error;
+    return $error;
 }
 
-sub incpath_generator
+
+sub paths
 {
+    my( $burner ) = @_;
+
     my $req = $Para::Frame::REQ;
 
     unless( $req->{'incpath'} )
     {
-	$req->{'incpath'} = [ map uri2file( $_."inc" )."/", @{$req->{'dirsteps'}} ];
-	push @{$req->{'incpath'}}, $Para::Frame::CFG->{'paraframe'}."/inc";
-#	debug(0,"Incpath: @{$req->{'incpath'}}");
+	my $type = $burner->{'type'};
+	my $extra = "";
+	if( $type ne 'html' )
+	{
+	    $extra = $type . "/";
+	}
+
+	my $site = $req->site;
+	my $backlist = $site->appback;
+
+	my @path;
+	if( $extra )
+	{
+	    foreach my $step ( @{$req->{'dirsteps'}} )
+	    {
+		warn "  Adding step $step\n";
+		my $file = uri2file( $step );
+		warn "           as $file\n";
+		push @path, $file."/inc/".$extra;
+	    }
+
+	    foreach my $back (@$backlist)
+	    {
+		push @path, $back."/inc/".$extra;
+	    }
+
+	    push @path, $Para::Frame::CFG->{'paraframe'}."/inc/".$extra;
+	}
+
+
+	push @path, map uri2file( $_."inc" )."/", @{$req->{'dirsteps'}};
+
+	foreach my $back (@$backlist)
+	{
+	    push @path, $back."/inc/".$extra;
+	}
+
+	push @path, $Para::Frame::CFG->{'paraframe'}."/inc/";
+
+	$req->{'incpath'} = [ @path ];
+
+#	warn "Incpath for $req->{template}: ".Dumper $req->{'incpath'};
     }
+
     return $req->{'incpath'};
 }
 
