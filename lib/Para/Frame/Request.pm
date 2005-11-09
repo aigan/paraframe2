@@ -471,7 +471,11 @@ sub run_action
     push @$actionroots, "Para::Frame::Action";
 
     my( $c_run ) = $run =~ m/^([\w\-]+)$/
-	or die "bad chars in run: $run";
+	or do
+    {
+	debug "bad chars in run: $run";
+	return 0;
+    };
     debug(2,"Will now require $c_run");
 
     # Only keep error if all tries failed
