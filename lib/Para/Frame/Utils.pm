@@ -767,7 +767,7 @@ sub dirsteps
 
     my @step = ();
 
-    my $length = length( $base ) || 0;
+    my $length = length( $base ) || 1;
 
     while( length( $path ) > $length )
     {
@@ -776,7 +776,7 @@ sub dirsteps
     }
 
 #    warn "  Returning dirsteps @step with base $base\n";
-    return @step;
+    return @step, $path;
 }
 
 sub uri2file
