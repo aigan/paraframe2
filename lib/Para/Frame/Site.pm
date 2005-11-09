@@ -63,7 +63,7 @@ sub _new
 {
     my( $this, $params ) = @_;
     my $class = ref($this) || $this;
-    
+
     my $site = bless $params, $class;
 
     if( $site->webhost =~ /^http/ )
@@ -90,6 +90,11 @@ sub add
 
     $DATA{ $webhost } = $site;
     $DATA{'default'} ||= $site;
+
+    foreach my $alias (@{$params->{'aliases'}})
+    {
+	$DATA{ $alias } = $site;
+    }
 
     return $site;
 }
@@ -165,10 +170,17 @@ sub port
     return $1 || 80;
 }
 
+sub appbase
+{
+    my( $site ) = @_;
+
+    return $site->{'appbase'} || $Para::Frame::CFG->{'appbase'};
+}
+
 sub appfmly
 {
     my( $site ) = @_;
-    my $family = $site->{'appfmly'};
+    my $family = $site->{'appfmly'} || $Para::Frame::CFG->{'appfmly'};
     unless( ref $family )
     {
 	my @list = ();
@@ -182,9 +194,34 @@ sub appfmly
     return $family;
 }
 
+sub approot
+{
+    my( $site ) = @_;
+
+    return $site->{'approot'} || $Para::Frame::CFG->{'approot'};
+}
+
+sub appback
+{
+    my( $site ) = @_;
+
+    return $site->{'appback'} || $Para::Frame::CFG->{'appback'};
+}
+
 sub params
 {
     return $_[0]->{'params'};
+}
+
+sub languages
+{
+    return $_[0]->{'languages'} || $Para::Frame::CFG->{'languages'} || [];
+}
+
+sub uri2file
+{
+    my( $site ) = @_;
+    die "not implemented";
 }
 
 1;
