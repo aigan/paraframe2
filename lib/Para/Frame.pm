@@ -49,6 +49,7 @@ use Para::Frame::Widget;
 use Para::Frame::Burner;
 use Para::Frame::Time qw( now );
 use Para::Frame::Utils qw( throw uri2file debug create_file chmod_file fqdn );
+use Para::Frame::Email::Address;
 
 use constant TIMEOUT_LONG  =>   5;
 use constant TIMEOUT_SHORT =>   0.001;
@@ -939,25 +940,40 @@ sub add_background_jobs_conditional
     {
 	return if $delta < BGJOB_MED;
     }
-    
+
     ### Reload updated modules
     Para::Frame::Reload->check_for_updates;
 
     add_background_jobs($delta, $sysload);
 }
 
-sub add_background_jobs
-{
-    my( $delta, $sysload ) = @_;
+=head2 new_background
 
-    $REQNUM ++;
-    warn "\n\n$REQNUM Handling new request (in background)\n";
-    my $client = "background-$REQNUM";
+Sets up a background job using new_minimal
+
+=cut
+
+sub new_background
+{
+    my( $client ) = @_;
+
+    $client ||= "background-$REQNUM";
+
+    my $reqnum = $REQNUM ++;
     my $req = Para::Frame::Request->new_minimal($REQNUM, $client);
 
     ### Register the request
     $REQUEST{$client} = $req;
     switch_req( $req, 1 );
+    return $req;
+}
+
+sub add_background_jobs
+{
+    my( $delta, $sysload ) = @_;
+
+    my $req = new_background();
+    warn "\n\n$REQNUM Handling new request (in background)\n";
 
     my $bg_user;
     my $user_class = $Para::Frame::CFG->{'user_class'};
@@ -1240,8 +1256,8 @@ sub configure
     $CFG->{'paraframe'} ||= '/usr/local/paraframe';
     $CFG->{'paraframe_group'} ||= 'staff';
 
-    $CFG->{'approot'} or die "approot missing in config\n";
-    $CFG->{'ttcdir'} ||= $CFG->{'approot'} . "/var/ttc";
+    $CFG->{'approot'} || $CFG->{'appback'}
+      or die "appback or approot missing in config\n";
 
     # $Para::Frame::Time::TZ is set at startup from:
     #
@@ -1268,9 +1284,12 @@ sub configure
 	}
     }
 
+    my $ttcbase = $CFG->{'appback'}[0] || $CFG->{'approot'};
+    $CFG->{'ttcdir'} ||= $ttcbase . "/var/ttc";
+
+
     my %th_default =
 	(
-	 INCLUDE_PATH => [ \&Para::Frame::Burner::incpath_generator ],
 	 PRE_PROCESS => 'header_prepare.tt',
 	 POST_PROCESS => 'footer.tt',
 	 TRIM => 1,
@@ -1285,12 +1304,14 @@ sub configure
 	%th_default,
 	INTERPOLATE => 1,
 	COMPILE_DIR =>  $CFG->{'ttcdir'}.'/html',
+        type => 'html',
     });
 
     $CFG->{'th'}{'html_pre'} ||= Para::Frame::Burner->new({
 	%th_default,
 	COMPILE_DIR =>  $CFG->{'ttcdir'}.'/html_pre',
 	TAG_STYLE => 'star',
+        type => 'html_pre',
     });
 
     $CFG->{'th'}{'plain'} ||= Para::Frame::Burner->new({
@@ -1302,6 +1323,7 @@ sub configure
 	    'lf'  => sub { $_[0] =~ s/\r\n/\n/g; $_[0] },
 	    'autoformat' => sub { autoformat($_[0]) },
 	},
+        type => 'plain',
     });
 
     $CFG->{'port'} ||= 7788;
@@ -1324,6 +1346,11 @@ sub configure
     Para::Frame::Email::Address->on_configure;
 }
 
+sub dir
+{
+    return $CFG->{'paraframe'};
+}
+
 sub set_global_tt_params
 {
     my( $class ) = @_;
@@ -1337,6 +1364,7 @@ sub set_global_tt_params
 	'rand'            => sub{ int rand($_[0]) },
 	'uri'             => \&Para::Frame::Utils::uri,
 	'uri_path'        => \&Para::Frame::Utils::uri_path,
+        'timediff'        => \&Para::Frame::Utils::timediff,
 
 	'selectorder'     => \&Para::Frame::Widget::selectorder,
 	'slider'          => \&Para::Frame::Widget::slider,
