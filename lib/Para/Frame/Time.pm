@@ -44,6 +44,7 @@ BEGIN
 use base qw( DateTime );
 
 our $TZ; # Default Timezone, set in Para::Frame->configure
+# Use timezone only for presentation. Not for date calculations
 
 our @EXPORT_OK = qw(internet_date date now timespan duration ); #for docs only
 
@@ -120,9 +121,7 @@ sub get
 	    throw('validation', "Time format '$time' not recognized");
 	}
     }
-    my $to = $this->from_epoch( epoch => $date,
-				time_zone => $TZ,
-				);
+    my $to = $this->from_epoch( epoch => $date );
     debug(4,"Finaly: $to");
     return $to;
 }
@@ -137,7 +136,7 @@ Returns obj representing current time
 
 sub now
 {
-    Para::Frame::Time->SUPER::now(time_zone => $TZ);
+    Para::Frame::Time->SUPER::now();
 }
   
 =head2 date
@@ -229,12 +228,12 @@ sub cdate
     # fromatting dates for the DB. Change to use the specific dbix
     # datetime_format function
 
-    $_[0]->strftime('%Y-%m-%d %H:%M:%S');
+    $_[0]->clone->set_time_zone($TZ)->strftime('%Y-%m-%d %H:%M:%S');
  }
 
 sub format_datetime
 {
-    $_[0]->strftime('%Y-%m-%d %H.%M' )
+    $_[0]->clone->set_time_zone($TZ)->strftime('%Y-%m-%d %H.%M' )
 }
 
 sub stamp
