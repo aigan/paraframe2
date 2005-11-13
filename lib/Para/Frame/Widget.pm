@@ -721,7 +721,7 @@ sub textarea
     my( $key, $value, $params ) = @_;
 
     my $rows = $params->{'rows'} || 20;
-    my $cols = $params->{'cols'} || 60;
+    my $cols = $params->{'cols'} || 75;
     my @previous;
 
     if( my $q = $Para::Frame::REQ->q )
