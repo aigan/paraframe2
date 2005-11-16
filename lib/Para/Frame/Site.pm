@@ -218,6 +218,24 @@ sub languages
     return $_[0]->{'languages'} || $Para::Frame::CFG->{'languages'} || [];
 }
 
+sub pagepath
+{
+    my( $site ) = @_;
+    my $req = $Para::Frame::REQ;
+
+    my $home = $site->home;
+    my$tmpl = $req->template;
+    my( $page ) = $tmpl =~  /^$home(.*?)(\.\w\w)?\.\w{2,3}$/;
+    if( $page )
+    {
+	return $page;
+    }
+    else
+    {
+	die "Couldn't get pagepath from $tmpl\n";
+    }
+}
+
 sub uri2file
 {
     my( $site ) = @_;
