@@ -120,12 +120,12 @@ sub new_th
 {
     if( my $th = pop(@{$_[0]->{'free'}}) )
     {
-	debug 1, "TH retrieved from stack";
+	debug 2, "TH retrieved from stack";
 	return $th;
     }
     else
     {
-	debug 1, "TH created from config";
+	debug 2, "TH created from config";
 #	debug "  for $Para::Frame::REQ";
 	return Template->new($_[0]->{config});
     }
@@ -222,38 +222,51 @@ sub paths
 
 	my $site = $req->site;
 	my $backlist = $site->appback;
+	my $last_step = $req->{'dirsteps'}[-1];
+
 
 	my @path;
 	if( $extra )
 	{
 	    foreach my $step ( @{$req->{'dirsteps'}} )
 	    {
-		warn "  Adding step $step\n";
-		my $file = uri2file( $step );
-		warn "           as $file\n";
-		push @path, $file."/inc/".$extra;
+#		warn "  Adding step $step\n";
+		push @path, $step."inc/".$extra;
+	    }
+
+	    # Add another step if sitehome differs from approot
+	    if( $last_step ne $site->approot )
+	    {
+		push @path, $site->approot."/inc/".$extra;
 	    }
 
 	    foreach my $back (@$backlist)
 	    {
-		push @path, $back."/inc/".$extra;
+		if( $last_step ne "$back/" )
+		{
+		    push @path, $back."/inc/".$extra;
+		}
 	    }
 
 	    push @path, $Para::Frame::CFG->{'paraframe'}."/inc/".$extra;
 	}
 
 
-	push @path, map uri2file( $_."inc" )."/", @{$req->{'dirsteps'}};
+	push @path, map $_."inc/", @{$req->{'dirsteps'}};
 
 	foreach my $back (@$backlist)
 	{
-	    push @path, $back."/inc/".$extra;
+	    if( $last_step ne "$back/" )
+	    {
+		push @path, $back."/inc/";
+	    }
 	}
 
 	push @path, $Para::Frame::CFG->{'paraframe'}."/inc/";
 
 	$req->{'incpath'} = [ @path ];
 
+#	warn "Incpath:\n".join "", map "- $_\n", @{$req->{'incpath'}};
 #	warn "Incpath for $req->{template}: ".Dumper $req->{'incpath'};
     }
 
