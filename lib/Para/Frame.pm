@@ -84,7 +84,6 @@ our @BGJOBS_PENDING;       # New jobs to be added in background
 our $TERMINATE  ;
 our $IN_STARTUP;           # True until we reach the watchdog loop
 our $ACTIVE_PIDFILE;       # The PID indicated by existing pidfile
-our $REAPER_FAILSAFE;      # Testing...
 
 # STDOUT goes to the watchdog. Use well defined messages!
 # STDERR goes to the log
@@ -289,17 +288,6 @@ sub main_loop
 	    }
 	    elsif( $req->{'childs'} )
 	    {
-#		if( $REAPER_FAILSAFE )
-#		{
-#		    debug "FAILSAFE REAPING";
-#		    &REAPER if $REAPER_FAILSAFE > time;
-#		    $REAPER_FAILSAFE = 0;
-#		}
-#		else
-#		{
-#		    $REAPER_FAILSAFE = time + 3;
-#		}
-
 		# Stay open while waiting for child
 		if( debug >= 4 )
 #		if(1)
@@ -345,21 +333,6 @@ sub main_loop
 
 	    # exit loop if child done
 	    last unless $child->{'req'}{'childs'};
-
-#	    ### DEBUG
-#	    warn "Waiting for a child\n";
-#	    my $childs = $child->req->{'childs'};
-#	    warn "  childs: $childs\n";
-#		if( $REAPER_FAILSAFE )
-#		{
-#		    debug "FAILSAFE REAPING";
-#		    &REAPER if $REAPER_FAILSAFE > time;
-#		    $REAPER_FAILSAFE = 0;
-#		}
-#		else
-#		{
-#		    $REAPER_FAILSAFE = time + 3;
-#		}
 	}
 	else
 	{
@@ -440,8 +413,6 @@ sub main_loop
 		}
 
 	    }
-
-#	    &REAPER; # In case we missed something...
 	}
     }
     debug(4,"Exiting  main_loop at level $LEVEL",-1);
@@ -796,6 +767,8 @@ sub close_callback
 	warn "$REQUEST{$client}{reqnum} Done\n";
     }
 
+    return if $REQUEST{$client}{'subrequest'};
+
     if( $client =~ /^background/ )
     {
 	# Releasing active request
@@ -823,7 +796,7 @@ sub REAPER
     # we will leave the unreaped child as a zombie. And the next time
     # two children die we get another zombie. And so on.
 
-    warn "| In reaper\n";
+    warn "| In reaper\n" if $DEBUG > 1;
 
     while (($child_pid = waitpid(-1, POSIX::WNOHANG)) > 0)
     {
@@ -837,8 +810,8 @@ sub REAPER
 	else
 	{
 	    warn "|   No object registerd with PID $child_pid\n";
-	    warn "|     This may be a child already handled\n";
-	    warn "|     Or some third party thing like Date::Manip...\n";
+#	    warn "|     This may be a child already handled\n";
+#	    warn "|     Or some third party thing like Date::Manip...\n";
 	}
     }
     $SIG{CHLD} = \&REAPER;  # still loathe sysV
@@ -947,32 +920,18 @@ sub add_background_jobs_conditional
     add_background_jobs($delta, $sysload);
 }
 
-=head2 new_background
-
-Sets up a background job using new_minimal
-
-=cut
-
-sub new_background
+sub add_background_jobs
 {
-    my( $client ) = @_;
+    my( $delta, $sysload ) = @_;
 
-    $client ||= "background-$REQNUM";
-
-    my $reqnum = $REQNUM ++;
+    $REQNUM ++;
+    my $client = "background-$REQNUM";
     my $req = Para::Frame::Request->new_minimal($REQNUM, $client);
 
     ### Register the request
     $REQUEST{$client} = $req;
     switch_req( $req, 1 );
-    return $req;
-}
 
-sub add_background_jobs
-{
-    my( $delta, $sysload ) = @_;
-
-    my $req = new_background();
     warn "\n\n$REQNUM Handling new request (in background)\n";
 
     my $bg_user;
@@ -1287,6 +1246,10 @@ sub configure
     my $ttcbase = $CFG->{'appback'}[0] || $CFG->{'approot'};
     $CFG->{'ttcdir'} ||= $ttcbase . "/var/ttc";
 
+    my $tt_plugins = $CFG->{'tt_plugins'} || [];
+    $tt_plugins = [$tt_plugins] unless ref $tt_plugins;
+    push @$tt_plugins, 'Para::Frame::Template::Plugin';
+
 
     my %th_default =
 	(
@@ -1296,7 +1259,7 @@ sub configure
 	 PRE_CHOMP => 1,
 	 POST_CHOMP => 1,
 	 RECURSION => 1,
-	 PLUGIN_BASE => 'Para::Frame::Template::Plugin',
+	 PLUGIN_BASE => $tt_plugins,
 	 ABSOLUTE => 1,
 	 );
 
