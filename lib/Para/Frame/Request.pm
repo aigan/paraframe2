@@ -141,6 +141,25 @@ sub new
     return $req;
 }
 
+=head2 new_subrequest
+
+Sets up a subrequest using new_minimal
+
+=cut
+
+sub new_subrequest
+{
+    my( $original_req ) = @_;
+
+    my $client = $original_req->client;
+
+    $Para::Frame::REQNUM ++;
+    my $req = Para::Frame::Request->new_minimal($Para::Frame::REQNUM, $client);
+
+    $req->{'subrequest'} = $original_req;
+    return $req;
+}
+
 =head2 new_minimal
 
 Used for background jobs, without a calling browser client
@@ -176,6 +195,9 @@ sub new_minimal
 	wait           => 0,              ## Asked to wait?
 	site           => undef,          ## The site for the request
     }, $class;
+
+    my %ttparams = %$Para::Frame::PARAMS;
+    $req->{'params'} = \%ttparams;
 
     $req->{'site'}    = Para::Frame::Site->get();
     $req->{'result'}  = new Para::Frame::Result;  # Before Session
@@ -404,12 +426,13 @@ sub set_template
 
 sub set_dirsteps
 {
-    my( $req, $path_full ) = @_;
+    my( $req, $path_full, $path_home ) = @_;
 
-    $path_full ||= dirname( $req->template ) . "/";
-    warn "Setting dirsteps for $path_full\n";
+    $path_full ||= uri2file( dirname( $req->template ) . "/" );
+    $path_home ||= uri2file( $req->site->home );
+#    warn "Setting dirsteps for $path_full\n";
     undef $req->{'incpath'};
-    return $req->{'dirsteps'} = [ dirsteps( $path_full, $req->site->home ) ];
+    return $req->{'dirsteps'} = [ dirsteps( $path_full, $path_home ) ];
 }
 
 sub set_error_template
@@ -849,7 +872,7 @@ sub add_params
 	{
 	    next if $param->{$key};
 	    $param->{$key} = $val;
-	    debug(4,"Add TT param $key");
+	    debug(4,"Add TT param $key: $val");
 	}
     }
     else
@@ -857,7 +880,7 @@ sub add_params
 	while( my($key, $val) = each %$extra )
 	{
 	    $param->{$key} = $val;
-	    debug(4,"Add TT param $key");
+	    debug(4,"Add TT param $key: $val");
 	}
      }
 }
@@ -1025,10 +1048,10 @@ sub find_template
     }
 
     # Also used by &Para::Frame::Burner::paths
-    $req->set_dirsteps( $path_full );
+    $req->set_dirsteps( uri2file( $path_full )."/" );
 
     # uri2file returns file without '/' for dirs
-    my( @step ) = map uri2file( $_."def" )."/", @{$req->{'dirsteps'}};
+    my( @step ) = map $_."def/", @{$req->{'dirsteps'}};
 
 
     my @backdefs = map $_."/def/", @{$site->appback};
@@ -1485,18 +1508,24 @@ sub precompile_page
 {
     my( $original_req, $srcdir, $file, $dest, $language, $type ) = @_;
 
-    my $req = Para::Frame::new_background( $original_req->client );
+    $original_req->{'wait'} ++;
+
+    my $req = $original_req->new_subrequest;
+
+    Para::Frame::switch_req( $req, 1 );
+
     warn "\n$Para::Frame::REQNUM Precompiling $file\n";
 
     $req->{'lang'} = [$language] if $language;
     $type ||= 'html_pre';
 
     my $destfile = uri2file( $dest );
+    my $srcpath = dirname( "$srcdir$file" ) . "/";
 
-    warn "$srcdir$file -> $destfile in $type ($language)\n";
+    debug(2,"$srcdir $file -> $destfile in $type ($language)");
 
     $req->set_uri( $dest );
-    $req->set_dirsteps();
+    $req->set_dirsteps($srcpath, $srcdir);
 
     my $fh = new IO::File;
     $fh->open( "$srcdir$file" ) or die "Failed to open '$file': $!\n";
@@ -1510,6 +1539,8 @@ sub precompile_page
     my $error = $burner->error;
 
     Para::Frame::switch_req( $original_req );
+
+    $original_req->{'wait'} --;
 
     unless( $res )
     {
