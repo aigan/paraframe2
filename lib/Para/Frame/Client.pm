@@ -28,7 +28,7 @@ BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
     print "Loading ".__PACKAGE__." $VERSION\n"
-	unless $Psi::QUIET;
+	unless $ENV{'MOD_PERL'};
 }
 
 use Para::Frame::Reload;
@@ -36,7 +36,7 @@ use Para::Frame::Reload;
 our $SOCK;
 our $r;
 
-our $DEBUG = 0;
+our $DEBUG = 1;
 our $BACKUP_PORT;
 
 # $SIG{HUP} = sub { warn "Got a HUP\n"; };
@@ -80,7 +80,7 @@ sub handler
     {
 	return 0;
     }
-    
+
     my $params = {};
     foreach my $key ( $q->param )
     {
@@ -153,7 +153,7 @@ sub send_to_server
 sub connect_to_server
 {
     my( $port ) = @_;
-    
+
     # Retry a couple of times
 
     my @cfg =
@@ -176,7 +176,8 @@ sub connect_to_server
 
 	last if $SOCK;
 
-	if( $try >= 20 )
+#	if( $try >= 20 )
+	if( $try >= 3 )
 	{
 	    warn "$$:   Giving up!\n";
 	    return undef;
@@ -196,7 +197,7 @@ sub print_error_page
     $error ||= "Unexplaind error";
     $explain ||= "";
     chomp $explain;
-    
+
     warn "$$: Returning error: $error\n" if $DEBUG;
 
     my $dirconfig = $r->dir_config;
