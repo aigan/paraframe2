@@ -428,9 +428,9 @@ sub set_dirsteps
 {
     my( $req, $path_full, $path_home ) = @_;
 
-    $path_full ||= uri2file( dirname( $req->template ) . "/" );
+    $path_full ||= uri2file( dirname( $req->template ) . "/" ) . "/";
     $path_home ||= uri2file( $req->site->home );
-#    warn "Setting dirsteps for $path_full\n";
+#    warn "Setting dirsteps for $path_full under $path_home\n";
     undef $req->{'incpath'};
     return $req->{'dirsteps'} = [ dirsteps( $path_full, $path_home ) ];
 }

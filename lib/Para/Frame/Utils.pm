@@ -776,7 +776,7 @@ sub dirsteps
     }
 
 #    warn "  Returning dirsteps @step with base $base\n";
-    return @step, $path;
+    return @step;
 }
 
 sub uri2file
