@@ -401,16 +401,6 @@ sub set_template
     else
     {
 #	# Don't change template...
-#
-#	my( $tname, $tpath, $text ) = fileparse( $template, qr{\..*} );
-#	my( $fname, $fpath, $fext ) = fileparse( $file,     qr{\..*} );
-#
-#	# Change the name but not the path
-#
-#	if( $tname ne $fname )
-#	{
-#	    $template = $tpath . $fname . $fext;
-#	}
     }
 
     debug(3,"setting template to $template");
@@ -429,7 +419,7 @@ sub set_dirsteps
     my( $req, $path_full, $path_home ) = @_;
 
     $path_full ||= uri2file( dirname( $req->template ) . "/" ) . "/";
-    $path_home ||= uri2file( $req->site->home );
+    $path_home ||= uri2file( $req->site->home  . "/" );
 #    warn "Setting dirsteps for $path_full under $path_home\n";
     undef $req->{'incpath'};
     return $req->{'dirsteps'} = [ dirsteps( $path_full, $path_home ) ];
