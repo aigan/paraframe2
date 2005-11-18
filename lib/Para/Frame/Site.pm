@@ -110,7 +110,7 @@ sub get
 	croak "Either site $name or default is registred";
 }
 
-sub webhome     { $_[0]->{'webhome'} || '/' }
+sub webhome     { $_[0]->{'webhome'} || '' }
 sub home        { $_[0]->webhome }
 
 
