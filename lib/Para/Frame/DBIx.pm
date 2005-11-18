@@ -880,8 +880,8 @@ sub save_record
 		$fields_added{ $field } ++;
 		push @fields, $field;
 		push @values, $new;
-		$new ||= '<undef>';
-		$old ||= '<undef>';
+		$new = '<undef>' unless defined $new;
+		$old = '<undef>' unless defined $old;
 		debug(1,"  field $field differ: '$new' != '$old'");
 	    }
 	}
@@ -898,8 +898,8 @@ sub save_record
 		$fields_added{ $field } ++;
 		push @fields, $field;
 		push @values, $new;
-		$new ||= '<undef>';
-		$old ||= '<undef>';
+		$new = '<undef>' unless defined $new;
+		$old = '<undef>' unless defined $old;
 		debug(1,"  field $field differ: '$new' != '$old'");
 	    }
 	}
@@ -924,7 +924,9 @@ sub save_record
 		$fields_added{ $field } ++;
 		push @fields, $field;
 		push @values, pgbool( $new );
-		debug(1,"  field $field differ");
+		$new = '<undef>' unless defined $new;
+		$old = '<undef>' unless defined $old;
+		debug(1,"  field $field differ: '$new' != '$old'");
 	    }
 	}
 	elsif( $type eq 'date' )
