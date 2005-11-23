@@ -1709,10 +1709,13 @@ sub yield
 {
     my( $req, $wait ) = @_;
 
-    # The reqnum param is just for getting it in backtrace
-
-    $req->{'in_yield'} ++;
-    Para::Frame::main_loop( 1, $wait, $req->{'reqnum'} );
+    # In case there is an exception in main_loop()...
+    eval
+    {
+	$req->{'in_yield'} ++;
+	# The reqnum param is just for getting it in backtrace
+	Para::Frame::main_loop( 1, $wait, $req->{'reqnum'} );
+    };
     $req->{'in_yield'} --;
     Para::Frame::switch_req( $req );
 }
