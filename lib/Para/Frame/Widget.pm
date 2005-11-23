@@ -173,7 +173,7 @@ A 'onClick' attribute will set the corresponding tag attribute.
 
 A 'class' attribute will set the class for the link.
 
-If no class is set, the class will be 'selected' if the link goes to
+If no class is set, the class will be 'same_place' if the link goes to
 the current page.  To be used with CSS for marking the current page in
 menues.
 
