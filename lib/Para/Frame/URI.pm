@@ -32,7 +32,7 @@ sub new
 
     # Remove double / in path
 
-    $uri =~ s§//§/§g;
+    $uri =~ s§([^:])//+§$1/§g;
 
     return URI->new($uri, $scheme);
 }
