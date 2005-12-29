@@ -13,6 +13,9 @@
    CATCH file; END;
 %]
 
+[% IF emergency_mode %]
+<h1 class="important">Crashed $emergency_mode times</h1>
+[% END %]
 
 <h1>[% IF result.errcnt %]
    [% IF result.errcnt == 1 %]

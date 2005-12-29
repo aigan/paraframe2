@@ -214,20 +214,15 @@ sub main_loop
 	# The algorithm was adopted from perlmoo by Joey Hess
 	# <joey@kitenet.net>.
 
-	# I could also use IO::Multiplex or Net::Server::Multiplex or POE
+#	### DEBUG -- EAT MEMORY
+#	$::APA[$::BEPA++]="*"x20000000;
 
-#	    warn "...\n";
-	#    my $t0 = [gettimeofday];
+	# I could also use IO::Multiplex or Net::Server::Multiplex or POE
 
 	my $client;
 
-	# See if clients have sent any data.
-	#    my @client_list = $select->can_read(1);
-	#    print "T 1: ", tv_interval ( $t0, [gettimeofday]), "\n";
-
 	foreach $client ($SELECT->can_read( $timeout ))
 	{
-#	    warn "  Handle client $client\n";
 	    if ($client == $SERVER)
 	    {
 		# Accept connection even if we should $TERMINATE since
@@ -370,8 +365,6 @@ sub main_loop
 	foreach my $child ( values %CHILD )
 	{
 	    my $child_data = ''; # We must init for each child!
-
-#	    warn sprintf "--> Checking $child, reading %d bytes\n", POSIX::BUFSIZ;
 
 	    # Do a nonblocking read to get data. We try to read often
 	    # so that the buffer will not get full.
@@ -532,7 +525,6 @@ sub get_value
 	}
     }
 
-#    warn "Waiting for client\n";
     if( debug >= 3 )
     {
 	debug "Get value from $client";
@@ -555,7 +547,6 @@ sub get_value
     {
 	foreach my $ready ( $SELECT->can_read( $timeout ) )
 	{
-#	    warn "  Client ready\n";
 	    last WAITE if $ready == $client;
 	}
 	if( time > $time + $timeout )
@@ -1324,6 +1315,7 @@ sub set_global_tt_params
 	'dump'            => \&Dumper,
 	'warn'            => sub{ warn($_[0],"\n");"" },
 	'debug'           => sub{ debug(@_) },
+	'emergency_mode'  => sub{ $Para::Frame::Watchdog::EMERGENCY_MODE },
 	'rand'            => sub{ int rand($_[0]) },
 	'uri'             => \&Para::Frame::Utils::uri,
 	'uri_path'        => \&Para::Frame::Utils::uri_path,

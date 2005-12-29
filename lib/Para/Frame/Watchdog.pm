@@ -41,12 +41,14 @@ our $CRASHCOUNTER;         # Number of crashes
 our $CRASHTIME;
 our $DO_CONNECTION_CHECK;
 our $HARD_RESTART;
+our $SHUTDOWN;             # Should we shut down the server?
 our $MSGTYPE;              # Type of messages from server 
 our $CHECKTIME;            # Time of last proc check
 our $CPU_TIME;             # user + system time
 our $CPU_USAGE;            # Aproximate avarage usage
 our $MEMORY_CLEAR_TIME;    # When to send memory message
 our $USE_LOGFILE;          # Redirects STDERR to logfile
+our $EMERGENCY_MODE;       # Experienced a crash. Maximum debug
 
 use constant INTERVAL_CONNECTION_CHECK =>  60;
 use constant INTERVAL_MAIN_LOOP        =>  10;
@@ -56,6 +58,7 @@ use constant TIMEOUT_SERVER_STARTUP    =>  45;
 use constant TIMEOUT_CONNECTION_CHECK  =>  60;
 use constant LIMIT_CONNECTION_TRIES    =>   5;
 use constant TIMEOUT_CREATE_FORK       =>   5;
+use constant EMERGENCY_DEBUG_LEVEL     =>   5;
 
 sub debug; # Use special version of debug
 
@@ -91,7 +94,7 @@ sub startup
 	restart_server();
     };
 
-    startup_in_fork();
+    return startup_in_fork();
 }
 
 sub watch_loop
@@ -100,8 +103,12 @@ sub watch_loop
     my $last_connection_check = time;
     while()
     {
+	exit 0 if $SHUTDOWN;
 	check_server_report();
-	check_connection() if $DO_CONNECTION_CHECK;
+	if( $DO_CONNECTION_CHECK )
+	{
+	    check_connection() or next;
+	}
 	check_process();
 
 	# Do a connection check once a minute
@@ -165,7 +172,7 @@ sub check_process
     elsif( $size > LIMIT_MEMORY_NOTICE and
 	   time > $MEMORY_CLEAR_TIME + TIMEOUT_CONNECTION_CHECK  )
     {
-	debug "Sening memory notice to server";
+	debug "Sending memory notice to server";
 	send_to_server('MEMORY', \$size );
 	$MEMORY_CLEAR_TIME = time;
     }
@@ -176,14 +183,15 @@ sub wait_for_server_setup
     my( $type, $level ) = get_server_message(TIMEOUT_SERVER_STARTUP);
     unless( $type )
     {
-	debug "Server failed to reach main loop";
-	exit 1;
+	debug "Server failed to reach main loop (TIMEOUT)";
+	return watchdog_crash();
     }
     if( $type ne 'MAINLOOP' )
     {
-	debug "Expected MAINLOOP message";
-	exit 1;
+	debug "Expected MAINLOOP message (got '$type')";
+	return watchdog_crash();
     }
+    return 1;
 }
 
 sub check_server_report
@@ -331,7 +339,7 @@ sub check_connection
 	$try ++;
 	debug 4, "  Check $try";
 
-	my $sock = send_to_server('PING');
+	my $sock = send_to_server('PING') or next;
 	my $select = IO::Select->new($sock);
 
 	# Waiting for the response in TIMEOUT_CONNECTION_CHECK seconds
@@ -370,9 +378,10 @@ sub check_connection
 	if( $try >= LIMIT_CONNECTION_TRIES )
 	{
 	    debug "Tried $try times";
-	    exit 1;
+	    return watchdog_crash();
 	}
     }
+    return 1;
 }
 
 sub on_crash
@@ -386,7 +395,35 @@ sub on_crash
     }
     debug "\n\n\nRestart $CRASHCOUNTER at $CRASHTIME\n\n\n";
     
-    startup_in_fork();
+    return startup_in_fork();
+}
+
+sub watchdog_crash
+{
+    $EMERGENCY_MODE++;
+    debug "\n\nWatchdog got an unexpected situation ($EMERGENCY_MODE)";
+
+    if( $Para::Frame::DEBUG < EMERGENCY_DEBUG_LEVEL )
+    {
+	$Para::Frame::DEBUG =
+	    $Para::Frame::Client::DEBUG =
+	    $Para::Frame::CFG->{'debug'} =
+	    EMERGENCY_DEBUG_LEVEL;
+	debug "Raising global debug to level $Para::Frame::DEBUG";
+    }
+
+    # Kill all children
+    if( $PID and kill 0, $PID )
+    {
+	restart_server(1);
+	# on_crash will be called from REAPER
+    }
+    else
+    {
+	on_crash();
+    }
+
+    return 0; # Make caller go back to main loop
 }
 
 sub startup_in_fork
@@ -446,12 +483,13 @@ sub startup_in_fork
     $FH = $fh;
     
     # Wait for server response
-    wait_for_server_setup();
+    wait_for_server_setup() or return 0;
 
     # schedule connection check (must be done outside REAPER)
     $DO_CONNECTION_CHECK ++;
 
     debug 1, "Watching $PID";
+    return 1;
 }
 
 sub REAPER
@@ -473,14 +511,17 @@ sub REAPER
 	    if( $? == 0 )
 	    {
 		debug "Server shut down whithout problems";
+		$SHUTDOWN = 1;
 	    }
 	    elsif( $? == 15 and not $HARD_RESTART )
 	    {
 		debug "Server got a TERM signal. I will not restart it";
+		$SHUTDOWN = 1;
 	    }
 	    elsif( $? == 9 and not $HARD_RESTART )
 	    {
 		debug "Server got a KILL signal. I will not restart it";
+		$SHUTDOWN = 1;
 	    }
 	    elsif( $? == 25088 )
 	    {
@@ -491,8 +532,10 @@ sub REAPER
 	    {
 		if( $Para::Frame::IN_STARTUP )
 		{
-		    debug "Server failed to reach main loop";
-		    exit $?;
+		    debug "  We are still in startup";
+		    debug "  Ignoring this signal...";
+		    return $?;
+#		    exit $?;
 		}
 
 		on_crash();
@@ -562,13 +605,17 @@ sub send_to_server
 {
     my( $code, $valref ) = @_;
 
+    # Returns the socket. Undef on failure!
+
+    exit 0 if $SHUTDOWN; # Bail out if requested to...
+
     my $port = $Para::Frame::CFG->{'port'};
     Para::Frame::Client::connect_to_server( $port );
     my $sock = $Para::Frame::Client::SOCK;
     unless( $sock )
     {
 	debug "Failed to connect to server";
-	exit 1;
+	return undef;
     }
     Para::Frame::Client::send_to_server($code, $valref);
     return $sock;
@@ -642,7 +689,7 @@ sub get_lsof
     else
     {
 	warn Dumper $args;
-	die "not implemented";
+	die "not implemented (no port given)";
     }
 
     my $cmdline = join " ", 'lsof', '-V', @params;
@@ -773,6 +820,8 @@ sub configure
     $Para::Frame::IN_STARTUP = 1;
     $MEMORY_CLEAR_TIME = 0;
     $HARD_RESTART = 0;
+    $EMERGENCY_MODE = 0;
+    $SHUTDOWN = 0;
 
     # Message label and format of the arguments
     $MSGTYPE =
@@ -785,6 +834,12 @@ sub configure
 
 END
 {
+    # Resetting signal handlers
+    $SIG{CHLD} = 'DEFAULT';
+    $SIG{TERM} = 'DEFAULT';
+    $SIG{USR1} = 'DEFAULT';
+    $SIG{HUP} = 'DEFAULT';
+
     if( $PID )
     {
 	# In watchdog
