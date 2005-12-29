@@ -405,7 +405,7 @@ sub bookmark
     # Should be called with normalized uri; (No 'index.tt' part)
 
     # This should default to the PREVIUS page in most cases
-    my $uri = URI->new($uri_str || $req->uri );
+    my $uri = Para::Frame::URI->new($uri_str || $req->uri );
     my $q = $req->q;
 
     if( $q->param )
@@ -457,7 +457,7 @@ sub get_next
     if( my $step = pop @{$route->{'route'}} )
     {
 #	warn "  Next step is $step\n";
-	$step = URI->new($step) unless UNIVERSAL::isa($step, 'URI');
+	$step = Para::Frame::URI->new($step) unless UNIVERSAL::isa($step, 'URI');
 	my $query = $step->query || '';
 #	warn "    step query is $query\n";
 
@@ -555,9 +555,9 @@ sub skip_step
     {
 	debug(1,"!!    back step one");
 
-	$step = URI->new($step) unless UNIVERSAL::isa($step, 'URI');
+	$step = Para::Frame::URI->new($step) unless UNIVERSAL::isa($step, 'URI');
 
-	my $caller_page = URI->new($step->query_param('caller_page'))
+	my $caller_page = Para::Frame::URI->new($step->query_param('caller_page'))
 	    or die "caller_page missing from $step";
 
 #	warn " -- Got caller $caller_page from $step\n";
