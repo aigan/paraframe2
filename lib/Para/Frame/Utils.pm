@@ -45,7 +45,6 @@ use LWP::UserAgent;
 use HTTP::Request;
 use Template::Exception;
 use DateTime::Duration;
-use URI;
 
 BEGIN
 {
@@ -502,7 +501,7 @@ sub chmod_file
     #
     $mode = $mode & ~ $umask;
 
-    if( debug() > 1 )
+    if( debug() > 3 )
     {
 	debug(sprintf     "orig umask is 0%.4o", $orig_umask);
 	if( defined $new_umask )

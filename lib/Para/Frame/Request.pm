@@ -26,7 +26,6 @@ use File::stat;
 use File::Slurp;
 use File::Basename; # exports fileparse, basename, dirname
 use IO::File;
-use URI;
 use Carp qw(cluck croak carp confess );
 use Encode qw( is_utf8 );
 use LWP::UserAgent;
@@ -50,6 +49,7 @@ use Para::Frame::Child::Result;
 use Para::Frame::Request::Ctype;
 use Para::Frame::Site;
 use Para::Frame::Change;
+use Para::Frame::URI;
 use Para::Frame::Utils qw( create_dir chmod_file dirsteps uri2file compile throw idn_encode idn_decode debug catch );
 
 sub new
@@ -257,7 +257,7 @@ sub set_language
 {
     my( $req, $language ) = @_;
 
-    debug "Decide on a language";
+    debug 2, "Decide on a language";
 
     my $string = $language
               || $req->q->param('lang')
@@ -265,7 +265,7 @@ sub set_language
               || $req->env->{HTTP_ACCEPT_LANGUAGE}
               || '';
 
-    debug "  Lang prefs are $string";
+    debug 3, "  Lang prefs are $string";
 
     my $site_languages = $req->site->languages;
 
@@ -331,9 +331,9 @@ sub set_uri
     # Only used by Para::Frame to set uri from original uri. Never
     # changes from that original uri.
 
-    my $uri = URI->new($uri_in);
+    my $uri = Para::Frame::URI->new($uri_in);
 
-    debug(3,"setting URI to $uri");
+    debug(3,"Setting URI to $uri");
     $req->{uri} = $uri;
     $req->set_template( $uri, 1 );
 
@@ -691,7 +691,21 @@ sub run_action
 
 	debug(0,"ACTION FAILED!");
 	debug(1,$@,-1);
-	$req->result->exception;
+	my $part = $req->result->exception;
+	if( my $error = $part->error )
+	{
+	    if( $error->type eq 'denied' )
+	    {
+		if( $req->s->u->level == 0 )
+		{
+		    # Ask to log in
+		    my $error_tt = "/login.tt";
+		    $part->hide(1);
+		    $req->s->route->bookmark;
+		    $req->set_error_template( $error_tt );
+		}
+	    }
+	}
 	return 0;
     };
 
@@ -893,13 +907,13 @@ sub referer
 	if( my $uri = $req->q->param('caller_page') )
 	{
 	    debug "Referer from caller_page";
-	    return URI->new($uri)->path;
+	    return Para::Frame::URI->new($uri)->path;
 	}
 
 	# The query could have been changed by route
 	if( my $uri = $req->q->referer )
 	{
-	    $uri = URI->new($uri);
+	    $uri = Para::Frame::URI->new($uri);
 	    last if $uri->host_port ne $req->host_with_port;
 
 	    debug "Referer from current http req ($uri)";
@@ -909,7 +923,7 @@ sub referer
 	# The actual referer is more acurate in this order
 	if( my $uri = $req->{'referer'} )
 	{
-	    $uri = URI->new($uri);
+	    $uri = Para::Frame::URI->new($uri);
 	    last if $uri->host_port ne $req->host_with_port;
 
 	    debug "Referer from original http req";
@@ -940,13 +954,13 @@ sub referer_query
 	if( my $uri = $req->q->param('caller_page') )
 	{
 	    debug "Referer query from caller_page";
-	    return URI->new($uri)->query;
+	    return Para::Frame::URI->new($uri)->query;
 	}
 
 	# The query could have been changed by route
 	if( my $uri = $req->q->referer )
 	{
-	    $uri = URI->new($uri);
+	    $uri = Para::Frame::URI->new($uri);
 	    last if $uri->host_port ne $req->host_with_port;
 
 	    if( my $query = $uri->query )
@@ -959,7 +973,7 @@ sub referer_query
 	# The actual referer is more acurate in this order
 	if( my $uri = $req->{'referer'} )
 	{
-	    $uri = URI->new($uri);
+	    $uri = Para::Frame::URI->new($uri);
 	    last if $uri->host_port ne $req->host_with_port;
 
 	    if( my $query = $uri->query )
@@ -1799,7 +1813,7 @@ sub output_redirection
     }
     else
     {
-	my $uri = URI->new($uri_in, 'http');
+	my $uri = Para::Frame::URI->new($uri_in, 'http');
 	$uri->host( idn_encode $req->http_host ) unless $uri->host;
 	$uri->port( $req->http_port ) unless $uri->port;
 	$uri->scheme('http');

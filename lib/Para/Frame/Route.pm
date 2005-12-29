@@ -24,7 +24,6 @@ Para::Frame::Route - Backtracking and planning steps in a session
 
 use strict;
 use Data::Dumper;
-use URI;
 use URI::QueryParam;
 use Carp;
 
@@ -37,6 +36,7 @@ BEGIN
 use Para::Frame;
 use Para::Frame::Reload;
 use Para::Frame::Request;
+use Para::Frame::URI;
 use Para::Frame::Utils qw( throw uri debug store_params );
 
 =head1 DESCRIPTION
@@ -141,7 +141,7 @@ sub plan_backtrack
 
     if( my $step = $route->{'route'}[-1] )
     {
-	$step = URI->new($step) unless UNIVERSAL::isa($step, 'URI');
+	$step = Para::Frame::URI->new($step) unless UNIVERSAL::isa($step, 'URI');
 #	my $uri = URI->new($step);
 	debug(1,"!!Plan backtrack to ".$step->path);
 	return $step->path . '?backtrack';
@@ -169,12 +169,12 @@ sub plan_next
 
     $urls = [$urls] unless UNIVERSAL::isa($urls, 'ARRAY');
     my $referer = $Para::Frame::REQ->referer;
-    my $caller_uri = URI->new( $referer );
+    my $caller_uri = Para::Frame::URI->new( $referer );
     $caller_uri->query($Para::Frame::REQ->referer_query);
 
     foreach my $url ( @$urls )
     {
-	$url = URI->new($url) unless UNIVERSAL::isa($url, 'URI');
+	$url = Para::Frame::URI->new($url) unless UNIVERSAL::isa($url, 'URI');
 
 	# Used in skip_step...
 	$url->query_param_append('caller_page' => $caller_uri )
@@ -206,12 +206,12 @@ sub plan_after
 
     $urls = [$urls] unless UNIVERSAL::isa($urls, 'ARRAY');
     my $referer = $Para::Frame::REQ->referer;
-    my $caller_uri = URI->new( $referer );
+    my $caller_uri = Para::Frame::URI->new( $referer );
     $caller_uri->query($Para::Frame::REQ->referer_query);
 
     foreach my $url ( @$urls )
     {
-	$url = URI->new($url) unless UNIVERSAL::isa($url, 'URI');
+	$url = Para::Frame::URI->new($url) unless UNIVERSAL::isa($url, 'URI');
 
 	# Used in skip_step...
 	$url->query_param_append('caller_page' => $caller_uri )
@@ -353,7 +353,7 @@ sub check_backtrack
 	{
 	    # Remove last step if it's equal to curent place, including params
 	    my $last_step = $route->{'route'}[-1];
-	    $last_step = URI->new($last_step) unless UNIVERSAL::isa($last_step, 'URI');
+	    $last_step = Para::Frame::URI->new($last_step) unless UNIVERSAL::isa($last_step, 'URI');
 
 #	my $lsp = $last_step->path;
 #	my $qsp = $req->uri;
