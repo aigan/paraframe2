@@ -923,8 +923,7 @@ sub confirm_simple
      text  => $text,
      button =>
      [
-      [ $button_name, undef, 'backtrack',
-      ],
+      [ $button_name, undef, 'next_step'],
       ['Backa', undef, 'skip_step'],
      ],
     };
