@@ -107,7 +107,7 @@
      [%- ELSIF checked -%]
         [%- ' checked' IF  checked != 'f' -%]
      [%- END -%]
-  >
+  />
 [% END %]
 
 
@@ -119,7 +119,7 @@
      [% ELSIF current == value -%]
         checked
      [%- END -%]
-  >
+  />
 [% END %]
 
 
