@@ -57,7 +57,7 @@ A value given in a HTML form was invalid
 
 =head2 confirm
 
-Ask for confirmation of something.  (deprecated)
+Ask for confirmation of something, involving modification of a form in the submitting template
 
 =head2 template
 
@@ -135,8 +135,6 @@ our $ERROR_TYPE =
 	    'c' => 'Bekräfta uppgift',
 	},
 	'bg'      => 'yellow',
-	'no_backtrack' => 1,
-	'hide'    => 1,
     },
     'action'     =>
     {
