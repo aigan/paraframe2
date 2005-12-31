@@ -1,5 +1,3 @@
- <hr />
-
 <h3>[% reqnum %]:
     [%+ go("Reload", me, 'nop') %]
     [%+ go("Debug", "/debug.tt", 'mark') %]
