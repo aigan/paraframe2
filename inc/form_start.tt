@@ -15,8 +15,9 @@ IF template.next_template_target;
 END;
 %]
 <form name="f" action="[% form_action %]" method="post" enctype="[% form_enctype %]"[% form_extra %]>
-
-<input type="hidden" name="run" value="[% next_action %]">
+<div>
+<input type="hidden" name="run" value="[% next_action %]" />
 [% UNLESS next_template %]
-<input type="hidden" name="destination" value="dynamic">
+<input type="hidden" name="destination" value="dynamic" />
 [% END %]
+</div>

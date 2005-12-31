@@ -1,5 +1,4 @@
-<script>
-<!--
+<script type="text/javascript">
 function go(handler, run)
 {
     document.f.run.value=run || document.f.run.value;
@@ -23,5 +22,4 @@ function showhide(whichLayer)
     }
 }
 [% PROCESS js_extra.tt %]
-//-->
 </script>

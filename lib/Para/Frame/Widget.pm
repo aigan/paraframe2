@@ -336,7 +336,7 @@ sub go
     }
 
     my $query = join '', map sprintf("document.f.$_.value='%s';", $attr->{$_}), keys %$attr;
-    return "<input type=\"button\" value=\"$label\" onClick=\"${query}go('$template', '$run')\" $extra>";
+    return "<input type=\"button\" value=\"$label\" onClick=\"${query}go('$template', '$run')\" $extra />";
 }
 
 sub go_js
@@ -460,7 +460,7 @@ sub preserve_data
 	foreach my $val ( @vals )
 	{
 	    $val = $q->escapeHTML($val);
-	    $text .= "<input type=\"hidden\" name=\"$key\" value=\"$val\">\n";
+	    $text .= "<input type=\"hidden\" name=\"$key\" value=\"$val\" />\n";
 	}
     }
     return $text;
@@ -638,7 +638,7 @@ sub hidden
 
     $value ||= '';
 
-    return sprintf('<input type="hidden" name="%s" value="%s">',
+    return sprintf('<input type="hidden" name="%s" value="%s" />',
 		   CGI->escapeHTML( $key ),
 		   CGI->escapeHTML( $value ),
 		   );
@@ -690,7 +690,7 @@ sub input
 	  CGI->escapeHTML( $params->{$key} );
     }
 
-    return sprintf('<input name="%s" value="%s" size="%s" maxlength="%s"%s>',
+    return sprintf('<input name="%s" value="%s" size="%s" maxlength="%s"%s />',
                    CGI->escapeHTML( $key ),
                    CGI->escapeHTML( $value ),
                    CGI->escapeHTML( $size ),
@@ -764,7 +764,7 @@ sub filefield
     my $cols = $params->{'cols'} || 60;
     my $value = $params->{'value'} || $Para::Frame::REQ->q->param($key) || "";
 
-    return sprintf('<input type="file" name="%s" value="%s" size="%s">',
+    return sprintf('<input type="file" name="%s" value="%s" size="%s" />',
 		   CGI->escapeHTML( $key ),
 		   CGI->escapeHTML( $value ),
 		   CGI->escapeHTML( $cols ),
@@ -833,14 +833,14 @@ sub css_header
 
     foreach my $style ( @$persistent )
     {
-	$out .= "<link rel=\"Stylesheet\" href=\"$style\" type=\"text/css\">\n";
+	$out .= "<link rel=\"Stylesheet\" href=\"$style\" type=\"text/css\" />\n";
     }
 
     if( $default )
     {
 	foreach my $style ( @{$alternate->{$default}} )
 	{
-	    $out .= "<link rel=\"Stylesheet\" title=\"$default\" href=\"$style\" type=\"text/css\">\n";
+	    $out .= "<link rel=\"Stylesheet\" title=\"$default\" href=\"$style\" type=\"text/css\" />\n";
 	}
     }
 
@@ -849,7 +849,7 @@ sub css_header
 	next if $title eq $default;
 	foreach my $style ( @{$alternate->{$title}} )
 	{
-	    $out .= "<link rel=\"alternate stylesheet\" title=\"$title\" href=\"$style\" type=\"text/css\">\n";
+	    $out .= "<link rel=\"alternate stylesheet\" title=\"$title\" href=\"$style\" type=\"text/css\" />\n";
 	}
     }    
 
