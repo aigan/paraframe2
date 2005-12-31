@@ -324,6 +324,15 @@ sub set_language
 
 #######################################################################
 
+sub set_http_status
+{
+    my( $req, $status ) = @_;
+    return 0 if $status < 100;
+    return $req->send_code( 'AR-PUT', 'status', $status );
+}
+
+#######################################################################
+
 sub set_uri
 {
     my( $req, $uri_in ) = @_;
@@ -563,7 +572,7 @@ sub run_action
 
     my $actionroots = [$site->appbase."::Action"];
 
-    my $appfmly = $req->site->appfmly;
+    my $appfmly = $site->appfmly;
 
     foreach my $family ( @$appfmly )
     {
@@ -1396,7 +1405,7 @@ sub render_output
     if( not $in )
     {
 	( $in, $ext ) = $req->find_template( '/page_not_found.tt' );
-	$req->send_code( 'AR-PUT', 'status', 404 );
+	$req->set_http_status(404);
 	$Para::Frame::REQ->result->error('notfound', "Hittar inte sidan $template\n");
     }
 
@@ -1462,7 +1471,7 @@ sub render_output
 		elsif( $error->type eq 'notfound' )
 		{
 		    $error_tt = "/page_not_found.tt";
-		    $req->send_code( 'AR-PUT', 'status', 404 );
+		    $req->set_http_status(404);
 		}
 		else
 		{
