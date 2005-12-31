@@ -1,15 +1,18 @@
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" 
+   "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="sv">
   <head>
     [% DEFAULT otitle = title %]
     <title>[% PROCESS title.tt %]</title>
     [%+ css_header(css) %]
     [% IF favicon %]<link rel="shortcut icon" href="$favicon" type="image/x-icon" />[% END %]
-    [% IF description %]<meta name="description" content="[% description | html %]">[% END %]
-    [% IF keywords %]<meta name="keywords" content="[% keywords | html %]">[% END +%]
-    <meta name="robots" content="[% IF no_robots_index;'no';END %]index,[% IF no_robots_follow;'no';END %]follow">
+    [% IF description %]<meta name="description" content="[% description | html %]" />[% END %]
+    [% IF keywords %]<meta name="keywords" content="[% keywords | html %]" />[% END +%]
+    [% IF no_robots_index or no_robots_follow %]
+    <meta name="robots" content="[% IF no_robots_index;'no';END %]index,[% IF no_robots_follow;'no';END %]follow" />
+    [% END %]
 
     [% PROCESS header_extra.tt %]
-
     [% PROCESS js.tt %]
   </head>
 
