@@ -33,6 +33,9 @@ sub handler
     my $password = $q->param('password') || "";
     my $remember = $q->param('remember_login') || 0;
 
+    # Do not repeat failed login in backtrack
+    $req->{'no_bookmark_on_failed_login'}=1;
+
     my @extra = ();
     if( $remember )
     {

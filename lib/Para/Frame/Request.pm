@@ -1462,7 +1462,10 @@ sub render_output
 			# Ask to log in
 			$error_tt = "/login.tt";
 			$req->result->hide_part('denied');
-			$req->s->route->bookmark;
+			unless( $req->{'no_bookmark_on_failed_login'} )
+			{
+			    $req->s->route->bookmark;
+			}
 		    }
 		    else
 		    {
