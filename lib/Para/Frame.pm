@@ -1064,6 +1064,7 @@ sub add_hook
 			  before_db_commit    |
 			  after_db_rollback   |
 			  before_switch_req   |
+			  before_render_output|
 			  busy_background_job |
 			  add_background_jobs 
 			  )$/x )

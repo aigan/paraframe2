@@ -783,6 +783,8 @@ sub after_jobs
 	}
 
 
+	Para::Frame->run_hook( $req, 'before_render_output');
+
 	my $render_result = 0;
 	if( $req->{'renderer'} )
 	{

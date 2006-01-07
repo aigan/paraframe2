@@ -357,6 +357,11 @@ sub new
 			      $dbix->commit;
 			  });
 
+    Para::Frame->add_hook('before_render_output', sub
+			  {
+			      $dbix->commit;
+			  });
+
     # I tried to just setting InactiveDestroy. But several processes
     # can't share a dbh. Multiple requests/multiple forsk may/will
     # result in errors like "message type 0x43 arrived from server
