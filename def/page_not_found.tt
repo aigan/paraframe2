@@ -7,3 +7,4 @@ The file you requested cannot be found.
 </p>
 
 [% preserve_data %]
+[% warn(ENV.REDIRECT_ERROR_NOTES) %]
