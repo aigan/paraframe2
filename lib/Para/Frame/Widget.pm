@@ -903,6 +903,7 @@ sub confirm_simple
 
     my $req = $Para::Frame::REQ;
     my $q = $req->q;
+    my $site = $req->site;
 
     foreach my $confirmed ( $q->param('confirmed') )
     {
@@ -912,8 +913,8 @@ sub confirm_simple
 
     ## Set up route, confirmation data and throw exception
 
-    $req->s->route->bookmark;
-    $req->set_error_template('/confirm.tt');
+    $req->session->route->bookmark;
+    $req->set_error_template($site->home.'/confirm.tt');
     my $result = $req->result;
     my $home = $req->site->home;
 
