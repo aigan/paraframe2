@@ -130,7 +130,7 @@ sub new
 	$req->{'browser'} = new HTTP::BrowserDetect($env->{'HTTP_USER_AGENT'});
     }
     $req->{'result'}  = new Para::Frame::Result;  # Before Session
-    $req->{'s'}       = new Para::Frame::Session($req);
+    $req->{'s'}       = Para::Frame->Session->new($req);
 
     $req->set_language;
 
@@ -170,21 +170,12 @@ sub new_minimal
 {
     my( $class, $reqnum, $bg_client ) = @_;
 
-    if( $Para::Frame::REQ )
-    {
-	# Detatch previous %ENV
-	$Para::Frame::REQ->{'env'} = {%ENV};
-    }
-
-    %ENV = ();
-    my( $env ) = \%ENV;
-
     my $req =  bless
     {
 	client         => $bg_client,     ## Just the unique name
 	indent         => 1,              ## debug indentation
 	jobs           => [],             ## queue of actions to perform
-	env            => $env,
+	env            => {},             ## No env mor minimals!
 	's'            => undef,          ## Session object
 	lang           => undef,          ## Chosen language
 	result         => undef,
@@ -201,7 +192,7 @@ sub new_minimal
 
     $req->{'site'}    = Para::Frame::Site->get();
     $req->{'result'}  = new Para::Frame::Result;  # Before Session
-    $req->{'s'}       = Para::Frame::Session->new_minimal();
+    $req->{'s'}       = Para::Frame->Session->new_minimal();
 
     return $req;
 }
@@ -708,7 +699,7 @@ sub run_action
 		if( $req->s->u->level == 0 )
 		{
 		    # Ask to log in
-		    my $error_tt = "/login.tt";
+		    my $error_tt = $site->home."/login.tt";
 		    $part->hide(1);
 		    $req->s->route->bookmark;
 		    $req->set_error_template( $error_tt );
@@ -865,7 +856,7 @@ sub error_backtrack
 	    # It must be a template
 	    unless( $req->template =~ /\.tt/ )
 	    {
-		$previous = "/error.tt";
+		$previous = $req->site->home."/error.tt";
 	    }
 
 	    debug(3,"Previous is $previous");
@@ -1206,14 +1197,14 @@ sub find_template
 			debug(2,"Error while compiling template $filename: $@");
 			# FIXME
 			$req->result->exception;
-			if( $template eq '/error.tt' )
+			if( $template eq $site->home.'/error.tt' )
 			{
 			    $req->{'error_template'} = $template;
 			    $req->{'page'} = $req->fallback_error_page;
 			    return undef;
 			}
 			debug(2,"Using /error.tt");
-			($in) = $req->find_template('/error.tt');
+			($in) = $req->find_template($site->home.'/error.tt');
 			debug(-2);
 			return( $in, 'tt' );
 		    }
@@ -1392,6 +1383,8 @@ sub render_output
     my $template = $req->template;
     my $page = "";
 
+    my $site = $req->site;
+
 
     my( $in, $ext ) = $req->find_template( $template );
 
@@ -1406,7 +1399,7 @@ sub render_output
 
     if( not $in )
     {
-	( $in, $ext ) = $req->find_template( '/page_not_found.tt' );
+	( $in, $ext ) = $req->find_template( $site->home.'/page_not_found.tt' );
 	$req->set_http_status(404);
 	$Para::Frame::REQ->result->error('notfound', "Hittar inte sidan $template\n");
     }
@@ -1444,7 +1437,7 @@ sub render_output
 		    if( $error->info =~ /not found/ )
 		    {
 			debug "Subtemplate not found";
-			$error_tt = '/page_part_not_found.tt';
+			$error_tt = $site->home.'/page_part_not_found.tt';
 			my $incpathstring = join "", map "- $_\n", @{$req->{'incpath'}};
 			$part->add_message("Include path is\n$incpathstring");
 		    }
@@ -1452,7 +1445,7 @@ sub render_output
 		    {
 			debug "Other template error";
 			$part->type('template');
-			$error_tt = '/error.tt';
+			$error_tt = $site->home.'/error.tt';
 		    }
 		}
 		elsif( $error->type eq 'denied' )
@@ -1460,7 +1453,7 @@ sub render_output
 		    if( $req->s->u->level == 0 )
 		    {
 			# Ask to log in
-			$error_tt = "/login.tt";
+			$error_tt = $site->home."/login.tt";
 			$req->result->hide_part('denied');
 			unless( $req->{'no_bookmark_on_failed_login'} )
 			{
@@ -1469,18 +1462,18 @@ sub render_output
 		    }
 		    else
 		    {
-			$error_tt = "/denied.tt";
+			$error_tt = $site->home."/denied.tt";
 			$req->s->route->plan_next($req->referer);
 		    }
 		}
 		elsif( $error->type eq 'notfound' )
 		{
-		    $error_tt = "/page_not_found.tt";
+		    $error_tt = $site->home."/page_not_found.tt";
 		    $req->set_http_status(404);
 		}
 		else
 		{
-		    $error_tt = '/error.tt';
+		    $error_tt = $site->home.'/error.tt';
 		}
 	    }
 
@@ -1488,7 +1481,7 @@ sub render_output
 	    debug(1,$burner->error());
 
 	    # Avoid recursive failure
-	    if( ($template eq $error_tt) and ($error_tt eq '/error.tt') )
+	    if( ($template eq $error_tt) and ($error_tt eq $site->home.'/error.tt') )
 	    {
 		$req->{'page'} = $req->fallback_error_page;
 		return 1;
@@ -1760,6 +1753,8 @@ sub forward
     # To forward to a page not handled by the paraframe, use
     # redirect()
 
+    my $site = $req->site;
+
     $uri ||= $req->template_uri;
 
     if( not $req->{'page'} )
@@ -1767,7 +1762,7 @@ sub forward
 	cluck "forward() called without a generated page";
 	unless( $uri =~ /\.html$/ )
 	{
-	    $uri = "/error.tt";
+	    $uri = $site->home."/error.tt";
 	}
     }
     elsif( $uri =~ /\.html$/ )
@@ -1867,6 +1862,9 @@ sub http_host
 
     # This is the host name the client requested. It tells with which
     # of the alternatives names the site was requested
+
+    $Data::Dumper::Maxdepth = 3;
+    confess Dumper $_[0] unless $ENV{HTTP_HOST}; ### DEBUG
 
     return idn_decode( $ENV{HTTP_HOST} );
 }
