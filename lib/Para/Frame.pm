@@ -525,7 +525,7 @@ sub get_value
 	}
     }
 
-    if( debug >= 3 )
+    if( debug >= 4 )
     {
 	debug "Get value from $client";
 	if( my $req = $REQUEST{$client} )
@@ -1289,6 +1289,7 @@ sub configure
 	"/paraframe_" . $CFG->{'port'} . ".log";
 
     $CFG->{'user_class'} ||= 'Para::Frame::User';
+    $CFG->{'session_class'} ||= 'Para::Frame::Session';
 
     $CFG->{'bg_user_code'} ||= sub{ $CFG->{'user_class'}->get('guest') };
 
@@ -1299,6 +1300,16 @@ sub configure
     Para::Frame::Route->on_configure;
     Para::Frame::Widget->on_configure;
     Para::Frame::Email::Address->on_configure;
+}
+
+sub Session
+{
+    $CFG->{'session_class'};
+}
+
+sub User
+{
+    $CFG->{'user_class'};
 }
 
 sub dir
