@@ -87,7 +87,14 @@ sub new
     # Create a route object for the session
     $s->{'route'} = Para::Frame::Route->new();
 
+    $s->init;
+
     return $s;
+}
+
+sub init
+{
+    # Reimplement this
 }
 
 sub new_minimal
