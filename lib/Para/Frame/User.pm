@@ -37,45 +37,55 @@ use Para::Frame::Utils qw( throw passwd_crypt debug );
 =head1 SYNOPSIS
 
   package My::User;
-  use Para::Frame::Utils qw( throw );
+  use Para::Frame::Utils qw( throw passwd_crypt );
   use base qw(Para::Frame::User);
 
-  sub verify_user
+  sub verify_password
   {
-      my( $u, $username, $password ) = @_;
+    my( $u, $password_encrypted ) = @_;
 
-      my $uid;       # Numerical Id of user
-      my $level;     # Access level of user, 0 = guest access
-      my $rela_name; # Full name
+    $password_encrypted ||= '';
+
+    if( $password_encrypted eq passwd_crypt($u->{'passwd'}) )
+    {
+	return 1;
+    }
+    else
+    {
+	return 0;
+    }
+  }
+
+  sub get
+  {
+      my( $class, $username ) = @_;
+
+      my $rec;
 
       if( $username eq 'egon' )
       {
-          if( $password eq 'secret' )
-          {
-              $uid       =  1;
-              $level     = 10;
-              $real_name = "Egon Duktig";
-          }
-          else
-          {
-	      throw('validation', "Wrong password for $username");
-          }
-      }
+        $rec =
+        {
+          name => 'Egon Duktig',
+          username => 'egon',
+          uid      => 123,
+          level    => 1,
+          passwd   => 'hemlis',
+        };
       else
       {
-          throw('validation', "User '$username' doesn't exist");
+        $rec =
+        {
+          name => 'Gäst',
+          username => 'guest',
+          uid      => 0,
+          level    => 0,
+        };
       }
 
-      # Clear out any old data
-      $u->clear;
-
-      $u->{'username'} = $username;
-      $u->{'name'}     = $real_name;
-      $u->{'uid'}      = $uid;
-      $u->{'level'}    = $level;
-
-      return 1; # Successful identification
+      return bless $rec, $class;
   }
+
 
 =head1 DESCRIPTION
 
@@ -193,19 +203,35 @@ sub authenticate_user
     return 1;
 }
 
-sub verify_user # Reimplement this method
+sub verify_user # NOT USED
 {
-    my( $u, $username, $password ) = @_;
+    throw('action', "Not used");
+}
+
+sub verify_password # Reimplement this method
+{
+    my( $u, $password_encrypted ) = @_;
 
     # Example:
-    #
-    # throw('validation', "Ingen med namnet ".
-    #     "'$username' existerar\n");
     #
     # throw('validation', "Fel lösenord för $username\n");
 
     throw('validation', "Not implemented");
     0;
+}
+
+sub get # Reimplement this method
+{
+    my( $class, $username ) = @_;
+
+    my $u = bless {}, $class;
+
+    $u->{'name'} = 'Gäst';
+    $u->{'username'} = 'guest';
+    $u->{'uid'} = 0;
+    $u->{'level'} = 0;
+
+    return $u;
 }
 
 sub logout
@@ -227,20 +253,6 @@ sub logout
     # Do not run hook if we are on guest level
     Para::Frame->run_hook($req, 'after_user_logout')
 	unless $Para::Frame::U->level == 0;
-}
-
-sub get # Reimplement this method
-{
-    my( $class, $username ) = @_;
-
-    my $u = bless {}, $class;
-
-    $u->{'name'} = 'Gäst';
-    $u->{'username'} = 'guest';
-    $u->{'uid'} = 0;
-    $u->{'level'} = 0;
-
-    return $u;
 }
 
 sub change_current_user
