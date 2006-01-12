@@ -229,7 +229,7 @@ sub send
 
     my( $from_addr ) = Para::Frame::Email::Address->parse( $p->{'from'} );
     $from_addr or
-      thtow('mail', "Failed to parse address $p->{'from'}\n");
+      throw('mail', "Failed to parse address $p->{'from'}\n");
 #    my $from_addr_str = $from_addr->address;
 
 
