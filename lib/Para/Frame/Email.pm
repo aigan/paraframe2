@@ -340,6 +340,7 @@ sub send
 	{
 	    debug(0,"Connecting to $mailhost",1);
 
+	    # TODO: Specify hello string...
 	    my $smtp = Net::SMTP->new( Host    => $mailhost,
 				       Timeout => 60,
 				       Debug   => 0,
