@@ -1,8 +1,8 @@
 <script type="text/javascript">
-function go(handler, run)
+function go(template, run)
 {
     document.f.run.value=run || document.f.run.value;
-    document.f.action = handler || document.f.action;
+    document.f.action = template || document.f.action;
     document.f.submit();
     return true;
 }
