@@ -8,12 +8,12 @@
 
 <table>
 [% FOREACH part = a.list %]
-   [% tr2 %][% a.rowformat(part) %]</tr>
+   [% tr2 %]<td>[% a.rowformat(part) %]</tr>
 [% END %]
 </table>
 
 [% view = a.view %]
 [% DEFAULT view = me %]
-[% DEFAULT class='msg' %]
-<p>[% go('Backa', '/', 'skip_step', class=class) +%]
-[%+ go('Hoppa över', undef, 'skip_step&skip_step', class=class) %]
+[% DEFAULT href_class='msg' %]
+<p>[% go('Backa', home, 'skip_step', href_class=href_class) +%]
+[%+ go('Hoppa över', undef, 'skip_step&skip_step', href_class=href_class) %]
