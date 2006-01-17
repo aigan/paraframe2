@@ -1,6 +1,6 @@
 <h3>[% reqnum %]:
     [%+ go("Reload", me, 'nop') %]
-    [%+ go("Debug", "/debug.tt", 'mark') %]
+    [%+ go("Debug", "$home/debug.tt", 'mark') %]
     [%+ debug %]
 </h3>
 
