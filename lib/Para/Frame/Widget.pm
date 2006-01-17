@@ -167,11 +167,13 @@ sub slider
 
 Draw a link to $template with text $label and query params %attrs.
 
-A 'target' attribute will set the target frame for the link.
+A 'href_target' attribute will set the target frame for the link.
 
-A 'onClick' attribute will set the corresponding tag attribute.
+A 'href_onclick' attribute will set the corresponding tag attribute.
 
-A 'class' attribute will set the class for the link.
+A 'href_class' attribute will set the class for the link.
+
+A 'href_id' attribute will set the id for the link.
 
 If no class is set, the class will be 'same_place' if the link goes to
 the current page.  To be used with CSS for marking the current page in
@@ -191,20 +193,20 @@ sub jump
     $attr ||= {};
 
     my $extra = "";
-    if( my $val = delete $attr->{'target'} )
+    if( my $val = delete $attr->{'href_target'} )
     {
 	$extra .= " target=\"$val\"";
     }
-    if( my $val = delete $attr->{'id'} )
+    if( my $val = delete $attr->{'href_id'} )
     {
 	$extra .= " id=\"$val\"";
     }
-    if( my $val = delete $attr->{'onClick'} )
+    if( my $val = delete $attr->{'href_onclick'} )
     {
 	$extra .= " onClick=\"$val\"";
     }
 
-    my $class_val = delete $attr->{'class'};
+    my $class_val = delete $attr->{'href_class'};
     if( $class_val )
     {
 	$extra .= " class=\"$class_val\"";
@@ -281,7 +283,7 @@ sub submit
 
     $label ||= 'Fortsätt';
     $attr ||= {};
-    my $class = $attr->{'class'} || 'msg';
+    my $class = $attr->{'href_class'} || 'msg';
 
     my $name = '';
     $name = "name=\"$setval\"" if $setval;
@@ -323,14 +325,14 @@ sub go
     $template ||= '';
     $run ||= 'nop';
     $attr ||= {};
-    $attr->{'class'} ||= 'msg';
+    $attr->{'href_class'} ||= 'msg';
 
     my $extra = "";
-    if( my $val = delete $attr->{'target'} )
+    if( my $val = delete $attr->{'href_target'} )
     {
 	$extra .= "target=\"$val\" ";
     }
-    if( my $val = delete $attr->{'class'} )
+    if( my $val = delete $attr->{'href_class'} )
     {
 	$extra .= "class=\"$val\" ";
     }
