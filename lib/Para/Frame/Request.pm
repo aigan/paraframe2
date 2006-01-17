@@ -215,6 +215,12 @@ sub language { $_[0]->{'lang'} }
 sub error_page_selected { $_[0]->{'error_template'} ? 1 : 0 }
 sub error_page_not_selected { $_[0]->{'error_template'} ? 0 : 1 }
 
+sub user
+{
+    return shift->session->user;
+}
+
+
 sub change
 {
     return $_[0]->{'change'} ||= Para::Frame::Change->new();
@@ -1515,9 +1521,25 @@ sub render_output
     return 1;
 }
 
+#############################################################
+
+
+=head2 precompile_page
+
+  $req->precompile_page( $srcfile, $destfile, {ARGLIST} )
+
+  arg type defaults to html_pre
+  arg language defaults to undef
+
+$srcfile is the absolute system path to the template.
+
+$destfile is the URL path in the current site for the destination file.
+
+=cut
+
 sub precompile_page
 {
-    my( $original_req, $srcdir, $file, $dest, $language, $type ) = @_;
+    my( $original_req, $srcfile, $destfile_web, $args ) = @_;
 
     $original_req->{'wait'} ++;
 
@@ -1525,24 +1547,25 @@ sub precompile_page
 
     Para::Frame::switch_req( $req, 1 );
 
-    warn "\n$Para::Frame::REQNUM Precompiling $file\n";
+    warn "\n$Para::Frame::REQNUM Precompiling $srcfile\n";
 
-    $req->{'lang'} = [$language] if $language;
-    $type ||= 'html_pre';
+    $args ||= {};
 
-    my $destfile = uri2file( $dest );
-    my $srcpath = dirname( "$srcdir$file" ) . "/";
+    $req->{'lang'} = [$args->{'language'}] if $args->{'language'};
+    my $type = $args->{'type'} || 'html_pre';
 
-    debug(2,"$srcdir $file -> $destfile in $type ($language)");
+    my $srcdir = dirname( $srcfile );
+    my $destfile = uri2file( $destfile_web );
 
-    $req->set_uri( $dest );
-    $req->set_dirsteps($srcpath, $srcdir);
+    debug(2,"$srcdir $srcfile -> $destfile in $type");
+
+    $req->set_uri( $destfile_web );
+    $req->set_dirsteps($srcdir."/");
 
     my $fh = new IO::File;
-    $fh->open( "$srcdir$file" ) or die "Failed to open '$file': $!\n";
+    $fh->open( "$srcfile" ) or die "Failed to open '$srcfile': $!\n";
 
     $req->set_tt_params;
-#    warn "    Processing $file to $dest in $type $language\n";
 
     my $burner = $Para::Frame::CFG->{'th'}{$type};
     my $res = $burner->burn($fh, $req->{'params'}, $destfile );
@@ -2124,6 +2147,8 @@ sub set_tt_params
 {
     my( $req ) = @_;
 
+    my $site = $req->site;
+
     # Real filename
     my $real_filename = $req->filename;
     $real_filename or die "No filename given: ".Dumper($req);
@@ -2133,10 +2158,15 @@ sub set_tt_params
     $req->{'dir'} = $dir;
     debug(3,"Setting dir to $dir");
 
+    my $home = $site->home;
+    my $template = $req->template;
+    my( $site_file ) = $template =~ /^$home(.*?)(\.\w\w)?\.\w{2,3}$/
+      or die "Couldn't get site_file from $template under $home";
+
     # Add local site params
     if( $req->site->params )
     {
-	$req->add_params($req->site->params);
+	$req->add_params($site->params);
     }
 
     # Keep alredy defined params  # Static within a request
@@ -2145,6 +2175,7 @@ sub set_tt_params
 	'ENV'             => $req->env,
 	'me'              => $req->template_uri,
 	'filename'        => $real_filename,
+        'site_file'       => $site_file,
 	'dir'             => $dir,
 	'browser'         => $req->{'browser'},
 	'u'               => $Para::Frame::U,
@@ -2153,8 +2184,8 @@ sub set_tt_params
 	'req'             => $req,
 
 	# Is allowed to change between requests
-	'site'            => $req->site,
-	'home'            => $req->site->webhome,
+	'site'            => $site,
+	'home'            => $site->home,
     }, 1);
 }
 
