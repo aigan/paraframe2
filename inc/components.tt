@@ -63,9 +63,9 @@
 [% MACRO regret(label) BLOCK %]
 [% DEFAULT
        	label = 'Backa'
-	class = 'msg'
+	href_class = 'msg'
 %]
-   [% go(label, undef, 'skip_step', class=class) %]
+   [% go(label, undef, 'skip_step', href_class=href_class) %]
 [% END %]
 
 
@@ -73,9 +73,9 @@
 [% MACRO remove_step(label) BLOCK %]
 [% DEFAULT
        	label = 'Ta bort steg'
-	class = 'msg'
+	href_class = 'msg'
 %]
-   [% go(label, me, 'remove_step', class=class) %]
+   [% go(label, me, 'remove_step', href_class=href_class) %]
 [% END %]
 
 
@@ -83,9 +83,9 @@
 [% MACRO backstep(label, break_path) BLOCK %]
 [% DEFAULT
        	label = 'Hoppa över'
-	class = 'msg'
+	href_class = 'msg'
 %]
-   [% go(label, undef, 'next_step', class=class) %]
+   [% go(label, undef, 'next_step', href_class=href_class) %]
    [% IF break_path %]
       [% hidden('break_path', break_path) %]
    [% END %]
