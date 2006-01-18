@@ -1,3 +1,0 @@
-[% IF title %]
-   <h1>[% title %]</h1>
-[% END %]
