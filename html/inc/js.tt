@@ -1,0 +1,25 @@
+<script type="text/javascript">
+function go(template, run)
+{
+    document.f.run.value=run || document.f.run.value;
+    document.f.action = template || document.f.action;
+    document.f.submit();
+    return true;
+}
+function showhide(whichLayer)
+{
+    if(document.getElementById)
+    {
+        var style2 = document.getElementById(whichLayer).style;
+        if( style2.display == 'block' )
+        {
+            style2.display = 'none';
+        }
+        else
+        {
+            style2.display = 'block';
+        }
+    }
+}
+[% PROCESS js_extra.tt %]
+</script>
