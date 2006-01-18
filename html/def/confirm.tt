@@ -1,0 +1,18 @@
+[% META
+	otitle = 'Confirm'
+%]
+[%
+	c = result.info.confirm;
+%]
+
+[% preserve_data %]
+
+<table align="center">
+<tr><td align="center" colspan="[% c.button.size %]"><h1>[% c.title | html %]</h1></td></tr>
+<tr><td colspan="[% c.button.size %]">[% c.text | html | html_para %]</td></tr>
+<tr>
+[% FOREACH b = c.button %]
+   <td align="center">[% go(b.0 b.1 b.2 b.3) %]</td>
+[% END %]
+</tr>
+</table>
