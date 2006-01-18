@@ -1,0 +1,9 @@
+[% META title="500 - Included file not found"
+	level = 0
+%]
+
+<p>
+The file you requested needed a include template that couldent be found
+</p>
+
+[% preserve_data %]
