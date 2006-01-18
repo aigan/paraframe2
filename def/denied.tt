@@ -1,7 +1,0 @@
-[% META
-	otitle = 'Otillräcklig behörighet'
-%]
-
-<p>Det val du gjort kräver en högre behörighet än den du har nu.
-
-<p>[% regret %]
