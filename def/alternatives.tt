@@ -1,4 +1,0 @@
-[% META
-	otitle = 'Alternatives'
-%]
-[% PROCESS alternatives_box.tt %]
