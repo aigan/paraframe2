@@ -242,6 +242,21 @@ sub uri2file
     die "not implemented";
 }
 
+sub htmlsrc # src dir for precompile or for getting inc files
+{
+    my( $site ) = @_;
+    return $site->{'htmlsrc'} ||
+      $site->{'is_compiled'} ?
+	($site->approot . "/dev") :
+	  uri2file($site->home);
+}
+
+sub is_compiled
+{
+    return $_[0]->{'is_compiled'} || 0;
+}
+
+
 1;
 
 =head1 SEE ALSO
