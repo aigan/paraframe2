@@ -194,6 +194,7 @@ sub burn
 {
 #    my( $burner ) = shift;
 #    return $burner->th->process(@_);
+    debug 2, "Burning using $_[0]->{type}";
     return shift->th->process(@_);
 }
 
@@ -235,8 +236,7 @@ sub paths
 	my $htmlsrc = $site->htmlsrc;
 	my $backdir = $site->is_compiled ? '/dev' : '/html';
 
-
-	debug "Creating incpath for $dir under $destroot ($type)";
+	debug "Creating incpath for $dir with $backdir under $destroot ($type)";
 
 	my @searchpath;
 
@@ -261,6 +261,15 @@ sub paths
 
 
 	$req->{'incpath'} = [ @searchpath ];
+
+
+	if( debug > 2 )
+	{
+	    my $incpathstring = join "", map "- $_\n", @{$req->{'incpath'}};
+	    debug "Include path:";
+	    debug $incpathstring;
+	}
+
     }
 
     return $req->{'incpath'};
