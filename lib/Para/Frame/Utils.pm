@@ -774,7 +774,10 @@ sub dirsteps
 	$path =~ s/[^\/]+\/$//;
     }
 
-#    warn "  Returning dirsteps @step with base $base\n";
+#    debug("Returning dirsteps\n");
+#    debug(join "",map(" - $_\n",@step));
+#    debug(" with base $base\n");
+
     return @step;
 }
 
@@ -800,6 +803,8 @@ sub uri2file
     {
 	return $file;
     }
+
+    confess "uri missing" unless $uri;
 
 #    warn "    From client\n";
     $req->send_code( 'URI2FILE', $uri );
