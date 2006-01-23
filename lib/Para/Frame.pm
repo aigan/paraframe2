@@ -557,7 +557,7 @@ sub get_value
 	    {
 		debug $req->debug_data;
 	    }
-	    
+
 	    cluck "trace for $client";
 	    throw('action', "Data timeout while talking to client\n");
 	}
@@ -1260,6 +1260,7 @@ sub configure
 	INTERPOLATE => 1,
 	COMPILE_DIR =>  $CFG->{'ttcdir'}.'/html',
         type => 'html',
+	subdir_suffix => '',
     });
 
     $CFG->{'th'}{'html_pre'} ||= Para::Frame::Burner->new({
@@ -1267,6 +1268,7 @@ sub configure
 	COMPILE_DIR =>  $CFG->{'ttcdir'}.'/html_pre',
 	TAG_STYLE => 'star',
         type => 'html_pre',
+	subdir_suffix => '_pre',
     });
 
     $CFG->{'th'}{'plain'} ||= Para::Frame::Burner->new({
@@ -1279,6 +1281,7 @@ sub configure
 	    'autoformat' => sub { autoformat($_[0]) },
 	},
         type => 'plain',
+	subdir_suffix => '_plain',
     });
 
     $CFG->{'port'} ||= 7788;
