@@ -36,7 +36,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw debug uri2file );
+use Para::Frame::Utils qw( throw debug uri2file dirsteps );
 
 sub new
 {
@@ -68,6 +68,9 @@ sub new
 
     $burner->{'type'} = $config_in->{'type'} or
       croak "No type given for burner";
+
+    $burner->{'subdir_suffix'} = $config_in->{'subdir_suffix'} || '';
+
 
     $burner->{'config'} = $config;
     $burner->{'free'} = [];
@@ -204,6 +207,11 @@ sub error
     return $error;
 }
 
+sub subdir_suffix
+{
+     return $_[0]->{'subdir_suffix'} || '';
+}
+
 
 sub paths
 {
@@ -214,60 +222,45 @@ sub paths
     unless( $req->{'incpath'} )
     {
 	my $type = $burner->{'type'};
-	my $extra = "";
-	if( $type ne 'html' )
-	{
-	    $extra = $type . "/";
-	}
 
 	my $site = $req->site;
-	my $backlist = $site->appback;
-	my $last_step = $req->{'dirsteps'}[-1];
+	my $subdir = 'inc' . $burner->subdir_suffix;
+
+ 	my $path_full = $req->{'dirsteps'}[0];
+	my $destroot = uri2file($site->home);
+	my $dir = $path_full;
+	$dir =~ s/^$destroot// or
+	  die "destroot $destroot not part of $dir";
+	my $paraframedir = $Para::Frame::CFG->{'paraframe'};
+	my $htmlsrc = $site->htmlsrc;
+	my $backdir = $site->is_compiled ? '/dev' : '/html';
 
 
-	my @path;
-	if( $extra )
+	debug "Creating incpath for $dir under $destroot ($type)";
+
+	my @searchpath;
+
+	foreach my $step ( dirsteps($dir), '/' )
 	{
-	    foreach my $step ( @{$req->{'dirsteps'}} )
+	    debug "Adding $step to path";
+
+	    push @searchpath, $htmlsrc.$step.$subdir.'/';
+
+	    foreach my $appback (@{$site->appback})
 	    {
-#		warn "  Adding step $step\n";
-		push @path, $step."inc/".$extra;
+		push @searchpath, $appback.$backdir.$step.$subdir.'/';
 	    }
 
-	    # Add another step if sitehome differs from approot
-	    if( $last_step ne $site->approot )
+	    if( $site->is_compiled )
 	    {
-		push @path, $site->approot."/inc/".$extra;
+		push @searchpath,  $paraframedir.'/dev'.$step.$subdir.'/';
 	    }
 
-	    foreach my $back (@$backlist)
-	    {
-		if( $last_step ne "$back/" )
-		{
-		    push @path, $back."/inc/".$extra;
-		}
-	    }
-
-	    push @path, $Para::Frame::CFG->{'paraframe'}."/inc/".$extra;
+	    push @searchpath,  $paraframedir.'/html'.$step.'inc/';
 	}
 
 
-	push @path, map $_."inc/", @{$req->{'dirsteps'}};
-
-	foreach my $back (@$backlist)
-	{
-	    if( $last_step ne "$back/" )
-	    {
-		push @path, $back."/inc/";
-	    }
-	}
-
-	push @path, $Para::Frame::CFG->{'paraframe'}."/inc/";
-
-	$req->{'incpath'} = [ @path ];
-
-#	warn "Incpath:\n".join "", map "- $_\n", @{$req->{'incpath'}};
-#	warn "Incpath for $req->{template}: ".Dumper $req->{'incpath'};
+	$req->{'incpath'} = [ @searchpath ];
     }
 
     return $req->{'incpath'};
