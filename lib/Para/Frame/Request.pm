@@ -420,13 +420,28 @@ sub set_template
     return $template;
 }
 
+##############################################
+
+=head2 set_dirsteps
+
+  $req->set_dirsteps( $path_full, $path_home )
+
+  Both paths must end with a /
+
+  path_full defaults to the current template dir
+  path_home default to the current site home
+
+Both paths is the filesystem path. Not the URL path
+
+=cut
+
 sub set_dirsteps
 {
     my( $req, $path_full, $path_home ) = @_;
 
     $path_full ||= uri2file( dirname( $req->template ) . "/" ) . "/";
     $path_home ||= uri2file( $req->site->home  . "/" );
-#    warn "Setting dirsteps for $path_full under $path_home\n";
+    debug 1, "Setting dirsteps for $path_full under $path_home";
     undef $req->{'incpath'};
     return $req->{'dirsteps'} = [ dirsteps( $path_full, $path_home ) ];
 }
@@ -702,12 +717,12 @@ sub run_action
 	{
 	    if( $error->type eq 'denied' )
 	    {
-		if( $req->s->u->level == 0 )
+		if( $req->session->u->level == 0 )
 		{
 		    # Ask to log in
 		    my $error_tt = $site->home."/login.tt";
 		    $part->hide(1);
-		    $req->s->route->bookmark;
+		    $req->session->route->bookmark;
 		    $req->set_error_template( $error_tt );
 		}
 	    }
@@ -761,7 +776,7 @@ sub after_jobs
 	### Do pre backtrack stuff
 	### Do backtrack stuff
 	$req->error_backtrack or
-	    $req->s->route->check_backtrack;
+	    $req->session->route->check_backtrack;
 	### Do last job stuff
     }
 
@@ -817,7 +832,7 @@ sub after_jobs
 sub done
 {
     my( $req ) = @_;
-    $req->s->after_request( $req );
+    $req->session->after_request( $req );
 
     # Redundant shortcut
     unless( $req->{'wait'} or
@@ -942,7 +957,7 @@ sub referer
 	# session
 	#
 	debug "Referer from session";
-	return $req->s->referer->path if $req->s->referer;
+	return $req->session->referer->path if $req->session->referer;
     }
 
     debug "Referer from default value";
@@ -995,7 +1010,7 @@ sub referer_query
 	# session
 	#
 	debug "Referer query from session";
-	return $req->s->referer->query if $req->s->referer;
+	return $req->session->referer->query if $req->session->referer;
     }
 
     debug "Referer query from default value";
@@ -1062,22 +1077,47 @@ sub find_template
     # Also used by &Para::Frame::Burner::paths
     $req->set_dirsteps( uri2file( $path_full )."/" );
 
-    # uri2file returns file without '/' for dirs
-    my( @step ) = map $_."def/", @{$req->{'dirsteps'}};
+    my @searchpath = uri2file($path_full)."/";
 
+    if( $site->is_compiled )
+    {
+	push @searchpath, map $_."def/", @{$req->{'dirsteps'}};
+    }
+    else
+    {
+	my $destroot = uri2file($site->home);
+	my $dir = $path_full;
+	$dir =~ s/^$destroot// or
+	  die "destroot $destroot not part of $dir";
+	my $paraframedir = $Para::Frame::CFG->{'paraframe'};
 
-    my @backdefs = map $_."/def/", @{$site->appback};
-    my $global = $Para::Frame::CFG->{'paraframe'}. "/def/";
+	foreach my $appback (@{$site->appback})
+	{
+	    push @searchpath, $appback . '/html' . $dir . '/';
+	}
+
+	push @searchpath, $paraframedir . '/html' . $dir . '/';
+
+	foreach my $path ( dirsteps($dir), '/' )
+	{
+	    push @searchpath, $destroot . $path . "/def/";
+	    foreach my $appback (@{$site->appback})
+	    {
+		push @searchpath, $appback . '/heml' . $path . "/def/";
+	    }
+	    push @searchpath,  $paraframedir . '/html' . $path . "/def/";
+	}
+    }
 
     # Reasonable default?
     my $language = $req->lang || ['sv'];
 
     debug(4,"Check $ext",1);
-    foreach my $path ( uri2file($path_full)."/", @step, @backdefs, $global )
+    foreach my $path ( @searchpath )
     {
 	unless( $path )
 	{
-	    cluck "path undef (@step)";
+	    cluck "path undef (@searchpath)";
 	    next;
 	}
 
@@ -1456,20 +1496,20 @@ sub render_output
 		}
 		elsif( $error->type eq 'denied' )
 		{
-		    if( $req->s->u->level == 0 )
+		    if( $req->session->u->level == 0 )
 		    {
 			# Ask to log in
 			$error_tt = $site->home."/login.tt";
 			$req->result->hide_part('denied');
 			unless( $req->{'no_bookmark_on_failed_login'} )
 			{
-			    $req->s->route->bookmark;
+			    $req->session->route->bookmark;
 			}
 		    }
 		    else
 		    {
 			$error_tt = $site->home."/denied.tt";
-			$req->s->route->plan_next($req->referer);
+			$req->session->route->plan_next($req->referer);
 		    }
 		}
 		elsif( $error->type eq 'notfound' )
@@ -1508,11 +1548,10 @@ sub render_output
         $page .= ("<table>\n");
 	$page .= (sprintf "<tr><td>Referer <td>%s\n", $req->referer);
 	$page .= (sprintf "<tr><td>Orig URI <td>%s\n", $req->{orig_uri});
-	$page .= (sprintf "<tr><td>me <td>%s\n", $req->{me});
+	$page .= (sprintf "<tr><td>template_uri <td>%s\n", $req->{template_uri});
 	$page .= (sprintf "<tr><td>template <td>%s\n", $req->{template});
 	$page .= (sprintf "<tr><td>dir <td>%s\n", $req->{dir});
 	$page .= (sprintf "<tr><td>filename <td>%s\n", $req->filename);
-	$page .= (sprintf "<tr><td>Session ID <td>%s\n", $req->s->id);
         $page .= ("</table>\n");
     }
 
@@ -1526,14 +1565,14 @@ sub render_output
 
 =head2 precompile_page
 
-  $req->precompile_page( $srcfile, $destfile, {ARGLIST} )
+  $req->precompile_page( $srcfile, $destfile_web, {ARGLIST} )
 
   arg type defaults to html_pre
   arg language defaults to undef
 
 $srcfile is the absolute system path to the template.
 
-$destfile is the URL path in the current site for the destination file.
+$destfile_web is the URL path in the current site for the destination file.
 
 =cut
 
@@ -1554,13 +1593,20 @@ sub precompile_page
     $req->{'lang'} = [$args->{'language'}] if $args->{'language'};
     my $type = $args->{'type'} || 'html_pre';
 
-    my $srcdir = dirname( $srcfile );
     my $destfile = uri2file( $destfile_web );
+    my $destdir = dirname( $destfile );
 
-    debug(2,"$srcdir $srcfile -> $destfile in $type");
+    debug(2,"$srcfile -> $destdir $destfile in $type");
 
-    $req->set_uri( $destfile_web );
-    $req->set_dirsteps($srcdir."/");
+    # The URI shoule be the dir and not index.tt
+    # TODO: Handle this in another place?
+    my $uri = $destfile_web;
+    $uri =~ s/index(\.\w\w)?\.tt$//;
+    $req->set_uri( $uri );
+    $req->set_template( $destfile_web );
+    $req->{template_uri} = $uri;
+
+    $req->set_dirsteps($destdir.'/');
 
     my $fh = new IO::File;
     $fh->open( "$srcfile" ) or die "Failed to open '$srcfile': $!\n";
@@ -1581,7 +1627,7 @@ sub precompile_page
 	my $part = $original_req->result->exception($error);
 	if( $error->info =~ /not found/ )
 	{
-	    debug "Subtemplate not found";
+	    debug "Subtemplate for precompile not found";
 	    my $incpathstring = join "", map "- $_\n", @{$req->{'incpath'}};
 	    $part->add_message("Include path is\n$incpathstring");
 	}
@@ -1800,7 +1846,7 @@ sub forward
     }
 
     $req->output_redirection($uri );
-    $req->s->register_result_page($uri, $req->{'headers'}, $req->{'page'});
+    $req->session->register_result_page($uri, $req->{'headers'}, $req->{'page'});
 }
 
 sub redirect
@@ -2060,7 +2106,7 @@ sub debug_data
     my $reqnum = $req->{'reqnum'};
     $out .= "This is request $reqnum\n";
 
-    $out .= $req->s->debug_data;
+    $out .= $req->session->debug_data;
 
     if( $req->is_from_client )
     {
@@ -2159,9 +2205,19 @@ sub set_tt_params
     debug(3,"Setting dir to $dir");
 
     my $home = $site->home;
+
     my $template = $req->template;
     my( $site_file ) = $template =~ /^$home(.*?)(\.\w\w)?\.\w{2,3}$/
       or die "Couldn't get site_file from $template under $home";
+
+    my $template_uri = $req->template_uri;
+#    debug "template_uri is $template_uri";
+    my( $site_uri ) = $template_uri =~ /^$home(.*?)(\.\w\w)?(\.\w{2,3})?$/
+      or die "Couldn't get site_uri from $template_uri under $home";
+#    debug "site_uri set to $site_uri";
+    $site_uri .= $3 if $3;
+#    debug "site_uri is now $site_uri";
+
 
     # Add local site params
     if( $req->site->params )
@@ -2173,9 +2229,10 @@ sub set_tt_params
     $req->add_params({
 	'q'               => $req->{'q'},
 	'ENV'             => $req->env,
-	'me'              => $req->template_uri,
+	'me'              => $template_uri,
 	'filename'        => $real_filename,
         'site_file'       => $site_file,
+        'site_uri'        => $site_uri,
 	'dir'             => $dir,
 	'browser'         => $req->{'browser'},
 	'u'               => $Para::Frame::U,
