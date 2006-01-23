@@ -755,7 +755,7 @@ sub dirsteps
 
     unless( $path =~ /^\// and $path =~ /\/$/ )
     {
-	die "Invalid path: '$path'\n";
+	confess "Invalid path: '$path'\n";
     }
 
     $base ||= '';
