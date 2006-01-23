@@ -1086,7 +1086,7 @@ sub find_template
     else
     {
 	my $destroot = uri2file($site->home);
-	my $dir = $path_full;
+	my $dir = uri2file( $path_full );
 	$dir =~ s/^$destroot// or
 	  die "destroot $destroot not part of $dir";
 	my $paraframedir = $Para::Frame::CFG->{'paraframe'};
@@ -1098,7 +1098,7 @@ sub find_template
 
 	push @searchpath, $paraframedir . '/html' . $dir . '/';
 
-	foreach my $path ( dirsteps($dir), '/' )
+	foreach my $path ( dirsteps($dir.'/'), '/' )
 	{
 	    push @searchpath, $destroot . $path . "/def/";
 	    foreach my $appback (@{$site->appback})
@@ -1263,6 +1263,24 @@ sub find_template
 	}
 	debug(-1);
     }
+
+    # Check if site should be compiled but hasn't been yet
+    #
+    if( $site->is_compiled )
+    {
+	my $sample_template = $site->home . "/def/page_not_found.tt";
+	unless( stat(uri2file($sample_template)) )
+	{
+	    $site->set_is_compiled(0);
+	    debug "*** The site is not yet compiled";
+	    my( $data, $ext ) = $req->find_template( $template );
+
+#	    $site->set_is_compiled(1);
+
+	    return( $data, $ext );
+	}
+    }
+
 
     # If we can't find the filname
     debug(1,"Not found: $template");
@@ -1449,6 +1467,8 @@ sub render_output
 	$req->set_http_status(404);
 	$Para::Frame::REQ->result->error('notfound', "Hittar inte sidan $template\n");
     }
+
+    debug 2, "Template to render is $in, that is a ".ref($in);
 
     if( not $in )
     {
