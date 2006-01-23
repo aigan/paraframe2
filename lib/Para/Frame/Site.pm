@@ -55,7 +55,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw debug fqdn );
+use Para::Frame::Utils qw( throw debug fqdn uri2file );
 
 our %DATA; # hostname -> siteobj
 
@@ -236,12 +236,6 @@ sub pagepath
     }
 }
 
-sub uri2file
-{
-    my( $site ) = @_;
-    die "not implemented";
-}
-
 sub htmlsrc # src dir for precompile or for getting inc files
 {
     my( $site ) = @_;
@@ -256,6 +250,10 @@ sub is_compiled
     return $_[0]->{'is_compiled'} || 0;
 }
 
+sub set_is_compiled
+{
+    return $_[0]->{'is_compiled'} = $_[1];
+}
 
 1;
 
