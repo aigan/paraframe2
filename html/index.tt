@@ -1,1 +1,3 @@
-[% title="Välkommen till ParaFrame" %]
+[% META title="Välkommen till ParaFrame" %]
+
+<p>Du har nu startat paraframe!
