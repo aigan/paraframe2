@@ -228,7 +228,7 @@ sub paths
 	my $subdir = 'inc' . $burner->subdir_suffix;
 
  	my $path_full = $req->{'dirsteps'}[0];
-	my $destroot = uri2file($site->home);
+	my $destroot = uri2file($site->home.'/');
 	my $dir = $path_full;
 	$dir =~ s/^$destroot// or
 	  die "destroot $destroot not part of $dir";
@@ -236,13 +236,13 @@ sub paths
 	my $htmlsrc = $site->htmlsrc;
 	my $backdir = $site->is_compiled ? '/dev' : '/html';
 
-	debug "Creating incpath for $dir with $backdir under $destroot ($type)";
+	debug 3, "Creating incpath for $dir with $backdir under $destroot ($type)";
 
 	my @searchpath;
 
 	foreach my $step ( dirsteps($dir), '/' )
 	{
-	    debug "Adding $step to path";
+	    debug 4, "Adding $step to path";
 
 	    push @searchpath, $htmlsrc.$step.$subdir.'/';
 

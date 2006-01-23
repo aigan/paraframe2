@@ -1085,10 +1085,15 @@ sub find_template
     }
     else
     {
-	my $destroot = uri2file($site->home);
+	my $destroot = uri2file($site->home.'/');
 	my $dir = uri2file( $path_full );
 	$dir =~ s/^$destroot// or
 	  die "destroot $destroot not part of $dir";
+#	debug "destroot: $destroot";
+#	debug "dir: $dir";
+
+
+
 	my $paraframedir = $Para::Frame::CFG->{'paraframe'};
 
 	foreach my $appback (@{$site->appback})
@@ -1100,17 +1105,24 @@ sub find_template
 
 	foreach my $path ( dirsteps($dir.'/'), '/' )
 	{
-	    push @searchpath, $destroot . $path . "/def/";
+	    push @searchpath, $destroot . $path . "def/";
 	    foreach my $appback (@{$site->appback})
 	    {
-		push @searchpath, $appback . '/heml' . $path . "/def/";
+		push @searchpath, $appback . '/heml' . $path . "def/";
 	    }
-	    push @searchpath,  $paraframedir . '/html' . $path . "/def/";
+	    push @searchpath,  $paraframedir . '/html' . $path . "def/";
 	}
     }
 
     # Reasonable default?
     my $language = $req->lang || ['sv'];
+
+    if( debug > 3 )
+    {
+	my  $searchstr = join "", map " - $_\n", @searchpath;
+	debug "Looking for template in:";
+	debug $searchstr;
+    }
 
     debug(4,"Check $ext",1);
     foreach my $path ( @searchpath )

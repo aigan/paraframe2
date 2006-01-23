@@ -242,7 +242,7 @@ sub htmlsrc # src dir for precompile or for getting inc files
     return $site->{'htmlsrc'} ||
       $site->{'is_compiled'} ?
 	($site->approot . "/dev") :
-	  uri2file($site->home);
+	  uri2file($site->home.'/');
 }
 
 sub is_compiled
