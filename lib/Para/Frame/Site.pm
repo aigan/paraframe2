@@ -103,6 +103,8 @@ sub get
 {
     my( $this, $name ) = @_;
 
+    return $name if UNIVERSAL::isa($name, 'Para::Frame::Site');
+
     no warnings 'uninitialized';
 
     debug 3, "Looking up site $name";
