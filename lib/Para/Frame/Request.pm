@@ -260,11 +260,17 @@ sub set_language
 
     debug 2, "Decide on a language";
 
-    $language_in ||= $req->q->param('lang')
-	         ||  $req->q->cookie('lang')
-                 ||  $req->env->{HTTP_ACCEPT_LANGUAGE}
-                 ||  '';
-
+    if( $req->is_from_client )
+    {
+	$language_in ||= $req->q->param('lang')
+	             ||  $req->q->cookie('lang')
+                     ||  $req->env->{HTTP_ACCEPT_LANGUAGE}
+                     ||  '';
+    }
+    else
+    {
+	$language_in ||= '';
+    }
     debug 3, "  Lang prefs are $language_in";
 
     my $site_languages = $req->site->languages;
@@ -325,8 +331,11 @@ sub set_language
 	}
     }
 
-    $req->send_code( 'AR-PUT', 'header_out', 'Vary', 'negotiate,accept-language' );
-    $req->send_code( 'AR-PUT', 'header_out', 'Content-Language', $alternatives[0] );
+    if( $req->is_from_client )
+    {
+	$req->send_code( 'AR-PUT', 'header_out', 'Vary', 'negotiate,accept-language' );
+	$req->send_code( 'AR-PUT', 'header_out', 'Content-Language', $alternatives[0] );
+    }
 
     $req->{'lang'} = \@alternatives;
     debug 2, "Lang priority is: @alternatives";
@@ -1631,41 +1640,44 @@ sub precompile_page
 
     $original_req->{'wait'} ++;
 
+    my( $res, $error );
     my $req = $original_req->new_subrequest($args);
 
-    Para::Frame::switch_req( $req, 1 );
+    eval
+    {
+	Para::Frame::switch_req( $req, 1 );
 
-    warn "\n$Para::Frame::REQNUM Precompiling $srcfile\n";
+	warn "\n$Para::Frame::REQNUM Precompiling $srcfile\n";
 
-    my $type = $args->{'type'} || 'html_pre';
+	my $type = $args->{'type'} || 'html_pre';
 
-    my $destfile = uri2file( $destfile_web );
-    my $destdir = dirname( $destfile );
+	my $destfile = uri2file( $destfile_web );
+	my $destdir = dirname( $destfile );
 
-    debug(2,"$srcfile -> $destdir $destfile in $type");
+	debug(2,"$srcfile -> $destdir $destfile in $type");
 
-    # The URI shoule be the dir and not index.tt
-    # TODO: Handle this in another place?
-    my $uri = $destfile_web;
-    $uri =~ s/index(\.\w\w)?\.tt$//;
-    $req->set_uri( $uri );
-    $req->set_template( $destfile_web );
-    $req->{template_uri} = $uri;
+	# The URI shoule be the dir and not index.tt
+	# TODO: Handle this in another place?
+	my $uri = $destfile_web;
+	$uri =~ s/index(\.\w\w)?\.tt$//;
+	$req->set_uri( $uri );
+	$req->set_template( $destfile_web );
+	$req->{template_uri} = $uri;
 
-    $req->set_dirsteps($destdir.'/');
+	$req->set_dirsteps($destdir.'/');
 
-    my $fh = new IO::File;
-    $fh->open( "$srcfile" ) or die "Failed to open '$srcfile': $!\n";
+	my $fh = new IO::File;
+	$fh->open( "$srcfile" ) or die "Failed to open '$srcfile': $!\n";
 
-    $req->set_tt_params;
+	$req->set_tt_params;
 
-    my $burner = $Para::Frame::CFG->{'th'}{$type};
-    my $res = $burner->burn($fh, $req->{'params'}, $destfile );
-    $fh->close;
-    my $error = $burner->error;
+	my $burner = $Para::Frame::CFG->{'th'}{$type};
+	$res = $burner->burn($fh, $req->{'params'}, $destfile );
+	$fh->close;
+	$error = $burner->error;
 
+    };
     Para::Frame::switch_req( $original_req );
-
     $original_req->{'wait'} --;
 
     unless( $res )
