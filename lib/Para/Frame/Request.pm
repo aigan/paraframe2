@@ -118,7 +118,9 @@ sub new
     my %ttparams = %$Para::Frame::PARAMS;
     $req->{'params'} = \%ttparams;
 
-    $req->{'site'}    = Para::Frame::Site->get( $req->host_from_env );
+    my $site_name = $dirconfig->{'site'} || $req->host_from_env;
+    debug "Request under site $site_name";
+    $req->{'site'}    = Para::Frame::Site->get( $site_name );
 
     # Cache uri2file translation
     uri2file( $orig_uri, $orig_filename, $req);
@@ -149,12 +151,12 @@ Sets up a subrequest using new_minimal
 
 sub new_subrequest
 {
-    my( $original_req ) = @_;
+    my( $original_req, $args ) = @_;
 
     my $client = $original_req->client;
 
     $Para::Frame::REQNUM ++;
-    my $req = Para::Frame::Request->new_minimal($Para::Frame::REQNUM, $client);
+    my $req = Para::Frame::Request->new_minimal($Para::Frame::REQNUM, $client, $args);
 
     $req->{'subrequest'} = $original_req;
     return $req;
@@ -168,7 +170,7 @@ Used for background jobs, without a calling browser client
 
 sub new_minimal
 {
-    my( $class, $reqnum, $bg_client ) = @_;
+    my( $class, $reqnum, $bg_client, $args ) = @_;
 
     my $req =  bless
     {
@@ -177,7 +179,6 @@ sub new_minimal
 	jobs           => [],             ## queue of actions to perform
 	env            => {},             ## No env mor minimals!
 	's'            => undef,          ## Session object
-	lang           => undef,          ## Chosen language
 	result         => undef,
 	childs         => 0,              ## counter in parent
 	in_yield       => 0,              ## inside a yield
@@ -190,7 +191,10 @@ sub new_minimal
     my %ttparams = %$Para::Frame::PARAMS;
     $req->{'params'} = \%ttparams;
 
-    $req->{'site'}    = Para::Frame::Site->get();
+    $req->set_language( $args->{'language'} );
+
+    my $site_name = $args->{'site'} || undef;
+    $req->{'site'}    = Para::Frame::Site->get($site_name);
     $req->{'result'}  = new Para::Frame::Result;  # Before Session
     $req->{'s'}       = Para::Frame->Session->new_minimal();
 
@@ -252,17 +256,16 @@ sub in_yield
 #
 sub set_language
 {
-    my( $req, $language ) = @_;
+    my( $req, $language_in ) = @_;
 
     debug 2, "Decide on a language";
 
-    my $string = $language
-              || $req->q->param('lang')
-	      || $req->q->cookie('lang')
-              || $req->env->{HTTP_ACCEPT_LANGUAGE}
-              || '';
+    $language_in ||= $req->q->param('lang')
+	         ||  $req->q->cookie('lang')
+                 ||  $req->env->{HTTP_ACCEPT_LANGUAGE}
+                 ||  '';
 
-    debug 3, "  Lang prefs are $string";
+    debug 3, "  Lang prefs are $language_in";
 
     my $site_languages = $req->site->languages;
 
@@ -272,9 +275,20 @@ sub set_language
 	return;
     }
 
+
+    my @alts;
+    if( UNIVERSAL::isa($language_in, "ARRAY") )
+    {
+	@alts = @$language_in;
+    }
+    else
+    {
+	@alts = split /,\s*/, $language_in;
+    }
+
     my %priority;
 
-    foreach my $alt ( split /,\s*/, $string )
+    foreach my $alt ( @alts )
     {
 	my( $code, @info ) = split /\s*;\s*/, $alt;
 	my $q;
@@ -315,7 +329,7 @@ sub set_language
     $req->send_code( 'AR-PUT', 'header_out', 'Content-Language', $alternatives[0] );
 
     $req->{'lang'} = \@alternatives;
-    debug "Lang priority is: @alternatives";
+    debug 2, "Lang priority is: @alternatives";
 }
 
 
@@ -441,7 +455,7 @@ sub set_dirsteps
 
     $path_full ||= uri2file( dirname( $req->template ) . "/" ) . "/";
     $path_home ||= uri2file( $req->site->home  . "/" );
-    debug 1, "Setting dirsteps for $path_full under $path_home";
+    debug 3, "Setting dirsteps for $path_full under $path_home";
     undef $req->{'incpath'};
     return $req->{'dirsteps'} = [ dirsteps( $path_full, $path_home ) ];
 }
@@ -1055,6 +1069,7 @@ sub find_template
     my( $in );
 
     my $site = $req->site;
+#    debug("The site is".Dumper($site));
 
 
     my( $base_name, $path_full, $ext_full ) = fileparse( $template, qr{\..*} );
@@ -1612,17 +1627,16 @@ sub precompile_page
 {
     my( $original_req, $srcfile, $destfile_web, $args ) = @_;
 
+    $args ||= {};
+
     $original_req->{'wait'} ++;
 
-    my $req = $original_req->new_subrequest;
+    my $req = $original_req->new_subrequest($args);
 
     Para::Frame::switch_req( $req, 1 );
 
     warn "\n$Para::Frame::REQNUM Precompiling $srcfile\n";
 
-    $args ||= {};
-
-    $req->{'lang'} = [$args->{'language'}] if $args->{'language'};
     my $type = $args->{'type'} || 'html_pre';
 
     my $destfile = uri2file( $destfile_web );
