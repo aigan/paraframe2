@@ -112,8 +112,25 @@ sub get
 	croak "Either site $name or default is registred";
 }
 
+sub name        { $_[0]->{'name'} || $_[0]->webhost }
+sub code        { $_[0]->{'code'} || $_[0]->webhost }
+
+
+#######################################################################
+
+=head2 home
+
+  $site->home
+  $site->webhome
+
+Returns the home dir of the site as URL path, excluding the last '/'.
+
+=cut
+
 sub webhome     { $_[0]->{'webhome'} || '' }
 sub home        { $_[0]->webhome }
+
+#######################################################################
 
 
 sub last_step   { $_[0]->{'last_step'} } # default to undef
@@ -210,10 +227,22 @@ sub appback
     return $site->{'appback'} || $Para::Frame::CFG->{'appback'};
 }
 
+
+#######################################################
+
+=head2 params
+
+The TT params to be added for each request in this site
+
+=cut
+
 sub params
 {
-    return $_[0]->{'params'};
+    return $_[0]->{'params'} || {};
 }
+
+
+#######################################################
 
 sub languages
 {
