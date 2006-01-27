@@ -50,6 +50,7 @@ use Para::Frame::Request::Ctype;
 use Para::Frame::Site;
 use Para::Frame::Change;
 use Para::Frame::URI;
+use Para::Frame::Page;
 use Para::Frame::Utils qw( create_dir chmod_file dirsteps uri2file compile throw idn_encode idn_decode debug catch );
 
 sub new
@@ -102,8 +103,9 @@ sub new
 	referer        => $q->referer,    ## The referer of this page
 	ctype          => undef,          ## The response content-type
 	dirconfig      => $dirconfig,     ## Apache $r->dir_config
+        page           => undef,          ## The page requested
 	in_body        => 0,              ## flag then headers sent
-	page           => undef,          ## Ref to the generated page
+	page_content   => undef,          ## Ref to the generated page
 	page_sender    => undef,          ## The mode of sending the page
 	childs         => 0,              ## counter in parent
 	in_yield       => 0,              ## inside a yield
@@ -135,6 +137,8 @@ sub new
     $req->{'s'}       = Para::Frame->Session->new($req);
 
     $req->set_language;
+
+    $req->{'page'} = Para::Frame::Page->obj($req);
 
     # Log some info
     #
@@ -198,6 +202,8 @@ sub new_minimal
     $req->{'result'}  = new Para::Frame::Result;  # Before Session
     $req->{'s'}       = Para::Frame->Session->new_minimal();
 
+    $req->{'page'} = Para::Frame::Page->obj($req);
+
     return $req;
 }
 
@@ -218,6 +224,7 @@ sub lang { $_[0]->{'lang'} }
 sub language { $_[0]->{'lang'} }
 sub error_page_selected { $_[0]->{'error_template'} ? 1 : 0 }
 sub error_page_not_selected { $_[0]->{'error_template'} ? 0 : 1 }
+sub page { $_[0]->{'page'} }
 
 sub user
 {
@@ -339,6 +346,85 @@ sub set_language
 
     $req->{'lang'} = \@alternatives;
     debug 2, "Lang priority is: @alternatives";
+}
+
+
+#######################################################################
+
+=head2 preferred_language
+
+  $req->preferred_language()
+
+  $req->preferred_language( $lang1, $lang2, ... )
+
+Returns the language form the list that the user preferes. C<$langX>
+is the language code, like C<sv> or C<en>.
+
+The list will always be restircted to the languages supported by the
+site, ie C<$req-E<gt>site-E<gt>languages>.  The parameters should only
+be used to restrict the choises futher.
+
+=head3 Default
+
+The first language in the list of languages supported by the
+application.
+
+=head3 Example
+
+  [% SWITCH lang %]
+  [% CASE 'sv' %]
+     <p>Valkommen ska ni vara!</p>
+  [% CASE %]
+     <p>Welcome, poor thing.</p>
+  [% END %]
+
+=cut
+
+sub preferred_language
+{
+    my( $req, @lim_langs ) = @_;
+
+    my @langs;
+    if( @lim_langs )
+    {
+      LANG:
+	foreach my $lang (@{$req->site->languages})
+	{
+	    foreach( @lim_langs )
+	    {
+		if( $lang eq $_ )
+		{
+		    push @langs, $lang;
+		    next LANG;
+		}
+	    }
+	}
+    }
+    else
+    {
+	@langs = @{$req->site->languages};
+    }
+
+    if( $req->is_from_client )
+    {
+	if( my $clang = $req->q->cookie('lang') )
+	{
+	    unshift @langs, $clang;
+	}
+    }
+
+    foreach my $lang (@{$req->language})
+    {
+	foreach( @langs )
+	{
+	    if( $lang eq $_ )
+	    {
+		return $lang;
+	    }
+	}
+    }
+
+    return $req->site->languages->[0];
 }
 
 
@@ -1282,7 +1368,7 @@ sub find_template
 			if( $template eq $site->home.'/error.tt' )
 			{
 			    $req->{'error_template'} = $template;
-			    $req->{'page'} = $req->fallback_error_page;
+			    $req->{'page_content'} = $req->fallback_error_page;
 			    return undef;
 			}
 			debug(2,"Using /error.tt");
@@ -1494,7 +1580,7 @@ sub render_output
     if( not $in )
     {
 	# Maby we have a fallback page generated
-	return 1 if $req->{'page'};
+	return 1 if $req->{'page_content'};
     }
 
     if( not $in )
@@ -1585,7 +1671,7 @@ sub render_output
 	    # Avoid recursive failure
 	    if( ($template eq $error_tt) and ($error_tt eq $site->home.'/error.tt') )
 	    {
-		$req->{'page'} = $req->fallback_error_page;
+		$req->{'page_content'} = $req->fallback_error_page;
 		return 1;
 	    }
 
@@ -1611,7 +1697,7 @@ sub render_output
         $page .= ("</table>\n");
     }
 
-    $req->{'page'} = \$page;
+    $req->{'page_content'} = \$page;
 
     return 1;
 }
@@ -1659,7 +1745,7 @@ sub precompile_page
 	# The URI shoule be the dir and not index.tt
 	# TODO: Handle this in another place?
 	my $uri = $destfile_web;
-	$uri =~ s/index(\.\w\w)?\.tt$//;
+	$uri =~ s/\/index(\.\w\w)?\.tt$/\//;
 	$req->set_uri( $uri );
 	$req->set_template( $destfile_web );
 	$req->{template_uri} = $uri;
@@ -1675,15 +1761,18 @@ sub precompile_page
 	$res = $burner->burn($fh, $req->{'params'}, $destfile );
 	$fh->close;
 	$error = $burner->error;
-
     };
+
+    $error ||= catch($@);
+
     Para::Frame::switch_req( $original_req );
     $original_req->{'wait'} --;
 
-    unless( $res )
+    if( $error )
     {
+	debug "ERROR WHILE PRECOMPILING PAGE";
 	my $part = $original_req->result->exception($error);
-	if( $error->info =~ /not found/ )
+	if( ref $error and $error->info =~ /not found/ )
 	{
 	    debug "Subtemplate for precompile not found";
 	    my $incpathstring = join "", map "- $_\n", @{$req->{'incpath'}};
@@ -1741,7 +1830,7 @@ sub send_output
 	}
 	else
 	{
-	    if( is_utf8  ${ $req->{'page'} } )
+	    if( is_utf8  ${ $req->{'page_content'} } )
 	    {
 		$req->{'page_sender'} = 'utf8';
 	    }
@@ -1757,13 +1846,13 @@ sub send_output
 	    $req->send_headers;
 	    binmode( $req->client, ':utf8');
 	    debug(4,"Transmitting in utf8 mode");
-	    $req->send_in_chunks( $req->{'page'} );
+	    $req->send_in_chunks( $req->{'page_content'} );
 	    binmode( $req->client, ':bytes');
 	}
 	else # Default
 	{
 	    $req->send_headers;
-	    $req->send_in_chunks( $req->{'page'} );
+	    $req->send_in_chunks( $req->{'page_content'} );
 	}
     }
 }
@@ -1884,7 +1973,7 @@ sub forward
 
     $uri ||= $req->template_uri;
 
-    if( not $req->{'page'} )
+    if( not $req->{'page_content'} )
     {
 	cluck "forward() called without a generated page";
 	unless( $uri =~ /\.html$/ )
@@ -1904,7 +1993,7 @@ sub forward
     }
 
     $req->output_redirection($uri );
-    $req->session->register_result_page($uri, $req->{'headers'}, $req->{'page'});
+    $req->session->register_result_page($uri, $req->{'headers'}, $req->{'page_content'});
 }
 
 sub redirect
@@ -2247,6 +2336,91 @@ sub debug_data
 
 }
 
+
+#######################################################################
+
+=head2 settt_params
+
+The standard functions availible in templates.
+
+=over
+
+=item browser
+
+The L<HTTP::BrowserDetect> object.  Not in StandAlone mode.
+
+=item dir
+
+The directory part of the filename, including the last '/'.  Symlinks
+resolved.
+
+=item u
+
+$req->{'user'} : The L<Para::Frame::User> object.
+
+=item ENV
+
+$req->env: The Environment hash (L<http://hoohoo.ncsa.uiuc.edu/cgi/env.html>).  Only in client mode.
+
+=item filename
+
+Holds the L<Para::Frame::Request/filename>.
+
+=item home
+
+$req->site->home : L<Para::Frame::Site/home>
+
+=item lang
+
+The L<Para::Frame::Request/preffered_language> value.
+
+=item me
+
+Holds the L<Para::Frame::Request/template_uri>.
+
+=item q
+
+The L<CGI> object.  You will probably mostly use
+[% q.param() %] method. Only in client mode.
+
+=item req
+
+The C<req> object.
+
+=item reqnum
+
+The paraframe server request number
+
+=item result
+
+$req->{'result'} : The L<Para::Frame::Result> object
+
+=item site
+
+The <Para;;Frame::Site> object.
+
+=item site_dir
+
+This page file path relative the site home, excluding language and doc
+format extensions.  Symlinks resolved.
+
+=item site_file
+
+This page file path relative the site home, excluding language and doc
+format extensions.  Symlinks resolved.
+
+=item site_uri
+
+This page URL path relative the site home, excluding language but
+including doc format extensions.  Symlinks resolved.
+
+This is often the same as site_file + .tt except then the page is a
+dir or index.tt
+
+=back
+
+=cut
+
 sub set_tt_params
 {
     my( $req ) = @_;
@@ -2262,23 +2436,9 @@ sub set_tt_params
     $req->{'dir'} = $dir;
     debug(3,"Setting dir to $dir");
 
-    my $home = $site->home;
-
-    my $template = $req->template;
-    my( $site_file ) = $template =~ /^$home(.*?)(\.\w\w)?\.\w{2,3}$/
-      or die "Couldn't get site_file from $template under $home";
-
-    my $template_uri = $req->template_uri;
-#    debug "template_uri is $template_uri";
-    my( $site_uri ) = $template_uri =~ /^$home(.*?)(\.\w\w)?(\.\w{2,3})?$/
-      or die "Couldn't get site_uri from $template_uri under $home";
-#    debug "site_uri set to $site_uri";
-    $site_uri .= $3 if $3;
-#    debug "site_uri is now $site_uri";
-
 
     # Add local site params
-    if( $req->site->params )
+    if( $site->params )
     {
 	$req->add_params($site->params);
     }
@@ -2287,15 +2447,18 @@ sub set_tt_params
     $req->add_params({
 	'q'               => $req->{'q'},
 	'ENV'             => $req->env,
-	'me'              => $template_uri,
+
+	'page'            => $req->page,
+
+	'me'              => $req->template_uri,
 	'filename'        => $real_filename,
-        'site_file'       => $site_file,
-        'site_uri'        => $site_uri,
 	'dir'             => $dir,
+
 	'browser'         => $req->{'browser'},
 	'u'               => $Para::Frame::U,
 	'result'          => $req->{'result'},
 	'reqnum'          => $req->{'reqnum'},
+	'lang'            => $req->preferred_language, # calculate once
 	'req'             => $req,
 
 	# Is allowed to change between requests
