@@ -202,7 +202,7 @@ sub error
 {
     my $th = $_[0]->{'used'}{$Para::Frame::REQ};
     return undef unless $th;
-    my $error = $th->error;
+    my $error = $th->error or return 0;
 #    warn Dumper $error;
     $error = Template::Exception->new('template',$error) unless ref $error;
     return $error;
