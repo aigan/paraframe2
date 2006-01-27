@@ -71,8 +71,6 @@ standard L<Para::Frame::TT::components>.
 
 =item L</jump>
 
-=item L</uri>
-
 =item L</submit>
 
 =item L</go>
@@ -100,6 +98,10 @@ standard L<Para::Frame::TT::components>.
 =item L</textarea>
 
 =item L</filefield>
+
+=item L</css_header>
+
+=item L</inflect>
 
 =back
 
