@@ -67,7 +67,7 @@ BEGIN
             elapsed_time uri store_params clear_params add_params
             restore_params idn_encode idn_decode debug reset_hashref
             timediff extract_query_params fqdn retrieve_from_url
-            get_from_fork preferred_language );
+            get_from_fork );
 
 }
 
@@ -1219,12 +1219,25 @@ sub reset_hashref
     return $hashref;
 }
 
+
+#########################################################
+
+=head2 timediff
+
+Returns the time since last usage of timediff, followd with the param
+as text string.
+
+=cut
+
 sub timediff
 {
     my $ts = $Para::Frame::timediff_timestamp;
     $Para::Frame::timediff_timestamp = Time::HiRes::time();
     return sprintf "%20s: %2.2f\n", $_[0], Time::HiRes::time() - $ts;
 }
+
+
+#########################################################
 
 sub extract_query_params
 {
@@ -1238,6 +1251,9 @@ sub extract_query_params
 
     return $rec;
 }
+
+
+#########################################################
 
 =head2 fqdn
 
@@ -1302,85 +1318,6 @@ sub retrieve_from_url
     }
 
     return $fork->yield->message; # Returns the result from fork
-}
-
-
-=head2 preferred_language
-
-  preferred_language()
-
-  preferred_language( $lang1, $lang2, ... )
-
-Returns the language form the list that the user preferes. C<$langX>
-is the language code, like C<sv> or C<en>.
-
-The list will always be restircted to the languages supported by the
-application, ie C<$req-E<gt>app-E<gt>languages>.  The parameters should only
-be used to restrict the choises futher.
-
-=head3 Default
-
-The first language in the list of languages supported by the
-application.
-
-=head3 Example
-
-  [% SWITCH lang %]
-  [% CASE 'sv' %]
-     <p>Valkommen ska ni vara!</p>
-  [% CASE %]
-     <p>Welcome, poor thing.</p>
-  [% END %]
-
-=cut
-
-sub preferred_language
-{
-    my( @lim_langs ) = @_;
-
-    my $req = $Para::Frame::REQ;
-
-    my @langs;
-    if( @lim_langs )
-    {
-      LANG:
-	foreach my $lang (@{$req->site->languages})
-	{
-	    foreach( @lim_langs )
-	    {
-		if( $lang eq $_ )
-		{
-		    push @langs, $lang;
-		    next LANG;
-		}
-	    }
-	}
-    }
-    else
-    {
-	@langs = @{$req->site->languages};
-    }
-
-    if( $req->is_from_client )
-    {
-	if( my $clang = $req->q->cookie('lang') )
-	{
-	    unshift @langs, $clang;
-	}
-    }
-
-    foreach my $lang (@{$req->language})
-    {
-	foreach( @langs )
-	{
-	    if( $lang eq $_ )
-	    {
-		return $lang;
-	    }
-	}
-    }
-
-    return $req->site->languages->[0];
 }
 
 
