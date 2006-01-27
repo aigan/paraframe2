@@ -1175,6 +1175,15 @@ sub open_logfile
     chmod_file($log);
 }
 
+
+#######################################################################
+
+=head2 configure
+
+FIXME
+
+=cut
+
 sub configure
 {
     my( $class, $cfg_in ) = @_;
@@ -1320,6 +1329,65 @@ sub dir
     return $CFG->{'paraframe'};
 }
 
+
+
+#######################################################################
+
+=head2 set_global_tt_params
+
+The standard functions availible in templates.
+
+Most of them exists in both from client and not client.
+
+=over
+
+=item cfg
+
+$app->conf : L<Para::Frame/configure>
+
+=item debug
+
+Emit a debug message in the error log. See L<Para::Frame::Utils/debug>
+
+=item dump
+
+The L<Data::Dumper/Functions> Dumper().  To be used for
+debugging. Either dump the data structure inside the page (in
+<pre></pre>) or combine with debug to send the dump to the error
+log. For example: [% debug(dump(myvar)) %]
+
+=item emergency_mode
+
+True if paraframe recovered from an abnormal error.
+
+=item rand
+
+Produce a random integer number, at least 0 and at most one less than
+the number given as param.
+
+=item timediff
+
+See L<Para::Fraume::Utils/timediff>
+
+=item uri
+
+See L<Para::Fraume::Utils/uri>
+
+=item uri_path
+
+See L<Para::Fraume::Utils/uri_path>
+
+=item warn
+
+Emit a warning in the error log, excluding the linenumber
+(L<perlfunc/warn>). You should use debug() instead.
+
+=back
+
+See also L<Para::Frame::Widget>
+
+=cut
+
 sub set_global_tt_params
 {
     my( $class ) = @_;
@@ -1335,24 +1403,6 @@ sub set_global_tt_params
 	'uri'             => \&Para::Frame::Utils::uri,
 	'uri_path'        => \&Para::Frame::Utils::uri_path,
         'timediff'        => \&Para::Frame::Utils::timediff,
-
-	'selectorder'     => \&Para::Frame::Widget::selectorder,
-	'slider'          => \&Para::Frame::Widget::slider,
-	'jump'            => \&Para::Frame::Widget::jump,
-	'submit'          => \&Para::Frame::Widget::submit,
-	'go'              => \&Para::Frame::Widget::go,
-	'go_js'           => \&Para::Frame::Widget::go_js,
-	'forward'         => \&Para::Frame::Widget::forward,
-	'forward_url'     => \&Para::Frame::Widget::forward_url,
-	'alfanum_bar'     => \&Para::Frame::Widget::alfanum_bar,
-	'rowlist'         => \&Para::Frame::Widget::rowlist,
-	'list2block'      => \&Para::Frame::Widget::list2block,
-	'preserve_data'   => \&Para::Frame::Widget::preserve_data,
-	'param_includes'  => \&Para::Frame::Widget::param_includes,
-	'hidden'          => \&Para::Frame::Widget::hidden,
-	'input'           => \&Para::Frame::Widget::input,
-	'textarea'        => \&Para::Frame::Widget::textarea,
-	'filefield'       => \&Para::Frame::Widget::filefield,
     };
 
     $class->add_global_tt_params( $params );
