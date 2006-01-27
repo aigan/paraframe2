@@ -49,7 +49,7 @@ sub handler
     my $page = "Done";
     $req->{'renderer'} = sub
     {
-	$req->{'page'} = \$page;
+	$req->{'page_content'} = \$page;
 	$req->{'page_sender'} = 'bytes';
     };
 
