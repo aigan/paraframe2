@@ -98,7 +98,7 @@ sub message
 	$msg =~ s/(\n\r?)+$//;
 	next unless length $msg;
 
-	debug(3, shortmess "Adding result message '$msg'");
+	debug(3, "Adding result message '$msg'");
 
 	push @{$result->{'part'}}, Para::Frame::Result::Part->new({
 	    'message' => $msg,
