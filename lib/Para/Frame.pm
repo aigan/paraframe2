@@ -758,7 +758,16 @@ sub close_callback
 	warn "$REQUEST{$client}{reqnum} Done\n";
     }
 
-    return if $REQUEST{$client}{'subrequest'};
+    if( $REQUEST{$client}{'subrequest'} )
+    {
+	# This is a subrequest
+
+	# It's done now. But we must wait on the root request to
+	# finish also. They both uses the same client. Thus, don't
+	# touch the client.
+
+	return;
+    }
 
     if( $client =~ /^background/ )
     {
