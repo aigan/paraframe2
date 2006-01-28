@@ -48,7 +48,7 @@ use Para::Frame::Request;
 use Para::Frame::Widget;
 use Para::Frame::Burner;
 use Para::Frame::Time qw( now );
-use Para::Frame::Utils qw( throw uri2file debug create_file chmod_file fqdn );
+use Para::Frame::Utils qw( throw debug create_file chmod_file fqdn );
 use Para::Frame::Email::Address;
 
 use constant TIMEOUT_LONG  =>   5;
@@ -675,17 +675,11 @@ sub get_value
 		    my $current_req = $REQ;
 		    my $req = $REQUEST{ $caller_clientaddr } or
 			die "Client $caller_clientaddr not registred";
-		    switch_req( $req );
-		    my $file =  uri2file($val);
-		    switch_req( $current_req ) if $current_req;
+		    my $file = $req->uri2file($val);
 
 		    # Send response in calling $REQ
 		    debug(2,"Returning answer $file");
-#		    debug "  to $client";
 
-
-
-#		    $client->send(join "\0", 'URI2FILE', $file );
 		    $client->send(join "\0", 'RESP', $file );
 		    $client->send("\n");
 		}

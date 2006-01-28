@@ -62,7 +62,7 @@ BEGIN
 
       = qw( in trim make_passwd random throw catch
             create_file create_dir chmod_tree chmod_file chmod_dir
-            package_to_module module_to_package dirsteps uri2file
+            package_to_module module_to_package dirsteps
             compile passwd_crypt deunicode paraframe_dbm_open
             elapsed_time uri store_params clear_params add_params
             restore_params idn_encode idn_decode debug reset_hashref
@@ -72,9 +72,6 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-
-
-our %URI2FILE;
 
 our %TEST; ### DEBUG
 our $FQDN; # See fqdn()
@@ -787,41 +784,6 @@ sub dirsteps
 
     return @step;
 }
-
-sub uri2file
-{
-    my( $uri, $file, $req ) = @_;
-
-    # $req is for usage BEFORE global $REQ is set
-
-    # This will return file without '/' for dirs
-#    warn "  Get filename for uri $uri\n";
-
-    $req ||= $Para::Frame::REQ;
-    confess($req) unless UNIVERSAL::isa($req, "Para::Frame::Request");
-    my $key = $req->host . $uri;
-
-    if( $file )
-    {
-	return $URI2FILE{ $key } = $file;
-    }
-
-    if( $file = $URI2FILE{ $key } )
-    {
-	return $file;
-    }
-
-    confess "uri missing" unless $uri;
-
-#    warn "    From client\n";
-    $req->send_code( 'URI2FILE', $uri );
-    $file = Para::Frame::get_value( $req );
-
-    debug(4, "Storing URI2FILE in key $key");
-    $URI2FILE{ $key } = $file;
-    return $file;
-}
-
 
 
 =head2 compile

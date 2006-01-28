@@ -36,7 +36,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw debug uri2file dirsteps );
+use Para::Frame::Utils qw( throw debug dirsteps );
 
 sub new
 {
@@ -228,7 +228,7 @@ sub paths
 	my $subdir = 'inc' . $burner->subdir_suffix;
 
  	my $path_full = $req->{'dirsteps'}[0];
-	my $destroot = uri2file($site->home.'/');
+	my $destroot = $req->uri2file($site->home.'/');
 	my $dir = $path_full;
 	$dir =~ s/^$destroot// or
 	  die "destroot $destroot not part of $dir";

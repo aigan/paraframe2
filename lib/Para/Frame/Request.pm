@@ -51,7 +51,9 @@ use Para::Frame::Site;
 use Para::Frame::Change;
 use Para::Frame::URI;
 use Para::Frame::Page;
-use Para::Frame::Utils qw( create_dir chmod_file dirsteps uri2file compile throw idn_encode idn_decode debug catch );
+use Para::Frame::Utils qw( create_dir chmod_file dirsteps compile throw idn_encode idn_decode debug catch );
+
+our %URI2FILE;
 
 sub new
 {
@@ -125,7 +127,7 @@ sub new
     $req->{'site'}    = Para::Frame::Site->get( $site_name );
 
     # Cache uri2file translation
-    uri2file( $orig_uri, $orig_filename, $req);
+    $req->uri2file( $orig_uri, $orig_filename, $req);
 
     $req->{'cookies'} = new Para::Frame::Cookies($req);
 
@@ -241,7 +243,7 @@ sub cookies { shift->{'cookies'} }
 sub result { shift->{'result'} }
 sub uri { shift->{'uri'} }
 sub dir { shift->{'dir'} }
-sub filename { uri2file(shift->template) }
+sub filename { $_[0]->uri2file($_[0]->template) }
 sub lang { $_[0]->{'lang'} }
 sub language { $_[0]->{'lang'} }
 sub error_page_selected { $_[0]->{'error_template'} ? 1 : 0 }
@@ -289,6 +291,35 @@ sub template_uri
 sub in_yield
 {
     return $_[0]->{'in_yield'};
+}
+
+sub uri2file
+{
+    my( $req, $uri, $file ) = @_;
+
+    # This will return file without '/' for dirs
+
+    my $key = $req->host . $uri;
+
+    if( $file )
+    {
+	return $URI2FILE{ $key } = $file;
+    }
+
+    if( $file = $URI2FILE{ $key } )
+    {
+	return $file;
+    }
+
+    confess "uri missing" unless $uri;
+
+#    warn "    From client\n";
+    $req->send_code( 'URI2FILE', $uri );
+    $file = Para::Frame::get_value( $req );
+
+    debug(4, "Storing URI2FILE in key $key");
+    $URI2FILE{ $key } = $file;
+    return $file;
 }
 
 ##############################################
@@ -529,7 +560,7 @@ sub set_template
 
     $req->{'moved_temporarily'} ||= 1 unless $always_move;
 
-    my $file = uri2file( $template );
+    my $file = $req->uri2file( $template );
     debug(3,"The template $template represents the file $file");
     if( -d $file )
     {
@@ -581,8 +612,8 @@ sub set_dirsteps
 {
     my( $req, $path_full, $path_home ) = @_;
 
-    $path_full ||= uri2file( dirname( $req->template ) . "/" ) . "/";
-    $path_home ||= uri2file( $req->site->home  . "/" );
+    $path_full ||= $req->uri2file( dirname( $req->template ) . "/" ) . "/";
+    $path_home ||= $req->uri2file( $req->site->home  . "/" );
     debug 3, "Setting dirsteps for $path_full under $path_home";
     undef $req->{'incpath'};
     return $req->{'dirsteps'} = [ dirsteps( $path_full, $path_home ) ];
@@ -1224,9 +1255,9 @@ sub find_template
     }
 
     # Also used by &Para::Frame::Burner::paths
-    $req->set_dirsteps( uri2file( $path_full )."/" );
+    $req->set_dirsteps( $req->uri2file( $path_full )."/" );
 
-    my @searchpath = uri2file($path_full)."/";
+    my @searchpath = $req->uri2file($path_full)."/";
 
     if( $site->is_compiled )
     {
@@ -1234,8 +1265,8 @@ sub find_template
     }
     else
     {
-	my $destroot = uri2file($site->home.'/');
-	my $dir = uri2file( $path_full );
+	my $destroot = $req->uri2file($site->home.'/');
+	my $dir = $req->uri2file( $path_full );
 	$dir =~ s/^$destroot// or
 	  die "destroot $destroot not part of $dir";
 #	debug "destroot: $destroot";
@@ -1431,7 +1462,7 @@ sub find_template
     {
 	my $lang = $language->[0];
 	my $sample_template = $site->home . "/def/page_not_found.$lang.tt";
-	unless( stat(uri2file($sample_template)) )
+	unless( stat($req->uri2file($sample_template)) )
 	{
 	    $site->set_is_compiled(0);
 	    debug "*** The site is not yet compiled";
@@ -1783,7 +1814,7 @@ sub precompile_page
 
     my $type = $args->{'type'} || 'html_pre';
 
-    my $destfile = uri2file( $destfile_web );
+    my $destfile = $req->uri2file( $destfile_web );
     my $destdir = dirname( $destfile );
 
     debug(2,"$srcfile -> $destdir $destfile in $type");
