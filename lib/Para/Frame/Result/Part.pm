@@ -20,6 +20,11 @@ package Para::Frame::Result::Part;
 
 Para::Frame::Result - Representing an individual result as part of the Result object
 
+=head1 DESCRIPTION
+
+This object should be a compatible standin for Template::Exception,
+since it is a container object.
+
 =cut
 
 use strict;
