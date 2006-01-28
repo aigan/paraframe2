@@ -286,6 +286,12 @@ sub set_is_compiled
     return $_[0]->{'is_compiled'} = $_[1];
 }
 
+sub equals
+{
+    # Uses perl obj stringification
+    return( $_[0] eq $_[1] );
+}
+
 1;
 
 =head1 SEE ALSO
