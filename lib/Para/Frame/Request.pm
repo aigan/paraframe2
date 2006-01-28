@@ -155,15 +155,37 @@ Sets up a subrequest using new_minimal
 
 sub new_subrequest
 {
-    my( $original_req, $args ) = @_;
+    my( $original_req, $args, $coderef, @params ) = @_;
 
     my $client = $original_req->client;
 
     $Para::Frame::REQNUM ++;
     my $req = Para::Frame::Request->new_minimal($Para::Frame::REQNUM, $client, $args);
-
     $req->{'subrequest'} = $original_req;
-    return $req;
+    $original_req->{'wait'} ++; # Wait for subreq
+
+    Para::Frame::switch_req( $req, 1 );
+    warn "\n$Para::Frame::REQNUM Starting subrequest\n";
+
+    my $res = eval
+    {
+	&$coderef( $req, @params );
+    };
+
+    my $err = catch($@);
+
+    $original_req->{'wait'} --;
+    Para::Frame::switch_req( $original_req );
+
+    if( $err )
+    {
+	debug "Got error from process subrequest:\n";
+	debug $err->as_string;
+
+	die $err;
+    }
+
+    return $res;
 }
 
 =head2 new_minimal
@@ -225,6 +247,17 @@ sub language { $_[0]->{'lang'} }
 sub error_page_selected { $_[0]->{'error_template'} ? 1 : 0 }
 sub error_page_not_selected { $_[0]->{'error_template'} ? 0 : 1 }
 sub page { $_[0]->{'page'} }
+
+sub original
+{
+    # If this is a subrequest; return the original request
+    return $_[0]->{'subrequest'};
+}
+
+sub equals
+{
+    return( $_[0]->{'reqnum'} == $_[1]->{'reqnum'} );
+}
 
 sub user
 {
@@ -1173,6 +1206,12 @@ sub find_template
 	debug(0,"path: $path_full");
 	debug(0,"name: $base_name");
 	debug(0,"ext : $ext_full");
+
+	# We should not try to finding templates including lang
+	if( $ext_full =~ /^\.(\w\w)\.tt$/ )
+	{
+	    confess "Trying to get template with specific lang ext";
+	}
     }
 
     my( $ext ) = $ext_full =~ m/^\.(.+)/; # Skip initial dot
@@ -1225,7 +1264,7 @@ sub find_template
     }
 
     # Reasonable default?
-    my $language = $req->lang || ['sv'];
+    my $language = $req->lang || ['en'];
 
     if( debug > 3 )
     {
@@ -1381,16 +1420,17 @@ sub find_template
 		debug(-2);
 		return( $data, $ext );
 	    }
-	    debug(-1);
 	}
 	debug(-1);
     }
+    debug(-1);
 
     # Check if site should be compiled but hasn't been yet
     #
     if( $site->is_compiled )
     {
-	my $sample_template = $site->home . "/def/page_not_found.tt";
+	my $lang = $language->[0];
+	my $sample_template = $site->home . "/def/page_not_found.$lang.tt";
 	unless( stat(uri2file($sample_template)) )
 	{
 	    $site->set_is_compiled(0);
@@ -1590,7 +1630,7 @@ sub render_output
 	$Para::Frame::REQ->result->error('notfound', "Hittar inte sidan $template\n");
     }
 
-    debug 2, "Template to render is $in, that is a ".ref($in);
+    debug 2, "Template to render is $in ($ext), that is a ".ref($in);
 
     if( not $in )
     {
@@ -1600,6 +1640,7 @@ sub render_output
     elsif( $ext ne 'tt' )
     {
 	$req->get_static( $in, \$page );
+	$req->{'page_content'} = \$page;
 	return 1;
     }
     else
@@ -1697,6 +1738,12 @@ sub render_output
         $page .= ("</table>\n");
     }
 
+
+    if( debug > 3 )
+    {
+	my $length = length($page);
+	warn "Page with length $length placed in $req";
+    }
     $req->{'page_content'} = \$page;
 
     return 1;
@@ -1720,58 +1767,53 @@ $destfile_web is the URL path in the current site for the destination file.
 
 sub precompile_page
 {
-    my( $original_req, $srcfile, $destfile_web, $args ) = @_;
+    my( $req, $srcfile, $destfile_web, $args ) = @_;
 
     $args ||= {};
 
-    $original_req->{'wait'} ++;
+    # Check that destfile_web matches given site
+    my $home = $req->site->home;
+    if( length( $home ) )
+    {
+	$destfile_web =~ /^$home/ or
+	  die "The file $destfile_web is not placed in $home";
+    }
 
     my( $res, $error );
-    my $req = $original_req->new_subrequest($args);
 
-    eval
-    {
-	Para::Frame::switch_req( $req, 1 );
+    my $type = $args->{'type'} || 'html_pre';
 
-	warn "\n$Para::Frame::REQNUM Precompiling $srcfile\n";
+    my $destfile = uri2file( $destfile_web );
+    my $destdir = dirname( $destfile );
 
-	my $type = $args->{'type'} || 'html_pre';
+    debug(2,"$srcfile -> $destdir $destfile in $type");
 
-	my $destfile = uri2file( $destfile_web );
-	my $destdir = dirname( $destfile );
+    # The URI shoule be the dir and not index.tt
+    # TODO: Handle this in another place?
+    my $uri = $destfile_web;
+    $uri =~ s/\/index(\.\w\w)?\.tt$/\//;
+    $req->set_uri( $uri );
+    $req->set_template( $destfile_web );
+    $req->{template_uri} = $uri;
 
-	debug(2,"$srcfile -> $destdir $destfile in $type");
+    $req->set_language($args->{'language'});
 
-	# The URI shoule be the dir and not index.tt
-	# TODO: Handle this in another place?
-	my $uri = $destfile_web;
-	$uri =~ s/\/index(\.\w\w)?\.tt$/\//;
-	$req->set_uri( $uri );
-	$req->set_template( $destfile_web );
-	$req->{template_uri} = $uri;
+    $req->set_dirsteps($destdir.'/');
 
-	$req->set_dirsteps($destdir.'/');
+    my $fh = new IO::File;
+    $fh->open( "$srcfile" ) or die "Failed to open '$srcfile': $!\n";
 
-	my $fh = new IO::File;
-	$fh->open( "$srcfile" ) or die "Failed to open '$srcfile': $!\n";
+    $req->set_tt_params;
 
-	$req->set_tt_params;
-
-	my $burner = $Para::Frame::CFG->{'th'}{$type};
-	$res = $burner->burn($fh, $req->{'params'}, $destfile );
-	$fh->close;
-	$error = $burner->error;
-    };
-
-    $error ||= catch($@);
-
-    Para::Frame::switch_req( $original_req );
-    $original_req->{'wait'} --;
+    my $burner = $Para::Frame::CFG->{'th'}{$type};
+    $res = $burner->burn($fh, $req->{'params'}, $destfile );
+    $fh->close;
+    $error = $burner->error;
 
     if( $error )
     {
 	debug "ERROR WHILE PRECOMPILING PAGE";
-	my $part = $original_req->result->exception($error);
+	my $part = $req->result->exception($error);
 	if( ref $error and $error->info =~ /not found/ )
 	{
 	    debug "Subtemplate for precompile not found";
@@ -1781,6 +1823,8 @@ sub precompile_page
 
 	die $part;
     }
+
+    return 1;
 }
 
 
@@ -1866,6 +1910,12 @@ sub send_in_chunks
     debug(4,"Sending ".length($$dataref)." bytes of data to client");
     my $sent = 0;
     my $errcnt = 0;
+
+    unless( $length )
+    {
+	confess "We got nothing to send (for req $req)";
+    }
+
 
     eval
     {
