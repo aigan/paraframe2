@@ -311,6 +311,17 @@ sub uri2file
 	return $file;
     }
 
+    debug "uri2file key $key";
+
+    if( my $orig = $req->original )
+    {
+	unless( $orig->site->host eq $req->site->host )
+	{
+	    die "Host mismatch";
+	}
+    }
+
+
     confess "uri missing" unless $uri;
 
 #    warn "    From client\n";
