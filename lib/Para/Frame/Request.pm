@@ -179,7 +179,7 @@ sub new_subrequest
 
     if( $err )
     {
-	debug "Got error from process subrequest:\n";
+	debug "Got error from processing subrequest:\n";
 	debug $err->as_string;
 
 	die $err;
