@@ -219,8 +219,12 @@ sub throw
   catch( $error, $output )
   catch( ['errtype1', 'errytpe2'], $output )
 
-Returns (a true) L<Template::Exception> object if $error.  Appends
-$output to object.
+Returns (a true) L<Template::Exception> object if $error.
+
+But if the input is a Para::Frame::Result::Part, use that instead,
+since that is a cointainer of the error.
+
+Appends $output to object.
 
 If an arrayref of scalars is given, each scalar is compared to the
 type of the exception object found in C<$@>.  Returns the object if
@@ -293,7 +297,10 @@ sub catch
 	$error = $@;
     }
 
-    if( $error and not UNIVERSAL::isa($error, 'Template::Exception') )
+    return undef unless $error;
+
+    unless( UNIVERSAL::isa($error, 'Para::Frame::Result::Part') or
+	    UNIVERSAL::isa($error, 'Template::Exception') )
     {
 	my $type = 'undef';
 	my $info = $error;
@@ -307,7 +314,7 @@ sub catch
 	$error = Template::Exception->new( $type, $info, $output );
     }
 
-    if( $tests and $error )
+    if( $tests )
     {
 	foreach my $test ( @$tests )
 	{
