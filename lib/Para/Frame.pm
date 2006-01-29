@@ -752,7 +752,16 @@ sub close_callback
 	warn "$REQUEST{$client}{reqnum} Done\n";
     }
 
-    if( $REQUEST{$client}{'subrequest'} )
+    if( $client =~ /^background/ )
+    {
+	#(May be a subrequst, but decoupled)
+
+	# Releasing active request
+	delete $REQUEST{$client}{'active_reqest'};
+	delete $REQUEST{$client};
+	switch_req(undef);
+    }
+    elsif( $REQUEST{$client}{'subrequest'} )
     {
 	# This is a subrequest
 
@@ -760,15 +769,14 @@ sub close_callback
 	# finish also. They both uses the same client. Thus, don't
 	# touch the client.
 
-	return;
-    }
+	# But it may be that the parent already is done. (See
+	# Para::Frame::Request->new_subrequest) )
 
-    if( $client =~ /^background/ )
-    {
-	# Releasing active request
-	delete $REQUEST{$client}{'active_reqest'};
-	delete $REQUEST{$client};
-	switch_req(undef);
+#	$::SRCNT++;
+#	debug "This was subrequest ending $::SRCNT";
+#	exit if $::SRCNT >= 10;
+
+	return;
     }
     else
     {
@@ -940,13 +948,14 @@ sub add_background_jobs
 	my $job = shift @BGJOBS_PENDING;
 	my $original_request = shift @$job;
 	my $reqnum = $original_request->{'reqnum'};
-	$bg_user = $original_request->s->u;
+	$bg_user = $original_request->session->u;
 	$user_class->change_current_user($bg_user);
 
 	# Make sure the original request is the same for all jobs in
 	# each background request
 
 	$req->{'original_request'} = $original_request;
+	$req->set_site($original_request->site);
 	$req->add_job('run_code', @$job);
 
 	for( my $i=0; $i<=$#BGJOBS_PENDING; $i++ )
