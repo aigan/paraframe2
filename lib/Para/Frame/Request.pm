@@ -317,7 +317,8 @@ sub uri2file
     {
 	unless( $orig->site->host eq $req->site->host )
 	{
-	    die "Host mismatch";
+#	    $req = Para::Frame::Request... ### TODO: continue...
+	    confess "Host mismatch";
 	}
     }
 
