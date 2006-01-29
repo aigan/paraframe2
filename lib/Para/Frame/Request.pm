@@ -151,7 +151,14 @@ sub new
 
 =head2 new_subrequest
 
-Sets up a subrequest using new_minimal
+Sets up a subrequest using new_minimal.
+
+A subrequest must make sure that it finishes BEFORE the parent, unless
+it's decoupled to become a background request.
+
+The parent will be made to wait for the subrequest result. But if the
+subrequest sets up additional jobs, you have to take care of either
+makeing it a background request or making the parent wait.
 
 =cut
 
@@ -160,23 +167,33 @@ sub new_subrequest
     my( $original_req, $args, $coderef, @params ) = @_;
 
     my $client = $original_req->client;
+    $Para::Frame::REQNUM ++;
 
-    if( my $site_name = $args->{'site'} )
+    if( my $site_in = $args->{'site'} )
     {
-	my $site = Para::Frame::Site->get( $site_name );
+	my $site = Para::Frame::Site->get( $site_in );
 	if( $original_req->site->host ne $site->host )
 	{
-	    confess "Host mismatch";
+	    debug "Host mismatch ".$site->host;
+	    debug "Changing the client of the subrequest";
+	    $client = "background-$Para::Frame::REQNUM";
 	}
     }
 
-    $Para::Frame::REQNUM ++;
     my $req = Para::Frame::Request->new_minimal($Para::Frame::REQNUM, $client, $args);
+
+    # TODO: These two may be possible to merge
+    $req->{'original_request'} = $original_req;
     $req->{'subrequest'} = $original_req;
+
     $original_req->{'wait'} ++; # Wait for subreq
+    debug "$original_req->{reqnum} now waits on $original_req->{'wait'} things";
 
     Para::Frame::switch_req( $req, 1 );
     warn "\n$Para::Frame::REQNUM Starting subrequest\n";
+
+    ### Register the client, if it was created now
+    $Para::Frame::REQUEST{$client} ||= $req;
 
     my $res = eval
     {
@@ -186,6 +203,7 @@ sub new_subrequest
     my $err = catch($@);
 
     $original_req->{'wait'} --;
+    debug "$original_req->{reqnum} now waits on $original_req->{'wait'} things";
     Para::Frame::switch_req( $original_req );
 
     if( $err )
@@ -207,11 +225,11 @@ Used for background jobs, without a calling browser client
 
 sub new_minimal
 {
-    my( $class, $reqnum, $bg_client, $args ) = @_;
+    my( $class, $reqnum, $client, $args ) = @_;
 
     my $req =  bless
     {
-	client         => $bg_client,     ## Just the unique name
+	client         => $client,        ## Just the unique name
 	indent         => 1,              ## debug indentation
 	jobs           => [],             ## queue of actions to perform
 	env            => {},             ## No env mor minimals!
@@ -230,8 +248,9 @@ sub new_minimal
 
     $req->set_language( $args->{'language'} );
 
-    my $site_name = $args->{'site'} || undef;
-    $req->{'site'}    = Para::Frame::Site->get($site_name);
+    # $args->{'site'} may be undef
+    $req->set_site( $args->{'site'} );
+
     $req->{'result'}  = new Para::Frame::Result;  # Before Session
     $req->{'s'}       = Para::Frame->Session->new_minimal();
 
@@ -320,17 +339,7 @@ sub uri2file
 	return $file;
     }
 
-    debug "uri2file key $key";
-
-    if( my $orig = $req->original )
-    {
-	unless( $orig->site->host eq $req->site->host )
-	{
-#	    $req = Para::Frame::Request->cached_virtual_client;
-	    confess "Host mismatch";
-	}
-    }
-
+#    debug "uri2file key $key";
 
     confess "uri missing" unless $uri;
 
@@ -1553,21 +1562,24 @@ sub send_code
 	# order to give ouerself a client to send this command
 	# to. This will be ... entertaining...
 
-	debug "The $client will now considering starting an UA";
+	debug "Req $req->{reqnum} will now considering starting an UA";
 
 	# Use existing
 	$req->{'wait_for_active_reqest'} ||= 0;
+	debug "  It waits for $req->{'wait_for_active_reqest'} active requests";
 	unless( $req->{'wait_for_active_reqest'} ++ )
 	{
-	    debug "  Prepare for starting UA\n";
+	    debug "  So we prepares for starting an UA";
+	    debug "  Now it waits for 1 active request";
 
 	    my $origreq = $req->{'original_request'};
 
-	    # Find out which website to use
-	    if( $origreq )
-	    {
-		$req->{'site'} = $origreq->{'site'};
-	    }
+#	    # The site should have been set before...
+#	    if( $origreq )
+#	    {
+#		$req->{'site'} = $origreq->{'site'};
+#		debug "Using host ".$req->site->host;
+#	    }
 
 	    my $webhost = $req->site->webhost;
 	    my $webpath = $req->site->loopback;
@@ -1600,16 +1612,8 @@ sub send_code
 
 	# Got it! Now send the message
 	#
-	debug "We got an active request for $client";
+	debug "We got the active request $req->{'active_reqest'}{reqnum} now";
 	my $aclient = $req->{'active_reqest'}->client;
-	if( debug )
-	{
-	    if( my $areq = $Para::Frame::REQUEST{$aclient} )
-	    {
-		my $areqnum = $areq->{'reqnum'};
-		debug "  Req $areqnum";
-	    }
-	}
 
 	$aclient->send(join "\0", @_ );
 	$aclient->send("\n");
@@ -1628,17 +1632,21 @@ sub release_active_request
 {
     my( $req ) = @_;
 
+    debug "$req->{reqnum} is now waiting for one active req less";
+
     $req->{'wait_for_active_reqest'} --;
 
     if( $req->{'wait_for_active_reqest'} )
     {
-	debug "More jobs for active request";
+	debug "More jobs for active request ($req->{'wait_for_active_reqest'})";
     }
     else
     {
-        debug "Releasing active_request";
-
+        debug "Releasing active_request $req->{'active_reqest'}{'reqnum'}";
 	$req->{'active_reqest'}{'wait'} --;
+	debug "That request is now waiting for $req->{'active_reqest'}{'wait'} things";
+
+	debug "Removing the referens to that request";
 	delete $req->{'active_reqest'};
     }
 }
@@ -2203,6 +2211,28 @@ sub site
     return $_[0]->{'site'} ||= Para::Frame::Site->get();
 }
 
+sub set_site
+{
+    my( $req, $site_in ) = @_;
+    my $site = Para::Frame::Site->get( $site_in );
+
+    # Check that site mathces the client
+    #
+    unless( $req->client =~ /^background/ )
+    {
+	if( my $orig = $req->original )
+	{
+	    unless( $orig->site->host eq $req->site->host )
+	    {
+		my $site_name = $site->name;
+		confess "Host mismatch: $site_name";
+	    }
+	}
+    }
+
+    return $req->{'site'} = $site;
+}
+
 sub host_from_env
 {
     # This is the host name as given in the apache config.
@@ -2499,24 +2529,6 @@ $req->{'result'} : The L<Para::Frame::Result> object
 =item site
 
 The <Para;;Frame::Site> object.
-
-=item site_dir
-
-This page file path relative the site home, excluding language and doc
-format extensions.  Symlinks resolved.
-
-=item site_file
-
-This page file path relative the site home, excluding language and doc
-format extensions.  Symlinks resolved.
-
-=item site_uri
-
-This page URL path relative the site home, excluding language but
-including doc format extensions.  Symlinks resolved.
-
-This is often the same as site_file + .tt except then the page is a
-dir or index.tt
 
 =back
 
