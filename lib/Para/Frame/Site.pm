@@ -127,8 +127,8 @@ Returns the home dir of the site as URL path, excluding the last '/'.
 
 =cut
 
-sub webhome     { $_[0]->{'webhome'} || '' }
-sub home        { $_[0]->webhome }
+sub webhome     { $_[0]->home }
+sub home        { $_[0]->{'webhome'} || '' }
 
 #######################################################################
 
@@ -154,7 +154,7 @@ sub webhost
     return $_[0]->{'webhost'} || fqdn();
 }
 
-sub loopback    { $_[0]->{'loopback'} }
+sub loopback    { $_[0]->{'loopback'} || $_[0]->home.'/' }
 
 sub host        { $_[0]->webhost }
 
