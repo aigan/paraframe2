@@ -161,6 +161,15 @@ sub new_subrequest
 
     my $client = $original_req->client;
 
+    if( my $site_name = $args->{'site'} )
+    {
+	my $site = Para::Frame::Site->get( $site_name );
+	if( $original_req->site->host ne $site->host )
+	{
+	    confess "Host mismatch";
+	}
+    }
+
     $Para::Frame::REQNUM ++;
     my $req = Para::Frame::Request->new_minimal($Para::Frame::REQNUM, $client, $args);
     $req->{'subrequest'} = $original_req;
@@ -317,7 +326,7 @@ sub uri2file
     {
 	unless( $orig->site->host eq $req->site->host )
 	{
-#	    $req = Para::Frame::Request... ### TODO: continue...
+#	    $req = Para::Frame::Request->cached_virtual_client;
 	    confess "Host mismatch";
 	}
     }
@@ -1545,7 +1554,6 @@ sub send_code
 	# to. This will be ... entertaining...
 
 	debug "The $client will now considering starting an UA";
-	
 
 	# Use existing
 	$req->{'wait_for_active_reqest'} ||= 0;
