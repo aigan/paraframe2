@@ -36,13 +36,14 @@ sub handler
 
     unless( $oreq )
     {
-	warn "Could not find $client!!!\n";
-	die;
+	die "Could not find $client in Para::Frame::REQUEST hash!!!\n";
     }
 
     $oreq->{'active_reqest'} = $req;
+    debug "Req $oreq->{reqnum} has active_reqest $req->{reqnum}";
 
     $req->{'wait'} ++;
+    debug "Req $req->{reqnum} waits for $req->{'wait'} things";
 
     # Give a short quick response
     #
