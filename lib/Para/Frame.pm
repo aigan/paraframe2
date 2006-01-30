@@ -761,7 +761,7 @@ sub close_callback
 	delete $REQUEST{$client};
 	switch_req(undef);
     }
-    elsif( $REQUEST{$client}{'subrequest'} )
+    elsif( $REQUEST{$client}{'original_request'} )
     {
 	# This is a subrequest
 
@@ -1038,7 +1038,7 @@ sub handle_request
 		 $s->u->id,
 		 $s->{'debug'},
 		 );
-    warn "# $client\n" if debug();
+    warn "# $client\n" if debug() > 4;
    
     ### Redirected from another page?
     if( my $page_result = $req->s->{'page_result'}{ $req->uri } )
