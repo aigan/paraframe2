@@ -163,15 +163,26 @@
    direction = q.param('direction');
    DEFAULT value = name;
    DEFAULT defdir = 'asc';
+   DEFAULT direction = 'asc';
    IF order == value;
       IF direction == 'asc';
          direc = 'desc';
+         dirimg = '/ui/images/arrow.down.png';
       ELSE;
 	 direc = 'asc';
+	 dirimg = '/ui/images/arrow.up.png';
       END;
+      class="selected";
    ELSE;
       direc = defdir;
    END;
-   forward( name, me, order=value, direction=direc );
-   END;
+   url = forward_url( me, order=value, direction=direc, offset=0 );
 %]
+   <a href="$url" class="$class">$name
+[% IF dirimg %]
+   <img alt=" $direction" src="$home$dirimg">
+[% END %]
+</a>
+[% END;
+%]
+
