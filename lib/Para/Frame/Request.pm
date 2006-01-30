@@ -123,7 +123,7 @@ sub new
     $req->{'params'} = \%ttparams;
 
     my $site_name = $dirconfig->{'site'} || $req->host_from_env;
-    debug "Request under site $site_name";
+#    debug "Request under site $site_name";
     $req->{'site'}    = Para::Frame::Site->get( $site_name );
 
     # Cache uri2file translation
@@ -182,13 +182,9 @@ sub new_subrequest
 
     my $req = Para::Frame::Request->new_minimal($Para::Frame::REQNUM, $client, $args);
 
-    # TODO: These two may be possible to merge
     $req->{'original_request'} = $original_req;
-    $req->{'subrequest'} = $original_req;
-
     $original_req->{'wait'} ++; # Wait for subreq
     debug "$original_req->{reqnum} now waits on $original_req->{'wait'} things";
-
     Para::Frame::switch_req( $req, 1 );
     warn "\n$Para::Frame::REQNUM Starting subrequest\n";
 
@@ -281,7 +277,7 @@ sub page { $_[0]->{'page'} }
 sub original
 {
     # If this is a subrequest; return the original request
-    return $_[0]->{'subrequest'};
+    return $_[0]->{'original_request'};
 }
 
 sub equals
@@ -1254,7 +1250,7 @@ sub find_template
 {
     my( $req, $template ) = @_;
 
-    debug(0,"Finding template $template");
+    debug(2,"Finding template $template");
     my( $in );
 
     my $site = $req->site;
@@ -1344,7 +1340,7 @@ sub find_template
 	}
 
 	# We look for both tt and html regardless of it the file was called as .html
-	debug(1,"Check $path",1);
+	debug(3,"Check $path",1);
 	die "dir_redirect failed" unless $base_name;
 
 	# Handle dirs
