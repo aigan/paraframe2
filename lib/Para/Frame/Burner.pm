@@ -142,7 +142,7 @@ sub free_th
     my( $th ) = delete $burner->{'used'}{$req};
     if( $th )
     {
-	debug 1, "TH released to stack";
+	debug 2, "TH released to stack";
 	$th->{ _ERROR } = '';
 	push @{$burner->{'free'}}, $th;
     }
