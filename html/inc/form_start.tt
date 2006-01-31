@@ -4,7 +4,12 @@
    # call default_template instead of plan_bactrack directly
 
 form_action = next_template || plan_backtrack || default_template || default_step || me;
-DEFAULT form_enctype = "multipart/form-data";
+DEFAULT form_method = "POST";
+IF form_method == "POST";
+  DEFAULT form_enctype = "multipart/form-data";
+ELSE;
+  DEFAULT form_enctype = "application/x-www-form-urlencoded";
+END;
 
 form_extra = "";
 IF template.onsubmit;
