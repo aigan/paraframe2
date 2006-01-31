@@ -1988,7 +1988,15 @@ sub send_in_chunks
 		}
 		else
 		{
-		    debug(1,"  Failed to send chunk $i\n  Tries to recover...",1);
+		    debug(1,"  Failed to send chunk $i");
+
+		    if( $req->{'cancel'} )
+		    {
+			debug("Request was cancelled. Giving up");
+			return $sent;
+		    }
+
+		    debug(1,"  Tries to recover...",1);
 		    
 		    $errcnt++;
 		    $req->yield( 0.9 );
