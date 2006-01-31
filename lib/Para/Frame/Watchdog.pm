@@ -45,7 +45,7 @@ our $SHUTDOWN;             # Should we shut down the server?
 our $MSGTYPE;              # Type of messages from server 
 our $CHECKTIME;            # Time of last proc check
 our $CPU_TIME;             # user + system time
-our $CPU_USAGE;            # Aproximate avarage usage
+our $CPU_USAGE=0;          # Aproximate avarage usage
 our $MEMORY_CLEAR_TIME;    # When to send memory message
 our $USE_LOGFILE;          # Redirects STDERR to logfile
 our $EMERGENCY_MODE;       # Experienced a crash. Maximum debug
