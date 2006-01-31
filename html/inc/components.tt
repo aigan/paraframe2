@@ -1,6 +1,6 @@
 [% MACRO box(part) BLOCK %]
-<table border=0 cellpadding=0 cellspacing=0 bgcolor="$part.border" align="center"><tr><td>
-<table border="$part.width" cellpadding=10><tr><td bgcolor="$part.bg" class="msg">
+<table bgcolor="$part.border" class="error"><tr><td>
+<table border="$part.width"><tr><td bgcolor="$part.bg" class="msg">
    [% IF part.title %]<h1>$part.title</h1>[% END %]
 <pre>[% part.message | html %]</pre>
 [% IF part.context %]
