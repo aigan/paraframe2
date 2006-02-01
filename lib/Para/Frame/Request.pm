@@ -348,6 +348,39 @@ sub uri2file
     return $file;
 }
 
+=head2 normalized_uri
+
+Gives the proper version of the URI. Ending index.tt will be
+removed. This is used for redirecting (forward) the browser if
+nesessary.
+
+Input must ge the path part as a string
+
+Output is the path part as a string
+
+=cut
+
+sub normalized_uri
+{
+    my( $req, $uri ) = @_;
+
+    $uri ||= $req->uri;
+
+    if( $uri =~ s/\/index.tt$/\// )
+    {
+	return $uri;
+    }
+
+    my $uri_file = $req->uri2file( $uri );
+    if( -d $uri_file and $uri !~ /\/$/ )
+    {
+	return $uri.'/';
+    }
+
+    return $uri;
+}
+
+
 ##############################################
 # Set language
 #
@@ -983,8 +1016,6 @@ sub after_jobs
     #
     if( $req->in_last_job )
     {
-	## TODO: forward if requested uri ends in /index.tt
-
 	# Redirection requestd?
 	if( $req->error_page_not_selected and $req->{'redirect'} )
 	{
@@ -1166,6 +1197,13 @@ sub referer
     return $req->site->webhome.'/';
 }
 
+
+=head2 referer_query
+
+Returns the escaped form of the query string.
+
+=cut
+
 sub referer_query
 {
     my( $req ) = @_;
@@ -1213,7 +1251,27 @@ sub referer_query
     }
 
     debug "Referer query from default value";
-    return {};
+    return '';
+}
+
+=head2 referer_with_query
+
+Returns referer with query string as a string.
+
+=cut
+
+sub referer_with_query
+{
+    my( $req ) = @_;
+
+    if( my $query = $req->referer_query )
+    {
+	return $req->referer . '?' . $query;
+    }
+    else
+    {
+	return $req->referer;
+    }
 }
 
 #############################################
@@ -1741,7 +1799,7 @@ sub render_output
 			$req->result->hide_part('denied');
 			unless( $req->{'no_bookmark_on_failed_login'} )
 			{
-			    $req->session->route->bookmark;
+			    $req->session->route->bookmark();
 			}
 		    }
 		    else
@@ -1910,10 +1968,24 @@ sub send_output
     {
 	debug(0,"Sending output to ".$req->uri);
 	debug(0,"Sending the page ".$req->template_uri);
+	unless( $req->error_page_not_selected )
+	{
+	    debug(0,"An error page was selected");
+	}
     }
 
-    if( $req->error_page_not_selected and
-	$req->uri ne $req->template_uri )
+
+    # forward if requested uri ends in '/index.tt' or if it is a dir
+    # without an ending '/'
+
+    my $uri = $req->uri;
+    my $uri_norm = $req->normalized_uri( $uri );
+    if( $uri ne $uri_norm )
+    {
+	$req->forward($uri_norm);
+    }
+    elsif( $req->error_page_not_selected and
+	$uri ne $req->template_uri )
     {
 	$req->forward();
     }
@@ -2085,6 +2157,9 @@ sub forward
     my $site = $req->site;
 
     $uri ||= $req->template_uri;
+
+
+    debug "Forwarding to $uri";
 
     if( not $req->{'page_content'} )
     {
