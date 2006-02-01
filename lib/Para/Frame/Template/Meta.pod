@@ -29,6 +29,23 @@ Default value: 0
 
 Sets focus on form field with specified name.
 
+=head2 onsubmit
+
+Sets the onsubmit param of the form tag. Javascript stuff.
+
+=head2 form_method
+
+The method of the form. Default is POST.
+
+=head2 form_enctype
+
+The enctype of the form. Uses multipart/form-data if form_method is
+POST, in oprder to make file uploads possible. If GET, it will use the
+standard enctype.
+
+=head2 form_extra
+
+A string to put in the form tag.
 
 =head2 next_template
 
@@ -37,8 +54,11 @@ Set default next page to view after form submit.
 The value can be any sort of URL.  Used to set form.f.action.
 
 Default template determined by L<Para::Frame::Route/plan_backtrack>
-in case of form submit with next_handler being false.
+in case of form submit with next_template being false.
 
+=head2 next_template_target
+
+Sets the target of the next template. It's the name of the browser window.
 
 =head2 default_template
 
@@ -46,7 +66,7 @@ Set default next page to view after form submit.
 
 The value can be any sort of URL.  Used to set form.f.action.
 
-This will be used if both L</next_handler> and
+This will be used if both L</next_template> and
 L<Para::Frame::Route/plan_backtrack> returns undef.
 
 
@@ -57,21 +77,34 @@ next page.
 
 Stored in form field 'run'.
 
-Multiple actions can be taken by concatenating them with '&'.  Each
-action value consist of [\w-] and will in turn invoke
-&Para::Frame::Action::<action>::handler()
+Multiple actions can be taken by concatenating them with '&', or by
+having multiple run fields. An action can also append more actions to
+be taken.
 
-Later actions will be aborted if a previous action makes an exception.
+The name of the action should be in all lower case. Paraframe will
+look for a Perl module with the samne name in the application appbase
+or any of the appfmly or in paraframe. If appbase is Rit::HG and teh
+action is named lookup it will first try with Rit::HG::Action::lookup
+and then Para::Frame::Action::lookup.
+
+It will then call the handler() function with the $req as param.
+
+The first action that fails (with an exception) will cauese the later
+actions to not be run.
 
 
 =head2 css
 
-The cascading stylesheet to use for this page.
+The cascading stylesheet to use for this page. The header metadata is
+generated using L<Para::Frame::Widget/css_header>.
+
+Example: [% META css="/my_style.css" %]
 
 
 =head2 favicon
 
-The favicon to use for this page
+The favicon to use for this page. Can also be given as a tt param in
+site config or globaly.
 
 
 =head2 description
@@ -81,14 +114,15 @@ The description of the page (for search engines)
 
 =head2 keywords
 
-The keywords for the page (for search engines)
+The keywords for the page. (Not used by most search engines)
 
 This is given as a string
 
 
 =head2 body_class
 
-The class of the HTML body (for CSS)
+The class of the HTML body (for CSS). Can also be given as a tt param
+in site confog or blobaly.
 
 
 =head1 SEE ALSO
