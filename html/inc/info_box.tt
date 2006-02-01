@@ -1,13 +1,11 @@
-[%
-   FOREACH part = result.parts;
-      NEXT IF part.hide;
-      IF part.type;
-         IF part.prefix_message; %]
-            <strong><pre>[% part.prefix_message | html %]</pre></strong>
-[%       END;
-         box(part);
-      ELSE; %]
-         <strong><pre>[% part.message | html %]</pre></strong>
+[% FOREACH part IN result.error_parts;
+      IF part.prefix_message;
+%]       <pre class="paraframe_error_prefix">[% part.prefix_message | html %]</pre>
 [%    END;
-   END;
+      box(part);
+   END
 %]
+
+[%  FOREACH part IN result.info_parts; %]
+      <pre class="paraframe_info">[% part.message | html %]</pre>
+[% END %]
