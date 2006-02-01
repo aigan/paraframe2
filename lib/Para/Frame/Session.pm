@@ -130,7 +130,7 @@ sub after_request
     # This is the uri of the previous request. Not necessarily the
     # referer of the next request.
 
-    $s->{'referer'} = Para::Frame::URI->new($req->template_uri);
+    $s->{'referer'} = Para::Frame::URI->new($req->normalized_uri);
     $s->{'referer'}->query_form(store_params());
 }
 
