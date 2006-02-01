@@ -51,7 +51,7 @@ These are the parts called:
 
 =item favicon, description, keywords, robots
 
-=item L</header_extra.tt>
+=item L</header_extra.tt> (empty)
 
 =item L</js.tt>
 
@@ -99,7 +99,7 @@ B</your/selected/template.tt>
 
 =over
 
-=item L</border_bottom.tt>
+=item L</border_bottom.tt> (empty)
 
 =item </form>
 
