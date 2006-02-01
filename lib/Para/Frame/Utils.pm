@@ -831,6 +831,7 @@ sub passwd_crypt
     my( $passwd ) = @_;
 
     my $ip = $Para::Frame::REQ->client_ip;
+    $passwd or croak "Password missing";
 
     $ip =~ s/\.\d{1,3}$//; # accept changing ip within c-network
 
