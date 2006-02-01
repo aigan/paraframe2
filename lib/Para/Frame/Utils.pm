@@ -192,7 +192,11 @@ sub throw
     local $" = ', ';
 
     # die! die! die!
-    if (UNIVERSAL::isa($error, 'Template::Exception'))
+    if( UNIVERSAL::isa($error, 'Para::Frame::Result::Part'))
+    {
+	die $error;
+    }
+    elsif( UNIVERSAL::isa($error, 'Template::Exception') )
     {
 	die $error;
     }
@@ -1284,6 +1288,11 @@ sub retrieve_from_url
 	{
 	    my $message = $res->message;
 	    throw('action', "Failed to retrieve '$url' content: $message");
+
+	    # TODO: Set up a better error response
+#	    my $part = $req->result->exception('action', $message);
+#	    $part->prefix_message("Failed to retrieve '$url' content");
+#	    throw($part);
 	}
     }
 
