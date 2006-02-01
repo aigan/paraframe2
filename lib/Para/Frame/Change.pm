@@ -16,6 +16,12 @@ package Para::Frame::Change;
 #
 #=====================================================================
 
+=head1 NAME
+
+Para::Frame::Change - DB Change class
+
+=cut
+
 use strict;
 
 BEGIN
@@ -27,6 +33,13 @@ BEGIN
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug );
 
+
+=head1 DESCRIPTION
+
+=head1 METHODS
+
+=cut
+
 sub new
 {
     my( $class ) = @_;
@@ -35,6 +48,17 @@ sub new
 
     return $change->reset;
 }
+
+=head2 reset
+
+  $change->reset()
+
+Resets the change object. Like creating a new object, but keeps the
+existing one.
+
+Returns the now empty object.
+
+=cut
 
 sub reset
 {
@@ -121,3 +145,9 @@ sub report
 }
 
 1;
+
+=head1 SEE ALSO
+
+L<Para::Frame>
+
+=cut
