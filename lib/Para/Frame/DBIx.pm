@@ -51,13 +51,13 @@ C<Para::Frame::DBIx> is an optional module.  It will not be used unless
 the application calls it.
 
 The application should initiate the connection and store the object in
-C<$app-E<gt>{dbix}>.  That is not enforced.  Just praxis.
+a global or site variable.
 
-Multipple connections are not supported.
+Multipple connections are supported.
 
 On error, an 'dbi' exception is thrown.
 
-=head2 Exported objects
+=head2 Exported TT functions
 
 =over
 
@@ -78,228 +78,67 @@ On error, an 'dbi' exception is thrown.
 
 #######################################################################
 
-=head2 select_list
+=head2 new
 
-  Perl: $dbix->select_list($statement, @vals)
-  Tmpl: select_list(statement, val1, val2, ... )
+  Para::Frame::DBIx->new( \%params )
 
-Executes the $statement, substituting all '?' within with the values.
+Param C<connect> can be a string or a ref to a list with up to four
+values. Those values will be passed to L<DBI/connect>. Those will be
+$data_source, $username, $password and \%attr.
 
-The C<select *> part of the statement can be left out.
+A C<connect> data_source must be given. If username or password is not
+given or undef, the DBI default will be used.
 
-=head3 Template example
+If the C<connect> attr is not given the paraframe will use the default
+of:
+  RaiseError         => 1,
+  ShowErrorStatement => 1,
+  PrintError         => 0,
+  AutoCommit         => 0,
 
-  [% FOREACH select_list('from user where age > ?', agelimit) %]
-     <li>[% name ] is [% age %] years old
-  [% END %]
+If param C<import_tt_params> is true, the TT select functions will be
+globaly exported, connected to this database. Alternatively, you could
+export the $dbix object as a TT variable globaly or for a particular
+site. That would allow you to access all methods. Only one dbix should
+import_tt_params.
 
-=head3 Returns
+The default for C<import_tt_params> is false.
 
-a ref to a list of hash records
+The param C<bind_dbh> can be used to bind the $dbh object (returned by
+L<DBI/connect>) to a specific variable, that will be updated after
+each connection. Example: C<bind_dbh =E<gt> \ $MyProj::dbh,>
 
-=head3 Exceptions
+The param C<datetime_formatter> should hold the module name to use to
+format dates for this database. The default is
+L<DateTime::Format::Pg>. It's used by L</format_datetime>. The module
+will be required during object construction.
 
-dbi : DBI returned error
+The object uses the hooks L<Para::Frame/on_fork> for reconnecting to
+the database on forks.
 
-=cut
+It uses hook L<Para::Frame/on_error_detect> to retrieve error
+information from exceptions and L</rollback> the database.
 
-sub select_list
-{
-    my( $dbix, $st, @vals ) = @_;
-    #
-    # Return list or records
+It uses hook L<Para::Frame/done>, L<Para::Frame/before_switch_req> and
+L<Para::Frame/gefore_render_output> for times to L</commit>.
 
-    if( ref $vals[0] eq 'ARRAY' )
-    {
-	@vals = @{$vals[0]};
-    }
+The constructor will not connect to the database, since we will
+probably fork after creation. But you may want to, after you have the
+object, use L<Para::Frame/on_startup>.
 
-    my $ref;
-    throw('incomplete','no parameter to statement') unless $st;
-    $st = "select * ".$st if $st !~/^\s*select\s/i;
+Example:
 
-    eval
-    {
-	my $sth = $dbix->dbh->prepare( $st );
-	$sth->execute($dbix->format_value_list(@vals));
-	$ref =  $sth->fetchall_arrayref({});
-	$sth->finish;
-    };
-    report_error("Select list",\@vals);
-    return $ref;
-}
-
-
-#######################################################################
-
-=head2 select_record
-
-  Perl: $dbix->select_record($statement, @vals)
-  Tmpl: select_record(statement, val1, val2, ... )
-
-Executes the $statement, substituting all '?' within with the values.
-
-The C<select *> part of the statement can be left out.
-
-=head3 Template example
-
-  [% user = select_record('from user where uid = ?', uid) %]
-  <p>[% user.name ] is [% user.age %] years old
-
-=head3 Returns
-
-a ref to the first hash record
-
-=head3 Exceptions
-
-dbi : DBI returned error
-
-dbi : no records was found
+  $MyProj::dbix = Para::Frame::DBIx ->
+	new({
+	     connect            => ['dbi:Pg:dbname=myproj'],
+	     import_tt_params   => 1,
+	});
+  Para::Frame->add_hook('on_startup', sub
+			  {
+			      $MyProj::dbix->connect;
+			  });
 
 =cut
-
-sub select_record
-{
-    my( $dbix, $st, @vals ) = @_;
-    #
-    # Return list or records
-
-    if( ref $vals[0] eq 'ARRAY' )
-    {
-	@vals = @{$vals[0]};
-    }
-
-    my $ref;
-    throw('incomplete','no parameter to statement') unless $st;
-    $st = "select * ".$st if $st !~/^\s*select\s/i;
-
-    eval
-    {
-	my $sth = $dbix->dbh->prepare( $st );
-	$sth->execute( $dbix->format_value_list(@vals) ) or croak "$st (@vals)\n";
-	$ref =  $sth->fetchrow_hashref
-	    or die "Found ".$sth->rows()." rows\nSQL: $st";
-	$sth->finish;
-    };
-    report_error("Select record",\@vals);
-    return $ref;
-}
-
-#######################################################################
-
-=head2 select_possible_record
-
-  Perl: $dbix->select_possible_record($statement, @vals)
-  Tmpl: select_possible_record(statement, val1, val2, ... )
-
-Executes the $statement, substituting all '?' within with the values.
-
-The C<select *> part of the statement can be left out.
-
-=head3 Template example
-
-  [% user = select_record('from user where uid = ?', uid) %]
-  [% IF user %]
-     <p>[% user.name ] is [% user.age %] years old
-  [% END %]
-
-=head3 Returns
-
-a ref to the first hash record or C<undef> if no record was found
-
-=head3 Exceptions
-
-dbi : DBI returned error
-
-=cut
-
-sub select_possible_record
-{
-    my( $dbix, $statement, @vals ) = @_;
-    #
-    # Return list or records
-
-    if( ref $vals[0] eq 'ARRAY' )
-    {
-	@vals = @{$vals[0]};
-    }
-
-    my $ref;
-    throw('incomplete','no parameter to statement') unless $statement;
-    $statement = "select * ".$statement if $statement !~/^\s*select\s/i;
-
-    eval
-    {
-	my $sth = $dbix->dbh->prepare( $statement );
-	$sth->execute( $dbix->format_value_list(@vals) );
-	$ref =  $sth->fetchrow_hashref;
-	$sth->finish;
-    };
-    report_error("Select possible record",\@vals);
-    return $ref;
-}
-
-
-#######################################################################
-
-=head2 select_key
-
-  Perl: $dbix->select_key($field, $statement, @vals)
-  Tmpl: select_key(field, statement, val1, val2, ... )
-
-Executes the $statement, substituting all '?' within with the values.
-$field should be the primary key or have unique values.
-
-The C<select *> part of the statement can be left out.
-
-=head3 Template example
-
-  [% user = select_key('uid', 'from user') %]
-  [% FOREACH id = user.keys %]
-     <p>$id: [% user.$id.name ] is [% user.$id.age %] years old
-  [% END %]
-
-=head3 Returns
-
-The result is indexed on $field.  The records are returned as a ref to
-a indexhash och recordhashes.
-
-Each index will hold the last record those $field holds that value.
-
-=head3 Exceptions
-
-dbi : DBI returned error
-
-=cut
-
-sub select_key
-{
-    my( $dbix, $keyf, $st, @vals ) = @_;
-    #
-    # Return ref to hash of records
-
-    if( ref $vals[0] eq 'ARRAY' )
-    {
-	@vals = @{$vals[0]};
-    }
-
-    $st = "select * ".$st if $st !~/^\s*select\s/i;
-    my $rh = {};
-
-    eval
-    {
-	my $sth = $dbix->dbh->prepare( $st );
-	$sth->execute( $dbix->format_value_list(@vals) );
-	while( my $r = $sth->fetchrow_hashref )
-	{
-	    $rh->{$r->{$keyf}} = $r;
-	}
-	$sth->finish;
-    };
-    report_error("Select key",\@vals);
-    return $rh;
-}
-
 
 sub new
 {
@@ -345,7 +184,6 @@ sub new
     my $formatter_module = package_to_module($dbix->{'datetime_formatter'});
     require $formatter_module;
 
-   
 
     Para::Frame->add_hook('done', sub
 			  {
@@ -357,6 +195,9 @@ sub new
 			      $dbix->commit;
 			  });
 
+    # Since the templare may look up things from DB and some things
+    # may only be written after on_commit has been triggered.
+    #
     Para::Frame->add_hook('before_render_output', sub
 			  {
 			      $dbix->commit;
@@ -387,7 +228,7 @@ sub new
 			      }
 
 			      $typeref ||= \ "";
-				      
+
 #				      confess("-- rollback...");
 
 			      if( $dbix->dbh->err() )
@@ -400,7 +241,7 @@ sub new
 				  $$inforef .= "\n". DBI->errstr();
 				  $$typeref ||= 'dbi';
 			      }
-				      
+
 			      debug(0,"ROLLBACK DB");
 
 			      eval
@@ -420,6 +261,243 @@ sub new
 
     return $dbix;
 }
+
+#######################################################################
+
+=head2 select_list
+
+  Perl: $dbix->select_list($statement, @vals)
+  Tmpl: select_list(statement, val1, val2, ... )
+
+Executes the $statement, substituting all '?' within with the values.
+
+The C<select *> part of the statement can be left out.
+
+Template example:
+
+  [% FOREACH select_list('from user where age > ?', agelimit) %]
+     <li>[% name ] is [% age %] years old
+  [% END %]
+
+Returns:
+
+a ref to a list of hash records
+
+Exceptions:
+
+dbi : DBI returned error
+
+=cut
+
+sub select_list
+{
+    my( $dbix, $st, @vals ) = @_;
+    #
+    # Return list or records
+
+    if( ref $vals[0] eq 'ARRAY' )
+    {
+	@vals = @{$vals[0]};
+    }
+
+    my $ref;
+    throw('incomplete','no parameter to statement') unless $st;
+    $st = "select * ".$st if $st !~/^\s*select\s/i;
+
+    eval
+    {
+	my $sth = $dbix->dbh->prepare( $st );
+	$sth->execute($dbix->format_value_list(@vals));
+	$ref =  $sth->fetchall_arrayref({});
+	$sth->finish;
+    };
+    report_error("Select list",\@vals);
+    return $ref;
+}
+
+
+#######################################################################
+
+=head2 select_record
+
+  Perl: $dbix->select_record($statement, @vals)
+  Tmpl: select_record(statement, val1, val2, ... )
+
+Executes the $statement, substituting all '?' within with the values.
+
+The C<select *> part of the statement can be left out.
+
+Template example:
+
+  [% user = select_record('from user where uid = ?', uid) %]
+  <p>[% user.name ] is [% user.age %] years old
+
+Returns:
+
+a ref to the first hash record
+
+Exceptions:
+
+dbi : DBI returned error
+
+dbi : no records was found
+
+=cut
+
+sub select_record
+{
+    my( $dbix, $st, @vals ) = @_;
+    #
+    # Return list or records
+
+    if( ref $vals[0] eq 'ARRAY' )
+    {
+	@vals = @{$vals[0]};
+    }
+
+    my $ref;
+    throw('incomplete','no parameter to statement') unless $st;
+    $st = "select * ".$st if $st !~/^\s*select\s/i;
+
+    eval
+    {
+	my $sth = $dbix->dbh->prepare( $st );
+	$sth->execute( $dbix->format_value_list(@vals) ) or croak "$st (@vals)\n";
+	$ref =  $sth->fetchrow_hashref
+	    or die "Found ".$sth->rows()." rows\nSQL: $st";
+	$sth->finish;
+    };
+    report_error("Select record",\@vals);
+    return $ref;
+}
+
+#######################################################################
+
+=head2 select_possible_record
+
+  Perl: $dbix->select_possible_record($statement, @vals)
+  Tmpl: select_possible_record(statement, val1, val2, ... )
+
+Executes the $statement, substituting all '?' within with the values.
+
+The C<select *> part of the statement can be left out.
+
+Template example:
+
+  [% user = select_record('from user where uid = ?', uid) %]
+  [% IF user %]
+     <p>[% user.name ] is [% user.age %] years old
+  [% END %]
+
+Returns:
+
+a ref to the first hash record or C<undef> if no record was found
+
+Exceptions:
+
+dbi : DBI returned error
+
+=cut
+
+sub select_possible_record
+{
+    my( $dbix, $statement, @vals ) = @_;
+    #
+    # Return list or records
+
+    if( ref $vals[0] eq 'ARRAY' )
+    {
+	@vals = @{$vals[0]};
+    }
+
+    my $ref;
+    throw('incomplete','no parameter to statement') unless $statement;
+    $statement = "select * ".$statement if $statement !~/^\s*select\s/i;
+
+    eval
+    {
+	my $sth = $dbix->dbh->prepare( $statement );
+	$sth->execute( $dbix->format_value_list(@vals) );
+	$ref =  $sth->fetchrow_hashref;
+	$sth->finish;
+    };
+    report_error("Select possible record",\@vals);
+    return $ref;
+}
+
+
+#######################################################################
+
+=head2 select_key
+
+  Perl: $dbix->select_key($field, $statement, @vals)
+  Tmpl: select_key(field, statement, val1, val2, ... )
+
+Executes the $statement, substituting all '?' within with the values.
+$field should be the primary key or have unique values.
+
+The C<select *> part of the statement can be left out.
+
+Template example:
+
+  [% user = select_key('uid', 'from user') %]
+  [% FOREACH id = user.keys %]
+     <p>$id: [% user.$id.name ] is [% user.$id.age %] years old
+  [% END %]
+
+Returns:
+
+The result is indexed on $field.  The records are returned as a ref to
+a indexhash och recordhashes.
+
+Each index will hold the last record those $field holds that value.
+
+Exceptions:
+
+dbi : DBI returned error
+
+=cut
+
+sub select_key
+{
+    my( $dbix, $keyf, $st, @vals ) = @_;
+    #
+    # Return ref to hash of records
+
+    if( ref $vals[0] eq 'ARRAY' )
+    {
+	@vals = @{$vals[0]};
+    }
+
+    $st = "select * ".$st if $st !~/^\s*select\s/i;
+    my $rh = {};
+
+    eval
+    {
+	my $sth = $dbix->dbh->prepare( $st );
+	$sth->execute( $dbix->format_value_list(@vals) );
+	while( my $r = $sth->fetchrow_hashref )
+	{
+	    $rh->{$r->{$keyf}} = $r;
+	}
+	$sth->finish;
+    };
+    report_error("Select key",\@vals);
+    return $rh;
+}
+
+=head2 connect
+
+  $dbix->connect()
+
+Connects to the database and runs hook L<Para::Frame/after_db_connect>.
+
+The constructor adds ha hook for on_fork that will reconnect to dhe
+database in the child.
+
+Returns true or throws an 'dbi' exception.
+
+=cut
 
 sub connect
 {
@@ -449,6 +527,16 @@ sub connect
     return 1;
 }
 
+=head2 commit
+
+  $dbix->commit()
+
+Runs the hook L<Para::Frame/before_db_commit>.
+
+Returns the result of L<DBI/commit>
+
+=cut
+
 sub commit
 {
     my( $dbix ) = @_;
@@ -456,6 +544,17 @@ sub commit
     Para::Frame->run_hook( $Para::Frame::REQ, 'before_db_commit', $dbix);
     $dbix->dbh->commit;
 }
+
+=head2 rollback
+
+Starts by doing the rollbak. Then runs the hook
+L<Para::Frame/after_db_rollback>.
+
+Calls L<Para::Frame::Change/reset>
+
+Returns the change object
+
+=cut
 
 sub rollback
 {
@@ -466,7 +565,35 @@ sub rollback
     $Para::Frame::REQ->change->reset;
 }
 
+=head2 dbh
+
+  $dbix->dbh()
+
+Returns the $dbh object, as returned by L<DBI/connect>.
+
+=cut
+
 sub dbh { $_[0]->{'dbh'} }
+
+=head2 get_nextval
+
+  $dbix->get_nextval($seq)
+
+This is done by the SQL query C<"select nextval(?)">
+
+Example:
+
+  my $id = $dbix->get_nextval('person_id_sequence');
+
+Returns:
+
+The id
+
+Exceptions:
+
+dbi : Failed to get nextval
+
+=cut
 
 sub get_nextval
 {
@@ -480,10 +607,39 @@ sub get_nextval
     $id or throw ('sql', "Failed to get nextval\n");
 }
 
+=head2 equals
+
+  $dbix1->equals( $dbix2 )
+
+Returns true is they are the same object.
+
+=cut
+
 sub equals
 {
     return $_[0] eq $_[1];
 }
+
+=head2 format_datetime
+
+  $dbix->format_datetime( $time )
+
+This uses the C<datetime_formatter> property of $dbix (as set on
+construction) for transforming the time to a format suitable for with
+the database.
+
+It will parse most formats using L<Para::Frame::Time/get>. Especially
+if C<$time> already is a L<Para::Frame::Time> object.
+
+Returns:
+
+The formatted string
+
+Exceptions:
+
+validation : "Time format '$time' not recognized"
+
+=cut
 
 sub format_datetime
 {
@@ -492,6 +648,29 @@ sub format_datetime
     $time = Para::Frame::Time->get( $time );
     return $dbix->{'datetime_formatter'}->format_datetime($time);
 }
+
+=head2 update
+
+  $req->update( $table, \%set, \%where )
+
+TODO: Test that this method works...
+
+C<$table> is the name of the table as a string
+
+C<\%set> is a hashref of key/value pairs where the C<key> is the field
+name and C<value> is the new value of the field. The value will be
+formatted by L</format_value> with type C<undef>.
+
+C<\%where> is a hashref of key/value pars where the C<key> is the
+field name and C<value> is the value that field should have.
+
+Returns: The number of rows updated
+
+Exceptions:
+
+dbi : ... full explanation ...
+
+=cut
 
 sub update
 {
@@ -514,7 +693,7 @@ sub update
     }
 
     my $setstr   = join ",", map "$_=?", @set_fields;
-    my $wherestr = join ",", map "$_=?", @where_fields;
+    my $wherestr = join " and ", map "$_=?", @where_fields;
     my $st = "update $table set $setstr where $wherestr";
     my $sth;
 
@@ -543,9 +722,31 @@ Params are:
   types = definition of field types
 
 The values will be automaticly formatted for the database. types, if
-existing, helps in this formatting.
+existing, helps in this formatting. L</format_value> is used for this.
 
-Returns numer of rows inserted
+Returns number of rows inserted.
+
+Example:
+
+  $dbix->insert({
+	table => 'person',
+	rec   =>
+        {
+          id      => 12,
+          name    => 'Gandalf'
+          updated => now(),
+        },
+	types =>
+        {
+          id      => 'string',
+          name    => 'string',
+          updated => 'boolean',
+        },
+  });
+
+Exceptions:
+
+dbi : ... full explanation ...
 
 =cut
 
@@ -594,7 +795,104 @@ sub insert
 
 =head2 insert_wrapper
 
-High level for adding a record
+  $dbix->insert_wrapper( \%params )
+
+High level for adding a record.
+
+Params are:
+  rec    = hashref of name/value pairs for fields to update
+  map    = hashref of translation map for interface to fieldname
+  parser = hashref of fieldname/coderef for parsing values
+  types  = hashref of fieldname/type
+  table  = name of table
+  unless_exists = listref of fields to check before inserting
+  return_field  = what field value to return
+
+Example:
+
+  our %FIELDMAP =
+  (
+    id   => 'pid',                 # The DB field is named pid
+    name => 'username',            # The DB field is named username
+  );
+
+  our %FIELDTYPES =
+  (
+    updated => 'date',             # Parse this as an date and format
+  );
+
+  our %FIELDPARSER =               # The coderef returns the object
+  (                                # and the object has a id() method
+    project => sub{ MyProj::Project->get(shift) },
+  );
+
+  ...
+
+  my $rec =
+  {
+    id      => 12,
+    name    => 'Gandalf',
+    updated => now(),              # From Para::Frame::Time
+    project => 'Destroy the Ring', # The db field holds the project id
+  };
+  my $newperson = MyProj::Person->insert($rec);
+
+  ...
+
+  sub insert
+  {
+    my( $class, $rec ) = @_;
+    return MyProj::Person->get_by_id(
+	       $Para::dbix->insert_wrapper({
+	           rec    => $rec,
+		   map    => \%FIELDMAP,
+		   types  => \%FIELDTYPE,
+                   parser => \%FIELDPARSER,
+		   table  => 'person',
+		   unless_exists => ['name'], # Avoid duplicates
+		   return_field => 'id',      # used by get_by_id()
+	       }));
+  }
+
+C<rec> is the field/value pairs. Each field name may be translated by
+C<map>. Defaults to an empty record.
+
+C<map> is used for the case there the name of the object property
+doesn't match the DB field name. We may want use opne naming scheme
+for field names and another naming scheme for object properties. One
+or the other may change over time.
+
+C<parser> is used for special translation of the given value to the
+value that should be inserted in the database.  One good usage for
+this is for foreign keys there the field holds the key of a record in
+another table. The parser should return the related object. The
+L</format_value> method will be used to get the actual C<id> by
+calling the objects method C<id>.
+
+C<types> helps L</format_value>.
+
+C<table> is the name of the table. This is the only param that must be
+given.
+
+C<unless_exists> is a field name or a ref to a list of field names. If
+a record is found with those fields having the values from the
+C<$rec>, no new record will be created.
+
+C<return_field> will return the value of this field if defined. If
+C<unless_exists> find an existing record, the value of thats records
+field will be returned. May be used as in the example, for returning
+the id.
+
+Returns the number of records inserted, unless C<return_field> is
+used. If C<unless_exists> finds an existing record, the number of
+records inserted is 0.
+
+The usage of %FIELDTYPES, et al, in the example, demonstrates how each
+table should have each own Perl class set up in its own file as a
+module. The fields could be defined globaly for the class and used in
+each method dealing with the DB.
+
+Validation of the data has not yet been integrated...
 
 =cut
 
@@ -611,7 +909,7 @@ sub insert_wrapper
     my $rfield  = $params->{'return_field'};
 
     $rfield = $map->{$rfield} || $rfield;
-    
+
     my $rec = {};
     foreach my $key ( keys %$rec_in )
     {
@@ -676,7 +974,51 @@ sub insert_wrapper
 
 =head2 update_wrapper
 
-High level for updating a record
+  $dbix->update_wrapper( \%params )
+
+High level for updating a record. This will compare two records to
+detect if anything has changed.
+
+Params are:
+  rec_new = hashref of name/value pairs for fields to update
+  rec_old = hashref of the record to be updated
+  map     = hashref of translation map for interface to fieldname
+  parser  = hashref of fieldname/coderef for parsing values
+  types   = hashref of fieldname/type
+  table   = name of table
+  key     = hashref of field/value pairs to use as the record key
+  on_update = hashref of field/value pairs to be set on update
+  copy_data = obj to be updated with formatted values if any change
+
+This is similar to L</insert_wrapper> but most of the job is done by
+L</save_record>.
+
+Returns the number of fields changed.
+
+C<copy_data> will take each field from the translated fields from
+$rec_new and their corresponding formatted value, and place them in
+the given object or hashref.  The point is to update the object with
+the given changes.
+
+Example:
+
+  my $changes = $dbix->update_wrapper({
+    rec_new         => $rec,
+    rec_old         => $me->get( $person->id ),
+    types           => \%FIELDTYPE,
+    table           => 'person',
+    key =>
+    {
+        id => $person->id,
+    },
+    on_update =>
+    {
+        updated => now(),
+    },
+    fields_to_check => [values %FIELDMAP],
+    map             => \%FIELDMAP,
+    copy_data       => $person,
+    });
 
 =cut
 
@@ -741,7 +1083,11 @@ sub update_wrapper
     return $res;
 }
 
+=head2 format_value_list
 
+  $dbix->format_value_list(@value_list)
+
+=cut
 
 sub format_value_list
 {
@@ -771,6 +1117,11 @@ sub format_value_list
     return @res;
 }
 
+=head2 format_value
+
+  $dbix->format_value( $type, $value )
+
+=cut
 
 sub format_value
 {
@@ -827,6 +1178,11 @@ sub format_value
     }
 }
 
+=head2 save_record
+
+  $dbix->save_record( \%params )
+
+=cut
 
 sub save_record
 {
@@ -1030,6 +1386,12 @@ sub save_record
 
 # TODO: Replace pgbool with dbbool, dependant on the db used
 
+=head2 report_error
+
+  report_error( $title, \@values )
+
+=cut
+
 sub report_error
 {
     my( $title, $vals ) = @_;
@@ -1045,6 +1407,12 @@ sub report_error
 	throw('dbi', "$info\nValues: $values\n$at");
     }
 }
+
+=head2 pgbool
+
+  pgbool($value)
+
+=cut
 
 sub pgbool
 {
