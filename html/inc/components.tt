@@ -1,6 +1,6 @@
 [% MACRO box(part) BLOCK %]
-<table bgcolor="$part.border" class="error"><tr><td>
-<table border="$part.width"><tr><td bgcolor="$part.bg" class="msg">
+<table bgcolor="$part.border" class="paraframe_box"><tr><td>
+<table border="$part.width"><tr><td bgcolor="$part.bg">
    [% IF part.title %]<h1>$part.title</h1>[% END %]
 <pre>[% part.message | html %]</pre>
 [% IF part.context %]
@@ -63,7 +63,6 @@
 [% MACRO regret(label) BLOCK %]
 [% DEFAULT
        	label = 'Backa'
-	href_class = 'msg'
 %]
    [% go(label, undef, 'skip_step', href_class=href_class) %]
 [% END %]
@@ -73,7 +72,6 @@
 [% MACRO remove_step(label) BLOCK %]
 [% DEFAULT
        	label = 'Ta bort steg'
-	href_class = 'msg'
 %]
    [% go(label, me, 'remove_step', href_class=href_class) %]
 [% END %]
@@ -83,7 +81,6 @@
 [% MACRO backstep(label, break_path) BLOCK %]
 [% DEFAULT
        	label = 'Hoppa över'
-	href_class = 'msg'
 %]
    [% go(label, undef, 'next_step', href_class=href_class) %]
    [% IF break_path %]
