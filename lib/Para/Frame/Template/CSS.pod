@@ -1,0 +1,26 @@
+=head1 NAME
+
+Para::Frame::Template::CSS - Modify standard widgets with CSS
+
+=head1 Classes
+
+=head2 paraframe_info
+
+=head2 paraframe_error_prefix
+
+=head2 paraframe_box
+
+=head2 debug
+
+=head2 odd
+
+=head2 even
+
+=head2 selected
+
+
+=head1 SEE ALSO
+
+L<Para::Frame>
+
+=cut
