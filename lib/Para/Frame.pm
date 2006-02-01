@@ -1379,15 +1379,15 @@ the number given as param.
 
 =item timediff
 
-See L<Para::Fraume::Utils/timediff>
+See L<Para::Frame::Utils/timediff>
 
 =item uri
 
-See L<Para::Fraume::Utils/uri>
+See L<Para::Frame::Utils/uri>
 
 =item uri_path
 
-See L<Para::Fraume::Utils/uri_path>
+See L<Para::Frame::Utils/uri_path>
 
 =item warn
 
