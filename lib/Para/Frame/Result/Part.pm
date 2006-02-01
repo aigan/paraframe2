@@ -147,7 +147,7 @@ our $ERROR_TYPE =
 	{
 	    'c' => 'Försök misslyckades',
 	},
-	'bg'      => 'red',
+	'bg'      => '#ff3718',
 	'view_context' => 1,
     },
     'compilation' =>
@@ -219,6 +219,13 @@ sub new
     }
 
     return $part;
+}
+
+sub info
+{
+    my( $part ) = @_;
+
+    return $part->error->info;
 }
 
 sub type
