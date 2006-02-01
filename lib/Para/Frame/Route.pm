@@ -168,13 +168,16 @@ sub plan_next
     my( $route, $urls ) = @_;
 
     $urls = [$urls] unless UNIVERSAL::isa($urls, 'ARRAY');
-    my $referer = $Para::Frame::REQ->referer;
-    my $caller_uri = Para::Frame::URI->new( $referer );
-    $caller_uri->query($Para::Frame::REQ->referer_query);
+    my $referer = $Para::Frame::REQ->referer_with_query;
 
-    foreach my $url ( @$urls )
+
+
+    my $caller_uri = Para::Frame::URI->new( $referer );
+
+    foreach my $url_in ( @$urls )
     {
-	$url = Para::Frame::URI->new($url) unless UNIVERSAL::isa($url, 'URI');
+	my $url_norm = $Para::Frame::REQ->normalized_uri( $url_in );
+	my $url = Para::Frame::URI->new($url_norm);
 
 	# Used in skip_step...
 	$url->query_param_append('caller_page' => $caller_uri )
@@ -205,13 +208,13 @@ sub plan_after
     my( $route, $urls ) = @_;
 
     $urls = [$urls] unless UNIVERSAL::isa($urls, 'ARRAY');
-    my $referer = $Para::Frame::REQ->referer;
+    my $referer = $Para::Frame::REQ->referer_with_query;
     my $caller_uri = Para::Frame::URI->new( $referer );
-    $caller_uri->query($Para::Frame::REQ->referer_query);
 
-    foreach my $url ( @$urls )
+    foreach my $url_in ( @$urls )
     {
-	$url = Para::Frame::URI->new($url) unless UNIVERSAL::isa($url, 'URI');
+	my $url_norm = $Para::Frame::REQ->normalized_uri( $url_in );
+	my $url = Para::Frame::URI->new($url_norm);
 
 	# Used in skip_step...
 	$url->query_param_append('caller_page' => $caller_uri )
@@ -402,10 +405,12 @@ sub bookmark
 
     my $req = $Para::Frame::REQ;
 
-    # Should be called with normalized uri; (No 'index.tt' part)
+    $uri_str ||= $req->uri;
+    my $norm_uri = $req->normalized_uri( $uri_str );
+
 
     # This should default to the PREVIUS page in most cases
-    my $uri = Para::Frame::URI->new($uri_str || $req->uri );
+    my $uri = Para::Frame::URI->new($norm_uri );
     my $q = $req->q;
 
     if( $q->param )
@@ -453,6 +458,8 @@ sub get_next
     my( $route, $break_path ) = @_;
 
     my $req = $Para::Frame::REQ;
+
+    my $default = $route->default || $req->site->webhome;
 
     if( my $step = pop @{$route->{'route'}} )
     {
@@ -504,7 +511,7 @@ sub get_next
     {
 	debug(1,"!!  No more steps in route");
 	debug 1, "!!    Using default step, breaking path";
-	$req->set_template($route->default);
+	$req->set_template($default);
     }
     else
     {
@@ -516,7 +523,7 @@ sub get_next
 	else
 	{
 	    debug 1, "!!    Using default step";
-	    $req->set_template($route->default);
+	    $req->set_template($default);
 	}
 
     }
@@ -641,6 +648,11 @@ sub clear_special_params
     $q->delete('section');
     $q->delete('renderer');
     $q->delete('destination');
+
+    if( $ENV{QUERY_STRING} eq 'backtrack' )
+    {
+	delete $ENV{QUERY_STRING};
+    }
 }
 
 
@@ -670,6 +682,8 @@ sub steps
 
 Returns the default template to use after the last step
 
+Can be undef!
+
 =cut
 
 sub default
@@ -689,7 +703,7 @@ sub replace_query
     $q->delete_all;
     delete $q->{'.url_param'};
 #    warn Dumper \%ENV;
-    $q->init($query_string);
+    $q->init($query_string) if $query_string;
 
 #    warn Dumper $q;
     return $q;
