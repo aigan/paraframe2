@@ -285,12 +285,18 @@ sub submit
 
     $label ||= 'Fortsätt';
     $attr ||= {};
-    my $class = $attr->{'href_class'} || 'msg';
+
+    my $extra = "";
+
+    if( my $class = $attr->{'href_class'} )
+    {
+	$extra .= " class=\"$class\"";
+    }
 
     my $name = '';
     $name = "name=\"$setval\"" if $setval;
 
-    return "<input type=\"submit\" class=\"$class\" $name value=\"$label\">";
+    return "<input type=\"submit\" $name value=\"$label\">";
 }
 
 #######################################################################
@@ -327,7 +333,6 @@ sub go
     $template ||= '';
     $run ||= 'nop';
     $attr ||= {};
-    $attr->{'href_class'} ||= 'msg';
 
     my $extra = "";
     if( my $val = delete $attr->{'href_target'} )
@@ -782,8 +787,21 @@ sub filefield
 =head2 css_header
 
   css_header( \%attrs )
+  css_header( $url )
 
-Draws a css header
+Draws a css header.
+
+Paths not beginning with / are relative to the site home.
+
+The style may be given by using L<Para::Frame::Template::Meta/css> or
+by setting a TT param either for the site or globaly.
+
+The persistant styles will always be used and is a ref to list of URLs.
+
+The alternate can be switched between using the browser, or via
+javascript, and is a ref to ha hash of stylenames and listrefs holding
+the URLs. The default points to which of the alternate styles to use
+if no special one is selected.
 
 Example:
     $attrs =
@@ -813,6 +831,8 @@ sub css_header
 	};
     }
 
+    my $home = $Para::Frame::REQ->site->home;
+
     my $default = $Para::Frame::U->style || $p->{'default'} || 'default';
     my $persistent = $p->{'persistent'} || [];
     my $alternate = $p->{'alternate'} || {};
@@ -837,6 +857,7 @@ sub css_header
 
     foreach my $style ( @$persistent )
     {
+	$style =~ s/^([^\/])/$home\/$1/;
 	$out .= "<link rel=\"Stylesheet\" href=\"$style\" type=\"text/css\" />\n";
     }
 
@@ -844,6 +865,7 @@ sub css_header
     {
 	foreach my $style ( @{$alternate->{$default}} )
 	{
+	    $style =~ s/^([^\/])/$home\/$1/;
 	    $out .= "<link rel=\"Stylesheet\" title=\"$default\" href=\"$style\" type=\"text/css\" />\n";
 	}
     }
@@ -853,9 +875,10 @@ sub css_header
 	next if $title eq $default;
 	foreach my $style ( @{$alternate->{$title}} )
 	{
+	    $style =~ s/^([^\/])/$home\/$1/;
 	    $out .= "<link rel=\"alternate stylesheet\" title=\"$title\" href=\"$style\" type=\"text/css\" />\n";
 	}
-    }    
+    }
 
     return $out;
 }
