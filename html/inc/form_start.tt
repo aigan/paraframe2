@@ -1,16 +1,8 @@
-
 [%
    # This will backtrack if next_template is set to $home
    # call default_template instead of plan_bactrack directly
 
 form_action = next_template || plan_backtrack || default_template || default_step || me;
-DEFAULT form_method = "POST";
-IF form_method == "POST";
-  DEFAULT form_enctype = "multipart/form-data";
-ELSE;
-  DEFAULT form_enctype = "application/x-www-form-urlencoded";
-END;
-
 form_extra = "";
 IF template.onsubmit;
    form_extra = "$form_extra onsubmit='${template.onsubmit}'";
@@ -18,8 +10,17 @@ END;
 IF template.next_template_target;
    form_extra = "$form_extra target='${template.next_action_target}'";
 END;
+
+DEFAULT form_method = "POST";
+IF form_method == "POST";
+  DEFAULT form_enctype = "multipart/form-data";
+END;
+IF form_enctype;
+   form_extra = "$form_extra enctype='$form_enctype'";
+END;
+
 %]
-<form name="f" action="[% form_action %]" method="post" enctype="[% form_enctype %]"[% form_extra %]>
+<form name="f" action="[% form_action %]" method="[% form_method %]" [% form_extra %]>
 <div>
 <input type="hidden" name="run" value="[% next_action %]" />
 [% UNLESS next_template %]
