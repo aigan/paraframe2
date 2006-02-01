@@ -179,6 +179,24 @@ sub exception
     return $result->error($type, $info, $text);
 }
 
+=head2 error
+
+  $result->error( $type, $message, $contextref )
+  $result->error( $type, $message )
+
+Creates a new error part and adds it to the result. Clears out $@
+
+Marks the part as hidden if it is of a type that should be hidden or
+if hide_all is set.
+
+The part type determines if the result is flagd for backtracking;
+making the resulting page uri and template the same as the origin
+page.
+
+Returns the part.
+
+=cut
+
 sub error
 {
     my( $result, $type, $message, $contextref ) = @_;
@@ -208,20 +226,97 @@ sub error
     return $part;
 }
 
+=head2 errcnt
+
+Returns the number of errors in the result.
+
+=cut
+
 sub errcnt
 {
     return $_[0]->{'errcnt'};
 }
+
+=head2 backtrack
+
+Returns true if we should backtrack because of the result.
+
+=cut
 
 sub backtrack
 {
     return $_[0]->{'backtrack'};
 }
 
+=head2 parts
+
+Returns a reference to a list of all L<Para::Frame::Result::Part>
+objects.
+
+=cut
+
 sub parts
 {
     return $_[0]->{'part'};
 }
+
+=head2 error_parts
+
+Returns all visible error parts.
+
+=cut
+
+sub error_parts
+{
+    my( $result ) = @_;
+
+    my @res;
+
+    foreach my $part ( @{$result->{'part'}} )
+    {
+	next if $part->hide;
+
+	next unless $part->error;
+
+	push @res, $part;
+    }
+
+    return \@res;
+}
+
+=head2 info_parts
+
+Returns all visible info parts.
+
+=cut
+
+sub info_parts
+{
+    my( $result ) = @_;
+
+    my @res;
+
+    foreach my $part ( @{$result->{'part'}} )
+    {
+	next if $part->hide;
+
+	next if $part->error;
+
+	push @res, $part;
+    }
+
+    return \@res;
+}
+
+=head2 find
+
+  $result->find( $type )
+
+$type is the name of the type in string format.
+
+Retruns the first part in the result that is of the specified type.
+
+=cut
 
 sub find
 {
@@ -237,6 +332,19 @@ sub find
     debug "  No such part";
     return undef;
 }
+
+=head2 hide_part
+
+  $result->hide_part( $type )
+  $result->hide_part()
+
+Hides all errors of the specified type.
+
+Of no type is given; hides all errors.
+
+Nothing returned.
+
+=cut
 
 sub hide_part
 {
@@ -267,6 +375,12 @@ sub hide_part
 
     return undef;
 }
+
+=head2 as_string
+
+Returns the result in string format.
+
+=cut
 
 sub as_string
 {
