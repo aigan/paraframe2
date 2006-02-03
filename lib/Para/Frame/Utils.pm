@@ -639,9 +639,19 @@ Chmod and chgrp dir to ritframe standard.
 
 sub chmod_dir
 {
-    my( $dir, $params ) = @_;
+    my( $dir, $mode, $params ) = @_;
 
     $params ||= {};
+    if( ref $mode )
+    {
+	$params = $mode;
+	$mode = undef;
+    }
+    else
+    {
+	$params->{'mode'} = $mode;
+    }
+
     return if $params->{'do_not_chmod_dir'};
     chmod_file( $dir, $params );
 }
