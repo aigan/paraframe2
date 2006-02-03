@@ -81,11 +81,31 @@ sub handler
 	return 0;
     }
 
+    my @tempfiles = ();
     my $params = {};
     foreach my $key ( $q->param )
     {
-	$params->{$key} = $q->param_fetch($key);
+	if( $q->upload($key) )
+	{
+	    warn "$$: param $key is a filehandle\n";
+	    my $val = $q->param($key);
+	    $params->{$key} = "$val"; # Remove GLOB from value
+
+	    my $keyfile = $key;
+	    $keyfile =~ s/[^\w_\-]//; # Make it a normal filename
+	    my $dest = "/tmp/paraframe/$$-$keyfile";
+	    copy_to_file( $dest, $q->upload($key) ) or return 1;
+	    $ENV{"paraframe-upload-$keyfile"} = $dest;
+	    push @tempfiles, $dest;
+	    warn "$$: Setting ENV paraframe-upload-$keyfile\n";
+	}
+	else
+	{
+	    $params->{$key} = $q->param_fetch($key);
+	}
     }
+
+
 
     my $value = freeze [ $params,  \%ENV, $r->uri, $r->filename, $ctype, $dirconfig ];
 
@@ -128,6 +148,12 @@ sub handler
 	    sleep 1; # Give server time to recover
 	    warn "$$: Trying again...\n" if $DEBUG;
 	}
+    }
+
+    foreach my $tempfile (@tempfiles)
+    {
+	warn "$$: Removing tempfile $tempfile\n";
+	unlink $tempfile or warn "$$:   failed: $!\n";;
     }
 
     warn "$$: Done\n\n" if $DEBUG;
@@ -246,6 +272,48 @@ sub print_error_page
     return 1;
 }
 
+sub copy_to_file
+{
+    my( $filename, $fh ) = @_;
+
+    my $dir = $filename;
+    $dir =~ s/\/[^\/]+$//;
+    create_dir($dir) unless -d $dir;
+
+    unless( open OUT, ">$filename" )
+    {
+	warn "$$: Couldn't write to $filename: $!\n";
+	print_error_page("Upload error", "Couldn't write to $filename: $!");
+	return 0; #failed
+    }
+
+    my $buf;
+    my $fname; ## Temporary filenames
+    my $bufsize = 2048;
+    while( (my $len = sysread($fh, $buf, $bufsize)) > 0 )
+    {
+	print OUT $buf;
+    }
+    close($fh);
+    close(OUT);
+
+    return 1;
+}
+
+sub create_dir
+{
+    my( $dir ) = @_;
+
+    my $parent = $dir;
+    $parent =~ s/\/[^\/]+$//;
+
+    unless( -d $parent )
+    {
+	create_dir( $parent );
+    }
+
+    mkdir $dir, 02711;
+}
 
 sub get_response
 {
