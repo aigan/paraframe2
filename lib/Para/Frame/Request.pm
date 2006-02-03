@@ -1129,7 +1129,7 @@ sub add_params
 	{
 	    next if $param->{$key};
 	    $param->{$key} = $val;
-	    debug(4,"Add TT param $key: $val");
+	    debug(4,"Add TT param $key: $val") if $val;
 	}
     }
     else
