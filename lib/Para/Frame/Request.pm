@@ -154,7 +154,7 @@ sub new
 Sets up a subrequest using new_minimal.
 
 A subrequest must make sure that it finishes BEFORE the parent, unless
-it's decoupled to become a background request.
+it is decoupled to become a background request.
 
 The parent will be made to wait for the subrequest result. But if the
 subrequest sets up additional jobs, you have to take care of either
@@ -372,9 +372,11 @@ sub normalized_uri
     }
 
     my $uri_file = $req->uri2file( $uri );
-    if( -d $uri_file and $uri !~ /\/$/ )
+    if( -d $uri_file and $uri !~ /\/(\?.*)?$/ )
     {
-	return $uri.'/';
+	$uri =~ s/\?/\/?/
+	    or $uri .= '/';
+	return $uri;
     }
 
     return $uri;
