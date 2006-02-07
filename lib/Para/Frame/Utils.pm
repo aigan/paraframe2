@@ -191,6 +191,7 @@ sub throw
     my( $error, $info, $output ) = @_;
     local $" = ', ';
 
+#    warn "Got thrown $error, $info";
     # die! die! die!
     if( UNIVERSAL::isa($error, 'Para::Frame::Result::Part'))
     {
@@ -203,6 +204,7 @@ sub throw
     elsif (defined $info)
     {
 #	confess; ### DEBUG
+#	warn "Creating an $error exception";
 	die Template::Exception->new($error, $info, $output);
     }
     else
@@ -839,6 +841,15 @@ sub compile
     return require $filename;
 }
 
+=head1 passwd_crypt
+
+  passwd_crypt( $password )
+
+This function returns an encrypted version of the given string, uses
+the current clients C-network IP as salt. The encrypted password will
+be diffrent if the client comes from a diffrent net or subnet.
+
+=cut
 
 sub passwd_crypt
 {
