@@ -579,7 +579,8 @@ sub dbh { $_[0]->{'dbh'} }
 
   $dbix->get_nextval($seq)
 
-This is done by the SQL query C<"select nextval(?)">
+This is done by the SQL query C<"select nextval(?)"> that doesn't work
+with mysql. Use L</get_lastval>.
 
 Example:
 
@@ -605,6 +606,33 @@ sub get_nextval
     $sth->finish;
 
     $id or throw ('sql', "Failed to get nextval\n");
+}
+
+=head2 get_lastval
+
+  $dbix->get_lastval
+  $dbix->get_lastval($sequence)
+
+For MySQL, this retrieves the C<AUTOINCREMENT> value from
+mysql_insertid that corresponds to mysql_insert_id().
+
+If given a sequence, it retrieves the value with C<"select currval(?)">.
+
+=cut
+
+sub get_lastval
+{
+    my( $dbix, $seq ) = @_;
+
+    if( $seq )
+    {
+	my $sth = $dbix->dbh->prepare( "select currval(?)" );
+	$sth->execute( $seq ) or croak "Faild to get current from $seq\n";
+	my( $id ) = $sth->fetchrow_array;
+	$sth->finish;
+	return $id or throw ('sql', "Failed to get currval\n");
+    }
+    return $dbix->dbh->{'mysql_insertid'};
 }
 
 =head2 equals
