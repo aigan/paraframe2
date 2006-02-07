@@ -1014,11 +1014,10 @@ sub handle_request
 
     ### Create request ($REQ not yet set)
     my $req = new Para::Frame::Request( $REQNUM, $client, $recordref );
-
     ### Register the request
     $REQUEST{ $client } = $req;
-    switch_req( $req, 1 ); 
- 
+    switch_req( $req, 1 );
+
     ### Further initialization that requires $REQ
     $req->ctype( $req->{'orig_ctype'} );
     $req->{'uri'} = $req->set_uri( $req->{'orig_uri'} );
@@ -1041,7 +1040,7 @@ sub handle_request
 		 $s->{'debug'},
 		 );
     warn "# $client\n" if debug() > 4;
-   
+
     ### Redirected from another page?
     if( my $page_result = $req->s->{'page_result'}{ $req->uri } )
     {
