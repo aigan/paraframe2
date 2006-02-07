@@ -194,8 +194,20 @@ sub burn
 {
 #    my( $burner ) = shift;
 #    return $burner->th->process(@_);
-    debug 2, "Burning using $_[0]->{type}";
+
     return shift->th->process(@_);
+
+#### It's not possible to generate page in fork, since it returns
+#### resulting page by modifying the page ref sent as an param
+
+#    my $fork = $Para::Frame::REQ->create_fork;
+#    if( $fork->in_child )
+#    {
+#	debug 2, "Burning using $_[0]->{type}";
+#	my $res = $_[0]->th->process(@_);
+#	$fork->return( $res );
+#    }
+#    $fork->yield;
 }
 
 sub error
