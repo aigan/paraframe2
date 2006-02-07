@@ -84,6 +84,7 @@ our @BGJOBS_PENDING;       # New jobs to be added in background
 our $TERMINATE  ;
 our $IN_STARTUP;           # True until we reach the watchdog loop
 our $ACTIVE_PIDFILE;       # The PID indicated by existing pidfile
+our $LAST       ;          # The last entering of the main loop
 
 # STDOUT goes to the watchdog. Use well defined messages!
 # STDERR goes to the log
@@ -167,7 +168,6 @@ sub startup
 				   )
 	or (die "Cannot connect to socket $port: $@\n");
 
-    
     warn "Connected to port $port\n";
 
     nonblock($SERVER);
@@ -203,6 +203,8 @@ sub main_loop
     {
 	$LEVEL ++;
     }
+
+    $LAST = time; # To give ingo about if it's time to yield
 
     debug(4,"Entering main_loop at level $LEVEL",1) if $LEVEL;
     print "MAINLOOP $LEVEL\n" unless $Para::Frame::FORK;
