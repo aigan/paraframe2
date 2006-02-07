@@ -125,10 +125,18 @@ sub code        { $_[0]->{'code'} || $_[0]->webhost }
 
 Returns the home dir of the site as URL path, excluding the last '/'.
 
+This can be overridden by setting C<home> in dirconfig; Example
+from .htaccess:
+
+  PerlSetVar home /~myuser/
+
 =cut
 
 sub webhome     { $_[0]->home }
-sub home        { $_[0]->{'webhome'} || '' }
+sub home
+{
+    $Para::Frame::REQ->{'dirconfig'}{'home'} || $_[0]->{'webhome'} || '';
+}
 
 #######################################################################
 
