@@ -72,7 +72,7 @@ use Para::Frame::Utils qw( throw passwd_crypt debug );
           level    => 1,
           passwd   => 'hemlis',
         };
-      else
+      elsif( $username eq 'guest' )
       {
         $rec =
         {
@@ -81,6 +81,10 @@ use Para::Frame::Utils qw( throw passwd_crypt debug );
           uid      => 0,
           level    => 0,
         };
+      }
+      else
+      {
+        return undef;
       }
 
       return bless $rec, $class;
@@ -208,17 +212,23 @@ sub verify_user # NOT USED
     throw('action', "Not used");
 }
 
-sub verify_password # Reimplement this method
-{
-    my( $u, $password_encrypted ) = @_;
+=head1 get
 
-    # Example:
-    #
-    # throw('validation', "Fel lösenord för $username\n");
+  $this->get( $username )
 
-    throw('validation', "Not implemented");
-    0;
-}
+Returns the user object, or undef if no such user exist.
+
+This method should be reimplemented in a User class that inherits from
+this class.
+
+See the example above.
+
+The special user guest should always be recognized and the user object
+must always contain the hash fields given in the example.
+
+Do not throw any exceptions in this code.
+
+=cut
 
 sub get # Reimplement this method
 {
@@ -232,6 +242,26 @@ sub get # Reimplement this method
     $u->{'level'} = 0;
 
     return $u;
+}
+
+=head1 verify_password
+
+  $u->verify_password( $encrypted_password )
+
+Returns true or false.
+
+Compare the password as in the example above, using
+L<Para::Frame::User/passwd_crypt>. See this function for the
+restrictions.
+
+=cut
+
+sub verify_password # Reimplement this method
+{
+    my( $u, $password_encrypted ) = @_;
+
+    throw('validation', "Not implemented");
+    0;
 }
 
 sub logout
