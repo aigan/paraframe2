@@ -1087,6 +1087,16 @@ sub update_wrapper
 
   $dbix->format_value_list(@value_list)
 
+Returns a list of formatted values
+
+Plain scalars are not modified
+
+DateTime objects are formatted
+
+Objects with an id method uses the id
+
+Other objects are stringyfied.
+
 =cut
 
 sub format_value_list
@@ -1120,6 +1130,19 @@ sub format_value_list
 =head2 format_value
 
   $dbix->format_value( $type, $value )
+  $dbix->format_value( undef, $value )
+
+If type is undef, uses L</format_value_list>.
+
+Returns the formatted value
+
+Handled types are C<string>, C<boolean> and C<date>.
+
+Exceptions:
+
+validation : Type $type not handled
+
+validation : Value $valstr not a $type
 
 =cut
 
@@ -1158,29 +1181,37 @@ sub format_value
     {
 	debug 3, "Formatting $valstr";
 
-	if( not ref $val )
-	{
-	    return $val;
-	}
-	elsif( $val->isa('DateTime') )
-	{
-	    return $dbix->format_datetime( $val );
-	}
-	elsif( $val->can('id') )
-	{
-	    return $val->id;
-	}
-	else
-	{
-	    debug "Trying to stringify $valstr";
-	    return "$val"; # Stringify
-	}
+	return $dbix->format_value_list( $val );
     }
 }
 
 =head2 save_record
 
   $dbix->save_record( \%params )
+
+High level for saving a record.
+
+Params are:
+  rec_new = hashref of name/value pairs for fields to update
+  rec_old = hashref of the record to be updated
+  table   = name of table
+  on_update = hashref of field/value pairs to be set on update
+  key     = hashref of field/value pairs to use as the record key
+  keyval  = alternative to give all in key param
+  fields_to_check = which fields to check
+
+Returns the number of changes.
+
+If any changes are made, determined by formatting the values and
+comparing rec_new with rec_old, those fields are updated for the
+record in the table.
+
+The types handled are C<string>, C<integer>, C<float>, C<boolean>,
+C<date> and C<email>.
+
+Exceptions:
+
+action : Type $type not recoginzed
 
 =cut
 
@@ -1239,6 +1270,7 @@ sub save_record
 		(defined $old and not defined $new) or
 		( $new ne $old ) )
 	    {
+
 		$fields_added{ $field } ++;
 		push @fields, $field;
 		push @values, $new;
@@ -1384,11 +1416,13 @@ sub save_record
 
 ############ functions
 
-# TODO: Replace pgbool with dbbool, dependant on the db used
-
 =head2 report_error
 
   report_error( $title, \@values )
+
+If $@ is true, throws a C<dbi> exception, adding the title and the
+list of values. Those should be the values given to dbh for the SQL
+query.
 
 =cut
 
@@ -1412,7 +1446,11 @@ sub report_error
 
   pgbool($value)
 
+Returns 't' or 'f' for true/false value.
+
 =cut
+
+# TODO: Replace pgbool with dbbool, dependant on the db used
 
 sub pgbool
 {
