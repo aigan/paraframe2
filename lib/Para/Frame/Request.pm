@@ -2129,6 +2129,16 @@ sub send_in_chunks
     return $sent;
 }
 
+sub may_yield
+{
+    my( $req, $wait ) = @_;
+
+    if( time - $Para::Frame::LAST > 2 )
+    {
+	$Para::Frame::REQ->yield( $wait );
+    }
+}
+
 sub yield
 {
     my( $req, $wait ) = @_;
