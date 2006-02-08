@@ -48,7 +48,7 @@ use Para::Frame::Request;
 use Para::Frame::Widget;
 use Para::Frame::Burner;
 use Para::Frame::Time qw( now );
-use Para::Frame::Utils qw( throw debug create_file chmod_file fqdn );
+use Para::Frame::Utils qw( throw catch debug create_file chmod_file fqdn );
 use Para::Frame::Email::Address;
 
 use constant TIMEOUT_LONG  =>   5;
@@ -216,199 +216,212 @@ sub main_loop
 	# The algorithm was adopted from perlmoo by Joey Hess
 	# <joey@kitenet.net>.
 
-#	### DEBUG -- EAT MEMORY
-#	$::APA[$::BEPA++]="*"x20000000;
-
-	# I could also use IO::Multiplex or Net::Server::Multiplex or POE
-
-	my $client;
-
-	foreach $client ($SELECT->can_read( $timeout ))
+	eval
 	{
-	    if ($client == $SERVER)
-	    {
-		# Accept connection even if we should $TERMINATE since
-		# it could be communication for finishing existing
-		# requests
 
-		# New connection.
-		my($iaddr, $address, $port, $peer_host);
-		$client = $SERVER->accept;
-		if(!$client)
+	    my $client;
+
+	    foreach $client ($SELECT->can_read( $timeout ))
+	    {
+		if ($client == $SERVER)
 		{
-		    debug(0,"Problem with accept(): $!");
-		    next;
-		}
-		($port, $iaddr) = sockaddr_in(getpeername($client));
-		$peer_host = gethostbyaddr($iaddr, AF_INET) || inet_ntoa($iaddr);
-		$SELECT->add($client);
-		nonblock($client);
+		    # Accept connection even if we should $TERMINATE since
+		    # it could be communication for finishing existing
+		    # requests
 
-		debug(4,"\n\nNew client connected");
-	    }
-	    else
-	    {
-		switch_req(undef);
-		get_value( $client );
-	    }
-	}
-
-	### Do the jobs piled up
-	#
-	$timeout = TIMEOUT_LONG; # We change this if there are jobs to do
-	# List may change during iteration by close_callback...
-	my @requests = values %REQUEST;
-	foreach my $req ( @requests )
-	{
-	    if( $req->{'in_yield'} )
-	    {
-		# Do not do jobs for a request that waits for a child
-		debug 5, "In_yield: $req->{reqnum}";
-	    }
-	    elsif( $req->{'cancel'} )
-	    {
-		debug "  cancelled by request";
-		$req->run_hook('done');
-		close_callback($req->{'client'});
-	    }
-	    elsif( $req->{'wait'} )
-	    {
-		# Waiting for something else to finish...
-		debug 4, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
-	    }
-	    elsif( my $job = shift @{$req->{'jobs'}} )
-	    {
-		my( $cmd, @args ) = @$job;
-		switch_req( $req );
-		debug(2,"Found a job ($cmd) in $req->{reqnum}");
-		$req->$cmd( @args );
-	    }
-	    elsif( $req->{'childs'} )
-	    {
-		# Stay open while waiting for child
-		if( debug >= 4 )
-#		if(1)
-		{
-		    debug "$req->{reqnum} stays open, waiting for $req->{'childs'} childs";
-		    foreach my $child ( values %CHILD )
+		    # New connection.
+		    my($iaddr, $address, $port, $peer_host);
+		    $client = $SERVER->accept;
+		    if(!$client)
 		    {
-			my $creq = $child->req;
-			my $creqnum = $creq->{'reqnum'};
-			my $cclient = $creq->client;
-			my $cpid = $child->pid;
-			debug "  Req $creqnum $cclient has a child with pid $cpid";
+			debug(0,"Problem with accept(): $!");
+			next;
 		    }
+		    ($port, $iaddr) = sockaddr_in(getpeername($client));
+		    $peer_host = gethostbyaddr($iaddr, AF_INET)
+		      || inet_ntoa($iaddr);
+		    $SELECT->add($client);
+		    nonblock($client);
+
+		    debug(4,"\n\nNew client connected");
+		}
+		else
+		{
+		    switch_req(undef);
+		    get_value( $client );
 		}
 	    }
-	    else
+
+	    ### Do the jobs piled up
+	    #
+	    $timeout = TIMEOUT_LONG; # We change this if there are jobs to do
+	    # List may change during iteration by close_callback...
+	    my @requests = values %REQUEST;
+	    foreach my $req ( @requests )
 	    {
-		# All jobs done for now
-		confess "req not a req ".Dumper $req unless ref $req eq 'Para::Frame::Request'; ### DEBUG
-		$req->run_hook('done');
-		close_callback($req->{'client'});
-	    }
-
-	    $timeout = TIMEOUT_SHORT; ### Get the jobs done quick
-	}
-
-	### Do background jobs if no req jobs waiting
-	#
-	unless( values %REQUEST )
-	{
-	    add_background_jobs_conditional() and
-		$timeout = TIMEOUT_SHORT;
-	}
-
-
-	### Waiting for a child? (*inside* a nested request)
-	#
-	if( $child )
-	{
-	    # This could be a simple yield and not a child, then just
-	    # exit now
-	    last unless ref $child;
-
-	    # exit loop if child done
-	    last unless $child->{'req'}{'childs'};
-	}
-	else
-	{
-	    if( $TERMINATE )
-	    {
-		# Exit asked to and nothing is in flux
-		if( not keys %REQUEST and
-		    not keys %CHILD   and
-		    not @BGJOBS_PENDING
-		    )
+		if( $req->{'in_yield'} )
 		{
-		    if( $TERMINATE eq 'HUP' )
-		    {
-			# Make watchdog restart us
-			debug "Executing HUP now";
-			exit 1;
-		    }
-		    elsif( $TERMINATE eq 'TERM' )
-		    {
-			# No restart
-			debug "Executing TERM now";
-			exit 0;
-		    }
-		    else
-		    {
-			debug "Termination code $TERMINATE not recognized";
-			$TERMINATE = 0;
-		    }
+		    # Do not do jobs for a request that waits for a child
+		    debug 5, "In_yield: $req->{reqnum}";
 		}
-	    }
-	}
-
-	### Are there any data to be read from childs?
-	#
-	foreach my $child ( values %CHILD )
-	{
-	    my $child_data = ''; # We must init for each child!
-
-	    # Do a nonblocking read to get data. We try to read often
-	    # so that the buffer will not get full.
-
-	    $child->{'fh'}->read($child_data, POSIX::BUFSIZ);
-	    $child->{'data'} .= $child_data;
-
-	    if( $child_data )
-	    {
-		my $cpid = $child->pid;
-		my $length = length( $child_data );
-#		debug "Read $length bytes from $cpid";
-
-		my $tlength = length( $child->{'data'} );
-#		debug "  Total of $tlength bytes read";
-
-		if( $child->{'data'} =~ /^(\d{1,8})\0/ )
+		elsif( $req->{'cancel'} )
 		{
-		    # Expected length
-		    my $elength = length($1)+$1+2;
-#		    debug "  Expecting $elength bytes";
-		    if( $tlength == $elength )
+		    debug "  cancelled by request";
+		    $req->run_hook('done');
+		    close_callback($req->{'client'});
+		}
+		elsif( $req->{'wait'} )
+		{
+		    # Waiting for something else to finish...
+		    debug 4, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
+		}
+		elsif( my $job = shift @{$req->{'jobs'}} )
+		{
+		    my( $cmd, @args ) = @$job;
+		    switch_req( $req );
+		    debug(2,"Found a job ($cmd) in $req->{reqnum}");
+		    $req->$cmd( @args );
+		}
+		elsif( $req->{'childs'} )
+		{
+		    # Stay open while waiting for child
+		    if( debug >= 4 )
 		    {
-			# Whole string recieved!
-#			debug "  All data retrieved";
-			unless( $child->{'done'} ++ )
+			debug "$req->{reqnum} stays open, waiting for $req->{'childs'} childs";
+			foreach my $child ( values %CHILD )
 			{
-			    # Avoid double deregister
-			    $child->deregister(undef,$1);
-			    delete $CHILD{$cpid};
-#			    debug "  Killing $cpid";
-			    kill 9, $cpid;
+			    my $creq = $child->req;
+			    my $creqnum = $creq->{'reqnum'};
+			    my $cclient = $creq->client;
+			    my $cpid = $child->pid;
+			    debug "  Req $creqnum $cclient has a child with pid $cpid";
 			}
 		    }
 		}
 		else
 		{
-		    debug "Got '$child->{data}'";
+		    # All jobs done for now
+		    confess "req not a req ".Dumper $req unless ref $req eq 'Para::Frame::Request'; ### DEBUG
+		    $req->run_hook('done');
+		    close_callback($req->{'client'});
 		}
 
+		$timeout = TIMEOUT_SHORT; ### Get the jobs done quick
 	    }
+
+	    ### Do background jobs if no req jobs waiting
+	    #
+	    unless( values %REQUEST )
+	    {
+		add_background_jobs_conditional() and
+		  $timeout = TIMEOUT_SHORT;
+	    }
+
+
+	    ### Waiting for a child? (*inside* a nested request)
+	    #
+	    if( $child )
+	    {
+		# This could be a simple yield and not a child, then just
+		# exit now
+		last unless ref $child;
+
+		# exit loop if child done
+		last unless $child->{'req'}{'childs'};
+	    }
+	    else
+	    {
+		if( $TERMINATE )
+		{
+		    # Exit asked to and nothing is in flux
+		    if( not keys %REQUEST and
+			not keys %CHILD   and
+			not @BGJOBS_PENDING
+		      )
+		    {
+			if( $TERMINATE eq 'HUP' )
+			{
+			    # Make watchdog restart us
+			    debug "Executing HUP now";
+			    exit 1;
+			}
+			elsif( $TERMINATE eq 'TERM' )
+			{
+			    # No restart
+			    debug "Executing TERM now";
+			    exit 0;
+			}
+			else
+			{
+			    debug "Termination code $TERMINATE not recognized";
+			    $TERMINATE = 0;
+			}
+		    }
+		}
+	    }
+
+	    ### Are there any data to be read from childs?
+	    #
+	    foreach my $child ( values %CHILD )
+	    {
+		my $child_data = ''; # We must init for each child!
+
+		# Do a nonblocking read to get data. We try to read often
+		# so that the buffer will not get full.
+
+		$child->{'fh'}->read($child_data, POSIX::BUFSIZ);
+		$child->{'data'} .= $child_data;
+
+		if( $child_data )
+		{
+		    my $cpid = $child->pid;
+		    my $length = length( $child_data );
+
+		    my $tlength = length( $child->{'data'} );
+
+		    if( $child->{'data'} =~ /^(\d{1,8})\0/ )
+		    {
+			# Expected length
+			my $elength = length($1)+$1+2;
+			if( $tlength == $elength )
+			{
+			    # Whole string recieved!
+			    unless( $child->{'done'} ++ )
+			    {
+				# Avoid double deregister
+				$child->deregister(undef,$1);
+				delete $CHILD{$cpid};
+				kill 9, $cpid;
+			    }
+			}
+		    }
+		    else
+		    {
+			debug "Got '$child->{data}'";
+		    }
+		}
+	    }
+        };
+	if( $@ )
+	{
+	    warn "# FATAL REQUEST ERROR!!!\n";
+	    warn "# Unexpected exception:\n";
+	    warn "#>>\n";
+	    warn map "#>> $_\n", split /\n/, catch($@)->as_string;
+	    warn "#>>\n";
+
+	    my $emergency_level = Para::Frame::Watchdog::EMERGENCY_DEBUG_LEVEL;
+	    if( $Para::Frame::DEBUG <= $emergency_level )
+	    {
+		$Para::Frame::DEBUG =
+		  $Para::Frame::Client::DEBUG =
+		    $Para::Frame::CFG->{'debug'} =
+		      $emergency_level;
+		warn "#Raising global debug to level $Para::Frame::DEBUG\n";
+	    }
+	    $timeout = TIMEOUT_SHORT;
 	}
+
     }
     debug(4,"Exiting  main_loop at level $LEVEL",-1);
     $LEVEL --;
