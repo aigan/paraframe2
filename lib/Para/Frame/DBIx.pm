@@ -744,7 +744,7 @@ sub update
 
 Insert a row in a table in $dbix
 
-Params are:
+  Params are:
   table = name of table
   rec   = hashref of field/value pairs
   types = definition of field types
@@ -827,7 +827,7 @@ sub insert
 
 High level for adding a record.
 
-Params are:
+  Params are:
   rec    = hashref of name/value pairs for fields to update
   map    = hashref of translation map for interface to fieldname
   parser = hashref of fieldname/coderef for parsing values
@@ -1007,7 +1007,7 @@ sub insert_wrapper
 High level for updating a record. This will compare two records to
 detect if anything has changed.
 
-Params are:
+  Params are:
   rec_new = hashref of name/value pairs for fields to update
   rec_old = hashref of the record to be updated
   map     = hashref of translation map for interface to fieldname
@@ -1219,7 +1219,7 @@ sub format_value
 
 High level for saving a record.
 
-Params are:
+  Params are:
   rec_new = hashref of name/value pairs for fields to update
   rec_old = hashref of the record to be updated
   table   = name of table

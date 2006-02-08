@@ -59,7 +59,7 @@ methods / variables) or as templates for inclusion or defined template
 macros.
 
 These are the standard widgets defined as Perl code.  See also the
-standard L<Para::Frame::TT::components>.
+standard L<Para::Frame::Template::components>.
 
 =head1 Exported objects
 
@@ -167,7 +167,8 @@ sub slider
 
   jump( $label, $template, %attrs )
 
-Draw a link to $template with text $label and query params %attrs.
+Draw a link to C<$template> with text C<$label> and query params
+C<%attrs>.
 
 A 'href_target' attribute will set the target frame for the link.
 
@@ -177,7 +178,7 @@ A 'href_class' attribute will set the class for the link.
 
 A 'href_id' attribute will set the id for the link.
 
-If no class is set, the class will be 'same_place' if the link goes to
+If no class is set, the class will be C<same_place> if the link goes to
 the current page.  To be used with CSS for marking the current page in
 menues.
 
@@ -1069,6 +1070,6 @@ sub on_reload
 
 =head1 SEE ALSO
 
-L<Para::Frame>, L<Para::Frame::Manual::Templates>
+L<Para::Frame>, L<Para::Frame::Template::Components>
 
 =cut
