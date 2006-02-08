@@ -154,13 +154,10 @@
    [% END %]
 [% END %]
 
-
-
 [% MACRO sort(name, value, defdir) BLOCK;
-   direction = q.param('direction');
    DEFAULT value = name;
    DEFAULT defdir = 'asc';
-   DEFAULT direction = 'asc';
+   DEFAULT direction = defdir;
    IF order == value;
       IF direction == 'asc';
          direc = 'desc';

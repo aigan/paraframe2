@@ -403,7 +403,7 @@ sub watchdog_crash
     $EMERGENCY_MODE++;
     debug "\n\nWatchdog got an unexpected situation ($EMERGENCY_MODE)";
 
-    if( $Para::Frame::DEBUG < EMERGENCY_DEBUG_LEVEL )
+    if( $Para::Frame::DEBUG <= EMERGENCY_DEBUG_LEVEL )
     {
 	$Para::Frame::DEBUG =
 	    $Para::Frame::Client::DEBUG =
