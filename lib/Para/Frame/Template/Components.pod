@@ -1,6 +1,6 @@
 =head1 NAME
 
-Rit::Frame::Template::Components - Common template macro widgets
+Para::Frame::Template::Components - Common template macro widgets
 
 =head1 DESCRIPTION
 
@@ -13,7 +13,72 @@ methods / variables) or as templates for inclusion or defined template
 macros.
 
 These are the standard widgets defined as TT macros.  See also the
-standard L<Rit::Frame::Widget> module.
+standard L<Para::Frame::Widget> module.
+
+
+=head2 box
+
+  box(part)
+
+Draws a box where part is a L<Para::Frame::Result::Part> object. It
+uses:
+
+  part.title        = title in box
+  part.message      = the message
+  part.context      = More info
+  part.context_line = The row number
+  part.border       = The colour of the outer border
+  part.width        = The width of the outer border
+  part.bg           = The background colour of the box
+
+The box uses the class C<paraframe_box>
+
+The message and context are written in C<E<lt>preE<gt>> blocks and are
+HTML escaped.
+
+=head2 step
+
+  step(label, template, run)
+  step(label, template)
+  step(label)
+
+Draws buttons to navigate between forms.
+
+=head2 searchstep
+
+  searchstep(label)
+
+Draws buttons for search forms.
+
+=head2 actionstep
+
+  actionstep(label)
+
+Draws buttons for when the form has a given default action and
+template.
+
+=head2 nostep
+
+  nostep(label)
+
+Draws buttons For not doing anything with this page, but continue to
+next step.
+
+=head2 regret
+
+  regret(label)
+
+Draws buttons for going back to the previous page.
+
+=head2 remove_step
+
+  remove_step(label)
+
+Draws a button for removing one step from the route.
+
+=head2 backstep
+
+Draws a button for going to the next step.
 
 
 =head2 radio
@@ -65,9 +130,68 @@ is the name of fhe field.
 Creates a small hr.
 
 
+=head2 sort
+
+  sort(name, value, default_direction)
+
+Draws a sort link to be used in a column header.
+
+  name  = The label to draw as the column header
+  value = the field name in the DB table to use
+  default_direction = asc or desc
+
+
+Default value is C<name>
+
+Default direction is C<asc>
+
+If the header is selected, it uses the class C<selected>.
+
+The sorting direction is placed in the variable C<direction>.
+
+The sorting field is placed in the variable C<order>.
+
+The offset is placed in C<offset>.
+
+Example:
+
+  <h2>Translation</h2>
+
+  [%# The default order here is sv and the default direction asc #%]
+  [% order = q.param('order') || 'sv' %]
+  [% direction = q.param('direction' || 'asc') %]
+
+  <table>
+  <tr><th>[% sort('English', 'en') %]</th>
+      <th>[% sort('Swedish', 'sv') %]</th>
+  </tr>
+  [% FOREACH tr IN select_list("from tr order by $order $direction") %]
+     [% tr2 %]
+        <td>[% tr.sv %]</td>
+        <td>[% tr.en %]</td>
+     </tr>
+  [% END %]
+  </table>
+
+=head2 expand
+
+  [% WRAPPER expand label=$mylabel %]
+     $content
+  [% END %]
+
+  [% WRAPPER expand label_show=$show_html label_hide=$hide_html %]
+     $content
+  [% END %]
+
+Draws a widget with C<label_show> or C<label>. Click that label to
+expand the C<$content>.
+
+For collapsed state, the class C<paraframe_expand> is used and for the
+expanded state, the class C<paraframe_expanded> is used.
+
 
 =head1 SEE ALSO
 
-L<Rit::Frame>
+L<Para::Frame>, L<Para::Frame::Widget>
 
 =cut
