@@ -18,11 +18,16 @@ package Para::Frame::Action::user_logout;
 
 use strict;
 
+use Para::Frame::Route;
+
 sub handler
 {
     my( $req ) = @_;
 
     $Para::Frame::U->logout;
+
+    # Not to be used after a logout
+    &Para::Frame::Route::clear_special_params;
 
     return "Du har nu loggat ut\n";
 }
