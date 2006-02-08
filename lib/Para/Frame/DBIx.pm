@@ -204,7 +204,7 @@ sub new
 			  });
 
     # I tried to just setting InactiveDestroy. But several processes
-    # can't share a dbh. Multiple requests/multiple forsk may/will
+    # can't share a dbh. Multiple requests/multiple forks may/will
     # result in errors like "message type 0x43 arrived from server
     # while idle" and "message type 0x5a arrived from server while
     # idle". Solve this by reconnecting in forks. TODO: reconnect on
