@@ -25,7 +25,7 @@
    [% END %]
 [% END %]
 
-[% MACRO search(label) BLOCK %]
+[% MACRO searchstep(label) BLOCK %]
    [% DEFAULT label='Sök' %]
    [% submit(label) %]
    [%+ backstep('Fortsätt med nästa sak', 1) %]
@@ -183,3 +183,17 @@
 [% END;
 %]
 
+[% BLOCK expand %]
+   [% DEFAULT paraframe_formcount=0 %]
+   [% paraframe_formcount = paraframe_formcount + 1 %]
+   [% paraframe_display='none' %]
+   [% paraframe_label_display='block' %]
+   [% DEFAULT label = "Instruktion" %]
+   [% DEFAULT label_show = "Visa ${label}..." %]
+   [% DEFAULT label_hide = "Dölj ${label}..." %]
+<div class="paraframe_expand"><a href="javascript:showhide('paraframe_fid_[% paraframe_formcount %]');showhide('paraframe_fid_[% paraframe_formcount %]_label');" id="paraframe_fid_[% paraframe_formcount %]_label" style="display:[% paraframe_label_display %]">Visa [% label %]...</a></div>
+<div class="paraframe_expanded" id="paraframe_fid_$formcount" style="display:$paraframe_display">
+<a href="javascript:showhide('paraframe_fid_[% paraframe_formcount %]');showhide('paraframe_fid_[% paraframe_formcount %]_label');">Dölj [% label %]...</a>
+$content
+</div>
+[% END %]
