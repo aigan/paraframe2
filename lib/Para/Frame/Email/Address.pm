@@ -18,7 +18,7 @@ package Para::Frame::Email::Address;
 
 =head1 NAME
 
-Para::Frame::Email::Address
+Para::Frame::Email::Address - Represents an email address
 
 =cut
 
@@ -41,6 +41,37 @@ use Para::Frame::Utils qw( throw reset_hashref );
 use overload '""' => \&as_string;
 use overload 'eq' => \&equals;
 use overload 'ne' => sub{ not &equals(@_) };
+
+=head1 DESCRIPTION
+
+Objects of this class is a container for L<Mail::Address> objects. It
+stringifies to L</as_string> and uses L</equals> for C<eq>/C<ne>
+comparsions.
+
+=cut
+
+=head2 parse
+
+  Para::Frame::Email::Address->parse( $email_in )
+
+This is the object constructor.
+
+If C<$email_in> already is an Para::Frame::Email::Address object;
+retuns it.
+
+Parses the address using L<Mail::Address/parse>.
+
+Checks that the domain name was given.
+
+Returns the object.
+
+Exceptions:
+
+email - '$email_str_in' är inte en korrekt e-postadress
+
+email - Ange hela adressen, inklusive \@\n'$email_str_in' är inte korrekt
+
+=cut
 
 sub parse
 {
@@ -81,13 +112,54 @@ sub parse
     return $a;
 }
 
+=head2 as_string
+
+  $a->as_string
+
+Returns a string using L<Mail::Address/address>
+
+=cut
+
 sub as_string { $_[0]->{addr}->address }
+
+=head2 address
+
+  $a->address
+
+Returns a string using L<Mail::Address/address>
+
+=cut
 
 sub address { $_[0]->{addr}->address }
 
+=head2 host
+
+ $a->host
+
+Returns a string using L<Mail::Address/host>
+
+=cut
+
 sub host { $_[0]->{addr}->host }
 
+=head2 format
+
+ $a->format
+
+Returns a string using L<Mail::Address/format>
+
+=cut
+
 sub format { $_[0]->{addr}->format }
+
+=head2 format_human
+
+ $a->format_human
+
+Returns a human readable version of the object including the name if
+existing.
+
+=cut
 
 sub format_human
 {
@@ -102,11 +174,27 @@ sub format_human
     }
 }
 
+=head2 name
+
+  $a->name
+
+Returns the name for the email address.
+
+=cut
+
 sub name
 {
     return shift->{addr}->name(@_);
 }
 
+=head2 desig
+
+  $a->desig
+
+Gives a resonable designation of the object. In this case, the name or
+the address.
+
+=cut
 
 sub desig
 {
@@ -126,6 +214,24 @@ sub desig
 # 
 #     return $a;    
 # }
+
+=head2 validate
+
+ $a->validate
+
+Checks that the address is valid.  Checks that the domain exists and
+that it accepts email. If possible, checks that the email address
+exists at that domain.
+
+Returns true if address was validated.
+
+If the address was not validated, throws an exception.
+
+Exceptions:
+
+email - ... an explanation of what went wrong ...
+
+=cut
 
 sub validate
 {
@@ -242,10 +348,30 @@ sub _validate
     return 0;
 }
 
+=head2 error_msg
+
+  $a->error_msg
+
+Returns the error message from the latest validation.
+
+=cut
+
 sub error_msg
 {
     return $_[0]->{'error_msg'};
 }
+
+=head2 equals
+
+  $a->equals($a2)
+
+Makes $a2 a atring if it is an object using L</as_string>.
+
+Checks that the two strings are equal.
+
+Returns true or false.
+
+=cut
 
 sub equals
 {
@@ -271,6 +397,11 @@ sub equals
     return $a->as_string eq $a2_as_string;
 }
 
+=head1 Global TT params
+
+Adds C<email> as an global tt param. Uses L</parse>.
+
+=cut
 
 sub on_configure
 {
@@ -290,6 +421,6 @@ sub on_configure
 
 =head1 SEE ALSO
 
-L<Para::Frame>,
+L<Para::Frame>, L<Mail::Address>
 
 =cut

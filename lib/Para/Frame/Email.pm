@@ -18,7 +18,7 @@ package Para::Frame::Email;
 
 =head1 NAME
 
-Para::Frame::Email - Sending emails
+Para::Frame::Email - For sending emails
 
 =cut
 
@@ -47,6 +47,28 @@ use Para::Frame::Reload;
 use Para::Frame::Request;
 use Para::Frame::Utils qw( throw debug );
 use Para::Frame::Widget;
+use Para::Frame::Time qw( date );
+use Para::Frame::Email::Address;
+
+=head2 new
+
+  Para::Frame::Email->new( \%params )
+
+Creates the Email sender object.
+
+The default params for the email are:
+
+  u    = The active L<Para::Frame::User> object (for the application)
+  q    = The active L<CGI> object
+  date = The L<Para::Frame::Time/date> function
+  site = The L<Para::Frame::Site> object
+
+The given C<params> can replace and add to this list. They are given
+to L</set>.
+
+Returns the object.
+
+=cut
 
 sub new
 {
@@ -57,7 +79,7 @@ sub new
     {
 	params =>
 	{
-	    'u'        => $req->s->u,
+	    'u'        => $req->session->user,
 	    'q'        => $req->q,
 	    'date'     => sub{ date(@_) },
 	    'site'     => $req->site,
@@ -67,6 +89,14 @@ sub new
     $e->set($p) if $p;
     return $e;
 }
+
+=head2 set
+
+  $e->set( \%params )
+
+Adds and/or replaces the params to use for sending this email.
+
+=cut
 
 sub set
 {
@@ -82,18 +112,38 @@ sub set
     return $e->{params};
 }
 
+=head2 params
+
+  $e->params
+
+Returns the hashref of params.
+
+=cut
+
 sub params
 {
     return $_[0]->{params};
 }
 
+=head2 good
+
+  $listref = $e->good()
+  @list    = $e->good()
+  $bool    = $e->good($email)
+
+In scalar context, it retuns a listref of addresses successfully sent
+to.
+
+In list context, it returns a list of addresses sucessfully sent to.
+
+If given an C<$email> returns true if this address was sucessfully
+sent to.
+
+=cut
+
 sub good
 {
     my( $e, $email ) = @_;
-
-    # scalar $e->good  # returns ref to array of strings of successful emails
-    # @list = $e->good # returns list of hashes of strings of successful emails
-    # $e->good( $email_str ) # returns true if email string recorded as positive
 
     if( $email )
     {
@@ -102,6 +152,20 @@ sub good
 
     return wantarray ? keys %{$e->{'result'}{'good'}} : $e->{'result'}{'good'};
 }
+
+=head2 bad
+
+  $listref = $e->bad()
+  @list    = $e->bad()
+  $bool    = $e->bad($email)
+
+In scalar context, it retuns a listref of addresses not sent to.
+
+In list context, it returns a list of addresses not sent to.
+
+If given an C<$email> returns true if this address was not sent to.
+
+=cut
 
 sub bad
 {
@@ -115,6 +179,14 @@ sub bad
     return wantarray ? keys %{$e->{'result'}{'bad'}} : $e->{'result'}{'bad'};
 }
 
+=head2 error_msg
+
+  $e->error_msg
+
+Returns the error messages generated or the empty string.
+
+=cut
+
 sub error_msg
 {
     return $_[0]->{error_msg} || "";
@@ -122,7 +194,17 @@ sub error_msg
 
 =head2 send_in_fork
 
-  $e->send_in_fork(\%params)
+  Para::Frame::Email->send_in_fork( \%params )
+  Para::Frame::Email->send_in_fork()
+  $e->send_in_fork( \%params )
+  $e->send_in_fork()
+
+Sends the email in a fork. Throws an exception if failure occured.
+
+The return message is taken from $params{return_message} or the
+default "Email delivered".
+
+Calls L</send> with the given C<params>.
 
 =cut
 
@@ -145,6 +227,25 @@ sub send_in_fork
     return $fork;
 }
 
+=head2 send_in_background
+
+  Para::Frame::Email->send_in_background( \%params )
+  Para::Frame::Email->send_in_background()
+  $e->send_in_background( \%params )
+  $e->send_in_background()
+
+Sends the email in the background. That is. Send it between other
+requests. This will make the site unaccessable while the daemin waits
+for the recieving email server to answer.
+
+Throws an exception if failure occured.
+
+Returns true if sucessful.
+
+Calls L</send> with the given C<params>.
+
+=cut
+
 sub send_in_background
 {
     my( $e, $p_in ) = @_;
@@ -157,6 +258,26 @@ sub send_in_background
     });
     return 1;
 }
+
+=head2 send_by_proxy
+
+  Para::Frame::Email->send_by_proxy( \%params )
+  Para::Frame::Email->send_by_proxy()
+  $e->send_by_proxy( \%params )
+  $e->send_by_proxy()
+
+Sends the email using a proxy like sendmail.
+
+Adds the param C<by_proxy = 1>
+
+Throws an exception if failure occured.
+
+The return message is taken from $params{return_message} or the
+default "Email delivered".
+
+Calls L</send> with the given C<params>.
+
+=cut
 
 sub send_by_proxy
 {
@@ -172,8 +293,76 @@ sub send_by_proxy
     return $e->send($p_in);
 }
 
+=head2 send
+
+  Para::Frame::Email->send( \%params )
+  Para::Frame::Email->send()
+  $e->send( \%params )
+  $e->send()
+
+Calls L</set> with the given params, adding or replacing the existing
+params.
+
+Resets the result status before sending.
+
+The required params are:
+
+  template  = Which TT template to use for the email
+  from      = The sender email address
+  subject   = The subject line of the email
+  to        = The reciever email address
+
+Optional params:
+
+  pgpsign   = Signs the email with pgpsign
+  Reply-To  = Adds a Reply-To header to the email
+  by_proxy  = Sens email using sendmail
+
+
+The template are searched for in the C</email/> dir under the site
+home.
+
+C<to> can be a ref to a list of email addresses to try. We try them in
+the given order. Quits after the furst sucessful address.
+
+Sends all the params to the TT template for rendering.
+
+With param C<pgpsign>, signs the resulting email by calling
+L</pgpsign> with the email content and the param value.
+
+Makes the C<form> address an object using
+L<Para::Frame::Email::Address/parse>.
+
+Makes the C<to> addresses objects by using
+L<Para::Frame::Email::Address/parse>.
+
+Encodes the to, form and subject fields of the email by using mime
+encoding.
+
+Sends the email in the format quoted-printable.
+
+If sending C<by_proxy>, we will not get any indication if the email
+was sucessfully sent or not.
+
+Exceptions:
+
+notfound - Hittar inte e-postmallen ...
+
+mail - Failed to parse address $p->{'from'}
+
+Example:
+
+  Para::Frame::Email->send({
+    template => 'registration_confirmation.tt',
+    from     => '"The registry office" <registry@mydomain.com>',
+    to       => $recipient_email,
+    subject  => "Welcome to our site",
+  });
+
+=cut
+
 sub send
-{
+  {
     my($e, $p_in ) = @_;
 
     # DEBUG...
@@ -196,11 +385,12 @@ sub send
     $p->{'to'}       or die "No reciever for this email?\n";
 
     my $req = $Para::Frame::REQ;
+    my $home = $req->site->home;
 
     # List of addresses to try. Quit after first success
     my @try = ref $p->{'to'} eq 'ARRAY' ? @{$p->{'to'}} : $p->{'to'};
 
-    my( $in, $ext ) = $req->find_template("/email/".$p->{'template'});
+    my( $in, $ext ) = $req->find_template("$home/email/".$p->{'template'});
     if( not $in )
     {
 	throw('notfound', "Hittar inte e-postmallen ".$p->{'template'});
@@ -421,6 +611,26 @@ sub encode_mimewords
     return $string;
 }
 
+=head2 pgpsign
+
+  pgpsign( $dataref, $configfile )
+
+This is called by C<$e-C<gt>send()> if the param C<pgpsign> has
+C<$configfile> as value.
+
+The signing is done by L<Crypt::OpenPGP> using C<Compat> PGP5 and
+C<ConfigFile $configfile>.
+
+Modifies $dataref.
+
+Return true on success.
+
+Exceptions:
+
+action - The error given by L<Crypt::OpenPGP/sign>
+
+=cut
+
 sub pgpsign
 {
     my( $dataref, $cfile ) = @_;
@@ -494,3 +704,9 @@ Enter the index of the signing key you wish to use: ";
 }
 
 1;
+
+=head1 SEE ALSO
+
+L<Para::Frame>, L<Para::Frame::Email::Address>
+
+=cut
