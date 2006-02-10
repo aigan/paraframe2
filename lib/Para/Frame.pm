@@ -38,7 +38,7 @@ use DateTime::TimeZone;
 BEGIN
 {
     our $CVSVERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    our $VERSION = "1.00"; # Paraframe version
+    our $VERSION = "1.01"; # Paraframe version
     print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
@@ -1240,7 +1240,10 @@ sub configure
     $CFG->{'dir_run'} ||= $CFG->{'dir_var'}."/run";
 
     $CFG->{'paraframe'} ||= '/usr/local/paraframe';
+
     $CFG->{'paraframe_group'} ||= 'staff';
+    getgrnam( $CFG->{'paraframe_group'} )
+	or die "paraframe_group $CFG->{paraframe_group} doesn't exist\n";
 
     $CFG->{'approot'} || $CFG->{'appback'}
       or die "appback or approot missing in config\n";
