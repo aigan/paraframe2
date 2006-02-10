@@ -1773,15 +1773,16 @@ sub render_output
 
 	    ### Use error page template
 	    my $error_tt = $req->template; # Could have changed
+	    my $new_error_tt;
 	    if( $error_tt eq $template ) # No new template specified
 	    {
 		if( $error->type eq 'file' )
 		{
-#		    debug $error->as_string();
 		    if( $error->info =~ /not found/ )
 		    {
 			debug "Subtemplate not found";
-			$error_tt = $site->home.'/page_part_not_found.tt';
+			$new_error_tt = $error_tt =
+			    $site->home.'/page_part_not_found.tt';
 			my $incpathstring = join "", map "- $_\n", @{$req->{'incpath'}};
 			$part->add_message("Include path is\n$incpathstring");
 		    }
@@ -1789,15 +1790,16 @@ sub render_output
 		    {
 			debug "Other template error";
 			$part->type('template');
-			$error_tt = $site->home.'/error.tt';
+			$new_error_tt = $error_tt = $site->home.'/error.tt';
 		    }
+		    debug $error->as_string();
 		}
 		elsif( $error->type eq 'denied' )
 		{
 		    if( $req->session->u->level == 0 )
 		    {
 			# Ask to log in
-			$error_tt = $site->home."/login.tt";
+			$new_error_tt = $error_tt = $site->home."/login.tt";
 			$req->result->hide_part('denied');
 			unless( $req->{'no_bookmark_on_failed_login'} )
 			{
@@ -1806,18 +1808,19 @@ sub render_output
 		    }
 		    else
 		    {
-			$error_tt = $site->home."/denied.tt";
+			$new_error_tt = $error_tt = $site->home."/denied.tt";
 			$req->session->route->plan_next($req->referer);
 		    }
 		}
 		elsif( $error->type eq 'notfound' )
 		{
-		    $error_tt = $site->home."/page_not_found.tt";
+		    $new_error_tt = $error_tt =
+			$site->home."/page_not_found.tt";
 		    $req->set_http_status(404);
 		}
 		else
 		{
-		    $error_tt = $site->home.'/error.tt';
+		    $new_error_tt = $error_tt = $site->home.'/error.tt';
 		}
 	    }
 
@@ -1825,7 +1828,7 @@ sub render_output
 	    debug(1,$burner->error());
 
 	    # Avoid recursive failure
-	    if( ($template eq $error_tt) and ($error_tt eq $site->home.'/error.tt') )
+	    if( ($template eq $error_tt) and $new_error_tt )
 	    {
 		$req->{'page_content'} = $req->fallback_error_page;
 		return 1;
