@@ -1071,6 +1071,76 @@ sub handle_request
     ### Clean up used globals
 }
 
+=head2 add_hook
+
+  Para::Frame->add_hook( $label, \&code )
+
+Adds code to be run on special occations
+
+Availible hooks are:
+
+=head3 on_startup
+
+Runs just before the C<main_loop>.
+
+=head3 on_memory
+
+Runs then the watchdog send a C<MEMORY> notice.
+
+=head3 on_error_detect
+
+Runs then the exception is catched by
+L<Para::Frame::Result/exception>.
+
+=head3 on_fork
+
+Runs in the child just after the fork.
+
+=head3 done
+
+Runs just before the request is done.
+
+=head3 user_login
+
+Runs after user logged in, in L<Para::Frame::Action::user_login>
+
+=head3 before_user_logout
+
+Runs after user logged out, in L<Para::Frame::User/logout>
+
+=head3 after_db_connect
+
+Runs after each DB connect from L<Para::Frame::DBIx/connect>
+
+=head3 before_db_commit
+
+Runs before committing each DB, from L<Para::Frame::DBIx/commit>
+
+=head3 after_db_rollback
+
+Runs after a rollback för each DB, from L<Para::Frame::DBIx/rollback>
+
+=head3 before_switch_req
+
+Runs just before switching from one request to another. Not Switching
+from one request to another can be done several times before the
+request is done.
+
+=head3 before_render_output
+
+Runs before the result page starts to render.
+
+=head3 busy_background_job
+
+Runs often, between requests.
+
+=head3 add_background_jobs
+
+For adding jobs that should be done in the background, then there is
+nothing else to do or then it hasen't run in a while.
+
+=cut
+
 sub add_hook
 {
     my( $class, $label, $code ) = @_;
@@ -1085,14 +1155,14 @@ sub add_hook
 			  done                |
 			  user_login          |
 			  before_user_logout  |
-			  after_user_logout   |
+			  after_user_logout   | # not used
 			  after_db_connect    |
 			  before_db_commit    |
 			  after_db_rollback   |
 			  before_switch_req   |
 			  before_render_output|
 			  busy_background_job |
-			  add_background_jobs 
+			  add_background_jobs
 			  )$/x )
     {
 	die "No such hook: $label\n";
@@ -1151,6 +1221,15 @@ sub run_hook
     return 1;
 }
 
+=head2 add_blobal_tt_params
+
+  Para::Frame->add_global_tt_params( \%params )
+
+Adds all params to the global params to be used for all
+templates. Replacing existing params if the name is the same.
+
+=cut
+
 sub add_global_tt_params
 {
     my( $class, $params ) = @_;
@@ -1206,7 +1285,144 @@ sub open_logfile
 
 =head2 configure
 
-FIXME
+  Para::Frame->configure( \%cfg )
+
+Configures paraframe before startup.
+
+These configuration params are used:
+
+=head3 debug
+
+Sets global C<$Para::Frame::DEBUG> value that will be used as default
+debug value for all sessions. Also sets debug value for the
+C<Para::Frame::Client> then used from the server.
+
+Default is 0.
+
+=head3 dir_var
+
+The base for L</dir_log> and L</dir_run>.
+
+Default is C</var>
+
+=head3 dir_log
+
+The dir to store the paraframe log.
+
+Default is C<$dir_var/log>
+
+=head3 dir_run
+
+The dir to store the process pid.
+
+Default is C<$dir_var/run>
+
+=head3 paraframe
+
+The dir that holds paraframe.
+
+Default is C</usr/local/paraframe>
+
+=head3 paraframe_group
+
+The file group to set files to that are created.
+
+Default is C<staff>
+
+=head3 approot
+
+The path to application. This is the dir that holds the C<lib> and
+possibly the C<var> dirs. See L<Para::Frame::Site/approot>.
+
+Must be defined
+
+=head3 appback
+
+This is a listref of server paths. Each path should bee a dir that
+holds a C<html> dir, or a C<dev> dir, for compiled sites.  See
+L<Para::Frame::Site/appback>.
+
+Must be defined
+
+=head3 time_zone
+
+Sets the time zone for L<Para::Frame::Time>.
+
+Defaults to C<local>
+
+=head3 time_format
+
+Sets the default presentation of times using
+L<Para::Frame::Time/format_datetime>
+
+Defaults to C<%Y-%m-%d %H.%M>
+
+=head3 umask
+
+The default umask for created files.
+
+Defaults C<0007>
+
+=head3 appfmly
+
+This should be a listref of elements, each to be treated ass fallbacks
+for L</appbase>.  If no actions are found under L</appbase> one after
+one of the elements in C<appfmly> are tried. See
+L<Para::Frame::Site/appfmly>.
+
+Defaults to none.
+
+=head3 ttcdir
+
+The directory that holds the compiled templates.
+
+Defaults to L</appback> or L</approot> followed by C</var/ttc>.
+
+=head3 tt_plugins
+
+Adds a list of L<Template::Plugin> bases. Always adds
+L<Para::Frame::Template::Plugin>.
+
+Defaults to the empty list.
+
+=head3 port
+
+The port top listen on for incoming requests.
+
+Defaults to C<7788>.
+
+=head3 pidfile
+
+The file to use for storing the paraframe pid.
+
+Defaults to L</dir_run> followed by C</parframe_$port.pid>
+
+=head3 logfile
+
+The file to use for logging.
+
+Defaults to L</dir_run> followed by C</parframe_$port.log>
+
+=head3 user_class
+
+The class to use for user identification. Should be a subclass to
+L<Para::Frame::User>.
+
+Defaults to C<Para::Frame::User>
+
+=head3 session_class
+
+The class to use for sessopms- Should be a subclass to
+L<Para::Frame::Session>.
+
+Defaults to C<Para::Frame::Session>
+
+=head3 bg_user_code
+
+A coderef that generates a user object to be used for background jobs.
+
+Defaults to code that C<get> C<guest> fråm L</user_class>.
+
 
 =cut
 
@@ -1346,15 +1562,38 @@ sub configure
     Para::Frame::Email::Address->on_configure;
 }
 
+=head2 Session
+
+  Para::Frame->Session
+
+Returns the L</session_class> string.
+
+=cut
+
 sub Session
 {
     $CFG->{'session_class'};
 }
 
+=head3 User
+
+  Para::Frame->User
+
+Returns the L</user_class> string.
+
+=cut
+
 sub User
 {
     $CFG->{'user_class'};
 }
+
+=head3 dir
+
+Returns the L</paraframe> dir.
+
+
+=cut
 
 sub dir
 {
