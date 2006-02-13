@@ -47,7 +47,7 @@ BEGIN
 
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( trim throw );
+use Para::Frame::Utils qw( trim throw debug );
 
 =head1 DESCRIPTION
 
@@ -193,38 +193,8 @@ sub jump
     my( $label, $template, $attr ) = @_;
 
     $label = '???' unless length $label;
-    $attr ||= {};
 
-    my $extra = "";
-    if( my $val = delete $attr->{'href_target'} )
-    {
-	$extra .= " target=\"$val\"";
-    }
-    if( my $val = delete $attr->{'href_id'} )
-    {
-	$extra .= " id=\"$val\"";
-    }
-    if( my $val = delete $attr->{'href_onclick'} )
-    {
-	$extra .= " onClick=\"$val\"";
-    }
-
-    my $class_val = delete $attr->{'href_class'};
-    if( $class_val )
-    {
-	$extra .= " class=\"$class_val\"";
-    }
-    elsif( not defined $class_val )
-    {
-	if( $Para::Frame::REQ->is_from_client )
-	{
-	    # Mark as selected if link goes to current page
-	    if( $Para::Frame::REQ->template_uri eq $template and not $attr->{'run'} )
-	    {
-		$extra .= " class=\"same_place\"";
-	    }
-	}
-    }
+    my $extra = jump_extra( $template, $attr );
 
     {
 	my $q = $Para::Frame::REQ->q;
@@ -261,6 +231,48 @@ sub jump
     {
 	return CGI->escapeHTML( $label );
     }
+}
+
+sub jump_extra
+{
+    my( $template, $attr ) = @_;
+
+    $attr ||= {};
+
+    my $extra = "";
+    if( my $val = delete ${$attr}{'href_target'} )
+    {
+	$extra .= " target=\"$val\"";
+    }
+    if( my $val = delete ${$attr}{'href_id'} )
+    {
+	$extra .= " id=\"$val\"";
+    }
+    if( my $val = delete ${$attr}{'href_onclick'} )
+    {
+	$extra .= " onClick=\"$val\"";
+    }
+
+    my $class_val = delete ${$attr}{'href_class'};
+    if( $class_val )
+    {
+	$extra .= " class=\"$class_val\"";
+    }
+    elsif( not defined $class_val )
+    {
+	if( $Para::Frame::REQ->is_from_client )
+	{
+	    # Mark as selected if link goes to current page
+	    if( $Para::Frame::REQ->template_uri eq $template and not $attr->{'run'} )
+	    {
+		$extra .= " class=\"same_place\"";
+	    }
+	}
+    }
+
+    debug "Returning extra $extra";
+
+    return $extra;
 }
 
 
@@ -382,11 +394,13 @@ sub forward
 {
     my( $label, $template, $attr ) = @_;
 
+    my $extra = jump_extra( $template, $attr );
+
     my $url = forward_url( $template, $attr );
 
     $label = '???' unless length $label;
 
-    return "<a href=\"$url\">$label</a>";
+    return "<a href=\"$url\"$extra>$label</a>";
 }
 
 sub forward_url
