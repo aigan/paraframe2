@@ -170,7 +170,7 @@
    ELSE;
       direc = defdir;
    END;
-   url = forward_url( me, order=value, direction=direc, offset=0 );
+   url = forward_url( me, order=value, direction=direc, page=1, use_cached=0 );
 %]
    <a href="$url" class="$class">$name
 [% IF dirimg %]
@@ -188,9 +188,9 @@
    [% DEFAULT label = "Instruktion" %]
    [% DEFAULT label_show = "Visa ${label}..." %]
    [% DEFAULT label_hide = "Dölj ${label}..." %]
-<div class="paraframe_expand"><a href="javascript:showhide('paraframe_fid_[% paraframe_formcount %]');showhide('paraframe_fid_[% paraframe_formcount %]_label');" id="paraframe_fid_[% paraframe_formcount %]_label" style="display:[% paraframe_label_display %]">Visa [% label %]...</a></div>
-<div class="paraframe_expanded" id="paraframe_fid_$formcount" style="display:$paraframe_display">
-<a href="javascript:showhide('paraframe_fid_[% paraframe_formcount %]');showhide('paraframe_fid_[% paraframe_formcount %]_label');">Dölj [% label %]...</a>
+<div class="paraframe_expand"><a href="javascript:showhide('paraframe_fid_[% paraframe_formcount %]');showhide('paraframe_fid_[% paraframe_formcount %]_label');" id="paraframe_fid_[% paraframe_formcount %]_label" style="display:[% paraframe_label_display %]">[% label_show %]</a></div>
+<div class="paraframe_expanded" id="paraframe_fid_$paraframe_formcount" style="display:$paraframe_display">
+<a href="javascript:showhide('paraframe_fid_[% paraframe_formcount %]');showhide('paraframe_fid_[% paraframe_formcount %]_label');">[% label_hide %]</a>
 $content
 </div>
 [% END %]
