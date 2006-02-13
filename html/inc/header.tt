@@ -5,7 +5,7 @@
     [% DEFAULT otitle = title %]
     <title>[% PROCESS title.tt %]</title>
     [%+ css_header(css) %]
-    [% IF favicon %]<link rel="shortcut icon" href="$favicon" type="image/x-icon" />[% END %]
+    [%+ favicon_header(favicon) %]
     [% IF description %]<meta name="description" content="[% description | html %]" />[% END %]
     [% IF keywords %]<meta name="keywords" content="[% keywords | html %]" />[% END +%]
     [% IF no_robots_index or no_robots_follow %]
