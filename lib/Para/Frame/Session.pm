@@ -31,7 +31,7 @@ use Para::Frame::Time qw( now );
 use Para::Frame::User;
 use Para::Frame::Route;
 use Para::Frame::URI;
-use Para::Frame::Utils qw( store_params );
+use Para::Frame::Utils qw( store_params debug );
 
 our $SESSION_COOKIE_NAME = 'paraframe-sid';
 
@@ -79,6 +79,8 @@ sub new
 	user           => undef,
 	debug          => $Para::Frame::CFG->{'debug'},
 	template_error => '', # Default
+        list           => {},
+        listid         => 1,
     }, $class;
 
     # Register s
@@ -178,6 +180,16 @@ sub debug_data
     my $udesig = $s->u->desig;
     $out .= "User is $udesig\n";
     return $out;
+}
+
+sub list
+{
+    my( $s, $id ) = @_;
+
+    return undef unless $id;
+    debug "Returning cached list $id";
+
+    return $s->{list}{$id};
 }
 
 1;
