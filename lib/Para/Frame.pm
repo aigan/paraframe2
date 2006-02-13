@@ -1254,6 +1254,9 @@ sub configure
     $Para::Frame::Time::TZ =
 	DateTime::TimeZone->new( name => $CFG->{'time_zone'} );
 
+    $CFG->{'time_format'} ||= "%Y-%m-%d %H.%M";
+    $Para::Frame::Time::FORMAT = $CFG->{'time_format'};
+
     $CFG->{'umask'} ||= 0007;
     umask($CFG->{'umask'});
 
