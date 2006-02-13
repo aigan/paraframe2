@@ -50,6 +50,10 @@ use Para::Frame::Widget;
 use Para::Frame::Time qw( date );
 use Para::Frame::Email::Address;
 
+=head2 DESCRIPTION
+
+Put the email templates under C<$home/email/>.
+
 =head2 new
 
   Para::Frame::Email->new( \%params )
@@ -194,17 +198,25 @@ sub error_msg
 
 =head2 send_in_fork
 
-  Para::Frame::Email->send_in_fork( \%params )
-  Para::Frame::Email->send_in_fork()
-  $e->send_in_fork( \%params )
-  $e->send_in_fork()
+  $fork = Para::Frame::Email->send_in_fork( \%params )
+  $fork = Para::Frame::Email->send_in_fork()
+  $fork = $e->send_in_fork( \%params )
+  $fork = $e->send_in_fork()
 
 Sends the email in a fork. Throws an exception if failure occured.
 
-The return message is taken from $params{return_message} or the
-default "Email delivered".
+Returns the fork. 
+
+The return message in the fork is taken from $params{return_message}
+or the default "Email delivered".
 
 Calls L</send> with the given C<params>.
+
+Example:
+
+  $fork = Para::Frame::Email->send_in_fork( \%params )
+  $fork->yield;
+  return "" if $fork->failed;
 
 =cut
 
@@ -319,7 +331,7 @@ Optional params:
   by_proxy  = Sens email using sendmail
 
 
-The template are searched for in the C</email/> dir under the site
+The template are searched for in the C<$home/email/> dir under the site
 home.
 
 C<to> can be a ref to a list of email addresses to try. We try them in
@@ -344,6 +356,8 @@ Sends the email in the format quoted-printable.
 If sending C<by_proxy>, we will not get any indication if the email
 was sucessfully sent or not.
 
+Returns true on success or false on failure to send email.
+
 Exceptions:
 
 notfound - Hittar inte e-postmallen ...
@@ -352,12 +366,14 @@ mail - Failed to parse address $p->{'from'}
 
 Example:
 
-  Para::Frame::Email->send({
+  my $emailer = Para::Frame::Email->new({
     template => 'registration_confirmation.tt',
     from     => '"The registry office" <registry@mydomain.com>',
     to       => $recipient_email,
     subject  => "Welcome to our site",
   });
+  $emailer->send or throw('email', $emailer->err_msg);
+
 
 =cut
 
@@ -365,8 +381,11 @@ sub send
   {
     my($e, $p_in ) = @_;
 
-    # DEBUG...
-    unless( $Para::SITE_CFG->{'send_email'} )
+    my $req = $Para::Frame::REQ;
+    my $home = $req->site->home;
+    my $site = $req->site;
+
+    unless( $site->send_email )
     {
 	debug "Not sending any email right now...";
 	return 0;
@@ -383,9 +402,6 @@ sub send
     $p->{'from'}     or die "No from selected\n";
     $p->{'subject'}  or die "No subject selected\n";
     $p->{'to'}       or die "No reciever for this email?\n";
-
-    my $req = $Para::Frame::REQ;
-    my $home = $req->site->home;
 
     # List of addresses to try. Quit after first success
     my @try = ref $p->{'to'} eq 'ARRAY' ? @{$p->{'to'}} : $p->{'to'};
