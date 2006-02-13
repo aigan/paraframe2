@@ -21,7 +21,7 @@ package Para::Frame::Time;
 
 =head1 NAME
 
-Para::Frame::Time
+Para::Frame::Time - Parses, calculates and presents dates and times
 
 =cut
 
@@ -43,8 +43,9 @@ BEGIN
 
 use base qw( DateTime );
 
-our $TZ; # Default Timezone, set in Para::Frame->configure
 # Use timezone only for presentation. Not for date calculations
+our $TZ;     # Default Timezone, set in Para::Frame->configure
+our $FORMAT; # Default presentation format.
 
 our @EXPORT_OK = qw(internet_date date now timespan duration ); #for docs only
 
@@ -69,8 +70,8 @@ sub import
 
 =head1 DESCRIPTION
 
-Subclass to L<DateTime>, it automaticly strinigifies to the
-format C<%Y-%m-%d %H.%M>.
+This is a subclass to L<DateTime>, it automaticly strinigifies using
+L</format_datetime>.
 
 =cut
 
@@ -78,7 +79,10 @@ format C<%Y-%m-%d %H.%M>.
 
   Para::Frame::Time->get( $any_type_of_date )
 
-Parses everything and returns object
+Parses C<$any_type_of_date> and returns a C<Para::Frame::Time> object.
+
+This handles among other things, swedish and english dates, as
+recognized by L<Date::Manip/ParseDateString>.
 
 =cut
 
@@ -130,7 +134,7 @@ sub get
 
   now() # Exportable
 
-Returns obj representing current time
+Returns a C<Para::Frame::Time> object representing current time.
 
 =cut
 
@@ -138,12 +142,12 @@ sub now
 {
     Para::Frame::Time->SUPER::now();
 }
-  
+
 =head2 date
 
   date($any_string) #exportable
 
-Same as Para::Frame::Time->get()
+This function calls L</get> whit the given string.
 
 =cut
 
@@ -157,13 +161,13 @@ sub date
 
   timespan($from, $to) #exportable
 
-Returns a DateTime::Span object.
+Returns a L<DateTime::Span> object.
 
 Use undef value for setting either $from or $to to infinity
 
 This returns a closed span, including its end-dates.
 
-For other options, use DateTime::Span directly
+For other options, use L<DateTime::Span> directly
 
 =cut
 
@@ -193,7 +197,7 @@ sub timespan
 
   duration( %params ) #exportable
 
-Returns a DateTime::Duration object.
+Returns a L<DateTime::Duration> object.
 
 =cut
 
@@ -205,10 +209,13 @@ sub duration
 
 =head2 internet_date
 
-  internet_date()
-  internet_date($time)
+  internet_date( $time_in_any_format ) # exportable
+  $t->internet_date()
 
-Returns a date in a format suitable for use in SMTP or HTTP headers.
+Returns a date string in a format suitable for use in SMTP or HTTP
+headers.
+
+Can be called as a function or mehtod.
 
 =cut
 
@@ -231,25 +238,65 @@ sub cdate
     $_[0]->clone->set_time_zone($TZ)->strftime('%Y-%m-%d %H:%M:%S');
  }
 
+=head2 format_datetime
+
+  $t->format_datetime()
+
+Returns a string using the format given by L<Para::Frame/configure>.
+
+=cut
+
 sub format_datetime
 {
-    $_[0]->clone->set_time_zone($TZ)->strftime('%Y-%m-%d %H.%M' )
+    $_[0]->clone->set_time_zone($TZ)->strftime($FORMAT)
 }
+
+=head2 stamp
+
+  $t->stamp
+
+Same as L</format_datetime>
+
+=cut
 
 sub stamp
 {
     $_[0]->format_datetime;
 }
 
+=head2 desig
+
+  $t->desig
+
+Same as L</format_datetime>
+
+=cut
+
 sub desig
 {
     $_[0]->format_datetime;
 }
 
+=head2 plain
+
+  $t->plain
+
+Same as L</format_datetime>
+
+=cut
+
 sub plain
 {
     $_[0]->format_datetime;
 }
+
+=head2 sysdesig
+
+  $t->sysdesig
+
+Returns a string representation of the object for debug purposes.
+
+=cut
 
 sub sysdesig
 {
@@ -260,7 +307,9 @@ sub defined { 1 }
 
 #######################################################################
 
-=head3 syskey
+=head2 syskey
+
+  $t->syskey
 
 Returns a unique predictable id representing this object
 
@@ -275,6 +324,10 @@ sub syskey
 #######################################################################
 
 =head2 equals
+
+  $t->equals( $t2 )
+
+Returns true if both objects has the same value.
 
 =cut
 
@@ -370,6 +423,8 @@ sub _compare_overload
 =head1 SEE ALSO
 
 L<Para::Frame>,
-L<Time::Piece>
+L<DateTime>,
+L<DateTime::Duration>,
+L<DateTime::Span>
 
 =cut

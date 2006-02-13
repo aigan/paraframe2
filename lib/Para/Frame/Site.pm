@@ -35,13 +35,8 @@ Background jobs may not be coupled to a specific site.
 
 A default site is used then the needed.
 
-Information about each specific site is looked up by the canonical
-name that is considered to consist of the apache servern name,
-followed by ":$port" if $port != 80. This is what $req->host
-returns. (It does NOT include 'http://')
-
-$req->http_host gives the name used in the request, in the same
-format.
+Information about each specific site is looked up by L</get> using
+L</host> as param.
 
 =cut
 
@@ -79,6 +74,68 @@ sub _new
     return $site;
 }
 
+=head2 add
+
+  Para::Frame::Site->add( \%params )
+
+Adds a site with the given params. Should be called before
+startup. The params are stored as the properties of the object, to be
+used later.
+
+Special params are:
+
+=over
+
+C<webhost     > = See L</host>
+
+C<aliases     > = a listref of site aliases
+
+C<name        > = See L</name>
+
+C<code        > = See L</code>
+
+C<webhome     > = See L</webhome>
+
+C<last_step   > = See L</last_step>
+
+C<login_page  > = See L</login_page>
+
+C<logout_page > = See L</logout_page>
+
+C<loopback    > = See L</loopback>
+
+C<backup_host > = See L</backup_host>
+
+C<appbase     > = See L</appbase>
+
+C<appfmly     > = See L</appfmly>
+
+C<approot     > = See L</approot>
+
+C<appback     > = See L</appback>
+
+C<params      > = See L</params>
+
+C<languages   > = See L</languages>
+
+C<htmlsrc     > = See L</htmlsrc>
+
+C<is_compiled > = See L</is_compiled>
+
+C<send_email  > = See L</send_email>
+
+=back
+
+The site is registred under the L</host>, L</code> and all given
+C<aliases>.
+
+The B<first> site registred is also registred as the C<default> site.
+
+The B<first> site registred under a given L</host> is the default
+site used for requests under that domain.
+
+=cut
+
 sub add
 {
     my( $this, $params ) = @_;
@@ -88,7 +145,7 @@ sub add
     my $webhost = $site->webhost;
     debug "Registring site $webhost";
 
-    $DATA{ $webhost } = $site;
+    $DATA{ $webhost } ||= $site;
     $DATA{'default'} ||= $site;
 
     foreach my $alias (@{$params->{'aliases'}})
@@ -96,8 +153,23 @@ sub add
 	$DATA{ $alias } = $site;
     }
 
+    if( my $alias = $params->{'code'} )
+    {
+	$DATA{ $alias } = $site;
+    }
+
     return $site;
 }
+
+=head2 get
+
+  Para::Frame::Site->get( $name )
+
+Returns the site registred (by L</add>) under the given C<$name>.
+
+If no such site was regitred, returns the C<default> site.
+
+=cut
 
 sub get
 {
@@ -112,27 +184,69 @@ sub get
 	croak "Either site $name or default is registred";
 }
 
-sub name        { $_[0]->{'name'} || $_[0]->webhost }
-sub code        { $_[0]->{'code'} || $_[0]->webhost }
+=head2 name
+
+  $site->name
+
+Returns the C<name> of the site.
+
+Default to L</host>.
+
+=cut
+
+sub name
+{
+    return $_[0]->{'name'} || $_[0]->webhost;
+}
+
+=head2 code
+
+  $site->code
+
+Returns the C<code> of the site.
+
+Defaults to L</host>.
+
+=cut
+
+sub code
+{
+    return $_[0]->{'code'} || $_[0]->webhost;
+}
 
 
 #######################################################################
 
+=head2 webhome
+
+  $site->webhome
+
+Same as L</home>.
+
+=cut
+
+sub webhome
+{
+    return $_[0]->home;
+}
+
 =head2 home
 
   $site->home
-  $site->webhome
 
 Returns the home dir of the site as URL path, excluding the last '/'.
+
+Should be an URL path.
 
 This can be overridden by setting C<home> in dirconfig; Example
 from .htaccess:
 
-  PerlSetVar home /~myuser/
+  PerlSetVar home /~myuser
+
+B<Important> Do not end home with a C</>
 
 =cut
 
-sub webhome     { $_[0]->home }
 sub home
 {
     $Para::Frame::REQ->{'dirconfig'}{'home'} || $_[0]->{'webhome'} || '';
@@ -141,7 +255,38 @@ sub home
 #######################################################################
 
 
-sub last_step   { $_[0]->{'last_step'} } # default to undef
+=head2 last_step
+
+  $site->last_step
+
+Returns the C<last_step> to be used if no mere steps are found in the
+route. Used by L<Para::Frame::Route>.
+
+Should be an URL path.
+
+Defaults to C<undef>.
+
+=cut
+
+sub last_step
+{
+    return $_[0]->{'last_step'};
+}
+
+=head2 login_page
+
+  $site->login_page
+
+Returns the C<login_page> to be used.
+
+Should be an URL path.
+
+Defaults to L</last_step> if defined.
+
+Otherwise, defaults to L</webhome>.
+
+=cut
+
 sub login_page
 {
     return
@@ -150,23 +295,105 @@ sub login_page
 	$_[0]->webhome.'/';
 }
 
+=head2 logout_page
+
+  $site->logout_page
+
+Returns the C<logout_page> to be used.
+
+Should be an URL path.
+
+Defaults to L</webhome>.
+
+=cut
+
 sub logout_page
 {
     return $_[0]->{'logout_page'} ||
 	$_[0]->webhome.'/';
 }
 
+=head2 host
+
+  $site->host
+
+Returns the C<webhost>.
+
+This shold be the canonical name of the host of the site. This is the
+main hostname of the apache virtual host. If the port is anything else
+than 80, the port is apended. This string does not contain
+'http://'. This is the value returned by
+L<Para::Frame::Request/host>.
+
+L</http_host> gives the name used in the request, and may differ from
+the main hostname of the site.
+
+Example: C<frame.para.se> or C<frame.para.se:81>
+
+Defaults to the fully qualified domain name as returned by
+L<Para::Frame::Utils/fqdn>.
+
+=cut
+
+sub host
+{
+    return $_[0]->webhost;
+}
+
+=head2 webhost
+
+  $site->webhost
+
+Same as L</host>
+
+=cut
 
 sub webhost
 {
     return $_[0]->{'webhost'} || fqdn();
 }
 
-sub loopback    { $_[0]->{'loopback'} || $_[0]->home.'/' }
+=head2 loopback
 
-sub host        { $_[0]->webhost }
+  $site->loopback
 
-sub backup_host { $_[0]->{'backup_host'} }
+Returns the C<loopback> path to use then Para::Frame connects to
+itself via Apache (for getting info from mod_perl). This should be a
+lightweight page.
+
+Should be an URL path.
+
+Defaults to L</home>.
+
+=cut
+
+sub loopback
+{
+    return $_[0]->{'loopback'} || $_[0]->home.'/';
+}
+
+=head2 backup_host
+
+  $site->backup_host
+
+Returns the C<backup_host> used by
+L<Para::Frame::Request/fallback_error_page> for redirecting the user
+to a backup website in cases then the site is severily broken.
+
+=cut
+
+sub backup_host
+{
+    return $_[0]->{'backup_host'};
+}
+
+=head2 host_without_port
+
+  $site->host_without_port
+
+Returns the L</host> without the port part.
+
+=cut
 
 sub host_without_port
 {
@@ -175,6 +402,15 @@ sub host_without_port
     $webhost =~ s/:\d+$//;
     return $webhost;
 }
+
+=head2 host_with_port
+
+  $site->howt_with_port
+
+Returns the L</host> B<with> the port part. For example
+C<frame.para.se:80>.
+
+=cut
 
 sub host_with_port
 {
@@ -190,6 +426,14 @@ sub host_with_port
     }
 }
 
+=head2 port
+
+  $site->port
+
+Returns the port of the L</host>.
+
+=cut
+
 sub port
 {
     my $webhost = $_[0]->{'webhost'};
@@ -197,12 +441,40 @@ sub port
     return $1 || 80;
 }
 
+=head2 appbase
+
+  $site->appbase
+
+Returns the C<appbase> of the site.
+
+This should be a prefix for Perl modules. If appbase is set to
+C<MyProj>, the actions would have the prefix C<MyProj::Action::> and
+be placed in C<lib/MyProj/Action/>.
+
+Defaults to L<Para::Frame/CFG> C<appbase>.
+
+=cut
+
 sub appbase
 {
     my( $site ) = @_;
 
     return $site->{'appbase'} || $Para::Frame::CFG->{'appbase'};
 }
+
+=head2 appfmly
+
+  $site->appfmly
+
+Returns the C<appfmly> for the site.
+
+This should be a listref of elements, each to be treated ass fallbacks
+for L</appbase>.  If no actions are found under L</appbase> one after
+one of the elements in C<appfmly> are tried.
+
+Defaults to L<Para::Frame/CFG> C<appfmly>.
+
+=cut
 
 sub appfmly
 {
@@ -221,12 +493,42 @@ sub appfmly
     return $family;
 }
 
+=head2 approot
+
+  $site->approot
+
+Returns the path to application. This is the dir that holds the C<lib>
+and possibly the C<var> dirs.
+
+Defaults to L<Para::Frame/CFG> C<approot>.
+
+=cut
+
 sub approot
 {
     my( $site ) = @_;
 
     return $site->{'approot'} || $Para::Frame::CFG->{'approot'};
 }
+
+=head2 appback
+
+  $site->appback
+
+Returns the C<appback> of the site.
+
+This is a listref of server paths. Each path should bee a dir that
+holds a C<html> dir, or a C<dev> dir, for compiled sites.
+
+These dirs can hold C<inc> and C<def> dirs that will be used in
+template searches.
+
+See L<Para::Frame::Request/find_template> and
+L<Para::Frame::Burner/paths>.
+
+Defaults to L<Para::Frame/CFG> C<appback>.
+
+=cut
 
 sub appback
 {
@@ -236,11 +538,38 @@ sub appback
 }
 
 
+=head2 send_email
+
+  $site->send_email
+
+Returns C<send_email> of the site. True or false.
+
+=cut
+
+sub send_email
+{
+    if( defined $_[0]->{'send_email'} )
+    {
+	return $_[0]->{'send_email'};
+    }
+    else
+    {
+	if( defined $Para::Frame::CFG->{'send_email'} )
+	{
+	    return $Para::Frame::CFG->{'send_email'};
+	}
+    }
+
+    return 1;
+}
+
 #######################################################
 
 =head2 params
 
-The TT params to be added for each request in this site
+  $site->params
+
+The TT params to be added for each request in this site.
 
 =cut
 
@@ -252,14 +581,31 @@ sub params
 
 #######################################################
 
+=head2 languages
+
+  $site->languages
+
+Returns a listref of languages this site supports.
+
+Each element should be the language code as a two letter string.
+
+Defaults to L<Para::Frame/CFG> C<languages>.
+
+=cut
+
 sub languages
 {
     return $_[0]->{'languages'} || $Para::Frame::CFG->{'languages'} || [];
 }
 
+
+
 sub pagepath
 {
     my( $site ) = @_;
+
+    die "deprecated";
+
     my $req = $Para::Frame::REQ;
 
     my $home = $site->home;
@@ -293,6 +639,14 @@ sub set_is_compiled
 {
     return $_[0]->{'is_compiled'} = $_[1];
 }
+
+=head2 equals
+
+  $site->equals( $site2 )
+
+Returns true if C<$site> and C<$site2> is the same object.
+
+=cut
 
 sub equals
 {
