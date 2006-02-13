@@ -161,7 +161,7 @@ sub make_passwd
   random()
   random($max)
 
-Creates a integer number $x: 1 <= $x <= $max
+Creates a integer number $x: 1 <= $x < $max
 
 =cut
 
