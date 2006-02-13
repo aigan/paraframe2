@@ -1,6 +1,646 @@
+2006-02-10  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Email/Address.pm: Added docs
+
+	* lib/Para/Frame/Request.pm: Avoid looping errors
+
+	* lib/Para/Frame/Email.pm: Added docs
+
+	* lib/Para/Frame.pm: - Make this Para::Frame version 1.01
+	- Check that paraframe_group exists
+
+2006-02-08  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Watchdog.pm: buggfix
+
+	* lib/Para/Frame.pm: Catch exceptions in main loop
+
+	* lib/Para/Frame/Template/Components.pod: added an example in doc
+
+	* lib/Para/Frame/DBIx.pm: comment spelling
+
+	* html/inc/components.tt: buggfix
+
+	* lib/Para/Frame/Template/Components.pod: Added docs
+
+	* lib/Para/Frame/Action/user_logout.pm: Clear special params on logout
+
+	* lib/Para/Frame/Widget.pm, lib/Para/Frame/DBIx.pm: docfix
+
+	* html/inc/components.tt: - Renamed search to searchstep
+	- Added block expand
+
+2006-02-07  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Site.pm: home() now also looks in .htaccess
+
+	* lib/Para/Frame/Utils.pm: added passwd_crypt docs
+
+	* lib/Para/Frame/User.pm: Added docs
+
+	* lib/Para/Frame/DBIx.pm: added get_lastval()
+
+	* lib/Para/Frame.pm: Just removed whitespace
+
+	* lib/Para/Frame/Request.pm: added may_yield()
+
+	* lib/Para/Frame/DBIx.pm: - added docs
+	- reused code
+
+	* lib/Para/Frame/Burner.pm: notes about burning in fork
+
+	* lib/Para/Frame.pm:
+	New global variable holds the time of the latest run of main_loop
+
+2006-02-04  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm:
+	bugfix for normalizing URIs with query strings
+
+2006-02-03  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm: begfix
+
+	* lib/Para/Frame/Request.pm: handle undef val
+
+	* lib/Para/Frame/Client.pm: File upload
+
+2006-02-01  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Result/Part.pm:
+	- Support obj as standin for Template::Exception
+	- Use a lighter red
+
+	* lib/Para/Frame/Utils.pm:
+	Support Para::Frame::Result::Part as standin for Template::Exception
+
+	* lib/Para/Frame/DBIx.pm: Added lots of docs
+
+	* lib/Para/Frame/Change.pm: added docs
+
+	* lib/Para/Frame.pm: linkfix
+
+	* html/inc/components.tt: use css for style
+
+	* lib/Para/Frame/Template/Overview.pod:
+	note about empty default templates
+
+	* lib/Para/Frame/Template/Meta.pod: added docs
+
+	* lib/Para/Frame/Widget.pm: - Not uses class 'msg' any more
+	- Added docs
+	- Adds $home to path for relative css URLs
+
+	* lib/Para/Frame/Utils.pm: debug
+
+	* lib/Para/Frame/Session.pm: uses normalized_uri
+
+	* lib/Para/Frame/Route.pm: - Uses normalized_uri()
+	- bugfixes
+
+	* lib/Para/Frame/Result.pm: - Added docs
+	- Added error_parts() and info_parts()
+
+	* lib/Para/Frame/Request.pm:
+	- Added normalized_uri() and the usage thereof
+	- Added docs
+	- Added referer_with_query()
+
+	* html/inc/info_box.tt:
+	Separated the error parts from the information parts, makeing it easier to alter the presentation.
+
+	* html/inc/form_start.tt: Added form_method
+
+	* html/inc/debug.tt: adds a div to the template
+
+	* html/inc/components.tt: - removes the msg class
+	- renamess box class to paraframe_box
+
+	* lib/Para/Frame/Template/CSS.pod: documents styles used
+
+2006-01-31  jonas <jonas@paranormal.se>
+
+	* html/inc/form_start.tt:
+	set default form enctype depending on form_method
+
+	* lib/Para/Frame/Request.pm:
+	Look if we shouls give up retrying sending page to client
+
+	* html/inc/components.tt: use css for styles
+
+	* lib/Para/Frame/Watchdog.pm: set default
+
+2006-01-30  jonas <jonas@paranormal.se>
+
+	* html/ui/images/arrow.down.png, html/ui/images/arrow.up.png, html/ui/styleswitch.js:
+	common ui widgets
+
+	* lib/Para/Frame/Request.pm: - less debug
+	- rename subrequest
+
+	* lib/Para/Frame/Burner.pm: less debug
+
+	* lib/Para/Frame.pm: rename subrequest
+
+	* html/inc/components.tt: use sort from ritframe
+
+2006-01-29  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/wait_for_req.pm: more debug
+
+	* lib/Para/Frame/Site.pm: loopback defaults to site home
+
+	* lib/Para/Frame/Request.pm:
+	- Explained the conditions for a subrequest
+	- If a subrequest handles a diffrent site, make it a background request, using the proper client if necessary
+	- added method set_site() that checks that it matches the client
+	- more debug
+	- removed references to site_dir, et al
+
+	* lib/Para/Frame.pm:
+	- subrequests can now be detatched as background jobs, and will in that case be deregistred then done
+	- On creation of background request from Para::Frame; set the site to original request site.
+
+	* lib/Para/Frame/Request.pm: Just moving to homer for continuing devel
+
+	* lib/Para/Frame/Request.pm: Just to keep note...
+
+2006-01-28  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: test uri2file hostcheck
+
+	* lib/Para/Frame.pm, lib/Para/Frame/Burner.pm, lib/Para/Frame/Request.pm, lib/Para/Frame/Site.pm, lib/Para/Frame/Utils.pm:
+	moved uri2file to Para::Frame::Request
+
+	* lib/Para/Frame/Result/Part.pm:
+	Note about handling Template::Exception
+
+	* lib/Para/Frame/Utils.pm:
+	catch() now also handles Para::Frame::Result::Part
+
+	* lib/Para/Frame/Request.pm: spelling
+
+	* lib/Para/Frame/Site.pm: added method equals()
+
+	* lib/Para/Frame/Result.pm: less debug
+
+	* lib/Para/Frame/Request.pm:
+	- new_subrequest() now calls the code to be run under the new req
+	- added methods original() and equals()
+	- check that we are not trying to find templates with lang in name
+	- default lang is en
+	- debug ident bugfix in find_template
+	- check that we are not trying to return an empty page
+	- precompile_page() is not using a subrequest itself
+
+	* lib/Para/Frame.pm: Added code comment about subrequests
+
+2006-01-27  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/wait_for_req.pm:
+	renamed $req->{'page'} to $req->{'page_content'}
+
+	* lib/Para/Frame/Widget.pm:
+	added references to css_header and inflect in docs
+
+	* lib/Para/Frame/Utils.pm: - documented timediff
+	- moved preferred_language to Request
+
+	* lib/Para/Frame/Site.pm: - added accessors to name and code
+	- documented home and params
+
+	* lib/Para/Frame/Request.pm: - Adding ref to Para::Frame::Page
+	- moved preferred_language to here
+	- renamed $req->{'page'} to $req->{'page_content'}
+	- better error handling while precompiling page
+	- documenting tt vars
+
+	* lib/Para/Frame/Burner.pm:
+	bugfix: only return true if there was an error
+
+	* lib/Para/Frame.pm: - added docs
+	- removed tt vars defined in Widget module
+
+	* lib/Para/Frame/Page.pm: New class representing the page requested
+
+2006-01-25  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: - set_language handles nonclient usage
+	- precompile_page should now handle exceptions, resetting previous state
+
+	* lib/Para/Frame/Request.pm:
+	- Setting site for request based on site variable in apache dirconfig or from req host
+	- new_subrequest() and new_minimal() now takes an args param
+	- setting language with set_language() from new_minimal()
+	- set_language() now accepts an array of langs
+	- precompile_page() now takes an args param that it uses for setting language and site (and type)
+
+	* lib/Para/Frame/Site.pm:
+	$class->get() now accepts a site object, that it then just returns
+
+2006-01-23  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm:
+	throw exception if we try to translate an empty path
+
+	* lib/Para/Frame/Site.pm, lib/Para/Frame/Request.pm, lib/Para/Frame/Burner.pm:
+	bugfix
+
+	* lib/Para/Frame/Utils.pm: more debug
+
+	* lib/Para/Frame/Site.pm: - bugfixes
+	- added set_is_compiled()
+
+	* lib/Para/Frame/Request.pm: - bugfixes
+	- fallback on not compiled mode for bootstrap
+
+	* lib/Para/Frame/Burner.pm: misc debug
+
+	* html/index.tt: Default intro page
+
+	* html/index.tt: Default index dir
+
+	* MANIFEST: updated manifest
+
+	* MANIFEST: updated
+
+	* lib/Para/Frame/Site.pm: added methods htmlsrc() and is_compiled()
+
+	* lib/Para/Frame/Request.pm: - new algoritm for include paths
+	- use ->session instead of ->s
+	- handle index.tt in precompile
+	- added site_uri as a tt variable
+
+	* lib/Para/Frame/Burner.pm: new algoritm for include dirs
+
+	* lib/Para/Frame.pm:
+	added subdir_suffix for burners for use in inc paths
+
+2006-01-18  jonas <jonas@paranormal.se>
+
+	* html/def/page_part_not_found.tt:
+	Renamed file html/def/page_part_not_found.tt, formerly def/page_part_not_found.tt
+
+	* html/def/page_not_found.tt:
+	Renamed file html/def/page_not_found.tt, formerly def/page_not_found.tt
+
+	* html/def/login.tt:
+	Renamed file html/def/login.tt, formerly def/login.tt
+
+	* html/def/index.tt:
+	Renamed file html/def/index.tt, formerly def/index.tt
+
+	* html/def/error.tt:
+	Renamed file html/def/error.tt, formerly def/error.tt
+
+	* html/def/env.tt: Renamed file html/def/env.tt, formerly def/env.tt
+
+	* html/def/denied.tt:
+	Renamed file html/def/denied.tt, formerly def/denied.tt
+
+	* html/def/debug.tt:
+	Renamed file html/def/debug.tt, formerly def/debug.tt
+
+	* html/def/confirm.tt:
+	Renamed file html/def/confirm.tt, formerly def/confirm.tt
+
+	* html/def/alternatives.tt:
+	Renamed file html/def/alternatives.tt, formerly def/alternatives.tt
+
+	* html/inc/title.tt:
+	Renamed file html/inc/title.tt, formerly inc/title.tt
+
+	* html/inc/pagify.tt:
+	Renamed file html/inc/pagify.tt, formerly inc/pagify.tt
+
+	* html/inc/menu_top.tt:
+	Renamed file html/inc/menu_top.tt, formerly inc/menu_top.tt
+
+	* html/inc/login_box.tt:
+	Renamed file html/inc/login_box.tt, formerly inc/login_box.tt
+
+	* html/inc/js.tt: Renamed file html/inc/js.tt, formerly inc/js.tt
+
+	* html/inc/js_extra.tt:
+	Renamed file html/inc/js_extra.tt, formerly inc/js_extra.tt
+
+	* html/inc/info_box.tt:
+	Renamed file html/inc/info_box.tt, formerly inc/info_box.tt
+
+	* html/inc/headline.tt:
+	Renamed file html/inc/headline.tt, formerly inc/headline.tt
+
+	* html/inc/header.tt:
+	Renamed file html/inc/header.tt, formerly inc/header.tt
+
+	* html/inc/header_prepare.tt:
+	Renamed file html/inc/header_prepare.tt, formerly inc/header_prepare.tt
+
+	* html/inc/header_extra.tt:
+	Renamed file html/inc/header_extra.tt, formerly inc/header_extra.tt
+
+	* html/inc/form_start.tt:
+	Renamed file html/inc/form_start.tt, formerly inc/form_start.tt
+
+	* html/inc/components.tt:
+	Renamed file html/inc/components.tt, formerly inc/components.tt
+
+	* html/inc/border_top.tt:
+	Renamed file html/inc/border_top.tt, formerly inc/border_top.tt
+
+	* html/inc/footer.tt:
+	Renamed file html/inc/footer.tt, formerly inc/footer.tt
+
+	* html/inc/env.tt: Renamed file html/inc/env.tt, formerly inc/env.tt
+
+	* html/inc/debug.tt:
+	Renamed file html/inc/debug.tt, formerly inc/debug.tt
+
+	* html/inc/border_bottom.tt:
+	Renamed file html/inc/border_bottom.tt, formerly inc/border_bottom.tt
+
+	* html/inc/alternatives_box.tt:
+	Renamed file html/inc/alternatives_box.tt, formerly inc/alternatives_box.tt
+
+	* dev/inc_pre/header.tt:
+	Renamed file dev/inc_pre/header.tt, formerly inc_pre/header.tt
+
+	* dev/inc_pre/header_prepare.tt:
+	Renamed file dev/inc_pre/header_prepare.tt, formerly inc_pre/header_prepare.tt
+
+	* dev/inc_pre/form_start.tt:
+	Renamed file dev/inc_pre/form_start.tt, formerly inc_pre/form_start.tt
+
+	* dev/inc_pre/footer.tt:
+	Renamed file dev/inc_pre/footer.tt, formerly inc_pre/footer.tt
+
+	* dev/inc_pre/border_top.tt:
+	Renamed file dev/inc_pre/border_top.tt, formerly inc_pre/border_top.tt
+
+2006-01-17  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: changed jump() interface, along with go()
+
+	* lib/Para/Frame/Watchdog.pm: less debug
+
+	* lib/Para/Frame/Request.pm: - user() shortcut
+	- redesigned precompile_page()
+	- added site_file tt param
+
+2006-01-16  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Email.pm: note
+
+2006-01-12  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Email.pm: bugfix
+
+2006-01-11  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/user_login.pm: bugfix
+
+	* lib/Para/Frame/Widget.pm: relative to home
+
+	* lib/Para/Frame/Utils.pm: Added preferred_language()
+
+	* lib/Para/Frame/User.pm: - Added docs for verify_password() and get()
+	- Removed verify_user()
+
+	* lib/Para/Frame/Session.pm: Calls $s->init for initializing
+
+	* lib/Para/Frame/Request.pm: - %ENV bugfix
+	- setting special templates relative $home
+
+	* lib/Para/Frame.pm:
+	- Added methods Session and User, returning respective class
+	- $CFG->{'session_class'} defaults to 'Para::Frame::Session'
+
+2006-01-07  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/DBIx.pm: reset changes on roolback
+
+	* lib/Para/Frame/Action/user_login.pm, lib/Para/Frame/Request.pm:
+	Bugfix: not backtracking to faild login attempts
+
+	* lib/Para/Frame.pm, lib/Para/Frame/DBIx.pm, lib/Para/Frame/Request.pm:
+	commit DB before template rendering, so that the DB is updated
+
+2005-12-31  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: xhtml
+
+	* lib/Para/Frame/Result/Part.pm: bugfix in member registration
+
+	* lib/Para/Frame/Request.pm: added set_http_status
+
+2005-12-30  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: backtrack has been renamed to next_step
+
+2005-12-29  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/URI.pm: Not removing / from http://...
+
+	* lib/Para/Frame/Route.pm: Using Para::Frame::URI
+
+	* lib/Para/Frame.pm, lib/Para/Frame/Watchdog.pm:
+	- Try harder not to crash
+	- Try harder to recover from crashes
+	- Reports crashes
+
+	* lib/Para/Frame/Request.pm, lib/Para/Frame/Route.pm, lib/Para/Frame/Session.pm, lib/Para/Frame/URI.pm, lib/Para/Frame/Utils.pm:
+	Using Para::Frame::URI class
+
+2005-11-23  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: protect against exceptions
+
+	* lib/Para/Frame/Widget.pm: doc fix
+
+2005-11-18  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Site.pm: not using / in dir!
+
+	* lib/Para/Frame/Request.pm: rollback / in dir
+
+	* lib/Para/Frame/Utils.pm, lib/Para/Frame/Site.pm, lib/Para/Frame/Request.pm:
+	bugfix
+
+	* lib/Para/Frame/DBIx.pm: handles empty fields
+
+2005-11-16  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Site.pm: added pagepath()
+
+	* lib/Para/Frame/Request.pm: - Introducing new_subrequest()
+	- changed set_dirsteps for setting resolved dirs
+
+	* lib/Para/Frame/Client.pm: do not use $Psi::QUIET
+
+	* lib/Para/Frame/Burner.pm:
+	tweaked paths() for looking in all the right places
+
+	* lib/Para/Frame.pm:
+	- replaced new_background() with new_subrequest() in Request
+	- You can now add more tt plugin_base
+
+	* lib/Para/Frame/Action/symdump.pm: For debugging memory leaks
+
+2005-11-13  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: wider default textarea
+
+2005-11-09  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm: bugfix
+
+	* lib/Para/Frame/Burner.pm: less debug
+
+	* lib/Para/Frame/Utils.pm:
+	- added docs for dirsteps(), and changed its behaviour
+
+	* lib/Para/Frame/User.pm: added id() as alias for uid()
+
+	* lib/Para/Frame/Site.pm:
+	added appbase() approot() appback() and languages()
+
+	* lib/Para/Frame/Result.pm: - added docs for exception()
+	- handing Para::Frame::Result::Part objects in exception()
+
+	* lib/Para/Frame/Request.pm: - added set_language() method
+	- added precompile_page() method
+	- added set_dirsteps() method
+
+	* lib/Para/Frame/Reload.pm: removed usage of $Psi::QUIET
+
+	* lib/Para/Frame/Burner.pm:
+	replaced incpath_generator() with paths() that generate the incpath using appback and more.
+
+	* lib/Para/Frame.pm: - added new_background() function
+	- added tt param timediff
+	- added dir() function
+
+	* README: added depend note
+
+	* Makefile.PL: added depend on DateTime::Format::Pg
+
+	* lib/Para/Frame/Time.pm:
+	Work in UTC/floting and present in local timezone
+
+	* lib/Para/Frame/Request.pm: Do not die on malformed values
+
+2005-10-23  jonas <jonas@paranormal.se>
+
+	* MANIFEST.SKIP: Ignores Para-Frame- files
+
+	* MANIFEST: Added some files
+
+2005-10-22  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm: check on startup
+
+2005-10-18  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/debug_change.pm:
+	support changing global debug level
+
+	* lib/Para/Frame.pm: not using debug level 6
+
+2005-10-15  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm: 5 minute average sysload
+
+	* lib/Para/Frame/Route.pm: less debug
+
+	* lib/Para/Frame.pm: bugfix
+
+2005-10-13  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Result/Part.pm: hide confirm
+
+	* lib/Para/Frame/Action/backtrack.pm: removed
+
+	* lib/Para/Frame/Widget.pm: enable export of functions
+
+	* lib/Para/Frame/Session.pm: add query params to referer
+
+	* lib/Para/Frame/Route.pm: add params to caller_page
+
+	* lib/Para/Frame/Result.pm: bugfix
+
+	* lib/Para/Frame/Request.pm: added referer_query
+
+2005-10-12  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Result.pm: bugfix
+
+	* lib/Para/Frame/Change.pm: Report even if only notes added.
+
+2005-10-08  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/next_step.pm: added option to break_path
+
+	* lib/Para/Frame/Utils.pm:
+	added uri_path for translating relative to absolute path
+
+	* lib/Para/Frame/Route.pm:
+	- added break_path option to get_next for not chosing the next_template if nothing else to do
+
+	* lib/Para/Frame/Request.pm, lib/Para/Frame/Change.pm:
+	Moved Para::Change to Para::Frame::Change
+
+	* lib/Para/Frame.pm: added url_path TT param
+
+	* lib/Para/Frame/Change.pm:
+	Renamed file paraframe/lib/Para/Frame/Change.pm, formerly lib/Para/Change.pm
+
+	* lib/Para/Frame/Utils.pm: make sure we have a $req
+
+2005-10-07  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Email/Address.pm:
+	- added format_human() for displaying address for humans
+	- added desig() for giving a short designation of the address
+	- added on_configure() for exporting the email param to templates
+
+	* lib/Para/Frame/Utils.pm: - removed maxof() and minof()
+	- added in()
+
+	* lib/Para/Frame/Route.pm:
+	use default last step if no steps left and asked for next step
+
+	* lib/Para/Frame/Email.pm: use formatted address in from field
+
+	* lib/Para/Frame.pm: configure Para::Frame::Email::Address on startup
+
+2005-10-03  jonas <jonas@paranormal.se>
+
+	* MANIFEST, MANIFEST.SKIP, README, lib/Para/Frame.pm, lib/Para/Frame/Overview.pod, lib/Para/Frame/Template/Components.pod, lib/Para/Frame/Template/Index.pod, lib/Para/Frame/Template/Meta.pod, lib/Para/Frame/Template/Overview.pod:
+	documentation
+
+	* Makefile.PL: depend on Test::More and Test::Warn
+
+	* lib/Para/Frame/Email.pm: less debug
+
+	* lib/Para/Frame/DBIx.pm: do not die on error in fork. Just ignore it
+
+	* lib/Para/Frame/DBIx.pm: - make integers integers
+	- added param copy_data in update_wrapper() for copying the changed fields to an object
+
+2005-10-01  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: Do not use clone!
+
+	* lib/Para/Frame/Site.pm: bugfix
+
+	* lib/Para/Frame/Email.pm: do not use clone!
+
+	* Changes, MANIFEST, Makefile.PL, README, t/01_basic.t:
+	new files for paraframe package
+
 2005-09-30  jonas <jonas@paranormal.se>
 
-	* lib/Para/Frame/Utils.pm: expand elapsed_time()
+	* lib/Para/Frame/Request.pm: Set header 404 for page_not_found.tt
 
 2005-09-28  jonas <jonas@paranormal.se>
 
