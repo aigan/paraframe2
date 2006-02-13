@@ -886,6 +886,36 @@ sub css_header
 
 
 
+
+
+
+#######################################################################
+
+=head2 favicon_header
+
+  css_header( $url )
+
+Draws a favicon header.
+
+Paths not beginning with / are relative to the site home.
+
+=cut
+
+sub favicon_header
+{
+    my( $url ) = @_;
+
+    return "" unless $url;
+
+    my $home = $Para::Frame::REQ->site->home;
+
+    $url =~ s/^([^\/])/$home\/$1/;
+
+    return "<link rel=\"shortcut icon\" href=\"$url\" type=\"image/x-icon\" />";
+}
+
+
+
 #######################################################################
 
 =head2 confirm_simple
@@ -1049,6 +1079,7 @@ sub on_configure
 	'textarea'        => \&textarea,
 	'filefield'       => \&filefield,
 	'css_header'      => \&css_header,
+	'favicon_header'  => \&favicon_header,
 	'inflect'         => \&inflect,
     };
 
