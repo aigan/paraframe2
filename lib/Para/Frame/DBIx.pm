@@ -36,6 +36,7 @@ BEGIN
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw catch debug timediff package_to_module );
 use Para::Frame::Time qw( date );
+use Para::Frame::List;
 
 use base qw( Exporter );
 BEGIN
@@ -281,7 +282,7 @@ Template example:
 
 Returns:
 
-a ref to a list of hash records
+a L<Para::Frame::List> with the hash records
 
 Exceptions:
 
@@ -312,7 +313,7 @@ sub select_list
 	$sth->finish;
     };
     report_error("Select list",\@vals);
-    return $ref;
+    return Para::Frame::List->new($ref);
 }
 
 
