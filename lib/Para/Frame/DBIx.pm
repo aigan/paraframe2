@@ -571,6 +571,10 @@ sub rollback
 
 Returns the $dbh object, as returned by L<DBI/connect>.
 
+Example:
+
+  $dbix->dbh->do("update mytable set a=?, b=? where c=?", {}, $a, $b, $c);
+
 =cut
 
 sub dbh { $_[0]->{'dbh'} }
@@ -679,9 +683,7 @@ sub format_datetime
 
 =head2 update
 
-  $req->update( $table, \%set, \%where )
-
-TODO: Test that this method works...
+  $dbix->update( $table, \%set, \%where )
 
 C<$table> is the name of the table as a string
 
@@ -697,6 +699,10 @@ Returns: The number of rows updated
 Exceptions:
 
 dbi : ... full explanation ...
+
+Example:
+
+  $dbix->update( 'my_users', { email => $new_email }, { user_id => $u->id })
 
 =cut
 
