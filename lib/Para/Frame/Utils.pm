@@ -60,7 +60,7 @@ BEGIN
 {
     @Para::Frame::Utils::EXPORT_OK
 
-      = qw( in trim make_passwd random throw catch
+      = qw( in trim make_passwd random throw catch run_error_hooks
             create_file create_dir chmod_tree chmod_file chmod_dir
             package_to_module module_to_package dirsteps
             compile passwd_crypt deunicode paraframe_dbm_open
@@ -305,7 +305,7 @@ sub catch
     unless( UNIVERSAL::isa($error, 'Para::Frame::Result::Part') or
 	    UNIVERSAL::isa($error, 'Template::Exception') )
     {
-	my $type = 'undef';
+	my $type = undef;
 	my $info = $error;
 
 	if( ref $error eq 'ARRAY' )
@@ -330,6 +330,19 @@ sub catch
     }
 
     return $error;
+}
+
+sub run_error_hooks
+{
+    my( $type, $info ) = $_[0]->type_info;
+    my $text = $_[0]->text;
+    my $textref = \ $text;
+
+    Para::Frame->run_hook($Para::Frame::REQ, 'on_error_detect', \$type, \$info, $textref );
+
+    $type ||= 'action';
+
+    return Template::Exception->new( $type, $info, $textref );
 }
 
 
