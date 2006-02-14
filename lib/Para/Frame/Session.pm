@@ -16,6 +16,13 @@ package Para::Frame::Session;
 #
 #=====================================================================
 
+
+=head1 NAME
+
+Para::Frame::Session - Session handling
+
+=cut
+
 use strict;
 use CGI;
 use FreezeThaw qw( thaw );
@@ -182,6 +189,15 @@ sub debug_data
     return $out;
 }
 
+=head2 list
+
+  $s->list( $id )
+
+Returns the previously stored L<Para::Frame::List> object number
+C<$id>.
+
+=cut
+
 sub list
 {
     my( $s, $id ) = @_;
@@ -191,5 +207,13 @@ sub list
 
     return $s->{list}{$id};
 }
+
+
+=head1 SEE ALSO
+
+L<Para::Frame>
+
+=cut
+
 
 1;
