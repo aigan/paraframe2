@@ -25,9 +25,9 @@ Para::Frame::List - Methods for list manipulation
 use strict;
 use Carp qw( carp croak shortmess );
 use Data::Dumper;
-use List::Util qw( min max );
+use List::Util;
+use Template::Constants;
 
-use base qw( Tie::Array );
 
 BEGIN
 {
@@ -41,6 +41,7 @@ use Para::Frame::Widget qw( forward );
 
 our %OBJ; # Store obj info
 
+use base qw( Template::Iterator );
 
 =head2 DESCRIPTION
 
@@ -50,6 +51,11 @@ be used as usual. Example:
   my $l = Para::Frame::List->new( \@biglist );
   my $first_element = $l->[0];
   my $last_element = pop @$l;
+
+The iteration methods is compatible with L<Template::Iterator>. The
+iterator status codes are taken from L<Template::Constants>.
+
+NB! The method max 
 
 The object also has the following methods.
 
@@ -79,7 +85,7 @@ sub new
 
     my $l = bless $listref, $class;
 
-    debug "Adding list obj $l";
+    debug 3, "Adding list obj $l";
 
     $p ||= {};
 
@@ -95,7 +101,7 @@ sub DESTROY
 {
     my( $l ) = @_;
 
-    debug "Removing list obj $l";
+    debug 3, "Removing list obj $l";
     delete $OBJ{$l};
 
     return 1;
@@ -124,7 +130,9 @@ sub from_page
     my $obj = $OBJ{$l};
 
     my $start = $obj->{page_size} * ($page-1);
-    my $end = min( $start + $obj->{page_size} - 1, scalar(@$l));
+    my $end = List::Util::min( $start + $obj->{page_size}, scalar(@$l))-1;
+
+    debug "From $start to $end";
 
     return [ @{$l}[$start..$end] ];
 
@@ -253,8 +261,8 @@ sub pagelist
     my $dpages = $obj->{display_pages};
     my $pages = $l->pages;
 
-    my $startpage = max( $pagenum - $dpages/2, 1);
-    my $endpage = min( $pages, $startpage + $dpages - 1);
+    my $startpage = List::Util::max( $pagenum - $dpages/2, 1);
+    my $endpage = List::Util::min( $pages, $startpage + $dpages - 1);
 
     my $id = $l->id;
 
@@ -343,7 +351,8 @@ Sets and returns the given C<$page_size>
 
 sub set_page_size
 {
-    return $OBJ{$_[0]}{page_size} = $_[1];
+    $OBJ{$_[0]}{page_size} = $_[1];
+    return "";
 }
 
 
@@ -373,7 +382,8 @@ Sets and returns the given L</display_pages>.
 
 sub set_display_pages
 {
-    return $OBJ{$_[0]}{display_pages} = $_[1];
+    $OBJ{$_[0]}{display_pages} = $_[1];
+    return "";
 }
 
 
@@ -493,6 +503,243 @@ sub limit
     return $list->new( [@{$list}[0..($limit-1)]] );
 }
 
+
+#######################################################################
+
+=head2 get_first
+
+  $l->get_first
+
+Initialises the object for iterating through the target data set.  The
+first record is returned, if defined, along with the STATUS_OK value.
+If there is no target data, or the data is an empty set, then undef
+is returned with the STATUS_DONE value.
+
+=cut
+
+sub get_first
+{
+    my( $l ) = @_;
+    my $obj = $OBJ{$l};
+
+    my $size = scalar @$l;
+    my $index = 0;
+
+    return (undef, Template::Constants::STATUS_DONE) unless $size;
+
+    # initialise various counters, flags, etc.
+    @$obj{ qw( SIZE INDEX COUNT FIRST LAST ) }
+      = ( $size, $index, 1, 1, $size > 1 ? 0 : 1, undef );
+    @$obj{ qw( PREV NEXT ) } = ( undef, $l->[ $index + 1 ]);
+
+    return $l->[ $index ];
+}
+
+
+
+#######################################################################
+
+=head2 get_next
+
+  $l->get_next
+
+Called repeatedly to access successive elements in the data set.
+Should only be called after calling get_first() or a warning will
+be raised and (undef, STATUS_DONE) returned.
+
+=cut
+
+sub get_next
+{
+    my( $l ) = @_;
+    my $obj = $OBJ{$l};
+
+    my( $index ) = $obj->{INDEX};
+
+    # warn about incorrect usage
+    unless( defined $index )
+    {
+        my ($pack, $file, $line) = caller();
+        warn("iterator get_next() called before get_first() at $file line $line\n");
+        return( undef, Template::Constants::STATUS_DONE );   ## RETURN ##
+    }
+
+    # if there's still some data to go...
+    if( $index < $#$l )
+    {
+        # update counters and flags
+        $index++;
+        @$obj{ qw( INDEX COUNT FIRST LAST ) }
+	  = ( $index, $index + 1, 0, $index == $#$l ? 1 : 0 );
+        @$obj{ qw( PREV NEXT ) } = @$l[ $index - 1, $index + 1 ];
+        return $l->[ $index ];                           ## RETURN ##
+    }
+    else
+    {
+        return (undef, Template::Constants::STATUS_DONE);   ## RETURN ##
+    }
+}
+
+
+#######################################################################
+
+=head2 get_all
+
+  $l->get_all
+
+Method which returns all remaining items in the iterator as a Perl list
+reference.  May be called at any time in the life-cycle of the iterator.
+The get_first() method will be called automatically if necessary, and
+then subsequent get_next() calls are made, storing each returned
+result until the list is exhausted.
+
+=cut
+
+sub get_all
+{
+    my( $l ) = @_;
+    my $obj = $OBJ{$l};
+
+    my($index) = $obj->{INDEX};
+    my @data;
+
+    # if there's still some data to go...
+    if ($index < $#$l)
+    {
+        $index++;
+        @data = @{ $l }[ $index..$#$l ];
+
+        # update counters and flags
+        @$obj{ qw( INDEX COUNT FIRST LAST ) }
+	  = ( $#$l, $#$l + 1, 0, 1 );
+
+        return \@data;                                      ## RETURN ##
+    }
+    else
+    {
+        return (undef, Template::Constants::STATUS_DONE);   ## RETURN ##
+    }
+}
+
+
+
+#######################################################################
+
+=head2 max
+
+  $l->max
+
+Returns the maximum index number (i.e. the index of the last element)
+which is equivalent to size() - 1.
+
+=cut
+
+sub max
+{
+    my( $l ) = @_;
+
+    return $#$l;
+}
+
+
+
+#######################################################################
+
+=head2 index
+
+  $l->index
+
+Returns the current index number which is in the range 0 to max().
+
+=cut
+
+sub index
+{
+    return $OBJ{$_[0]}{INDEX};
+}
+
+
+
+#######################################################################
+
+=head2 count
+
+  $l->count
+
+Returns the current iteration count in the range 1 to size().  This is
+equivalent to index() + 1.
+
+=cut
+
+sub count
+{
+    return $OBJ{$_[0]}{COUNT};
+}
+
+
+#######################################################################
+
+=head2 first
+
+  $l->first
+
+Returns a boolean value to indicate if the iterator is currently on
+the first iteration of the set.
+
+=cut
+
+sub first
+{
+    return $OBJ{$_[0]}{FIRST};
+}
+
+#######################################################################
+
+=head2 last
+
+  $l->last
+
+Returns a boolean value to indicate if the iterator is currently on
+the last iteration of the set.
+
+=cut
+
+sub last
+{
+    return $OBJ{$_[0]}{LAST};
+}
+
+#######################################################################
+
+=head2 prev
+
+  $l->prev
+
+Returns the previous item in the data set, or undef if the iterator is
+on the first item.
+
+=cut
+
+sub prev
+{
+    return $OBJ{$_[0]}{PREV};
+}
+
+#######################################################################
+
+=head2 next
+
+  $l->next
+
+Returns the next item in the data set or undef if the iterator is on
+the last item.
+
+=cut
+
+sub next
+{
+    return $OBJ{$_[0]}{NEXT};
+}
 
 1;
 
