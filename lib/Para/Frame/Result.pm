@@ -35,7 +35,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( trim debug );
+use Para::Frame::Utils qw( trim debug catch run_error_hooks );
 use Para::Frame::Result::Part;
 
 =head1 DESCRIPTION
@@ -127,62 +127,36 @@ For other errors, adds parts to result and returns one of them.
 
 sub exception
 {
-    my( $result, $explicit, $info, $text ) = @_;
+    my( $result, $explicit, $info_in, $textref ) = @_;
 
-#    warn("Input is ".Dumper($result, $explicit, $@)."\n");
-
-    $text ||= "";
-    unless( ref $text )
+    $textref ||= "";
+    unless( ref $textref )
     {
-	$text = \ "$text";
+	$textref = \ "$textref";
     }
 
-    if( $info )
+    if( $info_in )
     {
-	$explicit = Template::Exception->new($explicit, $info, $text);
+	$explicit = Template::Exception->new($explicit, $info_in, $textref);
     }
 
     $@ = $explicit if $explicit;
 
-    # Check if the info part is in fact the exception object
-    if( ref($@) )
-    {
-	if( ref($@) eq 'Para::Frame::Result::Part' )
-	{
-	    # This exception has already been registred
-	    return $@;
-	}
-	elsif( ref($@->[1]) eq 'ARRAY' )
-	{
-	    debug "Removing first part: ".Dumper( $@->[0]);
-	    $@ = $@->[1]; # $@->[0] is probably 'undef'
-	}
-    }
+    my $error = catch($@);
 
-    $info  ||= ref($@) ? $@->[1] : $@;
-    my $type = ref($@) ? $@->[0] : undef;
-    $type ||= 'undef';
+    run_error_hooks($error);
 
-    ## on_error_detect
-    #
-    Para::Frame->run_hook($Para::Frame::REQ, 'on_error_detect', \$type, \$info, $text );
-
-    $type = undef if $type and $type eq 'undef';
-    $type ||= 'action';
-
-#    warn "Exception defined: $type\n";
-    if( $type eq 'undef' )
-    {
-	confess Dumper( $info, \@_ );
-    }
-
-    return $result->error($type, $info, $text);
+    return $result->error( $error );
 }
+
 
 =head2 error
 
   $result->error( $type, $message, $contextref )
+
   $result->error( $type, $message )
+
+  $result->error( $exception_obj )
 
 Creates a new error part and adds it to the result. Clears out $@
 
@@ -201,13 +175,21 @@ sub error
 {
     my( $result, $type, $message, $contextref ) = @_;
 
-    $message =~ s/(\n\r?)+$//;
-    unless( ref $contextref )
+    my $error;
+    if( ref $type )
     {
-	$contextref = \ "$contextref";
+	$error = $type;
     }
+    else
+    {
+	$message =~ s/(\n\r?)+$//;
+	unless( ref $contextref )
+	{
+	    $contextref = \ "$contextref";
+	}
 
-    my $error = Template::Exception->new( $type, $message, $contextref );
+	$error = Template::Exception->new( $type, $message, $contextref );
+    }
 
     $@ = undef; # Clear out error info
 
