@@ -206,6 +206,10 @@ expand the C<$content>.
 For collapsed state, the class C<paraframe_expand> is used and for the
 expanded state, the class C<paraframe_expanded> is used.
 
+=head2 tr2
+
+Draws a html C<tr> with the class C<odd> or C<even> for usage in a
+C<FORACH>. Use C<css> for presenting the rows in diffrent styles.
 
 =head1 SEE ALSO
 
