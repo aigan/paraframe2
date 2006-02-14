@@ -11,12 +11,11 @@ use base "Template::Plugin";
 use strict;
 
 use Data::Dumper;
-use vars qw( $VERSION );
 
 BEGIN
 {
-    $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    warn "  Loading Para::Frame::Template::Plugin::Meta::Interpolate $VERSION\n";
+    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
+    print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
 =head1 DESCRIPTION
