@@ -270,8 +270,6 @@ sub jump_extra
 	}
     }
 
-    debug "Returning extra $extra";
-
     return $extra;
 }
 
