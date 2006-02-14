@@ -212,6 +212,7 @@ sub burn
 
 sub error
 {
+    return undef unless $Para::Frame::REQ;
     my $th = $_[0]->{'used'}{$Para::Frame::REQ};
     return undef unless $th;
     my $error = $th->error or return 0;
