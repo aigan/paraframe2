@@ -62,6 +62,8 @@ On error, an 'dbi' exception is thrown.
 
 =over
 
+=item L</cached_select_list>
+
 =item L</select_list>
 
 =item L</select_record>
@@ -169,6 +171,7 @@ sub new
     {
 	debug "Adding global params for dbix $dbix->{connect}[0]";
 	Para::Frame->add_global_tt_params({
+	    'cached_select_list'       => sub{ $dbix->cached_select_list(@_) },
 	    'select_list'              => sub{ $dbix->select_list(@_) },
 	    'select_record'            => sub{ $dbix->select_record(@_) },
 	    'select_key'               => sub{ $dbix->select_key(@_) },
@@ -265,6 +268,33 @@ sub new
 
 #######################################################################
 
+=head2 cached_select_list
+
+See L</select_list>
+
+Stores the result in the session or uses the previously stored result.
+
+=cut
+
+sub cached_select_list
+{
+    my $dbix = shift;
+
+    my $req = $Para::Frame::REQ;
+    if( my $id = $req->q->param('use_cached') )
+    {
+	return $req->user->session->list($id);
+    }
+
+    my $list = $dbix->select_list( @_ );
+    $list->store;
+
+    return $list;
+}
+
+
+#######################################################################
+
 =head2 select_list
 
   Perl: $dbix->select_list($statement, @vals)
@@ -278,6 +308,12 @@ Template example:
 
   [% FOREACH select_list('from user where age > ?', agelimit) %]
      <li>[% name ] is [% age %] years old
+  [% END %]
+
+Template example:
+
+  [% FOREACH rec IN select_list('from user where age > ?', agelimit) %]
+     <li>[% rec.name ] is [% rec.age %] years old
   [% END %]
 
 Returns:
