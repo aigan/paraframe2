@@ -55,6 +55,12 @@ These are the parts called:
 
 =item L</js.tt>
 
+=over
+
+=item L</js_extra.tt> (empty)
+
+=back
+
 =item </head><body>
 
 =item L</border_top.tt>
