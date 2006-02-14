@@ -42,18 +42,31 @@ use Para::Frame::Widget qw( forward );
 our %OBJ; # Store obj info
 
 
-#########################################################################
-################################  Constructors  #########################
+=head2 DESCRIPTION
 
-=head2 Constructors
+The object is a ref to the list it contains. All list operations can
+be used as usual. Example:
 
-These can be called with the class name or any List object.
+  my $l = Para::Frame::List->new( \@biglist );
+  my $first_element = $l->[0];
+  my $last_element = pop @$l;
+
+The object also has the following methods.
 
 =cut
 
 #######################################################################
 
-=head3 new
+=head2 new
+
+  $l = Para::Frame::List->new( \@list )
+
+  $l = Para::Frame::List->new( \@list, \%params )
+
+Availible params are:
+
+  page_size      (default is 20 )
+  display_pages  (default is 10 )
 
 =cut
 
@@ -89,16 +102,14 @@ sub DESTROY
 }
 
 
-#########################################################################
-################################  Accessors  ############################
-
-=head2 Accessors
-
-=cut
-
 #######################################################################
 
 =head2 from_page
+
+  $l->from_page( $pagenum )
+
+Returns a ref to a list of elements corresponding to the given
+C<$page> based on the L</page_size>.
 
 =cut
 
@@ -123,6 +134,11 @@ sub from_page
 
 =head2 store
 
+  $l->store
+
+Stores the object in the session for later retrieval by
+L<Para::Frame::Session/list)
+
 =cut
 
 sub store
@@ -137,7 +153,10 @@ sub store
 	my $id = $session->{'listid'} ++;
 
 	# Remove previous from cache
-	delete $session->{list}{$id - 1};
+	if( my $prev = delete $session->{list}{$id - 1} )
+	{
+#	    debug "Removed $prev (".($id-1).")";
+	}
 
 	$obj->{'stored_id'} = $id;
 	$obj->{stored_time} = time;
@@ -155,6 +174,11 @@ sub store
 
 =head2 id
 
+  $l->id
+
+Returns the C<id> given to this object from L</store> in the
+L<Para::Frame::Session>.
+
 =cut
 
 sub id
@@ -170,6 +194,10 @@ sub id
 
 =head2 pages
 
+  $l->pages
+
+Returns the number of pages this list will take given L</page_size>.
+
 =cut
 
 sub pages
@@ -184,6 +212,31 @@ sub pages
 #######################################################################
 
 =head2 pagelist
+
+  $l->pagelist( $pagenum )
+
+Returns a widget for navigating between the pages.
+
+Example:
+
+  [% USE Sorted_table('created','desc') %]
+  [% usertable = cached_select_list("from users order by $order $direction") %]
+  <table>
+    <tr>
+      <th>[% sort("Skapad",'created','desc') %]</th>
+      <th>[% sort("Namn",'username') %]</th>
+    </tr>
+    <tr><th colspan="2">[% usertable.size %] users</th></tr>
+    <tr><th colspan="2"> [% usertable.pagelist(page) %]</th></tr>
+  [% FOREACH user IN usertable %]
+    [% tr2 %]
+      <td>[% user.created %]</td>
+      <td>[% user.name %]</td>
+    </tr>
+  [% END %]
+  </table>
+
+This uses L<Para::Frame::Template::Plugin::Sorted_table>, L<Para::Frame::DBIx/cached_select_list>, L<Para::Frame::Template::Components/sort>, L</size>, this pagelist, L<Template::Manual::Directives/Loop Processing> and L<Para::Frame::Template::Components/tr2>.
 
 =cut
 
@@ -266,6 +319,10 @@ sub pagelist
 
 =head2 page_size
 
+  $l->page_size
+
+Returns the C<page_size> set for this object.
+
 =cut
 
 sub page_size
@@ -277,6 +334,10 @@ sub page_size
 ######################################################################
 
 =head2 set_page_size
+
+  $l->set_page_size( $page_size )
+
+Sets and returns the given C<$page_size>
 
 =cut
 
@@ -290,6 +351,10 @@ sub set_page_size
 
 =head2 display_pages
 
+  $l->display_pages
+
+Returns how many pages that should be listed by L</pagelist>.
+
 =cut
 
 sub display_pages
@@ -302,6 +367,8 @@ sub display_pages
 
 =head2 display_pages
 
+Sets and returns the given L</display_pages>.
+
 =cut
 
 sub set_display_pages
@@ -312,18 +379,7 @@ sub set_display_pages
 
 #######################################################################
 
-=head2 defined
-
-Yes.
-
-=cut
-
-sub defined {1}
-
-
-#######################################################################
-
-=head3 sth
+=head2 sth
 
 =cut
 
@@ -334,7 +390,12 @@ sub sth
 
 #######################################################################
 
-=head3 as_string
+=head2 as_string
+
+  $l->as_string
+
+Returns a string representation of the list. Using C<as_string> for
+elements that isn't plain scalars.
 
 =cut
 
@@ -386,7 +447,11 @@ sub as_string
 
 #######################################################################
 
-=head3 size
+=head2 size
+
+  $l->size
+
+Returns the number of elements in this list.
 
 =cut
 
@@ -401,22 +466,20 @@ sub size
 
 #######################################################################
 
-=head3 limit
+=head2 limit
 
-  $list->limit()
+  $l->limit()
 
-  $list->limit( $limit )
+  $l->limit( $limit )
 
-  $list->limit( 0 )
+  $l->limit( 0 )
 
 Limit the number of elements in the list. Returns the first C<$limit>
 items.
 
 Default C<$limit> is 10.  Set the limit to 0 to get all items.
 
-=head4 Returns
-
-A List with the first C<$limit> items.
+Returns: A List with the first C<$limit> items.
 
 =cut
 
@@ -430,271 +493,6 @@ sub limit
     return $list->new( [@{$list}[0..($limit-1)]] );
 }
 
-#########################################################################
-################################  Public methods  #######################
-
-
-=head2 Public methods
-
-=cut
-
-
-#######################################################################
-
-=head3 contains
-
-  $list->contains( $node )
-
-  $list->contains( $list2 )
-
-
-Returns true if the list contains all mentioned items supplied as a
-list, list objekt or single item.
-
-=cut
-
-sub contains
-{
-    my( $list, $tmpl ) = @_;
-
-    if( ref $tmpl )
-    {
-	if( ref $tmpl eq 'Rit::Base::List' )
-	{
-	    foreach my $val (@{$tmpl->as_list})
-	    {
-		return 0 unless $list->contains($val);
-	    }
-	    return 1;
-	}
-	elsif( ref $tmpl eq 'ARRAY' )
-	{
-	    foreach my $val (@$tmpl )
-	    {
-		return 0 unless $list->equals($val);
-	    }
-	    return 1;
-	}
-	elsif( ref $tmpl eq 'HASH' )
-	{
-	    die "Not implemented: $tmpl";
-	}
-    }
-
-    # Default for simple values and objects:
-
-    foreach my $node ( @{$list->as_list} )
-    {
-	return $node if $node->equals($tmpl);
-    }
-    return undef;
-}
-
-
-#######################################################################
-
-=head3 contains_any_of
-
-  $list->contains_any_of( $node )
-
-  $list->contains_any_of( $list2 )
-
-
-Returns true if the list contains at least one of the mentioned items
-supplied as a list, list objekt or single item.
-
-=cut
-
-sub contains_any_of
-{
-    my( $list, $tmpl ) = @_;
-
-    my $DEBUG = 0;
-
-    if( debug > 1 )
-    {
-	debug "Checking list with content:";
-	foreach my $node ( $list->nodes )
-	{
-	    debug sprintf "  * %s", $node->sysdesig;
-	}
-    }
-
-    if( ref $tmpl )
-    {
-	if( ref $tmpl eq 'Rit::Base::List' )
-	{
-	    foreach my $val (@{$tmpl->as_list})
-	    {
-		debug 2, sprintf "  check list item %s", $val->sysdesig;
-		return 1 if $list->contains_any_of($val);
-	    }
-	    debug 2, "    failed";
-	    return 0;
-	}
-	elsif( ref $tmpl eq 'ARRAY' )
-	{
-	    foreach my $val (@$tmpl )
-	    {
-		debug 2, sprintf "  check array item %s", $val->sysdesig;
-		return 1 if $list->contains_any_of($val);
-	    }
-	    debug 2, "    failed";
-	    return 0;
-	}
-	elsif( ref $tmpl eq 'HASH' )
-	{
-	    die "Not implemented: $tmpl";
-	}
-    }
-
-    # Default for simple values and objects:
-
-    foreach my $node ( @{$list->as_list} )
-    {
-	debug 2, sprintf "  check node %s", $node->sysdesig;
-	debug 2, sprintf "  against %s", $tmpl->sysdesig;
-	return $node if $node->equals($tmpl);
-    }
-    debug 2,"    failed";
-    return undef;
-}
-
-
-#######################################################################
-
-=head3 has_value
-
-=cut
-
-# TODO: Shouldn't this do the same as Node->has_value() ???
-
-sub has_value
-{
-    shift->find({value=>shift});
-}
-
-#######################################################################
-
-=head3 as_list
-
-Returns a referens to a list. Not a List object. The list content are
-materialized.
-
-=cut
-
-sub as_list
-{
-    # As decribed in Template::Iterator for use in FOREACH
-
-#    warn "List is $_[0]\n"; ### THIS WILL RECUSE TO DEATH
-
-#    confess $_[0] unless ref $_[0] eq 'Rit::Base::List';
-
-    my @list;
-
-    # Object can contain nodes or id's of nodes
-    if( ref $_[0]->[0] )
-    {
-	@list = @{$_[0]};
-	return \@list;
-    }
-
-    # Materialize
-    foreach my $id ( @{$_[0]} )
-    {
-#	unless( $id =~ /^\d+$/ )
-#	{
-#	    die Dumper @_;
-#	}
-	push @list, Rit::Base::Node->get( $id );
-    }
-#    warn "Returning list: @list\n";
-    return \@list;
-}
-
-#######################################################################
-
-=head3 desig
-
-Return a SCALAR string with the elements designation concatenated with
-C<' / '>.
-
-=cut
-
-sub desig
-{
-#    warn "Stringifies object ".ref($_[0])."\n"; ### DEBUG
-    return join ' / ', map $_->desig, $_[0]->nodes;
-}
-
-######################################################################
-
-=head2 is_list
-
-This is not a list.
-
-=head3 Returns
-
-0
-
-=cut
-
-sub is_list
-{
-    return 1;
-}
-
-
-#######################################################################
-
-=head3 first
-
-=cut
-
-sub first
-{
-    return $_[0][0];
-}
-
-#########################################################################
-################################  Private methods  ######################
-
-sub flatten_list
-{
-    my( $list_in, $seen ) = @_;
-
-    $list_in  ||= [];
-    $seen     ||= {};
-
-    my @list_out;
-
-    foreach my $elem ( @$list_in )
-    {
-	if( ref $elem )
-	{
-	    if( ref $elem eq 'Rit::Base::List' )
-	    {
-		push @list_out, @{ flatten_list($elem, $seen) };
-	    }
-	    else
-	    {
-		unless( $seen->{ $elem->syskey } ++ )
-		{
-		    push @list_out, $elem;
-		}
-	    }
-	}
-	else
-	{
-	    unless( $seen->{ $elem } ++ )
-	    {
-		push @list_out, $elem;
-	    }
-	}
-    }
-    return \@list_out;
-}
 
 1;
 
