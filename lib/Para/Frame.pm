@@ -48,7 +48,7 @@ use Para::Frame::Request;
 use Para::Frame::Widget;
 use Para::Frame::Burner;
 use Para::Frame::Time qw( now );
-use Para::Frame::Utils qw( throw catch debug create_file chmod_file fqdn );
+use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn );
 use Para::Frame::Email::Address;
 
 use constant TIMEOUT_LONG  =>   5;
@@ -404,14 +404,16 @@ sub main_loop
         };
 	if( $@ )
 	{
+	    my $err = run_error_hooks(catch($@));
+
 	    warn "# FATAL REQUEST ERROR!!!\n";
 	    warn "# Unexpected exception:\n";
 	    warn "#>>\n";
-	    warn map "#>> $_\n", split /\n/, catch($@)->as_string;
+	    warn map "#>> $_\n", split /\n/, $err->as_string;
 	    warn "#>>\n";
 
 	    my $emergency_level = Para::Frame::Watchdog::EMERGENCY_DEBUG_LEVEL;
-	    if( $Para::Frame::DEBUG <= $emergency_level )
+	    if( $Para::Frame::DEBUG < $emergency_level )
 	    {
 		$Para::Frame::DEBUG =
 		  $Para::Frame::Client::DEBUG =
@@ -419,6 +421,11 @@ sub main_loop
 		      $emergency_level;
 		warn "#Raising global debug to level $Para::Frame::DEBUG\n";
 	    }
+	    else
+	    {
+		die $err;
+	    }
+
 	    $timeout = TIMEOUT_SHORT;
 	}
 
