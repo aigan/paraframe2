@@ -1303,7 +1303,11 @@ sub get_static
 	die "What can I do";
     }
 
-    return $pageref = \$page;
+    my $length = length($page);
+    debug "Returning page with $length bytes";
+
+    # Use the same scalar thingy
+    return $$pageref = $page;
 }
 
 sub find_template
@@ -1323,12 +1327,17 @@ sub find_template
 	debug(0,"path: $path_full");
 	debug(0,"name: $base_name");
 	debug(0,"ext : $ext_full");
+    }
 
-	# We should not try to finding templates including lang
-	if( $ext_full =~ /^\.(\w\w)\.tt$/ )
-	{
-	    confess "Trying to get template with specific lang ext";
-	}
+    # Reasonable default?
+    my $language = $req->lang || ['en'];
+
+    # We should not try to find templates including lang
+    if( $ext_full =~ /^\.(\w\w)\.tt$/ )
+    {
+	debug "Trying to get template with specific lang ext";
+	$language = [$1];
+	$ext_full = '.tt';
     }
 
     my( $ext ) = $ext_full =~ m/^\.(.+)/; # Skip initial dot
@@ -1379,9 +1388,6 @@ sub find_template
 	    push @searchpath,  $paraframedir . '/html' . $path . "def/";
 	}
     }
-
-    # Reasonable default?
-    my $language = $req->lang || ['en'];
 
     if( debug > 3 )
     {
