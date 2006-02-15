@@ -958,6 +958,7 @@ C<confirm.tt> template.
 
 In an action:
 
+  use Para::Frame::Widget qw( confirm_simple );
   confirm_simple("Remove $obj_name?");
   $obj->remove;
 
