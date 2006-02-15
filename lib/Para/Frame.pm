@@ -1222,7 +1222,11 @@ sub run_hook
 		&{$hook}(@_);
 	    };
 	    $Para::Frame::hooks_running{"$hook"} --;
-	    die $@ if $@;
+	    if( $@ )
+	    {
+		debug(2, "hook $label throw an exception".Dumper($@));
+		die $@;
+	    }
 	}
     }
     return 1;
