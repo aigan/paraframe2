@@ -23,7 +23,7 @@ Para::Frame::List - Methods for list manipulation
 =cut
 
 use strict;
-use Carp qw( carp croak shortmess );
+use Carp qw( carp croak shortmess confess );
 use Data::Dumper;
 use List::Util;
 use Template::Constants;
@@ -83,6 +83,23 @@ sub new
 
     $listref ||= [];
 
+    if( UNIVERSAL::isa($listref, "Para::Frame::List") )
+    {
+	return $listref;
+    }
+
+    # Removes other things like overload
+    unless( ref $listref eq 'ARRAY' )
+    {
+	unless( UNIVERSAL::isa($listref, "ARRAY") )
+	{
+	    my $type = ref $listref;
+	    die "$type is not an array ref";
+	}
+
+	$listref = [@$listref];
+    }
+
     my $l = bless $listref, $class;
 
     debug 3, "Adding list obj $l";
@@ -113,9 +130,11 @@ sub DESTROY
 =head2 from_page
 
   $l->from_page( $pagenum )
+  $l->from_page
 
 Returns a ref to a list of elements corresponding to the given
-C<$page> based on the L</page_size>.
+C<$page> based on the L</page_size>. If no C<$pagenum>
+is given, takes the value from query param table_page or 1.
 
 =cut
 
@@ -123,7 +142,7 @@ sub from_page
 {
     my( $l, $page ) = @_;
 
-    $page ||= 1;
+    $page ||= $Para::Frame::REQ->q->param('table_page') || 1;
 
 #    @pagelist = ();
 
@@ -132,7 +151,7 @@ sub from_page
     my $start = $obj->{page_size} * ($page-1);
     my $end = List::Util::min( $start + $obj->{page_size}, scalar(@$l))-1;
 
-    debug "From $start to $end";
+    debug 2, "From $start to $end";
 
     return [ @{$l}[$start..$end] ];
 
@@ -222,8 +241,10 @@ sub pages
 =head2 pagelist
 
   $l->pagelist( $pagenum )
+  $l->pagelist
 
-Returns a widget for navigating between the pages.
+Returns a widget for navigating between the pages. If no C<$pagenum>
+is given, takes the value from query param table_page or 1.
 
 Example:
 
@@ -235,8 +256,8 @@ Example:
       <th>[% sort("Namn",'username') %]</th>
     </tr>
     <tr><th colspan="2">[% usertable.size %] users</th></tr>
-    <tr><th colspan="2"> [% usertable.pagelist(page) %]</th></tr>
-  [% FOREACH user IN usertable %]
+    <tr><th colspan="2"> [% usertable.pagelist %]</th></tr>
+  [% FOREACH user IN usertable.from_page %]
     [% tr2 %]
       <td>[% user.created %]</td>
       <td>[% user.name %]</td>
@@ -252,11 +273,13 @@ sub pagelist
 {
     my( $l, $pagenum ) = @_;
 
-    $pagenum ||= 1;
+    my $req = $Para::Frame::REQ;
+
+    $pagenum ||= $req->q->param('table_page') || 1;
 
     my $obj = $OBJ{$l};
 
-    debug "Creating pagelist for $l";
+#    debug "Creating pagelist for $l";
 
     my $dpages = $obj->{display_pages};
     my $pages = $l->pages;
@@ -264,9 +287,10 @@ sub pagelist
     my $startpage = List::Util::max( $pagenum - $dpages/2, 1);
     my $endpage = List::Util::min( $pages, $startpage + $dpages - 1);
 
+#    debug "From $startpage -> $endpage";
+
     my $id = $l->id;
 
-    my $req = $Para::Frame::REQ;
     my $page = $req->page;
     my $me = $page->url_path_full;
 
@@ -278,14 +302,13 @@ sub pagelist
     }
     else
     {
-	$out .= forward("<", $me, {use_cached=>$id, page => ($pagenum-1), href_class=>"paraframe_previous"});
+	$out .= forward("<", $me, {use_cached=>$id, table_page => ($pagenum-1), href_class=>"paraframe_previous"});
 #	$out .= forward("Först", $me, {use_cached=>$id, page => 1});
 	$out .= " ";
     }
-
     if( $startpage != 1 )
     {
-	$out .= forward(1, $me, {use_cached=>$id, page => 1});
+	$out .= forward(1, $me, {use_cached=>$id, table_page => 1});
 	$out .= " ...";
     }
 
@@ -298,14 +321,14 @@ sub pagelist
 	else
 	{
 	    $out .= " ";
-	    $out .= forward($p, $me, {use_cached=>$id, page => $p});
+	    $out .= forward($p, $me, {use_cached=>$id, table_page => $p});
 	}
     }
 
     if( $endpage != $pages )
     {
 	$out .= " ... ";
-	$out .= forward($pages, $me, {use_cached=>$id, page => $pages});
+	$out .= forward($pages, $me, {use_cached=>$id, table_page => $pages});
     }
 
     if( $pagenum == $pages )
@@ -316,7 +339,7 @@ sub pagelist
     {
 	$out .= " ";
 #	$out .= forward("Sist", $me, {use_cached=>$id, page => $pages});
-	$out .= forward(">", $me, {use_cached=>$id, page => ($pagenum+1), href_class=>"paraframe_next"});
+	$out .= forward(">", $me, {use_cached=>$id, table_page => ($pagenum+1), href_class=>"paraframe_next"});
     }
 
     return $out . "</span>";
@@ -740,6 +763,21 @@ sub next
 {
     return $OBJ{$_[0]}{NEXT};
 }
+
+
+
+our$AUTOLOAD;
+sub AUTOLOAD
+{
+    my $self = shift;
+    my $item = $AUTOLOAD;
+    $item =~ s/.*:://;
+    return if $item eq 'DESTROY';
+
+    confess($item);
+}
+
+
 
 1;
 
