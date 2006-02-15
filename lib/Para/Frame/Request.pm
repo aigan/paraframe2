@@ -2150,8 +2150,17 @@ sub yield
     eval
     {
 	$req->{'in_yield'} ++;
-	# The reqnum param is just for getting it in backtrace
-	Para::Frame::main_loop( 1, $wait, $req->{'reqnum'} );
+	my $done = 0;
+
+	while( not $done )
+	{
+	    # The reqnum param is just for getting it in backtrace
+	    Para::Frame::main_loop( 1, $wait, $req->{'reqnum'} );
+	    unless( $req->{'wait'} )
+	    {
+		$done = 1;
+	    }
+	}
     };
     $req->{'in_yield'} --;
     Para::Frame::switch_req( $req );
