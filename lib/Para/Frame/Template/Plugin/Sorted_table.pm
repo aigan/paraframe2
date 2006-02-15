@@ -31,14 +31,14 @@ sub new
     my( $this, $context, $order_in, $direction_in, $page_in ) = @_;
     my $class = ref($this) || $this;
 
-    debug "Preparing $order_in !!!";
+#    debug "Preparing $order_in !!!";
 
     my $stash = $context->stash;
     my $q = $Para::Frame::REQ->q;
 
     $stash->set('order', $q->param('order') || $order_in );
     $stash->set('direction', $q->param('direction') || $direction_in);
-    $stash->set('page', $q->param('page') || $page_in);
+    $stash->set('table_page', $q->param('table_page') || $page_in);
 
     return bless {}, $class;
 }
