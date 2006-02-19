@@ -20,7 +20,7 @@ package Para::Frame::Child::Result;
 
 =head1 NAME
 
-Para::Frame::Child::Result - Representing a child process result
+Para::Frame::Child::Result - Representing a child process result from CHILDs view
 
 =cut
 
