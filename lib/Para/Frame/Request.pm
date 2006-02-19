@@ -2297,17 +2297,24 @@ sub http_host
     # This is the host name the client requested. It tells with which
     # of the alternatives names the site was requested
 
-    $Data::Dumper::Maxdepth = 3;
-    confess Dumper $_[0] unless $ENV{HTTP_HOST}; ### DEBUG
+    if( my $server_port = $ENV{SERVER_PORT} )
+    {
+	if( $server_port == 80 )
+	{
+	    return idn_decode( $ENV{SERVER_NAME} );
+	}
+	else
+	{
+	    return idn_decode( "$ENV{SERVER_NAME}:$server_port" );
+	}
+    }
 
-    return idn_decode( $ENV{HTTP_HOST} );
+    return undef;
 }
 
 sub http_port
 {
-    my $host = $_[0]->http_host or return undef;
-    $host =~ m/:(\d+)$/;
-    return $1 || 80;
+    return $ENV{SERVER_PORT} || undef;
 }
 
 sub client_ip
