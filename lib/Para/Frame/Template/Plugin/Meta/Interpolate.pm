@@ -15,7 +15,7 @@ use Data::Dumper;
 BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
+    warn "Loading ".__PACKAGE__." $VERSION\n";
 }
 
 =head1 DESCRIPTION
