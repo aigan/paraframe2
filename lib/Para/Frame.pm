@@ -216,7 +216,7 @@ sub main_loop
 	# The algorithm was adopted from perlmoo by Joey Hess
 	# <joey@kitenet.net>.
 
-	eval
+	my $exit_action = eval
 	{
 
 	    my $client;
@@ -235,7 +235,7 @@ sub main_loop
 		    if(!$client)
 		    {
 			debug(0,"Problem with accept(): $!");
-			next;
+			return;
 		    }
 		    ($port, $iaddr) = sockaddr_in(getpeername($client));
 		    $peer_host = gethostbyaddr($iaddr, AF_INET)
@@ -324,10 +324,10 @@ sub main_loop
 	    {
 		# This could be a simple yield and not a child, then just
 		# exit now
-		last unless ref $child;
+		return "last" unless ref $child;
 
 		# exit loop if child done
-		last unless $child->{'req'}{'childs'};
+		return "last" unless $child->{'req'}{'childs'};
 	    }
 	    else
 	    {
@@ -429,6 +429,10 @@ sub main_loop
 	    $timeout = TIMEOUT_SHORT;
 	}
 
+	if( $exit_action eq 'last' )
+	{
+	    last;
+	}
     }
     debug(4,"Exiting  main_loop at level $LEVEL",-1);
     $LEVEL --;
