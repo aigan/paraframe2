@@ -23,7 +23,7 @@ Para::Frame::Widget - Common template widgets
 =cut
 
 use strict;
-use Carp;
+use Carp qw( cluck );
 use Data::Dumper;
 use IO::File;
 use CGI;
@@ -260,7 +260,7 @@ sub jump_extra
     }
     elsif( not defined $class_val )
     {
-	if( $Para::Frame::REQ->is_from_client )
+	if( $Para::Frame::REQ->is_from_client and $template )
 	{
 	    # Mark as selected if link goes to current page
 	    if( $Para::Frame::REQ->template_uri eq $template and not $attr->{'run'} )
@@ -562,11 +562,10 @@ text.
 sub rowlist
 {
     my( $name ) = @_;
-
     my $q = $Para::Frame::REQ->q;
 
     my @list;
-    foreach my $row ( split /\r?\n/, $q->param($name) )
+    foreach my $row ( split /\r?\n/, ($q->param($name)||'') )
     {
 	trim(\$row);
 	next unless length $row;
