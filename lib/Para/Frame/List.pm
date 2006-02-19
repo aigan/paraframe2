@@ -74,6 +74,12 @@ Availible params are:
   page_size      (default is 20 )
   display_pages  (default is 10 )
 
+Extra info about the object is stored in a class variable. Objects
+returned from a hash has to be recreated to register the object in the
+class variable. This will reset all the metadata.
+
+  $l = Para::Frame::List->new( $l )
+
 =cut
 
 sub new
@@ -85,7 +91,8 @@ sub new
 
     if( UNIVERSAL::isa($listref, "Para::Frame::List") )
     {
-	return $listref;
+	# For recreating an object returned from a fork
+	return $listref if $OBJ{$listref};
     }
 
     # Removes other things like overload
@@ -164,7 +171,7 @@ sub from_page
   $l->store
 
 Stores the object in the session for later retrieval by
-L<Para::Frame::Session/list)
+L<Para::Frame::Session/list>
 
 =cut
 
