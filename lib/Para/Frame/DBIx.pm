@@ -34,7 +34,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw catch debug timediff package_to_module );
+use Para::Frame::Utils qw( throw catch debug timediff package_to_module get_from_fork);
 use Para::Frame::Time qw( date );
 use Para::Frame::List;
 
@@ -287,6 +287,38 @@ sub cached_select_list
     }
 
     my $list = $dbix->select_list( @_ );
+    $list->store;
+
+    return $list;
+}
+
+
+
+#######################################################################
+
+=head2 cached_forked_select_list
+
+See L</select_list>
+
+Stores the result in the session or uses the previously stored result.
+
+Does the actual select in a fork.
+
+=cut
+
+sub cached_forked_select_list
+{
+    my $dbix = shift;
+
+    my $req = $Para::Frame::REQ;
+    if( my $id = $req->q->param('use_cached') )
+    {
+	return $req->user->session->list($id);
+    }
+
+    my @data = @_; # Copies before virtual sub
+    my $list = Para::Frame::List->new(get_from_fork(sub{$dbix->select_list(@data)}));
+
     $list->store;
 
     return $list;
