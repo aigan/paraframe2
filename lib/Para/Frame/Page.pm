@@ -43,7 +43,8 @@ use Para::Frame::Utils qw( throw debug );
 
 =head2 obj
 
-The page object, getting all info from the req obj...
+The page object, getting all info from the req obj... (Transitional
+layout...)
 
 =cut
 
@@ -75,20 +76,26 @@ path_base excludes the suffix of the filename
 dir excludes the trailing slash (and the filename)
 
 
-# url_path_tmpl  template
-# url_path_full  template_uri
-# url_path_base
-# url_dir
-# filename
-# basename
-# path_tmpl     site_uri
-# path_full
-# path_base     site_file
-# dir           site_dir
-# sys_path_tmpl
-# sys_path_base
-# sys_dir
+ # url_path_tmpl  template
+ # url_path_full  template_uri
+ # url_path_base
+ # url_dir
+ # filename
+ # basename
+ # path_tmpl     site_uri
+ # path_full
+ # path_base     site_file
+ # dir           site_dir
+ # sys_path_tmpl
+ # sys_path_base
+ # sys_dir
 
+
+=cut
+
+=head2 url_path_tmpl
+
+The path and filename in http on the host.
 
 =cut
 
@@ -97,10 +104,22 @@ sub url_path_tmpl
     return $_[0]->{'req'}->template;
 }
 
+=head2 url_path_full
+
+The preffered URI for the file in http on the host.
+
+=cut
+
 sub url_path_full
 {
     return $_[0]->{'req'}->template_uri;
 }
+
+=head2 filename
+
+The template filename without the path.
+
+=cut
 
 sub filename
 {
@@ -108,6 +127,14 @@ sub filename
       or die "Couldn't get filename from ".$_[0]->{'req'}->template;
     return $1;
 }
+
+=head2 path_base
+
+The path to the template, including the filename, relative the site
+home, begining with a slash. But excluding the suffixes of the file
+along with the dots.
+
+=cut
 
 sub path_base
 {
@@ -120,6 +147,13 @@ sub path_base
       or die "Couldn't get path_base from $template under $home";
     return $1;
 }
+
+=head2 path_full
+
+The preffered URI for the file, relative the site home, begining with
+a slash.
+
+=cut
 
 sub path_full
 {
@@ -134,6 +168,13 @@ sub path_full
     return $site_uri;
 }
 
+=head2 path_tmpl
+
+The path to the template, including the filename, relative the site
+home, begining with a slash.
+
+=cut
+
 sub path_tmpl
 {
     my( $page ) = @_;
@@ -146,6 +187,13 @@ sub path_tmpl
     $site_uri =~ s/\.\w\w\.tt$/.tt/; # Remove language part
     return $site_uri;
 }
+
+=head2 dir
+
+The path to the template, excluding the filename, relative the site
+home, begining but not ending with a slash.
+
+=cut
 
 sub dir
 {
