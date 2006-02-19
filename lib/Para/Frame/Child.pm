@@ -20,7 +20,7 @@ package Para::Frame::Child;
 
 =head1 NAME
 
-Para::Frame::Child - Representing a child process
+Para::Frame::Child - Representing a child process from the PARENTs view
 
 =cut
 
@@ -177,7 +177,7 @@ sub get_results
     # Length of prefix
     my $plength = length( $length ) + 1;
     
-#    debug "Data length is $length bytes";
+    debug 2, "Data length is $length bytes";
 
 
 #    warn "  got data: $data\n";
@@ -185,6 +185,7 @@ sub get_results
 #    warn "  result: $result\n"; ### DEBUG
 #    warn Dumper $result; ### DEBUG
     $child->{'result'} = $result;
+    debug 2, "Data result stored";
 
 
     delete $child->{'data'}; # We are finished with the raw data
