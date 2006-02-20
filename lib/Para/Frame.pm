@@ -401,7 +401,7 @@ sub main_loop
 		    }
 		}
 	    }
-        };
+        } || 'next'; #default
 	if( $@ )
 	{
 	    my $err = run_error_hooks(catch($@));
@@ -1042,10 +1042,7 @@ sub handle_request
     $REQUEST{ $client } = $req;
     switch_req( $req, 1 );
 
-    ### Further initialization that requires $REQ
-    $req->ctype( $req->{'orig_ctype'} );
-    $req->{'uri'} = $req->set_uri( $req->{'orig_uri'} );
-    $req->{'s'}->route->init;
+    $req->init;
 
     # Authenticate user identity
     my $user_class = $Para::Frame::CFG->{'user_class'};
@@ -1068,8 +1065,8 @@ sub handle_request
     ### Redirected from another page?
     if( my $page_result = $req->s->{'page_result'}{ $req->uri } )
     {
-	$req->{'headers'} = $page_result->[0];
-	$req->send_headers;
+	$req->page->set_headers( $page_result->[0] );
+	$req->page->send_headers;
 	$req->client->send( ${$page_result->[1]} );
 	delete $req->s->{'page_result'}{ $req->uri };
     }
