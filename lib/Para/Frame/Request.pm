@@ -16,18 +16,20 @@ package Para::Frame::Request;
 #
 #=====================================================================
 
+=head1 NAME
+
+Para::Frame::Request - The request from the client
+
+=cut
+
 use strict;
 use CGI qw( -compile );
 use CGI::Cookie;
 use FreezeThaw qw( thaw );
 use Data::Dumper;
 use HTTP::BrowserDetect;
-use File::stat;
-use File::Slurp;
-use File::Basename; # exports fileparse, basename, dirname
 use IO::File;
 use Carp qw(cluck croak carp confess );
-use Encode qw( is_utf8 );
 use LWP::UserAgent;
 use HTTP::Request;
 use Template::Document;
@@ -46,14 +48,20 @@ use Para::Frame::Session;
 use Para::Frame::Result;
 use Para::Frame::Child;
 use Para::Frame::Child::Result;
-use Para::Frame::Request::Ctype;
 use Para::Frame::Site;
 use Para::Frame::Change;
 use Para::Frame::URI;
 use Para::Frame::Page;
-use Para::Frame::Utils qw( create_dir chmod_file dirsteps compile throw idn_encode idn_decode debug catch );
+use Para::Frame::Utils qw( compile throw debug catch idn_decode );
 
 our %URI2FILE;
+
+=head1 DESCRIPTION
+
+Para::Frame::Request is the central class for most operations. The
+current request object can be reached as C<$Para::Frame::REQ>.
+
+=cut
 
 sub new
 {
@@ -87,28 +95,17 @@ sub new
 	indent         => 1,              ## debug indentation
 	client         => $client,
 	jobs           => [],             ## queue of actions to perform
-	headers        => [],             ## Headers to be sent to the client
 	'q'            => $q,
 	env            => $env,
 	's'            => undef,          ## Session object
 	lang           => undef,          ## Chosen language
-	redirect       => undef,          ## ... to other server
 	browser        => undef,          ## browser detection object
 	result         => undef,
 	orig_uri       => $orig_uri,
 	orig_ctype     => $content_type,
-	uri            => undef,
-	template       => undef,          ## if diffrent from URI
-	template_uri   => undef,          ## if diffrent from URI
-	moved_temporarily => 0,           ## ... or permanently?
-	error_template => undef,          ## if diffrent from template
 	referer        => $q->referer,    ## The referer of this page
-	ctype          => undef,          ## The response content-type
 	dirconfig      => $dirconfig,     ## Apache $r->dir_config
         page           => undef,          ## The page requested
-	in_body        => 0,              ## flag then headers sent
-	page_content   => undef,          ## Ref to the generated page
-	page_sender    => undef,          ## The mode of sending the page
 	childs         => 0,              ## counter in parent
 	in_yield       => 0,              ## inside a yield
 	child_result   => undef,          ## the child res if in child
@@ -118,9 +115,6 @@ sub new
 	cancel         => undef,          ## True if we should abort
 	change         => undef,
     }, $class;
-
-    my %ttparams = %$Para::Frame::PARAMS;
-    $req->{'params'} = \%ttparams;
 
     my $site_name = $dirconfig->{'site'} || $req->host_from_env;
 #    debug "Request under site $site_name";
@@ -140,7 +134,8 @@ sub new
 
     $req->set_language;
 
-    $req->{'page'} = Para::Frame::Page->obj($req);
+#    $req->{'page'} = Para::Frame::Page->obj($req);
+    $req->{'page'} = Para::Frame::Page->new();
 
     # Log some info
     #
@@ -148,6 +143,18 @@ sub new
 
     return $req;
 }
+
+sub init
+{
+    my( $req ) = @_;
+
+    debug "Initializing req";
+
+    ### Further initialization that requires $REQ
+    $req->page->init;
+    $req->{'s'}->route->init;
+}
+
 
 =head2 new_subrequest
 
@@ -250,7 +257,7 @@ sub new_minimal
     $req->{'result'}  = new Para::Frame::Result;  # Before Session
     $req->{'s'}       = Para::Frame->Session->new_minimal();
 
-    $req->{'page'} = Para::Frame::Page->obj($req);
+    $req->{'page'} = Para::Frame::Page->new();
 
     return $req;
 }
@@ -258,64 +265,220 @@ sub new_minimal
 
 #######################################################################
 
+=head2 q
+
+  $req->q
+
+Returns the L<CGI> object.
+
+=cut
+
 sub q { shift->{'q'} }
+
+=head2 session
+
+  $req->session
+
+Returns the L<Para::Frame::Session> object.
+
+=cut
+
 sub s { shift->{'s'} }
 sub session { shift->{'s'} }
+
+=head2 env
+
+  $req->env
+
+Returns a hashref of the environment variables passed given by Apache
+for the request.
+
+=cut
+
 sub env { shift->{'env'} }
+
+=head2 client
+
+  $req->client
+
+Returns the object representing the connection to the client that made
+this request. The stringification of this object is used as a key in
+several places.
+
+=cut
+
 sub client { shift->{'client'} }
+
+=head2 cookies
+
+  $req->cookies
+
+Returns the L<Para::Frame::Cookies> object for this request.
+
+=cut
+
 sub cookies { shift->{'cookies'} }
+
+=head2 result
+
+  $req->result
+
+Returns the L<Para::Frame::Result> object for this request.
+
+=cut
+
 sub result { shift->{'result'} }
-sub uri { shift->{'uri'} }
-sub dir { shift->{'dir'} }
-sub filename { $_[0]->uri2file($_[0]->template) }
+sub uri { $_[0]->page->uri }
+sub dir { shift->{'dir'} }  #??????????????
+
+=head2 language
+
+  $req->language
+
+Returns a ref to a list of language code strings.  For example
+C<['en']>. This is a prioritized list of languages that the sithe
+handles and that the client prefere.
+
+=cut
+
 sub lang { $_[0]->{'lang'} }
 sub language { $_[0]->{'lang'} }
-sub error_page_selected { $_[0]->{'error_template'} ? 1 : 0 }
-sub error_page_not_selected { $_[0]->{'error_template'} ? 0 : 1 }
+
+=head2 page
+
+  $req->page
+
+Returns the L<Para::Frame::Page> object.
+
+=cut
+
 sub page { $_[0]->{'page'} }
+
+=head2 original
+
+  $req->original
+
+If this is a subrequest; return the original request.
+
+=cut
 
 sub original
 {
-    # If this is a subrequest; return the original request
     return $_[0]->{'original_request'};
 }
+
+=head2 equals
+
+  $req->equals( $req2 )
+
+Returns true if the two requests are the same.
+
+=cut
 
 sub equals
 {
     return( $_[0]->{'reqnum'} == $_[1]->{'reqnum'} );
 }
 
+=head2 user
+
+  $req->user
+
+Returns the L<Para::Frame::User> object. Or probably a object of a
+subclass of that class.
+
+This is short for calling C<$req-E<gt>session-E<gt>user>
+
+=cut
+
 sub user
 {
     return shift->session->user;
 }
 
+=head2 change
+
+  $req->change
+
+Returns the L<Para::Frame::Change> object for this request.
+
+=cut
 
 sub change
 {
     return $_[0]->{'change'} ||= Para::Frame::Change->new();
 }
 
-# Is this request a client req or a bg server job?
+=head2 is_from_client
+
+  $req->is_from_client
+
+Returns true if this request is from a client and not a bacground
+server job or something else.
+
+=cut
+
 sub is_from_client
 {
     return $_[0]->{'q'} ? 1 : 0;
 }
 
+
+
+### Transitional methods
+###
+
 sub template
 {
-    return $_[0]->{'template'} || $_[0]->{'uri'};
+    return $_[0]->page->url_path_tmpl;
 }
 
 sub template_uri
 {
-    return $_[0]->{'template_uri'} || $_[0]->{'uri'};
+    return $_[0]->page->url_path_full;
 }
+
+sub filename
+{
+    return $_[0]->page->sys_path_tmpl;
+}
+
+sub error_page_selected { $_[0]->page->error_page_selected }
+
+sub error_page_not_selected { $_[0]->page->error_page_not_selected }
+
+###
+###########################################
+
+=head2 in_yield
+
+  $req->in_yield
+
+Returns true if some other request has yielded for this request.
+
+=cut
 
 sub in_yield
 {
     return $_[0]->{'in_yield'};
 }
+
+=head2 uri2file
+
+  $req->uri2file( $uri )
+
+  $req->uri2file( $uri, $file )
+
+This does the Apache URI to filename translation
+
+The answer is cached.
+
+If given a C<$file> uses that as a translation and caches is.
+
+(This method may have to create a pseudoclient connection to get the
+information.)
+
+=cut
 
 sub uri2file
 {
@@ -350,13 +513,15 @@ sub uri2file
 
 =head2 normalized_uri
 
+  $req->normalized_uri( $uri )
+
 Gives the proper version of the URI. Ending index.tt will be
 removed. This is used for redirecting (forward) the browser if
 nesessary.
 
-Input must ge the path part as a string
+C<$uri> must be the path part as a string.
 
-Output is the path part as a string
+Returns the path part as a string.
 
 =cut
 
@@ -554,160 +719,6 @@ sub preferred_language
 
 
 #######################################################################
-
-sub set_http_status
-{
-    my( $req, $status ) = @_;
-    return 0 if $status < 100;
-    return $req->send_code( 'AR-PUT', 'status', $status );
-}
-
-#######################################################################
-
-sub set_uri
-{
-    my( $req, $uri_in ) = @_;
-
-    # Only used by Para::Frame to set uri from original uri. Never
-    # changes from that original uri.
-
-    my $uri = Para::Frame::URI->new($uri_in);
-
-    debug(3,"Setting URI to $uri");
-    $req->{uri} = $uri;
-    $req->set_template( $uri, 1 );
-
-    return $uri;
-}
-
-sub set_template
-{
-    my( $req, $template, $always_move ) = @_;
-
-    # For setting a template diffrent from the URI
-
-    if( UNIVERSAL::isa $template, 'URI' )
-    {
-	$template = $template->path;
-    }
-
-    # To forward to a page not handled by the paraframe, use
-    # redirect()
-
-    if( $template =~ /^http/ )
-    {
-	# template param should NOT include the http://hostname part
-	croak "Tried to set a template to $template";
-    }
-
-
-    my $template_uri = $template;
-
-    # Apache can possibly be rewriting the name of the file...
-
-    # The template to file translation is used for getting the
-    # directory of the templates. But we assume that the URI
-    # represents an actual file, regardless of the uri2file
-    # translation. If the translation goes to another file, that file
-    # will be ignored and the file named like that in the URI will be
-    # used.
-
-
-    # We want to tell browsers/spiders if any redirection is a
-    # permanent or temporary one. Assume it's a temporary one unless
-    # $always_move is given. But if just one move is of temporary
-    # nature, keep that value. This will only be used if we are ending
-    # up redirecting to another page.
-
-    $req->{'moved_temporarily'} ||= 1 unless $always_move;
-
-    my $file = $req->uri2file( $template );
-    debug(3,"The template $template represents the file $file");
-    if( -d $file )
-    {
-	debug(3,"  It's a dir!");
-	unless( $template =~ /\/$/ )
-	{
-	    $template .= "/";
-	    $template_uri .= "/";
-	}
-	$template .= "index.tt";
-    }
-    elsif( $template =~ /\/$/ )
-    {
-	# Template indicates a dir. Make it so
-	$template .= "index.tt";
-    }
-    else
-    {
-#	# Don't change template...
-    }
-
-    debug(3,"setting template to $template");
-    debug(3,"setting template_uri to $template_uri");
-
-    $req->ctype->set("text/html") if $template =~ /\.tt$/;
-
-    $req->{template}     = $template;
-    $req->{template_uri} = $template_uri;
-
-    return $template;
-}
-
-##############################################
-
-=head2 set_dirsteps
-
-  $req->set_dirsteps( $path_full, $path_home )
-
-  Both paths must end with a /
-
-  path_full defaults to the current template dir
-  path_home default to the current site home
-
-Both paths is the filesystem path. Not the URL path
-
-=cut
-
-sub set_dirsteps
-{
-    my( $req, $path_full, $path_home ) = @_;
-
-    $path_full ||= $req->uri2file( dirname( $req->template ) . "/" ) . "/";
-    $path_home ||= $req->uri2file( $req->site->home  . "/" );
-    debug 3, "Setting dirsteps for $path_full under $path_home";
-    undef $req->{'incpath'};
-    return $req->{'dirsteps'} = [ dirsteps( $path_full, $path_home ) ];
-}
-
-sub set_error_template
-{
-    my( $req, $error_tt ) = @_;
-
-    return $req->{'error_template'} = $req->set_template( $error_tt );
-}
-
-sub ctype
-{
-    my( $req, $content_type ) = @_;
-
-    # Needs $REQ
-
-    unless( $req->{'ctype'} )
-    {
-	$req->{'ctype'} = Para::Frame::Request::Ctype->new();
-    }
-
-    if( $content_type )
-    {
-	$req->{'ctype'}->set( $content_type );
-    }
-
-    return $req->{'ctype'};
-}
-
-
-##############################################
 # Set up things from params
 #
 sub setup_jobs
@@ -716,11 +727,8 @@ sub setup_jobs
 
     my $q = $req->q;
 
-    # Section for request
-    $req->{'section'}  ||= [$q->param('section')];
-
     # Custom renderer?
-    $req->{'renderer'} ||= $q->param('renderer') || undef;
+    $req->page->set_renderer( $q->param('renderer') );
 
     # Setup actions
     my $actions = [];
@@ -747,43 +755,31 @@ sub add_job
     push @{ shift->{'jobs'} }, [@_];
 }
 
+=head2 add_background_job
+
+  $req->add_background_job( \&code, @params )
+
+Runs the C<&code> in the background with the given C<@params>.
+
+Background jobs are done B<in between> regular requests.
+
+The C<$req> is given as the first param.
+
+Example:
+
+  my $idle_job = sub
+  {
+      my( $req, $thing ) = @_;
+      debug "I'm idling now like a $thing...";
+  };
+  $req->add_background_job( $idle_job, 'Kangaroo' );
+
+=cut
+
 sub add_background_job
 {
     debug(2,"Added the background job $_[1] for $_[0]->{reqnum}");
     push @Para::Frame::BGJOBS_PENDING, [@_];
-}
-
-sub add_header
-{
-    push @{ shift->{'headers'}}, [@_];
-}
-
-sub send_headers
-{
-    my( $req ) = @_;
-
-    my $client = $req->client;
-
-    $req->ctype->commit;
-
-    my %multiple; # Replace first, but add later headers
-    foreach my $header ( @{$req->{'headers'}} )
-    {
-	if( $multiple{$header->[0]} ++ )
-	{
-	    debug(3,"Send header add @$header");
-	    $req->send_code( 'AT-PUT', 'add', @$header);
-	}
-	else
-	{
-	    debug(3,"Send header_out @$header");
-	    $req->send_code( 'AR-PUT', 'header_out', @$header);
-	}
-    }
-
-    debug(2,"Send newline");
-    $client->send( "\n" );
-    $req->{'in_body'} = 1;
 }
 
 sub run_code
@@ -815,6 +811,7 @@ sub run_action
     return 1 if $run eq 'nop'; #shortcut
 
     my $site = $req->site;
+    my $page = $req->page;
 
     my $actionroots = [$site->appbase."::Action"];
 
@@ -957,7 +954,7 @@ sub run_action
 		    my $error_tt = $site->home."/login.tt";
 		    $part->hide(1);
 		    $req->session->route->bookmark;
-		    $req->set_error_template( $error_tt );
+		    $page->set_error_template( $error_tt );
 		}
 	    }
 	}
@@ -971,6 +968,7 @@ sub run_action
 sub after_jobs
 {
     my( $req ) = @_;
+    my $page = $req->page;
 
     debug 4, "In after_jobs";
 
@@ -1019,10 +1017,10 @@ sub after_jobs
     if( $req->in_last_job )
     {
 	# Redirection requestd?
-	if( $req->error_page_not_selected and $req->{'redirect'} )
+	if( $page->error_page_not_selected and $page->redirection )
 	{
 	    $req->cookies->add_to_header;
- 	    $req->output_redirection( $req->{'redirect'} );
+ 	    $page->output_redirection( $page->redirection );
 	    return $req->done;
 	}
 
@@ -1030,29 +1028,29 @@ sub after_jobs
 	Para::Frame->run_hook( $req, 'before_render_output');
 
 	my $render_result = 0;
-	if( $req->{'renderer'} )
+	if( $page->renderer )
 	{
 	    # Using custom renderer
-	    $render_result = &{$req->{'renderer'}}( $req );
+	    $render_result = &{$page->renderer}( $req );
 
 	    # TODO: Handle error...
 	}
 	else
 	{
-	    $render_result = $req->render_output;
+	    $render_result = $page->render_output;
 	}
 
 	# The renderer may have set a redirection page
-	if( $req->{'redirect'} )
+	if( $page->redirection )
 	{
 	    $req->cookies->add_to_header;
- 	    $req->output_redirection( $req->{'redirect'} );
+ 	    $page->output_redirection( $page->redirection );
 	    return $req->done;
 	}
 	elsif( $render_result )
 	{
 	    $req->cookies->add_to_header;
- 	    $req->send_output;
+ 	    $page->send_output;
 	    return $req->done;
 	}
 	$req->add_job('after_jobs');
@@ -1097,14 +1095,15 @@ sub in_last_job
 sub error_backtrack
 {
     my( $req ) = @_;
+    my $page = $req->page;
 
-    if( $req->result->backtrack and not $req->error_page_selected )
+    if( $req->result->backtrack and not $page->error_page_selected )
     {
 	debug(2,"Backtracking to previuos page because of errors");
 	my $previous = $req->referer;
 	if( $previous )
 	{
-	    $req->set_template( $previous );
+	    $req->page->set_template( $previous );
 
 	    # It must be a template
 	    unless( $req->template =~ /\.tt/ )
@@ -1119,42 +1118,20 @@ sub error_backtrack
     return 0;
 }
 
-sub add_params
-{
-    my( $req, $extra, $keep_old ) = @_;
+=head2 referer
 
-    my $param = $req->{'params'};
+  $req->referer
 
-    if( $keep_old )
-    {
-	while( my($key, $val) = each %$extra )
-	{
-	    next if $param->{$key};
-	    $param->{$key} = $val;
-	    debug(4,"Add TT param $key: $val") if $val;
-	}
-    }
-    else
-    {
-	while( my($key, $val) = each %$extra )
-	{
-	    $param->{$key} = $val;
-	    debug(4,"Add TT param $key: $val");
-	}
-     }
-}
+Returns the LOCAL referer. Just the path part. If the referer
+was from another website, fall back to default
+
+Returns the URI path part as a string.
+
+=cut
 
 sub referer
 {
     my( $req ) = @_;
-
-    # Returns the LOCAL referer. Just the path part. If the referer
-    # was from another website, fall back to default
-
-    # TODO: test recovery from runaway processes
-    # test recursive $req->referer
-
-    # Returns the path part
 
   TRY:
     {
@@ -1202,7 +1179,12 @@ sub referer
 
 =head2 referer_query
 
-Returns the escaped form of the query string.
+  $req->referer_query
+
+Returns the escaped form of the query string.  Should give the same
+result regardless of GET or POST was used.
+
+Defaults to ''.
 
 =cut
 
@@ -1258,7 +1240,11 @@ sub referer_query
 
 =head2 referer_with_query
 
+  $req->referer_with_query
+
 Returns referer with query string as a string.
+
+This combines L</referer> and L</referer_query>.
 
 =cut
 
@@ -1277,318 +1263,6 @@ sub referer_with_query
 }
 
 #############################################
-
-sub get_static
-{
-    my( $req, $in, $pageref ) = @_;
-
-    my $client = $req->client;
-    $pageref or die "No pageref given";
-    my $page = "";
-
-    unless( ref $in )
-    {
-	$in = IO::File->new( $in );
-    }
-
-
-    if( ref $in eq 'IO::File' )
-    {
-	$page .= $_ while <$in>;
-#	$client->send( $_ ) while <$in>;
-    }
-    else
-    {
-	warn "in: $in\n";
-	die "What can I do";
-    }
-
-    my $length = length($page);
-    debug "Returning page with $length bytes";
-
-    # Use the same scalar thingy
-    return $$pageref = $page;
-}
-
-sub find_template
-{
-    my( $req, $template ) = @_;
-
-    debug(2,"Finding template $template");
-    my( $in );
-
-    my $site = $req->site;
-#    debug("The site is".Dumper($site));
-
-
-    my( $base_name, $path_full, $ext_full ) = fileparse( $template, qr{\..*} );
-    if( debug > 3 )
-    {
-	debug(0,"path: $path_full");
-	debug(0,"name: $base_name");
-	debug(0,"ext : $ext_full");
-    }
-
-    # Reasonable default?
-    my $language = $req->lang || ['en'];
-
-    # We should not try to find templates including lang
-    if( $ext_full =~ /^\.(\w\w)\.tt$/ )
-    {
-	debug "Trying to get template with specific lang ext";
-	$language = [$1];
-	$ext_full = '.tt';
-    }
-
-    my( $ext ) = $ext_full =~ m/^\.(.+)/; # Skip initial dot
-
-    # Not absolute path?
-    if( $template !~ /^\// )
-    {
-	cluck "not implemented ($template)";
-	$template = '/'.$template;
-    }
-
-    # Also used by &Para::Frame::Burner::paths
-    $req->set_dirsteps( $req->uri2file( $path_full )."/" );
-
-    my @searchpath = $req->uri2file($path_full)."/";
-
-    if( $site->is_compiled )
-    {
-	push @searchpath, map $_."def/", @{$req->{'dirsteps'}};
-    }
-    else
-    {
-	my $destroot = $req->uri2file($site->home.'/');
-	my $dir = $req->uri2file( $path_full );
-	$dir =~ s/^$destroot// or
-	  die "destroot $destroot not part of $dir";
-#	debug "destroot: $destroot";
-#	debug "dir: $dir";
-
-
-
-	my $paraframedir = $Para::Frame::CFG->{'paraframe'};
-
-	foreach my $appback (@{$site->appback})
-	{
-	    push @searchpath, $appback . '/html' . $dir . '/';
-	}
-
-	push @searchpath, $paraframedir . '/html' . $dir . '/';
-
-	foreach my $path ( dirsteps($dir.'/'), '/' )
-	{
-	    push @searchpath, $destroot . $path . "def/";
-	    foreach my $appback (@{$site->appback})
-	    {
-		push @searchpath, $appback . '/heml' . $path . "def/";
-	    }
-	    push @searchpath,  $paraframedir . '/html' . $path . "def/";
-	}
-    }
-
-    if( debug > 3 )
-    {
-	my  $searchstr = join "", map " - $_\n", @searchpath;
-	debug "Looking for template in:";
-	debug $searchstr;
-    }
-
-    debug(4,"Check $ext",1);
-    foreach my $path ( @searchpath )
-    {
-	unless( $path )
-	{
-	    cluck "path undef (@searchpath)";
-	    next;
-	}
-
-	# We look for both tt and html regardless of it the file was called as .html
-	debug(3,"Check $path",1);
-	die "dir_redirect failed" unless $base_name;
-
-	# Handle dirs
-	if( -d $path.$base_name.$ext_full )
-	{
-	    die "Found a directory: $path$base_name$ext_full\nShould redirect";
-	}
-
-
-	# Find language specific template
-	foreach my $lang ( map(".$_",@$language),'' )
-	{
-	    debug(4,"Check $lang");
-	    my $filename = $path.$base_name.$lang.$ext_full;
-	    if( -r $filename )
-	    {
-		debug(3,"Using $filename");
-
-		# Static file
-		if( $ext ne 'tt' )
-		{
-		    debug(3,"As STATIC ($ext)");
-		    debug(-2);
-		    return( $filename, $ext );
-		}
-
-		my $mod_time = stat( $filename )->mtime;
-		my $burner = $Para::Frame::CFG->{'th'}{'html'};
-		my $compdir = $burner->compile_dir;
-		my $compfile = $compdir.$filename;
-		debug 4, "Compdir: $compdir";
-
-		my( $data, $ltime);
-
-		# 1. Look in memory cache
-		#
-		if( my $rec = $Para::Frame::Cache::td{$filename} )
-		{
-		    debug(3,"Found in MEMORY");
-		    ( $data, $ltime) = @$rec;
-		    if( $ltime <= $mod_time )
-		    {
-			if( debug > 3 )
-			{
-			    debug(0,"     To old!");
-			    debug(0,"     ltime: $ltime");
-			    debug(0,"  mod_time: $mod_time");
-			}
-			undef $data;
-		    }
-		}
-
-		# 2. Look for compiled file
-		#
-		unless( $data )
-		{
-		    if( -f $compfile )
-		    {
-			debug(3,"Found in COMPILED file");
-
-			my $ltime = stat($compfile)->mtime;
-			if( $ltime <= $mod_time )
-			{
-			    if( debug > 3 )
-			    {
-				debug(0,"     To old!");
-				debug(0,"     ltime: $ltime");
-				debug(0,"  mod_time: $mod_time");
-			    }
-			}
-			else
-			{
-			    $data = load_compiled( $compfile );
-
-			    debug(3,"Loading $compfile");
-
-			    # Save to memory cache (loadtime)
-			    $Para::Frame::Cache::td{$filename} =
-				[$data, $ltime];
-			}
-		    }
-		}
-
-		# 3. Compile the template
-		#
-		unless( $data )
-		{
-		    eval
-		    {
-			debug(3,"Reading file");
-			$mod_time = time; # The new time of reading file
-			my $filetext = read_file( $filename );
-			my $parser = $burner->parser;
-
-			debug(3,"Parsing");
-			my $parsedoc = $parser->parse( $filetext )
-			    or throw('template', "parse error:\nFile: $filename\n".
-				     $parser->error);
-
-			$parsedoc->{ METADATA }{'name'} = $filename;
-			$parsedoc->{ METADATA }{'modtime'} = $mod_time;
-
-			debug(3,"Writing compiled file");
-			create_dir(dirname $compfile);
-			Template::Document->write_perl_file($compfile, $parsedoc);
-			chmod_file($compfile);
-			utime( $mod_time, $mod_time, $compfile );
-
-			$data = Template::Document->new($parsedoc)
-			    or throw('template', $Template::Document::ERROR);
-
-			# Save to memory cache
-			$Para::Frame::Cache::td{$filename} =
-			    [$data, $mod_time];
-			1;
-		    } or do
-		    {
-			debug(2,"Error while compiling template $filename: $@");
-			# FIXME
-			$req->result->exception;
-			if( $template eq $site->home.'/error.tt' )
-			{
-			    $req->{'error_template'} = $template;
-			    $req->{'page_content'} = $req->fallback_error_page;
-			    return undef;
-			}
-			debug(2,"Using /error.tt");
-			($in) = $req->find_template($site->home.'/error.tt');
-			debug(-2);
-			return( $in, 'tt' );
-		    }
-		}
-
-		debug(-2);
-		return( $data, $ext );
-	    }
-	}
-	debug(-1);
-    }
-    debug(-1);
-
-    # Check if site should be compiled but hasn't been yet
-    #
-    if( $site->is_compiled )
-    {
-	my $lang = $language->[0];
-	my $sample_template = $site->home . "/def/page_not_found.$lang.tt";
-	unless( stat($req->uri2file($sample_template)) )
-	{
-	    $site->set_is_compiled(0);
-	    debug "*** The site is not yet compiled";
-	    my( $data, $ext ) = $req->find_template( $template );
-
-#	    $site->set_is_compiled(1);
-
-	    return( $data, $ext );
-	}
-    }
-
-
-    # If we can't find the filname
-    debug(1,"Not found: $template");
-    return( undef );
-}
-
-sub load_compiled
-{
-    my( $file ) = @_;
-    my $compiled;
-
-    # From Template::Provider::_load_compiled:
-    # load compiled template via require();  we zap any
-    # %INC entry to ensure it is reloaded (we don't 
-    # want 1 returned by require() to say it's in memory)
-    delete $INC{ $file };
-    eval { $compiled = require $file; };
-    if( $@ )
-    {
-	throw('compile', "compiled template $compiled: $@");
-    }
-    return $compiled;
-}
 
 sub send_code
 {
@@ -1721,422 +1395,21 @@ sub get_cmd_val
     return Para::Frame::get_value( $req );
 }
 
-sub render_output
-{
-    my( $req ) = @_;
-
-    ### Output page
-    my $client = $req->client;
-    my $template = $req->template;
-    my $page = "";
-
-    my $site = $req->site;
-
-
-    my( $in, $ext ) = $req->find_template( $template );
-
-    # Setting tt params AFTER template was found
-    $req->set_tt_params;
-
-    if( not $in )
-    {
-	# Maby we have a fallback page generated
-	return 1 if $req->{'page_content'};
-    }
-
-    if( not $in )
-    {
-	( $in, $ext ) = $req->find_template( $site->home.'/page_not_found.tt' );
-	$req->set_http_status(404);
-	$Para::Frame::REQ->result->error('notfound', "Hittar inte sidan $template\n");
-    }
-
-    debug 2, "Template to render is $in ($ext), that is a ".ref($in);
-
-    if( not $in )
-    {
-	$page .= ( "<p>404: Not found\n" );
-	$page .= ( "<p>Failed to find the file not found error page!\n" );
-    }
-    elsif( $ext ne 'tt' )
-    {
-	$req->get_static( $in, \$page );
-	$req->{'page_content'} = \$page;
-	return 1;
-    }
-    else
-    {
-	my $burner = $Para::Frame::CFG->{'th'}{'html'};
-	$burner->burn($in, $req->{'params'}, \$page)
-	    or do
-	{
-
-	    debug(0,"FALLBACK!");
-	    my $part = $req->result->exception();
-	    $part->prefix_message("During the processing of\n$template");
-
-	    my $error = $burner->error;
-
-	    ### Use error page template
-	    my $error_tt = $req->template; # Could have changed
-	    my $new_error_tt;
-	    if( $error_tt eq $template ) # No new template specified
-	    {
-		if( $error->type eq 'file' )
-		{
-		    if( $error->info =~ /not found/ )
-		    {
-			debug "Subtemplate not found";
-			$new_error_tt = $error_tt =
-			    $site->home.'/page_part_not_found.tt';
-			my $incpathstring = join "", map "- $_\n", @{$req->{'incpath'}};
-			$part->add_message("Include path is\n$incpathstring");
-		    }
-		    else
-		    {
-			debug "Other template error";
-			$part->type('template');
-			$new_error_tt = $error_tt = $site->home.'/error.tt';
-		    }
-		    debug $error->as_string();
-		}
-		elsif( $error->type eq 'denied' )
-		{
-		    if( $req->session->u->level == 0 )
-		    {
-			# Ask to log in
-			$new_error_tt = $error_tt = $site->home."/login.tt";
-			$req->result->hide_part('denied');
-			unless( $req->{'no_bookmark_on_failed_login'} )
-			{
-			    $req->session->route->bookmark();
-			}
-		    }
-		    else
-		    {
-			$new_error_tt = $error_tt = $site->home."/denied.tt";
-			$req->session->route->plan_next($req->referer);
-		    }
-		}
-		elsif( $error->type eq 'notfound' )
-		{
-		    $new_error_tt = $error_tt =
-			$site->home."/page_not_found.tt";
-		    $req->set_http_status(404);
-		}
-		else
-		{
-		    $new_error_tt = $error_tt = $site->home.'/error.tt';
-		}
-	    }
-
-
-	    debug(1,$burner->error());
-
-	    # Avoid recursive failure
-	    if( ($template eq $error_tt) and $new_error_tt )
-	    {
-		$req->{'page_content'} = $req->fallback_error_page;
-		return 1;
-	    }
-
-
-	    $req->set_error_template( $error_tt );
-	    return 0;
-	};
-    }
-
-#	warn Dumper $req->result;
-
-    if( debug > 3 )
-    {
-	$page .= ( "<h2>Debug data</h2>\n" );
-#	$page .= (sprintf "<p>Using template %s med ext $ext\n", $in, $ext) if $in;
-        $page .= ("<table>\n");
-	$page .= (sprintf "<tr><td>Referer <td>%s\n", $req->referer);
-	$page .= (sprintf "<tr><td>Orig URI <td>%s\n", $req->{orig_uri});
-	$page .= (sprintf "<tr><td>template_uri <td>%s\n", $req->{template_uri});
-	$page .= (sprintf "<tr><td>template <td>%s\n", $req->{template});
-	$page .= (sprintf "<tr><td>dir <td>%s\n", $req->{dir});
-	$page .= (sprintf "<tr><td>filename <td>%s\n", $req->filename);
-        $page .= ("</table>\n");
-    }
-
-
-    if( debug > 3 )
-    {
-	my $length = length($page);
-	warn "Page with length $length placed in $req";
-    }
-    $req->{'page_content'} = \$page;
-
-    return 1;
-}
-
 #############################################################
 
+=head2 may_yield
 
-=head2 precompile_page
+  $req->may_yield
 
-  $req->precompile_page( $srcfile, $destfile_web, {ARGLIST} )
+  $req->may_yield( $wait )
 
-  arg type defaults to html_pre
-  arg language defaults to undef
+Calls L</yield> only if there was more than 2 seconds since the last
+yield.
 
-$srcfile is the absolute system path to the template.
-
-$destfile_web is the URL path in the current site for the destination file.
+For operations taking a lot of time, insert this in places there a
+change of request is safe.
 
 =cut
-
-sub precompile_page
-{
-    my( $req, $srcfile, $destfile_web, $args ) = @_;
-
-    $args ||= {};
-
-    # Check that destfile_web matches given site
-    my $home = $req->site->home;
-    if( length( $home ) )
-    {
-	$destfile_web =~ /^$home/ or
-	  die "The file $destfile_web is not placed in $home";
-    }
-
-    my( $res, $error );
-
-    my $type = $args->{'type'} || 'html_pre';
-
-    my $destfile = $req->uri2file( $destfile_web );
-    my $destdir = dirname( $destfile );
-
-    debug(2,"$srcfile -> $destdir $destfile in $type");
-
-    # The URI shoule be the dir and not index.tt
-    # TODO: Handle this in another place?
-    my $uri = $destfile_web;
-    $uri =~ s/\/index(\.\w\w)?\.tt$/\//;
-    $req->set_uri( $uri );
-    $req->set_template( $destfile_web );
-    $req->{template_uri} = $uri;
-
-    $req->set_language($args->{'language'});
-
-    $req->set_dirsteps($destdir.'/');
-
-    my $fh = new IO::File;
-    $fh->open( "$srcfile" ) or die "Failed to open '$srcfile': $!\n";
-
-    $req->set_tt_params;
-
-    my $burner = $Para::Frame::CFG->{'th'}{$type};
-    $res = $burner->burn($fh, $req->{'params'}, $destfile );
-    $fh->close;
-    $error = $burner->error;
-
-    if( $error )
-    {
-	debug "ERROR WHILE PRECOMPILING PAGE";
-	my $part = $req->result->exception($error);
-	if( ref $error and $error->info =~ /not found/ )
-	{
-	    debug "Subtemplate for precompile not found";
-	    my $incpathstring = join "", map "- $_\n", @{$req->{'incpath'}};
-	    $part->add_message("Include path is\n$incpathstring");
-	}
-
-	die $part;
-    }
-
-    return 1;
-}
-
-
-sub fallback_error_page
-{
-    my( $req ) = @_;
-
-    my $page = "";
-    $page .= "<p>500: Failure to render failure page\n";
-    $page .= "<pre>\n";
-    $page .= $req->result->as_string;
-    $page .= "</pre>\n";
-    if( my $backup = $req->site->backup_host )
-    {
-	my $path = $req->uri->path;
-	$page .= "<p>Try to get the page from  <a href=\"http://$backup$path\">$backup</a> instead</p>\n"
-	}
-    return \$page;
-}
-
-sub send_output
-{
-    my( $req ) = @_;
-
-    # Forward if URL differs from template_url
-
-    if( debug > 2 )
-    {
-	debug(0,"Sending output to ".$req->uri);
-	debug(0,"Sending the page ".$req->template_uri);
-	unless( $req->error_page_not_selected )
-	{
-	    debug(0,"An error page was selected");
-	}
-    }
-
-
-    # forward if requested uri ends in '/index.tt' or if it is a dir
-    # without an ending '/'
-
-    my $uri = $req->uri;
-    my $uri_norm = $req->normalized_uri( $uri );
-    if( $uri ne $uri_norm )
-    {
-	$req->forward($uri_norm);
-    }
-    elsif( $req->error_page_not_selected and
-	$uri ne $req->template_uri )
-    {
-	$req->forward();
-    }
-    else
-    {
-	# If not set, find out best way to send page
-	if( $req->{'page_sender'} )
-	{
-	    unless( $req->{'page_sender'} =~ /^(utf8|bytes)$/ )
-	    {
-		debug "Page sender $req->{page_sender} not recogized";
-	    }
-	}
-	else
-	{
-	    if( is_utf8  ${ $req->{'page_content'} } )
-	    {
-		$req->{'page_sender'} = 'utf8';
-	    }
-	    else
-	    {
-		$req->{'page_sender'} = 'bytes';
-	    }
-	}
-
-	if( $req->{'page_sender'} eq 'utf8' )
-	{
-	    $req->ctype->set_charset("UTF-8");
-	    $req->send_headers;
-	    binmode( $req->client, ':utf8');
-	    debug(4,"Transmitting in utf8 mode");
-	    $req->send_in_chunks( $req->{'page_content'} );
-	    binmode( $req->client, ':bytes');
-	}
-	else # Default
-	{
-	    $req->send_headers;
-	    $req->send_in_chunks( $req->{'page_content'} );
-	}
-    }
-}
-
-sub send_in_chunks
-{
-    my( $req, $dataref ) = @_;
-
-    my $client = $req->client;
-    my $length = length($$dataref);
-    debug(4,"Sending ".length($$dataref)." bytes of data to client");
-    my $sent = 0;
-    my $errcnt = 0;
-
-    unless( $length )
-    {
-	confess "We got nothing to send (for req $req)";
-    }
-
-
-    eval
-    {
-	if( $length > 64000 )
-	{
-	    my $chunk = 16384; # POSIX::BUFSIZ * 2
-	    for( my $i=0; $i<$length; $i+= $chunk )
-	    {
-		debug(4,"  Transmitting chunk from $i\n");
-		my $res = $client->send( substr $$dataref, $i, $chunk );
-		if( $res )
-		{
-		    $sent += $res;
-		    $errcnt = 0;
-		}
-		else
-		{
-		    debug(1,"  Failed to send chunk $i");
-
-		    if( $req->{'cancel'} )
-		    {
-			debug("Request was cancelled. Giving up");
-			return $sent;
-		    }
-
-		    debug(1,"  Tries to recover...",1);
-		    
-		    $errcnt++;
-		    $req->yield( 0.9 );
-		    
-		    if( $errcnt >= 100 )
-		    {
-			debug(0,"Got over 100 failures to send chunk $i");
-			last;
-		    }
-		    debug(-1);
-		    redo;
-		}
-	    }
-	}
-	else
-	{
-	    while(1)
-	    {
-		$sent = $client->send( $$dataref );
-		if( $sent )
-		{
-		    last;
-		}
-		else
-		{
-		    debug(1,"  Failed to send data to client\n  Tries to recover...",1);
-		    
-		    $errcnt++;
-		    $req->yield( 1.2 );
-		    
-		    if( $errcnt >= 10 )
-		    {
-			debug(0,"Got over 10 failures to send $length chars of data");
-			last;
-		    }
-		    debug(-1);
-		    redo;
-		}
-	    }
-	}
-	debug(4,"Transmitted $sent chars to client");
-    };
-    if( $@ )
-    {
-	my $err = catch($@);
-	unless( $Para::Frame::REQUEST{$client} )
-	{
-	    return 0;
-	}
-
-	debug "Faild to transmit to client";
-	debug $err->as_string;
-	return 0;
-    }
-
-    return $sent;
-}
 
 sub may_yield
 {
@@ -2147,6 +1420,22 @@ sub may_yield
 	$Para::Frame::REQ->yield( $wait );
     }
 }
+
+=head2 yield
+
+  $req->yield
+
+  $req->yield( $wait )
+
+This calls the main loop, changing all global variables if another
+request is processed.  Then that request is done, we return. If there
+was nothing to do, we will come back here quickly.
+
+If C<$wait> is given, waits a maximum of that amount of time for
+another request. Mostly to be used if we know that another request is
+coming and we want that to be handled before we continue.
+
+=cut
 
 sub yield
 {
@@ -2172,131 +1461,17 @@ sub yield
     Para::Frame::switch_req( $req );
 }
 
-sub forward
-{
-    my( $req, $uri ) = @_;
+=head2 http_host
 
-    # Should only be called AFTER the page has been generated
+  $req->http_host
 
-    # To request a forward, just set the set_template($uri) before the
-    # page is generated.
+Returns the host name the client requested. It tells with which of the
+alternatives names the site was requested
 
-    # To forward to a page not handled by the paraframe, use
-    # redirect()
-
-    my $site = $req->site;
-
-    $uri ||= $req->template_uri;
-
-
-    debug "Forwarding to $uri";
-
-    if( not $req->{'page_content'} )
-    {
-	cluck "forward() called without a generated page";
-	unless( $uri =~ /\.html$/ )
-	{
-	    $uri = $site->home."/error.tt";
-	}
-    }
-    elsif( $uri =~ /\.html$/ )
-    {
-	debug "Forward to html page: $uri";
-	my $referer = $req->referer;
-	debug "  Referer is $referer";
-	debug "  Cancelling forwarding";
-	$req->{template_uri} = $req->uri;
-	$req->send_output;
-	return;
-    }
-
-    $req->output_redirection($uri );
-    $req->session->register_result_page($uri, $req->{'headers'}, $req->{'page_content'});
-}
-
-sub redirect
-{
-    my( $req, $uri, $permanently ) = @_;
-
-    # This is for redirecting to a page  not handled by the paraframe
-
-    # The actual redirection will be done then all the jobs are
-    # finished. Error in the jobs could result in a redirection to an
-    # error page instead.
-
-    $req->{'moved_temporarily'} ||= 1 unless $permanently;
-
-    $req->{'redirect'} = $uri;
-}
-
-sub output_redirection
-{
-    my( $req, $uri_in ) = @_;
-    $uri_in or die "URI missing";
-
-    # Default to temporary move.
-
-    my $uri_out;
-
-    # URI module doesn't support punycode. Bypass module if we
-    # redirect to specified domain
-    #
-    if( $uri_in =~ /^ https?:\/\/ (.*?) (: | \/ | $ ) /x )
-    {
-	my $host_in = $1;
-#	warn "  matched '$host_in' in '$uri_in'!\n";
-	my $host_out = idn_encode( $host_in );
-#	warn "  Encoded to '$host_out'\n";
-	if( $host_in ne $host_out )
-	{
-	    $uri_in =~ s/$host_in/$host_out/;
-	}
-
-	$uri_out = $uri_in;
-    }
-    else
-    {
-	my $uri = Para::Frame::URI->new($uri_in, 'http');
-	$uri->host( idn_encode $req->http_host ) unless $uri->host;
-	$uri->port( $req->http_port ) unless $uri->port;
-	$uri->scheme('http');
-
-	$uri_out =  $uri->canonical->as_string;
-    }
-
-    debug(2,"--> Redirect to $uri_out");
-
-    my $moved_permanently = $req->{'moved_temporarily'} ? 0 : 1;
-
-    if( $moved_permanently )
-    {
-	debug "MOVED PERMANENTLY";
-	$req->send_code( 'AR-PUT', 'status', 301 );
-	$req->send_code( 'AR-PUT', 'header_out', 'Cache-Control', 'public' );
-    }
-    else # moved temporarily
-    {
-	$req->send_code( 'AR-PUT', 'status', 302 );
-	$req->send_code( 'AR-PUT', 'header_out', 'Pragma', 'no-cache' );
-	$req->send_code( 'AR-PUT', 'header_out', 'Cache-Control', 'no-cache' );
-    }
-    $req->send_code( 'AR-PUT', 'header_out', 'Location', $uri_out );
-    
-    my $page = "Go to $uri_out\n";
-    my $length = length( $page );
-
-    $req->send_code( 'AR-PUT', 'header_out', 'Content-Length', $length );
-    $req->send_code( 'AR-PUT', 'send_http_header', 'text/plain' );
-    $req->client->send( "\n" );
-    $req->client->send( $page );
-}
+=cut
 
 sub http_host
 {
-
-    # This is the host name the client requested. It tells with which
-    # of the alternatives names the site was requested
-
     if( my $server_port = $ENV{SERVER_PORT} )
     {
 	if( $server_port == 80 )
@@ -2312,20 +1487,57 @@ sub http_host
     return undef;
 }
 
+=head2 http_port
+
+  $req->http_port
+
+Returns the port the client used in this request.
+
+=cut
+
 sub http_port
 {
     return $ENV{SERVER_PORT} || undef;
 }
+
+=head2 client_ip
+
+  $req->client_ip
+
+Returns the ip address of the client as a string with dot-separated
+numbers.
+
+=cut
 
 sub client_ip
 {
     return $_[0]->env->{REMOTE_ADDR} || $_[0]->{'client'}->peerhost;
 }
 
+=head2 site
+
+  $req->site
+
+Returns the L<Para::Frame::Site> object for this request.
+
+=cut
+
 sub site
 {
     return $_[0]->{'site'} ||= Para::Frame::Site->get();
 }
+
+=head2 set_site
+
+  $req->set_site( $site )
+
+Sets the site to use for this request.
+
+C<$site> should be the name of a registred L<Para::Frame::Site>.
+
+The site must use the same host as the request.
+
+=cut
 
 sub set_site
 {
@@ -2365,6 +1577,15 @@ sub host_from_env
     }
 }
 
+=head2 host
+
+  $req->host
+
+Returns the host name used for accessing this host. Includes C<:$port>
+if port differs from 80.
+
+=cut
+
 sub host # Inkludes port if not :80
 {
     my( $req ) = @_;
@@ -2379,6 +1600,15 @@ sub host # Inkludes port if not :80
     }
 }
 
+=head2 host_without_port
+
+  $req->host_without_port
+
+Returns the host name used for accessing this host, without the port
+part.
+
+=cut
+
 sub host_without_port
 {
     my( $req ) = @_;
@@ -2387,6 +1617,15 @@ sub host_without_port
     $host =~ s/:\d+$//;
     return $host;
 }
+
+=head2 host_with_port
+
+  $req->host_with_port
+
+Returns the host name used for accessing this host, with the port
+part.
+
+=cut
 
 sub host_with_port
 {
@@ -2402,6 +1641,29 @@ sub host_with_port
 	return $host.":80";
     }
 }
+
+=head2 create_fork
+
+  $req->create_fork
+
+Creates a fork.
+
+In PARENT, returns a L<Para::Frame::Child> object.
+
+In CHILD, returnt a L<Para::Frame::Child::Result> object.
+
+Example:
+
+  my $fork = $req->create_fork;
+  if( $fork->in_child )
+  {
+      # Do the stuff...
+      $fork->return($my_result);
+  }
+  $fork->yield; # let other requests run
+  return $fork->result;
+
+=cut
 
 sub create_fork
 {
@@ -2496,6 +1758,8 @@ sub debug_data
 {
     my( $req ) = @_;
 
+    my $page = $req->page;
+
     my $out = "";
     my $reqnum = $req->{'reqnum'};
     $out .= "This is request $reqnum\n";
@@ -2506,7 +1770,7 @@ sub debug_data
     {
 	$out .= "Orig uri: $req->{orig_uri}\n";
 
-	if( my $redirect = $req->{'redirect'} )
+	if( my $redirect = $page->{'redirect'} )
 	{
 	    $out .= "Redirect is set to $redirect\n";
 	}
@@ -2516,7 +1780,7 @@ sub debug_data
 	    $out .= "Browser is $browser\n";
 	}
 
-	if( my $errtmpl = $req->{'error_template'} )
+	if( my $errtmpl = $page->{'error_template'} )
 	{
 	    $out .= "Error template is set to $errtmpl\n";
 	}
@@ -2526,7 +1790,7 @@ sub debug_data
 	    $out .= "Referer is $referer\n"
 	}
 
-	if( $req->{'in_body'} )
+	if( $page->{'in_body'} )
 	{
 	    $out .= "We have already sent the http header\n"
 	}
@@ -2586,114 +1850,15 @@ sub debug_data
 
 #######################################################################
 
-=head2 settt_params
+1;
 
-The standard functions availible in templates.
 
-=over
+=head1 AUTHOR
 
-=item browser
+Jonas Liljegren E<lt>jonas@paranormal.seE<gt>
 
-The L<HTTP::BrowserDetect> object.  Not in StandAlone mode.
+=head1 SEE ALSO
 
-=item dir
-
-The directory part of the filename, including the last '/'.  Symlinks
-resolved.
-
-=item u
-
-$req->{'user'} : The L<Para::Frame::User> object.
-
-=item ENV
-
-$req->env: The Environment hash (L<http://hoohoo.ncsa.uiuc.edu/cgi/env.html>).  Only in client mode.
-
-=item filename
-
-Holds the L<Para::Frame::Request/filename>.
-
-=item home
-
-$req->site->home : L<Para::Frame::Site/home>
-
-=item lang
-
-The L<Para::Frame::Request/preffered_language> value.
-
-=item me
-
-Holds the L<Para::Frame::Request/template_uri>.
-
-=item q
-
-The L<CGI> object.  You will probably mostly use
-[% q.param() %] method. Only in client mode.
-
-=item req
-
-The C<req> object.
-
-=item reqnum
-
-The paraframe server request number
-
-=item result
-
-$req->{'result'} : The L<Para::Frame::Result> object
-
-=item site
-
-The <Para;;Frame::Site> object.
-
-=back
+L<Para::Frame>
 
 =cut
-
-sub set_tt_params
-{
-    my( $req ) = @_;
-
-    my $site = $req->site;
-
-    # Real filename
-    my $real_filename = $req->filename;
-    $real_filename or die "No filename given: ".Dumper($req);
-
-    # Determine the directory
-    my( $dir ) = $real_filename =~ /^(.*\/)/;
-    $req->{'dir'} = $dir;
-    debug(3,"Setting dir to $dir");
-
-
-    # Add local site params
-    if( $site->params )
-    {
-	$req->add_params($site->params);
-    }
-
-    # Keep alredy defined params  # Static within a request
-    $req->add_params({
-	'q'               => $req->{'q'},
-	'ENV'             => $req->env,
-
-	'page'            => $req->page,
-
-	'me'              => $req->template_uri,
-	'filename'        => $real_filename,
-	'dir'             => $dir,
-
-	'browser'         => $req->{'browser'},
-	'u'               => $Para::Frame::U,
-	'result'          => $req->{'result'},
-	'reqnum'          => $req->{'reqnum'},
-	'lang'            => $req->preferred_language, # calculate once
-	'req'             => $req,
-
-	# Is allowed to change between requests
-	'site'            => $site,
-	'home'            => $site->home,
-    }, 1);
-}
-
-1;
