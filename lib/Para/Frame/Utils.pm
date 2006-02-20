@@ -765,7 +765,7 @@ sub uri
     my $query = join '&', @parts;
     $query and $query = '?'.$query;
 
-#    warn "Returning URI $template.$query\n";
+    debug(4, "Returning URI $template$query");
     return $template.$query;
 }
 
