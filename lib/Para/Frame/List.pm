@@ -776,12 +776,17 @@ sub next
 our$AUTOLOAD;
 sub AUTOLOAD
 {
-    my $self = shift;
+    my $list = shift;
     my $item = $AUTOLOAD;
     $item =~ s/.*:://;
     return if $item eq 'DESTROY';
 
-    confess($item);
+    if( $item =~ /^\d+$/ )
+    {
+	return $list->[$item];
+    }
+
+    confess("Method $item not recognized");
 }
 
 
