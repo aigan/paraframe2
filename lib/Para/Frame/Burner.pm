@@ -232,15 +232,16 @@ sub paths
     my( $burner ) = @_;
 
     my $req = $Para::Frame::REQ;
+    my $page = $req->page;
 
-    unless( $req->{'incpath'} )
+    unless( $page->incpath )
     {
 	my $type = $burner->{'type'};
 
 	my $site = $req->site;
 	my $subdir = 'inc' . $burner->subdir_suffix;
 
- 	my $path_full = $req->{'dirsteps'}[0];
+ 	my $path_full = $page->dirsteps->[0];
 	my $destroot = $req->uri2file($site->home.'/');
 	my $dir = $path_full;
 	$dir =~ s/^$destroot// or
@@ -273,19 +274,19 @@ sub paths
 	}
 
 
-	$req->{'incpath'} = [ @searchpath ];
+	$page->set_incpath([ @searchpath ]);
 
 
 	if( debug > 2 )
 	{
-	    my $incpathstring = join "", map "- $_\n", @{$req->{'incpath'}};
+	    my $incpathstring = join "", map "- $_\n", @{$page->incpath};
 	    debug "Include path:";
 	    debug $incpathstring;
 	}
 
     }
 
-    return $req->{'incpath'};
+    return $page->incpath;
 }
 
 

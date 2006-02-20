@@ -336,10 +336,10 @@ sub check_backtrack
     my( $route ) = @_;
 
     my $req = $Para::Frame::REQ;
-
+    my $page = $req->page;
 
     # No backtracking if an error page is selected
-    return if $req->error_page_selected;
+    return if $page->error_page_selected;
 
     # The CGI module doesn't handle query data in URL after a form POST
 #    debug "-- check for backtrack";
@@ -458,6 +458,7 @@ sub get_next
     my( $route, $break_path ) = @_;
 
     my $req = $Para::Frame::REQ;
+    my $page = $req->page;
 
     my $default = $route->default || $req->site->webhome;
 
@@ -501,7 +502,7 @@ sub get_next
 
 #	debug_query("AFTER");
 
-	$req->set_template( $step->path );
+	$page->set_template( $step->path );
 	$req->setup_jobs; # Takes care of any run keys in query string
 	$req->add_job('after_jobs');
 
@@ -511,19 +512,19 @@ sub get_next
     {
 	debug(1,"!!  No more steps in route");
 	debug 1, "!!    Using default step, breaking path";
-	$req->set_template($default);
+	$page->set_template($default);
     }
     else
     {
 	debug(1,"!!  No more steps in route");
-	if( $req->template_uri ne $req->referer )
+	if( $page->template_uri ne $req->referer )
 	{
 	    debug 1, "!!    Using selected template";
 	}
 	else
 	{
 	    debug 1, "!!    Using default step";
-	    $req->set_template($default);
+	    $page->set_template($default);
 	}
 
     }
@@ -553,6 +554,7 @@ sub skip_step
     my( $route ) = @_;
 
     my $req = $Para::Frame::REQ;
+    my $page = $req->page;
     my $q = $req->q;
     my $dest;
 
@@ -567,31 +569,8 @@ sub skip_step
 	my $caller_page = Para::Frame::URI->new($step->query_param('caller_page'))
 	    or die "caller_page missing from $step";
 
-#	warn " -- Got caller $caller_page from $step\n";
-
-#	# Why should we do this?!
-#
-#	# Check if previous steps has the same caller. Remove them as
-#	# well in that case.
-#      CHECK:
-#	while( my $next_step = @{$route->{'route'}}[-1] )
-#	{
-#	    $next_step = URI->new($next_step)
-#		unless UNIVERSAL::isa($next_step, 'URI');
-#
-#	    my $previous_caller =
-#		URI->new($next_step->query_param('caller_page'))
-#		or die "caller_page missing from $step";
-#	    if( $previous_caller->eq( $caller_page ) )
-#	    {
-#		pop @{$route->{'route'}};
-#		next CHECK;
-#	    }
-#	    last CHECK;
-#	}
 
 	# Now setup the params for the caller
-	
 	
 	debug "Got $caller_page";
 
@@ -611,7 +590,7 @@ sub skip_step
 
     $dest ||= $route->default || $req->site->webhome;
 
-    $req->set_template($dest);
+    $page->set_template($dest);
 }
 
 

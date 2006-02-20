@@ -65,7 +65,7 @@ sub add_to_header
 
     foreach my $cookie ( @$added )
     {
-	$req->add_header( 'Set-Cookie', $cookie->as_string );
+	$req->page->add_header( 'Set-Cookie', $cookie->as_string );
     }
 }
 
