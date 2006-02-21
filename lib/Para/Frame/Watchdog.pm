@@ -418,12 +418,12 @@ sub on_crash
 
 sub watchdog_crash
 {
-    $EMERGENCY_MODE++;
-    debug "\n\nWatchdog got an unexpected situation ($EMERGENCY_MODE)";
-
-
     # Bail out if this was under startup
     exit 1 if $Para::Frame::IN_STARTUP;
+
+
+    $EMERGENCY_MODE++;
+    debug "\n\nWatchdog got an unexpected situation ($EMERGENCY_MODE)";
 
 
     if( $Para::Frame::DEBUG <= EMERGENCY_DEBUG_LEVEL )
