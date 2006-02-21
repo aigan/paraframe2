@@ -185,6 +185,16 @@ sub startup
     $IN_STARTUP = 0;
 }
 
+=head2 watchdog_startup
+
+  Para::Frame->watchdog_startup
+
+Starts the L<Para::Frame::Watchdog>.
+
+You may want to use L</daemonize> instead.
+
+=cut
+
 sub watchdog_startup
 {
     Para::Frame::Watchdog->startup();
@@ -845,6 +855,15 @@ sub REAPER
     $SIG{CHLD} = \&REAPER;  # still loathe sysV
 }
 
+=head2 daemonize
+
+  Para::Frame->daemonize( $run_watchdog )
+
+Starts the paraframe daemon in the background. If C<$run_watchdog> is
+true, lets L<Para::Frame::Watchdog> start and watch over the daemon.
+
+=cut
+
 sub daemonize
 {
     my( $class, $run_watchdog ) = @_;
@@ -1299,7 +1318,8 @@ sub open_logfile
 
   Para::Frame->configure( \%cfg )
 
-Configures paraframe before startup.
+Configures paraframe before startup. The configuration is stored in
+C<$Para::Frame::CFG>
 
 These configuration params are used:
 
@@ -1435,6 +1455,26 @@ A coderef that generates a user object to be used for background jobs.
 
 Defaults to code that C<get> C<guest> fråm L</user_class>.
 
+=head3 th
+
+C<th> is a ref to a hash of L<Para::Frame::Burner> objects. You should
+use the default configuration.
+
+There are three standard burners.
+
+  html     = The burner used for all tt pages
+
+  plain    = The burner used for emails and other plain text things
+
+  html_pre = The burner for precompiling of tt pages
+
+Example for adding a filter to the html burner:
+
+  $Para::Frame::CFG->{'th'}{'html'}->add_filters({
+      'upper_case' => sub{ return uc($_[0]) },
+  });
+
+See also L<Para::Frame::Burner>
 
 =cut
 
