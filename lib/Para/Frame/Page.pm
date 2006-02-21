@@ -114,8 +114,6 @@ sub init
 
     my $req = $Para::Frame::REQ;
 
-    debug "Initializing page";
-
     $page->ctype( $req->{'orig_ctype'} );
     $page->set_uri();
 }
