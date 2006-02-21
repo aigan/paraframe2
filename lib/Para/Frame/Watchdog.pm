@@ -412,7 +412,7 @@ sub on_crash
 	$HARD_RESTART = 0;
     }
     debug "\n\n\nRestart $CRASHCOUNTER at $CRASHTIME\n\n\n";
-    
+
     return startup_in_fork();
 }
 
@@ -420,6 +420,11 @@ sub watchdog_crash
 {
     $EMERGENCY_MODE++;
     debug "\n\nWatchdog got an unexpected situation ($EMERGENCY_MODE)";
+
+
+    # Bail out if this was under startup
+    exit 1 if $Para::Frame::IN_STARTUP;
+
 
     if( $Para::Frame::DEBUG <= EMERGENCY_DEBUG_LEVEL )
     {
