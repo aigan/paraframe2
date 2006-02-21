@@ -123,19 +123,6 @@ sub new
     # Cache uri2file translation
     $req->uri2file( $orig_uri, $orig_filename, $req);
 
-    $req->{'cookies'} = new Para::Frame::Cookies($req);
-
-    if( $env->{'HTTP_USER_AGENT'} )
-    {
-	$req->{'browser'} = new HTTP::BrowserDetect($env->{'HTTP_USER_AGENT'});
-    }
-    $req->{'result'}  = new Para::Frame::Result;  # Before Session
-    $req->{'s'}       = Para::Frame->Session->new($req);
-
-    $req->set_language;
-
-#    $req->{'page'} = Para::Frame::Page->obj($req);
-    $req->{'page'} = Para::Frame::Page->new();
 
     # Log some info
     #
@@ -148,10 +135,25 @@ sub init
 {
     my( $req ) = @_;
 
-    debug "Initializing req";
+#    debug "Initializing req";
+
+    my $env = $req->{'env'};
 
     ### Further initialization that requires $REQ
-    $req->page->init;
+    $req->{'cookies'} = new Para::Frame::Cookies($req);
+
+    if( $env->{'HTTP_USER_AGENT'} )
+    {
+	$req->{'browser'} = new HTTP::BrowserDetect($env->{'HTTP_USER_AGENT'});
+    }
+    $req->{'result'}  = new Para::Frame::Result;  # Before Session
+    $req->{'s'}       = Para::Frame->Session->new($req);
+
+    $req->set_language;
+
+    $req->{'page'} = Para::Frame::Page->new();
+    $req->{'page'}->init;
+
     $req->{'s'}->route->init;
 }
 
