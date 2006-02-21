@@ -9,12 +9,18 @@ package Para::Frame::Request::Ctype;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
 #=====================================================================
+
+=head1 NAME
+
+Para::Frame::Request::Ctype - The request response content type
+
+=cut
 
 use strict;
 use Carp qw( cluck );
@@ -27,6 +33,12 @@ BEGIN
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( debug );
+
+=head1 DESCRIPTION
+
+You get this object by using L<Para::Frame::Page/ctype>.
+
+=cut
 
 sub new
 {
@@ -46,6 +58,26 @@ sub new
 
     return $ctype;
 }
+
+=head2 set
+
+  $ctype->set( $string )
+
+Sets the content type to the given string. The string should be
+formatted as in a HTTP header. It can include several extra
+parameters.
+
+The only supported extra parameter is C<charset>, that is set using
+L</set_charset>.
+
+The actual header isn't written until after the response page has been
+generated.
+
+Example:
+
+  $ctype->set("text/plain; charset=UTF-8")
+
+=cut
 
 sub set
 {
@@ -92,6 +124,16 @@ sub set
     return $ctype;
 }
 
+=head2 set_charset
+
+  $ctype->set_charset( $charset )
+
+Sets the charset of the content type.
+
+There is no validation of the sting given.
+
+=cut
+
 sub set_charset
 {
     my( $ctype, $charset ) = @_;
@@ -103,6 +145,15 @@ sub set_charset
 	$ctype->{'changed'} ++ if $ctype->{'ctype'};
     }
 }
+
+=head2 as_string
+
+  $ctype->as_string
+
+Returns a string representation of this object, suitible to be used in
+the HTTP header.
+
+=cut
 
 sub as_string
 {
@@ -140,3 +191,13 @@ sub commit
 }
 
 1;
+
+=head1 AUTHOR
+
+Jonas Liljegren E<lt>jonas@paranormal.seE<gt>
+
+=head1 SEE ALSO
+
+L<Para::Frame::Page>
+
+=cut

@@ -11,7 +11,7 @@ package Para::Frame::Child;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -41,6 +41,29 @@ use Para::Frame::Reload;
 use Para::Frame::Utils qw( debug );
 use Para::Frame::Request;
 use Para::Frame::Child::Result;
+
+=head1 DESCRIPTION
+
+Create a fork using L<Para::Frame::Request/create_fork>.
+
+This is the object that the PARENT gets, that is used for recieving
+the result from the CHILD.
+
+See L<Para::Frame::Request/create_fork> for examples.
+
+Large results may take considerable time to reconstruct by
+L<FreezeThaw/thaw>.
+
+Then the child is done, it returns the L<Para::Frame::Child::Result>
+object. If the retrieval of the data succeed, it check for exceptions
+in the object added by L<Para::Frame::Child::Result/exception>. If
+there are any exceptions, the first of them is given to
+L<Para::Frame::Result/exception>. If no exceptins was found, all the
+L<Para::Frame::Child::Result/on_return> are run.
+
+
+
+=cut
 
 sub register
 {
@@ -120,12 +143,23 @@ sub deregister
 
 }
 
+=head2 yield
+
+  $fork->yield
+
+Do other things until we get the result from the child.
+
+Returns the L<Para::Frame::Child::Result> object.
+
+Using L<Para::Frame::Child::result/on_return> are prefered over
+L</yield>.
+
+=cut
+
 sub yield
 {
     my( $child ) = @_;
 
-    # Do other things until we get the result from the child
-    # Returns the child result obj
 
     # The reqnum param is just for getting it in backtrace
 
@@ -133,7 +167,7 @@ sub yield
     $req->{'in_yield'} ++;
     Para::Frame::main_loop( $child, undef, $req->{'reqnum'} );
     $req->{'in_yield'} --;
-    
+
     Para::Frame::switch_req( $req );
     return $child->{'result'};
 }
@@ -176,7 +210,7 @@ sub get_results
     }
     # Length of prefix
     my $plength = length( $length ) + 1;
-    
+
     debug 2, "Data length is $length bytes";
 
 
@@ -210,15 +244,39 @@ sub get_results
     return $result;
 }
 
+=head2 req
+
+  $fork->req
+
+Returns the request coupled to the fork.
+
+=cut
+
 sub req
 {
     return $_[0]->{'req'};
 }
 
+=head2
+
+  $fork->pid
+
+Returns the CHILD process id number.
+
+=cut
+
 sub pid
 {
     return $_[0]->{'pid'};
 }
+
+=head2 status
+
+  $fork->status
+
+Returns the exit status of the CHILD process.
+
+=cut
 
 sub status
 {
@@ -232,20 +290,53 @@ sub status
     return $child->{'status'};
 }
 
+=head2 result
+
+  $fork->result
+
+Returns the L<Para::Frame::Child::Result> object, after the child is
+done.
+
+=cut
+
 sub result
 {
     return $_[0]->{'result'};
 }
+
+=head2 in_child
+
+  $fork->in_child
+
+Returns false.
+
+=cut
 
 sub in_child
 {
     return 0;
 }
 
+=head2 in_parent
+
+  $fork->in_parent
+
+Returns true.
+
+=cut
+
 sub in_parent
 {
     return 1;
 }
+
+=head2 failed
+
+  $fork->failed
+
+Returns true if the child registred an exception.
+
+=cut
 
 sub failed
 {
@@ -260,6 +351,14 @@ sub failed
 	return 0;
     }
 }
+
+=head2 succeeded
+
+  $fork->succeeded
+
+Rerurns true if the child didn't register an exception.
+
+=cut
 
 sub succeeded
 {
@@ -276,3 +375,14 @@ sub succeeded
 }
 
 1;
+
+
+=head1 AUTHOR
+
+Jonas Liljegren E<lt>jonas@paranormal.seE<gt>
+
+=head1 SEE ALSO
+
+L<Para::Frame::Request>, L<Para::Frame::Child::Result>
+
+=cut

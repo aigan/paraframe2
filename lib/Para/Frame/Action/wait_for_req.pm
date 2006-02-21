@@ -10,7 +10,7 @@ package Para::Frame::Action::wait_for_req;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2005 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2005-2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -60,3 +60,10 @@ sub handler
 }
 
 1;
+
+
+=head1 NAME
+
+Para::Frame::Action::wait_for_req - For internal pseudorequests
+
+=cut

@@ -11,12 +11,18 @@ package Para::Frame::Client;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
 #=====================================================================
+
+=head1 NAME
+
+Para::Frame::Client - The client for the Request
+
+=cut
 
 use strict;
 use CGI;
@@ -39,10 +45,56 @@ our $r;
 our $DEBUG = 1;
 our $BACKUP_PORT;
 
-# $SIG{HUP} = sub { warn "Got a HUP\n"; };
-# $SIG{INT} = sub { warn "Got a INT\n"; };
-# $SIG{TERM} = sub { warn "Got a TERM\n"; };
+=head1 DESCRIPTION
 
+This is the part of L<Para::Frame> that lives in the C<LWP> as a
+C<Perl Handler>.
+
+This package is also used by L<Para::Frame> to send messages to
+itself, for example from a child to the parent.
+
+The handler takes a lot of information about the request (made by the
+browser client calling Apache) and sends it to the paraframe daemon
+through a socket. It waits for the finished response page and gives
+that page to Apache for sending it back to the browser.
+
+The port for communication with paraframe is taken from the C<port>
+variable from Apache dir_config. See L<Apache/SERVER CONFIGURATION
+INFORMATION>.
+
+Example; For using port 7788, put in your .htaccess:
+
+  AddHandler perl-script tt
+  PerlHandler Para::Frame::Client
+  PerlSetVar port 7788
+
+The C<dir_config> hashref is used by paraframe for reading other
+variables.
+
+All other dirconfig variables are optional. Here is the list:
+
+=head3 port
+
+The port to use for communication with the paraframe daemon.
+
+=head3 backup_port
+
+A port to use if the server at the first port doesn't answer.
+
+=head3 backup_redirect
+
+A backup host to use if the paraframe daemon doesn't answer and
+neither the backup_port. The same path will be used on the backup
+host. It should be the host name, without path and without http. We
+will automaticly be redirected to that place.
+
+=head3 backup
+
+If all above fail, we will create a fallback page with a link
+suggesting to go to this site. The link is constructad in the same way
+as for L</backup_redirect>.
+
+=cut
 
 sub handler
 {
@@ -414,3 +466,14 @@ sub get_response
 }
 
 1;
+
+
+=head1 AUTHOR
+
+Jonas Liljegren E<lt>jonas@paranormal.seE<gt>
+
+=head1 SEE ALSO
+
+L<Para::Frame>, L<Apache>
+
+=cut

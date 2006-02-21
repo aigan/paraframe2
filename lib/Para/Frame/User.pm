@@ -212,7 +212,7 @@ sub verify_user # NOT USED
     throw('action', "Not used");
 }
 
-=head1 get
+=head2 get
 
   $this->get( $username )
 
@@ -244,7 +244,7 @@ sub get # Reimplement this method
     return $u;
 }
 
-=head1 verify_password
+=head2 verify_password
 
   $u->verify_password( $encrypted_password )
 
@@ -263,6 +263,16 @@ sub verify_password # Reimplement this method
     throw('validation', "Not implemented");
     0;
 }
+
+=head2 logout
+
+  $u->logout
+
+Logs out the user.
+
+Removes the cookies.
+
+=cut
 
 sub logout
 {
@@ -285,6 +295,14 @@ sub logout
 	unless $Para::Frame::U->level == 0;
 }
 
+=head2 change_current_user
+
+  $u->change_current_user( $new_user )
+
+Sets the user for this request to the object C<$new_user>.
+
+=cut
+
 sub change_current_user
 {
     $Para::Frame::U = $_[1];
@@ -292,11 +310,33 @@ sub change_current_user
     return $Para::Frame::REQ->s->{'user'} = $Para::Frame::U;
 }
 
+=head2 become_temporary_user
+
+  $u->become_temporary_user( $new_user )
+
+Temporarily change the user for this request to the object
+C<$new_user>, for some special operation. Remember who the real user
+is.  Make sure to switch back then done, and use C<eval{}> to catch
+errors and switch back before any exception.
+
+Switch back to the real user with L</revert_from_temporary_user>.
+
+=cut
+
 sub become_temporary_user
 {
     $Para::Frame::REQ->{'real_user'} = $Para::Frame::U;
     return $_[0]->change_current_user( $_[1] );
 }
+
+=head2 revert_from_temporary_user
+
+  $u->revert_from_temporary_user
+
+Reverts back from the temporary user to the user before
+L</become_temporary_user>.
+
+=cut
 
 sub revert_from_temporary_user
 {
@@ -321,9 +361,8 @@ sub style    { undef }
 
 # Shortcuts
 #
-sub session { $Para::Frame::REQ->s }
-sub s       { $Para::Frame::REQ->s }
-sub route   { $Para::Frame::REQ->s->route }
+sub session { $Para::Frame::REQ->session }
+sub route   { $Para::Frame::REQ->session->route }
 
 1;
 

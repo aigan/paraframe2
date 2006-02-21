@@ -1652,7 +1652,38 @@ In PARENT, returns a L<Para::Frame::Child> object.
 
 In CHILD, returnt a L<Para::Frame::Child::Result> object.
 
-Example:
+Then the child returns. The hook C<child_result> is runt with the
+L<Para::Frame::Result> object as the param after C<$req>.
+
+You must make sure to exit the child. This is supposed to be done by
+the L<Para::Frame::Result/result> method.
+
+The hook C<on_fork> is run in the CHILD just after the
+L<Para::Frame::Result> object is created.
+
+Example 1 uses L<Para::Frame::Child::Result/on_return>. Example 2 uses
+L<Para::Frame::Child/yield>. The first method (example 1) is preferred
+as it is safer and faster in certain cases.
+
+Example 1:
+
+  my $fork = $req->create_fork;
+  if( $fork->in_child )
+  {
+      # Do the stuff...
+      $fork->on_return('process_my_data');
+      $fork->return($my_result);
+  }
+  return "";
+
+  sub
+  {
+      my( $result ) = @_;
+      # Do more stuff
+      return "All done now";
+  }
+
+Example 2:
 
   my $fork = $req->create_fork;
   if( $fork->in_child )

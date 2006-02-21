@@ -9,12 +9,18 @@ package Para::Frame::Watchdog;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004, 2005 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
 #=====================================================================
+
+=head1 NAME
+
+Para::Frame::Watchdog - Watches over the process
+
+=cut
 
 use strict;
 use IO::File;
@@ -64,11 +70,23 @@ sub debug; # Use special version of debug
 
 # TODO: Proc::PidUtil
 
+=head1 DESCRIPTION
+
+Makes sure that the daemon runs.
+
+Restarts it if it eats too much memory or if it craches.
+
+Called by L<Para::Frame/daemonize> or L<Para::Frame/watchdog_startup>.
+
+Uses C<lsof> to check if another process uses our port, and tries to
+kill it if there is any. Works fine for restarting your daemon.
+
+=cut
 
 sub startup
 {
     my( $class, $use_logfile )  = @_;
-    
+
     configure($use_logfile);
 
     debug 1, "\n\nStarted process $$ on ".now()."\n\n";
@@ -846,6 +864,13 @@ END
 	debug("Closing down paraframe\n\n");
     }
 }
+
+
+=head1 SEE ALSO
+
+L<Para::Frame>
+
+=cut
 
 
 1;

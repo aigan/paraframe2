@@ -9,7 +9,7 @@ package Para::Frame::Action::mark;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -34,8 +34,15 @@ sub handler
     $route->bookmark( uri $req->referer, store_params );
 
     $q->param('run', grep {$_ ne 'mark'} @run );
-    
+
     return "";
 }
 
 1;
+
+
+=head1 NAME
+
+Para::Frame::Action::mark - bookmarks a page for the route
+
+=cut

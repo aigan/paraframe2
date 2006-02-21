@@ -9,7 +9,7 @@ package Para::Frame::Result::Part;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -18,12 +18,14 @@ package Para::Frame::Result::Part;
 
 =head1 NAME
 
-Para::Frame::Result - Representing an individual result as part of the Result object
+Para::Frame::Result::Part - Representing an individual result as part of the Result object
 
 =head1 DESCRIPTION
 
 This object should be a compatible standin for Template::Exception,
 since it is a container object.
+
+You create a new part by using L<Para::Frame::Result/error>.
 
 =cut
 
@@ -221,12 +223,32 @@ sub new
     return $part;
 }
 
+=head2 info
+
+  $part->info
+
+Returns the error info by L<Template::Exception> info().
+
+=cut
+
 sub info
 {
     my( $part ) = @_;
 
     return $part->error->info;
 }
+
+=head2 type
+
+  $part->type
+
+  $part->type( $type )
+
+Returns the error type by L<Template::Exception> type().
+
+If C<$type> is defined, sets it.
+
+=cut
 
 sub type
 {
@@ -240,11 +262,6 @@ sub type
     return $part->{'type'} || $part->error_type || "";
 }
 
-sub error
-{
-    return $_[0]->{'error'};
-}
-
 sub error_type
 {
     if( $_[0]->{'error'} )
@@ -252,6 +269,33 @@ sub error_type
 	return $_[0]->{'error'}->type;
     }
 }
+
+=head2 error
+
+  $part->error
+
+Returns the L<Template::Exception> object.
+
+=cut
+
+sub error
+{
+    return $_[0]->{'error'};
+}
+
+=head2 title
+
+  $part->title
+
+  $part->title( $title )
+
+Returns the part title.
+
+If C<$title> is defined, sets it.
+
+Defaults to title based on C<type>.
+
+=cut
 
 sub title
 {
@@ -272,6 +316,23 @@ sub title
     }
 }
 
+=head2 message
+
+  $part->message
+
+  $part->message( $message )
+
+  $part->message( \@messages )
+
+Returns the part message
+
+First all error info, followed by all the part messages. Joined by
+newline.
+
+If C<$message> is defined, sets it.
+
+=cut
+
 sub message
 {
     my( $part, $message ) = @_;
@@ -291,6 +352,20 @@ sub message
 
     return join "\n", @message;
 }
+
+=head2 hide
+
+  $part->hide
+
+  $part->hide( $bool )
+
+Returns true if this part should not be shown to the normal user.
+
+If C<$bool> is defined, sets it.
+
+Defaults to default for the part type.
+
+=cut
 
 sub hide
 {
@@ -326,20 +401,65 @@ sub hide
     }
 }
 
+=hide2 border
+
+  $part->border
+
+Returns the border colour for displaying the part, if error.
+
+Defaults to default for error type or black.
+
+=cut
+
 sub border
 {
     $_[0]->{'border'} || $ERROR_TYPE->{$_[0]->type}{'border'}||'black';
 }
+
+=head2 bg
+
+  $part->bg
+
+Returns the background colour for displaying the part, if error.
+
+Defaults to default for error type or #AAAAFF.
+
+=cut
 
 sub bg
 {
     $_[0]->{'bg'} || $ERROR_TYPE->{$_[0]->type}{'bg'}||'#AAAAFF';
 }
 
+=head2 width
+
+  $part->width
+
+Returns the width of the border (in px) for displaying the part, if
+error.
+
+Defaults to default fro error type or 3.
+
+=cut
+
 sub width
 {
     $_[0]->{'width'} || $ERROR_TYPE->{$_[0]->type}{'width'}||3;
 }
+
+=head2 view_context
+
+  $part->view_context
+
+  $part->view_context( $bool )
+
+Returns true if we should display the context of the error message.
+
+If C<$bool> is defined, sets it.
+
+Defaults to default for error type or false.
+
+=cut
 
 sub view_context
 {
@@ -371,9 +491,23 @@ sub view_context
     }
     else
     {
-	return $ERROR_TYPE->{ $part->type }{'view_context'};
+	return $ERROR_TYPE->{ $part->type }{'view_context'} || 0;
     }
 }
+
+=head2 no_backtrack
+
+  $part->no_backtrack
+
+  $part->no_backtrack( $bool )
+
+Returns true if we should not backtrack because of this error, if error.
+
+If C<$bool> is defined, sets it.
+
+Defaults to the default for the error type or false.
+
+=cut
 
 sub no_backtrack
 {
@@ -405,9 +539,17 @@ sub no_backtrack
     }
     else
     {
-	return $ERROR_TYPE->{ $part->type }{'no_backtrack'};
+	return $ERROR_TYPE->{ $part->type }{'no_backtrack'} || 0;
     }
 }
+
+=head2 context
+
+  $part->context
+
+Returns the context of the part.
+
+=cut
 
 sub context
 {
@@ -420,9 +562,22 @@ sub context
     return $part->{'context'};
 }
 
+=head2 context_line
+
+  $part->context_line
+
+Returns the line of the start of the context
+
+=cut
+
 sub context_line
 {
     my( $part ) = @_;
+
+    unless( $part->{'context'} )
+    {
+	$part->set_context;
+    }
     return $part->{'context_line'};
 }
 
@@ -454,6 +609,20 @@ sub set_context
     }
 }
 
+=head2 prefix_message
+
+  $part->prefix_message
+
+  $part->prefix_message( $message )
+
+Return a message to prefix the message with.
+
+If C<$message> is defined, sets it.
+
+Defaults to undef.
+
+=cut
+
 sub prefix_message
 {
     my( $part, $message ) = @_;
@@ -465,6 +634,16 @@ sub prefix_message
     }
     return $part->{'prefix_message'};
 }
+
+=head2 add_message
+
+  $part->add_message( \@messages )
+
+Adds each message to the message list for the part.
+
+Returns L</message>.
+
+=cut
 
 sub add_message
 {
@@ -482,6 +661,14 @@ sub add_message
 
     return $part->message;
 }
+
+=head2 as_string
+
+  $part->as_string
+
+Returns a representation of the part in plain text format.
+
+=cut
 
 sub as_string
 {

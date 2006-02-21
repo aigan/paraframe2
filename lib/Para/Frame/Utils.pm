@@ -350,9 +350,13 @@ sub run_error_hooks
 
   create_dir( $dir )
 
+  create_dir( $dir, \%params )
+
 Creates the directory, including parent directories.
 
 All created dirs is chmod and chgrp to ritframe standard.
+
+Passes C<%params> to L<create_dir> and L<chmod_dir>.
 
 =cut
 
@@ -425,8 +429,11 @@ sub create_file
 
   chmod_tree( $dir );
 
+  chmod_tree( $dir, \%params );
+
 Chmod and chgrp all files in dir tree to ritframe standard.
-Chgrp file 
+
+Passes C<%params> to L</chmod_file>.
 
 =cut
 
@@ -466,12 +473,28 @@ sub chmod_tree
   chmod_file( $filename, $mode, \%params )
   chmod_file( $filename, \%params )
 
-Chgrp file according to $Para::Frame::CFG->{'paraframe_group'}.
-Chmod file, using umask on 02777 for dirs and 0666 for files.
+Chgrp file according to L<Para::Frame/paraframe_group>.
 
-Using umask on $mode or $params{mode} if given
+If C<$mode> isn't given, falls back on C<%params>.
 
-Using $params{umask} if given
+Using L<perlfunc/umask> for setting all modes. That umask is set in
+L<Para::Frame/configure> using L<Para::Frame/umask>.
+
+That umask can be overridden for this file by C<param umask>.
+
+The mode for dirs will be the first defined of C<$mode> or C<param
+dirmode> of C<param mode> or C<02777>.
+
+The mode for nondir files will be the first defined of C<$mode> or
+C<param filemode> or C<param mode> or C<0666>.
+
+For example, with a default umask of C<07> and a default dirmode of
+C<02777>, the dir will be set to mode C<02770> that would be
+read/write access for user and group and no access for anyone else.
+
+If we fail to change the mode or group (because of permission
+problems) we will throw an exception with an analysis of the problem
+and a suggested solution.
 
 =cut
 
@@ -648,7 +671,17 @@ sub chmod_file
 
   chmod_dir( $dir )
 
-Chmod and chgrp dir to ritframe standard.
+  chmod_dir( $dir, $mode )
+
+  chmod_dir( $dir, \%params  )
+
+  chmod_dir( $dir, $mode, \%params )
+
+Does nothing if C<param do_not_chmod_dir> is true.
+
+C<$mode>, if existing, is copied top L<param dirmode>.
+
+Calls L</chmod_file> with the given C<$dir> and C<%params>.
 
 =cut
 
@@ -664,7 +697,7 @@ sub chmod_dir
     }
     else
     {
-	$params->{'mode'} = $mode;
+	$params->{'dirmode'} = $mode;
     }
 
     return if $params->{'do_not_chmod_dir'};
@@ -673,6 +706,10 @@ sub chmod_dir
 
 
 =head2 package_to_module
+
+  package_to_module( $package )
+
+Returns the correspondoing praxis filename of the module.
 
 =cut
 
@@ -686,6 +723,10 @@ sub package_to_module
 
 
 =head2 module_to_package
+
+  module_to_package( $module )
+
+Returns the corresponding praxis package name for the filename.
 
 =cut
 
@@ -701,6 +742,7 @@ sub module_to_package
 =head2 uri_path
 
   uri_path()
+
   uri_path($url)
 
 Returns the absolute path for the C<$url>. Defaults to the current
@@ -713,11 +755,12 @@ sub uri_path
     my( $template ) = @_;
 
     my $req = $Para::Frame::REQ;
+    my $page = $req->page;
 
-    $template ||= $req->template_uri;
+    $template ||= $page->template_uri;
     unless( $template =~ /^\// )
     {
-	$template = URI->new_abs($template, $req->template_uri)->path;
+	$template = URI->new_abs($template, $page->template_uri)->path;
     }
     return $template;
 }
@@ -725,12 +768,16 @@ sub uri_path
 =head2 uri
 
   uri()
+
   uri( $url )
+
   uri( $url, \%params )
 
 Creates a URL with query parameters separated by '&'.
 
-$url should not include a '?'.  $url defaults to app->home.
+C<$url> should not include a '?'.
+
+C<$url> defaults to L<Para::Frame::Site/home>.
 
 =cut
 
@@ -743,7 +790,7 @@ sub uri
     throw('compilation', shortmess "Too many args for uri")
 	if $attr and not ref $attr;
 
-    $template ||= $Para::Frame::CFG->{'apphome'};
+    $template ||= $req->site->home;
 
     my $extra = "";
     my @parts = ();
@@ -777,8 +824,24 @@ sub uri
 
   dirsteps( $path, $base )
 
-C<$base> is the website URL home path. Returns a list with all dirs
-from C<$path> to the dir before C<$base>
+C<$base> is the website URL home path.
+
+C<$base> defaults to ''.
+
+Returns a list with all dirs from C<$path> to the dir before C<$base>.
+
+C<$path> must both end and begin with C</>.
+
+C<$base> must not end with C</>.
+
+Example: C<dirsteps('/one/two/three/')> returns C<('/one/two/three/',
+'/one/two/', '/one/')>.
+
+Example: C<dirsteps('/one/two/three/', '/one')> returns C<('/one/two/three/',
+'/one/two/', '/one/')>.
+
+Example: C<dirsteps('/one/two/three/', '/one/two')> returns C<('/one/two/three/',
+'/one/two/')>.
 
 =cut
 
@@ -815,13 +878,6 @@ sub dirsteps
 }
 
 
-=head2 compile
-
-ciompile file
-
-=cut
-
-
 sub compile
 {
     my( $filename ) = @_;
@@ -854,13 +910,13 @@ sub compile
     return require $filename;
 }
 
-=head1 passwd_crypt
+=head2 passwd_crypt
 
   passwd_crypt( $password )
 
-This function returns an encrypted version of the given string, uses
-the current clients C-network IP as salt. The encrypted password will
-be diffrent if the client comes from a diffrent net or subnet.
+Returns an encrypted version of the given string, uses the current
+clients C-network IP as salt. The encrypted password will be diffrent
+if the client comes from a diffrent net or subnet.
 
 =cut
 
@@ -877,6 +933,14 @@ sub passwd_crypt
     return md5_hex( $passwd, $ip );
 }
 
+=head2 deunicode
+
+  deunicode( $text )
+
+Checks the text. If it's in UTF8, converts it to ISO-8859-1.
+
+=cut
+
 sub deunicode
 {
     if( $_[0] =~ /Ã/ ) # Could be unicode
@@ -886,6 +950,18 @@ sub deunicode
     }
     return $_[0];
 }
+
+=head2 paraframe_dbm_open
+
+  paraframe_dbm_open( $dbfile )
+
+REturns a referens to a hash tied to database file.
+
+Uses L<BerkeleyDB/BerkeleyDB::Hash>.
+
+Creates the file if it doesn't exist.
+
+=cut
 
 sub paraframe_dbm_open
 {
@@ -909,6 +985,19 @@ sub paraframe_dbm_open
 
     return \%db;
 }
+
+=head2 elapsed_time
+
+  elapsed_time( $duration )
+
+TODO: Move to Para::Frame::Time
+
+Returns an informal string representation of the duration.
+
+C<$duration> can be the number of seconds or a L<DateTime::Duration>
+object.
+
+=cut
 
 sub elapsed_time
 {
@@ -982,7 +1071,7 @@ sub elapsed_time
 	else
 	{
 	    $str .= "mindre än 1 minut";
-	}	
+	}
     }
 
     return $str;
@@ -991,7 +1080,11 @@ sub elapsed_time
 
 =head2 idn_decode
 
-decode international domain names with punycode
+  idn_decode( $domain )
+
+Decode international domain names with punycode.
+
+Returns the decoded domain as a string.
 
 =cut
 
@@ -1024,7 +1117,11 @@ sub idn_decode
 
 =head2 idn_encode
 
-encode international domain names with punycode
+  idn_encode( $domain )
+
+Encode international domain names with punycode.
+
+Returns the encoded domain as a string.
 
 =cut
 
@@ -1059,7 +1156,9 @@ sub idn_encode
 
 =head2 store_params
 
-Returns a hash with all the CGI query params
+  store_params()
+
+Returns a hash with all the CGI query params.
 
 =cut
 
@@ -1080,11 +1179,12 @@ sub store_params
 
 =head2 clear_params
 
-  cleare_params(@list)
+  cleare_params( @list )
+
   clear_params
 
 Clears the CGI query params given in list, or all params if no list
-given
+given.
 
 =cut
 
@@ -1107,7 +1207,7 @@ sub clear_params
 
 =head2 add_params
 
-  add_params(\%saved)
+  add_params( \%saved )
 
 Adds to the CGI query with the params given in the hashref.
 
@@ -1127,7 +1227,7 @@ sub add_params
 
 =head2 restore_params
 
-  restore_params(\%saved)
+  restore_params( \%saved )
 
 Remove all the CGI query params and replace them with those in the
 hashref given.
@@ -1145,9 +1245,26 @@ sub restore_params
 
 =head2 debug
 
-  debug($level, $message, $ident_delta)
+  debug( $level, $message, $ident_delta )
 
-Output debug info
+  debug( $level, $message )
+
+  debug( $message )
+
+  debug( $ident_delta )
+
+  $level = debug()
+
+If no params are given, just returns the current debug level.
+
+C<$level> specifies the minimum debug level required to display this
+debug message. Default is 0.
+
+The C<$message> is sent to C<STDERR>.
+
+C<$ident_delta> changes the current identation level. Each level
+equates to a space prefixed the message. The C<$ident_delta> can be a
+positive or negative integer.
 
 =cut
 
@@ -1207,6 +1324,18 @@ sub debug
     return $message . "\n";
 }
 
+=head2 reset_hashref
+
+  reset_hashref( $hashref, \%params )
+
+Removes all the data from C<$hashref> and copies all C<%params> to it.
+
+The point is to keep the thingy.
+
+Returns the hashref.
+
+=cut
+
 sub reset_hashref
 {
     my( $hashref, $params ) = @_;
@@ -1232,8 +1361,10 @@ sub reset_hashref
 
 =head2 timediff
 
-Returns the time since last usage of timediff, followd with the param
-as text string.
+  timediff( $label )
+
+Returns the time since last usage of timediff, prefixed with the
+param, as a text string.
 
 =cut
 
@@ -1265,9 +1396,11 @@ sub extract_query_params
 
 =head2 fqdn
 
+  fqdn()
+
 Gets the FQDN (fully qualified domain name). That is the hostname
 followed by the domain name.  Tha availible perl modules fails for
-me. ( Sys::Hostname and Net::Domain )
+me. ( L<Sys::Hostname> and L<Net::Domain> )
 
 =cut
 
@@ -1287,7 +1420,7 @@ sub fqdn
 
 =head2 retrieve_from_url
 
-    retrieve_from_url( $url );
+    retrieve_from_url( $url )
 
 Gets the page/file in a fork.
 
@@ -1337,9 +1470,9 @@ sub retrieve_from_url
 
 =head2 get_from_fork
 
-  get_from_fork(sub{ my_code })
+  get_from_fork( \&coderef )
 
-Run given coderef in a fork an retrieve the results
+Run given coderef in a fork an retrieve the results.
 
 =cut
 
@@ -1364,6 +1497,8 @@ sub get_from_fork
 =head2 validate
 
   validate( $value, $type )
+
+TODO: Not implemented...
 
 Validate that a value is of the specified type
 

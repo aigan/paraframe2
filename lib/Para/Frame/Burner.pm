@@ -9,7 +9,7 @@ package Para::Frame::Burner;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -37,6 +37,20 @@ BEGIN
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug dirsteps );
+
+=head2 DESCRIPTION
+
+There are three standard burners.
+
+  html     = The burner used for all tt pages
+
+  plain    = The burner used for emails and other plain text things
+
+  html_pre = The burner for precompiling of tt pages
+
+They are defined by L<Para::Frame/configure> in C<th>.
+
+=cut
 
 sub new
 {
@@ -148,6 +162,27 @@ sub free_th
     }
 }
 
+=head2 add_filters
+
+  $burner->add_filters( \%filters )
+
+  $burner->add_filters( \%filters, $dynamic )
+
+Adds a filter to the burner. Availible in all templates that uses the
+burner. If C<$dynamic> is true, adds all the filters as dynamic
+filters. Default is to add them as static filters.
+
+C<%filters> is a hash with the filter name and the coderef.
+
+Example:
+
+  $Para::Frame::CFG->{'th'}{'html'}->add_filters({
+      'upper_case' => sub{ return uc($_[0]) },
+  });
+
+
+=cut
+
 sub add_filters
 {
     my( $burner, $params, $dynamic ) = @_;
@@ -183,12 +218,22 @@ sub providers
     return $_[0]->th->context->load_templates();
 }
 
-
-
 sub error_hash #not used
 {
     return $_[0]->th->{ _ERROR };
 }
+
+=head2 burn
+
+  $burner->burn( @params )
+
+Calls L<Template/process> with the given params.
+
+Example:
+
+  $burner->burn( $in, $page->{'params'}, \$out)
+
+=cut
 
 sub burn
 {
@@ -209,6 +254,14 @@ sub burn
 #    }
 #    $fork->yield;
 }
+
+=head2 error
+
+  $burner->error
+
+Returns the L<Template::Exception> from the burning, if any.
+
+=cut
 
 sub error
 {

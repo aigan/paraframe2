@@ -42,6 +42,15 @@ use Para::Frame::Utils qw( store_params debug );
 
 our $SESSION_COOKIE_NAME = 'paraframe-sid';
 
+=head1 DESCRIPTION
+
+You get this object by L<Para::Frame::Request/session>.
+
+If you subclass this class, set the name of yo0ur class in
+L<Para::Frame/session_class>.
+
+=cut
+
 sub new
 {
     my( $class, $req ) = @_;
@@ -101,6 +110,18 @@ sub new
     return $s;
 }
 
+=head2 init
+
+  $s->init
+
+This is called after the session construction.
+
+Reimplement this mothod if you subclass C<Para::Frame::Session>.
+
+The default method is empty.
+
+=cut
+
 sub init
 {
     # Reimplement this
@@ -150,10 +171,27 @@ sub register_result_page
     $s->{'page_result'}{$uri} = [ $headers, $page_ref ];
 }
 
+=head2 id
+
+  $s->id
+
+Returns the session id.
+
+=cut
+
 sub id
 {
     return $_[0]->{'sid'};
 }
+
+=head2 user
+
+  $s->user
+
+Returns the session user object. L<Para::Frame::User> or an object in
+your subclass of that.
+
+=cut
 
 sub u
 {
@@ -165,10 +203,28 @@ sub user
     return $_[0]->{'user'};
 }
 
+=head2 referer
+
+  $s->referer
+
+Returns a L<URI> object of the previous page visited in the session.
+
+(A user can have several browser windows opened in the same session.)
+
+=cut
+
 sub referer
 {
     return $_[0]->{'referer'};
 }
+
+=head2 route
+
+  $part->route
+
+Returns the L<Para::Frame::Route> object.
+
+=cut
 
 sub route
 {
