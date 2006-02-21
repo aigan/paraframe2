@@ -1252,7 +1252,7 @@ sub run_hook
     return 1;
 }
 
-=head2 add_blobal_tt_params
+=head2 add_global_tt_params
 
   Para::Frame->add_global_tt_params( \%params )
 
