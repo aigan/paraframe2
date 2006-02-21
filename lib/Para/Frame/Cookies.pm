@@ -82,9 +82,9 @@ sub hash   { $_[0]->{'hash'} }
 
 sub add_to_header
 {
-    my( $self ) = @_;
+    my( $cookies ) = @_;
 
-    my $added = $self->added;
+    my $added = $cookies->added;
 
     foreach my $cookie ( @$added )
     {
@@ -108,10 +108,10 @@ Default C<-path> is '/'.
 
 sub add
 {
-    my( $self, $settings, $extra ) = @_;
+    my( $cookies, $settings, $extra ) = @_;
 
-    my $q = $self->req->q;
-    my $cookies = $self->added;
+    my $q = $Para::Frame::REQ->q;
+    my $added = $cookies->added;
 
     $extra ||= {};
     $extra->{-path} ||= '/';
@@ -122,10 +122,10 @@ sub add
 
 	debug(1,"Add cookie $key: $val");
 
-	push @$cookies, $q->cookie( -name  => $key,
-				    -value => $val,
-				    %$extra,
-				    );
+	push @$added, $q->cookie( -name  => $key,
+				  -value => $val,
+				  %$extra,
+				);
     }
 }
 
@@ -139,18 +139,18 @@ Removes the named cookies from the client, using HTTP headers.
 
 sub remove
 {
-    my $self = shift;
+    my $cookies = shift;
 
-    my $q = $self->req->q;
-    my $cookies = $self->added;
+    my $q = $Para::Frame::REQ->q;
+    my $added = $cookies->added;
 
     foreach my $key ( @_ )
     {
-	push @$cookies, $q->cookie( -name  => $key,
-				    -value => 'none',
-				    -path  => '/',
-				    -expires => "-1h",
-				    );
+	push @$added, $q->cookie( -name  => $key,
+				  -value => 'none',
+				  -path  => '/',
+				  -expires => "-1h",
+				);
     }
 }
 
@@ -165,15 +165,15 @@ client.
 
 sub as_html
 {
-    my( $self ) = @_;
+    my( $cookies ) = @_;
 
     my $desc = "";
 
     $desc .= "<ol>\n";
 
-    foreach my $key ( keys %{$self->hash} )
+    foreach my $key ( keys %{$cookies->hash} )
     {
-	$desc .= "<li>$key: ".$self->hash->{$key}->value."\n";
+	$desc .= "<li>$key: ".$cookies->hash->{$key}->value."\n";
     }
     $desc .= "</ol>\n";
 
