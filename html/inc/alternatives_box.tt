@@ -7,7 +7,7 @@
 <p>[% result.find('alternatives').message | html | html_para %]</p>
 
 <table>
-[% FOREACH part = a.list %]
+[% FOREACH part IN a.alts %]
    [% tr2 %]<td>[% a.rowformat(part) %]</tr>
 [% END %]
 </table>
