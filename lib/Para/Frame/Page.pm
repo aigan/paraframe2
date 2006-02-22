@@ -1134,7 +1134,20 @@ sub precompile
 
     my $type = $args->{'type'} || 'html_pre';
 
-    my $destfile = $req->uri2file( $destfile_web );
+    $destfile_web =~ /([^\/])$/ or die "oh no";
+    my $filename = $1;
+
+    my $destfile =  $req->uri2file( $destfile_web );
+    my $safecnt = 0;
+    while( $destfile !~ /$filename$/ )
+    {
+	die "Loop" if $safecnt++ > 100;
+	debug "Creating dir $destfile";
+	create_dir($destfile);
+	$req->uri2file_clear( $destfile_web );
+	$destfile =  $req->uri2file( $destfile_web );
+    }
+
     my $destdir = dirname( $destfile );
 
     # The URI shoule be the dir and not index.tt
