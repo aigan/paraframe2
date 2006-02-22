@@ -1209,7 +1209,7 @@ sub run_hook
 	    carp "Hook label missing";
 	}
 
-	if( $req )
+	if( $req and $req->{reqnum} )
 	{
 	    debug(0,"run_hook $label for $req->{reqnum}");
 	}
