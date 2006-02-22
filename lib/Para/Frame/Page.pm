@@ -58,6 +58,7 @@ BEGIN
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug create_dir chmod_file idn_encode idn_decode );
 use Para::Frame::Request::Ctype;
+use Para::Frame::URI;
 
 =head2 new
 
@@ -70,10 +71,8 @@ been registred. (Done by L<Para::Frame>.)
 
 sub new
 {
-    my( $this, $params) = @_;
+    my( $this ) = @_;
     my $class = ref($this) || $this;
-
-    $params ||= {};
 
     my $page = bless
     {
@@ -92,10 +91,10 @@ sub new
 	dirsteps       => undef,
 	params         => undef,
 	renderer       => undef,
+	site           => undef,          ## The site for the request
     }, $class;
 
-    my %ttparams = %$Para::Frame::PARAMS;
-    $page->{'params'} = \%ttparams;
+    $page->{'params'} = {%$Para::Frame::PARAMS};
 
     return $page;
 }
@@ -104,7 +103,8 @@ sub new
 
   $page->init()
 
-Initiates the page object.
+Initiates the page object for the request. (Not used for page objects
+not to be used as the response page.)
 
 =cut
 
@@ -113,6 +113,10 @@ sub init
     my( $page ) = @_;
 
     my $req = $Para::Frame::REQ;
+
+    my $site_name = $req->dirconfig->{'site'} || $req->host_from_env;
+    $page->{'site'} = Para::Frame::Site->get( $site_name );
+
 
     $page->ctype( $req->{'orig_ctype'} );
     $page->set_uri();
@@ -211,9 +215,8 @@ along with the dots.
 sub path_base
 {
     my( $page ) = @_;
-    my $req = $Para::Frame::REQ;
 
-    my $home = $req->site->home;
+    my $home = $page->site->home;
     my $template = $page->url_path_tmpl;
     $template =~ /^$home(.*?)(\.\w\w)?\.\w{2,3}$/
       or die "Couldn't get path_base from $template under $home";
@@ -230,9 +233,8 @@ a slash.
 sub path_full
 {
     my( $page ) = @_;
-    my $req = $Para::Frame::REQ;
 
-    my $home = $req->site->home;
+    my $home = $page->site->home;
     my $template_uri = $page->url_path_full;
     my( $site_uri ) = $template_uri =~ /^$home(.+?)$/
       or die "Couldn't get site_uri from $template_uri under $home";
@@ -250,12 +252,11 @@ home, begining with a slash.
 sub path_tmpl
 {
     my( $page ) = @_;
-    my $req = $Para::Frame::REQ;
 
-    my $home = $req->site->home;
+    my $home = $page->site->home;
     my $template = $page->url_path_tmpl;
     my( $site_uri ) = $template =~ /^$home(.+?)$/
-      or die "Couldn't get site_uri from $template under $home";
+      or confess "Couldn't get site_uri from $template under $home";
     $site_uri =~ s/\.\w\w\.tt$/.tt/; # Remove language part
     return $site_uri;
 }
@@ -270,9 +271,8 @@ home, begining but not ending with a slash.
 sub dir
 {
     my( $page ) = @_;
-    my $req = $Para::Frame::REQ;
 
-    my $home = $req->site->home;
+    my $home = $page->site->home;
     my $template = $page->url_path_tmpl;
     $template =~ /^$home(.*?)\/[^\/]*$/
       or confess "Couldn't get site_dir from $template under $home";
@@ -298,6 +298,57 @@ sub sys_path_tmpl
 #############################################
 #############################################
 #############################################
+
+=head2 site
+
+  $page->site
+
+Returns the L<Para::Frame::Site> this page is located in.
+
+=cut
+
+sub site
+{
+    return $_[0]->{'site'} ||= Para::Frame::Site->get();
+}
+
+
+=head2 set_site
+
+  $page->set_site( $site )
+
+Sets the site to use for this request.
+
+C<$site> should be the name of a registred L<Para::Frame::Site>.
+
+The site must use the same host as the request.
+
+=cut
+
+sub set_site
+{
+    my( $page, $site_in ) = @_;
+    my $req = $Para::Frame::REQ;
+
+    my $site = Para::Frame::Site->get( $site_in );
+
+    # Check that site mathces the client
+    #
+    unless( $req->client =~ /^background/ )
+    {
+	if( my $orig = $req->original )
+	{
+	    unless( $orig->site->host eq $req->site->host )
+	    {
+		my $site_name = $site->name;
+		confess "Host mismatch: $site_name";
+	    }
+	}
+    }
+
+    return $page->{'site'} = $site;
+}
+
 
 =head2 error_page_selected
 
@@ -333,7 +384,7 @@ sub find_template
     debug(2,"Finding template $template");
     my( $in );
 
-    my $site = $req->site;
+    my $site = $page->site;
 #    debug("The site is".Dumper($site));
 
 
@@ -546,7 +597,7 @@ sub find_template
 			if( $template eq $site->home.'/error.tt' )
 			{
 			    $req->{'error_template'} = $template;
-			    $page->{'page_content'} = $req->fallback_error_page;
+			    $page->{'page_content'} = $page->fallback_error_page;
 			    return undef;
 			}
 			debug(2,"Using /error.tt");
@@ -611,6 +662,7 @@ sub load_compiled  ############ function!
 sub fallback_error_page
 {
     my( $page ) = @_;
+
     my $req = $Para::Frame::REQ;
 
     my $out = "";
@@ -618,9 +670,9 @@ sub fallback_error_page
     $out .= "<pre>\n";
     $out .= $req->result->as_string;
     $out .= "</pre>\n";
-    if( my $backup = $req->site->backup_host )
+    if( my $backup = $page->site->backup_host )
     {
-	my $path = $req->uri->path;
+	my $path = $page->uri->path;
 	$out .= "<p>Try to get the page from  <a href=\"http://$backup$path\">$backup</a> instead</p>\n"
 	}
     return \$out;
@@ -663,15 +715,15 @@ sub headers
 
 sub set_uri
 {
-    my( $page ) = @_;
+    my( $page, $uri_in ) = @_;
 
     # Only used by Para::Frame to set uri from original uri. Never
     # changes from that original uri.
 
     my $req = $Para::Frame::REQ;
-    my $orig_uri = $req->{'orig_uri'};
+    $uri_in ||= $req->{'orig_uri'};
 
-    my $uri = Para::Frame::URI->new($orig_uri);
+    my $uri = Para::Frame::URI->new($uri_in);
 
     debug(3,"Setting URI to $uri");
     $page->{uri} = $uri;
@@ -910,7 +962,7 @@ sub render_output
     my $template = $page->template;
     my $out = "";
 
-    my $site = $req->site;
+    my $site = $page->site;
 
 
     my( $in, $ext ) = $page->find_template( $template );
@@ -1016,7 +1068,7 @@ sub render_output
 	    # Avoid recursive failure
 	    if( ($template eq $error_tt) and $new_error_tt )
 	    {
-		$page->{'page_content'} = $req->fallback_error_page;
+		$page->{'page_content'} = $page->fallback_error_page;
 		return 1;
 	    }
 
@@ -1042,11 +1094,11 @@ sub render_output
 
 
 
-=head2 precompile_page
+=head2 precompile
 
-  $req->precompile_page( $srcfile, $destfile_web )
+  $req->precompile( $srcfile, $destfile_web )
 
-  $req->precompile_page( $srcfile, $destfile_web, \%args )
+  $req->precompile( $srcfile, $destfile_web, \%args )
 
   arg type defaults to html_pre
   arg language defaults to undef
@@ -1057,7 +1109,7 @@ $destfile_web is the URL path in the current site for the destination file.
 
 =cut
 
-sub precompile_page
+sub precompile
 {
     my( $page, $srcfile, $destfile_web, $args ) = @_;
 
@@ -1066,7 +1118,7 @@ sub precompile_page
     $args ||= {};
 
     # Check that destfile_web matches given site
-    my $home = $req->site->home;
+    my $home = $page->site->home;
     if( length( $home ) )
     {
 	$destfile_web =~ /^$home/ or
@@ -1084,7 +1136,7 @@ sub precompile_page
 
     # The URI shoule be the dir and not index.tt
     # TODO: Handle this in another place?
-    my $uri = $destfile_web;
+    my $uri = $req->normalized_uri($destfile_web);
     $uri =~ s/\/index(\.\w\w)?\.tt$/\//;
     $page->set_uri( $uri );
     $page->set_template( $destfile_web );
@@ -1206,7 +1258,7 @@ sub forward
     # To forward to a page not handled by the paraframe, use
     # redirect()
 
-    my $site = $req->site;
+    my $site = $page->site;
 
     $uri ||= $page->template_uri;
 
@@ -1509,7 +1561,7 @@ sub set_dirsteps
     my $req = $Para::Frame::REQ;
 
     $path_full ||= $req->uri2file( dirname( $page->template ) . "/" ) . "/";
-    $path_home ||= $req->uri2file( $req->site->home  . "/" );
+    $path_home ||= $req->uri2file( $page->site->home  . "/" );
     debug 3, "Setting dirsteps for $path_full under $path_home";
     undef $page->{'incpath'};
     return $page->{'dirsteps'} = [ Para::Frame::Utils::dirsteps( $path_full, $path_home ) ];
@@ -1671,15 +1723,14 @@ sub set_tt_params
 
     my $req = $Para::Frame::REQ;
 
-    my $site = $req->site;
+    my $site = $page->site;
 
     # Real filename
-    my $real_filename = $req->filename;
+    my $real_filename = $page->sys_path_tmpl;
     $real_filename or die "No filename given: ".Dumper($req);
 
     # Determine the directory
     my( $dir ) = $real_filename =~ /^(.*\/)/;
-    $req->{'dir'} = $dir;
     debug(3,"Setting dir to $dir");
 
 
