@@ -1105,7 +1105,8 @@ sub render_output
 
 $srcfile is the absolute system path to the template.
 
-$destfile_web is the URL path in the current site for the destination file.
+$destfile_web is the URL path in the current site for the destination
+file.
 
 =cut
 
@@ -1132,12 +1133,22 @@ sub precompile
     my $destfile = $req->uri2file( $destfile_web );
     my $destdir = dirname( $destfile );
 
-    debug(2,"$srcfile -> $destdir $destfile in $type");
-
     # The URI shoule be the dir and not index.tt
     # TODO: Handle this in another place?
     my $uri = $req->normalized_uri($destfile_web);
     $uri =~ s/\/index(\.\w\w)?\.tt$/\//;
+
+    if( debug > 1 )
+    {
+	debug "srcfile     : $srcfile";
+	debug "destfile_web: $destfile_web";
+	debug "destfile    : $destfile";
+	debug "destdir     : $destdir";
+	debug "type        : $type";
+	debug "uri         : $uri";
+    }
+
+
     $page->set_uri( $uri );
     $page->set_template( $destfile_web );
     $page->{template_uri} = $uri;
