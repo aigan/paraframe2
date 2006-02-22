@@ -338,10 +338,14 @@ sub set_site
     {
 	if( my $orig = $req->original )
 	{
-	    unless( $orig->site->host eq $req->site->host )
+	    unless( $orig->site->host eq $site->host )
 	    {
 		my $site_name = $site->name;
-		confess "Host mismatch: $site_name";
+		my $orig_name = $orig->site->name;
+		debug "Host mismatch";
+		debug "orig site: $orig_name";
+		debug "New name : $site_name";
+		confess "set_site called";
 	    }
 	}
     }
