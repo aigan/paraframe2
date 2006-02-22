@@ -589,7 +589,7 @@ sub normalized_uri
     }
 
     my $uri_file = $req->uri2file( $uri );
-    debug "uri_file: $uri_file";
+#    debug "uri_file: $uri_file";
     if( -d $uri_file and $uri !~ /\/(\?.*)?$/ )
     {
 	$uri =~ s/\?/\/?/
