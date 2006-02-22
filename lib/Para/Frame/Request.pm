@@ -111,21 +111,14 @@ sub new
 	child_result   => undef,          ## the child res if in child
 	reqnum         => $reqnum,        ## The request serial number
 	wait           => 0,              ## Asked to wait?
-	site           => undef,          ## The site for the request
 	cancel         => undef,          ## True if we should abort
 	change         => undef,
     }, $class;
 
-    my $site_name = $dirconfig->{'site'} || $req->host_from_env;
-#    debug "Request under site $site_name";
-    $req->{'site'}    = Para::Frame::Site->get( $site_name );
-
     # Cache uri2file translation
     $req->uri2file( $orig_uri, $orig_filename, $req);
 
-
     # Log some info
-    #
     warn "# http://".$req->http_host."$orig_uri\n";
 
     return $req;
@@ -149,10 +142,11 @@ sub init
     $req->{'result'}  = new Para::Frame::Result;  # Before Session
     $req->{'s'}       = Para::Frame->Session->new($req);
 
-    $req->set_language;
-
     $req->{'page'} = Para::Frame::Page->new();
     $req->{'page'}->init;
+
+    $req->set_language;
+
 
     $req->{'s'}->route->init;
 }
@@ -189,7 +183,7 @@ sub new_subrequest
 	}
     }
 
-    my $req = Para::Frame::Request->new_minimal($Para::Frame::REQNUM, $client, $args);
+    my $req = Para::Frame::Request->new_minimal($Para::Frame::REQNUM, $client);
 
     $req->{'original_request'} = $original_req;
     $original_req->{'wait'} ++; # Wait for subreq
@@ -199,6 +193,9 @@ sub new_subrequest
 
     ### Register the client, if it was created now
     $Para::Frame::REQUEST{$client} ||= $req;
+
+    $req->minimal_init( $args ); ### <<--- INIT
+
 
     my $res = eval
     {
@@ -230,7 +227,7 @@ Used for background jobs, without a calling browser client
 
 sub new_minimal
 {
-    my( $class, $reqnum, $client, $args ) = @_;
+    my( $class, $reqnum, $client ) = @_;
 
     my $req =  bless
     {
@@ -245,21 +242,27 @@ sub new_minimal
 	child_result   => undef,          ## the child res if in child
 	reqnum         => $reqnum,        ## The request serial number
 	wait           => 0,              ## Asked to wait?
-	site           => undef,          ## The site for the request
     }, $class;
 
-    my %ttparams = %$Para::Frame::PARAMS;
-    $req->{'params'} = \%ttparams;
+    $req->{'params'} = {%$Para::Frame::PARAMS};
 
-    $req->set_language( $args->{'language'} );
+    return $req;
+}
 
-    # $args->{'site'} may be undef
-    $req->set_site( $args->{'site'} );
+sub minimal_init
+{
+    my( $req, $args ) = @_;
 
     $req->{'result'}  = new Para::Frame::Result;  # Before Session
     $req->{'s'}       = Para::Frame->Session->new_minimal();
 
-    $req->{'page'} = Para::Frame::Page->new();
+    my $page = $req->{'page'} = Para::Frame::Page->new();
+    if( my $site_in = $args->{'site'} )
+    {
+	$page->set_site( $site_in );
+    }
+
+    $req->set_language( $args->{'language'} );
 
     return $req;
 }
@@ -331,7 +334,6 @@ Returns the L<Para::Frame::Result> object for this request.
 
 sub result { shift->{'result'} }
 sub uri { $_[0]->page->uri }
-sub dir { shift->{'dir'} }  #??????????????
 
 =head2 language
 
@@ -354,7 +356,10 @@ Returns the L<Para::Frame::Page> object.
 
 =cut
 
-sub page { $_[0]->{'page'} }
+sub page
+{
+    return $_[0]->{'page'} or confess;
+}
 
 =head2 original
 
@@ -423,6 +428,20 @@ server job or something else.
 sub is_from_client
 {
     return $_[0]->{'q'} ? 1 : 0;
+}
+
+=head2 dirconfig
+
+  $req->dirconfig
+
+Returns the dirconfig hashref. See L<Apache/SERVER CONFIGURATION
+INFORMATION> C<dir_config>.
+
+=cut
+
+sub dirconfig
+{
+    return $_[0]->{'dirconfig'};
 }
 
 
@@ -572,7 +591,8 @@ sub set_language
     }
     debug 3, "  Lang prefs are $language_in";
 
-    my $site_languages = $req->site->languages;
+    confess "page not defined" unless $req->{'page'};
+    my $site_languages = $req->page->site->languages;
 
     unless( @$site_languages )
     {
@@ -676,11 +696,13 @@ sub preferred_language
 {
     my( $req, @lim_langs ) = @_;
 
+    my $site = $req->page->site;
+
     my @langs;
     if( @lim_langs )
     {
       LANG:
-	foreach my $lang (@{$req->site->languages})
+	foreach my $lang (@{$site->languages})
 	{
 	    foreach( @lim_langs )
 	    {
@@ -694,7 +716,7 @@ sub preferred_language
     }
     else
     {
-	@langs = @{$req->site->languages};
+	@langs = @{$site->languages};
     }
 
     if( $req->is_from_client )
@@ -716,7 +738,7 @@ sub preferred_language
 	}
     }
 
-    return $req->site->languages->[0];
+    return $site->languages->[0];
 }
 
 
@@ -812,8 +834,8 @@ sub run_action
 
     return 1 if $run eq 'nop'; #shortcut
 
-    my $site = $req->site;
     my $page = $req->page;
+    my $site = $page->site;
 
     my $actionroots = [$site->appbase."::Action"];
 
@@ -1105,12 +1127,12 @@ sub error_backtrack
 	my $previous = $req->referer;
 	if( $previous )
 	{
-	    $req->page->set_template( $previous );
+	    $page->set_template( $previous );
 
 	    # It must be a template
 	    unless( $req->template =~ /\.tt/ )
 	    {
-		$previous = $req->site->home."/error.tt";
+		$previous = $page->site->home."/error.tt";
 	    }
 
 	    debug(3,"Previous is $previous");
@@ -1134,6 +1156,8 @@ Returns the URI path part as a string.
 sub referer
 {
     my( $req ) = @_;
+
+    my $site = $req->page->site;
 
   TRY:
     {
@@ -1172,10 +1196,10 @@ sub referer
     }
 
     debug "Referer from default value";
-    return $req->site->last_step if $req->site->last_step;
+    return $site->last_step if $site->last_step;
 
     # Last try. Should always be defined
-    return $req->site->webhome.'/';
+    return $site->webhome.'/';
 }
 
 
@@ -1270,6 +1294,8 @@ sub send_code
 {
     my $req = shift;
 
+    my $site = $req->page->site;
+
     # To get a response, use get_cmd_val()
 
     debug(3, "Sending code: ".join("-", @_));
@@ -1319,8 +1345,8 @@ sub send_code
 #		debug "Using host ".$req->site->host;
 #	    }
 
-	    my $webhost = $req->site->webhost;
-	    my $webpath = $req->site->loopback;
+	    my $webhost = $site->webhost;
+	    my $webpath = $site->loopback;
 
 	    my $query = "run=wait_for_req&req=$client";
 	    my $url = "http://$webhost$webpath?$query";
@@ -1526,41 +1552,7 @@ Returns the L<Para::Frame::Site> object for this request.
 
 sub site
 {
-    return $_[0]->{'site'} ||= Para::Frame::Site->get();
-}
-
-=head2 set_site
-
-  $req->set_site( $site )
-
-Sets the site to use for this request.
-
-C<$site> should be the name of a registred L<Para::Frame::Site>.
-
-The site must use the same host as the request.
-
-=cut
-
-sub set_site
-{
-    my( $req, $site_in ) = @_;
-    my $site = Para::Frame::Site->get( $site_in );
-
-    # Check that site mathces the client
-    #
-    unless( $req->client =~ /^background/ )
-    {
-	if( my $orig = $req->original )
-	{
-	    unless( $orig->site->host eq $req->site->host )
-	    {
-		my $site_name = $site->name;
-		confess "Host mismatch: $site_name";
-	    }
-	}
-    }
-
-    return $req->{'site'} = $site;
+    return $_[0]->page->site;
 }
 
 sub host_from_env
