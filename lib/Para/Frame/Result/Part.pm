@@ -223,6 +223,9 @@ sub new
     return $part;
 }
 
+
+############### Compatible with Template::Exception
+
 =head2 info
 
   $part->info
@@ -261,6 +264,36 @@ sub type
     }
     return $part->{'type'} || $part->error_type || "";
 }
+
+
+sub type_info
+{
+    return $_[0]->error->type_info;
+}
+
+sub text
+{
+    my ($part, $newtextref) = @_;
+
+
+    my $text = $part->{'context'} ||= '';
+
+
+    if( $newtextref )
+    {
+	$$newtextref .= $text if $text ne $$newtextref;
+
+	$part->{'context'} = $$newtextref;
+        return '';
+
+    }
+    else
+    {
+        return $text;
+    }
+}
+
+######################################################
 
 sub error_type
 {
@@ -601,7 +634,6 @@ sub set_context
 	{
 	    my @lines = split "\n", $context;
 	    my $linecount = scalar @lines;
-	    warn "Context: $context\n";
 	    # Save last five rows
 	    $part->{'context'} = join "\n", @lines[-5..-1];
 	    $part->{'context_line'} = $linecount;
