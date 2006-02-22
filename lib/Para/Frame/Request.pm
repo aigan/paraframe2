@@ -532,6 +532,37 @@ sub uri2file
     return $file;
 }
 
+=head2 uri2file_clear
+
+  $req->uri2file( $uri )
+
+  $req->uri2file()
+
+Clears the C<$uri> from the cache for the C<$req> host.
+
+With no C<$uri>, clear all uris from the cache.
+
+=cut
+
+sub uri2file_clear
+{
+    my( $req, $uri ) = @_;
+
+    if( $uri )
+    {
+	my $key = $req->host . $uri;
+
+	delete $URI2FILE{ $key };
+    }
+    else
+    {
+	%URI2FILE = ();
+    }
+    return;
+}
+
+
+
 =head2 normalized_uri
 
   $req->normalized_uri( $uri )
@@ -558,6 +589,7 @@ sub normalized_uri
     }
 
     my $uri_file = $req->uri2file( $uri );
+    debug "uri_file: $uri_file";
     if( -d $uri_file and $uri !~ /\/(\?.*)?$/ )
     {
 	$uri =~ s/\?/\/?/
