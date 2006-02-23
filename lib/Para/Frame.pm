@@ -35,10 +35,13 @@ use Carp qw( cluck confess carp croak );
 use Sys::CpuLoad;
 use DateTime::TimeZone;
 
+our $VERSION;
+our $CVSVERSION;
+
 BEGIN
 {
-    our $CVSVERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    our $VERSION = "1.01"; # Paraframe version
+    $CVSVERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
+    $VERSION = "1.03"; # Paraframe version
     print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
@@ -1613,6 +1616,9 @@ sub configure
     Para::Frame::Route->on_configure;
     Para::Frame::Widget->on_configure;
     Para::Frame::Email::Address->on_configure;
+
+    # Making the version availible
+    $CFG->{'version'} = $VERSION;
 }
 
 =head2 Session
