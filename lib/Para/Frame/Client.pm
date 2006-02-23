@@ -29,6 +29,7 @@ use CGI;
 use IO::Socket;
 use FreezeThaw qw( freeze );
 use Data::Dumper;
+use Apache::Constants qw( :common );
 
 BEGIN
 {
@@ -73,6 +74,16 @@ variables.
 
 All other dirconfig variables are optional. Here is the list:
 
+=head3 site
+
+The name of the site to use. Useful if you have more than one site on
+the same host. This is used by L<Para::Frame::Site>.
+
+Set C<PerlSetVar site ignore> to not handling this request in
+paraframe. This is useful for making Apache use the C<DirectoryIndex>
+option. And it may be more useful than the C<SetHandler
+default-handler> config.
+
 =head3 port
 
 The port to use for communication with the paraframe daemon.
@@ -100,17 +111,18 @@ sub handler
 {
     ( $r ) = @_;
 
+    my $dirconfig = $r->dir_config;
+
+    if( $dirconfig->{'site'} and $dirconfig->{'site'} eq 'ignore' )
+    {
+	return DECLINED;
+    }
+
+    my $q = new CGI;
     $|=1;
 
     warn "$$: Client started\n" if $DEBUG;
 
-    my $q = new CGI;
-
-#    die $q->cookie;
-
-#    warn "$$: CGI obj created\n";
-
-    my $dirconfig = $r->dir_config;
     my $port = $dirconfig->{'port'};
     if( $BACKUP_PORT )
     {
