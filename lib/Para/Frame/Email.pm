@@ -406,7 +406,7 @@ sub send
     # List of addresses to try. Quit after first success
     my @try = ref $p->{'to'} eq 'ARRAY' ? @{$p->{'to'}} : $p->{'to'};
 
-    my( $in, $ext ) = $req->find_template("$home/email/".$p->{'template'});
+    my( $in, $ext ) = $req->page->find_template("$home/email/".$p->{'template'});
     if( not $in )
     {
 	throw('notfound', "Hittar inte e-postmallen ".$p->{'template'});
