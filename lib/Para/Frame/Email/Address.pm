@@ -377,6 +377,7 @@ sub equals
 {
     my( $a, $a2_in ) = @_;
 
+    $a2_in ||= "";
     my $a2_as_string;
     if( ref $a2_in )
     {
