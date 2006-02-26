@@ -1532,15 +1532,19 @@ alternatives names the site was requested
 
 sub http_host
 {
+    my $host = $ENV{HTTP_HOST} || $ENV{SERVER_NAME};
+
+    $host =~ s/:\d+$//; # May be empty even if not port 80 (https)
+
     if( my $server_port = $ENV{SERVER_PORT} )
     {
 	if( $server_port == 80 )
 	{
-	    return idn_decode( $ENV{SERVER_NAME} );
+	    return idn_decode( $host );
 	}
 	else
 	{
-	    return idn_decode( "$ENV{SERVER_NAME}:$server_port" );
+	    return idn_decode( "$host:$server_port" );
 	}
     }
 
