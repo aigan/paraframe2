@@ -978,9 +978,9 @@ sub add_background_jobs
     my $client = "background-$REQNUM";
     my $req = Para::Frame::Request->new_minimal($REQNUM, $client);
 
-    ### Register the request
     $REQUEST{$client} = $req;
     switch_req( $req, 1 );
+    $req->minimal_init;
 
     warn "\n\n$REQNUM Handling new request (in background)\n";
 
