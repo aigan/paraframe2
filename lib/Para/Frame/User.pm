@@ -307,7 +307,7 @@ sub change_current_user
 {
     $Para::Frame::U = $_[1];
     return $Para::Frame::U unless $Para::Frame::REQ;
-    return $Para::Frame::REQ->s->{'user'} = $Para::Frame::U;
+    return $Para::Frame::REQ->session->{'user'} = $Para::Frame::U;
 }
 
 =head2 become_temporary_user
