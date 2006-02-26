@@ -246,15 +246,15 @@ sub new_minimal
 
     $req->{'params'} = {%$Para::Frame::PARAMS};
 
+    $req->{'result'}  = new Para::Frame::Result;  # Before Session
+    $req->{'s'}       = Para::Frame->Session->new_minimal();
+
     return $req;
 }
 
 sub minimal_init
 {
     my( $req, $args ) = @_;
-
-    $req->{'result'}  = new Para::Frame::Result;  # Before Session
-    $req->{'s'}       = Para::Frame->Session->new_minimal();
 
     my $page = $req->{'page'} = Para::Frame::Page->new();
     if( my $site_in = $args->{'site'} )
