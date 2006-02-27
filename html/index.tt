@@ -1,3 +1,9 @@
-[% META title="Välkommen till ParaFrame" %]
+[% META otitle="ParaFrame" %]
 
-<p>Du har nu startat paraframe!
+<h1 align="center"><img src="$home/pf/images/logo/paraframe-735x150.png" alt="ParaFrame"></h1>
+
+<p>This is the default ParaFrame front page.
+
+<p>You can now build your site by replacing components and adding whatever you want.
+
+<p>Good luck!
