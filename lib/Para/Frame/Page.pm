@@ -191,6 +191,60 @@ sub template_uri
     return $_[0]->{'template_uri'} || $_[0]->uri;
 }
 
+
+=head2 url_dir
+
+The URI excluding the trailing slash (and the filename). If The URI is
+a dir, the C<url_dir> will be the same, minus the ending '/'.
+
+=cut
+
+sub url_dir
+{
+    my( $dir ) = $_[0]->{'template_uri'} =~ /^(.*)\//;
+    return $dir;
+}
+
+
+=head2 url_dir_path
+
+The same as L</url_dir>, but ends with a '/'.
+
+=cut
+
+sub url_dir_path
+{
+    my( $dir ) = $_[0]->{'template_uri'} =~ /^(.*\/)/;
+    return $dir;
+}
+
+
+=head2 url_parent
+
+Same as L</url_dir>, except that if the template is a dir, we will instead get the previous dir. Excluding the trailing slash.
+
+=cut
+
+sub url_parent
+{
+    my( $dir ) = $_[0]->{'template_uri'} =~ /^(.*)\/./;
+    return $dir;
+}
+
+
+=head2 url_parent_path
+
+The same as L</url_parent>, but ends with a '/'.
+
+=cut
+
+sub url_parent_path
+{
+    my( $dir ) = $_[0]->{'template_uri'} =~ /^(.*\/)./;
+    return $dir;
+}
+
+
 =head2 filename
 
 The template filename without the path.
@@ -289,6 +343,25 @@ sub sys_path_tmpl
 {
     return $Para::Frame::REQ->uri2file($_[0]->{'template'});
 }
+
+=head2 is_index
+
+True if this is a C</index.tt>
+
+=cut
+
+sub is_index
+{
+    if( $_[0]->{'template_uri'} =~ /\/$/ )
+    {
+	return 1;
+    }
+    else
+    {
+	return 0;
+    }
+}
+
 
 #############################################
 #############################################
@@ -505,7 +578,7 @@ sub find_template
 		}
 
 		my $mod_time = stat( $filename )->mtime;
-		my $burner = $Para::Frame::CFG->{'th'}{'html'};
+		my $burner = Para::Frame::Burner->get_by_type('html');
 		my $compdir = $burner->compile_dir;
 		my $compfile = $compdir.$filename;
 		debug 4, "Compdir: $compdir";
@@ -987,24 +1060,29 @@ sub render_output
 	$req->result->error('notfound', "Hittar inte sidan $template\n");
     }
 
-    debug 2, "Template to render is $in ($ext), that is a ".ref($in);
+    debug 2, "Template to render is $in ($ext)";
 
     if( not $in )
     {
 	$out .= ( "<p>404: Not found\n" );
 	$out .= ( "<p>Failed to find the file not found error page!\n" );
+	$page->{'page_content'} = \$out;
+	return 1;
     }
-    elsif( $ext ne 'tt' )
+
+    my $burner = Para::Frame::Burner->get_by_ext($ext);
+
+    if( not $burner )
     {
+	debug "Getting '$in' as a static page";
 	$page->get_static( $in, \$out );
 	$page->{'page_content'} = \$out;
 	return 1;
     }
     else
     {
-	my $burner = $Para::Frame::CFG->{'th'}{'html'};
 	$burner->burn($in, $page->{'params'}, \$out)
-	    or do
+	  or do
 	{
 
 	    debug(0,"FALLBACK!");
@@ -1572,25 +1650,19 @@ sub send_in_chunks
 
   $page->set_dirsteps( $path_full )
 
-  $page->set_dirsteps( $path_full, $path_home )
-
-  Both paths must end with a /
-
-  path_full defaults to the current template dir
-  path_home default to the current site home
-
-Both paths is the filesystem path. Not the URL path
+path_full defaults to the current template dir. It must end with a
+/. It is a filesystem path. Not the URL path
 
 =cut
 
 sub set_dirsteps
 {
-    my( $page, $path_full, $path_home ) = @_;
+    my( $page, $path_full ) = @_;
     my $req = $Para::Frame::REQ;
 
     $path_full ||= $req->uri2file( dirname( $page->template ) . "/" ) . "/";
-    $path_home ||= $req->uri2file( $page->site->home  . "/" );
-    debug 3, "Setting dirsteps for $path_full under $path_home";
+    my $path_home = $req->uri2file( $page->site->home  . "/" );
+    debug 3, "Setting dirsteps for $path_full";
     undef $page->{'incpath'};
     return $page->{'dirsteps'} = [ Para::Frame::Utils::dirsteps( $path_full, $path_home ) ];
 }
