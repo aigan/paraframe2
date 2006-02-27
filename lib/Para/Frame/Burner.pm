@@ -38,6 +38,9 @@ BEGIN
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug dirsteps );
 
+our %TYPE;
+our %EXT;
+
 =head2 DESCRIPTION
 
 There are three standard burners.
@@ -124,6 +127,88 @@ sub new
     return $burner;
 }
 
+=head2 add
+
+  Para::Frame::Burner->add( \%config )
+
+Adds a burner.
+
+Se sourcecode for details...
+
+=cut
+
+sub add
+{
+    my( $this, $config_in ) = @_;
+    my $class = ref($this) || $this;
+
+    my $burner = $class->new( $config_in );
+
+    my $handles = $burner->{'config'}{'handles'} || [];
+    $handles = [$handles] unless ref $handles;
+
+    my $type = $burner->{'type'} or die "Type missing";
+
+    foreach my $ext ( @$handles )
+    {
+	$EXT{$ext} = $burner;
+	debug "Regestring ext $ext to burner $type";
+    }
+
+    $TYPE{ $type } = $burner;
+
+    return $burner;
+}
+
+
+=head2 get_by_ext
+
+  Para::Frame::Burner->get_by_ext( $ext )
+
+Returns the burner registred for the extension.
+
+Returns undef if no burner registred with the extension.
+
+=cut
+
+sub get_by_ext
+{
+    my( $this, $ext ) = @_;
+
+    $ext or die "ext missing";
+
+    if( my $burner = $EXT{$ext} )
+    {
+	my $type = $burner->{'type'};
+	debug "Looked up burner for $ext: $type";
+	return $burner;
+    }
+    else
+    {
+	debug "No burner found for ext '$ext'";
+	return undef;
+    }
+
+
+#    return $EXT{($_[1]||'')};
+}
+
+=head2 get_by_type
+
+  Para::Frame::Burner->get_by_type( $type )
+
+Returns the burner registred for the type.
+
+Returns undef if no burner registred with the type.
+
+=cut
+
+sub get_by_type
+{
+    return $TYPE{($_[1]||'')};
+}
+
+
 sub th
 {
     return $_[0]->{'used'}{$Para::Frame::REQ} ||= $_[0]->new_th();
@@ -176,7 +261,7 @@ C<%filters> is a hash with the filter name and the coderef.
 
 Example:
 
-  $Para::Frame::CFG->{'th'}{'html'}->add_filters({
+  Para::Frame::Burner->get('html')->add_filters({
       'upper_case' => sub{ return uc($_[0]) },
   });
 
