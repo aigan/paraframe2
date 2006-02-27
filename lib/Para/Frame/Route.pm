@@ -460,7 +460,7 @@ sub get_next
     my $req = $Para::Frame::REQ;
     my $page = $req->page;
 
-    my $default = $route->default || $req->site->webhome;
+    my $default = $route->default || $req->site->home_path;
 
     if( my $step = pop @{$route->{'route'}} )
     {
@@ -588,7 +588,7 @@ sub skip_step
 	debug(1,"!!  No more steps in route");
     }
 
-    $dest ||= $route->default || $req->site->webhome;
+    $dest ||= $route->default || $req->site->home_path;
 
     $page->set_template($dest);
 }
