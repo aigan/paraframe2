@@ -252,6 +252,20 @@ sub home
     $Para::Frame::REQ->{'dirconfig'}{'home'} || $_[0]->{'webhome'} || '';
 }
 
+
+=head2 home_path
+
+  $site->home_path
+
+The same as L</home> but ends with a '/'.
+
+=cut
+
+sub home_path
+{
+    return( ($Para::Frame::REQ->{'dirconfig'}{'home'} || $_[0]->{'webhome'} || '').'/' );
+}
+
 #######################################################################
 
 
