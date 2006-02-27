@@ -161,10 +161,10 @@
    IF order == value;
       IF direction == 'asc';
          direc = 'desc';
-         dirimg = '/ui/images/arrow.down.png';
+         dirimg = '/pf/images/arrow.down.png';
       ELSE;
 	 direc = 'asc';
-	 dirimg = '/ui/images/arrow.up.png';
+	 dirimg = '/pf/images/arrow.up.png';
       END;
       class="selected";
    ELSE;

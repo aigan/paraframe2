@@ -1,0 +1,17 @@
+<div class="paraframe_menu_bottom_pf">
+<div style="float: right; padding: 0.3em">Debug at level [% debug %]</div>
+[% IF page.is_index %]
+   [% IF page.url_path_full == site.home_path %]
+      [%+ go("Home", site.home_path) %]
+   [% ELSE %]
+      [%+ go("Up", page.url_parent_path) %]
+   [% END %]
+[% ELSE %]
+   [%+ go("Index", page.url_dir_path) %]
+[% END %]
+[%+ go("Reload", me, 'nop') %]
+[%+ go("Debug", "$home/debug.tt", 'mark') %]
+[%+ go("Configure", "$home/debug.tt", 'mark') %]
+[%+ go("Show source", "$home/pf/cms/source.tt", 'mark') +%]
+</p>
+</div>

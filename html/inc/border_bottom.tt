@@ -1,1 +1,12 @@
+</div>
 
+<div class="paraframe_menu_bottom">
+[% PROCESS menu_bottom.tt %]
+</div>
+
+</form>
+
+[% PROCESS menu_bottom_pf.tt %]
+[% IF debug %]
+   [% PROCESS debug.tt %]
+[% END %]

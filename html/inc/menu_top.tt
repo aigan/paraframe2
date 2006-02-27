@@ -1,11 +1,15 @@
-<p align="right">[ [% u.name %] 
+<p style="float: right">
 [% IF u.level %]
-   | [% jump('Logga ut', site.logout_page, run='user_logout') %] 
+[ [% u.name %] 
+| [% jump('Sign out', site.logout_page, run='user_logout') %] 
+]
 [% ELSE %]
-   | [% jump('Logga in', "login.tt") %] 
+   [% jump('Sign in', "login.tt") %] 
 [% END %]
-   | [% jump('Katalog', ".") %] 
-]</p>
+</p>
 
-[% PROCESS headline.tt %]
-[% PROCESS info_box.tt %]
+<p><em><a href="http://frame.para.se/">Paraframe</a> version $cfg.version
+- port $cfg.port</em>
+- Request [% reqnum +%]
+</p>
+

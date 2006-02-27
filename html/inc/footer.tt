@@ -1,6 +1,2 @@
 [% PROCESS border_bottom.tt %]
-</form>
-
-[% PROCESS debug.tt %]
-
 </body></html>
