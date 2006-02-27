@@ -1474,7 +1474,7 @@ There are three standard burners.
 
 Example for adding a filter to the html burner:
 
-  $Para::Frame::CFG->{'th'}{'html'}->add_filters({
+  Para::Frame::Burner->get('html')->add_filters({
       'upper_case' => sub{ return uc($_[0]) },
   });
 
@@ -1568,34 +1568,40 @@ sub configure
 	 ABSOLUTE => 1,
 	 );
 
-    $CFG->{'th'}{'html'} ||= Para::Frame::Burner->new({
-	%th_default,
-	INTERPOLATE => 1,
-	COMPILE_DIR =>  $CFG->{'ttcdir'}.'/html',
-        type => 'html',
-	subdir_suffix => '',
-    });
 
-    $CFG->{'th'}{'html_pre'} ||= Para::Frame::Burner->new({
-	%th_default,
-	COMPILE_DIR =>  $CFG->{'ttcdir'}.'/html_pre',
-	TAG_STYLE => 'star',
-        type => 'html_pre',
-	subdir_suffix => '_pre',
-    });
+    Para::Frame::Burner->add({
+			      %th_default,
+			      INTERPOLATE => 1,
+			      COMPILE_DIR =>  $CFG->{'ttcdir'}.'/html',
+			      type => 'html',
+			      subdir_suffix => '',
+			      handles => ['tt'],
+			     });
 
-    $CFG->{'th'}{'plain'} ||= Para::Frame::Burner->new({
-	INTERPOLATE => 1,
-	COMPILE_DIR => $CFG->{'ttcdir'}.'/plain',
-	FILTERS =>
-	{
-	    'uri' => sub { CGI::escape($_[0]) },
-	    'lf'  => sub { $_[0] =~ s/\r\n/\n/g; $_[0] },
-	    'autoformat' => sub { autoformat($_[0]) },
-	},
-        type => 'plain',
-	subdir_suffix => '_plain',
-    });
+
+
+    Para::Frame::Burner->add({
+			      %th_default,
+			      COMPILE_DIR =>  $CFG->{'ttcdir'}.'/html_pre',
+			      TAG_STYLE => 'star',
+			      type => 'html_pre',
+			      subdir_suffix => '_pre',
+			     });
+
+    Para::Frame::Burner->add({
+			      INTERPOLATE => 1,
+			      COMPILE_DIR => $CFG->{'ttcdir'}.'/plain',
+			      FILTERS =>
+			      {
+			       'uri' => sub { CGI::escape($_[0]) },
+			       'lf'  => sub { $_[0] =~ s/\r\n/\n/g; $_[0] },
+			       'autoformat' => sub { autoformat($_[0]) },
+			      },
+			      type => 'plain',
+			      subdir_suffix => '_plain',
+			      handles => ['css'],
+			      ABSOLUTE => 1,
+			     });
 
     $CFG->{'port'} ||= 7788;
 
@@ -1619,6 +1625,16 @@ sub configure
 
     # Making the version availible
     $CFG->{'version'} = $VERSION;
+
+    # Colours
+    $CFG->{'css'} =
+    {
+     body_background => '#CCB195',
+     main_background => '#ECD3B8',
+     border => '#784825',
+#     button => '#AB7046',
+     button => '#E1CA9C',
+    };
 }
 
 =head2 Session
