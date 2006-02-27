@@ -833,13 +833,21 @@ sub css_header
 {
     my( $p ) = @_;
 
-    return "" unless $p;
-
-    unless( ref $p )
+    if( $p )
+    {
+	unless( ref $p )
+	{
+	    $p =
+	    {
+	     'persistent' => [ $p ],
+	    };
+	}
+    }
+    else
     {
 	$p =
 	{
-	    'persistent' => [ $p ],
+	 'persistent' => ['pf/default.css'],
 	};
     }
 
@@ -916,13 +924,36 @@ sub favicon_header
 {
     my( $url ) = @_;
 
-    return "" unless $url;
+    unless( $url )
+    {
+	$url = "pf/images/favicon.ico";
+    }
 
     my $home = $Para::Frame::REQ->site->home;
 
     $url =~ s/^([^\/])/$home\/$1/;
 
-    return "<link rel=\"shortcut icon\" href=\"$url\" type=\"image/x-icon\" />";
+
+    my $type = "image/x-icon";
+    if( $url =~ /\.(\w+)$/ )
+    {
+	my $ext = lc($1);
+	if( $ext eq 'ico' )
+	{
+	    $type = "image/x-icon";
+	}
+	elsif( $ext eq 'png' )
+	{
+	    $type = "image/png";
+	}
+	elsif( $ext eq 'gif' )
+	{
+	    $type = "image/gif";
+	}
+    }
+
+
+    return "<link rel=\"shortcut icon\" href=\"$url\" type=\"$type\" />";
 }
 
 
