@@ -23,7 +23,7 @@ Para::Frame::Widget - Common template widgets
 =cut
 
 use strict;
-use Carp qw( cluck );
+use Carp qw( cluck confess );
 use Data::Dumper;
 use IO::File;
 use CGI;
@@ -815,14 +815,18 @@ javascript, and is a ref to ha hash of stylenames and listrefs holding
 the URLs. The default points to which of the alternate styles to use
 if no special one is selected.
 
+The persitant and alternate list items may be coderefs. The code will
+be run with req as first param. They should return the paths for the
+stylefiles. Those may be translated as above.
+
 Example:
     $attrs =
      {
-      persistent => [ "/css/default.css" ],
+      persistent => [ "css/default.css" ],
       alternate =>
       {
-       light => [ "/css/light.css" ],
-       blue => [ "/css/blue.css" ],
+       light => [ "css/light.css" ],
+       blue => [ sub{"css/blue.css"} ],
       },
       default => 'blue',
      };
@@ -851,7 +855,8 @@ sub css_header
 	};
     }
 
-    my $home = $Para::Frame::REQ->site->home;
+    my $req = $Para::Frame::REQ;
+    my $home = $req->site->home;
 
     my $default = $Para::Frame::U->style || $p->{'default'} || 'default';
     my $persistent = $p->{'persistent'} || [];
@@ -877,6 +882,7 @@ sub css_header
 
     foreach my $style ( @$persistent )
     {
+	$style = &$style($req) if UNIVERSAL::isa($style,'CODE');
 	$style =~ s/^([^\/])/$home\/$1/;
 	$out .= "<link rel=\"Stylesheet\" href=\"$style\" type=\"text/css\" />\n";
     }
@@ -885,6 +891,7 @@ sub css_header
     {
 	foreach my $style ( @{$alternate->{$default}} )
 	{
+	    $style = &$style($req) if UNIVERSAL::isa($style,'CODE');
 	    $style =~ s/^([^\/])/$home\/$1/;
 	    $out .= "<link rel=\"Stylesheet\" title=\"$default\" href=\"$style\" type=\"text/css\" />\n";
 	}
@@ -895,6 +902,7 @@ sub css_header
 	next if $title eq $default;
 	foreach my $style ( @{$alternate->{$title}} )
 	{
+	    $style = &$style($req) if UNIVERSAL::isa($style,'CODE');
 	    $style =~ s/^([^\/])/$home\/$1/;
 	    $out .= "<link rel=\"alternate stylesheet\" title=\"$title\" href=\"$style\" type=\"text/css\" />\n";
 	}
