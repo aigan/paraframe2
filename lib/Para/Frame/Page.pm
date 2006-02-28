@@ -344,6 +344,20 @@ sub sys_path_tmpl
     return $Para::Frame::REQ->uri2file($_[0]->{'template'});
 }
 
+=head2 sys_dir
+
+The path and from system root. Excluding the last '/'
+
+=cut
+
+sub sys_dir
+{
+    my $sys_path_tmpl = $_[0]->sys_path_tmpl;
+    my( $dir ) = $sys_path_tmpl =~ /^(.*\/)/;
+
+    return $dir;
+}
+
 =head2 is_index
 
 True if this is a C</index.tt>
@@ -1247,6 +1261,7 @@ sub precompile
     $page->set_uri( $uri );
     $page->set_template( $destfile_web );
     $page->{template_uri} = $uri;
+    $page->{'params'}{'me'} = $uri;
 
     $req->set_language($args->{'language'});
 
@@ -1257,7 +1272,7 @@ sub precompile
 
     $page->set_tt_params;
 
-    my $burner = $Para::Frame::CFG->{'th'}{$type};
+    my $burner = Para::Frame::Burner->get_by_type($type);
     $res = $burner->burn($fh, $page->{'params'}, $destfile );
     $fh->close;
     $error = $burner->error;
@@ -1825,15 +1840,6 @@ sub set_tt_params
 
     my $site = $page->site;
 
-    # Real filename
-    my $real_filename = $page->sys_path_tmpl;
-    $real_filename or die "No filename given: ".Dumper($req);
-
-    # Determine the directory
-    my( $dir ) = $real_filename =~ /^(.*\/)/;
-    debug(3,"Setting dir to $dir");
-
-
     # Add local site params
     if( $site->params )
     {
@@ -1848,10 +1854,8 @@ sub set_tt_params
 	'page'            => $page,
 
 	'me'              => $page->template_uri,
-	'filename'        => $real_filename,
-	'dir'             => $dir,
 
-	'browser'         => $req->{'browser'},
+	'browser'         => $req->browser,
 	'u'               => $Para::Frame::U,
 	'result'          => $req->{'result'},
 	'reqnum'          => $req->{'reqnum'},
