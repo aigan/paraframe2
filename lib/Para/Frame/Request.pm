@@ -170,6 +170,7 @@ sub new_subrequest
     my( $original_req, $args, $coderef, @params ) = @_;
 
     my $client = $original_req->client;
+
     $Para::Frame::REQNUM ++;
 
     if( my $site_in = $args->{'site'} )
@@ -183,6 +184,7 @@ sub new_subrequest
 	}
     }
 
+    $args->{'user'} ||= $original_req->user;
     my $req = Para::Frame::Request->new_minimal($Para::Frame::REQNUM, $client);
 
     $req->{'original_request'} = $original_req;
@@ -263,6 +265,11 @@ sub minimal_init
     }
 
     $req->set_language( $args->{'language'} );
+
+
+    my $user_class = $Para::Frame::CFG->{'user_class'};
+    my $bg_user = $args->{'user'} || &{ $Para::Frame::CFG->{'bg_user_code'} };
+    $user_class->change_current_user($bg_user);
 
     return $req;
 }
@@ -445,6 +452,19 @@ sub dirconfig
 }
 
 
+=head2 browser
+
+  $req->browser
+
+Returns the L<HTTP::BrowserDetect> object for the request.
+
+=cut
+
+sub browser
+{
+    return $_[0]->{'browser'};
+}
+
 
 ### Transitional methods
 ###
@@ -467,6 +487,7 @@ sub filename
 sub error_page_selected { $_[0]->page->error_page_selected }
 
 sub error_page_not_selected { $_[0]->page->error_page_not_selected }
+
 
 ###
 ###########################################
