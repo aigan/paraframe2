@@ -33,6 +33,9 @@ sub handler
     my $password = $q->param('password') || "";
     my $remember = $q->param('remember_login') || 0;
 
+    $password or throw('incomplete', "Ange lösenord också");
+
+
     # Do not repeat failed login in backtrack
     $req->{'no_bookmark_on_failed_login'}=1;
 
@@ -45,7 +48,7 @@ sub handler
     my $user_class = $Para::Frame::CFG->{'user_class'};
     my $u = $user_class->get( $username );
     $u or throw('validation', "Användaren $username existerar inte");
-    
+
     $user_class->change_current_user( $u );
 
     my $password_encrypted = passwd_crypt( $password );
