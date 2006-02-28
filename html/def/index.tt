@@ -3,7 +3,7 @@
 
 <h1>Index $me</h1>
 
-[% USE fdir = Directory(dir) %]
+[% USE fdir = Directory(page.sys_dir) %]
 
 
 [% cnt = 1;
