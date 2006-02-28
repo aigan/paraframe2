@@ -413,7 +413,7 @@ sub send
     }
 
 
-    my $burner = $Para::Frame::CFG->{'th'}{'plain'};
+    my $burner = Para::Frame::Burner->get_by_type('plain');
 
     if( debug )
     {
