@@ -25,6 +25,11 @@ p
   margin: 0em;
 }
 
+h1
+{
+  clear: left;
+}
+
 .paraframe_menu_top
 {
   background: $css.body_background;
@@ -67,6 +72,10 @@ input
   border-color: $css.border;
 }
 
+form
+{
+	margin-bottom: 0em; /* Konqueror */
+}
 
 .same_place
 {
