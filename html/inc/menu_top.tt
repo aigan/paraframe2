@@ -1,3 +1,4 @@
+<img style="float: left" src="$home/pf/images/logo/pf-150x95.png" alt="ParaFrame">
 <p style="float: right">
 [% IF u.level %]
 [ [% u.name %] 
