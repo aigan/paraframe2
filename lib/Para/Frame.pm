@@ -1022,9 +1022,6 @@ sub add_background_jobs
     }
     elsif( not $TERMINATE )
     {
-	$bg_user = &{ $Para::Frame::CFG->{'bg_user_code'} };
-	$user_class->change_current_user($bg_user);
-
 	### Debug info
 	if( debug > 2 )
 	{
