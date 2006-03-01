@@ -23,3 +23,6 @@ function showhide(whichLayer)
 }
 [% PROCESS js_extra.tt %]
 </script>
+<!--[if lt IE 7.]>
+<script defer type="text/javascript" src="$home/pf/js/pngfix.js"></script>
+<![endif]-->

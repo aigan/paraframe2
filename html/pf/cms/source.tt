@@ -1,0 +1,5 @@
+[% META otitle="Show Source" %]
+
+[% ref = req.referer %]
+
+<h1>Source of [% ref %]</h1>
