@@ -911,7 +911,8 @@ sub set_template
     }
     else
     {
-#	# Don't change template...
+	# Remove language part
+	$template_uri =~ s/\.\w\w(\.\w{2,3})$/$1/;
     }
 
     debug(3,"setting template to $template");
@@ -1260,7 +1261,6 @@ sub precompile
 
     $page->set_uri( $uri );
     $page->set_template( $destfile_web );
-    $page->{template_uri} = $uri;
     $page->{'params'}{'me'} = $uri;
 
     $req->set_language($args->{'language'});
@@ -1853,7 +1853,7 @@ sub set_tt_params
 
 	'page'            => $page,
 
-	'me'              => $page->template_uri,
+	'me'              => $page->url_path_full,
 
 	'browser'         => $req->browser,
 	'u'               => $Para::Frame::U,
