@@ -54,17 +54,17 @@ use Para::Frame::Site;
     my $cfg =
     {
      'paraframe' => $PFROOT,
-     'logfile'      => "/tmp/pfserver.log",
-     'pidfile'      => "/tmp/pfserver.pid",
+     'logfile'      => "/tmp/pf_demoserver.log",
+     'pidfile'      => "/tmp/pf_demoserver.pid",
      'ttcdir'       => "/tmp",
      'approot'      => $APPROOT,
-     'port'         => '7791',
+     'port'         => '7793',
      'debug'        => $ARGV[1] || 0,
     };
     Para::Frame->configure( $cfg );
 
 
-    if( $ARGV[1] )
+    if( not $ARGV[1] )
     {
         Para::Frame->daemonize(1);
     }
