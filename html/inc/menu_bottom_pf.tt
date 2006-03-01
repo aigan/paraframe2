@@ -12,6 +12,7 @@
 [%+ go("Reload", me, 'nop') %]
 [%+ go("Debug", "$home/debug.tt", 'mark') %]
 [%+ go("Configure", "$home/debug.tt", 'mark') %]
-[%+ go("Show source", "$home/pf/cms/source.tt", 'mark') +%]
+[%+ go("Show source", "$home/pf/cms/source.tt", 'mark') %]
+[%+ go("Admin mode", "$home/pf/cms/source.tt", 'mark') %]
 </p>
 </div>
