@@ -1023,7 +1023,7 @@ sub confirm_simple
     ## Set up route, confirmation data and throw exception
 
     $req->session->route->bookmark;
-    $req->set_error_template($site->home.'/confirm.tt');
+    $req->page->set_error_template($site->home.'/confirm.tt');
     my $result = $req->result;
     my $home = $req->site->home;
 
