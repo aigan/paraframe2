@@ -11,6 +11,6 @@
 
 <p><em><a href="http://frame.para.se/">Paraframe</a> version $cfg.version
 - port $cfg.port</em>
-- Request [% reqnum +%]
+- Request [% req.id +%]
 </p>
 
