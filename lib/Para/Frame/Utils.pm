@@ -1289,6 +1289,7 @@ sub debug
 	if( $level =~ /^(\d|-\d)$/ )
 	{
 	    $Para::Frame::INDENT += $level;
+#	    carp "Ident $Para::Frame::INDENT" if $level > 0;
 	    return "";
 	}
 
@@ -1313,8 +1314,9 @@ sub debug
 	}
     }
 
-#    carp "Ident $delta" if $delta > 0;
     $Para::Frame::INDENT += $delta if $delta > 0;
+#    carp "Ident $Para::Frame::INDENT" if $delta > 0;
+    confess "Debug indentation too high" if $Para::Frame::INDENT > 10;
 
 #    if( $message =~ /^arc2 (\d+)/ )
 #    {

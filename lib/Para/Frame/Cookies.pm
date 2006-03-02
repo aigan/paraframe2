@@ -85,10 +85,16 @@ sub add_to_header
     my( $cookies ) = @_;
 
     my $added = $cookies->added;
+    my $page = $Para::Frame::REQ->page;
+
+    unless( UNIVERSAL::isa($page, 'Para::Frame::Page') )
+    {
+	confess "Page is '$page'";
+    }
 
     foreach my $cookie ( @$added )
     {
-	$Para::Frame::REQ->page->add_header( 'Set-Cookie', $cookie->as_string );
+	$page->add_header( 'Set-Cookie', $cookie->as_string );
     }
 }
 
