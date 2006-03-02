@@ -139,6 +139,7 @@ sub identify_user
     unless( $u )
     {
 	$req->result->message("Användaren $username existerar inte");
+	$class->clear_cookies;
 	$u = $class->identify_user( 'guest' );
     }
 
@@ -185,9 +186,9 @@ sub authenticate_user
 	unless( $destination eq 'dynamic' )
 	{
 	    $q->param('next_template', $req->referer);
+	    warn sprintf("  Setting next_tempalte to %s\n",
+			 $q->param('next_template'));
 	}
-	warn sprintf("  Setting next_tempalte to %s\n",
-		     $q->param('next_template'));
 
 	return undef;
     }
@@ -287,12 +288,21 @@ sub logout
     $class->change_current_user( $class->get( 'guest' ) );
     debug(3,"User are now ".$Para::Frame::U->name);
 
-    $req->cookies->add({'username' => 'guest'});
-    $req->cookies->remove('password');
+    $class->clear_cookies;
 
     # Do not run hook if we are on guest level
     Para::Frame->run_hook($req, 'after_user_logout')
 	unless $Para::Frame::U->level == 0;
+}
+
+sub clear_cookies
+{
+    my( $class ) = @_;
+
+    my $cookies = $Para::Frame::REQ->cookies;
+
+    $cookies->add({'username' => 'guest'});
+    $cookies->remove('password');
 }
 
 =head2 change_current_user
