@@ -277,6 +277,19 @@ sub minimal_init
 
 #######################################################################
 
+=head2 id
+
+  $req->id
+
+Returns the request number
+
+=cut
+
+sub id
+{
+    return $_[0]->{'reqnum'};
+}
+
 =head2 q
 
   $req->q
