@@ -6,7 +6,7 @@
 
 </form>
 
-[% PROCESS menu_bottom_pf.tt %]
+[% PROCESS menu_admin_pf.tt %]
 [% IF debug %]
    [% PROCESS debug.tt %]
 [% END %]
