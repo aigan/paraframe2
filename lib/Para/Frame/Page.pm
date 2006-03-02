@@ -161,7 +161,8 @@ Some of these are not yet implemented...
 
 =head2 url_path_tmpl
 
-The path and filename in http on the host.
+The path and filename in http on the host. With the language part
+removed.
 
 =cut
 
@@ -292,7 +293,6 @@ sub path_full
     my $template_uri = $page->url_path_full;
     my( $site_uri ) = $template_uri =~ /^$home(.+?)$/
       or die "Couldn't get site_uri from $template_uri under $home";
-    $site_uri =~ s/\.\w\w\.tt$/.tt/; # Remove language part
     return $site_uri;
 }
 
@@ -311,7 +311,6 @@ sub path_tmpl
     my $template = $page->url_path_tmpl;
     my( $site_uri ) = $template =~ /^$home(.+?)$/
       or confess "Couldn't get site_uri from $template under $home";
-    $site_uri =~ s/\.\w\w\.tt$/.tt/; # Remove language part
     return $site_uri;
 }
 
@@ -886,6 +885,7 @@ sub set_template
 	croak "Tried to set a template to $template";
     }
 
+    $template =~ s/\/index(\.\w\w)?.tt$/\//;
 
     my $template_uri = $template;
 
@@ -902,9 +902,9 @@ sub set_template
 	    $template .= "/";
 	    $template_uri .= "/";
 	}
-	$template .= "index.tt";
     }
-    elsif( $template =~ /\/$/ )
+
+    if( $template =~ /\/$/ )
     {
 	# Template indicates a dir. Make it so
 	$template .= "index.tt";
@@ -1261,7 +1261,7 @@ sub precompile
 
     $page->set_uri( $uri );
     $page->set_template( $destfile_web );
-    $page->{'params'}{'me'} = $uri;
+    $page->{'params'}{'me'} = $page->url_path_full;
 
     $req->set_language($args->{'language'});
 
@@ -1858,7 +1858,6 @@ sub set_tt_params
 	'browser'         => $req->browser,
 	'u'               => $Para::Frame::U,
 	'result'          => $req->{'result'},
-	'reqnum'          => $req->{'reqnum'},
 	'lang'            => $req->preferred_language, # calculate once
 	'req'             => $req,
 
