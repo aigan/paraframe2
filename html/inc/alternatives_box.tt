@@ -1,10 +1,10 @@
 [%
-	a = result.info.alternatives;
+	a = req.result.info.alternatives;
 %]
 
 <h1>[% a.title | html %]</h1>
 
-<p>[% result.find('alternatives').message | html | html_para %]</p>
+<p>[% req.result.find('alternatives').message | html | html_para %]</p>
 
 <table>
 [% FOREACH part IN a.alts %]
