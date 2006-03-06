@@ -1392,11 +1392,11 @@ sub send_code
 	# order to give ouerself a client to send this command
 	# to. This will be ... entertaining...
 
-	debug "Req $req->{reqnum} will now considering starting an UA";
+	debug 2, "Req $req->{reqnum} will now considering starting an UA";
 
 	# Use existing
 	$req->{'wait_for_active_reqest'} ||= 0;
-	debug "  It waits for $req->{'wait_for_active_reqest'} active requests";
+	debug 2, "  It waits for $req->{'wait_for_active_reqest'} active requests";
 	unless( $req->{'wait_for_active_reqest'} ++ )
 	{
 	    debug "  So we prepares for starting an UA";
@@ -1442,7 +1442,7 @@ sub send_code
 
 	# Got it! Now send the message
 	#
-	debug "We got the active request $req->{'active_reqest'}{reqnum} now";
+	debug 2, "We got the active request $req->{'active_reqest'}{reqnum} now";
 	my $aclient = $req->{'active_reqest'}->client;
 
 	$aclient->send(join "\0", @_ );
