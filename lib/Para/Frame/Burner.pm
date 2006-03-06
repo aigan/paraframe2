@@ -180,7 +180,7 @@ sub get_by_ext
     if( my $burner = $EXT{$ext} )
     {
 	my $type = $burner->{'type'};
-	debug "Looked up burner for $ext: $type";
+	debug 2, "Looked up burner for $ext: $type";
 	return $burner;
     }
     else

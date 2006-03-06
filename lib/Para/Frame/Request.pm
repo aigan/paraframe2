@@ -189,7 +189,7 @@ sub new_subrequest
 
     $req->{'original_request'} = $original_req;
     $original_req->{'wait'} ++; # Wait for subreq
-    debug "$original_req->{reqnum} now waits on $original_req->{'wait'} things";
+    debug 2, "$original_req->{reqnum} now waits on $original_req->{'wait'} things";
     Para::Frame::switch_req( $req, 1 );
     warn "\n$Para::Frame::REQNUM Starting subrequest\n";
 
@@ -207,7 +207,7 @@ sub new_subrequest
     my $err = catch($@);
 
     $original_req->{'wait'} --;
-    debug "$original_req->{reqnum} now waits on $original_req->{'wait'} things";
+    debug 2, "$original_req->{reqnum} now waits on $original_req->{'wait'} things";
     Para::Frame::switch_req( $original_req );
 
     if( $err )
@@ -353,7 +353,6 @@ Returns the L<Para::Frame::Result> object for this request.
 =cut
 
 sub result { shift->{'result'} }
-sub uri { $_[0]->page->uri }
 
 =head2 language
 
@@ -501,6 +500,7 @@ sub error_page_selected { $_[0]->page->error_page_selected }
 
 sub error_page_not_selected { $_[0]->page->error_page_not_selected }
 
+sub uri { $_[0]->page->uri }
 
 ###
 ###########################################
@@ -1083,7 +1083,7 @@ sub after_jobs
 	if( $req->{'wait'} )
 	{
 	    # Waiting for something else to finish...
-	    debug "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
+	    debug 2, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
 	    $req->add_job('after_jobs');
 	}
 	elsif( $req->{'childs'} )
@@ -1462,21 +1462,21 @@ sub release_active_request
 {
     my( $req ) = @_;
 
-    debug "$req->{reqnum} is now waiting for one active req less";
+    debug 2, "$req->{reqnum} is now waiting for one active req less";
 
     $req->{'wait_for_active_reqest'} --;
 
     if( $req->{'wait_for_active_reqest'} )
     {
-	debug "More jobs for active request ($req->{'wait_for_active_reqest'})";
+	debug 2, "More jobs for active request ($req->{'wait_for_active_reqest'})";
     }
     else
     {
-        debug "Releasing active_request $req->{'active_reqest'}{'reqnum'}";
+        debug 2, "Releasing active_request $req->{'active_reqest'}{'reqnum'}";
 	$req->{'active_reqest'}{'wait'} --;
-	debug "That request is now waiting for $req->{'active_reqest'}{'wait'} things";
+	debug 2, "That request is now waiting for $req->{'active_reqest'}{'wait'} things";
 
-	debug "Removing the referens to that request";
+	debug 2, "Removing the referens to that request";
 	delete $req->{'active_reqest'};
     }
 }
