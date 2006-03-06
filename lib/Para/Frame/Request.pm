@@ -140,10 +140,11 @@ sub init
 	$req->{'browser'} = new HTTP::BrowserDetect($env->{'HTTP_USER_AGENT'});
     }
     $req->{'result'}  = new Para::Frame::Result;  # Before Session
-    $req->{'s'}       = Para::Frame->Session->new($req);
 
     $req->{'page'} = Para::Frame::Page->new();
-    $req->{'page'}->init;
+    $req->{'page'}->init; # Before Session
+
+    $req->{'s'}       = Para::Frame->Session->new($req);
 
     $req->set_language;
 
