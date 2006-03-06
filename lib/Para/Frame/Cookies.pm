@@ -108,7 +108,7 @@ For each name/value pair in C<%namevalues>, create a corresponding
 cookie, with the addition of the C<%extra_params>. See L<CGI::Cookie>
 for valid params.
 
-Default C<-path> is '/'.
+Default C<-path> is the L<Para::Frame::Site/home_path>
 
 =cut
 
@@ -120,7 +120,13 @@ sub add
     my $added = $cookies->added;
 
     $extra ||= {};
-    $extra->{-path} ||= '/';
+
+    unless( $Para::Frame::REQ->page )
+    {
+	confess "no page";
+    }
+
+    $extra->{-path} ||= $Para::Frame::REQ->site->home_path;
 
     foreach my $key ( keys %$settings )
     {
@@ -135,11 +141,17 @@ sub add
     }
 }
 
-=head2 reomve
+=head2 remove
 
   $cookies->remove( @cookie_names )
 
+  $cookies->remove( \@cookei_names )
+
+  $cookies->remove( \@cookei_names, \%extra_params )
+
 Removes the named cookies from the client, using HTTP headers.
+
+Default C<-path> is the L<Para::Frame::Site/home_path>
 
 =cut
 
@@ -147,16 +159,33 @@ sub remove
 {
     my $cookies = shift;
 
-    my $q = $Para::Frame::REQ->q;
+    my $req = 
+
+    my( $list, $extra );
+
+    if( ref $_[0] )
+    {
+	$list = $_[0];
+	$extra = $_[1];
+    }
+    else
+    {
+	$list = [@_];
+    }
+
+    $extra ||= {};
+    $extra->{-path} ||= $Para::Frame::REQ->site->home_path;
+    $extra->{-expires} ||= "-1h";
+
+
     my $added = $cookies->added;
 
-    foreach my $key ( @_ )
+    foreach my $key ( @$list )
     {
-	push @$added, $q->cookie( -name  => $key,
-				  -value => 'none',
-				  -path  => '/',
-				  -expires => "-1h",
-				);
+	push @$added, $Para::Frame::REQ->q->cookie( -name  => $key,
+						    -value => 'none',
+						    %$extra,
+						  );
     }
 }
 
