@@ -1855,9 +1855,7 @@ sub set_tt_params
 
 	'me'              => $page->url_path_full,
 
-	'browser'         => $req->browser,
 	'u'               => $Para::Frame::U,
-	'result'          => $req->{'result'},
 	'lang'            => $req->preferred_language, # calculate once
 	'req'             => $req,
 
