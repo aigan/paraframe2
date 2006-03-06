@@ -837,6 +837,9 @@ sub css_header
 {
     my( $p ) = @_;
 
+    my $req = $Para::Frame::REQ;
+    my $home = $req->site->home;
+
     if( $p )
     {
 	unless( ref $p )
@@ -854,9 +857,6 @@ sub css_header
 	 'persistent' => ['pf/default.css'],
 	};
     }
-
-    my $req = $Para::Frame::REQ;
-    my $home = $req->site->home;
 
     my $default = $Para::Frame::U->style || $p->{'default'} || 'default';
     my $persistent = $p->{'persistent'} || [];
@@ -880,8 +880,9 @@ sub css_header
 
     my $out = "";
 
-    foreach my $style ( @$persistent )
+    foreach my $style_in ( @$persistent )
     {
+	my $style = $style_in;
 	$style = &$style($req) if UNIVERSAL::isa($style,'CODE');
 	$style =~ s/^([^\/])/$home\/$1/;
 	$out .= "<link rel=\"Stylesheet\" href=\"$style\" type=\"text/css\" />\n";
@@ -920,7 +921,7 @@ sub css_header
 
 =head2 favicon_header
 
-  css_header( $url )
+  favicon_header( $url )
 
 Draws a favicon header.
 
