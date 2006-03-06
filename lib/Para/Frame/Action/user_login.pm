@@ -45,8 +45,6 @@ sub handler
 	push @extra, -expires => '+10y';
     }
 
-    push @extra, -path => $req->site->home_path;
-
     my $user_class = $Para::Frame::CFG->{'user_class'};
     my $u = $user_class->get( $username );
     $u or throw('validation', "Användaren $username existerar inte");
