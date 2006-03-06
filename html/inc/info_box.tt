@@ -1,4 +1,4 @@
-[% FOREACH part IN result.error_parts;
+[% FOREACH part IN req.result.error_parts;
       IF part.prefix_message;
 %]       <pre class="paraframe_error_prefix">[% part.prefix_message | html %]</pre>
 [%    END;
@@ -6,6 +6,6 @@
    END
 %]
 
-[%  FOREACH part IN result.info_parts; %]
+[%  FOREACH part IN req.result.info_parts; %]
       <pre class="paraframe_info">[% part.message | html %]</pre>
 [% END %]
