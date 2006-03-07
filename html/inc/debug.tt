@@ -3,11 +3,11 @@
 <h1 class="important">Crashed $emergency_mode times</h1>
 [% END %]
 
-<h1>[% IF result.errcnt %]
-   [% IF result.errcnt == 1 %]
-      [% result.errcnt %] error
+<h1>[% IF req.result.errcnt %]
+   [% IF req.result.errcnt == 1 %]
+      [% req.result.errcnt %] error
    [% ELSE %]
-      [% result.errcnt %] errors
+      [% req.result.errcnt %] errors
    [% END %]
 [% ELSE %]
    No errors
@@ -15,7 +15,7 @@
 </h1>
 
 <ol>
-[% FOREACH part = result.part %]
+[% FOREACH part = req.result.part %]
    <li>
       <code>[% part.type %]</code>
       <strong>--&gt;</strong><br>
