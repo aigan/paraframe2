@@ -1,9 +1,8 @@
 [% PROCESS form_start.tt %]
 
-<div class="paraframe_menu_top">
 [% PROCESS menu_top.tt %]
-</div>
 
 <div class="paraframe_main">
+
 [% PROCESS headline.tt %]
 [% PROCESS info_box.tt %]
