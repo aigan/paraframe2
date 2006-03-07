@@ -1598,6 +1598,7 @@ sub configure
 			      subdir_suffix => '_plain',
 			      handles => ['css'],
 			      ABSOLUTE => 1,
+			      TRIM => 1,
 			     });
 
     $CFG->{'port'} ||= 7788;
