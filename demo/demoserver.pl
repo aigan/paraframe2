@@ -17,6 +17,8 @@
 our $APPROOT;
 our $PFROOT;
 our $WEBHOME;
+our $WEBHOST;
+our $PORT;
 
 BEGIN
 {
@@ -29,6 +31,18 @@ BEGIN
     $PFROOT = abs_path("$FindBin::Bin/../");
     $APPROOT = $FindBin::Bin;
     $WEBHOME = $ARGV[0] or die "Give the URL of the demo dir as an arg";
+    if( $WEBHOME =~ s/:([^\/]+)// )
+    {
+	$PORT = $1;
+	print "Port $PORT\n";
+    }
+    if( $WEBHOME =~ s/\/\/([^\/]+)// )
+    {
+	$WEBHOST = $1;
+	print "Host $WEBHOST\n";
+    }
+
+    print "Home $WEBHOME\n";
 }
 
 use strict;
@@ -47,6 +61,7 @@ use Para::Frame::Site;
     Para::Frame::Site->add({
 			    'code'        => 'demo',
 			    'webhome'     => $WEBHOME,
+			    'webhost'     => $WEBHOST,
 			    'appbase'     => 'Para::Frame::Demo',
 			   });
 
@@ -54,11 +69,11 @@ use Para::Frame::Site;
     my $cfg =
     {
      'paraframe' => $PFROOT,
-     'logfile'      => "/tmp/pf_demoserver.log",
-     'pidfile'      => "/tmp/pf_demoserver.pid",
+     'logfile'      => "/tmp/pf_demoserver-$PORT.log",
+     'pidfile'      => "/tmp/pf_demoserver-$PORT.pid",
      'ttcdir'       => "/tmp",
      'approot'      => $APPROOT,
-     'port'         => '7793',
+     'port'         => $PORT,
      'debug'        => $ARGV[1] || 0,
     };
     Para::Frame->configure( $cfg );
