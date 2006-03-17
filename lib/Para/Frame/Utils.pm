@@ -108,7 +108,8 @@ sub in ($@)
 
   trim(\$string)
 
-Removes preceding and proceding whitespace.
+Removes preceding and proceding whitespace. Also removes duplicate
+whitespace.
 
 =cut
 
@@ -119,12 +120,14 @@ sub trim
     {
 	return undef unless defined $$ref;
 	$$ref =~ s/( ^ \s+ | \s+ $ )//gx;
+	$$ref =~ s/\s\s+/ /g;
 	return $$ref;
     }
     else
     {
 	return undef unless defined $ref;
 	$ref =~ s/( ^ \s+ | \s+ $ )//gx;
+	$ref =~ s/\s\s+/ /g;
 	return $ref;
     }
 }
