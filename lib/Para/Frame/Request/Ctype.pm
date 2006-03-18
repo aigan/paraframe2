@@ -138,7 +138,7 @@ sub set_charset
 {
     my( $ctype, $charset ) = @_;
 
-    if( $ctype->{'charset'} ne $charset )
+    if( $ctype->{'charset'}||'' ne $charset )
     {
 	$ctype->{'charset'} = $charset;
 	warn "  Setting charset to $charset\n";
