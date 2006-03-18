@@ -102,6 +102,7 @@ sub success
     $msg =~ s/\n?$/\n/; # Add if missing
     $change->{'changes'} ++;
     $change->{'message'} .=  $msg;
+    debug "Adding success message: $msg";
     return 1;
 }
 
@@ -140,6 +141,7 @@ sub fail
     $msg =~ s/\n?$/\n/; # Add if missing
     $change->{'errors'} ++;
     $change->{'errmsg'} .=  $msg;
+    debug "Adding fail message: $msg";
     return undef;
 }
 
