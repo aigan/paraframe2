@@ -223,6 +223,28 @@ sub new_subrequest
     return $res;
 }
 
+=head2 new_bgrequest
+
+Sets up a background request using new_minimal
+
+=cut
+
+sub new_bgrequest
+{
+    my( $class, $msg ) = @_;
+
+    $msg ||= "Handling new request (in background)";
+    $Para::Frame::REQNUM ++;
+    my $client = "background-$Para::Frame::REQNUM";
+    my $req = Para::Frame::Request->new_minimal($Para::Frame::REQNUM, $client);
+    $Para::Frame::REQUEST{$client} = $req;
+    Para::Frame::switch_req( $req, 1 );
+    $req->minimal_init;
+    warn "\n\n$Para::Frame::REQNUM $msg\n";
+    return $req;
+}
+
+
 =head2 new_minimal
 
 Used for background jobs, without a calling browser client
@@ -996,7 +1018,11 @@ sub after_jobs
 sub done
 {
     my( $req ) = @_;
-    $req->session->after_request( $req );
+
+    if( $req->is_from_client )
+    {
+	$req->session->after_request( $req );
+    }
 
     # Redundant shortcut
     unless( $req->{'wait'} or
