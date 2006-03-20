@@ -49,7 +49,7 @@ our %Lexicon =
    'The file you requested cannot be found' =>
    'Sidan som du angav kunde inte hittas',
 
-   'During the processing of [_1)' =>
+   'During the processing of [_1]' =>
    'Under körningen av [_1]',
 
   );
