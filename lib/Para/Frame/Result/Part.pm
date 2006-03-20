@@ -42,7 +42,7 @@ BEGIN
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( trim debug );
-
+use Para::Frame::L10N qw( loc );
 
 =head1 Exceptions
 
@@ -94,104 +94,68 @@ our $ERROR_TYPE =
 {
     'dbi'        =>
     {
-	'title' =>
-	{
-	    'c'   => 'Databasfel',
-	},
+	'title' => 'Databasfel',
 	'border'  => 'red',
 	'bg'      => 'AAAAAA',
     },
     'update'        =>
     {
-	'title'   =>
-	{
-	    'c' => 'Problem med att spara uppgift',
-	},
+	'title'   => 'Problem med att spara uppgift',
 	'border'  => 'red',
 	'bg'      => 'AAAAAA',
     },
     'incomplete' =>
     {
-	'title'   =>
-	{
-	    'c' => 'Uppgifter saknas',
-	},
+	'title'   => 'Uppgifter saknas',
 	'bg'      => 'yellow',
     },
     'validation' =>
     {
-	'title'   =>
-	{
-	    'c' => 'Fel vid kontroll',
-	},
+	'title'   => 'Fel vid kontroll',
 	'bg'      => 'yellow',
     },
     'alternatives' =>
     {
-	'title'   =>
-	{
-	    'c' => 'Flera alternativ',
-	},
+	'title'   => 'Flera alternativ',
 	'no_backtrack' => 1,
 	'hide'    => 1,
     },
     'confirm' =>
     {
-	'title'   =>
-	{
-	    'c' => 'Bekräfta uppgift',
-	},
+	'title'   => 'Bekräfta uppgift',
 	'bg'      => 'yellow',
     },
     'action'     =>
     {
-	'title'   =>
-	{
-	    'c' => 'Försök misslyckades',
-	},
+	'title'   => 'Försök misslyckades',
 	'bg'      => '#ff3718',
 	'view_context' => 1,
     },
     'compilation' =>
     {
-	'title'   =>
-	{
-	    'c' => 'Kompileringsfel',
-	},
+	'title'   => 'Kompileringsfel',
 	'bg'      => 'yellow',
 	'border'  => 'red',
 	'no_backtrack' => 1,
     },
     'notfound'     =>
     {
-	'title'   =>
-	{
-	    'c' => 'Hittar inte',
-	},
+	'title'   => 'Hittar inte',
 	'bg'      => 'red',
 	'no_backtrack' => 1,
     },
     'denied'     =>
     {
-	'title'   =>
-	{
-	    'c' => 'Access vägrad',
-	},
+	'title'   => 'Access vägrad',
     },
     'template'   =>
     {
-	'title'   =>
-	{
-	    'c' => 'Mallfel',
-	},
+	'title'   => 'Mallfel',
 	'view_context' => 1,
     },
     'file'       =>
     {
-	'title' =>
-	{
-	    'c' => 'Mallfil saknas',
-	},
+	'title' => 'Mallfil saknas',
     },
 };
 
@@ -339,13 +303,13 @@ sub title
 	$part->{'title'} = $title;
     }
 
-    return $part->{'title'} if $part->{'title'};
+    return loc($part->{'title'}) if $part->{'title'};
 
     my $type = $part->type;
     if( $type )
     {
-	return $ERROR_TYPE->{$type}{'title'}{'c'} ||
-	    "\u$type fel...";
+	return loc($ERROR_TYPE->{$type}{'title'}) ||
+	  sprintf "\u%s fel...", loc($type);
     }
 }
 
@@ -722,7 +686,7 @@ sub as_string
 	my $line = $part->context_line;
 	if( my $context = $part->context )
 	{
-	    $out .= "Context at line $line:\n";
+	    $out .= loc("Context at line ([_1])", $line)."\n";
 	    $out .= $context;
 	}
     }

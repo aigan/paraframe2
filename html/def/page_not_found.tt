@@ -1,9 +1,9 @@
-[% META title="404 - File not found"
+[% META title='-"404 - " _ loc("File not found")'
 	level = 0
 %]
 
 <p>
-The file you requested cannot be found.
+[% loc("The file you requested cannot be found") %].
 </p>
 
 [% preserve_data %]

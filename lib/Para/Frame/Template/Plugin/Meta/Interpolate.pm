@@ -18,9 +18,21 @@ BEGIN
     warn "Loading ".__PACKAGE__." $VERSION\n";
 }
 
+=head1 SYNOPSIS
+
+  [% META title='-"404 - " _ loc("File not found")' %]
+
+The value is enclosed in C<''>. The initial C<-> tells us to
+interpolate the rest as if it said:
+
+  [% title = "404 - " _ loc("File not found") %]
+
+The C<_> is a concatenation operator. And L<Para::Frame::L10N/loc> is
+the translation function.
+
 =head1 DESCRIPTION
 
-If URL starts with a '-', the rest of value will be evaluated as a TT
+If value starts with a '-', the rest of value will be evaluated as a TT
 expression. (No expressions are normally allowed in META.)
 
 =cut

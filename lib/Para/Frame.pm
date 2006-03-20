@@ -53,6 +53,7 @@ use Para::Frame::Burner;
 use Para::Frame::Time qw( now );
 use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn );
 use Para::Frame::Email::Address;
+use Para::Frame::L10N;
 
 use constant TIMEOUT_LONG  =>   5;
 use constant TIMEOUT_SHORT =>   0.001;
@@ -1398,10 +1399,10 @@ Defaults C<0007>
 
 =head3 appfmly
 
-This should be a listref of elements, each to be treated ass fallbacks
-for L</appbase>.  If no actions are found under L</appbase> one after
-one of the elements in C<appfmly> are tried. See
-L<Para::Frame::Site/appfmly>.
+This should be a listref of elements, each to be treated as fallbacks
+for L<Para::Frame::Site/appbase>.  If no actions are found under
+L<Para::Frame::Site/appbase> one after one of the elements in
+C<appfmly> are tried. See L<Para::Frame::Site/appfmly>.
 
 Defaults to none.
 
@@ -1563,7 +1564,11 @@ sub configure
 	 RECURSION => 1,
 	 PLUGIN_BASE => $tt_plugins,
 	 ABSOLUTE => 1,
-	 );
+#	 FILTERS =>
+#	 {
+#	     loc => \&Para::Frame::L10N::loc,
+#	 },
+	);
 
 
     Para::Frame::Burner->add({
@@ -1610,6 +1615,7 @@ sub configure
 
     $CFG->{'user_class'} ||= 'Para::Frame::User';
     $CFG->{'session_class'} ||= 'Para::Frame::Session';
+    $CFG->{'l10n_class'} ||= 'Para::Frame::L10N';
 
     $CFG->{'bg_user_code'} ||= sub{ $CFG->{'user_class'}->get('guest') };
 
@@ -1747,6 +1753,8 @@ sub set_global_tt_params
 	'uri'             => \&Para::Frame::Utils::uri,
 	'uri_path'        => \&Para::Frame::Utils::uri_path,
         'timediff'        => \&Para::Frame::Utils::timediff,
+        'mt'              => \&Para::Frame::L10N::mt,
+        'loc'             => \&Para::Frame::L10N::loc,
     };
 
     $class->add_global_tt_params( $params );

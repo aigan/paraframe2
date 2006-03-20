@@ -1,1 +1,1 @@
-[% otitle | html %]
+[% loc(otitle) | html %]

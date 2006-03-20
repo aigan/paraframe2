@@ -59,6 +59,7 @@ use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug create_dir chmod_file idn_encode idn_decode );
 use Para::Frame::Request::Ctype;
 use Para::Frame::URI;
+use Para::Frame::L10N qw( loc );
 
 =head2 new
 
@@ -487,7 +488,7 @@ sub find_template
     }
 
     # Reasonable default?
-    my $language = $req->lang || ['en'];
+    my $language = $req->language->alternatives || ['en'];
 
     # We should not try to find templates including lang
     if( $ext_full =~ /^\.(\w\w)\.tt$/ )
@@ -1102,7 +1103,7 @@ sub render_output
 
 	    debug(0,"FALLBACK!");
 	    my $part = $req->result->exception();
-	    $part->prefix_message("During the processing of\n$template");
+	    $part->prefix_message(loc("During the processing of [_1]",$template)."\n");
 
 	    my $error = $burner->error;
 
@@ -1262,8 +1263,6 @@ sub precompile
     $page->set_uri( $uri );
     $page->set_template( $destfile_web );
     $page->{'params'}{'me'} = $page->url_path_full;
-
-    $req->set_language($args->{'language'});
 
     $page->set_dirsteps($destdir.'/');
 
@@ -1856,7 +1855,7 @@ sub set_tt_params
 	'me'              => $page->url_path_full,
 
 	'u'               => $Para::Frame::U,
-	'lang'            => $req->preferred_language, # calculate once
+	'lang'            => $req->{'lang'}->preferred, # calculate once
 	'req'             => $req,
 
 	# Is allowed to change between requests

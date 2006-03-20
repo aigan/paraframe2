@@ -53,6 +53,7 @@ use Para::Frame::Change;
 use Para::Frame::URI;
 use Para::Frame::Page;
 use Para::Frame::Utils qw( compile throw debug catch idn_decode );
+use Para::Frame::L10N;
 
 our %URI2FILE;
 
@@ -359,14 +360,30 @@ sub result { shift->{'result'} }
 
   $req->language
 
-Returns a ref to a list of language code strings.  For example
-C<['en']>. This is a prioritized list of languages that the sithe
-handles and that the client prefere.
+Returns the L10N language handler object.
 
 =cut
 
-sub lang { $_[0]->{'lang'} }
-sub language { $_[0]->{'lang'} }
+sub lang { return $_[0]->language }
+sub language
+{
+#    carp "Returning language obj $_[0]->{'lang'}";
+#    unless( UNIVERSAL::isa $_[0]->{'lang'},'Para::Frame::L10N')
+#    {
+#	croak "Lanugage obj of wrong type: ".Dumper($_[0]->{'lang'});
+#    }
+    return $_[0]->{'lang'} or croak "Language not initialized";
+}
+
+sub set_language
+{
+    my( $req, $language_in ) = @_;
+
+#    carp "Setting language";
+    $req->{'lang'} = $Para::Frame::CFG->{'l10n_class'}->set( $language_in )
+      or die "Couldn't set language";
+}
+
 
 =head2 page
 
@@ -634,180 +651,6 @@ sub normalized_uri
 
     return $uri;
 }
-
-
-##############################################
-# Set language
-#
-sub set_language
-{
-    my( $req, $language_in ) = @_;
-
-    debug 2, "Decide on a language";
-
-    if( $req->is_from_client )
-    {
-	$language_in ||= $req->q->param('lang')
-	             ||  $req->q->cookie('lang')
-                     ||  $req->env->{HTTP_ACCEPT_LANGUAGE}
-                     ||  '';
-    }
-    else
-    {
-	$language_in ||= '';
-    }
-    debug 3, "  Lang prefs are $language_in";
-
-    confess "page not defined" unless $req->{'page'};
-    my $site_languages = $req->page->site->languages;
-
-    unless( @$site_languages )
-    {
-	$req->{'lang'} = ['en'];
-	return;
-    }
-
-
-    my @alts;
-    if( UNIVERSAL::isa($language_in, "ARRAY") )
-    {
-	@alts = @$language_in;
-    }
-    else
-    {
-	@alts = split /,\s*/, $language_in;
-    }
-
-    my %priority;
-
-    foreach my $alt ( @alts )
-    {
-	my( $code, @info ) = split /\s*;\s*/, $alt;
-	my $q;
-	foreach my $pair ( @info )
-	{
-	    my( $key, $value ) = split /\s*=\s*/, $pair;
-	    $q = $value if $key eq 'q';
-	}
-	$q ||= 1;
-
-	push @{$priority{$q}}, $code;
-    }
-
-    my %accept = map { $_, 1 } @$site_languages;
-
-#    warn "Acceptable choices are: ".Dumper(\%accept)."\n";
-
-    my @alternatives;
-    foreach my $prio ( sort {$b <=> $a} keys %priority )
-    {
-	foreach my $lang ( @{$priority{$prio}} )
-	{
-	    push @alternatives, $lang if $accept{$lang};
-	}
-    }
-
-    ## Add default lang, if not already there
-    my @defaults = $site_languages->[0];
-    foreach my $lang ( @$site_languages )
-    {
-	unless( grep {$_ eq $lang} @alternatives )
-	{
-	    push @alternatives, $lang;
-	}
-    }
-
-    if( $req->is_from_client )
-    {
-	$req->send_code( 'AR-PUT', 'header_out', 'Vary', 'negotiate,accept-language' );
-	$req->send_code( 'AR-PUT', 'header_out', 'Content-Language', $alternatives[0] );
-    }
-
-    $req->{'lang'} = \@alternatives;
-    debug 2, "Lang priority is: @alternatives";
-}
-
-
-#######################################################################
-
-=head2 preferred_language
-
-  $req->preferred_language()
-
-  $req->preferred_language( $lang1, $lang2, ... )
-
-Returns the language form the list that the user preferes. C<$langX>
-is the language code, like C<sv> or C<en>.
-
-The list will always be restircted to the languages supported by the
-site, ie C<$req-E<gt>site-E<gt>languages>.  The parameters should only
-be used to restrict the choises futher.
-
-=head3 Default
-
-The first language in the list of languages supported by the
-application.
-
-=head3 Example
-
-  [% SWITCH lang %]
-  [% CASE 'sv' %]
-     <p>Valkommen ska ni vara!</p>
-  [% CASE %]
-     <p>Welcome, poor thing.</p>
-  [% END %]
-
-=cut
-
-sub preferred_language
-{
-    my( $req, @lim_langs ) = @_;
-
-    my $site = $req->page->site;
-
-    my @langs;
-    if( @lim_langs )
-    {
-      LANG:
-	foreach my $lang (@{$site->languages})
-	{
-	    foreach( @lim_langs )
-	    {
-		if( $lang eq $_ )
-		{
-		    push @langs, $lang;
-		    next LANG;
-		}
-	    }
-	}
-    }
-    else
-    {
-	@langs = @{$site->languages};
-    }
-
-    if( $req->is_from_client )
-    {
-	if( my $clang = $req->q->cookie('lang') )
-	{
-	    unshift @langs, $clang;
-	}
-    }
-
-    foreach my $lang (@{$req->language})
-    {
-	foreach( @langs )
-	{
-	    if( $lang eq $_ )
-	    {
-		return $lang;
-	    }
-	}
-    }
-
-    return $site->languages->[0];
-}
-
 
 #######################################################################
 # Set up things from params
