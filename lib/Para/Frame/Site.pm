@@ -42,6 +42,7 @@ L</host> as param.
 
 use strict;
 use Carp qw( croak );
+use Data::Dumper;
 
 BEGIN
 {
@@ -249,7 +250,12 @@ B<Important> Do not end home with a C</>
 
 sub home
 {
-    $Para::Frame::REQ->{'dirconfig'}{'home'} || $_[0]->{'webhome'} || '';
+    if( $Para::Frame::REQ )
+    {
+	return $Para::Frame::REQ->{'dirconfig'}{'home'} || $_[0]->{'webhome'} || '';
+    }
+
+    return $_[0]->{'webhome'} || '';
 }
 
 
