@@ -34,7 +34,7 @@ and not just for the response page.
 
 Each Request has C<one> response Page object. It may first be a normal
 template and then change to generate an error page if action or
-template throw an exception. But it's still the same object.
+template throw an exception. But it is still the same object.
 
 I may change that so that a new Page object is created if there was a
 redirection to a new page.
