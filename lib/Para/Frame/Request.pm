@@ -397,6 +397,17 @@ sub language
     return $_[0]->{'lang'} or croak "Language not initialized";
 }
 
+=head2 set_language
+
+  $req->set_language()
+
+  $req->set_language( $language_in )
+
+Calls L<Para::Frame::L10N/set> or a subclass theriof defined in
+L<Para::Frame/l10n_class>.
+
+=cut
+
 sub set_language
 {
     my( $req, $language_in ) = @_;
