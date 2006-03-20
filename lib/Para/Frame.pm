@@ -180,13 +180,14 @@ sub startup
     # Setup signal handling
     $SIG{CHLD} = \&REAPER;
 
-    Para::Frame->run_hook(undef, 'on_startup');
-
-    warn "Setup complete, accepting connections\n";
-
     $LEVEL      = 0;
     $TERMINATE  = 0;
     $IN_STARTUP = 0;
+
+    # No REQ exists yet!
+    Para::Frame->run_hook(undef, 'on_startup');
+
+    warn "Setup complete, accepting connections\n";
 }
 
 =head2 watchdog_startup
@@ -975,15 +976,8 @@ sub add_background_jobs
 {
     my( $delta, $sysload ) = @_;
 
-    $REQNUM ++;
-    my $client = "background-$REQNUM";
-    my $req = Para::Frame::Request->new_minimal($REQNUM, $client);
+    my $req = Para::Frame::Request->new_bgrequest();
 
-    $REQUEST{$client} = $req;
-    switch_req( $req, 1 );
-    $req->minimal_init;
-
-    warn "\n\n$REQNUM Handling new request (in background)\n";
 
     my $bg_user;
     my $user_class = $Para::Frame::CFG->{'user_class'};
