@@ -27,13 +27,13 @@ sub handler
 
 
     my $level = $q->param('debuglevel');
-    $level = $s->{'debug'} unless defined $level;
+    $level = $s->debug_level unless defined $level;
 
     my $txt = "";
 
-    if( $level != $s->{'debug'} )
+    if( $level != $s->debug_level )
     {
-	$Para::Frame::DEBUG = $s->{'debug'} = $level;
+	$s->set_debug( $level );
 	$txt .= "Changed session debug level to $level\n";
     }
 
@@ -45,7 +45,7 @@ sub handler
 	$Para::Frame::CFG->{'debug'} = $global_level;
 	$txt .= "Changed global debug level to $global_level\n";
     }
-    
+
     return $txt;
 }
 
