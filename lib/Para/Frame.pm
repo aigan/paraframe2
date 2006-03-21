@@ -1078,12 +1078,14 @@ sub handle_request
     warn "# $client\n" if debug() > 4;
 
     ### Redirected from another page?
-    if( my $page_result = $req->s->{'page_result'}{ $req->uri } )
+    if( my $page_result = $req->session->{'page_result'}{ $req->uri } )
     {
-	$req->page->set_headers( $page_result->[0] );
-	$req->page->send_headers;
-	$req->client->send( ${$page_result->[1]} );
-	delete $req->s->{'page_result'}{ $req->uri };
+	debug "Sending stored page result";
+	my $page = $req->page;
+	$page->set_headers( $page_result->[0] );
+	$page->send_headers;
+	$page->send_in_chunks($page_result->[1]);
+	delete $req->session->{'page_result'}{ $req->uri };
     }
     else
     {
