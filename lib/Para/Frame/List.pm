@@ -155,6 +155,11 @@ sub from_page
 
     my $obj = $OBJ{$l};
 
+    if( $obj->{page_size} < 1 )
+    {
+	return $l;
+    }
+
     my $start = $obj->{page_size} * ($page-1);
     my $end = List::Util::min( $start + $obj->{page_size}, scalar(@$l))-1;
 
@@ -240,6 +245,11 @@ sub pages
 
     my $obj = $OBJ{$l};
 
+    if( $obj->{page_size} < 1 )
+    {
+	return 1;
+    }
+
     return int( (scalar(@$l) - 1) / $obj->{page_size} ) + 1;
 }
 
@@ -290,6 +300,11 @@ sub pagelist
 
     my $dpages = $obj->{display_pages};
     my $pages = $l->pages;
+
+    if( $pages <= 1 )
+    {
+	return "";
+    }
 
     my $startpage = List::Util::max( $pagenum - $dpages/2, 1);
     my $endpage = List::Util::min( $pages, $startpage + $dpages - 1);
@@ -381,7 +396,7 @@ Sets and returns the given C<$page_size>
 
 sub set_page_size
 {
-    $OBJ{$_[0]}{page_size} = $_[1];
+    $OBJ{$_[0]}{page_size} = int($_[1]);
     return "";
 }
 
@@ -412,7 +427,7 @@ Sets and returns the given L</display_pages>.
 
 sub set_display_pages
 {
-    $OBJ{$_[0]}{display_pages} = $_[1];
+    $OBJ{$_[0]}{display_pages} = int($_[1]);
     return "";
 }
 
