@@ -168,6 +168,7 @@ sub register_result_page
 {
     my( $s, $uri, $headers, $page_ref ) = @_;
     # URI should only be the path part
+    debug "Registred the page result for $uri";
     $s->{'page_result'}{$uri} = [ $headers, $page_ref ];
 }
 
@@ -263,6 +264,33 @@ sub list
 
     return $s->{list}{$id};
 }
+
+=head2 debug_level
+
+  $s->debug_level
+
+Return the session debug level
+
+=cut
+
+sub debug_level
+{
+    return $_[0]->{'debug'};
+}
+
+=head2 set_debug
+
+  $s->set_debug
+
+Sets and return the session debug level
+
+=cut
+
+sub set_debug
+{
+    return $Para::Frame::DEBUG = $_[0]->{'debug'} = int($_[1]);
+}
+
 
 
 =head1 SEE ALSO
