@@ -174,7 +174,7 @@
 %]
    <a href="$url" class="$class">$name
 [% IF dirimg %]
-   <img alt=" $direction" src="$home$dirimg">
+   <img alt="$direction" src="$home$dirimg">
 [% END %]
 </a>
 [% END;
