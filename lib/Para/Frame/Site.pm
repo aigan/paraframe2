@@ -286,7 +286,7 @@ This is NOT an URL path.
 sub sys_home
 {
     my $req = $Para::Frame::REQ;
-    return $req->uri2file( $_[0]->home );
+    return $req->uri2file( $_[0]->home.'/' );
 }
 
 
@@ -300,7 +300,8 @@ The same as L</sys_home> but ends with a '/'.
 
 sub sys_home_path
 {
-    return $_[0]->sys_home . '/';
+    my $req = $Para::Frame::REQ;
+    return $req->uri2file( $_[0]->home.'/' ).'/';
 }
 
 #######################################################################
