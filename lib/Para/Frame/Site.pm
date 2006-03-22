@@ -272,6 +272,37 @@ sub home_path
     return( ($Para::Frame::REQ->{'dirconfig'}{'home'} || $_[0]->{'webhome'} || '').'/' );
 }
 
+
+=head2 sys_home
+
+  $site->sys_home
+
+Returns the home dir of the site in the filesystem, excluding the last '/'.
+
+This is NOT an URL path.
+
+=cut
+
+sub sys_home
+{
+    my $req = $Para::Frame::REQ;
+    return $req->uri2file( $_[0]->home );
+}
+
+
+=head2 sys_home_path
+
+  $site->sys_home_path
+
+The same as L</sys_home> but ends with a '/'.
+
+=cut
+
+sub sys_home_path
+{
+    return $_[0]->sys_home . '/';
+}
+
 #######################################################################
 
 
