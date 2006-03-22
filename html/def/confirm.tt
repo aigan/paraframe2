@@ -2,7 +2,7 @@
 	otitle = 'Confirm'
 %]
 [%
-	c = result.info.confirm;
+	c = req.result.info.confirm;
 %]
 
 [% preserve_data %]
