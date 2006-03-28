@@ -1277,13 +1277,16 @@ sub debug
 {
     my( $level, $message, $delta ) = @_;
 
+#    warn "This was called from ".(caller(1))[3];
+
     # Initialize here since DEBUG may be called before configure
-    $Para::Frame::DEBUG  ||= 0;
+    my $debug = $Para::Frame::Logging::WATCH{(caller(1))[3]} ||
+      $Para::Frame::DEBUG  || 0;
     $Para::Frame::INDENT ||= 0;
 
     # Returns $message if given
     return "" if $Para::Frame::IN_STARTUP and $Para::Frame::QUIET_STARTUP and $level;
-    return $Para::Frame::DEBUG unless defined $level;
+    return $debug unless defined $level;
 
     $delta ||= 0;
     $Para::Frame::INDENT += $delta if $delta < 0;
@@ -1308,7 +1311,7 @@ sub debug
 	$level = 0;
     }
 
-    if( $Para::Frame::DEBUG >= $level )
+    if( $debug >= $level )
     {
 	my $prefix =  $Para::Frame::FORK ? "| $$: " : "";
 
