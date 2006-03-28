@@ -1,0 +1,25 @@
+[% META title="Watchlist"
+	next_action="debug_change"
+%]
+
+[% PROCESS menu.tt %]
+
+[% debugalts = {'0'=0, '1'=1, '2'=2, '3'=3, '4'=4, '5'=5} %]
+
+<table>
+
+<tr class="odd"><td>Session debug level
+<td>[% select('debuglevel', debug, debugalts) %]
+
+<tr class="even"><td>Global debug level
+<td>[% select('debuglevel-global', cfg.debug, debugalts) %]
+
+<tr><td>[% input("new_watch_sub") %]
+<td>[% select('new_watch_level', 0, debugalts) %]
+
+[% FOREACH sub IN req.logging.watchlist.keys %]
+[%tr2%]<td>[% sub %] <td>[% select("watch_$sub", req.logging.watchlist.$sub, debugalts) %]
+[% END %]
+</table>
+
+<p>[% step %]
