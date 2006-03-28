@@ -18,6 +18,9 @@ package Para::Frame::Action::debug_change;
 
 use strict;
 
+use Para::Frame::Logging;
+use Para::Frame::Utils qw( debug );
+
 sub handler
 {
     my( $req ) = @_;
@@ -44,6 +47,33 @@ sub handler
     {
 	$Para::Frame::CFG->{'debug'} = $global_level;
 	$txt .= "Changed global debug level to $global_level\n";
+    }
+
+    foreach my $key ( $q->param )
+    {
+	debug "Looking at key $key";
+	if( $key =~ /^watch_(.*)/ )
+	{
+	    if( $q->param($key) )
+	    {
+		$Para::Frame::Logging::WATCH{$1} = $q->param($key);
+	    }
+	    else
+	    {
+		delete $Para::Frame::Logging::WATCH{$1};
+	    }
+	}
+    }
+
+    if( my $key = $q->param('new_watch_sub') )
+    {
+	if( my $val = $q->param('new_watch_level') )
+	{
+	    $Para::Frame::Logging::WATCH{$key} = $val;
+	}
+
+	$q->delete('new_watch_sub');
+	$q->delete('new_watch_level');
     }
 
     return $txt;
