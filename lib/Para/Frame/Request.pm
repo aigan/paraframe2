@@ -54,6 +54,7 @@ use Para::Frame::URI;
 use Para::Frame::Page;
 use Para::Frame::Utils qw( compile throw debug catch idn_decode );
 use Para::Frame::L10N;
+use Para::Frame::Logging;
 
 our %URI2FILE;
 
@@ -114,6 +115,7 @@ sub new
 	wait           => 0,              ## Asked to wait?
 	cancel         => undef,          ## True if we should abort
 	change         => undef,
+        header_only    => 0,              ## true if only sending header
     }, $class;
 
     # Cache uri2file translation
@@ -552,6 +554,8 @@ sub error_page_selected { $_[0]->page->error_page_selected }
 sub error_page_not_selected { $_[0]->page->error_page_not_selected }
 
 sub uri { $_[0]->page->uri }
+
+sub header_only { $_[0]->{'header_only'} }
 
 ###
 ###########################################
@@ -1730,97 +1734,9 @@ sub run_hook
     Para::Frame->run_hook(@_);
 }
 
-sub debug_data
+sub logging
 {
-    my( $req ) = @_;
-
-    my $page = $req->page;
-
-    my $out = "";
-    my $reqnum = $req->{'reqnum'};
-    $out .= "This is request $reqnum\n";
-
-    $out .= $req->session->debug_data;
-
-    if( $req->is_from_client )
-    {
-	$out .= "Orig uri: $req->{orig_uri}\n";
-
-	if( my $redirect = $page->{'redirect'} )
-	{
-	    $out .= "Redirect is set to $redirect\n";
-	}
-
-	if( my $browser = $req->env->{'HTTP_USER_AGENT'} )
-	{
-	    $out .= "Browser is $browser\n";
-	}
-
-	if( my $errtmpl = $page->{'error_template'} )
-	{
-	    $out .= "Error template is set to $errtmpl\n";
-	}
-
-	if( my $referer = $req->referer )
-	{
-	    $out .= "Referer is $referer\n"
-	}
-
-	if( $page->{'in_body'} )
-	{
-	    $out .= "We have already sent the http header\n"
-	}
-
-    }
-
-    if( my $chldnum = $req->{'childs'} )
-    {
-	$out .= "This request waits for $chldnum children\n";
-
-	foreach my $child ( values %Para::Frame::CHILD )
-	{
-	    my $creq = $child->req;
-	    my $creqnum = $creq->{'reqnum'};
-	    my $cclient = $creq->client;
-	    my $cpid = $child->pid;
-	    $out .= "  Req $creqnum $cclient has a child with pid $cpid\n";
-	}
-    }
-
-    if( $req->{'in_yield'} )
-    {
-	$out .= "This request is in yield now\n";
-    }
-
-    if( $req->{'wait'} )
-    {
-	$out .= "This request waits for something\n";
-    }
-
-    if( my $jobcnt = @{ $req->{'jobs'} } )
-    {
-	$out .= "Has $jobcnt jobs\n";
-	foreach my $job ( @{ $req->{'jobs'} } )
-	{
-	    my( $cmd, @args ) = @$job;
-	    $out .= "  $cmd with args @args\n";
-	}
-    }
-
-    if( my $acnt = @{ $req->{'actions'} } )
-    {
-	$out .= "Has $acnt a\n";
-	foreach my $action ( @{ $req->{'actions'} } )
-	{
-	    $out .= "  $action\n";
-	}
-    }
-
-    if( $req->result )
-    {
-	$out .= "Result:\n".$req->result->as_string;
-    }
-
+    return Para::Frame::Logging->new();
 }
 
 
