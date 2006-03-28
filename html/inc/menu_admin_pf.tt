@@ -10,8 +10,8 @@
    [%+ go("Index", page.url_dir_path) %]
 [% END %]
 [%+ go("Reload", me, 'nop') %]
-[%+ go("Debug", "$home/debug.tt", 'mark') %]
-[%+ go("Configure", "$home/debug.tt", 'mark') %]
+[%+ go("Debug", "$home/pf/config/debuglist.tt", 'mark') %]
+[%+ go("Configure", "$home/pf/config/", 'mark') %]
 [%+ go("Show source", "$home/pf/cms/source.tt", 'mark') %]
 [%+ go("Admin mode", "$home/pf/cms/source.tt", 'mark') %]
 </p>
