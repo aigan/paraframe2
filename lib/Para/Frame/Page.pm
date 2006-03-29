@@ -1839,12 +1839,6 @@ sub set_tt_params
 
     my $site = $page->site;
 
-    # Add local site params
-    if( $site->params )
-    {
-	$page->add_params($site->params);
-    }
-
     # Keep alredy defined params  # Static within a request
     $page->add_params({
 	'q'               => $req->{'q'},
@@ -1861,7 +1855,14 @@ sub set_tt_params
 	# Is allowed to change between requests
 	'site'            => $site,
 	'home'            => $site->home,
-    }, 1);
+    });
+
+    # Add local site params
+    if( $site->params )
+    {
+	$page->add_params($site->params);
+    }
+
 }
 
 1;
