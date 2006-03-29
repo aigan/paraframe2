@@ -615,6 +615,19 @@ sub send_email
     return 1;
 }
 
+=head2 backup_redirect
+
+  $site->backup_redirect
+
+Returns the backup_redirect
+
+=cut
+
+sub backup_redirect
+{
+    return $_[0]->{'backup_redirect'};
+}
+
 #######################################################
 
 =head2 params
