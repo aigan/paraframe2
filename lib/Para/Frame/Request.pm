@@ -56,6 +56,7 @@ use Para::Frame::Utils qw( compile throw debug catch idn_decode );
 use Para::Frame::L10N;
 use Para::Frame::Logging;
 use Para::Frame::Connection;
+use Para::Frame::Uploaded;
 
 our %URI2FILE;
 
@@ -557,6 +558,8 @@ sub error_page_not_selected { $_[0]->page->error_page_not_selected }
 sub uri { $_[0]->page->uri }
 
 sub header_only { $_[0]->{'header_only'} }
+
+sub uploaded { Para::Frame::Uploaded->new($_[1]) }
 
 ###
 ###########################################
