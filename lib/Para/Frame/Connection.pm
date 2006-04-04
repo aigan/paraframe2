@@ -9,7 +9,7 @@ package Para::Frame::Connection;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2005-2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -125,6 +125,6 @@ Jonas Liljegren E<lt>jonas@paranormal.seE<gt>
 
 =head1 SEE ALSO
 
-L<Para::Frame>, L<URI>
+L<Para::Frame>
 
 =cut
