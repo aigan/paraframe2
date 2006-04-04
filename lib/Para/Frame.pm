@@ -596,7 +596,7 @@ sub get_value
 
 	    if( my $req = $REQUEST{$client} )
 	    {
-		debug $req->debug_data;
+		debug $req->logging->debug_data;
 	    }
 
 	    cluck "trace for $client";
@@ -631,7 +631,12 @@ sub get_value
 	}
 	else
 	{
-	    die "Strange INBUFFER content: $INBUFFER{$client}\n";
+	    debug "Strange INBUFFER content: $INBUFFER{$client}\n";
+#	    debug join ',', map sprintf("%x",ord), split //, $INBUFFER{$client};
+	    $INBUFFER{$client} = '';
+	    $DATALENGTH{$client} = 0;
+	    close_callback($client);
+	    return;
 	}
     }
 
@@ -853,8 +858,6 @@ sub REAPER
 	else
 	{
 	    warn "|   No object registerd with PID $child_pid\n";
-#	    warn "|     This may be a child already handled\n";
-#	    warn "|     Or some third party thing like Date::Manip...\n";
 	}
     }
     $SIG{CHLD} = \&REAPER;  # still loathe sysV
