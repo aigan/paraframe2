@@ -631,7 +631,7 @@ sub rollback
 
     $dbix->dbh->rollback;
     Para::Frame->run_hook( $Para::Frame::REQ, 'after_db_rollback', $dbix);
-    $Para::Frame::REQ->change->reset;
+    $Para::Frame::REQ and $Para::Frame::REQ->change->reset;
 }
 
 =head2 dbh

@@ -62,8 +62,9 @@ sub watchlist
 
 sub debug_data
 {
-    my( $req ) = @_;
+    my( $log ) = @_;
 
+    my $req = $Para::Frame::REQ;
     my $page = $req->page;
 
     my $out = "";
