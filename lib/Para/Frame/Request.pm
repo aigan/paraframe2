@@ -55,6 +55,7 @@ use Para::Frame::Page;
 use Para::Frame::Utils qw( compile throw debug catch idn_decode );
 use Para::Frame::L10N;
 use Para::Frame::Logging;
+use Para::Frame::Connection;
 
 our %URI2FILE;
 
@@ -1240,6 +1241,17 @@ sub referer_with_query
 }
 
 #############################################
+
+
+sub send_to_daemon
+{
+    my( $req, $host_in, $code, $arg ) = @_;
+
+    my $conn = Para::Frame::Connection->new( $host_in );
+    my $val = $conn->get_cmd_val( $code, $arg );
+    $conn->disconnect;
+    return $val;
+}
 
 sub send_code
 {
