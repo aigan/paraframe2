@@ -1283,7 +1283,7 @@ sub precompile
 	if( ref $error and $error->info =~ /not found/ )
 	{
 	    debug "Subtemplate for precompile not found";
-	    my $incpathstring = join "", map "- $_\n", @{$req->{'incpath'}};
+	    my $incpathstring = join "", map "- $_\n", @{$page->incpath};
 	    $part->add_message("Include path is\n$incpathstring");
 	}
 
