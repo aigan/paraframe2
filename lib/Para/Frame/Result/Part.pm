@@ -174,6 +174,11 @@ sub new
 	    error => $params,
 	};
     }
+    elsif( ref $params eq 'Para::Frame::Result::Part' )
+    {
+	debug "Error already is a part!";
+	return $params;
+    }
 
     my $message = delete $params->{'message'};
     my $part = bless($params, $class);
