@@ -156,7 +156,7 @@ sub handler
 	    $params->{$key} = "$val"; # Remove GLOB from value
 
 	    my $keyfile = $key;
-	    $keyfile =~ s/[^\w_\-]//; # Make it a normal filename
+	    $keyfile =~ s/[^\w_\-]//g; # Make it a normal filename
 	    my $dest = "/tmp/paraframe/$$-$keyfile";
 	    copy_to_file( $dest, $q->upload($key) ) or return 1;
 	    $ENV{"paraframe-upload-$keyfile"} = $dest;
@@ -344,6 +344,9 @@ sub copy_to_file
     $dir =~ s/\/[^\/]+$//;
     create_dir($dir) unless -d $dir;
 
+    my $orig_umask = umask;
+    umask 07;
+
     unless( open OUT, ">$filename" )
     {
 	warn "$$: Couldn't write to $filename: $!\n";
@@ -361,6 +364,7 @@ sub copy_to_file
     close($fh);
     close(OUT);
 
+    umask $orig_umask;
     return 1;
 }
 
@@ -376,7 +380,10 @@ sub create_dir
 	create_dir( $parent );
     }
 
+    my $orig_umask = umask;
+    umask 0;
     mkdir $dir, 02711;
+    umask $orig_umask;
 }
 
 sub get_response
