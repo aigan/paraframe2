@@ -241,8 +241,8 @@ sub debug_data
     $out .= "Session id: $s->{'sid'}\n";
     $out .= "Session created $s->{'created'}\n";
     $out .= "Debug level is $s->{'debug'}\n";
-    my $udesig = $s->u->desig;
-    $out .= "User is $udesig\n";
+    my $uname = $s->u->username;
+    $out .= "User is $uname\n";
     return $out;
 }
 
