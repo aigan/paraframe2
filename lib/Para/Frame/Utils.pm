@@ -128,7 +128,7 @@ sub trim
     {
 	return undef unless defined $ref;
 	$ref =~ s/( ^ \s+ | \s+ $ )//gx;
-	$$ref =~ s/\s*\r?\n\s*/\n/g;
+	$ref =~ s/\s*\r?\n\s*/\n/g;
 	$ref =~ s/\s\s+/ /g;
 	return $ref;
     }
