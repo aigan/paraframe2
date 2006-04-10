@@ -1103,9 +1103,13 @@ sub render_output
 
 	    debug(0,"FALLBACK!");
 	    my $part = $req->result->exception();
-	    $part->prefix_message(loc("During the processing of [_1]",$template)."\n");
+	    my $error = $part->error;
 
-	    my $error = $burner->error;
+	    if( $part->view_context )
+	    {
+		$part->prefix_message(loc("During the processing of [_1]",$template)."\n");
+	    }
+
 
 	    ### Use error page template
 	    my $error_tt = $page->template; # Could have changed
