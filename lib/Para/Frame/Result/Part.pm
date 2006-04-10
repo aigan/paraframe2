@@ -94,68 +94,68 @@ our $ERROR_TYPE =
 {
     'dbi'        =>
     {
-	'title' => 'Databasfel',
+	'title' => 'Database error',
 	'border'  => 'red',
 	'bg'      => 'AAAAAA',
     },
     'update'        =>
     {
-	'title'   => 'Problem med att spara uppgift',
+	'title'   => 'Problem during update',
 	'border'  => 'red',
 	'bg'      => 'AAAAAA',
     },
     'incomplete' =>
     {
-	'title'   => 'Uppgifter saknas',
+	'title'   => 'Information missing',
 	'bg'      => 'yellow',
     },
     'validation' =>
     {
-	'title'   => 'Fel vid kontroll',
+	'title'   => 'Form check failed',
 	'bg'      => 'yellow',
     },
     'alternatives' =>
     {
-	'title'   => 'Flera alternativ',
+	'title'   => 'Multiple alternatives',
 	'no_backtrack' => 1,
 	'hide'    => 1,
     },
     'confirm' =>
     {
-	'title'   => 'Bekräfta uppgift',
+	'title'   => 'Confirm',
 	'bg'      => 'yellow',
     },
     'action'     =>
     {
-	'title'   => 'Försök misslyckades',
+	'title'   => 'Action failed',
 	'bg'      => '#ff3718',
 	'view_context' => 1,
     },
     'compilation' =>
     {
-	'title'   => 'Kompileringsfel',
+	'title'   => 'Compilation error',
 	'bg'      => 'yellow',
 	'border'  => 'red',
 	'no_backtrack' => 1,
     },
     'notfound'     =>
     {
-	'title'   => 'Hittar inte',
+	'title'   => 'Not found',
 	'bg'      => 'red',
 	'no_backtrack' => 1,
     },
     'denied'     =>
     {
-	'title'   => 'Access vägrad',
+	'title'   => 'Permission Denied',
     },
     'template'   =>
     {
-	'title'   => 'Mallfel',
+	'title'   => 'Template error',
 	'view_context' => 1,
     },
     'file'       =>
     {
-	'title' => 'Mallfil saknas',
+	'title' => 'Template missing',
     },
 };
 
@@ -184,7 +184,7 @@ sub new
     my $part = bless($params, $class);
 
     $part->add_message($message);
-    unless( $part->{'type'} )
+    unless( $part->type )
     {
 	$part->{'view_context'} = 1;
     }
@@ -314,7 +314,7 @@ sub title
     if( $type )
     {
 	return loc($ERROR_TYPE->{$type}{'title'}) ||
-	  sprintf "\u%s fel...", loc($type);
+	  sprintf "\u%s error...", loc($type);
     }
 }
 
