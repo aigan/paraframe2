@@ -52,6 +52,42 @@ our %Lexicon =
    'During the processing of [_1]' =>
    'Under körningen av [_1]',
 
+   'Permission Denied' =>
+   'Access nekad',
+
+   'Database error' =>
+   'Databasfel',
+
+   'Problem during update' =>
+   'Problem med att spara uppgift',
+
+   'Information missing' =>
+   'Uppgifter saknas'
+
+   'Form check failed' =>
+   'Fel vid kontroll'
+
+   'Multiple alternatives' =>
+   'Flera alternativ'
+
+   'Confirm' =>
+   'Bekräfta uppgift',
+
+   'Action failed' =>
+   'Försök misslyckades',
+
+   'Compilation error' =>
+   'Kompileringsfel',
+
+   'Not found' =>
+   'Hittar inte',
+
+   'Template error' =>
+   'Mallfel',
+
+   'Template missing' =>
+   'Mallfil saknas',
+
   );
 
 1;
