@@ -189,7 +189,7 @@ sub timespan
 	push @args, ( end => $to );
     }
 
-    return Para::Frame::Time->from_datetimes( @args );
+    return DateTime::Span->from_datetimes( @args );
 }
 
 
