@@ -216,12 +216,13 @@ sub new_subrequest
     debug 2, "$original_req->{reqnum} now waits on $original_req->{'wait'} things";
     Para::Frame::switch_req( $original_req );
 
+
+    # Merge the subrequest result with our result
+    $original_req->result->incorporate($req->result);
+
     if( $err )
     {
-	debug "Got error from processing subrequest:\n";
-	debug $err->as_string;
-
-	die $err;
+	die $err; # Subrequest failed
     }
 
     return $res;
@@ -336,7 +337,7 @@ Returns the L<Para::Frame::Session> object.
 
 =cut
 
-sub s { shift->{'s'} }
+sub s { shift->{'s'} }             ;;## formatting
 sub session { shift->{'s'} }
 
 =head2 env
