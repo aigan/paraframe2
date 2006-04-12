@@ -291,6 +291,17 @@ sub set_debug
     return $Para::Frame::DEBUG = $_[0]->{'debug'} = int($_[1]);
 }
 
+=head2 admin_mode
+
+  $s->admin_mode
+
+=cut
+
+sub admin_mode
+{
+    return $_[0]->{'admin_mode'};
+}
+
 
 
 =head1 SEE ALSO
