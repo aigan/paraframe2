@@ -3,7 +3,7 @@ package Para::Frame::Action::user_logout;
 #=====================================================================
 #
 # DESCRIPTION
-#   Paranormal.se user logout action
+#   Paraframe user logout action
 #
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>

@@ -262,7 +262,7 @@ sub jump_extra
     {
 	if( $Para::Frame::REQ->is_from_client and $template )
 	{
-	    # Mark as selected if link goes to current page
+	    # Mark as same_place if link goes to current page
 	    if( $Para::Frame::REQ->template_uri eq $template and not $attr->{'run'} )
 	    {
 		$extra .= " class=\"same_place\"";
