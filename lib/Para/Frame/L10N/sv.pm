@@ -62,13 +62,13 @@ our %Lexicon =
    'Problem med att spara uppgift',
 
    'Information missing' =>
-   'Uppgifter saknas'
+   'Uppgifter saknas',
 
    'Form check failed' =>
-   'Fel vid kontroll'
+   'Fel vid kontroll',
 
    'Multiple alternatives' =>
-   'Flera alternativ'
+   'Flera alternativ',
 
    'Confirm' =>
    'Bekräfta uppgift',
