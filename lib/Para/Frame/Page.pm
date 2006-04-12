@@ -379,12 +379,6 @@ sub is_index
 
 #############################################
 #############################################
-#############################################
-#############################################
-#############################################
-#############################################
-#############################################
-#############################################
 
 =head2 site
 
@@ -687,7 +681,7 @@ sub find_template
 			$req->result->exception;
 			if( $template eq $site->home.'/error.tt' )
 			{
-			    $req->{'error_template'} = $template;
+			    $page->{'error_template'} = $template;
 			    $page->{'page_content'} = $page->fallback_error_page;
 			    return undef;
 			}
@@ -939,6 +933,17 @@ remembering that this is an error response page.
 sub set_error_template
 {
     my( $page, $error_tt ) = @_;
+
+    # We want to set the error in the original request
+    if( my $req = $Para::Frame::REQ->original )
+    {
+	if( $req->page ne $page )
+	{
+	    debug "Calling original req set_error_template";
+	    return $req->page->set_error_template($error_tt);
+	}
+	debug "The original request had the same page obj";
+    }
 
     return $page->{'error_template'} = $page->set_template( $error_tt );
 }
