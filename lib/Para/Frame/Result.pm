@@ -376,6 +376,41 @@ sub as_string
     return $out;
 }
 
+=head2 incorporate
+
+  $res->import( $res2 )
+
+Import the result from another request into this result.
+
+=cut
+
+sub incorporate
+{
+    my( $result, $res2 ) = @_;
+
+    debug "Incorporate results";
+
+    push @{$result->{'part'}}, @{$res2->{'part'}};
+
+    $result->{'errcnt'} += $res2->{'errcnt'};
+    $result->{'backtrack'} += $res2->{'backtrack'};
+
+    foreach my $key (keys %{$res2->{'hide_part'}})
+    {
+	$result->{'hide_part'}{$key} = $res2->{'hide_part'}{$key};
+    }
+
+    foreach my $key (keys %{$res2->{'info'}})
+    {
+	debug "  Copying info.$key to result";
+	$result->{'info'}{$key} = $res2->{'info'}{$key};
+    }
+
+    return 1;
+}
+
+
+
 1;
 
 =head1 SEE ALSO
