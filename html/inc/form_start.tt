@@ -21,9 +21,10 @@ END;
 
 %]
 <form name="f" action="[% form_action %]" method="[% form_method %]" [% form_extra %]>
-<div>
 <input type="hidden" name="run" value="[% next_action %]" />
 [% UNLESS next_template %]
 <input type="hidden" name="destination" value="dynamic" />
 [% END %]
-</div>
+[% admin_mode = req.session.admin_mode %]
+<input type="hidden" name="admin_mode" value="[% admin_mode %]" />
+<input type="hidden" name="session_vars_update" />
