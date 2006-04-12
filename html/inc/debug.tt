@@ -19,7 +19,7 @@
    <li>
       <code>[% part.type %]</code>
       <strong>--&gt;</strong><br>
-      <code>[% part.message | html_line_break %]</code>
+      <code>[% part.message | html | html_line_break %]</code>
    </li>
 [% END %]
 </ol>
