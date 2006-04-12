@@ -13,6 +13,12 @@
 [%+ go("Debug", "$home/pf/config/debuglist.tt", 'mark') %]
 [%+ go("Configure", "$home/pf/config/", 'mark') %]
 [%+ go("Show source", "$home/pf/cms/source.tt", 'mark') %]
-[%+ go("Admin mode", "$home/pf/cms/source.tt", 'mark') %]
+
+[% IF req.session.admin_mode %]
+   [%+ go("Turn Admin off", me, 'session_vars_update', session_vars_update='admin_mode', admin_mode=0) %]
+[% ELSE %]
+   [%+ go("Turn Admin on", me, 'session_vars_update', session_vars_update='admin_mode', admin_mode=1) %]
+[% END %]
+
 </p>
 </div>
