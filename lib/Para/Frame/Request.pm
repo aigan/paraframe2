@@ -417,7 +417,7 @@ sub set_language
 {
     my( $req, $language_in ) = @_;
 
-#    carp "Setting language";
+#    debug "Setting language";
     $req->{'lang'} = $Para::Frame::CFG->{'l10n_class'}->set( $language_in )
       or die "Couldn't set language";
 }
@@ -1189,7 +1189,7 @@ sub referer_query
 	    $uri = Para::Frame::URI->new($uri);
 	    last if $uri->host_port ne $req->host_with_port;
 
-	    if( my $query = $uri->query )
+	    if( defined( my $query = $uri->query) )
 	    {
 		debug "Referer query from current http req ($query)";
 		return $query;
@@ -1202,7 +1202,7 @@ sub referer_query
 	    $uri = Para::Frame::URI->new($uri);
 	    last if $uri->host_port ne $req->host_with_port;
 
-	    if( my $query = $uri->query )
+	    if( defined(my $query = $uri->query) )
 	    {
 		debug "Referer query from original http req";
 		return $query;
