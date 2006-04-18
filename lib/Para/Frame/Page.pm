@@ -1005,6 +1005,11 @@ sub add_params
 	while( my($key, $val) = each %$extra )
 	{
 	    next if $param->{$key};
+	    unless( defined $val )
+	    {
+		debug "The TT param $key has no defined value";
+		next;
+	    }
 	    $param->{$key} = $val;
 	    debug(4,"Add TT param $key: $val") if $val;
 	}
@@ -1013,6 +1018,11 @@ sub add_params
     {
 	while( my($key, $val) = each %$extra )
 	{
+	    unless( defined $val )
+	    {
+		debug "The TT param $key has no defined value";
+		next;
+	    }
 	    $param->{$key} = $val;
 	    debug(4,"Add TT param $key: $val");
 	}
@@ -1858,7 +1868,7 @@ sub set_tt_params
 	'me'              => $page->url_path_full,
 
 	'u'               => $Para::Frame::U,
-	'lang'            => $req->{'lang'}->preferred, # calculate once
+	'lang'            => $req->language->preferred, # calculate once
 	'req'             => $req,
 
 	# Is allowed to change between requests
