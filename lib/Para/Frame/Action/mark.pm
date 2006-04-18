@@ -31,7 +31,8 @@ sub handler
     my @run = $q->param('run');
     $q->delete('run');
 
-    $route->bookmark( uri $req->referer, store_params );
+#    $route->bookmark( uri $req->referer, store_params );
+    $route->bookmark( $req->referer_with_query );
 
     $q->param('run', grep {$_ ne 'mark'} @run );
 
