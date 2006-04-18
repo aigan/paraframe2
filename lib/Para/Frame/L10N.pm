@@ -113,6 +113,7 @@ sub set
     my $site_languages = $req->page->site->languages;
     unless( @$site_languages )
     {
+	debug 2, "  No site language specified";
 	my @alternatives = 'en';
 	my $lh = $this->get_handle( @alternatives );
 	$lh->{'alternatives'} = \@alternatives;
@@ -457,7 +458,7 @@ sub preferred
 	}
     }
 
-    return $site->languages->[0];
+    return $site->languages->[0] || 'en';
 }
 
 =head2 alternatives
