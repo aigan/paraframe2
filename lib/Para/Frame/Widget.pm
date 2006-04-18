@@ -47,7 +47,7 @@ BEGIN
 
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( trim throw debug );
+use Para::Frame::Utils qw( trim throw debug uri store_params );
 
 =head1 DESCRIPTION
 
@@ -1014,6 +1014,7 @@ sub confirm_simple
     my $req = $Para::Frame::REQ;
     my $q = $req->q;
     my $site = $req->site;
+    my $page = $req->page;
 
     foreach my $confirmed ( $q->param('confirmed') )
     {
@@ -1022,9 +1023,12 @@ sub confirm_simple
     }
 
     ## Set up route, confirmation data and throw exception
+    # Sets the CURRENT as the next step, and with the CURRENT params
+    #
+    $req->session->route->plan_next(uri($page->url_path_full, store_params()));
 
-    $req->session->route->bookmark;
-    $req->page->set_error_template($site->home.'/confirm.tt');
+
+    $page->set_error_template($site->home.'/confirm.tt');
     my $result = $req->result;
     my $home = $req->site->home;
 
