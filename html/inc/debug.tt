@@ -26,7 +26,7 @@
 
 <h4>Route</h4>
 <ol>
-[% FOREACH step = route %]
+[% FOREACH step = route.list %]
 <li>
    [% step %]
    [% IF loop.last %]
