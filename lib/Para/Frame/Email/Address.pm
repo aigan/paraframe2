@@ -122,6 +122,16 @@ Returns a string using L<Mail::Address/address>
 
 sub as_string { $_[0]->{addr}->address }
 
+=head2 user
+
+  $a->user
+
+Returns a string using L<Mail::Address/user>
+
+=cut
+
+sub user { $_[0]->{addr}->user }
+
 =head2 address
 
   $a->address
