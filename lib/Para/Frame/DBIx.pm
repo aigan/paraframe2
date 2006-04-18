@@ -596,6 +596,21 @@ sub connect
     return 1;
 }
 
+=head2 disconnect
+
+  $dbix->disconnect()
+
+Disconnect from the DB
+
+=cut
+
+sub disconnect
+{
+    my( $dbix ) = @_;
+
+    return $dbix->{'dbh'}->disconnect;
+}
+
 =head2 commit
 
   $dbix->commit()
