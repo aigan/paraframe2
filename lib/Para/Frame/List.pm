@@ -118,6 +118,8 @@ sub new
 
     $OBJ{$l} = $p;
 
+    $l->init;
+
     return $l;
 }
 
@@ -129,6 +131,57 @@ sub DESTROY
     delete $OBJ{$l};
 
     return 1;
+}
+
+
+#######################################################################
+
+=head2 init
+
+  $l->init
+
+Called by L</new> for additional initializing. Subclasses can use this
+for filling the list with data or adding more properties. The object
+is an array ref of the actual list. All other properties resides in
+$Para::Frame::List::OBJ{$l}
+
+=cut
+
+sub init
+{
+    # Reimplement this
+}
+
+
+#######################################################################
+
+=head2 hashref
+
+  $l->hashref
+
+Returns $Para::Frame::List::OBJ{$l}
+
+=cut
+
+sub hashref
+{
+    return $OBJ{$_[0]};
+}
+
+
+#######################################################################
+
+=head2 as_list
+
+  $l->as_list
+
+Same as $l in itself, except that it returns a list rather than a listref if wantarray.
+
+=cut
+
+sub as_list
+{
+    return wantarray ? @{$_[0]} : $_[0];
 }
 
 
@@ -645,8 +698,10 @@ sub get_all
     my( $l ) = @_;
     my $obj = $OBJ{$l};
 
-    my($index) = $obj->{INDEX};
+    my($index) = $obj->{INDEX}||0;
     my @data;
+
+    debug "get_all - index $index max $#$l";
 
     # if there's still some data to go...
     if ($index < $#$l)
