@@ -25,39 +25,52 @@
    [% END %]
 [% END %]
 
-[% MACRO searchstep(label) BLOCK %]
-   [% DEFAULT label='Sök' %]
-   [% submit(label) %]
-   [%+ backstep('Fortsätt med nästa sak', 1) %]
-   [% IF route.size %]
-      [%+ regret %]
-   [% END %]
-[% END %]
+[% MACRO searchstep(label) BLOCK;
+      DEFAULT label='Sök';
+      submit(label);
+      IF route.caller_is_next_step;
+         regret;
+      ELSE;
+         backstep('Fortsätt med nästa sak', 1);
+         IF route.size;
+            regret;
+         END;
+      END;
+   END;
+%]
 
-[% MACRO actionstep(label) BLOCK %]
-   [% UNLESS label %]
-      [% IF uri_path(form_action) == me %]
-         [% label = "Spara" %]
-      [% ELSE %]
-         [% label = "Spara och fortsätt" %]
-      [% END %]
-   [% END %]
-   [% submit(label) %]
-   [%+ backstep %]
-   [% IF route.size %]
-      [%+ regret %]
-   [% END %]
-[% END %]
+[% MACRO actionstep(label) BLOCK;
+      UNLESS label;
+         IF uri_path(form_action) == me;
+            label = "Spara";
+         ELSE;
+            label = "Spara och fortsätt";
+         END;
+      END;
+      submit(label);
+      IF route.caller_is_next_step;
+         regret;
+      ELSE;
+         backstep;
+         IF route.size;
+            regret;
+         END;
+      END;
+   END;
+%]
 
-[% MACRO nostep(label) BLOCK %]
-   [% DEFAULT label='Fortsätt med nästa sak' %]
-   [% IF route.size %]
-      [%+ backstep(label) %]
-      [%+ regret('Hoppa över nästa sak') %]
-   [% ELSE %]
-      [%+ backstep(label) %]
-   [% END %]
-[% END %]
+[% MACRO nostep(label) BLOCK;
+      DEFAULT label='Fortsätt med nästa sak';
+      IF route.caller_is_next_step;
+         backstep(label);
+      ELSIF route.size;
+         backstep(label);
+         regret('Hoppa över nästa sak');
+      ELSE;
+         backstep(label);
+      END;
+   END;
+%]
 
 
 [% MACRO regret(label) BLOCK %]
@@ -126,20 +139,16 @@
       [% current = q.param(name) %]
    [% END %]
   <select name="[% name|html %]">
-  [% IF valkey %]
+  [%+ IF valkey %]
      [% DEFAULT tagkey = valkey -%]
      [%- IF header %]<option value="">[% header|html %]</option>[% END -%]
      [% FOREACH row IN data %]
-        <option value="[% row.$valkey %]"
-           [%- 'selected' IF row.$valkey == current -%]
-        >[% row.$tagkey %]</option>
-     [%- END %]
+        <option value="[% row.$valkey %]"[% ' selected' IF row.$valkey == current %]>[% row.$tagkey %]</option>
+     [%+ END %]
   [% ELSE %]
      [% FOREACH key IN data.keys.sort %]
-        <option value="[% key %]"
-           [%- 'selected' IF key == current -%]
-        >[% data.$key %]</option>
-     [% END %]
+        <option value="[% key %]"[% ' selected' IF key == current %]>[% data.$key %]</option>
+     [%+ END %]
   [% END %]
   </select>
 [% END %]
