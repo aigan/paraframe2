@@ -38,6 +38,7 @@ use Para::Frame::Reload;
 use Para::Frame::Request;
 use Para::Frame::URI;
 use Para::Frame::Utils qw( throw uri debug store_params );
+use Para::Frame::List;
 
 =head1 DESCRIPTION
 
@@ -107,21 +108,6 @@ bottom of the route stack, rather than on top.
 =cut
     ;
 
-sub on_configure
-{
-    # Called during compilation
-
-    Para::Frame->add_global_tt_params({
-	'plan_backtrack'  => sub{ $Para::Frame::REQ->s->route->plan_backtrack(@_) },
-	'plan'            => sub{ $Para::Frame::REQ->s->route->plan_next(@_) },
-	'plan_next'       => sub{ $Para::Frame::REQ->s->route->plan_next(@_) },
-	'plan_after'      => sub{ $Para::Frame::REQ->s->route->plan_after(@_) },
-	'default_step'    => sub{ $Para::Frame::REQ->s->route->default },
-	'route'           => sub{ $Para::Frame::REQ->s->route->{'route'} },
-    });
-}
-
-#######################################################################
 
 =head2 plan_backtrack
 
@@ -168,11 +154,8 @@ sub plan_next
     my( $route, $urls ) = @_;
 
     $urls = [$urls] unless UNIVERSAL::isa($urls, 'ARRAY');
-    my $referer = $Para::Frame::REQ->referer_with_query;
 
-
-
-    my $caller_uri = Para::Frame::URI->new( $referer );
+    my $caller_uri = $route->caller_uri;
 
     foreach my $url_in ( @$urls )
     {
@@ -180,13 +163,27 @@ sub plan_next
 	my $url = Para::Frame::URI->new($url_norm);
 
 	# Used in skip_step...
-	$url->query_param_append('caller_page' => $caller_uri )
-	    unless $url->query_param('caller_page');
+	my $url_clean = $url->clone;
+	if( $url->query_param('caller_page') )
+	{
+	    $url_clean->query_param_delete('caller_page');
+	}
+	else
+	{
+	    $url->query_param_append('caller_page' => $caller_uri );
+	}
 
 	debug(1,"!!New step in route: $url");
 
-	next if $route->{'route'}[-1] and $url->eq($route->{'route'}[-1]);
+	if( my $prev_uri_clean = $route->{'route_clean'}[-1] )
+	{
+	    if( $prev_uri_clean->eq( $url_clean ) )
+	    {
+		next;
+	    }
+	}
 	push @{$route->{'route'}}, $url;
+	push @{$route->{'route_clean'}}, $url_clean;
     }
 }
 
@@ -208,8 +205,8 @@ sub plan_after
     my( $route, $urls ) = @_;
 
     $urls = [$urls] unless UNIVERSAL::isa($urls, 'ARRAY');
-    my $referer = $Para::Frame::REQ->referer_with_query;
-    my $caller_uri = Para::Frame::URI->new( $referer );
+
+    my $caller_uri = $route->caller_uri;
 
     foreach my $url_in ( @$urls )
     {
@@ -217,14 +214,51 @@ sub plan_after
 	my $url = Para::Frame::URI->new($url_norm);
 
 	# Used in skip_step...
-	$url->query_param_append('caller_page' => $caller_uri )
-	    unless $url->query_param('caller_page');
+	my $url_clean = $url->clone;
+	if( $url->query_param('caller_page') )
+	{
+	    $url_clean->query_param_delete('caller_page');
+	}
+	else
+	{
+	    $url->query_param_append('caller_page' => $caller_uri );
+	}
 
-	debug(1,"!!New last step in route: $url");
+	debug(1,"!!New step in route: $url");
 
-	next if $route->{'route'}[0] and $url->eq($route->{'route'}[0]);
+	if( my $prev_uri_clean = $route->{'route_clean'}[-1] )
+	{
+	    if( $prev_uri_clean->eq( $url_clean ) )
+	    {
+		next;
+	    }
+	}
 	unshift @{$route->{'route'}}, $url;
+	unshift @{$route->{'route_clean'}}, $url_clean;
     }
+}
+
+
+
+
+#######################################################################
+
+=head2 caller_uri
+
+  $route->caller_uri
+
+Returns the caller_uri, excluding actions, as an L<URI> obj.
+
+=cut
+
+sub caller_uri
+{
+    my( $route ) = @_;
+
+    my $referer = $Para::Frame::REQ->referer_with_query;
+    my $caller_uri = Para::Frame::URI->new( $referer );
+    $caller_uri->query_param_delete('run');
+    return $caller_uri;
 }
 
 
@@ -256,6 +290,7 @@ sub clear
     my( $route ) = @_;
 
     $route->{'route'} = [];
+    $route->{'route_clean'} = [];
     return 1;
 }
 
@@ -352,22 +387,16 @@ sub check_backtrack
     {
 #	warn "-- no backtracking!\n" if $DEBUG;
 
+	### TODO: Not needed anymore?!?
+
       CHECK:
 	{
 	    # Remove last step if it's equal to curent place, including params
 	    my $last_step = $route->{'route'}[-1];
 	    $last_step = Para::Frame::URI->new($last_step) unless UNIVERSAL::isa($last_step, 'URI');
 
-#	my $lsp = $last_step->path;
-#	my $qsp = $req->uri;
-#	warn "-- comparing $lsp to $qsp\n";
-
 	    if( $last_step->path eq $req->template_uri )
 	    {
-#	    my $lsq = $last_step->query;
-#	    my $qsq = $req->q->query_string;
-#	    warn "-- comparing $lsq to $qsq\n";
-
 		if( $last_step->query eq $req->q->query_string )
 		{
 		    debug(1,"--Removing a step, since it's equal to this one");
@@ -405,25 +434,24 @@ sub bookmark
 
     my $req = $Para::Frame::REQ;
 
-    $uri_str ||= $req->uri;
-    my $norm_uri = $req->normalized_uri( $uri_str );
+    my $norm_uri = $req->normalized_uri( $uri_str || $req->referer_with_query );
 
 
     # This should default to the PREVIUS page in most cases
     my $uri = Para::Frame::URI->new($norm_uri );
-    my $q = $req->q;
 
-    if( $q->param )
+    debug(1,"!!Ads a bookmark");
+
+    if( $uri->query_param )
     {
-	debug(1,"!!Puts a bookmark with query params");
+	debug(1,"!!  with query params");
 	my @pairs;
-	foreach my $key ( $q->param )
+	foreach my $key ( $uri->query_param )
 	{
-	    foreach my $val ( $q->param($key) )
-	    {
-		# Skip complex values, like file upload
-		next if ref $val;
+	    next if $key eq 'run'; ### Skip run param!
 
+	    foreach my $val ( $uri->query_param($key) )
+	    {
 		push @pairs, $key => $val;
 	    }
 	}
@@ -459,17 +487,18 @@ sub get_next
 
     my $req = $Para::Frame::REQ;
     my $page = $req->page;
+    my $q = $req->q;
 
     my $default = $route->default || $req->site->home_path;
 
     if( my $step = pop @{$route->{'route'}} )
     {
-#	warn "  Next step is $step\n";
+	pop @{$route->{'route_clean'}};
+
+	warn "  Next step is $step\n";
 	$step = Para::Frame::URI->new($step) unless UNIVERSAL::isa($step, 'URI');
 	my $query = $step->query || '';
-#	warn "    step query is $query\n";
-
-	my $q = $req->q;
+	warn "    step query is $query\n";
 
 	# Modify step withe these params
 	my %args_replace;
@@ -512,10 +541,12 @@ sub get_next
     {
 	debug(1,"!!  No more steps in route");
 	debug 1, "!!    Using default step, breaking path";
+	$q->delete_all;
 	$page->set_template($default);
     }
     else
     {
+	$q->delete_all;
 	debug(1,"!!  No more steps in route");
 	if( $page->template_uri ne $req->referer )
 	{
@@ -562,6 +593,8 @@ sub skip_step
 
     if( my $step = pop @{$route->{'route'}} )
     {
+	pop @{$route->{'route_clean'}};
+
 	debug(1,"!!    back step one");
 
 	$step = Para::Frame::URI->new($step) unless UNIVERSAL::isa($step, 'URI');
@@ -610,11 +643,45 @@ sub remove_step
 
     if( my $step = pop @{$route->{'route'}} )
     {
+	pop @{$route->{'route_clean'}};
 	debug(1,"!!removed next step");
     }
 }
 
 
+#######################################################################
+
+=head2 caller_is_next_step
+
+  $route->caller_is_next_step
+
+True if the next steps caller page also is the next step
+
+=cut
+
+sub caller_is_next_step
+{
+    my( $route ) = @_;
+
+    debug "is caller also the next step?";
+    if( my $step = $route->{'route'}[-1] )
+    {
+	$step = Para::Frame::URI->new($step) unless UNIVERSAL::isa($step, 'URI');
+	my $caller_page = Para::Frame::URI->new($step->query_param('caller_page'))
+	    or die "caller_page missing from $step";
+	my $next = $step->path;
+	my $caller = $caller_page->path;
+	debug "Comparing $caller with $next";
+	if( $next eq $caller )
+	{
+	    return 1;
+	}
+    }
+    return 0;
+}
+
+
+#######################################################################
 
 sub clear_special_params
 {
@@ -647,9 +714,13 @@ Return the number of steps in route
 
 sub steps
 {
-    my( $route ) = @_;
+    return scalar @{$_[0]->{'route'}};
+}
 
-    return scalar( @{$route->{'route'}} );
+
+sub size
+{
+    return scalar @{$_[0]->{'route'}};
 }
 
 
@@ -670,6 +741,10 @@ sub default
     return $Para::Frame::REQ->site->last_step;
 }
 
+
+
+#######################################################################
+
 sub replace_query
 {
     my( $this, $q, $query_string ) = @_;
@@ -688,6 +763,10 @@ sub replace_query
     return $q;
 }
 
+
+
+#######################################################################
+
 sub debug_query
 {
     ### DEBUG
@@ -703,7 +782,33 @@ sub debug_query
 	    debug(1,"    $val");
 	}
     }
- }
+}
+
+
+#######################################################################
+
+sub list
+{
+    return Para::Frame::List->new($_[0]->{'route'});
+}
+
+#######################################################################
+
+sub on_configure
+{
+    # Called during compilation
+
+    Para::Frame->add_global_tt_params({
+	'plan_backtrack'  => sub{ $Para::Frame::REQ->s->route->plan_backtrack(@_) },
+	'plan'            => sub{ $Para::Frame::REQ->s->route->plan_next(@_) },
+	'plan_next'       => sub{ $Para::Frame::REQ->s->route->plan_next(@_) },
+	'plan_after'      => sub{ $Para::Frame::REQ->s->route->plan_after(@_) },
+	'default_step'    => sub{ $Para::Frame::REQ->s->route->default },
+	'route'           => sub{ $Para::Frame::REQ->s->route },
+    });
+}
+
+#######################################################################
 
 1;
 
