@@ -91,7 +91,7 @@ sub parse
     if( UNIVERSAL::isa $email_str_in, "Para::Frame::Email::Address" )
     {
 	# We are upgrading to a superclass
-	die "check this";
+	confess "check this";
 	$addr = $email_str_in->{'addr'};
     }
     else
