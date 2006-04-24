@@ -705,13 +705,42 @@ sub input
     $value ||= '';
 
     my $extra = "";
+    my $prefix = "";
+    my $separator = "";
+    if( my $tdlabel = delete $params->{'tdlabel'} )
+    {
+	$separator = "<td>";
+	$params->{'label'} = $tdlabel;
+    }
+    if( my $label = delete $params->{'label'} )
+    {
+	my $prefix_extra = "";
+	if( my $class = $params->{'label_class'} )
+	{
+	    $prefix_extra .= sprintf " class=\"%s\"",
+	    CGI->escapeHTML( $class );
+	}
+	$prefix .= sprintf('<label for="%s"%s>%s</label>',
+			   CGI->escapeHTML( $key ),
+			   $prefix_extra,
+			   CGI->escapeHTML($label),
+			   );
+	$params->{id} = $key;
+    }
+
     foreach my $key ( keys %$params )
     {
 	$extra .= sprintf " $key=\"%s\"",
 	  CGI->escapeHTML( $params->{$key} );
     }
 
-    return sprintf('<input name="%s" value="%s" size="%s" maxlength="%s"%s />',
+    if( $prefix )
+    {
+	$prefix .= $separator;
+    }
+
+    return sprintf('%s<input name="%s" value="%s" size="%s" maxlength="%s"%s />',
+		   $prefix,
                    CGI->escapeHTML( $key ),
                    CGI->escapeHTML( $value ),
                    CGI->escapeHTML( $size ),
