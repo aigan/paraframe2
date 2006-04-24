@@ -67,7 +67,7 @@ BEGIN
             elapsed_time uri store_params clear_params add_params
             restore_params idn_encode idn_decode debug reset_hashref
             timediff extract_query_params fqdn retrieve_from_url
-            get_from_fork );
+            get_from_fork datadump );
 
 }
 
@@ -1521,6 +1521,32 @@ sub validate
     my( $value, $type ) = @_;
 
     die "not implemented";
+}
+
+
+
+=head2 datadump
+
+  datadump( $value, $maxdepth )
+
+=cut
+
+sub datadump
+{
+    my( $ref, $maxdepth ) = @_;
+
+    if( $maxdepth )
+    {
+	my $old = $Data::Dumper::Maxdepth;
+	$Data::Dumper::Maxdepth = $maxdepth;
+	my $out = Dumper($ref);
+	$Data::Dumper::Maxdepth = $old;
+	return $out;
+    }
+    else
+    {
+	return Dumper($ref);
+    }
 }
 
 
