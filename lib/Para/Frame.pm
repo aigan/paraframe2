@@ -1744,7 +1744,7 @@ sub set_global_tt_params
     my $params =
     {
 	'cfg'             => $Para::Frame::CFG,
-	'dump'            => \&Dumper,
+	'dump'            => \&Para::Frame::Utils::datadump,
 	'warn'            => sub{ warn($_[0],"\n");"" },
 	'debug'           => sub{ debug(@_) },
 	'emergency_mode'  => sub{ $Para::Frame::Watchdog::EMERGENCY_MODE },
