@@ -1860,9 +1860,6 @@ sub set_tt_params
 
     # Keep alredy defined params  # Static within a request
     $page->add_params({
-	'q'               => $req->{'q'},
-	'ENV'             => $req->env,
-
 	'page'            => $page,
 
 	'me'              => $page->url_path_full,
@@ -1875,6 +1872,14 @@ sub set_tt_params
 	'site'            => $site,
 	'home'            => $site->home,
     });
+
+    if( $req->{'q'} )
+    {
+	$page->add_params({
+			   'q'               => $req->{'q'},
+			   'ENV'             => $req->env,
+			  });
+    }
 
     # Add local site params
     if( $site->params )
