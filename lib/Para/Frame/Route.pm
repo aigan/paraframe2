@@ -663,7 +663,6 @@ sub caller_is_next_step
 {
     my( $route ) = @_;
 
-    debug "is caller also the next step?";
     if( my $step = $route->{'route'}[-1] )
     {
 	$step = Para::Frame::URI->new($step) unless UNIVERSAL::isa($step, 'URI');
