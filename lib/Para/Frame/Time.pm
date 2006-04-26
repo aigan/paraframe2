@@ -31,7 +31,7 @@ use strict;
 use Carp qw( cluck carp );
 use Data::Dumper;
 use Date::Manip;
-use DateTime;# 0.3;
+use DateTime; # Should use 0.3, but not required
 use DateTime::Duration;
 use DateTime::Span;
 
@@ -382,8 +382,6 @@ C<$format> can be a format for L<DateTime::Format::Strptime> or a
 DateTime formatter as explained in L<DateTime/Formatters And
 Stringification>. If you call it with '1', it will use C<time_format>
 from L<Para::Frame/configure>.
-
-TODO: stringification not activated yet...
 
 =cut
 
