@@ -206,6 +206,8 @@ expand the C<$content>.
 For collapsed state, the class C<paraframe_expand> is used and for the
 expanded state, the class C<paraframe_expanded> is used.
 
+See L<Template::Manual::Directives/Processing Other Template Files and Blocks>
+
 =head2 tr2
 
 Draws a html C<tr> with the class C<odd> or C<even> for usage in a
