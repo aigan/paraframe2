@@ -12,7 +12,7 @@ package Para::Frame::Time;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -28,7 +28,7 @@ Para::Frame::Time - Parses, calculates and presents dates and times
 # Override Time::Piece with some new things
 use strict;
 #use POSIX qw(locale_h);
-use Carp qw( cluck );
+use Carp qw( cluck carp );
 use Data::Dumper;
 use Date::Manip;
 use DateTime;
@@ -43,9 +43,12 @@ BEGIN
 
 use base qw( DateTime );
 
+
+# These are set in Para::Frame->configure
 # Use timezone only for presentation. Not for date calculations
-our $TZ;     # Default Timezone, set in Para::Frame->configure
-our $FORMAT; # Default presentation format.
+our $TZ;         # Default Timezone
+our $FORMAT;     # Default format
+our $STRINGIFY;  # Default format used for stringification
 
 our @EXPORT_OK = qw(internet_date date now timespan duration ); #for docs only
 
@@ -140,6 +143,7 @@ Returns a C<Para::Frame::Time> object representing current time.
 
 sub now
 {
+#    carp "Para::Frame::now called";
     Para::Frame::Time->SUPER::now();
 }
 
@@ -230,6 +234,7 @@ sub internet_date
 
 sub cdate
 {
+    die "depprecated";
 
     # TODO: Remove me. This is not realy a cdate format. Used for
     # fromatting dates for the DB. Change to use the specific dbix
@@ -248,7 +253,8 @@ Returns a string using the format given by L<Para::Frame/configure>.
 
 sub format_datetime
 {
-    $_[0]->clone->set_time_zone($TZ)->strftime($FORMAT)
+#    warn "In format $FORMAT: ".Dumper($_[0]);
+    return $FORMAT->format_datetime($_[0]);
 }
 
 =head2 stamp
@@ -290,6 +296,23 @@ sub plain
     $_[0]->format_datetime;
 }
 
+=head2 loc
+
+  $t->loc
+
+Same as L</format_datetime>
+
+TODO: Localize format
+
+=cut
+
+sub loc($)
+{
+    return $_[0]->format_datetime;
+}
+
+
+
 =head2 sysdesig
 
   $t->sysdesig
@@ -317,7 +340,7 @@ Returns a unique predictable id representing this object
 
 sub syskey
 {
-    return $_[0]->iso8601;
+    return "time:".$_[0]->iso8601;
 }
 
 
@@ -343,6 +366,67 @@ sub equals
 }
 
 
+
+#######################################################################
+
+=head2 set_stringify
+
+  $class->set_stringify( 1 )
+
+  $class->set_stringify( $format )
+
+Sets the format for autostringification of all new dates.
+
+C<$format> can be a format for L<DateTime::Format::Strptime> or a
+DateTime formatter as explained in L<DateTime/Formatters And
+Stringification>. If you call it with '1', it will use C<time_format>
+from L<Para::Frame/configure>.
+
+TODO: stringification not activated yet...
+
+=cut
+
+sub set_stringify
+{
+    my( $this, $format ) = @_;
+
+    my $class = ref($this) || $this;
+
+    if( $format )
+    {
+	if( $format =~ /%/ )
+	{
+	    $STRINGIFY = DateTime::Format::Strptime->
+		new(
+		    pattern => $Para::Frame::CFG->{'time_format'},
+		    time_zone => $TZ,
+		    locale => $Para::Frame::CFG->{'locale'},
+		   );
+	}
+	elsif( ref $format )
+	{
+	    $STRINGIFY = $format;
+	}
+	elsif( $format == 1 )
+	{
+	    $STRINGIFY = $FORMAT;
+	}
+	elsif( not $format )
+	{
+	    undef $STRINGIFY;
+	}
+	else
+	{
+	    die "Format malformed: $format";
+	}
+    }
+
+    return $STRINGIFY;
+}
+
+
+
+
 ############################################################
 ############################################################
 #
@@ -365,7 +449,7 @@ sub equals
 # Add overload for stringify in DateTime::Span
 
 package DateTime::Span;
-    
+
 use overload
     (
     '""' => '_stringify_overload',
@@ -376,7 +460,7 @@ sub _stringify_overload
 {
     my $start = $_[0]->start;
     my $end   = $_[0]->end;
-    
+
     return "$start - $end";
 }
 
