@@ -44,6 +44,7 @@ BEGIN
     our @EXPORT_OK = qw( pgbool );
 }
 
+our $STATE_RECONNECTING; # Special temporary dbix state
 
 
 =head1 DESCRIPTION
@@ -379,8 +380,7 @@ sub select_list
 	$sth->execute($dbix->format_value_list(@vals));
 	$ref =  $sth->fetchall_arrayref({});
 	$sth->finish;
-    };
-    report_error("Select list",\@vals);
+    } or return $dbix->report_error(\@vals, $st,@vals);
     return Para::Frame::List->new($ref);
 }
 
@@ -435,8 +435,7 @@ sub select_record
 	$ref =  $sth->fetchrow_hashref
 	    or die "Found ".$sth->rows()." rows\nSQL: $st";
 	$sth->finish;
-    };
-    report_error("Select record",\@vals);
+    } or return $dbix->report_error(\@vals, $st, @vals);
     return $ref;
 }
 
@@ -470,7 +469,7 @@ dbi : DBI returned error
 
 sub select_possible_record
 {
-    my( $dbix, $statement, @vals ) = @_;
+    my( $dbix, $st, @vals ) = @_;
     #
     # Return list or records
 
@@ -480,17 +479,16 @@ sub select_possible_record
     }
 
     my $ref;
-    throw('incomplete','no parameter to statement') unless $statement;
-    $statement = "select * ".$statement if $statement !~/^\s*select\s/i;
+    throw('incomplete','no parameter to statement') unless $st;
+    $st = "select * ".$st if $st !~/^\s*select\s/i;
 
     eval
     {
-	my $sth = $dbix->dbh->prepare( $statement );
+	my $sth = $dbix->dbh->prepare( $st );
 	$sth->execute( $dbix->format_value_list(@vals) );
 	$ref =  $sth->fetchrow_hashref;
 	$sth->finish;
-    };
-    report_error("Select possible record",\@vals);
+    } or return $dbix->report_error(\@vals, $st,@vals);
     return $ref;
 }
 
@@ -550,8 +548,7 @@ sub select_key
 	    $rh->{$r->{$keyf}} = $r;
 	}
 	$sth->finish;
-    };
-    report_error("Select key",\@vals);
+    } or return $dbix->report_error(\@vals, $keyf, $st, @vals);
     return $rh;
 }
 
@@ -822,8 +819,7 @@ sub update
 	debug "SQL: $st\nValues: ".join ", ",map defined($_)?"'$_'":'<undef>', @values;
 	$sth->finish;
 	die "Nothing updated" unless $sth->rows;
-    };
-    report_error("Update",\@values);
+    } or return $dbix->report_error(\@values, $table, $set, $where);
     return $sth->rows;
 }
 
@@ -906,8 +902,7 @@ sub insert
 	$sth = $dbix->dbh->prepare($st);
 	$sth->execute( @values );
 	$sth->finish;
-    };
-    report_error("Insert",\@values);
+    } or return $dbix->report_error(\@values, $table, $rec);
     return $sth->rows;
 }
 
@@ -1524,41 +1519,72 @@ sub save_record
 	{
 	    my $sth = $dbix->dbh->prepare( $statement );
 	    $sth->execute( @values, @$keyval );
-	};
-	report_error("Save record",[@values,@$keyval]);
+	} or return $dbix->report_error([@values, @$keyval], $param);
     }
 
     return scalar @fields; # The number of changes
 }
 
-
-############ functions
-
 =head2 report_error
 
-  report_error( $title, \@values )
+  report_error( \@values, @params )
 
-If $@ is true, throws a C<dbi> exception, adding the title and the
-list of values. Those should be the values given to dbh for the SQL
-query.
+If $@ is true, throws a C<dbi> exception, adding the calles sub name
+and the list of values. Those should be the values given to dbh for
+the SQL query.
+
+If the connection may have been lost, tries to reestablish it and
+recalls the method with statement and values.
 
 =cut
 
 sub report_error
 {
-    my( $title, $vals ) = @_;
+    my( $dbix, $valref ) = (shift, shift);
     if( $@ )
     {
-	debug(0,"DBIx $title error");
+	my( $subroutine ) = (caller(1))[3];
+	$subroutine =~ s/.*:://;
+
+	debug(0,"DBIx $subroutine error");
 	$@ =~ s/ at \/.*//;
 	my $error = catch($@);
 	my $info = $error->info;
 	chomp $info;
+
+	debug "Error number: $DBI::err";
+	debug "Status: $DBI::state";
+	unless( $STATE_RECONNECTING or $dbix->dbh->ping )
+	{
+	    $STATE_RECONNECTING = 1;
+	    debug "Ping failed. Should reconnect";
+	    debug "Called from $subroutine";
+
+	    debug "Reconnecting to DB";
+	    eval
+	    {
+		$dbix->connect;
+	    } or do
+	    {
+		debug "Still no connection!";
+		debug "I'll try to restart the server";
+		Para::Frame->do_hup;
+		die $@;
+	    };
+
+	    my $res = $dbix->$subroutine(@_);
+	    $STATE_RECONNECTING = 0;
+	    return $res;
+	}
+
 	my $at = "...".shortmess();
-	my $values = join ", ",map defined($_)?"'$_'":'<undef>', @$vals;
+	my $values = join ", ",map defined($_)?"'$_'":'<undef>', @$valref;
 	throw('dbi', "$info\nValues: $values\n$at");
     }
 }
+
+
+############ functions
 
 =head2 pgbool
 
