@@ -30,7 +30,7 @@ use strict;
 #use POSIX qw(locale_h);
 use Carp qw( cluck carp );
 use Data::Dumper;
-use Date::Manip;
+use Date::Manip; # UnixDate
 use DateTime; # Should use 0.3, but not required
 use DateTime::Duration;
 use DateTime::Span;
@@ -93,9 +93,23 @@ sub get
 {
     my( $this, $time ) = @_;
 
-    return $time if UNIVERSAL::isa $time, "DateTime";
-
     return undef unless $time;
+
+
+    my $class = ref($this) || $this;
+    if( UNIVERSAL::isa $time, "DateTime" )
+    {
+	if( UNIVERSAL::isa $time, $class )
+	{
+	    return $time;
+	}
+	else
+	{
+	    # Rebless in right class. (May be subclass)
+	    return bless $time, $class;
+	}
+    }
+
 
     debug(3,"Parsing date '$time'");
 
@@ -130,6 +144,7 @@ sub get
     }
     my $to = $this->from_epoch( epoch => $date );
     $STRINGIFY and $to->set_formatter($STRINGIFY);
+    $to->set_time_zone($TZ);
     debug(4,"Finaly: $to");
     return $to;
 }
