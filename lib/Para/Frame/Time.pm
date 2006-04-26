@@ -31,7 +31,7 @@ use strict;
 use Carp qw( cluck carp );
 use Data::Dumper;
 use Date::Manip;
-use DateTime;
+use DateTime;# 0.3;
 use DateTime::Duration;
 use DateTime::Span;
 
@@ -129,6 +129,7 @@ sub get
 	}
     }
     my $to = $this->from_epoch( epoch => $date );
+    $STRINGIFY and $to->set_formatter($STRINGIFY);
     debug(4,"Finaly: $to");
     return $to;
 }
