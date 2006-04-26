@@ -34,6 +34,7 @@ use Data::Dumper;
 use Carp qw( cluck confess carp croak );
 use Sys::CpuLoad;
 use DateTime::TimeZone;
+use DateTime::Format::Strptime;
 
 our $VERSION;
 our $CVSVERSION;
@@ -1273,6 +1274,17 @@ sub add_global_tt_params
     }
 }
 
+=head2 do_hup
+
+Will tell watchdog to restart server by forking.
+
+=cut
+
+sub do_hup
+{
+    $TERMINATE = 'HUP';
+}
+
 sub write_pidfile
 {
     my( $pid ) = @_;
@@ -1323,6 +1335,11 @@ Configures paraframe before startup. The configuration is stored in
 C<$Para::Frame::CFG>
 
 These configuration params are used:
+
+=head3 locale
+
+Specifies what to set LC_ALL to, except LC_NUMERIC that is set to
+C.  The default is sv_SE.
 
 =head3 debug
 
@@ -1389,6 +1406,10 @@ Sets the default presentation of times using
 L<Para::Frame::Time/format_datetime>
 
 Defaults to C<%Y-%m-%d %H.%M>
+
+=head3 time_stringify
+
+Calls L<Para::Frame::Time/set_stringify> with the param.
 
 =head3 umask
 
@@ -1471,7 +1492,7 @@ There are three standard burners.
 
 Example for adding a filter to the html burner:
 
-  Para::Frame::Burner->get('html')->add_filters({
+  Para::Frame::Burner->get_by_type('html')->add_filters({
       'upper_case' => sub{ return uc($_[0]) },
   });
 
@@ -1492,13 +1513,14 @@ sub configure
     $PARAMS     = {};
     $INDENT     = 0;
 
+    $CFG = $cfg_in; # Assign to global var
+
     $ENV{PATH} = "/usr/bin:/bin";
 
     # Init locale
-    setlocale(LC_ALL, "sv_SE");
+    $CFG->{'locale'} ||= "sv_SE";
+    setlocale(LC_ALL, $CFG->{'locale'});
     setlocale(LC_NUMERIC, "C");
-
-    $CFG = $cfg_in; # Assign to global var
 
     ### Set main debug level
     $DEBUG = $CFG->{'debug'} || 0;
@@ -1524,7 +1546,15 @@ sub configure
 	DateTime::TimeZone->new( name => $CFG->{'time_zone'} );
 
     $CFG->{'time_format'} ||= "%Y-%m-%d %H.%M";
-    $Para::Frame::Time::FORMAT = $CFG->{'time_format'};
+    $Para::Frame::Time::FORMAT = DateTime::Format::Strptime->
+      new(
+	  pattern => $CFG->{'time_format'},
+	  time_zone => $Para::Frame::Time::TZ,
+	  locale => $CFG->{'locale'},
+	 );
+
+    $CFG->{'time_stringify'} ||= 0;
+    Para::Frame::Time->set_stringify($CFG->{'time_stringify'});
 
     $CFG->{'umask'} ||= 0007;
     umask($CFG->{'umask'});
