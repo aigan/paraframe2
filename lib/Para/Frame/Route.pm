@@ -434,29 +434,27 @@ sub bookmark
 
     my $req = $Para::Frame::REQ;
 
-    my $norm_uri = $req->normalized_uri( $uri_str || $req->referer_with_query );
-
+    $uri_str ||= uri($req->page->url_path_full, store_params);
+#    my $norm_uri = $req->normalized_uri( $uri_str || $req->referer_with_query );
 
     # This should default to the PREVIUS page in most cases
-    my $uri = Para::Frame::URI->new($norm_uri );
+    my $uri = Para::Frame::URI->new($uri_str );
 
     debug(1,"!!Ads a bookmark");
 
-    if( $uri->query_param )
-    {
-	debug(1,"!!  with query params");
-	my @pairs;
-	foreach my $key ( $uri->query_param )
-	{
-	    next if $key eq 'run'; ### Skip run param!
-
-	    foreach my $val ( $uri->query_param($key) )
-	    {
-		push @pairs, $key => $val;
-	    }
-	}
-	$uri->query_form( @pairs );
-    }
+#    if( $uri->query_param )
+#    {
+#	debug(1,"!!  with query params");
+#	my @pairs;
+#	foreach my $key ( $uri->query_param )
+#	{
+#	    foreach my $val ( $uri->query_param($key) )
+#	    {
+#		push @pairs, $key => $val;
+#	    }
+#	}
+#	$uri->query_form( @pairs );
+#    }
     $route->plan_next($uri);
 }
 
@@ -518,15 +516,25 @@ sub get_next
 
 	foreach my $key ( keys %args_replace )
 	{
-	    debug "replacing param $key with ".$q->param($key);
-	    $q->param( $key, @{ $args_replace{$key} } );
+	    if( @{ $args_replace{$key} } )
+	    {
+		debug "replacing param $key with @{[$q->param($key)]}";
+		$q->param( $key, @{ $args_replace{$key} } );
+	    }
+	    else
+	    {
+		$q->delete($key);
+	    }
 	}
 
 	foreach my $key ( keys %args_add )
 	{
-	    debug "adding to param $key with ".$q->param($key);
-	    my @vals = $q->param( $key );
-	    $q->param( $key, @{ $args_add{$key} }, @vals );
+	    if( @{ $args_replace{$key} } )
+	    {
+		debug "adding to param $key with ".$q->param($key);
+		my @vals = $q->param( $key );
+		$q->param( $key, @{ $args_add{$key} }, @vals );
+	    }
 	}
 
 #	debug_query("AFTER");
