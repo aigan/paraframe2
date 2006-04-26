@@ -261,7 +261,7 @@ C<%filters> is a hash with the filter name and the coderef.
 
 Example:
 
-  Para::Frame::Burner->get('html')->add_filters({
+  Para::Frame::Burner->get_by_type('html')->add_filters({
       'upper_case' => sub{ return uc($_[0]) },
   });
 
