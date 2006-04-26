@@ -738,7 +738,7 @@ sub equals
   $dbix->format_datetime( $time )
 
 This uses the C<datetime_formatter> property of $dbix (as set on
-construction) for transforming the time to a format suitable for with
+construction) for returning the time to a format suitable for
 the database.
 
 It will parse most formats using L<Para::Frame::Time/get>. Especially
@@ -758,8 +758,8 @@ sub format_datetime
 {
     my( $dbix, $time ) = @_;
     return undef unless $time;
-    $time = Para::Frame::Time->get( $time );
-    return $dbix->{'datetime_formatter'}->format_datetime($time);
+    return $dbix->{'datetime_formatter'}->
+	format_datetime(Para::Frame::Time->get( $time ));
 }
 
 =head2 update
