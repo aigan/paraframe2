@@ -364,7 +364,8 @@ sub pagelist
 
 #    debug "From $startpage -> $endpage";
 
-    my $id = $l->id;
+    # If 0, the caller should have taken care of caching in another way
+    my $id = $l->id || 0;
 
     my $page = $req->page;
     my $me = $page->url_path_full;
