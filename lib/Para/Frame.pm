@@ -1544,6 +1544,7 @@ sub configure
     $CFG->{'time_zone'} ||= "local";
     $Para::Frame::Time::TZ =
 	DateTime::TimeZone->new( name => $CFG->{'time_zone'} );
+    debug "Timezone set to ".$Para::Frame::Time::TZ->name;
 
     $CFG->{'time_format'} ||= "%Y-%m-%d %H.%M";
     $Para::Frame::Time::FORMAT = DateTime::Format::Strptime->
