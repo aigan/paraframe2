@@ -142,12 +142,24 @@ sub get
 	    throw('validation', "Time format '$time' not recognized");
 	}
     }
+
     my $to = $this->from_epoch( epoch => $date );
-    $STRINGIFY and $to->set_formatter($STRINGIFY);
-    $to->set_time_zone($TZ);
-    debug(4,"Finaly: $to");
-    return $to;
+    return $to->init;
 }
+
+=head2 init
+
+=cut
+
+sub init
+{
+    $STRINGIFY and $_[0]->set_formatter($STRINGIFY);
+    $_[0]->set_time_zone($TZ);
+    if(debug > 4){ debug "Finaly: $_[0]" };
+    return $_[0];
+}
+
+
 
 =head2 now
 
@@ -160,7 +172,7 @@ Returns a C<Para::Frame::Time> object representing current time.
 sub now
 {
 #    carp "Para::Frame::now called";
-    Para::Frame::Time->SUPER::now();
+    return bless(DateTime->now)->init;
 }
 
 =head2 date
