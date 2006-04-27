@@ -74,7 +74,9 @@ sub import
 =head1 DESCRIPTION
 
 This is a subclass to L<DateTime>, it automaticly strinigifies using
-L</format_datetime>.
+L</format_datetime> (?).
+
+TODO: Check what it uses for stringification...
 
 =cut
 
@@ -86,6 +88,17 @@ Parses C<$any_type_of_date> and returns a C<Para::Frame::Time> object.
 
 This handles among other things, swedish and english dates, as
 recognized by L<Date::Manip/ParseDateString>.
+
+The object is set to use the current locale and current timezone for display.
+
+Make sure that the C<$any_type_of_date> has the timezone defined.
+Dates with an unspecified timezone will be asumed to be in the local
+timezone (and not in UTC). This means that dates and times parsed from
+HTML forms will be taken to be the local time.
+
+If you parse dates from a SQL database, make sure it has a defiend
+timezone, or is in the local timezone, or set the timezone yourself
+BEFORE you call this method.
 
 =cut
 
