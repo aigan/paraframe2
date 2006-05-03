@@ -1542,9 +1542,7 @@ sub configure
     # $Para::Frame::Time::TZ is set at startup from:
     #
     $CFG->{'time_zone'} ||= "local";
-    $Para::Frame::Time::TZ =
-	DateTime::TimeZone->new( name => $CFG->{'time_zone'} );
-    debug "Timezone set to ".$Para::Frame::Time::TZ->name;
+    Para::Frame::Time->set_timezone($CFG->{'time_zone'});
 
     $CFG->{'time_format'} ||= "%Y-%m-%d %H.%M";
     $Para::Frame::Time::FORMAT = DateTime::Format::Strptime->
