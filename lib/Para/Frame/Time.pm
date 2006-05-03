@@ -30,10 +30,12 @@ use strict;
 #use POSIX qw(locale_h);
 use Carp qw( cluck carp );
 use Data::Dumper;
-use Date::Manip; # UnixDate
+use Date::Manip; # UnixDate ParseDate
 use DateTime; # Should use 0.3, but not required
 use DateTime::Duration;
 use DateTime::Span;
+use DateTime::Format::Strptime;
+use DateTime::Format::HTTP;
 
 BEGIN
 {
@@ -46,14 +48,15 @@ use base qw( DateTime );
 
 # These are set in Para::Frame->configure
 # Use timezone only for presentation. Not for date calculations
-our $TZ;         # Default Timezone
-our $FORMAT;     # Default format
-our $STRINGIFY;  # Default format used for stringification
+our $TZ;           # Default Timezone
+our $FORMAT;       # Default format
+our $STRINGIFY;    # Default format used for stringification
+our $LOCAL_PARSER; # For use with Date::Manip
 
 our @EXPORT_OK = qw(internet_date date now timespan duration ); #for docs only
 
 use Para::Frame::Reload; # This code is mingled with DateTime...
-use Para::Frame::Utils qw( throw debug );
+use Para::Frame::Utils qw( throw debug datadump );
 
 no warnings 'redefine';
 sub import
@@ -68,6 +71,11 @@ sub import
     my $callpkg = caller();
     no strict 'refs'; # Symbolic refs
     *{"$callpkg\::$_"} = \&{"$class\::$_"} foreach @_;
+
+
+    $LOCAL_PARSER =
+      DateTime::Format::Strptime->new( pattern => '%Y-%m-%dT%H:%M:%S',
+				       time_zone => 'floating');
 }
 
 
@@ -114,29 +122,50 @@ sub get
     {
 	if( UNIVERSAL::isa $time, $class )
 	{
+	    #debug "Keeping date '$time'";
 	    return $time;
 	}
 	else
 	{
 	    # Rebless in right class. (May be subclass)
+	    #debug "Reblessing date '$time'";
 	    return bless $time, $class;
 	}
     }
 
-
-    debug(3,"Parsing date '$time'");
+    #debug "Parsing date '$time'";
 
     my $date;
     if( $time =~ /^\d{7,}$/ )
     {
-	$date = $time;
+	$date = DateTime->from_epoch( epoch => $time );
     }
     else
     {
-	$time =~ s/^(\d{4}-\d{2}-\d{2} \d{2})\.(\d{2})$/$1:$2:00/; # Make date more recognizable
-	$date = UnixDate($time, '%s');
+	#debug "Parsing with standard format";
+
+	eval{ $date = $FORMAT->parse_datetime($time) };
     }
-    debug(5,"Epoch: $date");
+
+    unless( $date )
+    {
+	#debug "Parsing common formats";
+
+	if( $time =~ s/([\+\-]\d\d)\s*$/${1}00/ )
+	{
+	    #debug "Reformatted date to '$time'";
+	}
+
+	eval{ $date = DateTime::Format::HTTP->parse_datetime( $time, $TZ ) };
+    }
+
+    unless( $date )
+    {
+	# Parsing in local timezone
+	#debug "Parsing universal as in a local timezone";
+	$date = $LOCAL_PARSER->parse_datetime(UnixDate($time,"%O"));
+    }
+
     unless( $date )
     {
  	# Try once more, in english
@@ -144,8 +173,7 @@ sub get
 	debug(1,"Trying in english...");
 	Date_Init("Language=English");
 
-	$date = UnixDate($time, '%s');
-	debug(1,"Epoch: $date");
+	$date = $LOCAL_PARSER->parse_datetime(UnixDate($time,"%O"));
 
 	Date_Init("Language=$cur_lang"); # Reset language
 
@@ -156,8 +184,7 @@ sub get
 	}
     }
 
-    my $to = $this->from_epoch( epoch => $date );
-    return $to->init;
+    return bless($date, $class)->init;
 }
 
 =head2 init
@@ -166,9 +193,10 @@ sub get
 
 sub init
 {
+    #debug "Initiating date: $_[0]";
     $STRINGIFY and $_[0]->set_formatter($STRINGIFY);
     $_[0]->set_time_zone($TZ);
-    if(debug > 4){ debug "Finaly: $_[0]" };
+    #debug "Finaly: $_[0]";
     return $_[0];
 }
 
@@ -185,7 +213,9 @@ Returns a C<Para::Frame::Time> object representing current time.
 sub now
 {
 #    carp "Para::Frame::now called";
-    return bless(DateTime->now)->init;
+    my $now = bless(DateTime->now)->init;
+#    debug "Para::Frame::now returning '$now'";
+    return $now;
 }
 
 =head2 date
@@ -407,7 +437,6 @@ sub equals
 }
 
 
-
 #######################################################################
 
 =head2 set_stringify
@@ -438,7 +467,7 @@ sub set_stringify
 	    $STRINGIFY = DateTime::Format::Strptime->
 		new(
 		    pattern => $Para::Frame::CFG->{'time_format'},
-		    time_zone => $TZ,
+#		    time_zone => $TZ,
 		    locale => $Para::Frame::CFG->{'locale'},
 		   );
 	}
@@ -460,7 +489,39 @@ sub set_stringify
 	}
     }
 
+    debug "Stringify now set";
+
     return $STRINGIFY;
+}
+
+
+
+
+#######################################################################
+
+=head2 set_timezone
+
+  $class->set_timezone( ... )
+
+Calls L<DateTime::TimeZone/new> with the first param as the C<name>.
+
+Sets up the environment with the given timezone.
+
+Returns the L<DateTime::TimeZone> object.
+
+=cut
+
+sub set_timezone
+{
+    my( $this, $name ) = @_;
+
+    $TZ = DateTime::TimeZone->new( name => $name );
+    debug "Timezone set to ".$TZ->name;
+
+
+#    # TODO; DO NOT USE Date::Manip anymore :(
+#    die "fixme";
+#    Date_Init("TZ=");
 }
 
 
