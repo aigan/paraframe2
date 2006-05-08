@@ -529,7 +529,7 @@ sub get_next
 
 	foreach my $key ( keys %args_add )
 	{
-	    if( @{ $args_replace{$key} } )
+	    if( @{ $args_add{$key} } )
 	    {
 		debug "adding to param $key with ".$q->param($key);
 		my @vals = $q->param( $key );
