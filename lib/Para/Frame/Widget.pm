@@ -48,6 +48,7 @@ BEGIN
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( trim throw debug uri store_params );
+use Para::Frame::L10N qw( loc );
 
 =head1 DESCRIPTION
 
@@ -294,10 +295,12 @@ sub submit
 
     die "Too many args for submit()" if $attr and not ref $attr;
 
-    $label ||= 'Fortsätt';
+    $label ||= 'Continue';
     $attr ||= {};
 
     my $extra = "";
+
+    my $label_out = loc($label);
 
     if( my $class = $attr->{'href_class'} )
     {
