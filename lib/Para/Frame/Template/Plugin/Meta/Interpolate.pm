@@ -35,6 +35,18 @@ the translation function.
 If value starts with a '-', the rest of value will be evaluated as a TT
 expression. (No expressions are normally allowed in META.)
 
+It does not sets the variable if it's already true. That enables you
+to set it in another way.
+
+=head2 Example
+
+  [* META otitle = '-otitle=["[_1]s administration pages", site.name]' *]
+
+The normal use is to set the variable with the result of the template
+output. But to give complex values to a variable, like a list, you can
+do it as above.
+
+
 =cut
 
 #warn "$$: Compiling Para::Frame::Template::Plugin::Meta::Interpolate\n";
@@ -62,7 +74,10 @@ sub new
 	    my $src = $st.' '.$1.' '.$et;
 #	    warn "$$: Parsing $template->{$key} => $src\n";
 	    $val = $context->process( \$src, {} );
-	    $stash->set($key, $val);
+	    unless( $stash->get($key) )
+	    {
+		$stash->set($key, $val);
+	    }
 	}
 	else
 	{
