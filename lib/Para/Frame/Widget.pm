@@ -310,7 +310,7 @@ sub submit
     my $name = '';
     $name = "name=\"$setval\"" if $setval;
 
-    return "<input type=\"submit\" $name value=\"$label\">";
+    return "<input type=\"submit\" $name value=\"$label_out\">";
 }
 
 #######################################################################
