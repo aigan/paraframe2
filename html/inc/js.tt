@@ -13,12 +13,7 @@ function showhide(whichLayer) {
         if( style2.display != 'none' ) {
             style2.display = 'none';
         } else {
-            style2.display = 'block';
-// <!--[if !IE]>
-            if( tag2 == 'TR' ) {
-		style2.display = 'table-row';
-            }
-// <![endif]-->
+            style2.display = '';
         }
     }
 }
