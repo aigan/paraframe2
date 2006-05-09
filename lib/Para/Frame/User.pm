@@ -289,6 +289,8 @@ sub logout
     debug(3,"User are now ".$Para::Frame::U->name);
 
     $class->clear_cookies;
+    $req->session->after_user_logout;
+
 
     # Do not run hook if we are on guest level
     Para::Frame->run_hook($req, 'after_user_logout')
