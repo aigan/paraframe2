@@ -97,6 +97,7 @@ sub new
 	template_error => '', # Default
         list           => {},
         listid         => 1,
+        admin_mode     => 0,
     }, $class;
 
     # Register s
@@ -301,6 +302,20 @@ sub admin_mode
 {
     return $_[0]->{'admin_mode'};
 }
+
+
+=head2 after_user_logout
+
+Is called after a user logout
+
+=cut
+
+sub after_user_logout
+{
+    $_[0]->{'admin_mode'} = 0;
+}
+
+
 
 
 
