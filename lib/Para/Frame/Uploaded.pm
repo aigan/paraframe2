@@ -18,7 +18,7 @@ package Para::Frame::Uploaded;
 
 =head1 NAME
 
-Para::Frame::Connection - Class for uploaded files
+Para::Frame::Uploaded - Class for uploaded files
 
 =cut
 
