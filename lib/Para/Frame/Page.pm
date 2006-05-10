@@ -9,7 +9,7 @@ package Para::Frame::Page;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -48,6 +48,8 @@ use Encode qw( is_utf8 );
 use File::Basename; # exports fileparse, basename, dirname
 use File::stat; # exports stat
 use File::Slurp; # Exports read_file, write_file, append_file, overwrite_file, read_dir
+use Scalar::Util qw(weaken);
+use Data::Dumper;
 
 BEGIN
 {
@@ -56,7 +58,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw debug create_dir chmod_file idn_encode idn_decode );
+use Para::Frame::Utils qw( throw debug create_dir chmod_file idn_encode idn_decode datadump );
 use Para::Frame::Request::Ctype;
 use Para::Frame::URI;
 use Para::Frame::L10N qw( loc );
@@ -72,33 +74,40 @@ been registred. (Done by L<Para::Frame>.)
 
 sub new
 {
-    my( $this ) = @_;
+    my( $this, $req ) = @_;
     my $class = ref($this) || $this;
+    ref $req or die "req missing";
 
     my $page = bless
     {
-	headers        => [],             ## Headers to be sent to the client
-	uri            => undef,
-	template       => undef,          ## if diffrent from URI
-	template_uri   => undef,          ## if diffrent from URI
-	error_template => undef,          ## if diffrent from template
-	moved_temporarily => 0,           ## ... or permanently?
-	redirect       => undef,          ## ... to other server
-	ctype          => undef,          ## The response content-type
-	in_body        => 0,              ## flag then headers sent
-	page_content   => undef,          ## Ref to the generated page
-	page_sender    => undef,          ## The mode of sending the page
-	incpath        => undef,
-	dirsteps       => undef,
-	params         => undef,
-	renderer       => undef,
-	site           => undef,          ## The site for the request
+     headers        => [],             ## Headers to be sent to the client
+     uri            => undef,
+     template       => undef,          ## if diffrent from URI
+     template_uri   => undef,          ## if diffrent from URI
+     error_template => undef,          ## if diffrent from template
+     moved_temporarily => 0,           ## ... or permanently?
+     redirect       => undef,          ## ... to other server
+     ctype          => undef,          ## The response content-type
+     in_body        => 0,              ## flag then headers sent
+     page_content   => undef,          ## Ref to the generated page
+     page_sender    => undef,          ## The mode of sending the page
+     incpath        => undef,
+     dirsteps       => undef,
+     params         => undef,
+     renderer       => undef,
+     site           => undef,          ## The site for the request
+     req            => $req,
     }, $class;
+    weaken( $page->{'req'} );
+
 
     $page->{'params'} = {%$Para::Frame::PARAMS};
 
     return $page;
 }
+
+sub req { $_[0]->{'req'} }
+
 
 =head2 init
 
@@ -113,7 +122,7 @@ sub init
 {
     my( $page ) = @_;
 
-    my $req = $Para::Frame::REQ;
+    my $req = $page->req;
 
     my $site_name = $req->dirconfig->{'site'} || $req->host_from_env;
     $page->{'site'} = Para::Frame::Site->get( $site_name );
@@ -341,7 +350,7 @@ The path and filename from system root.
 
 sub sys_path_tmpl
 {
-    return $Para::Frame::REQ->uri2file($_[0]->{'template'});
+    return $_[0]->req->uri2file($_[0]->{'template'});
 }
 
 =head2 sys_dir
@@ -409,7 +418,7 @@ The site must use the same host as the request.
 sub set_site
 {
     my( $page, $site_in ) = @_;
-    my $req = $Para::Frame::REQ;
+    my $req = $page->req;
 
     my $site = Para::Frame::Site->get( $site_in );
 
@@ -464,7 +473,7 @@ sub error_page_not_selected
 sub find_template
 {
     my( $page, $template ) = @_;
-    my $req = $Para::Frame::REQ;
+    my $req = $page->req;
 
     debug(2,"Finding template $template");
     my( $in );
@@ -748,12 +757,10 @@ sub fallback_error_page
 {
     my( $page ) = @_;
 
-    my $req = $Para::Frame::REQ;
-
     my $out = "";
     $out .= "<p>500: Failure to render failure page\n";
     $out .= "<pre>\n";
-    $out .= $req->result->as_string;
+    $out .= $page->req->result->as_string;
     $out .= "</pre>\n";
     if( my $backup = $page->site->backup_host )
     {
@@ -805,8 +812,7 @@ sub set_uri
     # Only used by Para::Frame to set uri from original uri. Never
     # changes from that original uri.
 
-    my $req = $Para::Frame::REQ;
-    $uri_in ||= $req->{'orig_uri'};
+    $uri_in ||= $page->req->{'orig_uri'};
 
     my $uri = Para::Frame::URI->new($uri_in);
 
@@ -829,7 +835,7 @@ sub uri
   $page->set_template( $template, $always_move_flag )
 
 C<$template> should be the URL path including the filename. This can
-later be retrieved by L</utl_path_tmpl>.
+later be retrieved by L</url_path_tmpl>.
 
 Redirection to other pages can be done by using this method. Even from
 inside a page being generated.
@@ -887,7 +893,7 @@ sub set_template
 
     $page->{'moved_temporarily'} ||= 1 unless $always_move;
 
-    my $file = $Para::Frame::REQ->uri2file( $template );
+    my $file = $page->req->uri2file( $template );
     debug(3,"The template $template represents the file $file");
     if( -d $file )
     {
@@ -923,10 +929,17 @@ sub set_template
 
 =head2 set_error_template
 
-  $page->set_error_template( $template )
+  $page->set_error_template( $path_tmpl )
 
 Calls L</set_template> for setting the template. Sets a flag for
 remembering that this is an error response page.
+
+NB! Should be called with a L</path_tmpl> and not a
+L<url_path_tmpl>. We will prepend the L<Para::Frame::Site/home>
+part.
+
+This is done because we may change site that displays the error page.
+That also means that the site changed to must find that template.
 
 =cut
 
@@ -935,7 +948,7 @@ sub set_error_template
     my( $page, $error_tt ) = @_;
 
     # We want to set the error in the original request
-    if( my $req = $Para::Frame::REQ->original )
+    if( my $req = $page->req->original )
     {
 	if( $req->page ne $page )
 	{
@@ -945,7 +958,9 @@ sub set_error_template
 	debug "The original request had the same page obj";
     }
 
-    return $page->{'error_template'} = $page->set_template( $error_tt );
+    my $home = $page->site->home;
+    return $page->{'error_template'} =
+      $page->set_template( $home . $error_tt );
 }
 
 =head2 ctype
@@ -970,7 +985,7 @@ sub ctype
 
     unless( $page->{'ctype'} )
     {
-	$page->{'ctype'} = Para::Frame::Request::Ctype->new();
+	$page->{'ctype'} = Para::Frame::Request::Ctype->new($page->req);
     }
 
     if( $content_type )
@@ -1063,7 +1078,7 @@ sub render_output
 {
     my( $page ) = @_;
 
-    my $req = $Para::Frame::REQ;
+    my $req = $page->req;
 
     ### Output page
     my $client = $req->client;
@@ -1136,8 +1151,7 @@ sub render_output
 		    if( $error->info =~ /not found/ )
 		    {
 			debug "Subtemplate not found";
-			$new_error_tt = $error_tt =
-			    $site->home.'/page_part_not_found.tt';
+			$new_error_tt = $error_tt = '/page_part_not_found.tt';
 			my $incpathstring = join "", map "- $_\n", @{$req->{'incpath'}};
 			$part->add_message("Include path is\n$incpathstring");
 		    }
@@ -1145,7 +1159,7 @@ sub render_output
 		    {
 			debug "Other template error";
 			$part->type('template');
-			$new_error_tt = $error_tt = $site->home.'/error.tt';
+			$new_error_tt = $error_tt = '/error.tt';
 		    }
 		    debug $error->as_string();
 		}
@@ -1154,7 +1168,7 @@ sub render_output
 		    if( $req->session->u->level == 0 )
 		    {
 			# Ask to log in
-			$new_error_tt = $error_tt = $site->home."/login.tt";
+			$new_error_tt = $error_tt = "/login.tt";
 			$req->result->hide_part('denied');
 			unless( $req->{'no_bookmark_on_failed_login'} )
 			{
@@ -1163,19 +1177,18 @@ sub render_output
 		    }
 		    else
 		    {
-			$new_error_tt = $error_tt = $site->home."/denied.tt";
+			$new_error_tt = $error_tt = "/denied.tt";
 			$req->session->route->plan_next($req->referer);
 		    }
 		}
 		elsif( $error->type eq 'notfound' )
 		{
-		    $new_error_tt = $error_tt =
-			$site->home."/page_not_found.tt";
+		    $new_error_tt = $error_tt = "/page_not_found.tt";
 		    $page->set_http_status(404);
 		}
 		else
 		{
-		    $new_error_tt = $error_tt = $site->home.'/error.tt';
+		    $new_error_tt = $error_tt = '/error.tt';
 		}
 	    }
 
@@ -1231,7 +1244,7 @@ sub precompile
 {
     my( $page, $srcfile, $destfile_web, $args ) = @_;
 
-    my $req = $Para::Frame::REQ;
+    my $req = $page->req;
 
     $args ||= {};
 
@@ -1298,6 +1311,7 @@ sub precompile
     if( $error )
     {
 	debug "ERROR WHILE PRECOMPILING PAGE";
+	debug 2, $error;
 	my $part = $req->result->exception($error);
 	if( ref $error and $error->info =~ /not found/ )
 	{
@@ -1316,7 +1330,7 @@ sub send_output
 {
     my( $page ) = @_;
 
-    my $req = $Para::Frame::REQ;
+    my $req = $page->req;
 
     # Forward if URL differs from template_url
 
@@ -1387,7 +1401,7 @@ sub send_output
 sub forward
 {
     my( $page, $uri ) = @_;
-    my $req = $Para::Frame::REQ;
+    my $req = $page->req;
 
     # Should only be called AFTER the page has been generated
 
@@ -1475,7 +1489,7 @@ sub redirection
 sub output_redirection
 {
     my( $page, $uri_in ) = @_;
-    my $req = $Para::Frame::REQ;
+    my $req = $page->req;
 
     $uri_in or die "URI missing";
 
@@ -1526,7 +1540,7 @@ sub output_redirection
 	$req->send_code( 'AR-PUT', 'header_out', 'Cache-Control', 'no-cache' );
     }
     $req->send_code( 'AR-PUT', 'header_out', 'Location', $uri_out );
-    
+
     my $out = "Go to $uri_out\n";
     my $length = length( $out );
 
@@ -1539,16 +1553,15 @@ sub output_redirection
 sub set_http_status
 {
     my( $page, $status ) = @_;
-    my $req = $Para::Frame::REQ;
     return 0 if $status < 100;
-    return $req->send_code( 'AR-PUT', 'status', $status );
+    return $page->req->send_code( 'AR-PUT', 'status', $status );
 }
 
 sub send_headers
 {
     my( $page ) = @_;
 
-    my $req = $Para::Frame::REQ;
+    my $req = $page->req;
 
     my $client = $req->client;
 
@@ -1578,7 +1591,7 @@ sub send_in_chunks
 {
     my( $page, $dataref ) = @_;
 
-    my $req = $Para::Frame::REQ;
+    my $req = $page->req;
 
     my $client = $req->client;
     my $length = length($$dataref);
@@ -1691,13 +1704,15 @@ path_full defaults to the current template dir. It must end with a
 sub set_dirsteps
 {
     my( $page, $path_full ) = @_;
-    my $req = $Para::Frame::REQ;
+    my $req = $page->req;
 
     $path_full ||= $req->uri2file( dirname( $page->template ) . "/" ) . "/";
     my $path_home = $req->uri2file( $page->site->home  . "/" );
     debug 3, "Setting dirsteps for $path_full";
     undef $page->{'incpath'};
-    return $page->{'dirsteps'} = [ Para::Frame::Utils::dirsteps( $path_full, $path_home ) ];
+    $page->{'dirsteps'} = [ Para::Frame::Utils::dirsteps( $path_full, $path_home ) ];
+#    cluck "dirsteps for $_[0] set to ".Dumper($page->{'dirsteps'}); ### DEBUG
+    return $page->{'dirsteps'};
 }
 
 =head2 dirsteps
@@ -1715,6 +1730,7 @@ sub dirsteps
 
 sub set_incpath
 {
+#    cluck "incpath for $_[0] set to ".Dumper($_[1]); ### DEBUG
     return $_[0]->{'incpath'} = $_[1];
 }
 
@@ -1722,6 +1738,82 @@ sub incpath
 {
     return $_[0]->{'incpath'};
 }
+
+
+=head2 paths
+
+  $page->paths()
+
+Automaticly called by L<Template::Provider> via L<Para::Frame::Burner>
+to get the include paths for building pages from templates.
+
+=cut
+
+sub paths
+{
+    my( $page, $burner ) = @_;
+
+    unless( $page->incpath )
+    {
+	my $type = $burner->{'type'};
+
+	my $site = $page->site;
+	my $subdir = 'inc' . $burner->subdir_suffix;
+
+ 	my $path_full = $page->dirsteps->[0];
+	my $destroot = $page->req->uri2file($site->home.'/');
+	my $dir = $path_full;
+	unless( $dir =~ s/^$destroot// )
+	{
+	    warn "destroot $destroot not part of $dir";
+	    warn Dumper $page->dirsteps;
+	    warn datadump($page,2);
+	    die;
+	}
+	my $paraframedir = $Para::Frame::CFG->{'paraframe'};
+	my $htmlsrc = $site->htmlsrc;
+	my $backdir = $site->is_compiled ? '/dev' : '/html';
+
+	debug 3, "Creating incpath for $dir with $backdir under $destroot ($type)";
+
+	my @searchpath;
+
+	foreach my $step ( Para::Frame::Utils::dirsteps($dir), '/' )
+	{
+	    debug 4, "Adding $step to path";
+
+	    push @searchpath, $htmlsrc.$step.$subdir.'/';
+
+	    foreach my $appback (@{$site->appback})
+	    {
+		push @searchpath, $appback.$backdir.$step.$subdir.'/';
+	    }
+
+	    if( $site->is_compiled )
+	    {
+		push @searchpath,  $paraframedir.'/dev'.$step.$subdir.'/';
+	    }
+
+	    push @searchpath,  $paraframedir.'/html'.$step.'inc/';
+	}
+
+
+	$page->set_incpath([ @searchpath ]);
+
+
+	if( debug > 2 )
+	{
+	    my $incpathstring = join "", map "- $_\n", @{$page->incpath};
+	    debug "Include path:";
+	    debug $incpathstring;
+	}
+
+    }
+
+    return $page->incpath;
+}
+
+
 
 =head2 set_renderer
 
@@ -1854,8 +1946,7 @@ sub set_tt_params
 {
     my( $page ) = @_;
 
-    my $req = $Para::Frame::REQ;
-
+    my $req = $page->req;
     my $site = $page->site;
 
     # Keep alredy defined params  # Static within a request
