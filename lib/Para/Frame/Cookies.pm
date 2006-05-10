@@ -27,6 +27,7 @@ use Carp;
 use vars qw( $VERSION );
 use CGI::Cookie;
 use Data::Dumper;
+use Scalar::Util qw(weaken);
 
 BEGIN
 {
@@ -54,6 +55,7 @@ For B<reading> cookies sent by the client, use the L</hash> method.
 sub new
 {
     my( $class, $req ) = @_;
+    ref $req or die "req missing";
 
     my $cookie_hash = {};
     if( $req->env->{'HTTP_COOKIE'} )
@@ -61,12 +63,18 @@ sub new
 	$cookie_hash = scalar parse CGI::Cookie( $req->env->{'HTTP_COOKIE'} );
     }
 
-    return bless
+    my $cookies = bless
     {
-	added => [],
-	hash  => $cookie_hash,
+     added => [],
+     hash  => $cookie_hash,
+     req   => $req,
     }, $class;
+
+    weaken($cookies->{'req'});
+    return $cookies;
 }
+
+sub req    { $_[0]->{'req'} }
 
 sub added  { $_[0]->{'added'} }
 
@@ -85,7 +93,7 @@ sub add_to_header
     my( $cookies ) = @_;
 
     my $added = $cookies->added;
-    my $page = $Para::Frame::REQ->page;
+    my $page = $cookies->req->page;
 
     unless( UNIVERSAL::isa($page, 'Para::Frame::Page') )
     {
@@ -116,17 +124,18 @@ sub add
 {
     my( $cookies, $settings, $extra ) = @_;
 
-    my $q = $Para::Frame::REQ->q;
+    my $req   = $cookies->req;
+    my $q     = $req->q;
     my $added = $cookies->added;
 
     $extra ||= {};
 
-    unless( $Para::Frame::REQ->page )
+    unless( $req->page )
     {
 	confess "no page";
     }
 
-    $extra->{-path} ||= $Para::Frame::REQ->site->home_path;
+    $extra->{-path} ||= $req->site->home_path;
 
     foreach my $key ( keys %$settings )
     {
@@ -159,7 +168,7 @@ sub remove
 {
     my $cookies = shift;
 
-    my $req = 
+    my $req = $cookies->req;
 
     my( $list, $extra );
 
@@ -174,7 +183,7 @@ sub remove
     }
 
     $extra ||= {};
-    $extra->{-path} ||= $Para::Frame::REQ->site->home_path;
+    $extra->{-path} ||= $req->site->home_path;
     $extra->{-expires} ||= "-1h";
 
 
@@ -182,7 +191,7 @@ sub remove
 
     foreach my $key ( @$list )
     {
-	push @$added, $Para::Frame::REQ->q->cookie( -name  => $key,
+	push @$added, $req->q->cookie( -name  => $key,
 						    -value => 'none',
 						    %$extra,
 						  );
