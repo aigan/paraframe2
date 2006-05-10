@@ -9,7 +9,7 @@ package Para::Frame::Session;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -24,8 +24,6 @@ Para::Frame::Session - Session handling
 =cut
 
 use strict;
-use CGI;
-use FreezeThaw qw( thaw );
 
 BEGIN
 {
@@ -54,6 +52,11 @@ L<Para::Frame/session_class>.
 sub new
 {
     my( $class, $req ) = @_;
+
+    # $req should not be used, since object has a longer life, right?!
+    # ... But we want to find the session cookies...
+
+    $req ||= $Para::Frame::REQ;
 
     my( $s, $sid, $active );
 
@@ -88,16 +91,16 @@ sub new
 
     $s =  bless
     {
-	sid            => $sid,
-	active         => $active,
-	created        => $now,
-	latest         => $now,
-	user           => undef,
-	debug          => $Para::Frame::CFG->{'debug'},
-	template_error => '', # Default
-        list           => {},
-        listid         => 1,
-        admin_mode     => 0,
+     sid            => $sid,
+     active         => $active,
+     created        => $now,
+     latest         => $now,
+     user           => undef,
+     debug          => $Para::Frame::CFG->{'debug'},
+     template_error => '', # Default
+     list           => {},
+     listid         => 1,
+     admin_mode     => 0,
     }, $class;
 
     # Register s
