@@ -1060,7 +1060,7 @@ sub confirm_simple
     $req->session->route->plan_next(uri($page->url_path_full, store_params()));
 
 
-    $page->set_error_template($site->home.'/confirm.tt');
+    $page->set_error_template('/confirm.tt');
     my $result = $req->result;
     my $home = $req->site->home;
 
