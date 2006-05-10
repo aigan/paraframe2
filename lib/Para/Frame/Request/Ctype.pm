@@ -24,6 +24,7 @@ Para::Frame::Request::Ctype - The request response content type
 
 use strict;
 use Carp qw( cluck );
+use Scalar::Util qw(weaken);
 
 BEGIN
 {
@@ -42,22 +43,22 @@ You get this object by using L<Para::Frame::Page/ctype>.
 
 sub new
 {
-    my( $class, $string ) = @_;
+    my( $class, $req ) = @_;
+    ref $req or die "req missing";
 
     my $ctype =  bless
     {
-	ctype   => undef,
-	charset => undef,
-	changed => 0,
+     ctype   => undef,
+     charset => undef,
+     changed => 0,
+     req     => $req,
     }, $class;
-
-    if( $string )
-    {
-	$ctype->set( $string );
-    }
+    weaken( $ctype->{'req'} );
 
     return $ctype;
 }
+
+sub req    { $_[0]->{'req'} }
 
 =head2 set
 
@@ -172,7 +173,7 @@ sub commit
 {
     my( $ctype ) = @_;
 
-    # Set default 
+    # Set default
     #
     unless( $ctype->{'charset'} )
     {
@@ -184,7 +185,7 @@ sub commit
     {
 	my $string = $ctype->as_string;
 	debug(3,"Setting ctype string to $string");
-	$Para::Frame::REQ->send_code( 'AR-PUT', 'content_type', $string);
+	$ctype->req->send_code( 'AR-PUT', 'content_type', $string);
 	$ctype->{'changed'} = 0;
     }
     return 1;
