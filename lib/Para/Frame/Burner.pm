@@ -23,7 +23,7 @@ Para::Frame::Burner - Creates output from a template
 =cut
 
 use strict;
-use Carp qw( croak );
+use Carp qw( croak cluck );
 use Data::Dumper;
 use Template;
 use Template::Exception;
@@ -36,7 +36,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw debug dirsteps );
+use Para::Frame::Utils qw( throw debug datadump );
 
 our %TYPE;
 our %EXT;
@@ -77,11 +77,8 @@ sub new
 	$config->{$key} = $config_in->{$key};
     }
 
-    unless( $config_in->{'INCLUDE_PATH'} )
-    {
-	$config->{'INCLUDE_PATH'} = [ $burner ];
-    }
-
+    $config->{'INCLUDE_PATH'}
+      = $config_in->{'INCLUDE_PATH'} || [ $burner ];
 
     $burner->{'type'} = $config_in->{'type'} or
       croak "No type given for burner";
@@ -212,26 +209,22 @@ sub get_by_type
 sub th
 {
     return $_[0]->{'used'}{$Para::Frame::REQ} ||= $_[0]->new_th();
-#    debug "Using $Para::Frame::REQ: $_[0]->{'used'}{$Para::Frame::REQ}";
-#    $_[0]->{'used'}{$Para::Frame::REQ} ||= $_[0]->new_th();
-#    debug "Now   $Para::Frame::REQ: $_[0]->{'used'}{$Para::Frame::REQ}";
-#    return $_[0]->{'used'}{$Para::Frame::REQ};
 }
 
 sub new_th
 {
-    if( my $th = pop(@{$_[0]->{'free'}}) )
+    my( $th );
+    if( $th = pop(@{$_[0]->{'free'}}) )
     {
 	debug 2, "TH retrieved from stack";
-	return $th;
     }
     else
     {
 	debug 2, "TH created from config";
-#	debug "  for $Para::Frame::REQ";
-	return Template->new($_[0]->{config});
+	$th = Template->new($_[0]->{config});
     }
-#    return pop(@{$_[0]->{'free'}}) || Template->new($_[0]->{config});
+
+    return $th;
 }
 
 sub free_th
@@ -322,8 +315,17 @@ Example:
 
 sub burn
 {
-#    my( $burner ) = shift;
-#    return $burner->th->process(@_);
+#    my $th = shift->th;
+#    my $reqnum = $Para::Frame::REQ->id;
+#    my $page = $Para::Frame::REQ->page;
+#    debug "Burning with $th in req $reqnum with page $page";
+#    if( $page->incpath )
+#    {
+#	my $incpathstring = join "", map "- $_\n", @{$page->incpath};
+#	debug "Include path:";
+#	debug $incpathstring;
+#    }
+#    return $th->process(@_);
 
     return shift->th->process(@_);
 
@@ -364,70 +366,10 @@ sub subdir_suffix
      return $_[0]->{'subdir_suffix'} || '';
 }
 
-
 sub paths
 {
-    my( $burner ) = @_;
-
-    my $req = $Para::Frame::REQ;
-    my $page = $req->page;
-
-    unless( $page->incpath )
-    {
-	my $type = $burner->{'type'};
-
-	my $site = $req->site;
-	my $subdir = 'inc' . $burner->subdir_suffix;
-
- 	my $path_full = $page->dirsteps->[0];
-	my $destroot = $req->uri2file($site->home.'/');
-	my $dir = $path_full;
-	$dir =~ s/^$destroot// or
-	  die "destroot $destroot not part of $dir";
-	my $paraframedir = $Para::Frame::CFG->{'paraframe'};
-	my $htmlsrc = $site->htmlsrc;
-	my $backdir = $site->is_compiled ? '/dev' : '/html';
-
-	debug 3, "Creating incpath for $dir with $backdir under $destroot ($type)";
-
-	my @searchpath;
-
-	foreach my $step ( dirsteps($dir), '/' )
-	{
-	    debug 4, "Adding $step to path";
-
-	    push @searchpath, $htmlsrc.$step.$subdir.'/';
-
-	    foreach my $appback (@{$site->appback})
-	    {
-		push @searchpath, $appback.$backdir.$step.$subdir.'/';
-	    }
-
-	    if( $site->is_compiled )
-	    {
-		push @searchpath,  $paraframedir.'/dev'.$step.$subdir.'/';
-	    }
-
-	    push @searchpath,  $paraframedir.'/html'.$step.'inc/';
-	}
-
-
-	$page->set_incpath([ @searchpath ]);
-
-
-	if( debug > 2 )
-	{
-	    my $incpathstring = join "", map "- $_\n", @{$page->incpath};
-	    debug "Include path:";
-	    debug $incpathstring;
-	}
-
-    }
-
-    return $page->incpath;
+    return $Para::Frame::REQ->page->paths($_[0]);
 }
-
-
 
 1;
 
