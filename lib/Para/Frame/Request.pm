@@ -138,15 +138,15 @@ sub init
     my $env = $req->{'env'};
 
     ### Further initialization that requires $REQ
-    $req->{'cookies'} = new Para::Frame::Cookies($req);
+    $req->{'cookies'} = Para::Frame::Cookies->new($req);
 
     if( $env->{'HTTP_USER_AGENT'} )
     {
 	$req->{'browser'} = new HTTP::BrowserDetect($env->{'HTTP_USER_AGENT'});
     }
-    $req->{'result'}  = new Para::Frame::Result;  # Before Session
+    $req->{'result'}  = Para::Frame::Result->new();  # Before Session
 
-    $req->{'page'} = Para::Frame::Page->new();
+    $req->{'page'}    = Para::Frame::Page->new($req);
     $req->{'page'}->init; # Before Session
 
     $req->{'s'}       = Para::Frame->Session->new($req);
@@ -277,7 +277,7 @@ sub new_minimal
 
     $req->{'params'} = {%$Para::Frame::PARAMS};
 
-    $req->{'result'}  = new Para::Frame::Result;  # Before Session
+    $req->{'result'}  = Para::Frame::Result->new($req);  # Before Session
     $req->{'s'}       = Para::Frame->Session->new_minimal();
 
     return $req;
@@ -287,7 +287,7 @@ sub minimal_init
 {
     my( $req, $args ) = @_;
 
-    my $page = $req->{'page'} = Para::Frame::Page->new();
+    my $page = $req->{'page'} = Para::Frame::Page->new($req);
     if( my $site_in = $args->{'site'} )
     {
 	$page->set_site( $site_in );
@@ -927,7 +927,7 @@ sub run_action
 		if( $req->session->u->level == 0 )
 		{
 		    # Ask to log in
-		    my $error_tt = $site->home."/login.tt";
+		    my $error_tt = "/login.tt";
 		    $part->hide(1);
 		    $req->session->route->bookmark;
 		    $page->set_error_template( $error_tt );
