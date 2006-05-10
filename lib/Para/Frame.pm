@@ -9,7 +9,7 @@ package Para::Frame;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -796,6 +796,7 @@ sub close_callback
     else
     {
 #	warn "Done $client $REQUEST{$client}{'reqnum'}\n";
+	$REQUEST{$client}{reqnum} ||= '-';
 	warn "$REQUEST{$client}{reqnum} Done\n";
     }
 
@@ -828,6 +829,7 @@ sub close_callback
     else
     {
 	delete $REQUEST{$client};
+
 	delete $INBUFFER{$client};
 	switch_req(undef);
 	$SELECT->remove($client);
