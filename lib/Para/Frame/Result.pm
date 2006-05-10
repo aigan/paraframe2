@@ -9,7 +9,7 @@ package Para::Frame::Result;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -25,7 +25,6 @@ Para::Frame::Result - Holds the results of actions and exceptions
 use strict;
 use Data::Dumper;
 use Carp qw( carp shortmess croak confess );
-#use Clone qw( clone );
 use Template::Exception;
 
 BEGIN
@@ -60,15 +59,14 @@ sub new
 {
     my( $class ) = @_;
 
-
     my $result = bless
     {
-	part => [],
-	errcnt => 0,
-	backtrack => 0,
-	info => {},
-	main => undef,
-	hide_part => {},
+     part => [],
+     errcnt => 0,
+     backtrack => 0,
+     info => {},
+     main => undef,
+     hide_part => {},
     }, $class;
 
 
