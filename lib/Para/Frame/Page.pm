@@ -65,7 +65,7 @@ use Para::Frame::L10N qw( loc );
 
 =head2 new
 
-  Para::Frame::Page->new()
+  Para::Frame::Page->new($req)
 
 Creates a Page object. It should be initiated after the request has
 been registred. (Done by L<Para::Frame>.)
