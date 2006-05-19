@@ -1004,7 +1004,7 @@ sub add_background_jobs
 	# each background request
 
 	$req->{'original_request'} = $original_request;
-	$req->{'page'} = Para::Frame::Page->new();
+	$req->{'page'} = Para::Frame::Page->new($req);
 	$req->{'page'}->set_site($original_request->site);
 	$req->add_job('run_code', @$job);
 
