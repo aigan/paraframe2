@@ -1083,12 +1083,21 @@ sub error_backtrack
 	my $previous = $req->referer;
 	if( $previous )
 	{
+	    # It must be in the site dir
+	    my $destroot = $req->uri2file($req->site->home.'/');
+	    my $dir = $req->uri2file( $previous );
+	    unless( $dir =~ m/^$destroot/ )
+	    {
+		$previous = $page->site->home."/error.tt";
+	    }
+
 	    $page->set_template( $previous );
 
 	    # It must be a template
 	    unless( $req->template =~ /\.tt/ )
 	    {
 		$previous = $page->site->home."/error.tt";
+		$page->set_template( $previous );
 	    }
 
 	    debug(3,"Previous is $previous");
