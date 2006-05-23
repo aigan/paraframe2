@@ -100,7 +100,6 @@ sub new
     }, $class;
     weaken( $page->{'req'} );
 
-
     $page->{'params'} = {%$Para::Frame::PARAMS};
 
     return $page;
@@ -939,13 +938,18 @@ L<url_path_tmpl>. We will prepend the L<Para::Frame::Site/home>
 part.
 
 This is done because we may change site that displays the error page.
-That also means that the site changed to must find that template.
+That also means that the site changed to, must find that template.
 
 =cut
 
 sub set_error_template
 {
     my( $page, $error_tt ) = @_;
+
+    # $page->{'error_template'} holds the resolved template, inkluding
+    # the $home prefix
+
+    debug 2, "Setting error template to $error_tt";
 
     # We want to set the error in the original request
     if( my $req = $page->req->original )
@@ -1086,6 +1090,7 @@ sub render_output
     my $out = "";
 
     my $site = $page->site;
+    my $home = $site->home;
 
 
     my( $in, $ext ) = $page->find_template( $template );
@@ -1101,7 +1106,7 @@ sub render_output
 
     if( not $in )
     {
-	( $in, $ext ) = $page->find_template( $site->home.'/page_not_found.tt' );
+	( $in, $ext ) = $page->find_template( $home.'/page_not_found.tt' );
 	$page->set_http_status(404);
 	$req->result->error('notfound', "Hittar inte sidan $template\n");
     }
@@ -1141,10 +1146,15 @@ sub render_output
 	    }
 
 
+
 	    ### Use error page template
+	    # $error_tt and $new_error_tt EXCLUDES $home
+	    #
 	    my $error_tt = $page->template; # Could have changed
+	    $error_tt =~ s/^$home//; # Removes the $home prefix
 	    my $new_error_tt;
-	    if( $error_tt eq $template ) # No new template specified
+
+	    if( $home.$error_tt eq $template ) # No new template specified
 	    {
 		if( $error->type eq 'file' )
 		{
@@ -1192,11 +1202,10 @@ sub render_output
 		}
 	    }
 
-
 	    debug(1,$burner->error());
 
 	    # Avoid recursive failure
-	    if( ($template eq $error_tt) and $new_error_tt )
+	    if( ($template eq $home.$error_tt) and $new_error_tt )
 	    {
 		$page->{'page_content'} = $page->fallback_error_page;
 		return 1;
