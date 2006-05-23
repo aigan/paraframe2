@@ -181,7 +181,7 @@ sub error
     else
     {
 	$message =~ s/(\n\r?)+$//;
-	unless( ref $contextref )
+	if( $contextref and not ref $contextref )
 	{
 	    $contextref = \ "$contextref";
 	}
