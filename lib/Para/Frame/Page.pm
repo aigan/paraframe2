@@ -58,7 +58,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw debug create_dir chmod_file idn_encode idn_decode datadump );
+use Para::Frame::Utils qw( throw debug create_dir chmod_file idn_encode idn_decode datadump catch );
 use Para::Frame::Request::Ctype;
 use Para::Frame::URI;
 use Para::Frame::L10N qw( loc );
