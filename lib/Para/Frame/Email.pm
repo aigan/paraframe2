@@ -327,7 +327,7 @@ The required params are:
 Optional params:
 
   pgpsign   = Signs the email with pgpsign
-  Reply-To  = Adds a Reply-To header to the email
+  reply_to  = Adds a Reply-To header to the email
   by_proxy  = Sens email using sendmail
 
 
@@ -486,9 +486,10 @@ sub send
 #	    $msg->attr('content-type.charset' => 'ISO-8859-1');
 	}
 
-	if( $p->{'Reply-To'} )
+
+	if( $p->{'reply_to'} )
 	{
-	    $msg->add('Reply-To' =>  $p->{'Reply-To'} );
+	    $msg->add('Reply-To' =>  $p->{'reply_to'} );
 	}
 
 
