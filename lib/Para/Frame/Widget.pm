@@ -678,11 +678,35 @@ Draws a input field widget.
 
 Sets form field name to $field and value to $value.
 
-size      = width of input field  (default is 30)
+C<$value> will be taken from query param C<$field> or C<$value>, in
+turn.
 
-maxlength = max number of chars (default is size times 3)
 
-$value will be taken from query param $field or $value, in turn.
+Attributes:
+
+  size: width of input field  (default is 30)
+
+  maxlength: max number of chars (default is size times 3)
+
+  tdlabel: Sets C<label> and separates it with a C<td> tag.
+
+  label: draws a label before the field with the given text
+
+  label_class: Adds a class to the C<label> tag
+
+  separator: adds the unescaped string between label and input tag
+
+  tdlabel: sets the separator to '<td>'
+
+All other attributes are directly added to the input tag, with the
+value html escaped.
+
+Example:
+
+  Drawing a input field widget wit a label
+  [% input('location_name', '', label=loc('Location')) %]
+
+
 
 =cut
 
@@ -709,7 +733,7 @@ sub input
 
     my $extra = "";
     my $prefix = "";
-    my $separator = "";
+    my $separator = delete($params->{'separator'}) || '';
     if( my $tdlabel = delete $params->{'tdlabel'} )
     {
 	$separator = "<td>";
@@ -718,7 +742,7 @@ sub input
     if( my $label = delete $params->{'label'} )
     {
 	my $prefix_extra = "";
-	if( my $class = $params->{'label_class'} )
+	if( my $class = delete $params->{'label_class'} )
 	{
 	    $prefix_extra .= sprintf " class=\"%s\"",
 	    CGI->escapeHTML( $class );
@@ -742,7 +766,7 @@ sub input
 	$prefix .= $separator;
     }
 
-    return sprintf('%s<input name="%s" value="%s" size="%s" maxlength="%s"%s />',
+    return sprintf('%s<input type="text" name="%s" value="%s" size="%s" maxlength="%s"%s />',
 		   $prefix,
                    CGI->escapeHTML( $key ),
                    CGI->escapeHTML( $value ),
@@ -761,11 +785,25 @@ sub input
 
 Draws a textarea with fied name $field and value $value.
 
-cols    = width (default is 60)
+C<$value> will be taken from query param C<$field> or C<$value>, in
+turn.
 
-rows    = hight (default is 20)
+Attributes:
 
-$value is query param $field or $value, in turn.
+  cols: width (default is 60)
+
+  rows: hight (default is 20)
+
+  label: draws a label before the field with the given text
+
+  label_class: Adds a class to the C<label> tag
+
+  separator: adds the unescaped string between label and input tag
+
+All other attributes are directly added to the input tag, with the
+value html escaped.
+
+The default wrap attribute is 'virtual'.
 
 =cut
 
@@ -788,10 +826,44 @@ sub textarea
     }
     $value ||= '';
 
-    return sprintf('<textarea name="%s" cols="%s" rows="%s" wrap="virtual">%s</textarea>',
+    my $extra = "";
+    my $prefix = "";
+    my $separator = delete $params->{'separator'} || '';
+    if( my $label = delete $params->{'label'} )
+    {
+	my $prefix_extra = "";
+	if( my $class = delete $params->{'label_class'} )
+	{
+	    $prefix_extra .= sprintf " class=\"%s\"",
+	    CGI->escapeHTML( $class );
+	}
+	$prefix .= sprintf('<label for="%s"%s>%s</label>',
+			   CGI->escapeHTML( $key ),
+			   $prefix_extra,
+			   CGI->escapeHTML($label),
+			   );
+	$params->{id} = $key;
+    }
+
+    $params->{'wrap'} ||= "virtual";
+
+    foreach my $key ( keys %$params )
+    {
+	$extra .= sprintf " $key=\"%s\"",
+	  CGI->escapeHTML( $params->{$key} );
+    }
+
+    if( $prefix )
+    {
+	$prefix .= $separator;
+    }
+
+    return sprintf('%s<textarea name="%s" cols="%s" rows="%s"%s>%s</textarea>',
+		   $prefix,
 		   CGI->escapeHTML( $key ),
 		   CGI->escapeHTML( $cols ),
 		   CGI->escapeHTML( $rows ),
+		   $extra,
 		   CGI->escapeHTML( $value ),
 		   );
 }
