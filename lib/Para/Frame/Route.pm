@@ -493,10 +493,10 @@ sub get_next
     {
 	pop @{$route->{'route_clean'}};
 
-	warn "  Next step is $step\n";
+	debug 2, "  Next step is $step";
 	$step = Para::Frame::URI->new($step) unless UNIVERSAL::isa($step, 'URI');
 	my $query = $step->query || '';
-	warn "    step query is $query\n";
+	debug 3, "    step query is $query";
 
 	# Modify step withe these params
 	my %args_replace;
@@ -518,7 +518,7 @@ sub get_next
 	{
 	    if( @{ $args_replace{$key} } )
 	    {
-		debug "replacing param $key with @{[$q->param($key)]}";
+		debug 1, "replacing param $key with @{[$q->param($key)]}";
 		$q->param( $key, @{ $args_replace{$key} } );
 	    }
 	    else
@@ -531,7 +531,7 @@ sub get_next
 	{
 	    if( @{ $args_add{$key} } )
 	    {
-		debug "adding to param $key with ".$q->param($key);
+		debug 1, "adding to param $key with ".$q->param($key);
 		my @vals = $q->param( $key );
 		$q->param( $key, @{ $args_add{$key} }, @vals );
 	    }
