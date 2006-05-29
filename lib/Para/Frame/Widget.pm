@@ -883,10 +883,14 @@ sub textarea
 
   checkbox( $field, $value, %attrs )
 
+  checkbox( $field, %attrs )
+
 Draws a checkbox with fied name $field and value $value.
 
 C<$checked> will be taken from query param C<$field> or C<$checked>, in
 turn. Set to false if $checked is either false or 'f'.
+
+Default C<$value> is C<1>.
 
 Attributes:
 
@@ -917,6 +921,12 @@ sub checkbox
 	$checked = undef;
     }
 
+    if( ref $value )
+    {
+	$params = $value;
+	$value = 1;
+    }
+
     my @previous;
 
     if( my $q = $Para::Frame::REQ->q )
@@ -929,7 +939,7 @@ sub checkbox
 	$checked = $previous[0]?1:0;
     }
 
-    $value or croak "value param for checkbox missing";
+    $value ||= 1;
 
     my $extra = "";
     my $prefix = "";
