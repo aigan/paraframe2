@@ -81,26 +81,6 @@ Draws a button for removing one step from the route.
 Draws a button for going to the next step.
 
 
-=head2 radio
-
-  radio( $field, $value, $current )
-
-Draws a radiobutton with fied name $field and value $value.
-
-The radiobutton is selected if the query param $field == $value or
-$current == $value, in turn.
-
-
-=head2 checkbox
-
-  checkbox( $field, $value, $checked )
-
-Draws a checkbox with field name $field and value $value.
-
-The checkbox is checked if query param $field == $value or $checked is
-true.  'f', '0', '' and undef is considered false.
-
-
 =head2 select
 
   select( $field, $current, @data, $valkey, $tagkey, $header )

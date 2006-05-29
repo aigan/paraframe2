@@ -23,7 +23,7 @@ Para::Frame::Widget - Common template widgets
 =cut
 
 use strict;
-use Carp qw( cluck confess );
+use Carp qw( cluck confess croak );
 use Data::Dumper;
 use IO::File;
 use CGI;
@@ -698,6 +698,8 @@ Attributes:
 
   tdlabel: sets the separator to '<td>'
 
+  id: used for label. Defaults to C<$field>
+
 All other attributes are directly added to the input tag, with the
 value html escaped.
 
@@ -741,6 +743,7 @@ sub input
     }
     if( my $label = delete $params->{'label'} )
     {
+	my $id = $params->{id} || $key;
 	my $prefix_extra = "";
 	if( my $class = delete $params->{'label_class'} )
 	{
@@ -748,7 +751,7 @@ sub input
 	    CGI->escapeHTML( $class );
 	}
 	$prefix .= sprintf('<label for="%s"%s>%s</label>',
-			   CGI->escapeHTML( $key ),
+			   CGI->escapeHTML( $id ),
 			   $prefix_extra,
 			   CGI->escapeHTML($label),
 			   );
@@ -800,6 +803,8 @@ Attributes:
 
   separator: adds the unescaped string between label and input tag
 
+  id: used for label. Defaults to C<$field>
+
 All other attributes are directly added to the input tag, with the
 value html escaped.
 
@@ -831,6 +836,7 @@ sub textarea
     my $separator = delete $params->{'separator'} || '';
     if( my $label = delete $params->{'label'} )
     {
+	my $id = $params->{id} || $key;
 	my $prefix_extra = "";
 	if( my $class = delete $params->{'label_class'} )
 	{
@@ -838,11 +844,11 @@ sub textarea
 	    CGI->escapeHTML( $class );
 	}
 	$prefix .= sprintf('<label for="%s"%s>%s</label>',
-			   CGI->escapeHTML( $key ),
+			   CGI->escapeHTML( $id ),
 			   $prefix_extra,
 			   CGI->escapeHTML($label),
 			   );
-	$params->{id} = $key;
+	$params->{id} = $id;
     }
 
     $params->{'wrap'} ||= "virtual";
@@ -865,6 +871,262 @@ sub textarea
 		   CGI->escapeHTML( $rows ),
 		   $extra,
 		   CGI->escapeHTML( $value ),
+		   );
+}
+
+
+#######################################################################
+
+=head2 checkbox
+
+  checkbox( $field, $value, $checked, %attrs )
+
+  checkbox( $field, $value, %attrs )
+
+Draws a checkbox with fied name $field and value $value.
+
+C<$checked> will be taken from query param C<$field> or C<$checked>, in
+turn. Set to false if $checked is either false or 'f'.
+
+Attributes:
+
+  prefix_label: draws a label before the field with the given text
+
+  suffix_label: draws a label after the field with the given text
+
+  label: sets suffix_label
+
+  label_class: Adds a class to the C<label> tag
+
+  separator: adds the unescaped string between label and checkbox tag
+
+  id: used for label. Defaults to C<$field>
+
+All other attributes are directly added to the input tag, with the
+value html escaped.
+
+=cut
+
+sub checkbox
+{
+    my( $field, $value, $checked, $params ) = @_;
+
+    if( ref $checked )
+    {
+	$params = $checked;
+	$checked = undef;
+    }
+
+    my @previous;
+
+    if( my $q = $Para::Frame::REQ->q )
+    {
+	@previous = $q->param($field);
+    }
+
+    if( $#previous == 0 ) # Just one value
+    {
+	$checked = $previous[0]?1:0;
+    }
+
+    $value or croak "value param for checkbox missing";
+
+    my $extra = "";
+    my $prefix = "";
+    my $suffix = "";
+    my $separator = delete $params->{'separator'} || '';
+    my $label_class = delete $params->{'label_class'};
+    my $id = $params->{id} || $field;
+
+    my $suffix_label = $params->{'label'};
+    if( $suffix_label ||= delete $params->{'suffix_label'} )
+    {
+	my $suffix_extra = "";
+	if( $label_class )
+	{
+	    $suffix_extra .= sprintf " class=\"%s\"",
+	    CGI->escapeHTML( $label_class );
+	}
+	$suffix .= sprintf('<label for="%s"%s>%s</label>',
+			   CGI->escapeHTML( $id ),
+			   $suffix_extra,
+			   CGI->escapeHTML($suffix_label),
+			   );
+	$params->{id} = $id;
+    }
+
+    if( my $prefix_label = delete $params->{'prefix_label'} )
+    {
+	my $prefix_extra = "";
+	if( $label_class )
+	{
+	    $prefix_extra .= sprintf " class=\"%s\"",
+	    CGI->escapeHTML( $label_class );
+	}
+	$prefix .= sprintf('<label for="%s"%s>%s</label>',
+			   CGI->escapeHTML( $id ),
+			   $prefix_extra,
+			   CGI->escapeHTML($prefix_label),
+			   );
+	$params->{id} = $id;
+    }
+
+    foreach my $key ( keys %$params )
+    {
+	$extra .= sprintf " $key=\"%s\"",
+	  CGI->escapeHTML( $params->{$key} );
+    }
+
+    if( $checked and $checked ne 'f')
+    {
+	$extra .= " checked";
+    }
+
+    if( $prefix )
+    {
+	$prefix .= $separator;
+    }
+
+    if( $suffix )
+    {
+	$suffix = $separator . $suffix;
+    }
+
+    return sprintf('%s<input type="checkbox" name="%s" value="%s"%s>%s',
+		   $prefix,
+		   CGI->escapeHTML( $field ),
+		   CGI->escapeHTML( $value ),
+		   $extra,
+		   $suffix,
+		   );
+}
+
+
+#######################################################################
+
+=head2 radio
+
+  radio( $field, $value, $checked, %attrs )
+
+  radio( $field, $value, %attrs )
+
+Draws a radio button with fied name $field and value $value.
+
+C<$checked> will be taken from query param C<$field> or C<$checked>, in
+turn. Set to false if $checked is either false or 'f'.
+
+Attributes:
+
+  prefix_label: draws a label before the field with the given text
+
+  suffix_label: draws a label after the field with the given text
+
+  label: sets suffix_label
+
+  label_class: Adds a class to the C<label> tag
+
+  separator: adds the unescaped string between label and checkbox tag
+
+  id: used for label. Mandatory if label is set
+
+All other attributes are directly added to the input tag, with the
+value html escaped.
+
+=cut
+
+sub radio
+{
+    my( $field, $value, $checked, $params ) = @_;
+
+    if( ref $checked )
+    {
+	$params = $checked;
+	$checked = undef;
+    }
+
+    my @previous;
+
+    if( my $q = $Para::Frame::REQ->q )
+    {
+	@previous = $q->param($field);
+    }
+
+    if( $#previous == 0 ) # Just one value
+    {
+	$checked = $previous[0]?1:0;
+    }
+
+    $value or croak "value param for checkbox missing";
+
+    my $extra = "";
+    my $prefix = "";
+    my $suffix = "";
+    my $separator = delete $params->{'separator'} || '';
+    my $label_class = delete $params->{'label_class'};
+    my $id = $params->{id};
+
+    my $suffix_label = $params->{'label'};
+    if( $suffix_label ||= delete $params->{'suffix_label'} )
+    {
+	$id or croak "id param for radio missing";
+	my $suffix_extra = "";
+	if( $label_class )
+	{
+	    $suffix_extra .= sprintf " class=\"%s\"",
+	    CGI->escapeHTML( $label_class );
+	}
+	$suffix .= sprintf('<label for="%s"%s>%s</label>',
+			   CGI->escapeHTML( $id ),
+			   $suffix_extra,
+			   CGI->escapeHTML($suffix_label),
+			   );
+	$params->{id} = $id;
+    }
+
+    if( my $prefix_label = delete $params->{'prefix_label'} )
+    {
+	$id or croak "id param for radio missing";
+	my $prefix_extra = "";
+	if( $label_class )
+	{
+	    $prefix_extra .= sprintf " class=\"%s\"",
+	    CGI->escapeHTML( $label_class );
+	}
+	$prefix .= sprintf('<label for="%s"%s>%s</label>',
+			   CGI->escapeHTML( $id ),
+			   $prefix_extra,
+			   CGI->escapeHTML($prefix_label),
+			   );
+	$params->{id} = $id;
+    }
+
+    foreach my $key ( keys %$params )
+    {
+	$extra .= sprintf " $key=\"%s\"",
+	  CGI->escapeHTML( $params->{$key} );
+    }
+
+    if( $checked and $checked ne 'f')
+    {
+	$extra .= " checked";
+    }
+
+    if( $prefix )
+    {
+	$prefix .= $separator;
+    }
+
+    if( $suffix )
+    {
+	$suffix = $separator . $suffix;
+    }
+
+    return sprintf('%s<input type="radio" name="%s" value="%s"%s>%s',
+		   $prefix,
+		   CGI->escapeHTML( $field ),
+		   CGI->escapeHTML( $value ),
+		   $extra,
+		   $suffix,
 		   );
 }
 
@@ -1237,6 +1499,8 @@ sub on_configure
 	'hidden'          => \&hidden,
 	'input'           => \&input,
 	'textarea'        => \&textarea,
+        'checkbox'        => \&checkbox,
+        'radio'           => \&radio,
 	'filefield'       => \&filefield,
 	'css_header'      => \&css_header,
 	'favicon_header'  => \&favicon_header,

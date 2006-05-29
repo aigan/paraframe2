@@ -109,31 +109,6 @@
 
 
 
-[% MACRO checkbox(name, value, checked) BLOCK %]
-   [% DEFAULT value='t' %]
-  <input type="checkbox" name="$name" value="$value"
-     [%- IF q.param(name) -%]
-        [%- ' checked' IF  param_includes(name, value) -%]
-     [%- ELSIF checked -%]
-        [%- ' checked' IF  checked != 'f' -%]
-     [%- END -%]
-  />
-[% END %]
-
-
-
-[% MACRO radio(name, value, current) BLOCK %]
-  <input type="radio" name="$name" value="$value"
-     [%- IF q.param(name) %]
-        [% 'checked' IF  param_includes(name, value) %]
-     [% ELSIF current == value -%]
-        checked
-     [%- END -%]
-  />
-[% END %]
-
-
-
 [% MACRO select(name, current, data, valkey, tagkey, header) BLOCK %]
    [%- IF q.param(name) %]
       [% current = q.param(name) %]
