@@ -93,6 +93,7 @@ sub message
 
     foreach my $msg ( @messages )
     {
+	$msg ||= "";
 	$msg =~ s/(\n\r?)+$//;
 	next unless length $msg;
 
