@@ -915,13 +915,22 @@ sub checkbox
 {
     my( $field, $value, $checked, $params ) = @_;
 
-    if( ref $checked )
+    # Detecting how many params are given to the checkbox
+    #
+    if( ref $checked and
+	not $params and
+	(ref $checked eq 'HASH')
+	)
     {
 	$params = $checked;
 	$checked = undef;
     }
 
-    if( ref $value )
+    if( ref $value and
+	not $checked and
+	not $params and
+	(ref $value eq 'HASH')
+	)
     {
 	$params = $value;
 	$value = 1;
