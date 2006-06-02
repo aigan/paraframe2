@@ -29,6 +29,7 @@ use IO::File;
 use CGI;
 
 use locale;
+use POSIX qw(locale_h);
 
 BEGIN
 {
@@ -1372,13 +1373,13 @@ If no confirmation has been given, creates a confirmation dialog box
 and displays it by using an C<incomplete> exception and the
 C<confirm.tt> template.
 
-=head3 Default
+Default:
 
   $headline    = 'Är du säker?'
   $text        = ''
   $button_name = 'Ja'
 
-=head3 Example
+Example:
 
 In an action:
 
@@ -1444,7 +1445,7 @@ Replaces %d with the $number.
 
 Uses $many for negative numbers
 
-=head3 example
+example:
 
   inflect( 1, "no things", "a thing", "%d things")
 
@@ -1494,6 +1495,63 @@ sub inflect # inflection = böjning
     }
 }
 
+
+=head2 pricify
+
+Added as a filter to html burner.
+
+=cut
+
+sub pricify
+{
+    my( $price ) = @_;
+
+    my $old_numeric = setlocale(LC_NUMERIC);
+    my $old_monetary = setlocale(LC_MONETARY);
+    if( preferred_language() eq "sv" )
+    {
+	setlocale(LC_MONETARY, "sv_SE");
+    }
+    else
+    {
+	setlocale(LC_MONETARY, "en_GB");
+    }
+
+    my ($thousands_sep, $grouping, $decimal_point) =
+	@{localeconv()}{'mon_thousands_sep', 'mon_grouping', 'mon_decimal_point'};
+    setlocale(LC_MONETARY, $old_monetary);
+
+    # Apply defaults if values are missing
+    $thousands_sep = '&nbsp;' if $thousands_sep eq ' ' or (not $thousands_sep);
+    $decimal_point = ',' unless $decimal_point;
+
+    my @grouping;
+    if ($grouping) {
+	@grouping = unpack("C*", $grouping);
+    } else {
+	#warn "Using default grouping!";
+	@grouping = (3);
+    }
+
+    # To split it surely...
+    setlocale(LC_NUMERIC, "sv_SE");
+    $price = sprintf("%.2f", $price);
+    my ($whole, $part) = split /,/, $price;
+    setlocale(LC_NUMERIC, $old_numeric);
+
+    # Thousand grouping
+    $_ = $whole;
+    1 while
+	s/(\d)(\d{$grouping[0]}($|$thousands_sep))/$1$thousands_sep$2/;
+#    warn "$_";
+    $whole = $_;
+
+    $price = join($decimal_point, $whole, $part);
+
+    return $price;
+}
+
+
 #### Methods
 
 sub on_configure
@@ -1527,6 +1585,16 @@ sub on_configure
     };
 
     Para::Frame->add_global_tt_params( $params );
+
+
+
+    # Define TT filters
+    #
+    Para::Frame::Burner->get_by_type('html')->add_filters({
+	'pricify' => \&pricify,
+    });
+
+
 }
 
 sub on_reload
