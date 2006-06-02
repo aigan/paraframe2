@@ -1076,7 +1076,7 @@ sub radio
 	$checked = $previous[0]?1:0;
     }
 
-    $value or croak "value param for checkbox missing";
+    defined $value or croak "value param for radio missing";
 
     my $extra = "";
     my $prefix = "";
