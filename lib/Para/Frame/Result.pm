@@ -1,4 +1,4 @@
-#  $Id$  -*-perl-*-
+#  $Id$  -*-cperl-*-
 package Para::Frame::Result;
 #=====================================================================
 #
@@ -34,7 +34,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( trim debug catch run_error_hooks );
+use Para::Frame::Utils qw( trim debug catch run_error_hooks datadump );
 use Para::Frame::Result::Part;
 
 =head1 DESCRIPTION
@@ -143,6 +143,11 @@ sub exception
 
     my $error = catch($@);
 
+    unless( $error )
+    {
+	confess "Exception without a cause ($@) for Result ".datadump($result);
+    }
+
     run_error_hooks($error);
 
     return $result->error( $error );
@@ -181,6 +186,11 @@ sub error
     }
     else
     {
+	unless( $message )
+	{
+	    confess "Exception without a cause";
+	}
+
 	$message =~ s/(\n\r?)+$//;
 	if( $contextref and not ref $contextref )
 	{
@@ -190,6 +200,7 @@ sub error
 	$error = Template::Exception->new( $type, $message, $contextref );
     }
 
+    warn "Clearing our error info";
     $@ = undef; # Clear out error info
 
     my $part = Para::Frame::Result::Part->new($error);
