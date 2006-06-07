@@ -1,4 +1,4 @@
-#  $Id$  -*-perl-*-
+#  $Id$  -*-cperl-*-
 package Para::Frame::Utils;
 #=====================================================================
 #
@@ -339,6 +339,7 @@ sub catch
 
 sub run_error_hooks
 {
+    confess "error hook expected an exception" unless $_[0];
     my( $type, $info ) = $_[0]->type_info;
     my $text = $_[0]->text;
     my $textref = \ $text;
