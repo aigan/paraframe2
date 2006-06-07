@@ -119,13 +119,13 @@ level less than or equal to her level.  Default is 0.
 
 =cut
 
-sub new
-{
-    my( $class ) = @_;
-
-    $class->identify_user();
-    $class->authenticate_user();
-}
+#sub new
+#{
+#    my( $class ) = @_;
+#
+#    $class->identify_user();
+#    $class->authenticate_user();
+#}
 
 sub identify_user
 {
