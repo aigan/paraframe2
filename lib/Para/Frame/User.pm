@@ -129,7 +129,8 @@ level less than or equal to her level.  Default is 0.
 
 sub identify_user
 {
-    my( $class, $username ) = @_;
+    my( $this, $username ) = @_;
+    my $class = ref($this) || $this;
 
     my $req = $Para::Frame::REQ;
     my $q = $req->q;
@@ -149,7 +150,8 @@ sub identify_user
 
 sub authenticate_user
 {
-    my( $class, $password_encrypted ) = @_;
+    my( $this, $password_encrypted ) = @_;
+    my $class = ref($this) || $this;
 
     my $u   = $Para::Frame::U;
     my $req = $Para::Frame::REQ;
@@ -277,7 +279,8 @@ Removes the cookies.
 
 sub logout
 {
-    my( $class ) = @_;
+    my( $this ) = @_;
+    my $class = ref($this) || $this;
 
     my $req = $Para::Frame::REQ;
 
