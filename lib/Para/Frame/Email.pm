@@ -1,4 +1,4 @@
-#  $Id$  -*-perl-*-
+#  $Id$  -*-cperl-*-
 package Para::Frame::Email;
 #=====================================================================
 #
@@ -45,7 +45,7 @@ BEGIN
 use Para::Frame::Reload;
 
 use Para::Frame::Request;
-use Para::Frame::Utils qw( throw debug );
+use Para::Frame::Utils qw( throw debug fqdn );
 use Para::Frame::Widget;
 use Para::Frame::Time qw( date );
 use Para::Frame::Email::Address;
@@ -384,6 +384,7 @@ sub send
     my $req = $Para::Frame::REQ;
     my $home = $req->site->home;
     my $site = $req->site;
+    my $fqdn = fqdn;
 
     unless( $site->send_email )
     {
@@ -551,6 +552,7 @@ sub send
 	    my $smtp = Net::SMTP->new( Host    => $mailhost,
 				       Timeout => 60,
 				       Debug   => 0,
+				       Hello   => $fqdn,
 				       );
 
 #	    # DEBUG (should nog happen)
