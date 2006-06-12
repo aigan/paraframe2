@@ -1,4 +1,4 @@
-#  $Id$  -*-perl-*-
+#  $Id$  -*-cperl-*-
 package Para::Frame::Email::Address;
 #=====================================================================
 #
@@ -36,7 +36,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw reset_hashref );
+use Para::Frame::Utils qw( throw reset_hashref fqdn );
 
 use overload '""' => \&as_string;
 use overload 'eq' => \&equals;
@@ -269,6 +269,7 @@ sub _validate
     my $err_msg = "";
 
     my( $host ) = $a->host() or die;
+    my $fqdn = fqdn;
 
     my @mx_list = mx($host);
     my @mailhost_list;
@@ -328,6 +329,7 @@ sub _validate
 	    my $smtp = Net::SMTP->new($mailhost,
 				      Timeout => 30,
 				      Debug   => 0,
+				      Hello   => $fqdn,
 				      );
 	  SEND:
 	    {
