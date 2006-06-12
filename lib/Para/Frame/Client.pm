@@ -43,7 +43,7 @@ use Para::Frame::Reload;
 our $SOCK;
 our $r;
 
-our $DEBUG = 1;
+our $DEBUG = 0;
 our $BACKUP_PORT;
 
 =head1 DESCRIPTION
