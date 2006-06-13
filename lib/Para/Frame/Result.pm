@@ -200,7 +200,7 @@ sub error
 	$error = Template::Exception->new( $type, $message, $contextref );
     }
 
-    warn "Clearing our error info";
+    warn "Clearing our error info\n";
     $@ = undef; # Clear out error info
 
     my $part = Para::Frame::Result::Part->new($error);
