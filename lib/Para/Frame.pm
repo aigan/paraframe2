@@ -166,10 +166,10 @@ sub startup
 
     # Set up the tcp server. Must do this before chroot.
     $SERVER= IO::Socket::INET->new(
-				   LocalPort => $port,
-				   Proto    => 'tcp',
-				   Listen  => 10,
-				   Reuse  => 1,
+				   LocalPort  => $port,
+				   Proto      => 'tcp',
+				   Listen     => 10,
+				   ReuseAddr  => 1,
 				   )
 	or (die "Cannot connect to socket $port: $@\n");
 
