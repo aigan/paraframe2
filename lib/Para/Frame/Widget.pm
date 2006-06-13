@@ -888,8 +888,9 @@ sub textarea
 
 Draws a checkbox with fied name $field and value $value.
 
-C<$checked> will be taken from query param C<$field> or C<$checked>, in
-turn. Set to false if $checked is either false or 'f'.
+C<$checked> will be taken from query param C<$field> or C<$checked>,
+in turn. Set to true if query param value equals C$value>. Set to
+false if $checked is either false or 'f'.
 
 Default C<$value> is C<1>.
 
@@ -937,6 +938,8 @@ sub checkbox
 	$value = 1;
     }
 
+    $value ||= 1;
+
     my @previous;
 
     if( my $q = $Para::Frame::REQ->q )
@@ -944,12 +947,14 @@ sub checkbox
 	@previous = $q->param($field);
     }
 
-    if( $#previous == 0 ) # Just one value
+    foreach my $prev ( @previous )
     {
-	$checked = $previous[0]?1:0;
+	if( $prev eq $value )
+	{
+	    $checked = 1;
+	    last;
+	}
     }
-
-    $value ||= 1;
 
     my $extra = "";
     my $prefix = "";
