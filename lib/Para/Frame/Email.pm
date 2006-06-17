@@ -25,7 +25,6 @@ Para::Frame::Email - For sending emails
 use strict;
 use Carp;
 use locale;
-use Data::Dumper;
 use IO::File;
 use vars qw( $VERSION );
 use Mail::Address;
@@ -434,10 +433,18 @@ sub send
 	pgpsign(\$data, $p->{'pgpsign'} );
     }
 
-    my( $from_addr ) = Para::Frame::Email::Address->parse( $p->{'from'} );
+    my $from_addr = Para::Frame::Email::Address->parse( $p->{'from'} );
     $from_addr or
-      throw('mail', "Failed to parse address $p->{'from'}\n");
-#    my $from_addr_str = $from_addr->address;
+	throw('mail', "Failed to parse address $p->{'from'}\n");
+
+    my $envelope_from_addr = $from_addr;
+    if( $p->{'envelope_from'} )
+    {
+	$envelope_from_addr = Para::Frame::Email::Address->parse( $p->{'envelope_from'} );
+    }
+
+    my $envelope_from_addr_str = $envelope_from_addr->address;
+    my $from_addr_str = $from_addr->address;
 
 
     my @tried = ();
@@ -491,6 +498,23 @@ sub send
 	if( $p->{'reply_to'} )
 	{
 	    $msg->add('Reply-To' =>  $p->{'reply_to'} );
+	}
+
+	my $sender_addr;
+	if( $p->{'sender'} )
+	{
+	    $sender_addr = Para::Frame::Email::Address->parse( $p->{'sender'} );
+	}
+
+	if( $sender_addr )
+	{
+	    $msg->add('Sender' => $sender_addr->format );
+	    debug "Sender set to ".$sender_addr->format;
+	}
+	elsif( not $envelope_from_addr->equals( $from_addr ) )
+	{
+	    $msg->add('Sender' => $envelope_from_addr->format );
+	    debug "Sender set to ".$envelope_from_addr->format." from envelope from";
 	}
 
 
@@ -568,9 +592,9 @@ sub send
 		if( $smtp )
 		{
 		    debug(0,sprintf("Connected to %s", $smtp->domain));
-		    
+		    debug(0,"Sending mail from $envelope_from_addr_str");
 		    debug(0,"Sending mail to $to_addr_str");
-		    $smtp->mail($from_addr->address) or last SEND;
+		    $smtp->mail($envelope_from_addr_str) or last SEND;
 		    $smtp->to($to_addr_str) or last SEND;
 		    $smtp->data() or last SEND;
 		    $smtp->datasend($msg->as_string) or last SEND;
