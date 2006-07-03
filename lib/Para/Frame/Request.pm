@@ -160,7 +160,30 @@ sub init
 
 =head2 new_subrequest
 
-Sets up a subrequest using new_minimal.
+  $req->new_subrequest( \%args, \&code, @params )
+
+Sets up a subrequest using L</new_minimal>.
+
+=over
+
+=item We switch to the new request
+
+=item calls the C<&code> (in scalar context) with the req as the first param, followed by C<@params>
+
+=item switch back to the callng request
+
+=item returns the first of the returned values
+
+=back
+
+args:
+
+  site: A L<Para::Frame::Site> object. If defined, and the host
+differs from that of the current request, we sets ut a background
+request that can be used to query apache about uri2file translations.
+
+  user: A L<Para::Frame::User> object. Defaults to the current user.
+
 
 A subrequest must make sure that it finishes BEFORE the parent, unless
 it is decoupled to become a background request.
@@ -168,6 +191,9 @@ it is decoupled to become a background request.
 The parent will be made to wait for the subrequest result. But if the
 subrequest sets up additional jobs, you have to take care of either
 makeing it a background request or making the parent wait.
+
+We creates the new request with L</new_minimal> and sends the
+C<\%args> to L</minimal_init>.
 
 =cut
 
@@ -283,6 +309,27 @@ sub new_minimal
     return $req;
 }
 
+
+=head2 minimal_init
+
+  $req->minimal_init( \%args )
+
+Initializes the L</new_minimal> request. A smaller version of L<init>.
+
+args:
+
+  site: The site for the request, set by L</set_site>. Optional.
+
+  language: The language for the request, set by L</set_language>,
+that will use a default if no input.
+
+  user: The L<Para::Frame::User> to be in this request. Defaults to
+using L<Para::Frame/bg_user_code> for getting the user.
+
+Returns: The request
+
+=cut
+
 sub minimal_init
 {
     my( $req, $args ) = @_;
@@ -381,7 +428,11 @@ Returns the L<Para::Frame::Result> object for this request.
 
 =cut
 
-sub result { shift->{'result'} }
+sub result
+{
+    ref $_[0]->{result} or confess "The request doesn't have a result object ($_[0]->{result})";
+    return $_[0]->{'result'};
+}
 
 =head2 language
 
@@ -585,6 +636,8 @@ sub in_yield
   $req->uri2file( $uri, $file )
 
 This does the Apache URI to filename translation
+
+Directory URIs must end in '/'. The URI '' is not valid.
 
 The answer is cached.
 
@@ -892,12 +945,12 @@ sub run_action
 
     # Execute action
     #
+    my @res;
     eval
     {
 	debug(3,"using $actionroot",1);
 	no strict 'refs';
-	$req->result->message( &{$actionroot.'::'.$c_run.'::handler'}($req, @args) );
-	### Other info is stored in $req->result->{'info'}
+	my @res = &{$actionroot.'::'.$c_run.'::handler'}($req, @args);
 
 	if( $Para::Frame::FORK )
 	{
@@ -936,6 +989,11 @@ sub run_action
 	}
 	return 0;
     };
+
+    ### Other info is stored in $req->result->{'info'}
+    $req->result->message( @res );
+
+
 
     debug(-1);
     return 1; # All OK
@@ -1470,7 +1528,8 @@ sub yield
   $req->http_host
 
 Returns the host name the client requested. It tells with which of the
-alternatives names the site was requested
+alternatives names the site was requested. This string does not contain
+'http://'.
 
 =cut
 
