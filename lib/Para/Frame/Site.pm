@@ -1,4 +1,4 @@
-#  $Id$  -*-perl-*-
+#  $Id$  -*-cperl-*-
 package Para::Frame::Site;
 #=====================================================================
 #
@@ -52,6 +52,7 @@ BEGIN
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug fqdn );
+use Para::Frame::Dir;
 
 our %DATA; # hostname -> siteobj
 
@@ -218,6 +219,59 @@ sub code
 
 #######################################################################
 
+=head2 uri2file
+
+  $site->uri2file( $uri )
+
+  $site->uri2file( $uri, $file )
+
+Same as L<Para::Frame::Request/uri2file>, but looks up the file for
+the current site.
+
+We will use the current request or create a new request if the sites
+doesn't match.
+
+=cut
+
+sub uri2file
+{
+    my( $site ) = shift;
+
+    my $req = $Para::Frame::REQ;
+    my $req_site = $req->site;
+
+    if( $site->equals($req_site) )
+    {
+	return $req->uri2file(@_);
+    }
+    else
+    {
+	my $args = {};
+	$args->{'site'} = $site;
+	return $req->new_subrequest($args,
+				    \&Para::Frame::Request::uri2file,
+				    @_ );
+    }
+}
+
+
+#######################################################################
+
+=head2 home_dir
+
+  $site->home_dir
+
+Returns the L<Para::Frame::Dir> object fot the L</home>.
+
+=cut
+
+sub home_dir
+{
+    return Para::Frame::Dir->new({site => $_[0],
+				  url  => $_[0]->home,
+				 });
+}
+
 =head2 webhome
 
   $site->webhome
@@ -377,8 +431,8 @@ than 80, the port is apended. This string does not contain
 'http://'. This is the value returned by
 L<Para::Frame::Request/host>.
 
-L</http_host> gives the name used in the request, and may differ from
-the main hostname of the site.
+L<Para::Frame::Request/http_host> gives the name used in the request,
+and may differ from the main hostname of the site.
 
 Example: C<frame.para.se> or C<frame.para.se:81>
 
@@ -404,6 +458,27 @@ sub webhost
 {
     return $_[0]->{'webhost'} || fqdn();
 }
+
+=head2 scheme
+
+  $site->scheme
+
+Returns the scheme part of the request uri. It's probably either http
+or https.
+
+We currently just returns the string 'http'.
+
+Use this in the L<Para::Frame::URI> constructor.
+
+=cut
+
+sub scheme
+{
+    return "http";
+}
+
+=cut
+
 
 =head2 loopback
 
@@ -641,6 +716,25 @@ The TT params to be added for each request in this site.
 sub params
 {
     return $_[0]->{'params'} || {};
+}
+
+
+#######################################################
+
+=head2 dir
+
+  $site->dir( $url )
+
+Returns a L<Rit::Frame::Dir> object, similar to the
+L<Rit::Frame::Page> object.
+
+=cut
+
+sub dir
+{
+    return Para::Frame::Dir->new({site => $_[0],
+				  url  => $_[1],
+				 });
 }
 
 
