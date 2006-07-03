@@ -1,4 +1,4 @@
-#  $Id$  -*-perl-*-
+#  $Id$  -*-cperl-*-
 package Para::Frame::List;
 #=====================================================================
 #
@@ -55,7 +55,7 @@ be used as usual. Example:
 The iteration methods is compatible with L<Template::Iterator>. The
 iterator status codes are taken from L<Template::Constants>.
 
-NB! The method max 
+NB! The method max .. ???
 
 The object also has the following methods.
 
