@@ -1,4 +1,4 @@
-#  $Id$  -*-perl-*-
+#  $Id$  -*-cperl-*-
 package Para::Frame;
 #=====================================================================
 #
@@ -1457,7 +1457,7 @@ Defaults to L</dir_run> followed by C</parframe_$port.pid>
 
 The file to use for logging.
 
-Defaults to L</dir_run> followed by C</parframe_$port.log>
+Defaults to L</dir_log> followed by C</parframe_$port.log>
 
 =head3 user_class
 
@@ -1477,7 +1477,7 @@ Defaults to C<Para::Frame::Session>
 
 A coderef that generates a user object to be used for background jobs.
 
-Defaults to code that C<get> C<guest> fråm L</user_class>.
+Defaults to code that C<get> C<guest> from L</user_class>.
 
 =head3 th
 
