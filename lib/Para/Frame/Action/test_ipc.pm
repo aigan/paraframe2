@@ -1,4 +1,4 @@
-#  $Id$  -*-perl-*-
+#  $Id$  -*-cperl-*-
 package Para::Frame::Action::test_ipc;
 
 use strict;
