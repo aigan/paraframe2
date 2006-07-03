@@ -469,6 +469,13 @@ sub error_page_not_selected
     return $_[0]->{'error_template'} ? 0 : 1;
 }
 
+=head2 find_template
+
+  returns ($doc, $ext) where $doc is a L<Template::Document> objetct
+that can be parsed to a L<Para::Frame::Burner> object.
+
+=cut
+
 sub find_template
 {
     my( $page, $template ) = @_;
