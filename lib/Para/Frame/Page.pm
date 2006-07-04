@@ -249,10 +249,12 @@ sub parent
 
     if( $page->is_index )
     {
+#	debug "Getting parent for page index";
 	return $page->dir->parent;
     }
     else
     {
+#	debug "Getting dir for page";
 	return $page->dir;
     }
 }
@@ -384,8 +386,8 @@ sub dir
 
 =head2 dir_url_name
 
-The path to the template, excluding the filename, relative the site
-home, begining but not ending with a slash.
+The URL path to the template, excluding the filename, relative the site
+home, begining but not ending with a slash. May be an empty string.
 
 =cut
 
@@ -394,9 +396,8 @@ sub dir_url_name
     my( $page ) = @_;
     my $home = $page->site->home;
     my $template = $page->url_path_tmpl;
-    $template =~ /^$home(.*?)\/[^\/]*$/
-      or confess "Couldn't get site_dir from $template under $home";
-    return $1;
+    $template =~ /^(.*?)\/[^\/]*$/;
+    return $1||'';
 }
 
 =head2 sys_path_tmpl
