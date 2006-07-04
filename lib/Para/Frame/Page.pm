@@ -62,6 +62,7 @@ use Para::Frame::Utils qw( throw debug create_dir chmod_file idn_encode idn_deco
 use Para::Frame::Request::Ctype;
 use Para::Frame::URI;
 use Para::Frame::L10N qw( loc );
+use Para::Frame::Dir;
 
 =head2 new
 
@@ -97,6 +98,7 @@ sub new
      renderer       => undef,
      site           => undef,          ## The site for the request
      req            => $req,
+     dir            => undef,          ## Cached Para::Frame::Dir obj
     }, $class;
     weaken( $page->{'req'} );
 
@@ -204,6 +206,8 @@ sub template_uri
 
 =head2 url_dir
 
+use .dir.url_name instead
+
 The URI excluding the trailing slash (and the filename). If The URI is
 a dir, the C<url_dir> will be the same, minus the ending '/'.
 
@@ -211,6 +215,7 @@ a dir, the C<url_dir> will be the same, minus the ending '/'.
 
 sub url_dir
 {
+    die "deprecated";
     my( $dir ) = $_[0]->{'template_uri'} =~ /^(.*)\//;
     return $dir;
 }
@@ -218,18 +223,44 @@ sub url_dir
 
 =head2 url_dir_path
 
+use .dir.url_name_path instead
+
 The same as L</url_dir>, but ends with a '/'.
 
 =cut
 
 sub url_dir_path
 {
+    die "deprecated";
     my( $dir ) = $_[0]->{'template_uri'} =~ /^(.*\/)/;
     return $dir;
 }
 
 
+=head2 parent
+
+Same as L</dir>, except that if the template is the index, we will instead get the parent dir.
+
+=cut
+
+sub parent
+{
+    my( $page ) = @_;
+
+    if( $page->is_index )
+    {
+	return $page->dir->parent;
+    }
+    else
+    {
+	return $page->dir;
+    }
+}
+
+
 =head2 url_parent
+
+use .parent.url_name instead
 
 Same as L</url_dir>, except that if the template is a dir, we will instead get the previous dir. Excluding the trailing slash.
 
@@ -237,6 +268,7 @@ Same as L</url_dir>, except that if the template is a dir, we will instead get t
 
 sub url_parent
 {
+    die "deprecated";
     my( $dir ) = $_[0]->{'template_uri'} =~ /^(.*)\/./;
     return $dir;
 }
@@ -244,12 +276,15 @@ sub url_parent
 
 =head2 url_parent_path
 
+use .parent.url_name_path instead
+
 The same as L</url_parent>, but ends with a '/'.
 
 =cut
 
 sub url_parent_path
 {
+    die "deprecated";
     my( $dir ) = $_[0]->{'template_uri'} =~ /^(.*\/)./;
     return $dir;
 }
@@ -325,8 +360,9 @@ sub path_tmpl
 
 =head2 dir
 
-The path to the template, excluding the filename, relative the site
-home, begining but not ending with a slash.
+Returns a L<Para::Frame::Dir> object for the template.
+
+Was previously the same as L</dir_url_name>.
 
 =cut
 
@@ -334,6 +370,28 @@ sub dir
 {
     my( $page ) = @_;
 
+    unless( $page->{'dir'} )
+    {
+	my $url_name = $page->dir_url_name;
+	$page->{'dir'} = Para::Frame::Dir->new({site => $page->site,
+						url  => $url_name,
+					       });
+    }
+
+    return $page->{'dir'};
+}
+
+
+=head2 dir_url_name
+
+The path to the template, excluding the filename, relative the site
+home, begining but not ending with a slash.
+
+=cut
+
+sub dir_url_name
+{
+    my( $page ) = @_;
     my $home = $page->site->home;
     my $template = $page->url_path_tmpl;
     $template =~ /^$home(.*?)\/[^\/]*$/
@@ -354,12 +412,15 @@ sub sys_path_tmpl
 
 =head2 sys_dir
 
+use .dir.sys_name instead
+
 The path and from system root. Excluding the last '/'
 
 =cut
 
 sub sys_dir
 {
+    confess "deprecated";
     my $sys_path_tmpl = $_[0]->sys_path_tmpl;
     my( $dir ) = $sys_path_tmpl =~ /^(.*\/)/;
 
