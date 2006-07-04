@@ -73,7 +73,7 @@ sub new
     my $home = $site->home;
     unless( $url =~ /^$home/ )
     {
-	croak "URL '$url' is out of bound for site";
+	confess "URL '$url' is out of bound for site: ".datadump($args);
     }
 
     my $dir = bless
@@ -88,6 +88,9 @@ sub new
     {
 	croak "The dir $dir->{sys_name} is not found (or readable)";
     }
+
+
+#    debug "Created dir obj ".datadump($dir);
 
     return $dir;
 }
