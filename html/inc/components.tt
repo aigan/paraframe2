@@ -165,16 +165,16 @@
 %]
 
 [% BLOCK expand %]
-   [% DEFAULT paraframe_formcount=0 %]
-   [% paraframe_formcount = paraframe_formcount + 1 %]
+   [% DEFAULT global.paraframe_formcount=0 %]
+   [% global.paraframe_formcount = global.paraframe_formcount + 1 %]
    [% paraframe_display='none' %]
    [% paraframe_label_display='block' %]
    [% DEFAULT label = "Instruktion" %]
    [% DEFAULT label_show = "Visa ${label}..." %]
    [% DEFAULT label_hide = "Dölj ${label}..." %]
-<div class="paraframe_expand"><a href="javascript:showhide('paraframe_fid_[% paraframe_formcount %]');showhide('paraframe_fid_[% paraframe_formcount %]_label');" id="paraframe_fid_[% paraframe_formcount %]_label" style="display:[% paraframe_label_display %]">[% label_show %]</a></div>
-<div class="paraframe_expanded" id="paraframe_fid_$paraframe_formcount" style="display:$paraframe_display">
-<a href="javascript:showhide('paraframe_fid_[% paraframe_formcount %]');showhide('paraframe_fid_[% paraframe_formcount %]_label');">[% label_hide %]</a>
+<div class="paraframe_expand"><a href="javascript:showhide('paraframe_fid_[% global.paraframe_formcount %]');showhide('paraframe_fid_[% global.paraframe_formcount %]_label');" id="paraframe_fid_[% global.paraframe_formcount %]_label" style="display:[% paraframe_label_display %]">[% label_show %]</a></div>
+<div class="paraframe_expanded" id="paraframe_fid_$global.paraframe_formcount" style="display:$paraframe_display">
+<a href="javascript:showhide('paraframe_fid_[% global.paraframe_formcount %]');showhide('paraframe_fid_[% global.paraframe_formcount %]_label');">[% label_hide %]</a>
 $content
 </div>
 [% END %]
