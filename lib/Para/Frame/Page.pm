@@ -364,7 +364,7 @@ sub path_tmpl
 
 Returns a L<Para::Frame::Dir> object for the template.
 
-Was previously the same as L</dir_url_name>.
+Was previously the same as .dir.name
 
 =cut
 
