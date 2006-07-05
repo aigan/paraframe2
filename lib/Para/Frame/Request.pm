@@ -459,6 +459,8 @@ sub language
 
   $req->set_language( $language_in )
 
+This is called during the initiation of the request.
+
 Calls L<Para::Frame::L10N/set> or a subclass theriof defined in
 L<Para::Frame/l10n_class>.
 
