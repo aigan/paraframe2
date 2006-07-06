@@ -26,7 +26,6 @@ use strict;
 use CGI qw( -compile );
 use CGI::Cookie;
 use FreezeThaw qw( thaw );
-use Data::Dumper;
 use HTTP::BrowserDetect;
 use IO::File;
 use Carp qw(cluck croak carp confess );
@@ -52,7 +51,7 @@ use Para::Frame::Site;
 use Para::Frame::Change;
 use Para::Frame::URI;
 use Para::Frame::Page;
-use Para::Frame::Utils qw( compile throw debug catch idn_decode );
+use Para::Frame::Utils qw( compile throw debug catch idn_decode datadump );
 use Para::Frame::L10N;
 use Para::Frame::Logging;
 use Para::Frame::Connection;
@@ -448,7 +447,7 @@ sub language
 #    carp "Returning language obj $_[0]->{'lang'}";
 #    unless( UNIVERSAL::isa $_[0]->{'lang'},'Para::Frame::L10N')
 #    {
-#	croak "Lanugage obj of wrong type: ".Dumper($_[0]->{'lang'});
+#	croak "Lanugage obj of wrong type: ".datadump($_[0]->{'lang'});
 #    }
     return $_[0]->{'lang'} or croak "Language not initialized";
 }
@@ -777,7 +776,7 @@ sub setup_jobs
     }
     # We will not execute later actions if one of them fail
     $req->{'actions'} = $actions;
-#    warn "Actions are now ".Dumper($actions);
+#    warn "Actions are now ".datadump($actions);
 }
 
 sub add_job
@@ -952,7 +951,7 @@ sub run_action
     {
 	debug(3,"using $actionroot",1);
 	no strict 'refs';
-	my @res = &{$actionroot.'::'.$c_run.'::handler'}($req, @args);
+	@res = &{$actionroot.'::'.$c_run.'::handler'}($req, @args);
 
 	if( $Para::Frame::FORK )
 	{
@@ -994,8 +993,6 @@ sub run_action
 
     ### Other info is stored in $req->result->{'info'}
     $req->result->message( @res );
-
-
 
     debug(-1);
     return 1; # All OK
@@ -1798,7 +1795,7 @@ sub get_child_result
 	return 0;
     };
 
-#    warn Dumper $result;
+#    warn datadump $result;
 
     foreach my $message ( $result->message )
     {
