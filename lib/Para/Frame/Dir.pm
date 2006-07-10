@@ -9,7 +9,7 @@ package Para::Frame::Dir;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -21,6 +21,10 @@ package Para::Frame::Dir;
 Para::Frame::Dir - Represents a directory in the site
 
 =head1 DESCRIPTION
+
+Represents a directory in the site.
+
+
 
 There are corresponding methods here to L<Para::Frame::Page>.
 
@@ -39,20 +43,21 @@ BEGIN
     print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
+use base 'Para::Frame::File';
+
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug datadump catch );
-
-our $DIR;
+use Para::Frame::List;
+use Para::Frame::Page;
 
 
 #######################################################################
 
 =head2 new
 
-  Para::Frame::Page->new($req)
+  Para::Frame::Dir->new(\%args)
 
-Creates a Page object. It should be initiated after the request has
-been registred. (Done by L<Para::Frame>.)
+Creates a Dir object.
 
 =cut
 
@@ -67,7 +72,28 @@ sub new
     defined $url or croak "url param missing ".datadump($args);
     $url =~ s/\/$//; # Remove trailing slash
 
-    my $site = $args->{site} ||= $Para::Frame::REQ->site;
+
+    my $file = bless
+    {
+     url_name       => $url,
+     site           => undef,
+     initiated      => 0,
+     sys_name       => undef,
+     req            => undef,
+     hidden         => undef,
+    }, $class;
+
+    $file->{hidden} = $args->{hidden} || qr/(^\.|^CVS$|~$)/;
+
+
+    if( my $req = $args->{req} )
+    {
+	$file->{req} = $req;
+	weaken( $file->{'req'} );
+    }
+
+    # TODO: Use URL for extracting the site
+    my $site = $file->set_site( $args->{site} || $file->req->site );
 
     # Check tat url is part of the site
     my $home = $site->home;
@@ -76,48 +102,52 @@ sub new
 	confess "URL '$url' is out of bound for site: ".datadump($args);
     }
 
-    my $dir = bless
-    {
-     url            => $url,
-     site           => $site,          ## The site for the request
-     initiated      => 0,
-     sys_name       => $site->uri2file($url.'/'),
-    }, $class;
+    $file->{sys_name} = $site->uri2file($url.'/');
 
-    unless( -r $dir->{sys_name} )
+    unless( -r $file->{sys_name} )
     {
-	croak "The dir $dir->{sys_name} is not found (or readable)";
+	croak "The file $file->{sys_name} is not found (or readable)";
     }
 
 
-#    debug "Created dir obj ".datadump($dir);
+#    debug "Created file obj ".datadump($file);
 
-    return $dir;
+    return $file;
 }
 
 sub initiate
 {
-    return 1 if $_[0]->{initiated};
-
     my( $dir ) = @_;
+
+    my $sys_name = $dir->sys_name;
+    my $mtime = (stat($sys_name))[9];
+
+    if( $dir->{initiated} )
+    {
+	return 1 unless $mtime > $dir->{mtime};
+    }
+
+    $dir->{mtime} = $mtime;
 
     my %files;
 
-    my $d = IO::Dir->new($dir->sys_name) or die $!;
+    my $d = IO::Dir->new($sys_name) or die $!;
 
-    debug "Reading ".$dir->sys_name;
+    debug "Reading ".$sys_name;
 
     while(defined( my $name = $d->read ))
     {
 	next if $name =~ /^\.\.?$/;
 
 	my $f = {};
+	my $path = $sys_name.'/'.$name;
 
-	my $st = lstat($name);
+#	debug "Statting $path";
+	my $st = lstat($path);
 	if( -l _ )
 	{
-	    $f->{symbolic_link} = readlink($name);
-	    $st = stat($name);
+	    $f->{symbolic_link} = readlink($path);
+	    $st = stat($path);
 	}
 
 	$f->{readable} = -r _;
@@ -138,11 +168,14 @@ sub initiate
 	$f->{ascii} = -T _;
 	$f->{binary} = -B _;
 
+	die "Stat failed?! ".datadump([$f, $st]) unless $f->{size};
+
 	$files{$name} = $f;
     }
 
-    debug datadump(\%files);
-    return $_[0]->{initiated} = 1;
+    $dir->{file} = \%files;
+
+    return $dir->{initiated} = 1;
 }
 
 
@@ -150,19 +183,7 @@ sub initiate
 
 =head1 Accessors
 
-Prefix url_ gives the path of the dir in http on the host
-
-Prefix sys_ gives the path of the dir in the filesystem
-
-No prefix gives the path of the dir relative the site root in url_path
-
-dir excludes the trailing slash
-
-dir_path includes the trailing slash
-
- # url_name
- # name
- # sys_name
+See L<Para::Frame::File>
 
 =cut
 
@@ -181,58 +202,84 @@ sub dirs
     $dir->initiate;
 
     my @list;
-#    forach my $key
+    foreach my $name ( keys %{$dir->{file}} )
+    {
+	next unless $dir->{file}{$name}{directory};
+	my $url = $dir->{url_name}.'/'.$name;
+	push @list, $dir->new({ site => $dir->site,
+				url  => $url,
+			      });
+    }
+
+    return Para::Frame::List->new(\@list);
 }
 
 #######################################################################
 
-=head2 url
+=head2 files
 
-Returns the L<URI> object, including the scheme, host and port.
+Returns a L<Para::Frame::List> with L<Para::Frame::File> objects.
 
 =cut
 
-sub url
+sub files
 {
     my( $dir ) = @_;
 
-    my $site = $dir->site;
-    my $scheme = $site->scheme;
-    my $host = $site->host;
-    my $url_string = sprintf("%s://%s%s",
-			     $site->scheme,
-			     $site->host,
-			     $dir->name);
+    $dir->initiate;
 
-    return Para::Frame::URI->new($url_string);
+#    debug "Directory initiated";
+
+    my @list;
+    foreach my $name ( sort keys %{$dir->{file}} )
+    {
+	unless( $dir->{file}{$name}{readable} )
+	{
+	    debug "File $name not readable";
+	    next;
+	}
+
+	next if $name =~ $dir->{hidden};
+
+	my $url = $dir->{url_name}.'/'.$name;
+#	debug "Adding $url";
+	if( $dir->{file}{$name}{directory} )
+	{
+#	    debug "  As a Dir";
+	    push @list, $dir->new({ site => $dir->site,
+				    url  => $url,
+				  });
+	}
+	elsif( $name =~ /\.tt$/ )
+	{
+#	    debug "  As a Page";
+	    push @list, Para::Frame::Page->new({ site => $dir->site,
+						 url  => $url,
+					       });
+	}
+	else
+	{
+#	    debug "  As a File";
+	    push @list, Para::Frame::File->new({ site => $dir->site,
+						 url  => $url,
+					       });
+	}
+    }
+
+    return Para::Frame::List->new(\@list);
 }
-
 
 #######################################################################
 
-=head2 url_name
+=head2 url_path
 
-The URL path as a string excluding the trailing slash.
-
-=cut
-
-sub url_name
-{
-    return $_[0]->{'url'};
-}
-
-
-#######################################################################
-
-=head2 url_name_path
-
-The same as L</url_name>, but ends with a '/'.
+The same as L<Para::Frame::File/url_name>, but ends with a '/'.
 
 =cut
 
-sub url_name_path
+sub url_path
 {
-    return $_[0]->{'url'} . '/';
+    return $_[0]->{'url_name'} . '/';
 }
 
 
@@ -253,80 +300,10 @@ sub parent
 
     my $home = $dir->site->home;
     my( $pdirname ) = $dir->{'url'} =~ /^($home.*)\/./ or return undef;
-#    die "'$pdirname','$home','$dir->{url}'" unless $pdirname;
 
     return $dir->new({site => $dir->site,
 		      url  => $pdirname,
 		     });
-}
-
-
-#######################################################################
-
-=head2 name
-
-The path to the dir, relative the L<Para::Frame::Site/home>, begining
-but not ending with a slash.
-
-=cut
-
-sub name
-{
-    my( $dir ) = @_;
-
-    my $home = $dir->site->home;
-    my $url_name = $dir->url_name;
-    $url_name =~ /^$home(.*)$/
-      or confess "Couldn't get site_dir from $url_name under $home";
-    return $1;
-}
-
-#######################################################################
-
-=head2 name_path
-
-The path to the dir, relative the L<Para::Frame::Site/home>, begining
-and ending with a slash.
-
-=cut
-
-sub name_path
-{
-    my( $dir ) = @_;
-
-    my $home = $dir->site->home;
-    my $url_name_path = $dir->url_name_path;
-    $url_name_path =~ /^$home(.*)$/
-      or confess "Couldn't get site_dir from $url_name_path under $home";
-    return $1;
-}
-
-
-#######################################################################
-
-=head2 sys_name
-
-The path from the system root. Excluding the last '/'
-
-=cut
-
-sub sys_name
-{
-    return $_[0]->{'sys_name'};
-}
-
-
-#######################################################################
-
-=head2 sys_name_path
-
-The path from the system root. Including the last '/'
-
-=cut
-
-sub sys_name_path
-{
-    return $_[0]->{'sys_name'} . '/';
 }
 
 
@@ -345,20 +322,11 @@ sub has_index
     return -r $_[0]->sys_name_path . 'index.tt';
 }
 
-
 #######################################################################
 
-=head2 site
-
-  $page->site
-
-Returns the L<Para::Frame::Site> this page is located in.
-
-=cut
-
-sub site
+sub is_dir
 {
-    return $_[0]->{'site'} or die;
+    return 1;
 }
 
 #######################################################################
