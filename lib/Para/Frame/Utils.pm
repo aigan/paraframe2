@@ -763,10 +763,10 @@ sub uri_path
     my $req = $Para::Frame::REQ;
     my $page = $req->page;
 
-    $template ||= $page->template_uri;
+    $template ||= $page->url_path;
     unless( $template =~ /^\// )
     {
-	$template = URI->new_abs($template, $page->template_uri)->path;
+	$template = URI->new_abs($template, $page->url_path)->path;
     }
     return $template;
 }
