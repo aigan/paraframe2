@@ -96,7 +96,7 @@ sub new
     my $site = $file->set_site( $args->{site} || $file->req->site );
 
     # Check tat url is part of the site
-    my $home = $site->home;
+    my $home = $site->home_url_path;
     unless( $url =~ /^$home/ )
     {
 	confess "URL '$url' is out of bound for site: ".datadump($args);
@@ -271,13 +271,16 @@ sub files
 
 #######################################################################
 
-=head2 url_path
 
-The same as L<Para::Frame::File/url_name>, but ends with a '/'.
+=head2 url_path_slash
+
+The preffered URL for the file in http on the host. For dirs,
+excluding trailing slash.
+
 
 =cut
 
-sub url_path
+sub url_path_slash
 {
     return $_[0]->{'url_name'} . '/';
 }
@@ -298,7 +301,7 @@ sub parent
 {
     my( $dir ) = @_;
 
-    my $home = $dir->site->home;
+    my $home = $dir->site->home_url_path;
     my( $pdirname ) = $dir->{'url'} =~ /^($home.*)\/./ or return undef;
 
     return $dir->new({site => $dir->site,
