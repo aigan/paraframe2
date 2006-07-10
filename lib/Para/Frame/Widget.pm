@@ -265,7 +265,7 @@ sub jump_extra
 	if( $Para::Frame::REQ->is_from_client and $template )
 	{
 	    # Mark as same_place if link goes to current page
-	    if( $Para::Frame::REQ->template_uri eq $template and not $attr->{'run'} )
+	    if( $Para::Frame::REQ->page->url_path eq $template and not $attr->{'run'} )
 	    {
 		$extra .= " class=\"same_place\"";
 	    }
@@ -1229,7 +1229,7 @@ sub css_header
     my( $p ) = @_;
 
     my $req = $Para::Frame::REQ;
-    my $home = $req->site->home;
+    my $home = $req->page->site->home;
 
     if( $p )
     {
@@ -1329,7 +1329,7 @@ sub favicon_header
 	$url = "pf/images/favicon.ico";
     }
 
-    my $home = $Para::Frame::REQ->site->home;
+    my $home = $Para::Frame::REQ->page->site->home;
 
     $url =~ s/^([^\/])/$home\/$1/;
 
@@ -1404,8 +1404,8 @@ sub confirm_simple
 
     my $req = $Para::Frame::REQ;
     my $q = $req->q;
-    my $site = $req->site;
     my $page = $req->page;
+    my $site = $page->site;
 
     foreach my $confirmed ( $q->param('confirmed') )
     {
@@ -1416,12 +1416,12 @@ sub confirm_simple
     ## Set up route, confirmation data and throw exception
     # Sets the CURRENT as the next step, and with the CURRENT params
     #
-    $req->session->route->plan_next(uri($page->url_path_full, store_params()));
+    $req->session->route->plan_next(uri($page->url_path, store_params()));
 
 
     $page->set_error_template('/confirm.tt');
     my $result = $req->result;
-    my $home = $req->site->home;
+    my $home = $site->home;
 
     $result->{'info'}{'confirm'} =
     {
