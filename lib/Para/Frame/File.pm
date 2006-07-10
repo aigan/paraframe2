@@ -85,7 +85,7 @@ sub new
     my $site = $file->set_site( $args->{site} || $file->req->site );
 
     # Check tat url is part of the site
-    my $home = $site->home;
+    my $home = $site->home_url_path;
     unless( $url =~ /^$home/ )
     {
 	confess "URL '$url' is out of bound for site: ".datadump($args);
@@ -113,7 +113,7 @@ sub initiate
 {
     my( $f ) = @_;
 
-    my $name = $f->sys_name;
+    my $name = $f->sys_path;
     my $mtime = (stat($name))[9];
 
     if( $f->{initiated} )
@@ -168,16 +168,19 @@ path_base excludes the suffix of the filename
 
 path gives the preffered URL for the file
 
+For dirs: always exclude the trailing slash, except for path_slash
+
   url_path_tmpl  template
-  url_path_base
+  url_base
   url_path       template_url url_path_full
   sys_path       sys_path_tmpl
-  sys_path_base
+  sys_base
   name           #filename
   base           #basename
   path_tmpl      site_url
-  path_base      site_file
+  base           site_file
   path           path_full
+  path_slash
 
 =cut
 
@@ -208,26 +211,10 @@ sub url
 #######################################################################
 
 
-=head2 url_name
-
-The preffered URL for the file in http on the host. For dirs,
-excluding trailing slash.
-
-=cut
-
-sub url_name
-{
-    return $_[0]->{'url_name'};
-}
-
-
-#######################################################################
-
-
 =head2 url_path
 
 The preffered URL for the file in http on the host. For dirs,
-including trailing slash.
+excluding trailing slash.
 
 
 =cut
@@ -252,6 +239,29 @@ sub url_path_tmpl
 {
     return $_[0]->url_path;
 }
+
+#######################################################################
+
+
+=head2 base
+
+The path to the template, including the filename, relative the site
+home, begining with a slash. But excluding the suffixes of the file
+along with the dots. For Dirs, excluding the trailing slash.
+
+=cut
+
+sub base
+{
+    my( $page ) = @_;
+
+    my $home = $page->site->home_url_path;
+    my $template = $page->url_path_tmpl;
+    $template =~ /^$home(.*?)(\.\w\w)?\.\w{2,3}$/
+      or die "Couldn't get base from $template under $home";
+    return $1;
+}
+
 
 #######################################################################
 
@@ -319,7 +329,7 @@ home, begining but not ending with a slash. May be an empty string.
 sub dir_url_path
 {
     my( $page ) = @_;
-    my $home = $page->site->home;
+    my $home = $page->site->home_url_path;
     my $template = $page->url_path_tmpl;
     $template =~ /^(.*?)\/[^\/]*$/;
     return $1||'';
@@ -331,6 +341,8 @@ sub dir_url_path
 =head2 name
 
 The template filename without the path.
+
+For dirs, the dir name without the path.
 
 =cut
 
@@ -347,7 +359,7 @@ sub name
 =head2 path
 
 The preffered URL for the file, relative the site home, begining with
-a slash. And for dirs, ending with a slash.
+a slash. And for dirs, not ending with a slash.
 
 =cut
 
@@ -355,7 +367,7 @@ sub path
 {
     my( $f ) = @_;
 
-    my $home = $f->site->home;
+    my $home = $f->site->home_url_path;
     my $url_path = $f->url_path;
     my( $site_url ) = $url_path =~ /^$home(.+?)$/
       or die "Couldn't get site_url from $url_path under $home";
@@ -364,34 +376,34 @@ sub path
 
 #######################################################################
 
-=head2 name_path
 
-The path to the dir, relative the L<Para::Frame::Site/home>, begining
-and ending with a slash.
+=head2 path_slash
+
+The preffered URL for the file, relative the site home, begining with
+a slash. And for dirs, ending with a slash.
 
 =cut
 
-sub name_path
+sub path_slash
 {
     my( $f ) = @_;
 
-    my $home = $f->site->home;
-    my $url_name_path = $f->url_name_path;
-    $url_name_path =~ /^$home(.*)$/
-      or confess "Couldn't get site_dir from $url_name_path under $home";
-    return $1;
+    my $home = $f->site->home_url_path;
+    my $url_path = $f->url_path_slash;
+    my( $site_url ) = $url_path =~ /^$home(.+?)$/
+      or die "Couldn't get site_url from $url_path under $home";
+    return $site_url;
 }
-
 
 #######################################################################
 
-=head2 sys_name
+=head2 sys_path
 
 The path from the system root. Excluding the last '/' for dirs.
 
 =cut
 
-sub sys_name
+sub sys_path
 {
     return $_[0]->{'sys_name'} ||= $_[0]->site->uri2file($_[0]->url_path_tmpl);
 }
@@ -399,15 +411,15 @@ sub sys_name
 
 #######################################################################
 
-=head2 sys_path
+=head2 sys_path_slash
 
 The path from the system root. Including the last '/' for dirs.
 
 =cut
 
-sub sys_path
+sub sys_path_slash
 {
-    return $_[0]->sys_name . '/';
+    return $_[0]->sys_path . '/';
 }
 
 
