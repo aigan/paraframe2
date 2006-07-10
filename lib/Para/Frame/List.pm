@@ -368,7 +368,7 @@ sub pagelist
     my $id = $l->id || 0;
 
     my $page = $req->page;
-    my $me = $page->url_path_full;
+    my $me = $page->url_path;
 
     my $out = "<span class=\"paraframe_pagelist\">";
 

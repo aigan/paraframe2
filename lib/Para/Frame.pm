@@ -1004,8 +1004,7 @@ sub add_background_jobs
 	# each background request
 
 	$req->{'original_request'} = $original_request;
-	$req->{'page'} = Para::Frame::Page->new($req);
-	$req->{'page'}->set_site($original_request->site);
+	$req->set_site($original_request->site);
 	$req->add_job('run_code', @$job);
 
 	for( my $i=0; $i<=$#BGJOBS_PENDING; $i++ )
@@ -1058,7 +1057,7 @@ sub handle_request
     Para::Frame::Reload->check_for_updates;
 
     ### Create request ($REQ not yet set)
-    my $req = new Para::Frame::Request( $REQNUM, $client, $recordref );
+    my $req = Para::Frame::Request->new( $REQNUM, $client, $recordref );
     ### Register the request
     $REQUEST{ $client } = $req;
     switch_req( $req, 1 );
@@ -1084,14 +1083,15 @@ sub handle_request
     warn "# $client\n" if debug() > 4;
 
     ### Redirected from another page?
-    if( my $page_result = $req->session->{'page_result'}{ $req->uri } )
+    if( my $page_result =
+	$req->session->{'page_result'}{ $req->page->url_path } )
     {
 	debug "Sending stored page result";
 	my $page = $req->page;
 	$page->set_headers( $page_result->[0] );
 	$page->send_headers;
 	$page->send_in_chunks($page_result->[1]);
-	delete $req->session->{'page_result'}{ $req->uri };
+	delete $req->session->{'page_result'}{ $req->page->url_path };
     }
     else
     {

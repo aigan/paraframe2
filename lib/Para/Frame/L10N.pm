@@ -107,10 +107,19 @@ sub set
 
     my( $req ) = $Para::Frame::REQ;
 
+    # TODO: Handle L10N for pages with diffrent sites in same request
+
     # Get site languages
     #
-    confess "page not defined" unless $req->{'page'};
-    my $site_languages = $req->page->site->languages;
+    my $site_languages = [];
+    if( my $page = $req->page )
+    {
+	$site_languages = $page->site->languages;
+    }
+    else
+    {
+	$site_languages = $req->site->languages;
+    }
     unless( @$site_languages )
     {
 	debug 2, "  No site language specified";
@@ -416,7 +425,15 @@ sub preferred
     my( $lh, @lim_langs ) = @_;
 
     my $req = $Para::Frame::REQ;
-    my $site = $req->page->site;
+    my $site;
+    if( $req->page )
+    {
+	$site = $req->page->site;
+    }
+    else
+    {
+	$site = $req->site;
+    }
 
     my @langs;
     if( @lim_langs )

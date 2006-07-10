@@ -381,8 +381,8 @@ sub send
     my($e, $p_in ) = @_;
 
     my $req = $Para::Frame::REQ;
-    my $home = $req->site->home;
     my $site = $req->site;
+    my $home = $site->home;
     my $fqdn = fqdn;
 
     unless( $site->send_email )
@@ -406,8 +406,14 @@ sub send
     # List of addresses to try. Quit after first success
     my @try = ref $p->{'to'} eq 'ARRAY' ? @{$p->{'to'}} : $p->{'to'};
 
-    my( $in, $ext ) = $req->page->find_template("$home/email/".$p->{'template'});
-    if( not $in )
+    my $url = "$home/email/".$p->{'template'};
+    my $page = Para::Frame::Page->new({
+				       url => $url,
+				       site => $site,
+				      });
+
+    my( $tmpl ) = $page->template;
+    if( not $tmpl )
     {
 	throw('notfound', "Hittar inte e-postmallen ".$p->{'template'});
     }
@@ -426,7 +432,7 @@ sub send
     my %params = %$p;
 
     my $data = "";
-    $burner->burn( $in, \%params, \$data ) or throw($burner->error);
+    $burner->burn( $tmpl, \%params, \$data ) or throw($burner->error);
 
     if( $p->{'pgpsign'} )
     {

@@ -135,7 +135,7 @@ sub add
 	confess "no page";
     }
 
-    $extra->{-path} ||= $req->site->home_path;
+    $extra->{-path} ||= $req->page->site->home_path;
 
     foreach my $key ( keys %$settings )
     {
@@ -183,7 +183,7 @@ sub remove
     }
 
     $extra ||= {};
-    $extra->{-path} ||= $req->site->home_path;
+    $extra->{-path} ||= $req->page->site->home_path;
     $extra->{-expires} ||= "-1h";
 
 
