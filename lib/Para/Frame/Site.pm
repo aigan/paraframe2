@@ -171,6 +171,10 @@ Returns the site registred (by L</add>) under the given C<$name>.
 
 If no such site was regitred, returns the C<default> site.
 
+If $name is a site object, retuns it.
+
+Returns: A L<Para::Frame::Site> object
+
 =cut
 
 sub get
@@ -757,28 +761,6 @@ sub languages
     return $_[0]->{'languages'} || $Para::Frame::CFG->{'languages'} || [];
 }
 
-
-
-sub pagepath
-{
-    my( $site ) = @_;
-
-    die "deprecated";
-
-    my $req = $Para::Frame::REQ;
-
-    my $home = $site->home;
-    my$tmpl = $req->template;
-    my( $page ) = $tmpl =~  /^$home(.*?)(\.\w\w)?\.\w{2,3}$/;
-    if( $page )
-    {
-	return $page;
-    }
-    else
-    {
-	die "Couldn't get pagepath from $tmpl\n";
-    }
-}
 
 sub htmlsrc # src dir for precompile or for getting inc files
 {
