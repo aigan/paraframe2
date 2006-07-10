@@ -159,7 +159,7 @@ sub check_process
     {
 	my $cpu_delta = ($time - $CPU_TIME) || 0.00001;
 	my $sys_delta = ($sys_time - $CHECKTIME) || 0.00001;
-	my $usage = $cpu_delta/$sys_delta/10; # Get percent
+	my $usage = $cpu_delta/$sys_delta/100; # Get percent
 	$CPU_USAGE = ($CPU_USAGE * 2 + $usage ) / 3;
 
 	if( debug > 3 or $CPU_USAGE > 30 or $size > LIMIT_MEMORY_NOTICE )
