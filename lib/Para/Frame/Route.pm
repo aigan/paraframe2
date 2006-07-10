@@ -128,7 +128,7 @@ sub plan_backtrack
     if( my $step = $route->{'route'}[-1] )
     {
 	$step = Para::Frame::URI->new($step) unless UNIVERSAL::isa($step, 'URI');
-#	my $uri = URI->new($step);
+#	my $url = URI->new($step);
 	debug(1,"!!Plan backtrack to ".$step->path);
 	return $step->path . '?backtrack';
     }
@@ -155,11 +155,11 @@ sub plan_next
 
     $urls = [$urls] unless UNIVERSAL::isa($urls, 'ARRAY');
 
-    my $caller_uri = $route->caller_uri;
+    my $caller_url = $route->caller_url;
 
     foreach my $url_in ( @$urls )
     {
-	my $url_norm = $Para::Frame::REQ->normalized_uri( $url_in );
+	my $url_norm = $Para::Frame::REQ->normalized_url( $url_in );
 	my $url = Para::Frame::URI->new($url_norm);
 
 	# Used in skip_step...
@@ -170,14 +170,14 @@ sub plan_next
 	}
 	else
 	{
-	    $url->query_param_append('caller_page' => $caller_uri );
+	    $url->query_param_append('caller_page' => $caller_url );
 	}
 
 	debug(1,"!!New step in route: $url");
 
-	if( my $prev_uri_clean = $route->{'route_clean'}[-1] )
+	if( my $prev_url_clean = $route->{'route_clean'}[-1] )
 	{
-	    if( $prev_uri_clean->eq( $url_clean ) )
+	    if( $prev_url_clean->eq( $url_clean ) )
 	    {
 		next;
 	    }
@@ -206,11 +206,11 @@ sub plan_after
 
     $urls = [$urls] unless UNIVERSAL::isa($urls, 'ARRAY');
 
-    my $caller_uri = $route->caller_uri;
+    my $caller_url = $route->caller_url;
 
     foreach my $url_in ( @$urls )
     {
-	my $url_norm = $Para::Frame::REQ->normalized_uri( $url_in );
+	my $url_norm = $Para::Frame::REQ->normalized_url( $url_in );
 	my $url = Para::Frame::URI->new($url_norm);
 
 	# Used in skip_step...
@@ -221,14 +221,14 @@ sub plan_after
 	}
 	else
 	{
-	    $url->query_param_append('caller_page' => $caller_uri );
+	    $url->query_param_append('caller_page' => $caller_url );
 	}
 
 	debug(1,"!!New step in route: $url");
 
-	if( my $prev_uri_clean = $route->{'route_clean'}[-1] )
+	if( my $prev_url_clean = $route->{'route_clean'}[-1] )
 	{
-	    if( $prev_uri_clean->eq( $url_clean ) )
+	    if( $prev_url_clean->eq( $url_clean ) )
 	    {
 		next;
 	    }
@@ -243,22 +243,22 @@ sub plan_after
 
 #######################################################################
 
-=head2 caller_uri
+=head2 caller_url
 
-  $route->caller_uri
+  $route->caller_url
 
-Returns the caller_uri, excluding actions, as an L<URI> obj.
+Returns the caller_url, excluding actions, as an L<URI> obj.
 
 =cut
 
-sub caller_uri
+sub caller_url
 {
     my( $route ) = @_;
 
     my $referer = $Para::Frame::REQ->referer_with_query;
-    my $caller_uri = Para::Frame::URI->new( $referer );
-    $caller_uri->query_param_delete('run');
-    return $caller_uri;
+    my $caller_url = Para::Frame::URI->new( $referer );
+    $caller_url->query_param_delete('run');
+    return $caller_url;
 }
 
 
@@ -334,7 +334,7 @@ sub check_add
 
     my $req = $Para::Frame::REQ;
     my $q = $req->q;
-    my $uri = $req->uri;
+    my $url = $req->page->url_path;
 
     if( my @plan_url = $q->param('plan_next') )
     {
@@ -380,7 +380,7 @@ sub check_backtrack
 #    debug "-- check for backtrack";
     if( ($req->q->url_param('keywords')||'') eq 'backtrack' )
     {
-	debug(1,"!!Backtracking (because of uri keyword)");
+	debug(1,"!!Backtracking (because of url keyword)");
 	$route->get_next;
     }
     else
@@ -395,7 +395,7 @@ sub check_backtrack
 	    my $last_step = $route->{'route'}[-1];
 	    $last_step = Para::Frame::URI->new($last_step) unless UNIVERSAL::isa($last_step, 'URI');
 
-	    if( $last_step->path eq $req->template_uri )
+	    if( $last_step->path eq $page->url_path )
 	    {
 		if( $last_step->query eq $req->q->query_string )
 		{
@@ -414,9 +414,9 @@ sub check_backtrack
 
 =head2 bookmark
 
-  $route->bookmark( $uri_str )
+  $route->bookmark( $url_str )
 
-Put a bookmark on the page C<$uri_str>, defaulting to the current
+Put a bookmark on the page C<$url_str>, defaulting to the current
 page.
 
 This will add a step to the route with the page and all the query
@@ -430,32 +430,32 @@ Use C<$route->skip_step> to go back without taking the action.
 
 sub bookmark
 {
-    my( $route, $uri_str ) = @_;
+    my( $route, $url_str ) = @_;
 
     my $req = $Para::Frame::REQ;
 
-    $uri_str ||= uri($req->page->url_path_full, store_params);
-#    my $norm_uri = $req->normalized_uri( $uri_str || $req->referer_with_query );
+    $url_str ||= url($req->page->url_path, store_params);
+#    my $norm_url = $req->normalized_url( $url_str || $req->referer_with_query );
 
     # This should default to the PREVIUS page in most cases
-    my $uri = Para::Frame::URI->new($uri_str );
+    my $url = Para::Frame::URI->new($url_str );
 
     debug(1,"!!Ads a bookmark");
 
-#    if( $uri->query_param )
+#    if( $url->query_param )
 #    {
 #	debug(1,"!!  with query params");
 #	my @pairs;
-#	foreach my $key ( $uri->query_param )
+#	foreach my $key ( $url->query_param )
 #	{
-#	    foreach my $val ( $uri->query_param($key) )
+#	    foreach my $val ( $url->query_param($key) )
 #	    {
 #		push @pairs, $key => $val;
 #	    }
 #	}
-#	$uri->query_form( @pairs );
+#	$url->query_form( @pairs );
 #    }
-    $route->plan_next($uri);
+    $route->plan_next($url);
 }
 
 
@@ -487,7 +487,7 @@ sub get_next
     my $page = $req->page;
     my $q = $req->q;
 
-    my $default = $route->default || $req->site->home_path;
+    my $default = $route->default || $page->site->home_path;
 
     if( my $step = pop @{$route->{'route'}} )
     {
@@ -556,7 +556,7 @@ sub get_next
     {
 	$q->delete_all;
 	debug(1,"!!  No more steps in route");
-	if( $page->template_uri ne $req->referer )
+	if( $page->url_path ne $req->referer )
 	{
 	    debug 1, "!!    Using selected template";
 	}
@@ -629,7 +629,7 @@ sub skip_step
 	debug(1,"!!  No more steps in route");
     }
 
-    $dest ||= $route->default || $req->site->home_path;
+    $dest ||= $route->default || $page->site->home_path;
 
     $page->set_template($dest);
 }
@@ -641,7 +641,7 @@ sub skip_step
 
   $route->remove_step
 
-Remove next step in the route. Do not change uri or query params
+Remove next step in the route. Do not change url or query params
 
 =cut
 
@@ -745,7 +745,7 @@ Can be undef!
 
 sub default
 {
-    return $Para::Frame::REQ->site->last_step;
+    return $Para::Frame::REQ->page->site->last_step;
 }
 
 
