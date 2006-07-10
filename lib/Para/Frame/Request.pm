@@ -59,6 +59,8 @@ use Para::Frame::Uploaded;
 
 our %URI2FILE;
 
+#######################################################################
+
 =head1 DESCRIPTION
 
 Para::Frame::Request is the central class for most operations. The
@@ -66,12 +68,15 @@ current request object can be reached as C<$Para::Frame::REQ>.
 
 =cut
 
+#######################################################################
+
+
 sub new
 {
     my( $class, $reqnum, $client, $recordref ) = @_;
 
     my( $value ) = thaw( $$recordref );
-    my( $params, $env, $orig_uri, $orig_filename, $content_type, $dirconfig ) = @$value;
+    my( $params, $env, $orig_url, $orig_filename, $content_type, $dirconfig ) = @$value;
 
     # Modify $env for non-mod_perl mode
     $env->{'REQUEST_METHOD'} = 'GET';
@@ -104,7 +109,7 @@ sub new
 	lang           => undef,          ## Chosen language
 	browser        => undef,          ## browser detection object
 	result         => undef,
-	orig_uri       => $orig_uri,
+	orig_url       => $orig_url,
 	orig_ctype     => $content_type,
 	referer        => $q->referer,    ## The referer of this page
 	dirconfig      => $dirconfig,     ## Apache $r->dir_config
@@ -117,22 +122,26 @@ sub new
 	cancel         => undef,          ## True if we should abort
 	change         => undef,
         header_only    => 0,              ## true if only sending header
+        site           => undef,          ## Default site for req
     }, $class;
 
     # Cache uri2file translation
-    $req->uri2file( $orig_uri, $orig_filename, $req);
+    $req->uri2file( $orig_url, $orig_filename, $req);
 
     # Log some info
-    warn "# http://".$req->http_host."$orig_uri\n";
+    warn "# http://".$req->http_host."$orig_url\n";
 
     return $req;
 }
+
+#######################################################################
+
 
 sub init
 {
     my( $req ) = @_;
 
-#    debug "Initializing req";
+    debug "Initializing req";
 
     my $env = $req->{'env'};
 
@@ -145,8 +154,9 @@ sub init
     }
     $req->{'result'}  = Para::Frame::Result->new();  # Before Session
 
-    $req->{'page'}    = Para::Frame::Page->new($req);
-    $req->{'page'}->init; # Before Session
+    $req->{'page'}    = Para::Frame::Page->response_page($req);
+
+    $req->{'site'}    = $req->{'page'}->site;
 
     $req->{'s'}       = Para::Frame->Session->new($req);
 
@@ -155,6 +165,9 @@ sub init
 
     $req->{'s'}->route->init;
 }
+
+
+#######################################################################
 
 
 =head2 new_subrequest
@@ -253,6 +266,9 @@ sub new_subrequest
     return $res;
 }
 
+#######################################################################
+
+
 =head2 new_bgrequest
 
 Sets up a background request using new_minimal
@@ -273,6 +289,9 @@ sub new_bgrequest
     warn "\n\n$Para::Frame::REQNUM $msg\n";
     return $req;
 }
+
+
+#######################################################################
 
 
 =head2 new_minimal
@@ -298,6 +317,7 @@ sub new_minimal
 	child_result   => undef,          ## the child res if in child
 	reqnum         => $reqnum,        ## The request serial number
 	wait           => 0,              ## Asked to wait?
+        site           => undef,          ## Default site for req
     }, $class;
 
     $req->{'params'} = {%$Para::Frame::PARAMS};
@@ -307,6 +327,9 @@ sub new_minimal
 
     return $req;
 }
+
+
+#######################################################################
 
 
 =head2 minimal_init
@@ -333,11 +356,22 @@ sub minimal_init
 {
     my( $req, $args ) = @_;
 
-    my $page = $req->{'page'} = Para::Frame::Page->new($req);
-    if( my $site_in = $args->{'site'} )
+#    my $page = $req->{'page'} = Para::Frame::Page->new($req);
+
+    my $site_in = $args->{'site'};
+    unless( $site_in )
     {
-	$page->set_site( $site_in );
+	if( $req->is_from_client )
+	{
+	    $site_in = $req->dirconfig->{'site'} || $req->host_from_env;
+	}
+	else
+	{
+	    $site_in = 'default';
+	    debug "Site not set! Using default";
+	}
     }
+    $req->set_site( $site_in );
 
     $req->set_language( $args->{'language'} );
 
@@ -365,6 +399,9 @@ sub id
     return $_[0]->{'reqnum'};
 }
 
+#######################################################################
+
+
 =head2 q
 
   $req->q
@@ -374,6 +411,9 @@ Returns the L<CGI> object.
 =cut
 
 sub q { shift->{'q'} }
+
+#######################################################################
+
 
 =head2 session
 
@@ -386,6 +426,9 @@ Returns the L<Para::Frame::Session> object.
 sub s { shift->{'s'} }             ;;## formatting
 sub session { shift->{'s'} }
 
+#######################################################################
+
+
 =head2 env
 
   $req->env
@@ -396,6 +439,9 @@ for the request.
 =cut
 
 sub env { shift->{'env'} }
+
+#######################################################################
+
 
 =head2 client
 
@@ -409,6 +455,9 @@ several places.
 
 sub client { shift->{'client'} }
 
+
+#######################################################################
+
 =head2 cookies
 
   $req->cookies
@@ -418,6 +467,9 @@ Returns the L<Para::Frame::Cookies> object for this request.
 =cut
 
 sub cookies { shift->{'cookies'} }
+
+
+#######################################################################
 
 =head2 result
 
@@ -432,6 +484,9 @@ sub result
     ref $_[0]->{result} or confess "The request doesn't have a result object ($_[0]->{result})";
     return $_[0]->{'result'};
 }
+
+
+#######################################################################
 
 =head2 language
 
@@ -451,6 +506,9 @@ sub language
 #    }
     return $_[0]->{'lang'} or croak "Language not initialized";
 }
+
+
+#######################################################################
 
 =head2 set_language
 
@@ -475,6 +533,9 @@ sub set_language
 }
 
 
+#######################################################################
+
+
 =head2 page
 
   $req->page
@@ -485,8 +546,11 @@ Returns the L<Para::Frame::Page> object.
 
 sub page
 {
-    return $_[0]->{'page'} or confess;
+    return $_[0]->{'page'} or confess "Page not set";
 }
+
+
+#######################################################################
 
 =head2 original
 
@@ -501,6 +565,9 @@ sub original
     return $_[0]->{'original_request'};
 }
 
+
+#######################################################################
+
 =head2 equals
 
   $req->equals( $req2 )
@@ -513,6 +580,9 @@ sub equals
 {
     return( $_[0]->{'reqnum'} == $_[1]->{'reqnum'} );
 }
+
+
+#######################################################################
 
 =head2 user
 
@@ -530,6 +600,9 @@ sub user
     return shift->session->user;
 }
 
+
+#######################################################################
+
 =head2 change
 
   $req->change
@@ -542,6 +615,9 @@ sub change
 {
     return $_[0]->{'change'} ||= Para::Frame::Change->new();
 }
+
+
+#######################################################################
 
 =head2 is_from_client
 
@@ -557,6 +633,9 @@ sub is_from_client
     return $_[0]->{'q'} ? 1 : 0;
 }
 
+
+#######################################################################
+
 =head2 dirconfig
 
   $req->dirconfig
@@ -564,12 +643,17 @@ sub is_from_client
 Returns the dirconfig hashref. See L<Apache/SERVER CONFIGURATION
 INFORMATION> C<dir_config>.
 
+The param C<site> is used by L<Para::Frame::Page/response_page>.
+
 =cut
 
 sub dirconfig
 {
     return $_[0]->{'dirconfig'};
 }
+
+
+#######################################################################
 
 
 =head2 browser
@@ -586,36 +670,19 @@ sub browser
 }
 
 
-### Transitional methods
-###
-
-sub template
-{
-    return $_[0]->page->url_path_tmpl;
-}
-
-sub template_uri
-{
-    return $_[0]->page->url_path_full;
-}
-
-sub filename
-{
-    return $_[0]->page->sys_path_tmpl;
-}
-
-sub error_page_selected { $_[0]->page->error_page_selected }
-
-sub error_page_not_selected { $_[0]->page->error_page_not_selected }
-
-sub uri { $_[0]->page->uri }
+#######################################################################
 
 sub header_only { $_[0]->{'header_only'} }
 
+
+
+#######################################################################
+
 sub uploaded { Para::Frame::Uploaded->new($_[1]) }
 
-###
-###########################################
+
+
+#######################################################################
 
 =head2 in_yield
 
@@ -630,15 +697,18 @@ sub in_yield
     return $_[0]->{'in_yield'};
 }
 
+
+#######################################################################
+
 =head2 uri2file
 
-  $req->uri2file( $uri )
+  $req->uri2file( $url )
 
-  $req->uri2file( $uri, $file )
+  $req->uri2file( $url, $file )
 
-This does the Apache URI to filename translation
+This does the Apache URL to filename translation
 
-Directory URIs must end in '/'. The URI '' is not valid.
+Directory URLs must end in '/'. The URL '' is not valid.
 
 The answer is cached.
 
@@ -651,11 +721,11 @@ information.)
 
 sub uri2file
 {
-    my( $req, $uri, $file ) = @_;
+    my( $req, $url, $file ) = @_;
 
     # This will return file without '/' for dirs
 
-    my $key = $req->host . $uri;
+    my $key = $req->host . $url;
 
     if( $file )
     {
@@ -669,10 +739,10 @@ sub uri2file
 
 #    debug "uri2file key $key";
 
-    confess "uri missing" unless $uri;
+    confess "url missing" unless $url;
 
 #    warn "    From client\n";
-    $req->send_code( 'URI2FILE', $uri );
+    $req->send_code( 'URI2FILE', $url );
     $file = Para::Frame::get_value( $req );
 
     debug(4, "Storing URI2FILE in key $key");
@@ -680,25 +750,28 @@ sub uri2file
     return $file;
 }
 
+
+#######################################################################
+
 =head2 uri2file_clear
 
-  $req->uri2file( $uri )
+  $req->uri2file( $url )
 
   $req->uri2file()
 
-Clears the C<$uri> from the cache for the C<$req> host.
+Clears the C<$url> from the cache for the C<$req> host.
 
-With no C<$uri>, clear all uris from the cache.
+With no C<$url>, clear all uris from the cache.
 
 =cut
 
 sub uri2file_clear
 {
-    my( $req, $uri ) = @_;
+    my( $req, $url ) = @_;
 
-    if( $uri )
+    if( $url )
     {
-	my $key = $req->host . $uri;
+	my $key = $req->host . $url;
 
 	delete $URI2FILE{ $key };
     }
@@ -711,41 +784,46 @@ sub uri2file_clear
 
 
 
-=head2 normalized_uri
+#######################################################################
 
-  $req->normalized_uri( $uri )
 
-Gives the proper version of the URI. Ending index.tt will be
+=head2 normalized_url
+
+  $req->normalized_url( $url )
+
+Gives the proper version of the URL. Ending index.tt will be
 removed. This is used for redirecting (forward) the browser if
 nesessary.
 
-C<$uri> must be the path part as a string.
+C<$url> must be the path part as a string.
 
 Returns the path part as a string.
 
 =cut
 
-sub normalized_uri
+sub normalized_url
 {
-    my( $req, $uri ) = @_;
+    my( $req, $url ) = @_;
 
-    $uri ||= $req->uri;
+    $url ||= $req->page->url_path;
 
-    if( $uri =~ s/\/index.tt$/\// )
+    confess "Malformed URL" if ref $url;
+
+    if( $url =~ s/\/index.tt$/\// )
     {
-	return $uri;
+	return $url;
     }
 
-    my $uri_file = $req->uri2file( $uri );
-#    debug "uri_file: $uri_file";
-    if( -d $uri_file and $uri !~ /\/(\?.*)?$/ )
+    my $url_file = $req->uri2file( $url );
+#    debug "url_file: $url_file";
+    if( -d $url_file and $url !~ /\/(\?.*)?$/ )
     {
-	$uri =~ s/\?/\/?/
-	    or $uri .= '/';
-	return $uri;
+	$url =~ s/\?/\/?/
+	    or $url .= '/';
+	return $url;
     }
 
-    return $uri;
+    return $url;
 }
 
 #######################################################################
@@ -779,11 +857,17 @@ sub setup_jobs
 #    warn "Actions are now ".datadump($actions);
 }
 
+
+#######################################################################
+
 sub add_job
 {
     debug(2,"Added the job $_[1] for $_[0]->{reqnum}");
     push @{ shift->{'jobs'} }, [@_];
 }
+
+
+#######################################################################
 
 =head2 add_background_job
 
@@ -812,6 +896,9 @@ sub add_background_job
     push @Para::Frame::BGJOBS_PENDING, [@_];
 }
 
+
+#######################################################################
+
 sub run_code
 {
     my( $req, $coderef ) = (shift, shift );
@@ -834,14 +921,16 @@ sub run_code
     return $res;
 }
 
+
+#######################################################################
+
 sub run_action
 {
     my( $req, $run, @args ) = @_;
 
     return 1 if $run eq 'nop'; #shortcut
 
-    my $page = $req->page;
-    my $site = $page->site;
+    my $site = $req->site;
 
     my $actionroots = [$site->appbase."::Action"];
 
@@ -984,7 +1073,7 @@ sub run_action
 		    my $error_tt = "/login.tt";
 		    $part->hide(1);
 		    $req->session->route->bookmark;
-		    $page->set_error_template( $error_tt );
+		    $req->page->set_error_template( $error_tt );
 		}
 	    }
 	}
@@ -997,6 +1086,9 @@ sub run_action
     debug(-1);
     return 1; # All OK
 }
+
+
+#######################################################################
 
 sub after_jobs
 {
@@ -1092,6 +1184,9 @@ sub after_jobs
     return 1;
 }
 
+
+#######################################################################
+
 sub done
 {
     my( $req ) = @_;
@@ -1124,10 +1219,16 @@ sub done
     return;
 }
 
+
+#######################################################################
+
 sub in_last_job
 {
     return not scalar @{$_[0]->{'jobs'}};
 }
+
+
+#######################################################################
 
 sub error_backtrack
 {
@@ -1141,7 +1242,7 @@ sub error_backtrack
 	if( $previous )
 	{
 	    # It must be in the site dir
-	    my $destroot = $req->uri2file($req->site->home.'/');
+	    my $destroot = $req->uri2file($page->site->home.'/');
 	    my $dir = $req->uri2file( $previous );
 	    unless( $dir =~ m/^$destroot/ )
 	    {
@@ -1151,7 +1252,7 @@ sub error_backtrack
 	    $page->set_template( $previous );
 
 	    # It must be a template
-	    unless( $req->template =~ /\.tt/ )
+	    unless( $page->url_path_tmpl =~ /\.tt/ )
 	    {
 		$previous = $page->site->home."/error.tt";
 		$page->set_template( $previous );
@@ -1164,6 +1265,9 @@ sub error_backtrack
     return 0;
 }
 
+
+#######################################################################
+
 =head2 referer
 
   $req->referer
@@ -1171,7 +1275,7 @@ sub error_backtrack
 Returns the LOCAL referer. Just the path part. If the referer
 was from another website, fall back to default
 
-Returns the URI path part as a string.
+Returns the URL path part as a string.
 
 =cut
 
@@ -1184,30 +1288,30 @@ sub referer
   TRY:
     {
 	# Explicit caller_page could be given
-	if( my $uri = $req->q->param('caller_page') )
+	if( my $url = $req->q->param('caller_page') )
 	{
 	    debug "Referer from caller_page";
-	    return Para::Frame::URI->new($uri)->path;
+	    return Para::Frame::URI->new($url)->path;
 	}
 
 	# The query could have been changed by route
-	if( my $uri = $req->q->referer )
+	if( my $url = $req->q->referer )
 	{
-	    $uri = Para::Frame::URI->new($uri);
-	    last if $uri->host_port ne $req->host_with_port;
+	    $url = Para::Frame::URI->new($url);
+	    last if $url->host_port ne $req->host_with_port;
 
-	    debug "Referer from current http req ($uri)";
-	    return $uri->path;
+	    debug "Referer from current http req ($url)";
+	    return $url->path;
 	}
 
 	# The actual referer is more acurate in this order
-	if( my $uri = $req->{'referer'} )
+	if( my $url = $req->{'referer'} )
 	{
-	    $uri = Para::Frame::URI->new($uri);
-	    last if $uri->host_port ne $req->host_with_port;
+	    $url = Para::Frame::URI->new($url);
+	    last if $url->host_port ne $req->host_with_port;
 
 	    debug "Referer from original http req";
-	    return $uri->path;
+	    return $url->path;
 	}
 
 	# This could be confusing if several browser windows uses the same
@@ -1224,6 +1328,9 @@ sub referer
     return $site->webhome.'/';
 }
 
+
+
+#######################################################################
 
 =head2 referer_query
 
@@ -1243,19 +1350,19 @@ sub referer_query
   TRY:
     {
 	# Explicit caller_page could be given
-	if( my $uri = $req->q->param('caller_page') )
+	if( my $url = $req->q->param('caller_page') )
 	{
 	    debug "Referer query from caller_page";
-	    return Para::Frame::URI->new($uri)->query;
+	    return Para::Frame::URI->new($url)->query;
 	}
 
 	# The query could have been changed by route
-	if( my $uri = $req->q->referer )
+	if( my $url = $req->q->referer )
 	{
-	    $uri = Para::Frame::URI->new($uri);
-	    last if $uri->host_port ne $req->host_with_port;
+	    $url = Para::Frame::URI->new($url);
+	    last if $url->host_port ne $req->host_with_port;
 
-	    if( defined( my $query = $uri->query) )
+	    if( defined( my $query = $url->query) )
 	    {
 		debug "Referer query from current http req ($query)";
 		return $query;
@@ -1263,12 +1370,12 @@ sub referer_query
 	}
 
 	# The actual referer is more acurate in this order
-	if( my $uri = $req->{'referer'} )
+	if( my $url = $req->{'referer'} )
 	{
-	    $uri = Para::Frame::URI->new($uri);
-	    last if $uri->host_port ne $req->host_with_port;
+	    $url = Para::Frame::URI->new($url);
+	    last if $url->host_port ne $req->host_with_port;
 
-	    if( defined(my $query = $uri->query) )
+	    if( defined(my $query = $url->query) )
 	    {
 		debug "Referer query from original http req";
 		return $query;
@@ -1285,6 +1392,9 @@ sub referer_query
     debug "Referer query from default value";
     return '';
 }
+
+
+#######################################################################
 
 =head2 referer_with_query
 
@@ -1310,8 +1420,9 @@ sub referer_with_query
     }
 }
 
-#############################################
 
+
+#######################################################################
 
 sub send_to_daemon
 {
@@ -1323,11 +1434,12 @@ sub send_to_daemon
     return $val;
 }
 
+
+#######################################################################
+
 sub send_code
 {
     my $req = shift;
-
-    my $site = $req->page->site;
 
     # To get a response, use get_cmd_val()
 
@@ -1371,12 +1483,12 @@ sub send_code
 
 	    my $origreq = $req->{'original_request'};
 
-#	    # The site should have been set before...
-#	    if( $origreq )
-#	    {
-#		$req->{'site'} = $origreq->{'site'};
-#		debug "Using host ".$req->site->host;
-#	    }
+	    my $site = $req->site;
+	    if( $origreq )
+	    {
+		$site = $origreq->site;
+		debug "Using host ".$site->host;
+	    }
 
 	    my $webhost = $site->webhost;
 	    my $webpath = $site->loopback;
@@ -1425,6 +1537,9 @@ sub send_code
     }
 }
 
+
+#######################################################################
+
 sub release_active_request
 {
     my( $req ) = @_;
@@ -1448,6 +1563,9 @@ sub release_active_request
     }
 }
 
+
+#######################################################################
+
 sub get_cmd_val
 {
     my $req = shift;
@@ -1456,7 +1574,8 @@ sub get_cmd_val
     return Para::Frame::get_value( $req );
 }
 
-#############################################################
+
+#######################################################################
 
 =head2 may_yield
 
@@ -1481,6 +1600,9 @@ sub may_yield
 	$Para::Frame::REQ->yield( $wait );
     }
 }
+
+
+#######################################################################
 
 =head2 yield
 
@@ -1522,6 +1644,9 @@ sub yield
     Para::Frame::switch_req( $req );
 }
 
+
+#######################################################################
+
 =head2 http_host
 
   $req->http_host
@@ -1553,6 +1678,9 @@ sub http_host
     return undef;
 }
 
+
+#######################################################################
+
 =head2 http_port
 
   $req->http_port
@@ -1565,6 +1693,9 @@ sub http_port
 {
     return $ENV{SERVER_PORT} || undef;
 }
+
+
+#######################################################################
 
 =head2 client_ip
 
@@ -1580,9 +1711,73 @@ sub client_ip
     return $_[0]->env->{REMOTE_ADDR} || $_[0]->{'client'}->peerhost;
 }
 
+
+#######################################################################
+
+=head2 set_site
+
+  $req->set_site( $site )
+
+Sets the site to use for this request.
+
+C<$site> should be the name of a registred L<Para::Frame::Site> or a
+site object.
+
+The site must use the same host as the request.
+
+The method works similarly to L<Para::Frame::File/set_site>
+
+Returns: The site object
+
+=cut
+
+sub set_site
+{
+    my( $req, $site_in ) = @_;
+
+    $site_in or croak "site param missing";
+
+    my $site = Para::Frame::Site->get( $site_in );
+
+    # Check that site matches the client
+    #
+    unless( $req->client =~ /^background/ )
+    {
+	if( my $orig = $req->original )
+	{
+	    unless( $orig->site->host eq $site->host )
+	    {
+		my $site_name = $site->name;
+		my $orig_name = $orig->site->name;
+		debug "Host mismatch";
+		debug "orig site: $orig_name";
+		debug "New name : $site_name";
+		confess "set_site called";
+	    }
+	}
+    }
+
+    return $req->{'site'} = $site;
+}
+
+
+#######################################################################
+
 =head2 site
 
   $req->site
+
+The site for the request is used for actions.
+
+It may not be the same as the site of the response page as given by
+C<$req-E<gt>page-E<gt>site>. But will in most cases be the same since
+it's set in the same way as the initial site for the response page.
+
+But in some cases there will be no page (as for background jobs), and
+thus no page site.
+
+Make sure to set the request site along with the page site, if it's to
+change and any futher actions in the request should use that new site.
 
 Returns the L<Para::Frame::Site> object for this request.
 
@@ -1590,8 +1785,10 @@ Returns the L<Para::Frame::Site> object for this request.
 
 sub site
 {
-    return $_[0]->page->site;
+    return $_[0]->{site};
 }
+
+#######################################################################
 
 sub host_from_env
 {
@@ -1608,6 +1805,9 @@ sub host_from_env
 	return sprintf "%s:%d", $ENV{SERVER_NAME}, $port;
     }
 }
+
+
+#######################################################################
 
 =head2 host
 
@@ -1632,6 +1832,9 @@ sub host # Inkludes port if not :80
     }
 }
 
+
+#######################################################################
+
 =head2 host_without_port
 
   $req->host_without_port
@@ -1649,6 +1852,9 @@ sub host_without_port
     $host =~ s/:\d+$//;
     return $host;
 }
+
+
+#######################################################################
 
 =head2 host_with_port
 
@@ -1673,6 +1879,9 @@ sub host_with_port
 	return $host.":80";
     }
 }
+
+
+#######################################################################
 
 =head2 create_fork
 
@@ -1774,12 +1983,18 @@ sub create_fork
    }
 }
 
+
+#######################################################################
+
 sub register_child
 {
     my( $req, $pid, $fh ) = @_;
 
     return Para::Frame::Child->register( $req, $pid, $fh );
 }
+
+
+#######################################################################
 
 sub get_child_result
 {
@@ -1812,10 +2027,16 @@ sub get_child_result
     return 1;
 }
 
+
+#######################################################################
+
 sub run_hook
 {
     Para::Frame->run_hook(@_);
 }
+
+
+#######################################################################
 
 sub logging
 {
