@@ -101,6 +101,7 @@ sub new
      list           => {},
      listid         => 1,
      admin_mode     => 0,
+     page_result    => {},
     }, $class;
 
     # Register s
@@ -149,6 +150,7 @@ sub new_minimal
 	user           => undef,
 	debug          => $Para::Frame::CFG->{'debug'},
 	template_error => '', # Default
+	page_result    => {},
     }, $class;
 
     # Register s
@@ -161,19 +163,19 @@ sub after_request
 {
     my( $s, $req ) = @_;
 
-    # This is the uri of the previous request. Not necessarily the
+    # This is the url of the previous request. Not necessarily the
     # referer of the next request.
 
-    $s->{'referer'} = Para::Frame::URI->new($req->normalized_uri);
+    $s->{'referer'} = Para::Frame::URI->new($req->normalized_url);
     $s->{'referer'}->query_form(store_params());
 }
 
 sub register_result_page
 {
-    my( $s, $uri, $headers, $page_ref ) = @_;
-    # URI should only be the path part
-    debug "Registred the page result for $uri";
-    $s->{'page_result'}{$uri} = [ $headers, $page_ref ];
+    my( $s, $url, $headers, $page_ref ) = @_;
+    # URL should only be the path part
+    debug "Registred the page result for $url";
+    $s->{'page_result'}{$url} = [ $headers, $page_ref ];
 }
 
 =head2 id
