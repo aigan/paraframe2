@@ -382,7 +382,7 @@ sub send
 
     my $req = $Para::Frame::REQ;
     my $site = $req->site;
-    my $home = $site->home;
+    my $home = $site->home_url_path;
     my $fqdn = fqdn;
 
     unless( $site->send_email )

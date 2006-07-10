@@ -116,7 +116,7 @@ For each name/value pair in C<%namevalues>, create a corresponding
 cookie, with the addition of the C<%extra_params>. See L<CGI::Cookie>
 for valid params.
 
-Default C<-path> is the L<Para::Frame::Site/home_path>
+Default C<-path> is the L<Para::Frame::Site/home>
 
 =cut
 
@@ -135,7 +135,7 @@ sub add
 	confess "no page";
     }
 
-    $extra->{-path} ||= $req->page->site->home_path;
+    $extra->{-path} ||= $req->page->site->home->url_path_slash;
 
     foreach my $key ( keys %$settings )
     {
@@ -160,7 +160,7 @@ sub add
 
 Removes the named cookies from the client, using HTTP headers.
 
-Default C<-path> is the L<Para::Frame::Site/home_path>
+Default C<-path> is the L<Para::Frame::Site/home>
 
 =cut
 
@@ -183,7 +183,7 @@ sub remove
     }
 
     $extra ||= {};
-    $extra->{-path} ||= $req->page->site->home_path;
+    $extra->{-path} ||= $req->page->site->home->url_path_slash;
     $extra->{-expires} ||= "-1h";
 
 
