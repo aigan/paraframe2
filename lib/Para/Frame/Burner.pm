@@ -77,8 +77,9 @@ sub new
 	$config->{$key} = $config_in->{$key};
     }
 
-    $config->{'INCLUDE_PATH'}
-      = $config_in->{'INCLUDE_PATH'} || [ $burner ];
+# To be set dynamicly
+#    $config->{'INCLUDE_PATH'}
+#      = $config_in->{'INCLUDE_PATH'} || [ $burner ];
 
     $burner->{'type'} = $config_in->{'type'} or
       croak "No type given for burner";
@@ -205,9 +206,16 @@ sub get_by_type
     return $TYPE{($_[1]||'')};
 }
 
+=head2 th
+
+  $burner->th()
+
+=cut
+
 
 sub th
 {
+    # Send the params to new_th()
     return $_[0]->{'used'}{$Para::Frame::REQ} ||= $_[0]->new_th();
 }
 
@@ -222,6 +230,11 @@ sub new_th
     {
 	debug 2, "TH created from config";
 	$th = Template->new($_[0]->{config});
+
+	# Set up shortcut to modify include path
+	$th->{'pf_include_path'} = [];
+	$th->context->load_templates->[0]->
+	  include_path($th->{'pf_include_path'});
     }
 
     return $th;
@@ -230,8 +243,7 @@ sub new_th
 sub free_th
 {
     my( $burner ) = @_;
-    my $req = $Para::Frame::REQ;
-    my( $th ) = delete $burner->{'used'}{$req};
+    my( $th ) = delete $burner->{'used'}{$Para::Frame::REQ};
     if( $th )
     {
 	debug 2, "TH released to stack";
@@ -307,6 +319,8 @@ sub error_hash #not used
 
 Calls L<Template/process> with the given params.
 
+The params must have C<page> containing the page object
+
 Example:
 
   $burner->burn( $in, $page->{'params'}, \$out)
@@ -315,31 +329,9 @@ Example:
 
 sub burn
 {
-#    my $th = shift->th;
-#    my $reqnum = $Para::Frame::REQ->id;
-#    my $page = $Para::Frame::REQ->page;
-#    debug "Burning with $th in req $reqnum with page $page";
-#    if( $page->incpath )
-#    {
-#	my $incpathstring = join "", map "- $_\n", @{$page->incpath};
-#	debug "Include path:";
-#	debug $incpathstring;
-#    }
-#    return $th->process(@_);
-
-    return shift->th->process(@_);
-
-#### It's not possible to generate page in fork, since it returns
-#### resulting page by modifying the page ref sent as an param
-
-#    my $fork = $Para::Frame::REQ->create_fork;
-#    if( $fork->in_child )
-#    {
-#	debug 2, "Burning using $_[0]->{type}";
-#	my $res = $_[0]->th->process(@_);
-#	$fork->return( $res );
-#    }
-#    $fork->yield;
+    my $th = shift->th();
+    $th->{'pf_include_path'}[0] = $_[1]->{'page'};
+    return $th->process(@_);
 }
 
 =head2 error
@@ -364,11 +356,6 @@ sub error
 sub subdir_suffix
 {
      return $_[0]->{'subdir_suffix'} || '';
-}
-
-sub paths
-{
-    return $Para::Frame::REQ->page->paths($_[0]);
 }
 
 1;
