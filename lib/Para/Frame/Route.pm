@@ -434,13 +434,13 @@ sub bookmark
 
     my $req = $Para::Frame::REQ;
 
-    $url_str ||= url($req->page->url_path, store_params);
+    $url_str ||= uri($req->page->url_path, store_params);
 #    my $norm_url = $req->normalized_url( $url_str || $req->referer_with_query );
 
     # This should default to the PREVIUS page in most cases
     my $url = Para::Frame::URI->new($url_str );
 
-    debug(1,"!!Ads a bookmark");
+    debug(1,"!!Ads a bookmark ($url)");
 
 #    if( $url->query_param )
 #    {
@@ -487,7 +487,7 @@ sub get_next
     my $page = $req->page;
     my $q = $req->q;
 
-    my $default = $route->default || $page->site->home_path;
+    my $default = $route->default || $page->site->home->url_path_slash;
 
     if( my $step = pop @{$route->{'route'}} )
     {
@@ -629,7 +629,7 @@ sub skip_step
 	debug(1,"!!  No more steps in route");
     }
 
-    $dest ||= $route->default || $page->site->home_path;
+    $dest ||= $route->default || $page->site->home->url_path_slash;
 
     $page->set_template($dest);
 }

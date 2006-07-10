@@ -141,8 +141,6 @@ sub init
 {
     my( $req ) = @_;
 
-    debug "Initializing req";
-
     my $env = $req->{'env'};
 
     ### Further initialization that requires $REQ
@@ -805,9 +803,7 @@ sub normalized_url
 {
     my( $req, $url ) = @_;
 
-    $url ||= $req->page->url_path;
-
-    confess "Malformed URL" if ref $url;
+    $url ||= $req->page->orig_url_path;
 
     if( $url =~ s/\/index.tt$/\// )
     {
@@ -1242,11 +1238,11 @@ sub error_backtrack
 	if( $previous )
 	{
 	    # It must be in the site dir
-	    my $destroot = $req->uri2file($page->site->home.'/');
+	    my $destroot = $page->site->home->sys_path;
 	    my $dir = $req->uri2file( $previous );
 	    unless( $dir =~ m/^$destroot/ )
 	    {
-		$previous = $page->site->home."/error.tt";
+		$previous = $page->site->home_url_path."/error.tt";
 	    }
 
 	    $page->set_template( $previous );
@@ -1254,7 +1250,7 @@ sub error_backtrack
 	    # It must be a template
 	    unless( $page->url_path_tmpl =~ /\.tt/ )
 	    {
-		$previous = $page->site->home."/error.tt";
+		$previous = $page->site->home_url_path."/error.tt";
 		$page->set_template( $previous );
 	    }
 
@@ -1325,7 +1321,7 @@ sub referer
     return $site->last_step if $site->last_step;
 
     # Last try. Should always be defined
-    return $site->webhome.'/';
+    return $site->home->url_path_slash;
 }
 
 

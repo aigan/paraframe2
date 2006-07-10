@@ -1229,7 +1229,7 @@ sub css_header
     my( $p ) = @_;
 
     my $req = $Para::Frame::REQ;
-    my $home = $req->page->site->home;
+    my $home = $req->site->home_url_path;
 
     if( $p )
     {
@@ -1329,7 +1329,7 @@ sub favicon_header
 	$url = "pf/images/favicon.ico";
     }
 
-    my $home = $Para::Frame::REQ->page->site->home;
+    my $home = $Para::Frame::REQ->site->home_url_path;
 
     $url =~ s/^([^\/])/$home\/$1/;
 
@@ -1421,7 +1421,7 @@ sub confirm_simple
 
     $page->set_error_template('/confirm.tt');
     my $result = $req->result;
-    my $home = $site->home;
+    my $home = $site->home_url_path;
 
     $result->{'info'}{'confirm'} =
     {

@@ -796,7 +796,7 @@ sub uri
     throw('compilation', shortmess "Too many args for uri")
 	if $attr and not ref $attr;
 
-    $template ||= $req->site->home;
+    $template ||= $req->site->home_url_path;
 
     my $extra = "";
     my @parts = ();
