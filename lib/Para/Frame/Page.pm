@@ -155,6 +155,7 @@ sub new
      dir            => undef,          ## Cached Para::Frame::Dir obj
      initiated      => 0,              ## Initiating file info
      sys_name       => undef,          ## Cached sys path
+     burner         => undef,          ## burner used for page
     }, $class;
 
     $page->{'params'} = {%$Para::Frame::PARAMS};
@@ -262,29 +263,6 @@ sub url_path_tmpl
 
 #######################################################################
 
-
-=head2 path_base
-
-The path to the template, including the filename, relative the site
-home, begining with a slash. But excluding the suffixes of the file
-along with the dots.
-
-=cut
-
-sub path_base
-{
-    my( $page ) = @_;
-
-    my $home = $page->site->home;
-    my $template = $page->url_path_tmpl;
-    $template =~ /^$home(.*?)(\.\w\w)?\.\w{2,3}$/
-      or die "Couldn't get path_base from $template under $home";
-    return $1;
-}
-
-
-#######################################################################
-
 =head2 path_tmpl
 
 The path to the template, including the filename, relative the site
@@ -296,7 +274,7 @@ sub path_tmpl
 {
     my( $page ) = @_;
 
-    my $home = $page->site->home;
+    my $home = $page->site->home_url_path;
     my $template = $page->url_path_tmpl;
     my( $site_url ) = $template =~ /^$home(.+?)$/
       or confess "Couldn't get site_url from $template under $home";
@@ -706,7 +684,7 @@ sub set_error_template
 	debug "The original request had the same page obj";
     }
 
-    my $home = $page->site->home;
+    my $home = $page->site->home_url_path;
     return $page->{'error_template'} =
       $page->set_template( $home . $error_tt );
 }
@@ -819,77 +797,58 @@ file.
 
 sub precompile
 {
-    my( $page, $srcfile, $destfile_web, $args ) = @_;
+    my( $page, $srcfile, $args ) = @_;
 
     my $req = $page->req;
 
     $args ||= {};
 
-    # Check that destfile_web matches given site
-    my $home = $page->site->home;
-    if( length( $home ) )
-    {
-	$destfile_web =~ /^$home/ or
-	  die "The file $destfile_web is not placed in $home";
-    }
-
     my( $res, $error );
 
     my $type = $args->{'type'} || 'html_pre';
 
-    $destfile_web =~ /([^\/])$/ or die "oh no";
-    my $filename = $1;
+    my $filename = $page->name;
 
-    my $destfile =  $req->uri2file( $destfile_web );
+    my $destfile = $page->sys_path;
     my $safecnt = 0;
     while( $destfile !~ /$filename$/ )
     {
+	# TODO: Make this inteo a method
 	die "Loop" if $safecnt++ > 100;
 	debug "Creating dir $destfile";
 	create_dir($destfile);
-	$req->uri2file_clear( $destfile_web );
-	$destfile =  $req->uri2file( $destfile_web );
+	$page->{'sys_name'} = undef;
+	$destfile = $page->sys_path;
     }
 
-    my $destdir = dirname( $destfile );
+    my $dir = $page->dir;
 
-    # The URL shoule be the dir and not index.tt
-    # TODO: Handle this in another place?
-    my $url = $req->normalized_url($destfile_web);
-    $url =~ s/\/index(\.\w\w)?\.tt$/\//;
-
-    if( debug > 1 )
+    if( debug > 2 )
     {
 	debug "srcfile     : $srcfile";
-	debug "destfile_web: $destfile_web";
+	debug "destfile_web: ".$page->url_path;
 	debug "destfile    : $destfile";
-	debug "destdir     : $destdir";
+	debug "destdir     : ".$dir->sys_path;
 	debug "type        : $type";
-	debug "url         : $url";
     }
 
 
-    die "FIXME";
-    $page->set_url( $url );
-    $page->set_template( $destfile_web );
-    $page->{'params'}{'me'} = $page->url_path;
-
-    $page->set_dirsteps($destdir.'/');
+    $page->set_dirsteps( $dir->sys_path_slash );
 
     my $fh = new IO::File;
     $fh->open( "$srcfile" ) or die "Failed to open '$srcfile': $!\n";
 
     $page->set_tt_params;
 
-    my $burner = Para::Frame::Burner->get_by_type($type);
-    $res = $burner->burn($fh, $page->{'params'}, $destfile );
+    $page->set_burner_by_type($type);
+    $res = $page->burn( $fh, $destfile );
     $fh->close;
-    $error = $burner->error;
+    $error = $page->burner->error;
 
     if( $error )
     {
 	debug "ERROR WHILE PRECOMPILING PAGE";
-	debug 2, $error;
+	debug 0, $error;
 	my $part = $req->result->exception($error);
 	if( ref $error and $error->info =~ /not found/ )
 	{
@@ -965,7 +924,7 @@ sub set_http_status
 
   $p->paths( $burner )
 
-Automaticly called by L<Template::Provider> via L<Para::Frame::Burner>
+Automaticly called by L<Template::Provider>
 to get the include paths for building pages from templates.
 
 Returns: L</incpath>
@@ -974,17 +933,19 @@ Returns: L</incpath>
 
 sub paths
 {
-    my( $page, $burner ) = @_;
+    my( $page ) = @_;
 
     unless( $page->incpath )
     {
+	my $burner = $page->burner
+	  or confess "Page burner not set";
 	my $type = $burner->{'type'};
 
 	my $site = $page->site;
 	my $subdir = 'inc' . $burner->subdir_suffix;
 
  	my $path_full = $page->dirsteps->[0];
-	my $destroot = $page->req->uri2file($site->home.'/');
+	my $destroot = $site->home->sys_path;
 	my $dir = $path_full;
 	unless( $dir =~ s/^$destroot// )
 	{
@@ -1003,8 +964,6 @@ sub paths
 
 	foreach my $step ( Para::Frame::Utils::dirsteps($dir), '/' )
 	{
-	    debug 4, "Adding $step to path";
-
 	    push @searchpath, $htmlsrc.$step.$subdir.'/';
 
 	    foreach my $appback (@{$site->appback})
@@ -1182,7 +1141,7 @@ sub set_tt_params
 
 	# Is allowed to change between requests
 	'site'            => $site,
-	'home'            => $site->home,
+	'home'            => $site->home_url_path,
     });
 
     if( $req->{'q'} )
@@ -1209,6 +1168,80 @@ sub set_tt_params
 
 #######################################################################
 
+=head2 burner
+
+  $p->burner
+
+Returns: the L<Para::Frame::Burner> selected for this page
+
+=cut
+
+sub burner
+{
+    return $_[0]->{'burner'} or confess "No burner set";
+}
+
+#######################################################################
+
+=head2 set_burner_by_type
+
+  $p->set_burner_by_type( $type )
+
+Calls L<Para::Frame::Burner/get_by_type> and store it in the page
+object.
+
+Returns: the burner
+
+=cut
+
+sub set_burner_by_type
+{
+    return $_[0]->{'burner'} =
+      Para::Frame::Burner->get_by_type($_[1])
+	  or die "Burner type $_[1] not found";
+}
+
+#######################################################################
+
+=head2 set_burner_by_ext
+
+  $p->set_burner_by_ext( $ext )
+
+Calls L<Para::Frame::Burner/get_by_ext> and store it in the page
+object.
+
+Returns: the burner
+
+=cut
+
+sub set_burner_by_ext
+{
+    return $_[0]->{'burner'} =
+      Para::Frame::Burner->get_by_ext($_[1])
+	  or die "Burner ext $_[1] not found";
+}
+
+#######################################################################
+
+=head2 burn
+
+  $p->burn( $in, $out );
+
+Calls L<Para::Frame::Burner/burn> with C<($in, $params, $out)> there
+C<$params> are set by L</set_tt_params>.
+
+Returns: the burner
+
+=cut
+
+sub burn
+{
+    my( $page, $in, $out ) = @_;
+    return $_[0]->{'burner'}->burn($in, $page->{'params'}, $out );
+}
+
+#######################################################################
+
 =head2 find_template
 
   returns ($doc, $ext) where $doc is a L<Template::Document> objetct
@@ -1229,6 +1262,7 @@ sub find_template
 
 
     my( $base_name, $path_full, $ext_full ) = fileparse( $template, qr{\..*} );
+
     if( debug > 3 )
     {
 	debug(0,"path: $path_full");
@@ -1268,7 +1302,7 @@ sub find_template
     }
     else
     {
-	my $destroot = $req->uri2file($site->home.'/');
+	my $destroot = $site->home->sys_path;
 	my $dir = $req->uri2file( $path_full );
 	$dir =~ s/^$destroot// or
 	  die "destroot $destroot not part of $dir";
@@ -1342,7 +1376,7 @@ sub find_template
 		}
 
 		my $mod_time = stat( $filename )->mtime;
-		my $burner = Para::Frame::Burner->get_by_type('html');
+		my $burner = $page->set_burner_by_type('html');
 		my $compdir = $burner->compile_dir;
 		my $compfile = $compdir.$filename;
 		debug 4, "Compdir: $compdir";
@@ -1435,14 +1469,14 @@ sub find_template
 			debug(2,"Error while compiling template $filename: $@");
 			# FIXME
 			$req->result->exception;
-			if( $template eq $site->home.'/error.tt' )
+			if( $template eq $site->home_url_path.'/error.tt' )
 			{
 			    $page->{'error_template'} = $template;
 			    $page->{'page_content'} = $page->fallback_error_page;
 			    return undef;
 			}
 			debug(2,"Using /error.tt");
-			($in) = $page->find_template($site->home.'/error.tt');
+			($in) = $page->find_template($site->home_url_path.'/error.tt');
 			debug(-2);
 			return( $in, 'tt' );
 		    }
@@ -1461,7 +1495,7 @@ sub find_template
     if( $site->is_compiled )
     {
 	my $lang = $language->[0];
-	my $sample_template = $site->home . "/def/page_not_found.$lang.tt";
+	my $sample_template = $site->home_url_path . "/def/page_not_found.$lang.tt";
 	unless( stat($req->uri2file($sample_template)) )
 	{
 	    $site->set_is_compiled(0);
@@ -1606,7 +1640,7 @@ sub render_output
     my $out = "";
 
     my $site = $page->site;
-    my $home = $site->home;
+    my $home = $site->home_url_path;
 
 
     my( $in, $ext ) = $page->find_template( $template );
@@ -1648,7 +1682,8 @@ sub render_output
     }
     else
     {
-	$burner->burn($in, $page->{'params'}, \$out)
+	$page->{'burner'} = $burner;
+	$page->burn($in, \$out)
 	  or do
 	{
 
@@ -1874,7 +1909,7 @@ sub forward
 	cluck "forward() called without a generated page";
 	unless( $url =~ /\.html$/ )
 	{
-	    $url = $site->home."/error.tt";
+	    $url = $site->home_url_path."/error.tt";
 	}
     }
     elsif( $url =~ /\.html$/ )
@@ -2154,8 +2189,9 @@ sub set_dirsteps
     my( $page, $path_full ) = @_;
     my $req = $page->req;
 
-    $path_full ||= $req->uri2file( dirname( $page->url_path_tmpl ) . "/" ) . "/";
-    my $path_home = $req->uri2file( $page->site->home  . "/" );
+    $path_full ||= $page->dir->sys_path_slash;
+#    $path_full ||= $req->uri2file( dirname( $page->url_path_tmpl ) . "/" ) . "/";
+    my $path_home = $page->site->home->sys_path;
     debug 3, "Setting dirsteps for $path_full";
     undef $page->{'incpath'};
     $page->{'dirsteps'} = [ Para::Frame::Utils::dirsteps( $path_full, $path_home ) ];
