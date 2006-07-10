@@ -68,9 +68,9 @@ sub _new
 	croak "Do not include http in webhost";
     }
 
-    if( $site->webhome =~ /\/$/ )
+    if( $site->home_url_path =~ /\/$/ )
     {
-	croak "Do not end webhome wit a '/'";
+	croak "Do not end home_url_path wit a '/'";
     }
 
     return $site;
@@ -261,37 +261,24 @@ sub uri2file
 
 #######################################################################
 
-=head2 home_dir
-
-  $site->home_dir
-
-Returns the L<Para::Frame::Dir> object fot the L</home>.
-
-=cut
-
-sub home_dir
-{
-    return Para::Frame::Dir->new({site => $_[0],
-				  url  => $_[0]->home,
-				 });
-}
-
-=head2 webhome
-
-  $site->webhome
-
-Same as L</home>.
-
-=cut
-
-sub webhome
-{
-    return $_[0]->home;
-}
-
 =head2 home
 
   $site->home
+
+Returns the L<Para::Frame::Dir> object for the L</home>.
+
+=cut
+
+sub home
+{
+    return Para::Frame::Dir->new({site => $_[0],
+				  url  => $_[0]->home_url_path,
+				 });
+}
+
+=head2 home_url_path
+
+  $site->home_url_path
 
 Returns the home dir of the site as URL path, excluding the last '/'.
 
@@ -306,7 +293,7 @@ B<Important> Do not end home with a C</>
 
 =cut
 
-sub home
+sub home_url_path
 {
     if( $Para::Frame::REQ )
     {
@@ -317,50 +304,54 @@ sub home
 }
 
 
-=head2 home_path
-
-  $site->home_path
-
-The same as L</home> but ends with a '/'.
-
-=cut
-
-sub home_path
-{
-    return( ($Para::Frame::REQ->{'dirconfig'}{'home'} || $_[0]->{'webhome'} || '').'/' );
-}
-
-
-=head2 sys_home
-
-  $site->sys_home
-
-Returns the home dir of the site in the filesystem, excluding the last '/'.
-
-This is NOT an URL path.
-
-=cut
-
-sub sys_home
-{
-    my $req = $Para::Frame::REQ;
-    return $req->uri2file( $_[0]->home.'/' );
-}
-
-
-=head2 sys_home_path
-
-  $site->sys_home_path
-
-The same as L</sys_home> but ends with a '/'.
-
-=cut
-
-sub sys_home_path
-{
-    my $req = $Para::Frame::REQ;
-    return $req->uri2file( $_[0]->home.'/' ).'/';
-}
+#=head2 home_path
+#
+#  $site->home_path
+#
+#TODO: Rename to home_slash
+#
+#The same as L</home> but ends with a '/'.
+#
+#=cut
+#
+#sub home_path
+#{
+#    return( ($Para::Frame::REQ->{'dirconfig'}{'home'} || $_[0]->{'webhome'} || '').'/' );
+#}
+#
+#
+#=head2 sys_home
+#
+#  $site->sys_home
+#
+#Returns the home dir of the site in the filesystem, excluding the last '/'.
+#
+#This is NOT an URL path.
+#
+#=cut
+#
+#sub sys_home
+#{
+#    my $req = $Para::Frame::REQ;
+#    return $req->uri2file( $_[0]->home.'/' );
+#}
+#
+#
+#=head2 sys_home_path
+#
+#  $site->sys_home_path
+#
+#TODO: Rename to sys_home_slash
+#
+#The same as L</sys_home> but ends with a '/'.
+#
+#=cut
+#
+#sub sys_home_path
+#{
+#    my $req = $Para::Frame::REQ;
+#    return $req->uri2file( $_[0]->home.'/' ).'/';
+#}
 
 #######################################################################
 
@@ -500,7 +491,7 @@ Defaults to L</home>.
 
 sub loopback
 {
-    return $_[0]->{'loopback'} || $_[0]->home.'/';
+    return $_[0]->{'loopback'} || $_[0]->home_url_path.'/';
 }
 
 =head2 backup_host
@@ -768,7 +759,7 @@ sub htmlsrc # src dir for precompile or for getting inc files
     return $site->{'htmlsrc'} ||
       $site->{'is_compiled'} ?
 	($site->approot . "/dev") :
-	  $Para::Frame::REQ->uri2file($site->home.'/');
+	  $site->home->sys_path;
 }
 
 sub is_compiled
