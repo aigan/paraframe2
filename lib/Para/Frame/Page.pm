@@ -135,6 +135,7 @@ sub new
      orig_url_name  => undef, ## prev url_name
      tmpl_url_name  => undef, ## prev template
      url_name       => undef, ## prev template_url
+     url_norm       => undef, ## ends in slash for dirs
 
      error_template => undef,          ## if diffrent from template
 
@@ -169,17 +170,14 @@ sub new
 
     # Set URL
     #
-    defined $args->{url} or croak "url param missing ".datadump($args);
-    if( UNIVERSAL::isa $args->{url}, 'URI' )
+    my $url_in = $args->{url};
+    defined $url_in or croak "url param missing ".datadump($args);
+    if( UNIVERSAL::isa $url_in, 'URI' )
     {
-	$page->{orig_url_name} = $args->{url}->path;
+	$url_in = $args->{url}->path;
     }
-    else
-    {
-	my $url_path = $args->{url};
-#	$url_path =~ s/\/$//; # Remove trailing slash
-	$page->{orig_url_name} = $url_path;
-    }
+    $page->{orig_url_name} = $url_in;
+
 
     # TODO: Use URL for extracting the site
     my $site = $page->set_site( $args->{site} || $page->req->site );
@@ -258,7 +256,7 @@ removed.
 
 sub url_path_tmpl
 {
-    return $_[0]->{'tmpl_url_name'} || $_[0]->orig_url_path;
+    return $_[0]->{'tmpl_url_name'} || $_[0]->url_path_slash;
 }
 
 #######################################################################
@@ -294,7 +292,7 @@ True if this is a C</index.tt>
 
 sub is_index
 {
-    if( $_[0]->{'url_name'} =~ /\/$/ )
+    if( $_[0]->{'url_norm'} =~ /\/$/ )
     {
 	return 1;
     }
@@ -388,7 +386,7 @@ sub orig_url
 
   $p->orig_url_path
 
-Returns: The original URL path as a string excluding the trailing
+Returns: The original URL path. Dirs may or may not have a trailing
 slash.
 
 =cut
@@ -557,6 +555,9 @@ later be retrieved by L</url_path_tmpl>.
 Redirection to other pages can be done by using this method. Even from
 inside a page being generated.
 
+To forward to a page not handled by the paraframe server, use
+L</redirect>.
+
 Apache can possibly be rewriting the name of the file. For example the
 url C</this.tt> may be translated to, based on Apache config, to
 C</var/www/that.tt>.
@@ -585,62 +586,49 @@ The content type is set to C<text/html> if this is a C<.tt> file.
 
 sub set_template
 {
-    my( $page, $template, $always_move ) = @_;
+    my( $page, $url_in, $always_move ) = @_;
 
     # For setting a template diffrent from the URL
 
-    if( UNIVERSAL::isa $template, 'URI' )
+    if( UNIVERSAL::isa $url_in, 'URI' )
     {
-	$template = $template->path;
+	$url_in = $url_in->path;
     }
 
-    # To forward to a page not handled by the paraframe, use
-    # redirect()
-
-    if( $template =~ /^http/ )
+    if( $url_in =~ /^http/ )
     {
 	# template param should NOT include the http://hostname part
-	croak "Tried to set a template to $template";
+	croak "Tried to set a template to $url_in";
     }
 
-    $template =~ s/\/index(\.\w\w)?.tt$/\//;
+    my $req = $page->req;
+    my $url_norm = $req->normalized_url( $url_in );
 
-    my $url_path = $template;
+    # We can't remove language part bacause this code is used during
+    # precompilation
+#    $url_norm =~ s/\.\w\w(\.\w{2,3})$/$1/; # Remove language part
 
-
-    $page->{'moved_temporarily'} ||= 1 unless $always_move;
-
-    my $file = $page->req->uri2file( $template );
-    debug(3,"The template $template represents the file $file");
-    if( -d $file )
-    {
-	debug(3,"  It's a dir!");
-	unless( $template =~ /\/$/ )
-	{
-	    $template .= "/";
-	    $url_path .= "/";
-	}
-    }
+    my $template = $url_norm;
+    my $url_name = $url_norm;
 
     if( $template =~ /\/$/ )
     {
 	# Template indicates a dir. Make it so
 	$template .= "index.tt";
     }
-    else
-    {
-	# Remove language part
-	$url_path =~ s/\.\w\w(\.\w{2,3})$/$1/;
-    }
+
+    $url_name =~ s/\/$//; # Remove trailins slash
 
     debug(3,"setting template to $template");
-    debug(3,"setting url_path to $url_path");
-
-    $page->ctype->set("text/html") if $template =~ /\.tt$/;
+    debug(3,"setting url_norm to $url_norm");
 
     $page->{tmpl_url_name}     = $template;
-    $page->{url_name}          = $url_path;
+    $page->{url_norm}          = $url_norm;
+    $page->{url_name}          = $url_name;
     $page->{sys_name}          = undef;
+
+    $page->ctype->set("text/html") if $template =~ /\.tt$/;
+    $page->{'moved_temporarily'} ||= 1 unless $always_move;
 
     return $template;
 }
@@ -1133,7 +1121,7 @@ sub set_tt_params
     $page->add_params({
 	'page'            => $page,
 
-	'me'              => $page->url_path,
+	'me'              => $page->url_path_slash,
 
 	'u'               => $Para::Frame::U,
 	'lang'            => $req->language->preferred, # calculate once
@@ -1827,13 +1815,17 @@ sub send_output
     my $url = $page->orig_url_path;
     my $url_norm = $req->normalized_url( $url );
 
+    debug "Original url: $url";
+
     if( $url ne $url_norm )
     {
+	debug "!!! $url ne $url_norm";
 	$page->forward($url_norm);
     }
     elsif( $page->error_page_not_selected and
-	$url ne $page->url_path )
+	$url ne $page->url_path_slash )
     {
+	debug "!!! $url ne ".$page->url_path_slash;
 	$page->forward();
     }
     else
@@ -1885,6 +1877,8 @@ sub send_output
 Should only be called AFTER the page has been generated. It's used by
 L</send_output> and should not be used by others.
 
+C<$url> must be a normalized url path
+
 To request a forward, just use L</set_template> before the page is
 generated.
 
@@ -1894,12 +1888,12 @@ To forward to a page not handled by the paraframe, use L</redirect>.
 
 sub forward
 {
-    my( $page, $url ) = @_;
+    my( $page, $url_norm ) = @_;
     my $req = $page->req;
 
     my $site = $page->site;
 
-    $url ||= $page->url_path;
+    $url_norm ||= $page->url_path_slash;
 
 
     debug "Forwarding to $url";
@@ -1918,7 +1912,7 @@ sub forward
 	my $referer = $req->referer;
 	debug "  Referer is $referer";
 	debug "  Cancelling forwarding";
-	$page->{url_name} = $page->orig_url_path;
+	$page->{url_norm} = $page->orig_url_path;
 	$page->{sys_name} = undef;
 	$page->send_output;
 	return;
@@ -2271,7 +2265,7 @@ use .dir.url_path instead
 
 =head2 url_dir_path
 
-use .dir.url_path instead
+use .dir.url_path_slash instead
 
 =head2 url_parent
 
@@ -2279,11 +2273,11 @@ use .parent.url_path instead
 
 =head2 url_parent_path
 
-use .parent.url_path instead
+use .parent.url_path_slash instead
 
 =head2 sys_dir
 
-use .dir.sys_name instead
+use .dir.sys_path instead
 
 =cut
 

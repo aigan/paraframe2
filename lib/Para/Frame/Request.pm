@@ -807,18 +807,20 @@ sub normalized_url
 
     if( $url =~ s/\/index.tt$/\// )
     {
+#	debug "Normal   url: $url";
 	return $url;
     }
 
     my $url_file = $req->uri2file( $url );
-#    debug "url_file: $url_file";
     if( -d $url_file and $url !~ /\/(\?.*)?$/ )
     {
 	$url =~ s/\?/\/?/
 	    or $url .= '/';
+#	debug "Normal   url: $url";
 	return $url;
     }
 
+#    debug "Normal   url: $url";
     return $url;
 }
 

@@ -218,23 +218,6 @@ sub files
 
 #######################################################################
 
-
-=head2 url_path_slash
-
-The preffered URL for the file in http on the host. For dirs,
-excluding trailing slash.
-
-
-=cut
-
-sub url_path_slash
-{
-    return $_[0]->{'url_name'} . '/';
-}
-
-
-#######################################################################
-
 =head2 parent
 
 We get the parent L<Para::Frame::Dir> object.
@@ -249,7 +232,7 @@ sub parent
     my( $dir ) = @_;
 
     my $home = $dir->site->home_url_path;
-    my( $pdirname ) = $dir->{'url'} =~ /^($home.*)\/./ or return undef;
+    my( $pdirname ) = $dir->{'url_name'} =~ /^($home.*)\/./ or return undef;
 
     return $dir->new({site => $dir->site,
 		      url  => $pdirname,

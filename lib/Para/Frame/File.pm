@@ -61,14 +61,10 @@ sub new
 
     $args ||= {};
 
-    my $url = $args->{url};
-    defined $url or croak "url param missing ".datadump($args);
-    $url =~ s/(.)\/$/$1/; # Remove trailing (but not first) slash
-
-
     my $file = bless
     {
-     url_name       => $url,
+     url_norm       => undef,
+     url_name       => undef,
      site           => undef,
      initiated      => 0,
      sys_name       => undef,
@@ -87,26 +83,57 @@ sub new
     # TODO: Use URL for extracting the site
     my $site = $file->set_site( $args->{site} || $file->req->site );
 
-    # Check tat url is part of the site
+    my $url_in = $args->{url};
+    defined $url_in or croak "url param missing ".datadump($args);
+
+    # Check that url is part of the site
     my $home = $site->home_url_path;
-    unless( $url =~ /^$home/ )
+    unless( $url_in =~ /^$home/ )
     {
-	confess "URL '$url' is out of bound for site: ".datadump($args);
+	confess "URL '$url_in' is out of bound for site: ".datadump($args);
+    }
+
+    my $sys_name;
+
+    if( $class eq "Para::Frame::Dir" )
+    {
+	$url_in =~ s/([^\/])\/?$/$1\//;
+	$sys_name = $site->uri2file($url_in);
+    }
+    else
+    {
+	$sys_name = $site->uri2file($url_in);
+    }
+
+    unless( -r $sys_name )
+    {
+	croak "The file $sys_name is not found (or readable)";
     }
 
     if( $class eq "Para::Frame::Dir" )
     {
-	$file->{sys_name} = $site->uri2file($url.'/');
+	unless( -d $sys_name )
+	{
+	    croak "The file $sys_name is not a dir";
+	}
     }
     else
     {
-	$file->{sys_name} = $site->uri2file($url);
+	if( -d $sys_name )
+	{
+	    $url_in =~ s/([^\/])\/?$/$1\//;
+	    bless $file, "Para::Frame::Dir";
+	}
     }
 
-    unless( -r $file->{sys_name} )
-    {
-	croak "The file $file->{sys_name} is not found (or readable)";
-    }
+    $sys_name =~ s/([^\/])\/?$/$1/;
+
+    my $url_name = $url_in;
+    $url_name =~ s/\/$//; # Remove trailins slash
+
+    $file->{url_norm} = $url_in;    # With dir trailing slash
+    $file->{url_name} = $url_name;  # Without dir trailing slash
+    $file->{sys_name} = $sys_name;  # Without dir trailing slash
 
 
 #    debug "Created file obj ".datadump($file);
@@ -212,7 +239,7 @@ sub url
     my $url_string = sprintf("%s://%s%s",
 			     $site->scheme,
 			     $site->host,
-			     $page->{url_name});
+			     $page->{url_norm});
 
     return Para::Frame::URI->new($url_string);
 }
@@ -223,8 +250,8 @@ sub url
 
 =head2 url_path
 
-The preffered URL for the file in http on the host. For dirs,
-excluding trailing slash.
+The URL for the file in http on the host. For dirs, excluding trailing
+slash.
 
 
 =cut
@@ -232,6 +259,22 @@ excluding trailing slash.
 sub url_path
 {
     return $_[0]->{'url_name'};
+}
+
+
+#######################################################################
+
+
+=head2 url_path_slash
+
+This is the PREFERRED URL for the file in http on the host. For dirs,
+including trailing slash.
+
+=cut
+
+sub url_path_slash
+{
+    return $_[0]->{'url_norm'};
 }
 
 
@@ -247,7 +290,7 @@ removed. For L<Para::Frame::Page> this differs from L</url_path>.
 
 sub url_path_tmpl
 {
-    return $_[0]->url_path;
+    return $_[0]->url_path_slash;
 }
 
 #######################################################################
@@ -286,14 +329,14 @@ sub parent
 {
     my( $f ) = @_;
 
-    if( $f->is_index )
+    if( $f->{'url_norm'} =~ /\/$/ )
     {
-#	debug "Getting parent for page index";
+	debug "Getting parent for page index";
 	return $f->dir->parent;
     }
     else
     {
-#	debug "Getting dir for page";
+	debug "Getting dir for page";
 	return $f->dir;
     }
 }
@@ -320,7 +363,7 @@ sub dir
     {
 	my $url_path = $f->dir_url_path;
 	$f->{'dir'} = Para::Frame::Dir->new({site => $f->site,
-					     url  => $url_path,
+					     url  => $url_path.'/',
 					    });
     }
 
@@ -339,7 +382,6 @@ home, begining but not ending with a slash. May be an empty string.
 sub dir_url_path
 {
     my( $page ) = @_;
-    my $home = $page->site->home_url_path;
     my $template = $page->url_path_tmpl;
     $template =~ /^(.*?)\/[^\/]*$/;
     return $1||'';

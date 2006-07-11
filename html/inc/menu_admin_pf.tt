@@ -2,13 +2,13 @@
 <div style="float: right; padding: 0.3em">Debug at level [% debug %]</div>
 
 [% IF page.is_index %]
-   [% IF page.url_path_full == site.home_path %]
-      [%+ go("Home", site.home_path) %]
+   [% IF page.url_path == site.home_url_path %]
+      [%+ go("Home", site.home.url_path_slash) %]
    [% ELSE %]
-      [%+ go("Up", page.parent.url_path) %]
+      [%+ go("Up", page.parent.url_path_slash) %]
    [% END %]
 [% ELSE %]
-   [%+ go("Index", page.dir.url_path) %]
+   [%+ go("Index", page.dir.url_path_slash) %]
 [% END %]
 [%+ go("Reload", me, 'nop') %]
 [%+ go("Debug", "$home/pf/config/debuglist.tt", 'mark') %]
