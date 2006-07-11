@@ -61,6 +61,11 @@ sub _new
     my( $this, $params ) = @_;
     my $class = ref($this) || $this;
 
+    my $home_in = delete $params->{home};
+    $home_in ||= delete $params->{home_url_path};
+    $home_in ||= delete $params->{webhome};
+    $home_in ||= '';
+
     my $site = bless $params, $class;
 
     if( $site->webhost =~ /^http/ )
@@ -68,10 +73,17 @@ sub _new
 	croak "Do not include http in webhost";
     }
 
-    if( $site->home_url_path =~ /\/$/ )
+    if( $home_in =~ /\/$/ )
     {
 	croak "Do not end home_url_path wit a '/'";
     }
+
+    if( ref $home_in )
+    {
+	$home_in = $home_in->url_path;
+    }
+
+    $site->{'home_url_path'} = $home_in;
 
     return $site;
 }
@@ -88,43 +100,45 @@ Special params are:
 
 =over
 
-C<webhost     > = See L</host>
+C<webhost      > = See L</host>
+	       
+C<aliases      > = a listref of site aliases
+	       
+C<name         > = See L</name>
+	       
+C<code         > = See L</code>
+	       
+C<home         > = See L</home>
 
-C<aliases     > = a listref of site aliases
+C<home_url_path> = See L</home_url_path>
 
-C<name        > = See L</name>
-
-C<code        > = See L</code>
-
-C<webhome     > = See L</webhome>
-
-C<last_step   > = See L</last_step>
-
-C<login_page  > = See L</login_page>
-
-C<logout_page > = See L</logout_page>
-
-C<loopback    > = See L</loopback>
-
-C<backup_host > = See L</backup_host>
-
-C<appbase     > = See L</appbase>
-
-C<appfmly     > = See L</appfmly>
-
-C<approot     > = See L</approot>
-
-C<appback     > = See L</appback>
-
-C<params      > = See L</params>
-
-C<languages   > = See L</languages>
-
-C<htmlsrc     > = See L</htmlsrc>
-
-C<is_compiled > = See L</is_compiled>
-
-C<send_email  > = See L</send_email>
+C<last_step    > = See L</last_step>
+	       
+C<login_page   > = See L</login_page>
+	       
+C<logout_page  > = See L</logout_page>
+	       
+C<loopback     > = See L</loopback>
+	       
+C<backup_host  > = See L</backup_host>
+	       
+C<appbase      > = See L</appbase>
+	       
+C<appfmly      > = See L</appfmly>
+	       
+C<approot      > = See L</approot>
+	       
+C<appback      > = See L</appback>
+	       
+C<params       > = See L</params>
+	       
+C<languages    > = See L</languages>
+	       
+C<htmlsrc      > = See L</htmlsrc>
+	       
+C<is_compiled  > = See L</is_compiled>
+	       
+C<send_email   > = See L</send_email>
 
 =back
 
@@ -271,9 +285,19 @@ Returns the L<Para::Frame::Dir> object for the L</home>.
 
 sub home
 {
-    return Para::Frame::Dir->new({site => $_[0],
-				  url  => $_[0]->home_url_path,
-				 });
+    if( my $home_url_path = $Para::Frame::REQ->{'dirconfig'}{'home'} )
+    {
+	return Para::Frame::Dir->new({site => $_[0],
+				      url  => $home_url_path,
+				     });
+    }
+    else
+    {
+	return $_[0]->{'home'} ||=
+	  Para::Frame::Dir->new({site => $_[0],
+				 url  => $_[0]->{'home_url_path'},
+				});;
+    }
 }
 
 =head2 home_url_path
@@ -297,10 +321,10 @@ sub home_url_path
 {
     if( $Para::Frame::REQ )
     {
-	return $Para::Frame::REQ->{'dirconfig'}{'home'} || $_[0]->{'webhome'} || '';
+	return $Para::Frame::REQ->{'dirconfig'}{'home'} || $_[0]->{'home_url_path'};
     }
 
-    return $_[0]->{'webhome'} || '';
+    return $_[0]->{'home_url_path'};
 }
 
 
@@ -384,7 +408,7 @@ Should be an URL path.
 
 Defaults to L</last_step> if defined.
 
-Otherwise, defaults to L</webhome>.
+Otherwise, defaults to L</home_url_path> + slash.
 
 =cut
 
@@ -393,7 +417,7 @@ sub login_page
     return
 	$_[0]->{'login_page'} ||
 	$_[0]->{'last_step'}  ||
-	$_[0]->webhome.'/';
+	$_[0]->home_url_path.'/';
 }
 
 =head2 logout_page
@@ -404,14 +428,14 @@ Returns the C<logout_page> to be used.
 
 Should be an URL path.
 
-Defaults to L</webhome>.
+Defaults to L</home> + slash.
 
 =cut
 
 sub logout_page
 {
     return $_[0]->{'logout_page'} ||
-	$_[0]->webhome.'/';
+	$_[0]->home_url_path.'/';
 }
 
 =head2 host
@@ -785,6 +809,12 @@ sub equals
     # Uses perl obj stringification
     return( $_[0] eq $_[1] );
 }
+
+sub is_default
+{
+    return $_[0]->equals($DATA{'default'}) ? 1 : 0;
+}
+
 
 1;
 
