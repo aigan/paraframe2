@@ -57,63 +57,10 @@ use Para::Frame::Page;
 
   Para::Frame::Dir->new(\%args)
 
-Creates a Dir object.
+See L<Para::Frame::File>
 
 =cut
 
-sub new
-{
-    my( $this, $args ) = @_;
-    my $class = ref($this) || $this;
-
-    $args ||= {};
-
-    my $url = $args->{url};
-    defined $url or croak "url param missing ".datadump($args);
-    $url =~ s/\/$//; # Remove trailing slash
-
-
-    my $file = bless
-    {
-     url_name       => $url,
-     site           => undef,
-     initiated      => 0,
-     sys_name       => undef,
-     req            => undef,
-     hidden         => undef,
-    }, $class;
-
-    $file->{hidden} = $args->{hidden} || qr/(^\.|^CVS$|~$)/;
-
-
-    if( my $req = $args->{req} )
-    {
-	$file->{req} = $req;
-	weaken( $file->{'req'} );
-    }
-
-    # TODO: Use URL for extracting the site
-    my $site = $file->set_site( $args->{site} || $file->req->site );
-
-    # Check tat url is part of the site
-    my $home = $site->home_url_path;
-    unless( $url =~ /^$home/ )
-    {
-	confess "URL '$url' is out of bound for site: ".datadump($args);
-    }
-
-    $file->{sys_name} = $site->uri2file($url.'/');
-
-    unless( -r $file->{sys_name} )
-    {
-	croak "The file $file->{sys_name} is not found (or readable)";
-    }
-
-
-#    debug "Created file obj ".datadump($file);
-
-    return $file;
-}
 
 sub initiate
 {
