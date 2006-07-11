@@ -1896,19 +1896,19 @@ sub forward
     $url_norm ||= $page->url_path_slash;
 
 
-    debug "Forwarding to $url";
+    debug "Forwarding to $url_norm";
 
     if( not $page->{'page_content'} )
     {
 	cluck "forward() called without a generated page";
-	unless( $url =~ /\.html$/ )
+	unless( $url_norm =~ /\.html$/ )
 	{
-	    $url = $site->home_url_path."/error.tt";
+	    $url_norm = $site->home_url_path."/error.tt";
 	}
     }
-    elsif( $url =~ /\.html$/ )
+    elsif( $url_norm =~ /\.html$/ )
     {
-	debug "Forward to html page: $url";
+	debug "Forward to html page: $url_norm";
 	my $referer = $req->referer;
 	debug "  Referer is $referer";
 	debug "  Cancelling forwarding";
@@ -1918,8 +1918,8 @@ sub forward
 	return;
     }
 
-    $page->output_redirection($url );
-    $req->session->register_result_page($url, $page->{'headers'}, $page->{'page_content'});
+    $page->output_redirection($url_norm );
+    $req->session->register_result_page($url_norm, $page->{'headers'}, $page->{'page_content'});
 }
 
 
