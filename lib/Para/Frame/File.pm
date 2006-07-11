@@ -63,7 +63,7 @@ sub new
 
     my $url = $args->{url};
     defined $url or croak "url param missing ".datadump($args);
-    $url =~ s/\/$//; # Remove trailing slash
+    $url =~ s/(.)\/$/$1/; # Remove trailing (but not first) slash
 
 
     my $file = bless
@@ -73,7 +73,10 @@ sub new
      initiated      => 0,
      sys_name       => undef,
      req            => undef,
+     hidden         => undef,
     }, $class;
+
+    $file->{hidden} = $args->{hidden} || qr/(^\.|^CVS$|~$)/;
 
     if( my $req = $args->{req} )
     {
@@ -91,7 +94,14 @@ sub new
 	confess "URL '$url' is out of bound for site: ".datadump($args);
     }
 
-    $file->{sys_name} = $site->uri2file($url); ### Differ from dir
+    if( $class eq "Para::Frame::Dir" )
+    {
+	$file->{sys_name} = $site->uri2file($url.'/');
+    }
+    else
+    {
+	$file->{sys_name} = $site->uri2file($url);
+    }
 
     unless( -r $file->{sys_name} )
     {
@@ -369,8 +379,8 @@ sub path
 
     my $home = $f->site->home_url_path;
     my $url_path = $f->url_path;
-    my( $site_url ) = $url_path =~ /^$home(.+?)$/
-      or die "Couldn't get site_url from $url_path under $home";
+    my( $site_url ) = $url_path =~ /^$home(.*?)$/
+      or confess "Couldn't get site_url from $url_path under $home";
     return $site_url;
 }
 
@@ -391,7 +401,7 @@ sub path_slash
     my $home = $f->site->home_url_path;
     my $url_path = $f->url_path_slash;
     my( $site_url ) = $url_path =~ /^$home(.+?)$/
-      or die "Couldn't get site_url from $url_path under $home";
+      or confess "Couldn't get site_url from $url_path under $home";
     return $site_url;
 }
 
@@ -463,26 +473,27 @@ sub set_site
 {
     my( $f, $site_in ) = @_;
 
-    my $req = $f->req;
-
     $site_in or croak "site param missing";
 
     my $site = Para::Frame::Site->get( $site_in );
 
     # Check that site matches the client
     #
-    unless( $req->client =~ /^background/ )
+    if( my $req = $f->req )
     {
-	if( my $orig = $req->original )
+	unless( $req->client =~ /^background/ )
 	{
-	    unless( $orig->site->host eq $site->host )
+	    if( my $orig = $req->original )
 	    {
-		my $site_name = $site->name;
-		my $orig_name = $orig->site->name;
-		debug "Host mismatch";
-		debug "orig site: $orig_name";
-		debug "New name : $site_name";
-		confess "set_site called";
+		unless( $orig->site->host eq $site->host )
+		{
+		    my $site_name = $site->name;
+		    my $orig_name = $orig->site->name;
+		    debug "Host mismatch";
+		    debug "orig site: $orig_name";
+		    debug "New name : $site_name";
+		    confess "set_site called";
+		}
 	    }
 	}
     }
