@@ -1084,14 +1084,14 @@ sub handle_request
 
     ### Redirected from another page?
     if( my $page_result =
-	$req->session->{'page_result'}{ $req->page->url_path } )
+	$req->session->{'page_result'}{ $req->page->orig_url_path } )
     {
 	debug "Sending stored page result";
 	my $page = $req->page;
 	$page->set_headers( $page_result->[0] );
 	$page->send_headers;
 	$page->send_in_chunks($page_result->[1]);
-	delete $req->session->{'page_result'}{ $req->page->url_path };
+	delete $req->session->{'page_result'}{ $req->page->orig_url_path };
     }
     else
     {
