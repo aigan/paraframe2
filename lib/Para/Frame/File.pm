@@ -84,7 +84,7 @@ sub new
     my $site = $file->set_site( $args->{site} || $file->req->site );
 
     my $url_in = $args->{url};
-    defined $url_in or croak "url param missing ".datadump($args);
+    length($url_in) or croak "url param missing ".datadump($args);
 
     # Check that url is part of the site
     my $home = $site->home_url_path;
