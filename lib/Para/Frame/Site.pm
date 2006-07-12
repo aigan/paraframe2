@@ -41,7 +41,7 @@ L</host> as param.
 =cut
 
 use strict;
-use Carp qw( croak );
+use Carp qw( croak cluck );
 use Data::Dumper;
 
 BEGIN
@@ -51,7 +51,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw debug fqdn );
+use Para::Frame::Utils qw( throw debug fqdn datadump );
 use Para::Frame::Dir;
 
 our %DATA; # hostname -> siteobj
@@ -288,14 +288,14 @@ sub home
     if( my $home_url_path = $Para::Frame::REQ->{'dirconfig'}{'home'} )
     {
 	return Para::Frame::Dir->new({site => $_[0],
-				      url  => $home_url_path,
+				      url  => $home_url_path.'/',
 				     });
     }
     else
     {
 	return $_[0]->{'home'} ||=
 	  Para::Frame::Dir->new({site => $_[0],
-				 url  => $_[0]->{'home_url_path'},
+				 url  => $_[0]->{'home_url_path'}.'/',
 				});;
     }
 }
@@ -327,55 +327,6 @@ sub home_url_path
     return $_[0]->{'home_url_path'};
 }
 
-
-#=head2 home_path
-#
-#  $site->home_path
-#
-#TODO: Rename to home_slash
-#
-#The same as L</home> but ends with a '/'.
-#
-#=cut
-#
-#sub home_path
-#{
-#    return( ($Para::Frame::REQ->{'dirconfig'}{'home'} || $_[0]->{'webhome'} || '').'/' );
-#}
-#
-#
-#=head2 sys_home
-#
-#  $site->sys_home
-#
-#Returns the home dir of the site in the filesystem, excluding the last '/'.
-#
-#This is NOT an URL path.
-#
-#=cut
-#
-#sub sys_home
-#{
-#    my $req = $Para::Frame::REQ;
-#    return $req->uri2file( $_[0]->home.'/' );
-#}
-#
-#
-#=head2 sys_home_path
-#
-#  $site->sys_home_path
-#
-#TODO: Rename to sys_home_slash
-#
-#The same as L</sys_home> but ends with a '/'.
-#
-#=cut
-#
-#sub sys_home_path
-#{
-#    my $req = $Para::Frame::REQ;
-#    return $req->uri2file( $_[0]->home.'/' ).'/';
-#}
 
 #######################################################################
 
@@ -746,6 +697,8 @@ sub params
 
 Returns a L<Rit::Frame::Dir> object, similar to the
 L<Rit::Frame::Page> object.
+
+TODO: What is this used for?!
 
 =cut
 
