@@ -392,7 +392,7 @@ sub check_backtrack
       CHECK:
 	{
 	    # Remove last step if it's equal to curent place, including params
-	    my $last_step = $route->{'route'}[-1];
+	    my $last_step = $route->{'route'}[-1] or return;
 	    $last_step = Para::Frame::URI->new($last_step) unless UNIVERSAL::isa($last_step, 'URI');
 
 	    if( $last_step->path eq $page->url_path )
