@@ -1815,7 +1815,7 @@ sub send_output
     my $url = $page->orig_url_path;
     my $url_norm = $req->normalized_url( $url );
 
-    debug "Original url: $url";
+#    debug "Original url: $url";
 
     if( $url ne $url_norm )
     {
