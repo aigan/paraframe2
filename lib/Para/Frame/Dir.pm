@@ -194,7 +194,7 @@ sub files
 	{
 #	    debug "  As a Dir";
 	    push @list, $dir->new({ site => $dir->site,
-				    url  => $url,
+				    url  => $url.'/',
 				  });
 	}
 	elsif( $name =~ /\.tt$/ )
