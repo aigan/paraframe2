@@ -310,7 +310,7 @@ sub catch
     unless( UNIVERSAL::isa($error, 'Para::Frame::Result::Part') or
 	    UNIVERSAL::isa($error, 'Template::Exception') )
     {
-	my $type = undef;
+	my $type = "";    # Avoid undef warnings but be false
 	my $info = $error;
 
 	if( ref $error eq 'ARRAY' )
@@ -348,7 +348,13 @@ sub run_error_hooks
 
     $type ||= 'action';
 
-    return Template::Exception->new( $type, $info, $textref );
+    # Modify by direct (private) access
+    $_[0]->[0] = $type;
+    $_[0]->[1] = $info;
+    $_[0]->[2] = $textref;
+
+
+    return $_[0];
 }
 
 
