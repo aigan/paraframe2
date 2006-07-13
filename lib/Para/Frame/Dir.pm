@@ -235,7 +235,7 @@ sub parent
     my( $pdirname ) = $dir->{'url_name'} =~ /^($home.*)\/./ or return undef;
 
     return $dir->new({site => $dir->site,
-		      url  => $pdirname,
+		      url  => $pdirname.'/',
 		     });
 }
 
