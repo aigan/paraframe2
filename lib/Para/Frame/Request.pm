@@ -1288,7 +1288,7 @@ sub referer
 	# Explicit caller_page could be given
 	if( my $url = $req->q->param('caller_page') )
 	{
-	    debug "Referer from caller_page";
+	    debug 2, "Referer from caller_page";
 	    return Para::Frame::URI->new($url)->path;
 	}
 
@@ -1298,7 +1298,7 @@ sub referer
 	    $url = Para::Frame::URI->new($url);
 	    last if $url->host_port ne $req->host_with_port;
 
-	    debug "Referer from current http req ($url)";
+	    debug 2, "Referer from current http req ($url)";
 	    return $url->path;
 	}
 
@@ -1308,18 +1308,18 @@ sub referer
 	    $url = Para::Frame::URI->new($url);
 	    last if $url->host_port ne $req->host_with_port;
 
-	    debug "Referer from original http req";
+	    debug 2, "Referer from original http req";
 	    return $url->path;
 	}
 
 	# This could be confusing if several browser windows uses the same
 	# session
 	#
-	debug "Referer from session";
+	debug 1, "Referer from session";
 	return $req->session->referer->path if $req->session->referer;
     }
 
-    debug "Referer from default value";
+    debug 1, "Referer from default value";
     return $site->last_step if $site->last_step;
 
     # Last try. Should always be defined
@@ -1350,7 +1350,7 @@ sub referer_query
 	# Explicit caller_page could be given
 	if( my $url = $req->q->param('caller_page') )
 	{
-	    debug "Referer query from caller_page";
+	    debug 2, "Referer query from caller_page";
 	    return Para::Frame::URI->new($url)->query;
 	}
 
@@ -1362,7 +1362,7 @@ sub referer_query
 
 	    if( defined( my $query = $url->query) )
 	    {
-		debug "Referer query from current http req ($query)";
+		debug 2, "Referer query from current http req ($query)";
 		return $query;
 	    }
 	}
@@ -1375,7 +1375,7 @@ sub referer_query
 
 	    if( defined(my $query = $url->query) )
 	    {
-		debug "Referer query from original http req";
+		debug 2, "Referer query from original http req";
 		return $query;
 	    }
 	}
@@ -1383,11 +1383,11 @@ sub referer_query
 	# This could be confusing if several browser windows uses the same
 	# session
 	#
-	debug "Referer query from session";
+	debug 1, "Referer query from session";
 	return $req->session->referer->query if $req->session->referer;
     }
 
-    debug "Referer query from default value";
+    debug 1, "Referer query from default value";
     return '';
 }
 

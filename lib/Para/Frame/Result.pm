@@ -128,6 +128,8 @@ sub exception
 {
     my( $result, $explicit, $info_in, $textref ) = @_;
 
+#    debug "exception called with ".datadump(\@_);
+
     $textref ||= "";
     unless( ref $textref )
     {
@@ -141,6 +143,7 @@ sub exception
 
     $@ = $explicit if $explicit;
 
+#    debug "Now catcing ".datadump(\$@);
     my $error = catch($@);
 
     unless( $error )
@@ -200,7 +203,7 @@ sub error
 	$error = Template::Exception->new( $type, $message, $contextref );
     }
 
-    warn "Clearing our error info\n";
+#    warn "Clearing our error info\n";
     $@ = undef; # Clear out error info
 
     my $part = Para::Frame::Result::Part->new($error);
