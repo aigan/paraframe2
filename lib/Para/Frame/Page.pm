@@ -133,6 +133,7 @@ sub new
     my $page = bless
     {
      orig_url_name  => undef, ## prev url_name
+     orig           => undef, ## a File obj for the orig url
      tmpl_url_name  => undef, ## prev template
      url_name       => undef, ## prev template_url
      url_norm       => undef, ## ends in slash for dirs
@@ -349,6 +350,35 @@ listrefs of key/val pairs.
 sub headers
 {
     return @{$_[0]->{'headers'}};
+}
+
+
+#######################################################################
+
+=head2 orig
+
+  $p->orig
+
+Returns: the original url as a L<Para::Frame::File> object.
+
+TODO: Cache object
+
+=cut
+
+sub orig
+{
+    my( $page ) = @_;
+
+    unless( $page->{'orig'} )
+    {
+	$page->{'orig'} =
+	  Para::Frame::File->new({
+				  url => $page->{orig_url_name},
+				  site => $page->site,
+				  no_check => 1,
+				 });
+    }
+    return $page->{'orig'};
 }
 
 
@@ -606,7 +636,7 @@ sub set_template
 
     # We can't remove language part bacause this code is used during
     # precompilation
-#    $url_norm =~ s/\.\w\w(\.\w{2,3})$/$1/; # Remove language part
+    $url_norm =~ s/\.\w\w(\.\w{2,3})$/$1/; # Remove language part
 
     my $template = $url_norm;
     my $url_name = $url_norm;
@@ -769,17 +799,16 @@ sub add_params
 
 =head2 precompile
 
-  $req->precompile( $srcfile, $destfile_web )
+  $req->precompile( $srcfile )
 
-  $req->precompile( $srcfile, $destfile_web, \%args )
+  $req->precompile( $srcfile, \%args )
 
   arg type defaults to html_pre
   arg language defaults to undef
 
 $srcfile is the absolute system path to the template.
 
-$destfile_web is the URL path in the current site for the destination
-file.
+The destination file is the original url: L</orig>.
 
 =cut
 
@@ -795,9 +824,9 @@ sub precompile
 
     my $type = $args->{'type'} || 'html_pre';
 
-    my $filename = $page->name;
+    my $filename = $page->orig->name;
 
-    my $destfile = $page->sys_path;
+    my $destfile = $page->orig->sys_path;
     my $safecnt = 0;
     while( $destfile !~ /$filename$/ )
     {
@@ -805,16 +834,16 @@ sub precompile
 	die "Loop" if $safecnt++ > 100;
 	debug "Creating dir $destfile";
 	create_dir($destfile);
-	$page->{'sys_name'} = undef;
-	$destfile = $page->sys_path;
+	$page->orig->{'sys_name'} = undef;
+	$destfile = $page->orig->sys_path;
     }
 
     my $dir = $page->dir;
 
-    if( debug > 2 )
+    if( debug > 1 )
     {
 	debug "srcfile     : $srcfile";
-	debug "destfile_web: ".$page->url_path;
+	debug "destfile_web: ".$page->url_path_slash;
 	debug "destfile    : $destfile";
 	debug "destdir     : ".$dir->sys_path;
 	debug "type        : $type";
@@ -831,7 +860,7 @@ sub precompile
     $page->set_burner_by_type($type);
     $res = $page->burn( $fh, $destfile );
     $fh->close;
-    $error = $page->burner->error;
+    $error = $page->burner->error unless $res;
 
     if( $error )
     {
