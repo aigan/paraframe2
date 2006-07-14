@@ -805,7 +805,8 @@ sub normalized_url
 
     $url ||= $req->page->orig_url_path;
 
-    if( $url =~ s/\/index.tt$/\// )
+#    if( $url =~ s/\/index.tt$/\// )
+    if( $url =~ s/\/index(\.\w{2,3})?\.tt$/\// )
     {
 #	debug "Normal   url: $url";
 	return $url;
