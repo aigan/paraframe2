@@ -72,6 +72,9 @@ sub new
      hidden         => undef,
     }, $class;
 
+    my $no_check = $args->{no_check} || 0;
+
+
     $file->{hidden} = $args->{hidden} || qr/(^\.|^CVS$|~$)/;
 
     if( my $req = $args->{req} )
@@ -98,42 +101,46 @@ sub new
     if( $class eq "Para::Frame::Dir" )
     {
 	$url_in =~ s/([^\/])\/?$/$1\//;
-	$sys_name = $site->uri2file($url_in);
+	$sys_name = $site->uri2file($url_in) unless $no_check;
     }
     else
     {
-	$sys_name = $site->uri2file($url_in);
+	$sys_name = $site->uri2file($url_in) unless $no_check;
     }
 
-    unless( -r $sys_name )
+    unless( $no_check )
     {
-	croak "The file $sys_name is not found (or readable)";
-    }
-
-    if( $class eq "Para::Frame::Dir" )
-    {
-	unless( -d $sys_name )
+	unless( -r $sys_name )
 	{
-	    croak "The file $sys_name is not a dir";
+	    croak "The file $sys_name is not found (or readable)";
 	}
-    }
-    else
-    {
-	if( -d $sys_name )
+
+	if( $class eq "Para::Frame::Dir" )
 	{
-	    $url_in =~ s/([^\/])\/?$/$1\//;
-	    bless $file, "Para::Frame::Dir";
+	    unless( -d $sys_name )
+	    {
+		croak "The file $sys_name is not a dir";
+	    }
 	}
+	else
+	{
+	    if( -d $sys_name )
+	    {
+		$url_in =~ s/([^\/])\/?$/$1\//;
+		bless $file, "Para::Frame::Dir";
+	    }
+	}
+
+	$sys_name =~ s/([^\/])\/?$/$1/;
+	$file->{sys_name} = $sys_name;  # Without dir trailing slash
     }
 
-    $sys_name =~ s/([^\/])\/?$/$1/;
 
     my $url_name = $url_in;
     $url_name =~ s/\/$//; # Remove trailins slash
 
     $file->{url_norm} = $url_in;    # With dir trailing slash
     $file->{url_name} = $url_name;  # Without dir trailing slash
-    $file->{sys_name} = $sys_name;  # Without dir trailing slash
 
 
 #    debug "Created file obj ".datadump($file);
