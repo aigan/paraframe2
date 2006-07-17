@@ -33,8 +33,6 @@ canonical name of the webserver.
 
 Background jobs may not be coupled to a specific site.
 
-A default site is used then the needed.
-
 Information about each specific site is looked up by L</get> using
 L</host> as param.
 
@@ -145,10 +143,11 @@ C<send_email   > = See L</send_email>
 The site is registred under the L</host>, L</code> and all given
 C<aliases>.
 
-The B<first> site registred is also registred as the C<default> site.
-
 The B<first> site registred under a given L</host> is the default
 site used for requests under that domain.
+
+The first site registred will be the C<default> site, used for
+background jobs then no other site are specified.
 
 =cut
 
@@ -182,11 +181,11 @@ sub add
 
 Returns the site registred (by L</add>) under the given C<$name>.
 
-If no such site was regitred, returns the C<default> site.
-
 If $name is a site object, retuns it.
 
 Returns: A L<Para::Frame::Site> object
+
+Exceptions: Croaks if site nor found
 
 =cut
 
@@ -199,8 +198,8 @@ sub get
     no warnings 'uninitialized';
 
     debug 3, "Looking up site $name";
-    return $DATA{$name} || $DATA{'default'} or
-	croak "Either site $name or default is registred";
+    return $DATA{$name} or
+      croak "Site $name is not registred";
 }
 
 =head2 name
@@ -284,19 +283,10 @@ Returns the L<Para::Frame::Dir> object for the L</home>.
 
 sub home
 {
-    if( my $home_url_path = $Para::Frame::REQ->{'dirconfig'}{'home'} )
-    {
-	return Para::Frame::Dir->new({site => $_[0],
-				      url  => $home_url_path.'/',
-				     });
-    }
-    else
-    {
-	return $_[0]->{'home'} ||=
-	  Para::Frame::Dir->new({site => $_[0],
-				 url  => $_[0]->{'home_url_path'}.'/',
-				});;
-    }
+    return $_[0]->{'home'} ||=
+      Para::Frame::Dir->new({site => $_[0],
+			     url  => $_[0]->{'home_url_path'}.'/',
+			    });;
 }
 
 =head2 home_url_path
@@ -306,6 +296,8 @@ sub home
 Returns the home dir of the site as URL path, excluding the last '/'.
 
 Should be an URL path.
+
+TODO: rework PerlSetVar home config
 
 This can be overridden by setting C<home> in dirconfig; Example
 from .htaccess:
@@ -318,11 +310,6 @@ B<Important> Do not end home with a C</>
 
 sub home_url_path
 {
-    if( $Para::Frame::REQ )
-    {
-	return $Para::Frame::REQ->{'dirconfig'}{'home'} || $_[0]->{'home_url_path'};
-    }
-
     return $_[0]->{'home_url_path'};
 }
 
@@ -760,11 +747,6 @@ sub equals
 {
     # Uses perl obj stringification
     return( $_[0] eq $_[1] );
-}
-
-sub is_default
-{
-    return $_[0]->equals($DATA{'default'}) ? 1 : 0;
 }
 
 
