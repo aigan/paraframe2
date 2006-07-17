@@ -36,6 +36,8 @@ use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw catch debug timediff package_to_module get_from_fork datadump );
 use Para::Frame::Time qw( date );
 use Para::Frame::List;
+use Para::Frame::DBIx::Table;
+
 
 use base qw( Exporter );
 BEGIN
@@ -585,6 +587,9 @@ sub select_key
     return $rh;
 }
 
+
+#######################################################################
+
 =head2 connect
 
   $dbix->connect()
@@ -626,6 +631,9 @@ sub connect
     return 1;
 }
 
+
+#######################################################################
+
 =head2 disconnect
 
   $dbix->disconnect()
@@ -640,6 +648,9 @@ sub disconnect
 
     return $dbix->{'dbh'}->disconnect;
 }
+
+
+#######################################################################
 
 =head2 commit
 
@@ -658,6 +669,9 @@ sub commit
     Para::Frame->run_hook( $Para::Frame::REQ, 'before_db_commit', $dbix);
     $dbix->dbh->commit;
 }
+
+
+#######################################################################
 
 =head2 rollback
 
@@ -681,6 +695,9 @@ sub rollback
     $Para::Frame::REQ and $Para::Frame::REQ->change->reset;
 }
 
+
+#######################################################################
+
 =head2 dbh
 
   $dbix->dbh()
@@ -694,6 +711,9 @@ Example:
 =cut
 
 sub dbh { $_[0]->{'dbh'} }
+
+
+#######################################################################
 
 =head2 get_nextval
 
@@ -728,6 +748,9 @@ sub get_nextval
     $id or throw ('sql', "Failed to get nextval\n");
 }
 
+
+#######################################################################
+
 =head2 get_lastval
 
   $dbix->get_lastval
@@ -745,16 +768,17 @@ sub get_lastval
 {
     my( $dbix, $seq ) = @_;
 
-    if( $seq )
-    {
-	my $sth = $dbix->dbh->prepare( "select currval(?)" );
-	$sth->execute( $seq ) or croak "Faild to get current from $seq\n";
-	my( $id ) = $sth->fetchrow_array;
-	$sth->finish;
-	return $id or throw ('sql', "Failed to get currval\n");
-    }
-    return $dbix->dbh->{'mysql_insertid'};
+    $seq or croak "param sequence not given in get_lastval";
+
+    my $sth = $dbix->dbh->prepare( "select currval(?)" );
+    $sth->execute( $seq ) or croak "Faild to get current from $seq\n";
+    my( $id ) = $sth->fetchrow_array;
+    $sth->finish;
+    return $id or throw ('sql', "Failed to get currval\n");
 }
+
+
+#######################################################################
 
 =head2 equals
 
@@ -768,6 +792,9 @@ sub equals
 {
     return $_[0] eq $_[1];
 }
+
+
+#######################################################################
 
 =head2 format_datetime
 
@@ -797,6 +824,9 @@ sub format_datetime
     return $dbix->{'datetime_formatter'}->
 	format_datetime(Para::Frame::Time->get( $time ));
 }
+
+
+#######################################################################
 
 =head2 update
 
@@ -858,6 +888,9 @@ sub update
     } or return $dbix->report_error(\@values, $table, $set, $where);
     return $sth->rows;
 }
+
+
+#######################################################################
 
 =head2 insert
 
@@ -941,6 +974,9 @@ sub insert
     } or return $dbix->report_error(\@values, $table, $rec);
     return $sth->rows;
 }
+
+
+#######################################################################
 
 =head2 insert_wrapper
 
@@ -1120,6 +1156,7 @@ sub insert_wrapper
 }
 
 
+#######################################################################
 
 =head2 update_wrapper
 
@@ -1232,6 +1269,9 @@ sub update_wrapper
     return $res;
 }
 
+
+#######################################################################
+
 =head2 format_value_list
 
   $dbix->format_value_list(@value_list)
@@ -1275,6 +1315,9 @@ sub format_value_list
     }
     return @res;
 }
+
+
+#######################################################################
 
 =head2 format_value
 
@@ -1334,6 +1377,9 @@ sub format_value
 	return $dbix->format_value_list( $val );
     }
 }
+
+
+#######################################################################
 
 =head2 save_record
 
@@ -1562,6 +1608,9 @@ sub save_record
     return scalar @fields; # The number of changes
 }
 
+
+#######################################################################
+
 =head2 report_error
 
   $dbix->report_error( \@values, @params )
@@ -1621,7 +1670,7 @@ sub report_error
 }
 
 
-############
+#######################################################################
 
 =head2 rebless
 
@@ -1652,10 +1701,87 @@ sub rebless
 }
 
 
+#######################################################################
 
+=head2 table
+
+  $dbix->table( $name )
+
+Returns: a L<Para::Frame::DBIx::Table> object or C<undef> if not
+existing.
+
+Must be implemented for the DB driver.
+
+=cut
+
+sub table
+{
+    die "method table() not implemented";
+}
+
+
+#######################################################################
+
+=head2 tables
+
+  $dbix->tables()
+
+Returns: A L<Para::Frame::List> object of L<Para::Frame::DBIx::Table>
+objects.
+
+Must be implemented for the DB driver.
+
+=cut
+
+sub tables
+{
+    die "method table() not implemented";
+}
+
+
+#######################################################################
+
+=head2 bool
+
+  $dbix->bool($value)
+
+Returns: a boolean true/false value fore use in SQL statements for the
+DB.
+
+=cut
+
+sub bool
+{
+    die "bool not implemented";
+}
+
+
+
+########################################################################
+#
+#=head2 create_table
+#
+#  $dbix->create_table($value)
+#
+#Returns: a boolean true/false value fore use in SQL statements for the
+#DB.
+#
+#=cut
+#
+#sub bool
+#{
+#    die "bool not implemented";
+#}
+#
+#
+#######################################################################
 ############ functions
 
 =head2 pgbool
+
+DEPRECATED!
+
+Use L</bool> instead.
 
   pgbool($value)
 
@@ -1672,7 +1798,8 @@ sub pgbool
     return 't';
 }
 
-#########################
+
+#######################################################################
 
 1;
 
