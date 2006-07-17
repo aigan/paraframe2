@@ -1483,11 +1483,6 @@ sub send_code
 	    my $origreq = $req->{'original_request'};
 
 	    my $site = $req->site;
-	    if( $origreq )
-	    {
-		$site = $origreq->site;
-		debug "Using host ".$site->host;
-	    }
 
 	    my $webhost = $site->webhost;
 	    my $webpath = $site->loopback;
