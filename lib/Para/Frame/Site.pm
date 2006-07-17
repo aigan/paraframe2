@@ -158,11 +158,10 @@ sub add
 
     my $site = $this->_new( $params );
 
-    my $webhost = $site->webhost;
-    debug "Registring site $webhost";
+    debug "Registring site ".$site->name;
 
-    $DATA{ $webhost } ||= $site;
-    $DATA{'default'} ||= $site;
+    $DATA{ $site->host } ||= $site;
+    $DATA{'default'}     ||= $site;
 
     foreach my $alias (@{$params->{'aliases'}})
     {
