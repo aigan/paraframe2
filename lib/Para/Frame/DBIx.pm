@@ -9,7 +9,7 @@ package Para::Frame::DBIx;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -24,8 +24,7 @@ Para::Frame::DBIx - Wrapper module for DBI
 
 use strict;
 use DBI qw(:sql_types);
-use Carp qw( carp croak shortmess );
-use Data::Dumper;
+use Carp qw( carp croak shortmess confess );
 
 BEGIN
 {
@@ -34,7 +33,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw catch debug timediff package_to_module get_from_fork);
+use Para::Frame::Utils qw( throw catch debug timediff package_to_module get_from_fork datadump );
 use Para::Frame::Time qw( date );
 use Para::Frame::List;
 
@@ -58,6 +57,8 @@ a global or site variable.
 Multipple connections are supported.
 
 On error, an 'dbi' exception is thrown.
+
+The object will blessed into a subclass via L</rebless>, if availible.
 
 =head2 Exported TT functions
 
@@ -112,11 +113,6 @@ The param C<bind_dbh> can be used to bind the $dbh object (returned by
 L<DBI/connect>) to a specific variable, that will be updated after
 each connection. Example: C<bind_dbh =E<gt> \ $MyProj::dbh,>
 
-The param C<datetime_formatter> should hold the module name to use to
-format dates for this database. The default is
-L<DateTime::Format::Pg>. It's used by L</format_datetime>. The module
-will be required during object construction.
-
 The object uses the hooks L<Para::Frame/on_fork> for reconnecting to
 the database on forks.
 
@@ -129,6 +125,10 @@ L<Para::Frame/gefore_render_output> for times to L</commit>.
 The constructor will not connect to the database, since we will
 probably fork after creation. But you may want to, after you have the
 object, use L<Para::Frame/on_startup>.
+
+Returns a object that inherits from L<Para::Frame::DBIx>.
+
+Calls C<init> method in the subclass.
 
 Example:
 
@@ -168,6 +168,9 @@ sub new
 	$dbix->{'connect'} = $connect;
     }
 
+    $dbix->rebless;
+
+
     if( $params->{'import_tt_params'} )
     {
 	debug "Adding global params for dbix $dbix->{connect}[0]";
@@ -181,13 +184,6 @@ sub new
     }
 
     $dbix->{'bind_dbh'} = $params->{'bind_dbh'};
-
-
-    $dbix->{'datetime_formatter'} =
-	$params->{'datetime_formatter'} ||
-	'DateTime::Format::Pg';
-    my $formatter_module = package_to_module($dbix->{'datetime_formatter'});
-    require $formatter_module;
 
 
     Para::Frame->add_hook('done', sub
@@ -264,8 +260,45 @@ sub new
     # Use the on_startup hook
     # $dbix->connect;
 
+    $dbix->init( $params );
+
     return $dbix;
 }
+
+#######################################################################
+
+=head2 init
+
+  $dbix->init(\%args);
+
+This may be implemented in subclasses.
+
+The param C<datetime_formatter> should hold the module name to use to
+format dates for this database. The default is based on the DB driver.
+It's used by L</format_datetime>. The module will be required during
+object construction.
+
+C<datetime_formatter> defaults to L<DateTime::Format::Pg> which uses
+SQL standard C<ISO 8601> (2003-01-16T23:12:01+0200), which should work
+for most databases.
+
+=cut
+
+sub init
+{
+    my( $dbix, $args ) = @_;
+
+    $args ||= {};
+
+    $dbix->{'datetime_formatter'} =
+      $args->{'datetime_formatter'} ||
+	'DateTime::Format::Pg';
+    my $formatter_module = package_to_module($dbix->{'datetime_formatter'});
+    require $formatter_module;
+
+
+}
+
 
 #######################################################################
 
@@ -628,6 +661,8 @@ sub commit
 
 =head2 rollback
 
+  $dbix->rollback()
+
 Starts by doing the rollbak. Then runs the hook
 L<Para::Frame/after_db_rollback>.
 
@@ -696,6 +731,7 @@ sub get_nextval
 =head2 get_lastval
 
   $dbix->get_lastval
+
   $dbix->get_lastval($sequence)
 
 For MySQL, this retrieves the C<AUTOINCREMENT> value from
@@ -1243,6 +1279,7 @@ sub format_value_list
 =head2 format_value
 
   $dbix->format_value( $type, $value )
+
   $dbix->format_value( undef, $value )
 
 If type is undef, uses L</format_value_list>.
@@ -1527,7 +1564,7 @@ sub save_record
 
 =head2 report_error
 
-  report_error( \@values, @params )
+  $dbix->report_error( \@values, @params )
 
 If $@ is true, throws a C<dbi> exception, adding the calles sub name
 and the list of values. Those should be the values given to dbh for
@@ -1582,6 +1619,38 @@ sub report_error
 	throw('dbi', "$info\nValues: $values\n$at");
     }
 }
+
+
+############
+
+=head2 rebless
+
+  $dbix->rebless
+
+Checks if there exists a Para::Frame::DBIx::... module matching the
+connection, for customized interface.
+
+=cut
+
+sub rebless
+{
+    my( $scheme, $driver ) = DBI->parse_dsn($_[0]->{connect}[0]);
+
+    $scheme or confess "Invalid connect string: $_[0]->{connect}[0]";
+
+    my $package = "Para::Frame::DBIx::$driver";
+    my $module = package_to_module($package);
+    debug "DBIx uses package $package";
+
+    if( eval{ require $module } )
+    {
+	debug "Reblessing dbix into $package";
+	bless $_[0], $package;
+    }
+
+    return $_[0];
+}
+
 
 
 ############ functions
