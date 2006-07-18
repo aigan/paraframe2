@@ -648,6 +648,16 @@ sub get_value
 	#
 	if( length $INBUFFER{$client} >= $DATALENGTH{$client} )
 	{
+	    my $rest = '';
+	    if( length $INBUFFER{$client} > $DATALENGTH{$client} )
+	    {
+		$rest = substr( $INBUFFER{$client},
+				$DATALENGTH{$client},
+				undef,
+				'' );
+	    }
+
+
 	    debug(4,"The whole length read");
 
 	    if( $INBUFFER{$client} =~ s/^(\w+)\x00// )
@@ -660,7 +670,7 @@ sub get_value
 		    # Clear BUFFER so that we can recieve more from
 		    # same place.
 
-		    $INBUFFER{$client} = '';
+		    $INBUFFER{$client} = $rest;
 		    $DATALENGTH{$client} = 0;
 
 		    handle_request( $client, \$record );
@@ -702,7 +712,7 @@ sub get_value
 		{
 		    my $val = $INBUFFER{$client};
 		    debug(4,"RESP recieved ($val)");
-		    $INBUFFER{$client} = '';
+		    $INBUFFER{$client} = $rest;
 		    $DATALENGTH{$client} = 0;
 		    return $val;
 		}
@@ -762,7 +772,7 @@ sub get_value
 		debug(0,"No code given: $INBUFFER{$client}");
 	    }
 
-	    $INBUFFER{$client} = '';
+	    $INBUFFER{$client} = $rest;
 	    $DATALENGTH{$client} = 0;
 	}
     }
