@@ -23,7 +23,7 @@ Para::Frame::DBIx::mysql - Wrapper module for DBI mysql
 =cut
 
 use strict;
-use Carp qw( carp croak shortmess );
+use Carp qw( carp croak shortmess confess );
 use DateTime::Format::MySQL;
 
 BEGIN
