@@ -96,7 +96,7 @@ sub deregister
     $child->status( $status ) if defined $status;
     my $req = $child->req;
 
-    return if $req->{'cancel'};
+    return if $req->cancelled;
 
     if( $req->in_yield )
     {
