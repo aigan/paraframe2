@@ -2023,7 +2023,7 @@ sub output_redirection
 
     $req->send_code( 'AR-PUT', 'header_out', 'Content-Length', $length );
     $req->send_code( 'AR-PUT', 'send_http_header', 'text/plain' );
-    $req->client->send( "\n" );
+    $req->send_code( 'BODY' );
     $req->client->send( $out );
 }
 
@@ -2064,8 +2064,8 @@ sub send_headers
 	}
     }
 
-    debug(2,"Send newline");
-    $client->send( "\n" );
+    debug(2,"Begin body");
+    $req->send_code( 'BODY' );
     $page->{'in_body'} = 1;
 }
 
@@ -2124,7 +2124,7 @@ sub send_in_chunks
 		{
 		    debug(1,"  Failed to send chunk $i");
 
-		    if( $req->{'cancel'} )
+		    if( $req->cancelled )
 		    {
 			debug("Request was cancelled. Giving up");
 			return $sent;
