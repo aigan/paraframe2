@@ -27,6 +27,7 @@ Para::Frame::Client - The client for the Request
 use strict;
 use CGI;
 use IO::Socket;
+use IO::Select;
 use FreezeThaw qw( freeze );
 use Data::Dumper;
 use Apache::Constants qw( :common );
@@ -388,99 +389,151 @@ sub create_dir
 
 sub get_response
 {
+    my $select = IO::Select->new($SOCK);
+    my $timeout = 2;
+    my $c = $r->connection;
+    my $client_fn = $c->fileno(1);
+#    warn "$$: Client output filenumber is $client_fn\n";
+    my $client_fh = IO::Handle->new_from_fd($client_fn,'w');
+
+    unless( $client_fh ) # Lost connection
+    {
+	warn "$$: Lost connection to client\n";
+	warn "$$:   Sending CANCEL to server\n";
+	send_to_server("CANCEL");
+	return 0;
+    }
+
+#    warn "$$: Client output filehandle is $client_fh\n";
+    my $client_select = IO::Select->new($client_fh);
+#    warn "$$: Client output select is $client_select\n";
+
     my $in_body = 0;
     my $rows = 0;
     my $chars = 0;
-    while( $_ = <$SOCK> )
+    while( 1 )
     {
-	if( $DEBUG > 4 )
+	if( my @handle = $select->can_read( $timeout ) )
 	{
-#	    my $len = length( $_ );
-#	    warn "$$: Got: '$_'[$len]\n";
-	    $chars += length( $_ );
-	}
+	    # TODO: May not have been ready to get the whole line...
+	    my $row = <$SOCK>;
+	    defined $row or last; # End of file
 
-	# Code size max 10 chars
-	if( s/^([\w\-]{3,10})\0// )
-	{
-	    my $code = $1;
-	    warn "$$:   Code $code\n" if $DEBUG;
-	    chomp;
-	    # Apache Request command execution
-	    if( $code eq 'AR-PUT' )
+	    if( $DEBUG > 4 )
 	    {
-		my( $cmd, @vals ) = split(/\0/, $_);
-		warn "$$: AR-PUT $cmd with @vals\n" if $DEBUG;
-		$r->$cmd( @vals );
+		my $len = length( $row );
+		warn "$$: Got: '$row'[$len]\n";
+		$chars += $len;
 	    }
-	    # Get filename for this URI
-	    elsif( $code eq 'URI2FILE' )
+
+	    unless( $row =~ /\n$/ )
 	    {
-		my $uri = $_;
-		warn "$$: URI2FILE $uri\n" if $DEBUG;
-		my $sr = $r->lookup_uri($uri);
-		my $file = $sr->filename;
-		send_to_server( 'RESP', \$file );
+		warn "$$: Got a line not ending with LF:\n'$row'\n";
+		return 1; ### EXIT
 	    }
-	    # Get response of Apace Request command execution
-	    elsif( $code eq 'AR-GET' )
+
+	    # Code size max 16 chars
+	    # TODO: If in body, this may be part of the body (binary?)
+	    if( $row =~ s/^([\w\-]{3,16})\0// )
 	    {
-		my( $cmd, @vals ) = split(/\0/, $_);
-		warn "$$: AR-GET $cmd with @vals\n" if $DEBUG;
-		my $res =  $r->$cmd( @vals );
-		send_to_server( 'RESP', \$res );
-	    }
-	    # Apache Headers command execution
-	    elsif( $code eq 'AT-PUT' )
-	    {
-		my( $cmd, @vals ) = split(/\0/, $_);
-		warn "$$: AT-PUT $cmd with @vals\n" if $DEBUG;
-		my $h = $r->headers_out;
-		$h->$cmd( @vals );
+		my $code = $1;
+		warn "$$: Code $code\n" if $DEBUG;
+		chomp $row;
+		# Apache Request command execution
+		if( $code eq 'AR-PUT' )
+		{
+		    my( $cmd, @vals ) = split(/\0/, $row);
+		    warn "$$:      $cmd with @vals\n" if $DEBUG;
+		    $r->$cmd( @vals );
+		}
+		# Get filename for this URI
+		elsif( $code eq 'URI2FILE' )
+		{
+		    my $uri = $row;
+		    warn "$$:      $uri\n" if $DEBUG;
+		    my $sr = $r->lookup_uri($uri);
+		    my $file = $sr->filename;
+		    send_to_server( 'RESP', \$file );
+		}
+		# Get response of Apace Request command execution
+		elsif( $code eq 'AR-GET' )
+		{
+		    my( $cmd, @vals ) = split(/\0/, $row);
+		    warn "$$:      $cmd with @vals\n" if $DEBUG;
+		    my $res =  $r->$cmd( @vals );
+		    send_to_server( 'RESP', \$res );
+		}
+		# Apache Headers command execution
+		elsif( $code eq 'AT-PUT' )
+		{
+		    my( $cmd, @vals ) = split(/\0/, $row);
+		    warn "$$:      $cmd with @vals\n" if $DEBUG;
+		    my $h = $r->headers_out;
+		    $h->$cmd( @vals );
+		}
+		# Starting sending body
+		elsif( $code eq 'BODY' )
+		{
+		    my $content_type = $r->content_type;
+		    unless( $content_type )
+		    {
+			print_error_page("Body without content type");
+			return 0;
+		    }
+		    $r->send_http_header($content_type);
+		    $in_body = 1;
+		    $rows += send_body();
+		    last;
+		}
+		else
+		{
+		    die "Unrecognized code: $code\n";
+		}
 	    }
 	    else
 	    {
-		die "Unrecognized code: $code\n";
+		print_error_page("Unrecognized input",$row);
+		return 0;
 	    }
 	}
 	else
 	{
-	    if( $in_body )
+	    warn "$$: Checking connection\n";
+	    if( my @clients = $client_select->can_write(0.5) )
 	    {
-		unless( $r->print( $_ ) )
-		{
-		    warn "$$: Faild to print '$_' after row $rows\n";
-		    warn "$$:   Sending CANCEL to server\n";
-		    send_to_server("CANCEL");
-		    last;
-		}
-		$rows ++;
+		warn "$$:   Listening (@clients)\n";
 	    }
 	    else
 	    {
-		warn "$$: Output the http headers\n" if $DEBUG;
-		my $content_type = $r->content_type;
-		unless( $content_type )
-		{
-		    if( $r->uri =~ /\.tt$/ )
-		    {
-			$content_type = "text/html";
-		    }
-		    else
-		    {
-			$content_type = "text/plain";
-		    }
-		}
-		warn "$$: Content type appears to be $content_type\n" if $DEBUG;
+		warn "$$:   Gone?\n";
+	    }
 
-		$r->send_http_header($content_type);
-		$in_body = 1;
+	    if( $r->connection->aborted )
+	    {
+		warn "$$: ABORTED ABORTED ABORTED\n";
 	    }
 	}
     }
 
     warn "$$: Got $chars chars of data\n" if $DEBUG > 4;
 
+    return $rows;
+}
+
+sub send_body
+{
+    my $rows = 0;
+    while(defined( my $row = <$SOCK> ))
+    {
+	unless( $r->print( $row ) )
+	{
+	    warn "$$: Faild to print '$row' after row $rows\n";
+	    warn "$$:   Sending CANCEL to server\n";
+	    send_to_server("CANCEL");
+	    return 0;
+	}
+	$rows ++;
+    }
     return $rows;
 }
 
