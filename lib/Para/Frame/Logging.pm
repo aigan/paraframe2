@@ -75,7 +75,8 @@ sub debug_data
 
     if( $req->is_from_client )
     {
-	$out .= "Orig uri: $req->{orig_uri}\n";
+	my $orig_url_path = $page->orig_url_path;
+	$out .= "Orig url: $orig_url_path\n";
 
 	if( my $redirect = $page->{'redirect'} )
 	{
