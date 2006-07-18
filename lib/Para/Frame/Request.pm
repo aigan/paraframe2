@@ -119,7 +119,7 @@ sub new
 	child_result   => undef,          ## the child res if in child
 	reqnum         => $reqnum,        ## The request serial number
 	wait           => 0,              ## Asked to wait?
-	cancel         => undef,          ## True if we should abort
+	cancel         => 0,              ## True if we should abort
 	change         => undef,
         header_only    => 0,              ## true if only sending header
         site           => undef,          ## Default site for req
@@ -1442,6 +1442,7 @@ sub send_code
 
     # To get a response, use get_cmd_val()
 
+    $_[1] ||= 1; # Must be at least one param
     debug(3, "Sending code: ".join("-", @_));
 
     if( $Para::Frame::FORK )
@@ -2035,6 +2036,14 @@ sub run_hook
 sub logging
 {
     return Para::Frame::Logging->new();
+}
+
+
+#######################################################################
+
+sub cancelled
+{
+    return $_[0]->{'cancel'};
 }
 
 
