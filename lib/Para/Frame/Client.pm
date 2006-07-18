@@ -487,11 +487,12 @@ sub get_response
 		}
 		else
 		{
-		    die "Unrecognized code: $code\n";
+		    die "$$: Unrecognized code: $code\n";
 		}
 	    }
 	    else
 	    {
+		warn "$$: Unrecognized input: $row\n";
 		print_error_page("Unrecognized input",$row);
 		return 0;
 	    }
