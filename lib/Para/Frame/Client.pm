@@ -41,6 +41,8 @@ BEGIN
 
 use Para::Frame::Reload;
 
+use constant BUFSIZ => 8192; # Posix buffersize
+
 our $SOCK;
 our $r;
 
@@ -187,16 +189,16 @@ sub handler
 	    last;
 	}
 
-	my $rows = 0;
+	my $chunks = 0;
 	if( send_to_server('REQ', \$value) )
 	{
 	    warn "$$: Sent data to server\n" if $DEBUG;
-	    $rows = get_response();
+	    $chunks = get_response();
 	}
 
-	if( $rows )
+	if( $chunks )
 	{
-	    warn "$$: Returned $rows rows\n" if $DEBUG;
+	    warn "$$: Returned $chunks chunks\n" if $DEBUG;
 	    last;
 	}
 	else
@@ -398,10 +400,10 @@ sub get_response
 
     unless( $client_fh ) # Lost connection
     {
-	warn "$$: Lost connection to client\n";
+	warn "$$: Lost connection to client $client_fh fd $client_fn\n";
 	warn "$$:   Sending CANCEL to server\n";
 	send_to_server("CANCEL");
-	return 0;
+	return 1;
     }
 
 #    warn "$$: Client output filehandle is $client_fh\n";
@@ -409,7 +411,7 @@ sub get_response
 #    warn "$$: Client output select is $client_select\n";
 
     my $in_body = 0;
-    my $rows = 0;
+    my $chunks = 0;
     my $chars = 0;
     while( 1 )
     {
@@ -482,7 +484,7 @@ sub get_response
 		    }
 		    $r->send_http_header($content_type);
 		    $in_body = 1;
-		    $rows += send_body();
+		    $chunks += send_body();
 		    last;
 		}
 		else
@@ -518,24 +520,29 @@ sub get_response
 
     warn "$$: Got $chars chars of data\n" if $DEBUG > 4;
 
-    return $rows;
+    return $chunks;
 }
 
 sub send_body
 {
-    my $rows = 0;
-    while(defined( my $row = <$SOCK> ))
+    my $chunk = 0;
+    my $select = IO::Select->new($SOCK);
+    my $data = '';
+    $SOCK->read($data, BUFSIZ);
+
+    while( length $data )
     {
-	unless( $r->print( $row ) )
+	$chunk ++;
+	unless( $r->print( \$data ) )
 	{
-	    warn "$$: Faild to print '$row' after row $rows\n";
+	    warn "$$: Faild to print '$data' in chunk $chunk\n";
 	    warn "$$:   Sending CANCEL to server\n";
 	    send_to_server("CANCEL");
-	    return 0;
+	    return 1;
 	}
-	$rows ++;
+	$SOCK->read($data, BUFSIZ);
     }
-    return $rows;
+    return $chunk;
 }
 
 1;
