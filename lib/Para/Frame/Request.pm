@@ -76,7 +76,7 @@ sub new
     my( $class, $reqnum, $client, $recordref ) = @_;
 
     my( $value ) = thaw( $$recordref );
-    my( $params, $env, $orig_url, $orig_filename, $content_type, $dirconfig ) = @$value;
+    my( $params, $env, $orig_url, $orig_filename, $content_type, $dirconfig, $header_only ) = @$value;
 
     # Modify $env for non-mod_perl mode
     $env->{'REQUEST_METHOD'} = 'GET';
@@ -121,7 +121,7 @@ sub new
 	wait           => 0,              ## Asked to wait?
 	cancel         => 0,              ## True if we should abort
 	change         => undef,
-        header_only    => 0,              ## true if only sending header
+        header_only    => $header_only,   ## true if only sending header
         site           => undef,          ## Default site for req
     }, $class;
 
@@ -148,6 +148,7 @@ sub init
 
     if( $env->{'HTTP_USER_AGENT'} )
     {
+	local $^W = 0;
 	$req->{'browser'} = new HTTP::BrowserDetect($env->{'HTTP_USER_AGENT'});
     }
     $req->{'result'}  = Para::Frame::Result->new();  # Before Session
