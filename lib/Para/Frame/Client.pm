@@ -46,7 +46,7 @@ use constant BUFSIZ => 8192; # Posix buffersize
 our $SOCK;
 our $r;
 
-our $DEBUG = 0;
+our $DEBUG = 1;
 our $BACKUP_PORT;
 
 =head1 DESCRIPTION
@@ -174,7 +174,7 @@ sub handler
 
 
 
-    my $value = freeze [ $params,  \%ENV, $r->uri, $r->filename, $ctype, $dirconfig ];
+    my $value = freeze [ $params,  \%ENV, $r->uri, $r->filename, $ctype, $dirconfig, $r->header_only ];
 
     my $try = 0;
     while()
@@ -400,7 +400,7 @@ sub get_response
 
     unless( $client_fh ) # Lost connection
     {
-	warn "$$: Lost connection to client $client_fh fd $client_fn\n";
+	warn "$$: Lost connection to client $client_fn\n";
 	warn "$$:   Sending CANCEL to server\n";
 	send_to_server("CANCEL");
 	return 1;
@@ -410,7 +410,6 @@ sub get_response
     my $client_select = IO::Select->new($client_fh);
 #    warn "$$: Client output select is $client_select\n";
 
-    my $in_body = 0;
     my $chunks = 0;
     my $chars = 0;
     while( 1 )
@@ -476,15 +475,15 @@ sub get_response
 		# Starting sending body
 		elsif( $code eq 'BODY' )
 		{
-		    my $content_type = $r->content_type;
-		    unless( $content_type )
-		    {
-			print_error_page("Body without content type");
-			return 0;
-		    }
-		    $r->send_http_header($content_type);
-		    $in_body = 1;
+		    send_headers() or last;
 		    $chunks += send_body();
+		    last;
+		}
+		# Only sending headers
+		elsif( $code eq 'HEADER' )
+		{
+		    send_headers();
+		    $chunks = 1;
 		    last;
 		}
 		else
@@ -523,8 +522,22 @@ sub get_response
     return $chunks;
 }
 
+sub send_headers
+{
+    my $content_type = $r->content_type;
+    unless( $content_type )
+    {
+	print_error_page("Body without content type");
+	return 0;
+    }
+    $r->send_http_header($content_type);
+    $r->print(""); # Flush buffer
+    return 1;
+}
+
 sub send_body
 {
+    warn "$$: Sending body\n";
     my $chunk = 0;
     my $select = IO::Select->new($SOCK);
     my $data = '';
@@ -535,7 +548,7 @@ sub send_body
 	$chunk ++;
 	unless( $r->print( \$data ) )
 	{
-	    warn "$$: Faild to print '$data' in chunk $chunk\n";
+	    warn "$$: Faild to send chunk $chunk to client\n";
 	    warn "$$:   Sending CANCEL to server\n";
 	    send_to_server("CANCEL");
 	    return 1;
