@@ -1688,6 +1688,10 @@ sub render_output
 	return 1;
     }
 
+    # Don't burn if this is a HEAD request
+    return 1 if $req->header_only;
+
+
     my $burner = Para::Frame::Burner->get_by_ext($ext);
 
     if( not $burner )
@@ -1879,7 +1883,13 @@ sub send_output
 	    }
 	}
 
-	if( $page->{'page_sender'} eq 'utf8' )
+	if( $req->header_only )
+	{
+	    $page->send_headers;
+	    $req->send_code( 'HEADER' );
+
+	}
+	elsif( $page->{'page_sender'} eq 'utf8' )
 	{
 	    $page->ctype->set_charset("UTF-8");
 	    $page->send_headers;
@@ -1927,7 +1937,7 @@ sub forward
 
     debug "Forwarding to $url_norm";
 
-    if( not $page->{'page_content'} )
+    if( not( $page->{'page_content'} or $req->header_only ) )
     {
 	cluck "forward() called without a generated page";
 	unless( $url_norm =~ /\.html$/ )
@@ -2021,10 +2031,18 @@ sub output_redirection
     my $out = "Go to $url_out\n";
     my $length = length( $out );
 
-    $req->send_code( 'AR-PUT', 'header_out', 'Content-Length', $length );
     $req->send_code( 'AR-PUT', 'send_http_header', 'text/plain' );
-    $req->send_code( 'BODY' );
-    $req->client->send( $out );
+
+    if( $req->header_only )
+    {
+	$req->send_code( 'HEADER' );
+    }
+    else
+    {
+	$req->send_code( 'AR-PUT', 'header_out', 'Content-Length', $length );
+	$req->send_code( 'BODY' );
+	$req->client->send( $out );
+    }
 }
 
 
@@ -2064,9 +2082,6 @@ sub send_headers
 	}
     }
 
-    debug(2,"Begin body");
-    $req->send_code( 'BODY' );
-    $page->{'in_body'} = 1;
 }
 
 
@@ -2093,6 +2108,11 @@ sub send_in_chunks
     my( $page, $dataref ) = @_;
 
     my $req = $page->req;
+
+    debug(2,"Begin body");
+    $req->send_code( 'BODY' );
+    $page->{'in_body'} = 1;
+
 
     my $client = $req->client;
     my $length = length($$dataref);
