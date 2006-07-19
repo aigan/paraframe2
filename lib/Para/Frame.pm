@@ -646,14 +646,17 @@ sub get_value
 	debug(4,"End of record?");
 	# Have we read the full record of data?
 	#
-	if( length $INBUFFER{$client} >= $DATALENGTH{$client} )
+	my $length_buffer = length( $INBUFFER{$client} );
+	my $length_target = $DATALENGTH{$client};
+
+	if( $length_buffer >= $length_target )
 	{
 	    my $rest = '';
-	    if( length $INBUFFER{$client} > $DATALENGTH{$client} )
+	    if( $length_buffer > $length_target )
 	    {
 		$rest = substr( $INBUFFER{$client},
-				$DATALENGTH{$client},
-				undef,
+				$length_target,
+				($length_buffer - $length_target),
 				'' );
 	    }
 
