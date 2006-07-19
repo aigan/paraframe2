@@ -394,7 +394,7 @@ sub get_response
     my $select = IO::Select->new($SOCK);
     my $timeout = 2;
     my $c = $r->connection;
-    my $client_fn = $c->fileno(1);
+    my $client_fn = $c->fileno(0); # Direction right?!
 #    warn "$$: Client output filenumber is $client_fn\n";
     my $client_fh = IO::Handle->new_from_fd($client_fn,'w');
 
