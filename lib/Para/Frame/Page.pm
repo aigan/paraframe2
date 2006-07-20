@@ -181,7 +181,7 @@ sub new
 
 
     # TODO: Use URL for extracting the site
-    my $site = $page->set_site( $args->{site} || $page->req->site );
+    my $site = $page->set_site( $args->{site} || $page->req->site || 'default' );
 
     if( my $ctype = $args->{ctype} )
     {
