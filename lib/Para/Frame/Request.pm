@@ -1731,7 +1731,7 @@ sub set_site
 {
     my( $req, $site_in ) = @_;
 
-    $site_in or croak "site param missing";
+    $site_in or confess "site param missing";
 
     my $site = Para::Frame::Site->get( $site_in );
 
