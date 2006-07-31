@@ -99,43 +99,43 @@ Special params are:
 =over
 
 C<webhost      > = See L</host>
-	       
+
 C<aliases      > = a listref of site aliases
-	       
+
 C<name         > = See L</name>
-	       
+
 C<code         > = See L</code>
-	       
+
 C<home         > = See L</home>
 
 C<home_url_path> = See L</home_url_path>
 
 C<last_step    > = See L</last_step>
-	       
+
 C<login_page   > = See L</login_page>
-	       
+
 C<logout_page  > = See L</logout_page>
-	       
+
 C<loopback     > = See L</loopback>
-	       
+
 C<backup_host  > = See L</backup_host>
-	       
+
 C<appbase      > = See L</appbase>
-	       
+
 C<appfmly      > = See L</appfmly>
-	       
+
 C<approot      > = See L</approot>
-	       
+
 C<appback      > = See L</appback>
-	       
+
 C<params       > = See L</params>
-	       
+
 C<languages    > = See L</languages>
-	       
+
 C<htmlsrc      > = See L</htmlsrc>
-	       
+
 C<is_compiled  > = See L</is_compiled>
-	       
+
 C<send_email   > = See L</send_email>
 
 =back
@@ -283,10 +283,18 @@ Returns the L<Para::Frame::Dir> object for the L</home>.
 
 sub home
 {
-    return $_[0]->{'home'} ||=
-      Para::Frame::Dir->new({site => $_[0],
-			     url  => $_[0]->{'home_url_path'}.'/',
-			    });;
+    if( defined $_[0]->{'home'} )
+    {
+	return $_[0]->{'home'};
+    }
+    else
+    {
+#	debug "Creating dir obj for home '$_[0]->{home_url_path}/' for $_[0]";
+	return $_[0]->{'home'} =
+	    Para::Frame::Dir->new({site => $_[0],
+				   url  => $_[0]->{'home_url_path'}.'/',
+				  });;
+    }
 }
 
 =head2 home_url_path
