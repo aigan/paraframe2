@@ -1,4 +1,4 @@
-#  $Id$  -*-perl-*-
+#  $Id$  -*-cperl-*-
 package Para::Frame::Session;
 #=====================================================================
 #
@@ -172,10 +172,10 @@ sub after_request
 
 sub register_result_page
 {
-    my( $s, $url, $headers, $page_ref ) = @_;
+    my( $s, $url, $headers, $page_ref, $page_sender ) = @_;
     # URL should only be the path part
     debug "Registred the page result for $url";
-    $s->{'page_result'}{$url} = [ $headers, $page_ref ];
+    $s->{'page_result'}{$url} = [ $headers, $page_ref, $page_sender ];
 }
 
 =head2 id
