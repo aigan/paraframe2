@@ -2067,6 +2067,14 @@ sub output_redirection
 
     my $moved_permanently = $page->{'moved_temporarily'} ? 0 : 1;
 
+
+    my $res = $req->get_cmd_val( 'WAIT' );
+    if( $res eq 'LOADPAGE' )
+    {
+	$req->send_code('PAGE_READY', $url_out );
+	return;
+    }
+
     if( $moved_permanently )
     {
 	debug "MOVED PERMANENTLY";
