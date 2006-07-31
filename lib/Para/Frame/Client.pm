@@ -46,8 +46,11 @@ use constant BUFSIZ => 8192; # Posix buffersize
 our $SOCK;
 our $r;
 
-our $DEBUG = 1;
+our $DEBUG = 0;
 our $BACKUP_PORT;
+our $STARTED;
+our $LOADPAGE;
+our @NOTES;
 
 =head1 DESCRIPTION
 
@@ -141,11 +144,27 @@ sub handler
     my $reqline = $r->the_request;
     warn "$$: Got $reqline\n" if $DEBUG;
 
-    my $ctype = $r->content_type || 'text/html'; # FIXME
-#    my $ctype = $r->content_type or die; # TEST
-    if( $ctype =~ /^image/ )
+    ### Optimize for the common case.
+    #
+    # May be modified in req, but this value guides Loadpage
+    #
+    my $ctype = $r->content_type;
+    warn "$$: Orig ctype $ctype\n" if $ctype;
+    if( not $ctype )
     {
-	return 0;
+	if( $r->filename =~ /\.tt$/ )
+	{
+	    $ctype = $r->content_type('text/html');
+	}
+    }
+    elsif( $ctype eq "httpd/unix-directory" )
+    {
+	$ctype = $r->content_type('text/html');
+    }
+    else
+    {
+	warn "$$: declining $ctype\n";
+	return DECLINED;
     }
 
     my @tempfiles = ();
@@ -235,7 +254,7 @@ sub send_to_server
     $valref ||= \ "1";
     my $length = length($$valref) + length($code) + 1;
 
-    warn "$$: Sending $length - $code - value\n" if $DEBUG > 3;
+    warn "$$: Sending $length - $code - $$valref\n" if $DEBUG > 3;
     unless( print $SOCK "$length\x00$code\x00" . $$valref )
     {
 	die "LOST CONNECTION while sending $code\n";
@@ -391,8 +410,12 @@ sub create_dir
 
 sub get_response
 {
+    $STARTED = time;
+    $LOADPAGE = 0;
+    @NOTES = ();
+
     my $select = IO::Select->new($SOCK);
-    my $timeout = 2;
+    my $timeout = 1.5;
     my $c = $r->connection;
     my $client_fn = $c->fileno(0); # Direction right?!
 #    warn "$$: Client output filenumber is $client_fn\n";
@@ -411,26 +434,40 @@ sub get_response
 #    warn "$$: Client output select is $client_select\n";
 
     my $chunks = 0;
-    my $chars = 0;
+    my $data='';
+    my $buffer = '';
     while( 1 )
     {
-	if( my @handle = $select->can_read( $timeout ) )
+	if( $select->can_read( $timeout ) )
 	{
-	    # TODO: May not have been ready to get the whole line...
-	    my $row = <$SOCK>;
-	    defined $row or last; # End of file
-
-	    if( $DEBUG > 4 )
+	    my $rv = $SOCK->recv($buffer,BUFSIZ, 0);
+	    unless( defined $rv and length $buffer)
 	    {
-		my $len = length( $row );
-		warn "$$: Got: '$row'[$len]\n";
-		$chars += $len;
+		# EOF from client
+		warn "$$: Nothing in socket $SOCK\n";
+		warn "$$: EOF!\n";
+		last;
 	    }
 
-	    unless( $row =~ /\n$/ )
+	    $data .= $buffer;
+	}
+
+	if( $data )
+	{
+	    my $row;
+	    if( $data =~ s/^([^\n]+)\n// )
 	    {
-		warn "$$: Got a line not ending with LF:\n'$row'\n";
-		return 1; ### EXIT
+		$row = $1;
+	    }
+	    else
+	    {
+		warn "$$: Partial data: $data\n";
+		next;
+	    }
+
+	    if( my $len = length $data )
+	    {
+		warn "$$: $len bytes left in databuffer: $data\n";
 	    }
 
 	    # Code size max 16 chars
@@ -438,20 +475,24 @@ sub get_response
 	    if( $row =~ s/^([\w\-]{3,16})\0// )
 	    {
 		my $code = $1;
-		warn "$$: Code $code\n" if $DEBUG;
-		chomp $row;
+
+		if( $DEBUG > 4 )
+		{
+		    warn( sprintf "$$: Got %s: %s\n", $code,
+			  join '-', split /\0/, $row );
+		}
+
+
 		# Apache Request command execution
 		if( $code eq 'AR-PUT' )
 		{
 		    my( $cmd, @vals ) = split(/\0/, $row);
-		    warn "$$:      $cmd with @vals\n" if $DEBUG;
 		    $r->$cmd( @vals );
 		}
 		# Get filename for this URI
 		elsif( $code eq 'URI2FILE' )
 		{
 		    my $uri = $row;
-		    warn "$$:      $uri\n" if $DEBUG;
 		    my $sr = $r->lookup_uri($uri);
 		    my $file = $sr->filename;
 		    send_to_server( 'RESP', \$file );
@@ -460,7 +501,6 @@ sub get_response
 		elsif( $code eq 'AR-GET' )
 		{
 		    my( $cmd, @vals ) = split(/\0/, $row);
-		    warn "$$:      $cmd with @vals\n" if $DEBUG;
 		    my $res =  $r->$cmd( @vals );
 		    send_to_server( 'RESP', \$res );
 		}
@@ -468,23 +508,56 @@ sub get_response
 		elsif( $code eq 'AT-PUT' )
 		{
 		    my( $cmd, @vals ) = split(/\0/, $row);
-		    warn "$$:      $cmd with @vals\n" if $DEBUG;
 		    my $h = $r->headers_out;
 		    $h->$cmd( @vals );
 		}
-		# Starting sending body
-		elsif( $code eq 'BODY' )
+		# Forward to generated page
+		elsif( $code eq 'PAGE_READY' )
 		{
-		    send_headers() or last;
-		    $chunks += send_body();
+		    unless( $LOADPAGE )
+		    {
+			$chunks += send_loadpage();
+		    }
+		    send_reload($row);
 		    last;
 		}
-		# Only sending headers
-		elsif( $code eq 'HEADER' )
+		# Starting sending body
+		elsif( $code eq 'BODY' or $code eq 'HEADER' )
 		{
-		    send_headers();
-		    $chunks = 1;
-		    last;
+		    if( $LOADPAGE )
+		    {
+			my $resp = "LOADPAGE";
+			send_to_server( 'RESP', \ $resp );
+		    }
+		    else
+		    {
+			my $resp = "SEND";
+			send_to_server( 'RESP', \ $resp );
+			send_headers() or last;
+			if( $code eq 'BODY' )
+			{
+			    $chunks += send_body();
+			}
+			else # HEADER
+			{
+			    $chunks += 1;
+			}
+
+			last;
+		    }
+		}
+		elsif( $code eq 'NOTE' )
+		{
+		    push @NOTES, split(/\0/, $row);
+		    unless( $LOADPAGE )
+		    {
+			$chunks += send_loadpage();
+		    }
+
+		    while( my $note = shift @NOTES )
+		    {
+			send_message($note);
+		    }
 		}
 		else
 		{
@@ -500,26 +573,49 @@ sub get_response
 	}
 	else
 	{
-	    warn "$$: Checking connection\n";
-	    if( my @clients = $client_select->can_write(0.5) )
+	    if( $LOADPAGE )
 	    {
-		warn "$$:   Listening (@clients)\n";
+		send_message("Processing...");
+		while( my $note = shift @NOTES )
+		{
+		    send_message($note);
+		}
 	    }
-	    else
+	    elsif( ($r->content_type eq "text/html" ) and
+		   (time > $STARTED + 1 ) and
+		   (not $r->header_only ) )
 	    {
-		warn "$$:   Gone?\n";
-	    }
-
-	    if( $r->connection->aborted )
-	    {
-		warn "$$: ABORTED ABORTED ABORTED\n";
+		send_to_server( 'LOADPAGE' );
+		$chunks += send_loadpage();
 	    }
 	}
     }
 
-    warn "$$: Got $chars chars of data\n" if $DEBUG > 4;
-
     return $chunks;
+}
+
+sub send_loadpage
+{
+    $LOADPAGE = 1;
+    send_headers();
+    my $sr = $r->lookup_uri("/pf/loading.html");
+    my $filename = $sr->filename;
+    open IN, $filename or die $!;
+    $r->print(<IN>) or die $!;
+    close IN;
+    $r->rflush;
+    warn "$$: LOADPAGE sent to browser\n";
+    return 1;
+}
+
+sub send_reload
+{
+    my( $url ) = @_;
+    send_message("Page Ready!");
+    
+    warn "$$: Tell browser to reload page\n";
+    $r->print("<script type=\"text/javascript\">window.location.href=window.location.href;</script>");
+    $r->rflush;
 }
 
 sub send_headers
@@ -531,21 +627,27 @@ sub send_headers
 	return 0;
     }
     $r->send_http_header($content_type);
-    $r->print(""); # Flush buffer
+    $r->rflush;
     return 1;
 }
 
 sub send_body
 {
-    warn "$$: Sending body\n";
-    my $chunk = 0;
+    warn "$$: Waiting for body\n";
     my $select = IO::Select->new($SOCK);
     my $data = '';
-    $SOCK->read($data, BUFSIZ);
+    my $chunk = 1;
+    my $timeout = 30; # May have to wait for yield
+    
+    unless( $select->can_read($timeout) )
+    {
+	die "No body ready to be read from $SOCK";
+    }
+
+    $SOCK->read($data, BUFSIZ) or die "No body to send";
 
     while( length $data )
     {
-	$chunk ++;
 	unless( $r->print( \$data ) )
 	{
 	    warn "$$: Faild to send chunk $chunk to client\n";
@@ -553,9 +655,22 @@ sub send_body
 	    send_to_server("CANCEL");
 	    return 1;
 	}
-	$SOCK->read($data, BUFSIZ);
+	$SOCK->read($data, BUFSIZ) or last;
+	$chunk ++;
     }
+    $r->rflush;
     return $chunk;
+}
+
+sub send_message
+{
+    my( $msg ) = @_;
+    chomp $msg;
+    $msg =~ s/\n/\\n/g;
+
+    warn "$$: Sending message to browser: $msg\n";
+    $r->print("<script type=\"text/javascript\">document.f.messages.value += \"$msg\\n\"</script>\n");
+    $r->rflush;
 }
 
 1;

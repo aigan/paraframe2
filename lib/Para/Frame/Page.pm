@@ -145,7 +145,6 @@ sub new
      moved_temporarily => 0,           ## ... or permanently?
      redirect       => undef,          ## ... to other server
      ctype          => undef,          ## The response content-type
-     in_body        => 0,              ## flag then headers sent
      page_content   => undef,          ## Ref to the generated page
      page_sender    => undef,          ## The mode of sending the page
      incpath        => undef,
@@ -1885,27 +1884,81 @@ sub send_output
 
 	if( $req->header_only )
 	{
-	    $page->send_headers;
-	    $req->send_code( 'HEADER' );
-
+	    my $res;
+	    if( $req->in_loadpage )
+	    {
+		$res = "LOADPAGE";
+	    }
+	    else
+	    {
+		$page->send_headers;
+		$res = $req->get_cmd_val( 'HEADER' );
+	    }
+	    if( $res eq 'LOADPAGE' )
+	    {
+		$req->session->register_result_page($url_norm, $page->{'headers'}, $page->{'page_content'}, $page->{'page_sender'});
+		$req->send_code('PAGE_READY', $page->url->as_string);
+	    }
 	}
 	elsif( $page->{'page_sender'} eq 'utf8' )
 	{
-	    $page->ctype->set_charset("UTF-8");
-	    $page->send_headers;
-	    binmode( $req->client, ':utf8');
-	    debug(4,"Transmitting in utf8 mode");
-	    $req->send_in_chunks( $page->{'page_content'} );
-	    binmode( $req->client, ':bytes');
+	    my $res;
+	    if( $req->in_loadpage )
+	    {
+		$res = "LOADPAGE";
+	    }
+	    else
+	    {
+		$page->ctype->set_charset("UTF-8");
+		$page->send_headers;
+		$res = $req->get_cmd_val( 'BODY' );
+	    }
+	    if( $res eq 'LOADPAGE' )
+	    {
+		$req->session->register_result_page($url_norm, $page->{'headers'}, $page->{'page_content'}, $page->{'page_sender'});
+		$req->send_code('PAGE_READY', $page->url->as_string);
+	    }
+	    elsif( $res eq 'SEND' )
+	    {
+		binmode( $req->client, ':utf8');
+		debug(4,"Transmitting in utf8 mode");
+		$req->send_in_chunks( $page->{'page_content'} );
+		binmode( $req->client, ':bytes');
+	    }
+	    else
+	    {
+		die "Strange response '$res'";
+	    }
 	}
 	else # Default
 	{
-	    $page->send_headers;
-	    $page->send_in_chunks( $page->{'page_content'} );
+	    my $res;
+	    if( $req->in_loadpage )
+	    {
+		$res = "LOADPAGE";
+	    }
+	    else
+	    {
+		$page->send_headers;
+		$res = $req->get_cmd_val( 'BODY' );
+	    }
+	    if( $res eq 'LOADPAGE' )
+	    {
+		$req->session->register_result_page($url_norm, $page->{'headers'}, $page->{'page_content'}, $page->{'page_sender'});
+		$req->send_code('PAGE_READY', $page->url->as_string);
+	    }
+	    elsif( $res eq 'SEND' )
+	    {
+		$page->send_in_chunks( $page->{'page_content'} );
+	    }
+	    else
+	    {
+		die "Strange response '$res'";
+	    }
 	}
     }
+    debug "send_output: done";
 }
-
 
 #######################################################################
 
@@ -1958,7 +2011,7 @@ sub forward
     }
 
     $page->output_redirection($url_norm );
-    $req->session->register_result_page($url_norm, $page->{'headers'}, $page->{'page_content'});
+    $req->session->register_result_page($url_norm, $page->{'headers'}, $page->{'page_content'}, $page->{'page_sender'});
 }
 
 
@@ -2081,7 +2134,6 @@ sub send_headers
 	    $req->send_code( 'AR-PUT', 'header_out', @$header);
 	}
     }
-
 }
 
 
@@ -2109,14 +2161,10 @@ sub send_in_chunks
 
     my $req = $page->req;
 
-    debug(2,"Begin body");
-    $req->send_code( 'BODY' );
-    $page->{'in_body'} = 1;
-
-
     my $client = $req->client;
     my $length = length($$dataref);
-    debug(4,"Sending ".length($$dataref)." bytes of data to client");
+#    debug(4,"Sending ".length($$dataref)." bytes of data to client");
+    debug("Sending ".length($$dataref)." bytes of data to client");
     my $sent = 0;
     my $errcnt = 0;
 
@@ -2176,7 +2224,7 @@ sub send_in_chunks
 		}
 		else
 		{
-		    debug(1,"  Failed to send data to client\n  Tries to recover...",1);
+		    debug("  Failed to send data to client\n  Tries to recover...",1);
 		    
 		    $errcnt++;
 		    $req->yield( 1.2 );
@@ -2191,7 +2239,7 @@ sub send_in_chunks
 		}
 	    }
 	}
-	debug(4,"Transmitted $sent chars to client");
+	debug(4, "Transmitted $sent chars to client");
     };
     if( $@ )
     {

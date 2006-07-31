@@ -102,7 +102,9 @@ sub new
     {
 	indent         => 1,              ## debug indentation
 	client         => $client,
-	jobs           => [],             ## queue of actions to perform
+	jobs           => [],             ## queue of jobs to perform
+        actions        => [],             ## queue of actions to perform
+        resp           => [],             ## queue of client responses
 	'q'            => $q,
 	env            => $env,
 	's'            => undef,          ## Session object
@@ -123,6 +125,7 @@ sub new
 	change         => undef,
         header_only    => $header_only,   ## true if only sending header
         site           => undef,          ## Default site for req
+        in_loadpage    => 0,              ## client uses loadpage
     }, $class;
 
     # Cache uri2file translation
@@ -741,8 +744,7 @@ sub uri2file
     confess "url missing" unless $url;
 
 #    warn "    From client\n";
-    $req->send_code( 'URI2FILE', $url );
-    $file = Para::Frame::get_value( $req );
+    $file = $req->get_cmd_val( 'URI2FILE', $url );
 
     debug(4, "Storing URI2FILE in key $key");
     $URI2FILE{ $key } = $file;
@@ -1230,6 +1232,14 @@ sub in_last_job
 
 #######################################################################
 
+sub in_loadpage
+{
+    return $_[0]->{'in_loadpage'};
+}
+
+
+#######################################################################
+
 sub error_backtrack
 {
     my( $req ) = @_;
@@ -1520,16 +1530,14 @@ sub send_code
 	debug 2, "We got the active request $req->{'active_reqest'}{reqnum} now";
 	my $aclient = $req->{'active_reqest'}->client;
 
-	$aclient->send(join "\0", @_ );
-	$aclient->send("\n");
+	$aclient->send( join( "\0", @_ ) . "\n" );
 
 	# Set up release code
 	$req->add_job('release_active_request');
     }
     else
     {
-	$client->send(join "\0", @_ );
-	$client->send("\n");
+	$client->send( join( "\0", @_ ) . "\n" );
     }
 }
 
@@ -1566,8 +1574,18 @@ sub get_cmd_val
 {
     my $req = shift;
 
-    $req->send_code( 'AR-GET', @_ );
-    return Para::Frame::get_value( $req );
+    $req->send_code( @_ );
+    Para::Frame::get_value( $req );
+
+    # Something besides the answer may be waiting before the answer
+
+    while( not @{$req->{'resp'}} )
+    {
+	debug "No response registred. Getting next value:";
+	Para::Frame::get_value( $req );
+    }
+
+    return shift @{$req->{'resp'}};
 }
 
 
@@ -2049,6 +2067,18 @@ sub cancelled
 
 
 #######################################################################
+
+sub note
+{
+    my $req = shift;
+
+    return $req->send_code('NOTE', @_ );
+}
+
+
+#######################################################################
+
+
 
 1;
 

@@ -52,7 +52,7 @@ use Para::Frame::Request;
 use Para::Frame::Widget;
 use Para::Frame::Burner;
 use Para::Frame::Time qw( now );
-use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn );
+use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump );
 use Para::Frame::Email::Address;
 use Para::Frame::L10N;
 
@@ -237,33 +237,20 @@ sub main_loop
 
 	    my $client;
 
-	    foreach $client ($SELECT->can_read( $timeout ))
+	    while( my( $client ) = $SELECT->can_read( $timeout ) )
 	    {
-		if ($client == $SERVER)
+		if( $client == $SERVER )
 		{
 		    # Accept connection even if we should $TERMINATE since
 		    # it could be communication for finishing existing
 		    # requests
 
-		    # New connection.
-		    my($iaddr, $address, $port, $peer_host);
-		    $client = $SERVER->accept;
-		    if(!$client)
-		    {
-			debug(0,"Problem with accept(): $!");
-			return;
-		    }
-		    ($port, $iaddr) = sockaddr_in(getpeername($client));
-		    $peer_host = gethostbyaddr($iaddr, AF_INET)
-		      || inet_ntoa($iaddr);
-		    $SELECT->add($client);
-		    nonblock($client);
-
-		    debug(4,"\n\nNew client connected");
+		    add_client( $client );
 		}
 		else
 		{
 		    switch_req(undef);
+#		    debug "From main loop";
 		    get_value( $client );
 		}
 	    }
@@ -317,7 +304,7 @@ sub main_loop
 		else
 		{
 		    # All jobs done for now
-		    confess "req not a req ".Dumper $req unless ref $req eq 'Para::Frame::Request'; ### DEBUG
+		    confess "req not a req ".datadump($req) unless ref $req eq 'Para::Frame::Request'; ### DEBUG
 		    $req->run_hook('done');
 		    close_callback($req->{'client'});
 		}
@@ -508,12 +495,35 @@ sub switch_req
     }
 }
 
+sub add_client
+{
+    my( $client ) = @_;
+
+    # New connection.
+    my($iaddr, $address, $port, $peer_host);
+    $client = $SERVER->accept;
+    if(!$client)
+    {
+	debug(0,"Problem with accept(): $!");
+	return;
+    }
+    ($port, $iaddr) = sockaddr_in(getpeername($client));
+    $peer_host = gethostbyaddr($iaddr, AF_INET)
+	|| inet_ntoa($iaddr);
+    $SELECT->add($client);
+    nonblock($client);
+
+#    debug("New client connected: $client");
+}
+
 sub get_value
 {
     my( $client ) = @_;
 
     # Either we know we have something to read
     # or we are expecting an answer shortly
+
+    # Returns answer string or undef
 
     if( $Para::Frame::FORK )
     {
@@ -529,7 +539,9 @@ sub get_value
 		{
 		    my $val = $_;
 		    debug(1,"RESP ($val)");
-		    return $val;
+		    my $req = $REQUEST{ $client };
+		    push @{$req->{'resp'}}, $val;
+		    return 1;
 		}
 		else
 		{
@@ -543,7 +555,7 @@ sub get_value
 	}
 
 	undef $Para::Frame::Client::SOCK;
-	return;
+	return undef;
     }
 
 
@@ -567,33 +579,56 @@ sub get_value
 	}
     }
 
-    if( debug >= 4 )
-    {
-	debug "Get value from $client";
-	if( my $req = $REQUEST{$client} )
-	{
-	    my $reqnum = $req->{'reqnum'};
-	    debug "  Req $reqnum";
-	}
-	else
-	{
-	    debug "  Not a Req (yet?)";
-	}
-    }
-    
+    debug 4, "Get value from $client";
+
 
     my $time = time;
     my $timeout = 5;
   WAITE:
+#    my $debugcnt = 0;
     while(1)
     {
 	foreach my $ready ( $SELECT->can_read( $timeout ) )
 	{
 	    last WAITE if $ready == $client;
+	    if( $ready == $SERVER )
+	    {
+
+		# Take care of this in the interest of clearing out
+		# the buffer
+
+		debug "Addign client $ready\n";
+
+		add_client( $ready );
+		next;
+	    }
+	    else
+	    {
+		my $orig_req = $REQ;
+		my $req = $REQUEST{$ready};
+
+		debug "Switching req to client $ready";
+
+		switch_req($req);
+		eval
+		{
+		    get_value( $ready );
+		};
+		switch_req($orig_req);
+		die $@ if $@;
+		return 0;
+
+		### Caller will have to call this method again if necessary
+
+	    }
+#	    debug "Server socket is $SERVER";
+#	    Time::HiRes::sleep(0.2); ## Wait a little bit
 	}
+
 	if( time > $time + $timeout )
 	{
 	    warn "Data timeout!!!";
+	    exit 0; #### DEBUG !!!
 
 	    if( my $req = $REQUEST{$client} )
 	    {
@@ -605,44 +640,49 @@ sub get_value
 	}
     }
 
-    # Read data from client.
-    my $data='';
-    my $rv = $client->recv($data,POSIX::BUFSIZ, 0);
-
-    debug(4,"Read data...");
-
-    unless (defined $rv && length $data)
+    while(1)
     {
-	# EOF from client.
-	close_callback($client,'eof');
-	debug(4,"End of file");
-	return undef;
-    }
+	# Read data from client.
+	my $data='';
+	my $rv = $client->recv($data,POSIX::BUFSIZ, 0);
 
-    $INBUFFER{$client} .= $data;
-    unless( $DATALENGTH{$client} )
-    {
-	debug(4,"Length of record?");
-	# Read the length of the data string
-	#
-	if( $INBUFFER{$client} =~ s/^(\d+)\x00// )
+#	debug("Read data...");
+
+	if( defined $rv and length $data )
 	{
-	    debug(4,"Setting length to $1");
-	    $DATALENGTH{$client} = $1;
+	    $INBUFFER{$client} .= $data;
 	}
-	else
+	elsif( not length $INBUFFER{$client} )
 	{
-	    debug "Strange INBUFFER content: $INBUFFER{$client}\n";
-#	    debug join ',', map sprintf("%x",ord), split //, $INBUFFER{$client};
-	    $INBUFFER{$client} = '';
-	    $DATALENGTH{$client} = 0;
-	    close_callback($client);
-	    return;
-	}
-    }
+	    if( defined $rv ) # Empty string
+	    {
+		close_callback($client,'eof');
+	    }
 
-    if( $DATALENGTH{$client} )
-    {
+#	    debug "Nothing more in inbuffer";
+	    return 0;
+	}
+
+	unless( $DATALENGTH{$client} )
+	{
+	    debug(4,"Length of record?");
+	    # Read the length of the data string
+	    #
+	    if( $INBUFFER{$client} =~ s/^(\d+)\x00// )
+	    {
+		debug(4,"Setting length to $1");
+		$DATALENGTH{$client} = $1;
+	    }
+	    else
+	    {
+		debug "Strange INBUFFER content: $INBUFFER{$client}\n";
+		$INBUFFER{$client} = '';
+		$DATALENGTH{$client} = 0;
+		close_callback($client);
+		return undef;
+	    }
+	}
+
 	debug(4,"End of record?");
 	# Have we read the full record of data?
 	#
@@ -666,6 +706,7 @@ sub get_value
 	    if( $INBUFFER{$client} =~ s/^(\w+)\x00// )
 	    {
 		my( $code ) = $1;
+#		debug "GOT code $code: $INBUFFER{$client}";
 		if( $code eq 'REQ' )
 		{
 		    my $record = $INBUFFER{$client};
@@ -675,8 +716,11 @@ sub get_value
 
 		    $INBUFFER{$client} = $rest;
 		    $DATALENGTH{$client} = 0;
+#		    debug "Left ".length($rest)." bytes in buffer: $rest";
 
 		    handle_request( $client, \$record );
+		    close_callback($client);
+		    return 0; ### SPECIAL CASE
 		}
 		elsif( $code eq 'CANCEL' )
 		{
@@ -685,7 +729,7 @@ sub get_value
 		    unless( $req )
 		    {
 			debug "  Req not registred";
-			return;
+			next;
 		    }
 		    if( $req->{'childs'} )
 		    {
@@ -707,7 +751,6 @@ sub get_value
 		    }
 		    else
 		    {
-			$DATALENGTH{$client} = 0;
 			close_callback($client);
 		    }
 		}
@@ -715,9 +758,8 @@ sub get_value
 		{
 		    my $val = $INBUFFER{$client};
 		    debug(4,"RESP recieved ($val)");
-		    $INBUFFER{$client} = $rest;
-		    $DATALENGTH{$client} = 0;
-		    return $val;
+		    my $req = $REQUEST{ $client };
+		    push @{$req->{'resp'}}, $val;
 		}
 		elsif( $code eq 'URI2FILE' )
 		{
@@ -740,8 +782,13 @@ sub get_value
 		    # Send response in calling $REQ
 		    debug(2,"Returning answer $file");
 
-		    $client->send(join "\0", 'RESP', $file );
-		    $client->send("\n");
+		    $client->send( join( "\0", 'RESP', $file ) . "\n" );
+		}
+		elsif( $code eq 'LOADPAGE' )
+		{
+		    debug(0,"LOADPAGE");
+		    my $req = $REQUEST{ $client };
+		    $req->{'in_loadpage'} = 1;
 		}
 		elsif( $code eq 'PING' )
 		{
@@ -777,8 +824,12 @@ sub get_value
 
 	    $INBUFFER{$client} = $rest;
 	    $DATALENGTH{$client} = 0;
+#	    debug "Left ".length($rest)." bytes in buffer: $rest";
+	    return 0 unless length($rest);
 	}
     }
+
+    return 0; ### Will not come here...
 }
 
 sub nonblock
@@ -1102,9 +1153,50 @@ sub handle_request
 	debug "Sending stored page result";
 	my $page = $req->page;
 	$page->set_headers( $page_result->[0] );
-	$page->send_headers;
-	$page->send_in_chunks($page_result->[1]);
+	if( length ${$page_result->[1]} ) # May be header only
+	{
+	    if( $page_result->[2] eq 'utf8' )
+	    {
+		$page->ctype->set_charset("UTF-8");
+		$page->send_headers;
+		my $res = $req->get_cmd_val( 'BODY' );
+		if( $res eq 'LOADPAGE' )
+		{
+		    die "Was to slow to send the pregenerated page";
+		}
+		else
+		{
+		    binmode( $req->client, ':utf8');
+		    debug(4,"Transmitting in utf8 mode");
+		    $page->send_in_chunks( $page_result->[1] );
+		    binmode( $req->client, ':bytes');
+		}
+	    }
+	    else
+	    {
+		$page->send_headers;
+		my $res = $req->get_cmd_val( 'BODY' );
+		if( $res eq 'LOADPAGE' )
+		{
+		    die "Was to slow to send the pregenerated page";
+		}
+		else
+		{
+		    $page->send_in_chunks( $page_result->[1] );
+		}
+	    }
+	}
+	else
+	{
+	    $page->send_headers;
+	    my $res = $req->get_cmd_val( 'HEADER' );
+	    if( $res eq 'LOADPAGE' )
+	    {
+		die "Was to slow to send the pregenerated page";
+	    };
+	}
 	delete $req->session->{'page_result'}{ $req->page->orig_url_path };
+#	debug "Sending stored page result: done";
     }
     else
     {
@@ -1234,7 +1326,6 @@ sub run_hook
 	{
 	    debug(0,"run_hook $label");
 	}
-#    warn Dumper($hook, \@_);
     }
 
     return unless $HOOK{$label};
@@ -1261,7 +1352,7 @@ sub run_hook
 	    $Para::Frame::hooks_running{"$hook"} --;
 	    if( $@ )
 	    {
-		debug(2, "hook $label throw an exception".Dumper($@));
+		debug(2, "hook $label throw an exception".datadump($@));
 		die $@;
 	    }
 	}
@@ -1585,7 +1676,7 @@ sub configure
 
 	if( $DEBUG > 3 )
 	{
-	    warn "$key set to ".Dumper($CFG->{$key});
+	    warn "$key set to ".datadump($CFG->{$key});
 	}
     }
 
@@ -1744,7 +1835,7 @@ Emit a debug message in the error log. See L<Para::Frame::Utils/debug>
 
 =item dump
 
-The L<Data::Dumper/Functions> Dumper().  To be used for
+The L<Para::Frame::Utils/datadump> function.  To be used for
 debugging. Either dump the data structure inside the page (in
 <pre></pre>) or combine with debug to send the dump to the error
 log. For example: [% debug(dump(myvar)) %]
