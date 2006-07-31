@@ -46,10 +46,11 @@ use constant BUFSIZ => 8192; # Posix buffersize
 our $SOCK;
 our $r;
 
-our $DEBUG = 0;
+our $DEBUG = 1;
 our $BACKUP_PORT;
 our $STARTED;
 our $LOADPAGE;
+our $WAIT;
 our @NOTES;
 
 =head1 DESCRIPTION
@@ -412,6 +413,7 @@ sub get_response
 {
     $STARTED = time;
     $LOADPAGE = 0;
+    $WAIT = 0;
     @NOTES = ();
 
     my $select = IO::Select->new($SOCK);
@@ -445,6 +447,8 @@ sub get_response
 	    {
 		# EOF from client
 		warn "$$: Nothing in socket $SOCK\n";
+		warn "$$: rv: ".Dumper($rv);
+		warn "$$: buffer: ".Dumper($buffer);
 		warn "$$: EOF!\n";
 		last;
 	    }
@@ -521,8 +525,24 @@ sub get_response
 		    send_reload($row);
 		    last;
 		}
+		# Do not send loadpage now
+		elsif( $code eq 'WAIT' )
+		{
+		    my $resp;
+		    if( $LOADPAGE )
+		    {
+			$resp = "LOADPAGE";
+		    }
+		    else
+		    {
+			$resp = "SEND";
+		    }
+		    send_to_server( 'RESP', \ $resp );
+		    $WAIT = 1;
+		}
 		# Starting sending body
-		elsif( $code eq 'BODY' or $code eq 'HEADER' )
+		elsif( $code eq 'BODY' or
+		       $code eq 'HEADER' )
 		{
 		    if( $LOADPAGE )
 		    {
@@ -583,7 +603,9 @@ sub get_response
 	    }
 	    elsif( ($r->content_type eq "text/html" ) and
 		   (time > $STARTED + 1 ) and
-		   (not $r->header_only ) )
+		   (not $r->header_only ) and
+		   not $WAIT
+		 )
 	    {
 		send_to_server( 'LOADPAGE' );
 		$chunks += send_loadpage();
@@ -596,25 +618,31 @@ sub get_response
 
 sub send_loadpage
 {
-    $LOADPAGE = 1;
-    send_headers();
     my $sr = $r->lookup_uri("/pf/loading.html");
     my $filename = $sr->filename;
-    open IN, $filename or die $!;
-    $r->print(<IN>) or die $!;
-    close IN;
-    $r->rflush;
-    warn "$$: LOADPAGE sent to browser\n";
-    return 1;
+    if( open IN, $filename )
+    {
+	$LOADPAGE = 1;
+	send_headers();
+	$r->print(<IN>) or die $!;
+	close IN;
+	$r->rflush;
+	warn "$$: LOADPAGE sent to browser\n";
+	return 1;
+    }
+    else
+    {
+	die "$$: Cant open '$filename': $!\n";
+    }
 }
 
 sub send_reload
 {
     my( $url ) = @_;
     send_message("Page Ready!");
-    
+
     warn "$$: Tell browser to reload page\n";
-    $r->print("<script type=\"text/javascript\">window.location.href=window.location.href;</script>");
+    $r->print("<script type=\"text/javascript\">window.location.href='$url';</script>");
     $r->rflush;
 }
 
