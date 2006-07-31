@@ -112,7 +112,7 @@ sub new
     {
 	unless( -r $sys_name )
 	{
-	    croak "The file $sys_name is not found (or readable)";
+	    confess "The file $sys_name is not found (or readable)";
 	}
 
 	if( $class eq "Para::Frame::Dir" )
