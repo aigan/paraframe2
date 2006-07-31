@@ -1,4 +1,4 @@
-#  $Id$  -*-perl-*-
+#  $Id$  -*-cperl-*-
 package Para::Frame::Connection;
 #=====================================================================
 #
@@ -82,7 +82,7 @@ sub reset_buffer
 {
     my( $conn ) = @_;
 
-    $conn->{inbuffer} = \"";
+    $conn->{inbuffer} = \ "";
     $conn->{datalength} = undef;
 }
 
