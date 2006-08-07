@@ -26,6 +26,7 @@ use strict;
 use Data::Dumper;
 use File::Copy; # copy, move
 use Net::SCP;
+use IO::File;
 
 BEGIN
 {
@@ -36,9 +37,37 @@ BEGIN
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( debug throw );
 
+
+#######################################################################
+
+=head1 DESCRIPTION
+
+Uploaded files are taken care of in L<Para::Frame::Client>
+
+They are temporarily saved in C</tmp/paraframe/>. The filename is the
+client process id followed by the fieldname with nonalfanum chars
+removed. An ENV is set with the prefix C<paraframe-upload-> that has
+the full filename as the value. The file is deleted directly after the
+request!
+
+Use L</save_as> to store the file.
+
+Example:
+
+  $req->uploaded('filefield')->save_as($destfile);
+
+=cut
+
+
+#######################################################################
+
 =head2 new
 
   Para::Frame::Uploaded->new($fieldname)
+
+Called by L<Para::Frame::Request/uploaded>.
+
+Returns: The L<Para::Frame::Uploaded> object
 
 =cut
 
@@ -81,6 +110,24 @@ sub move_to
     die "Should move $uploaded->{infile} to $destfile";
 }
 
+#######################################################################
+
+=head2 save_as
+
+  $uploaded->save_as( $destfile )
+
+  $uploaded->save_as( $destfile, \%args )
+
+Copies the file to C<$destfile>.
+
+SCP is supported. You can use C<//host/path> or C<//user@host/path>.
+
+For SCP, C<$args-E<gt>{username}> is used if set.
+
+Returns: C<$uploaded>
+
+=cut
+
 sub save_as
 {
     my( $uploaded, $destfile, $args ) = @_;
@@ -121,6 +168,27 @@ sub save_as
 
     return $uploaded;
 }
+
+#######################################################################
+
+=head2 fh
+
+  $uploaded->fh
+
+  $uploaded->fh( $mode )
+
+Creates and returns an L<IO::File> object
+
+=cut
+
+sub fh
+{
+    my( $uploaded ) = shift;
+    return File::IO->new( $uploaded->{'filename'}, @_ );
+}
+
+
+#######################################################################
 
 
 1;
