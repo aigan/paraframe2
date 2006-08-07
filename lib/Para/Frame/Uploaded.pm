@@ -184,7 +184,7 @@ Creates and returns an L<IO::File> object
 sub fh
 {
     my( $uploaded ) = shift;
-    return File::IO->new( $uploaded->{'filename'}, @_ );
+    return IO::File->new( $uploaded->{'filename'}, @_ );
 }
 
 
