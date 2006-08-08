@@ -102,6 +102,7 @@ sub message
 	push @{$result->{'part'}}, Para::Frame::Result::Part->new({
 	    'message' => $msg,
 	});
+	$Para::Frame::REQ->note($msg);
     }
 }
 
