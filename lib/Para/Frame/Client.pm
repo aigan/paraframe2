@@ -31,6 +31,7 @@ use IO::Select;
 use FreezeThaw qw( freeze );
 use Data::Dumper;
 use Apache::Constants qw( :common );
+use Time::HiRes;
 
 BEGIN
 {
@@ -46,10 +47,13 @@ use constant BUFSIZ => 8192; # Posix buffersize
 our $SOCK;
 our $r;
 
-our $DEBUG = 1;
+our $DEBUG = 5;
 our $BACKUP_PORT;
 our $STARTED;
 our $LOADPAGE;
+our $LOADPAGE_URI;
+our $LOADPAGE_TIME;
+our $LAST_MESSAGE;
 our $WAIT;
 our @NOTES;
 
@@ -255,7 +259,11 @@ sub send_to_server
     $valref ||= \ "1";
     my $length = length($$valref) + length($code) + 1;
 
-    warn "$$: Sending $length - $code - $$valref\n" if $DEBUG > 3;
+    if( $DEBUG > 3 )
+    {
+	warn "$$: Sending $length - $code - $$valref\n";
+	warn sprintf "$$:   at %.2f\n", Time::HiRes::time;
+    }
     unless( print $SOCK "$length\x00$code\x00" . $$valref )
     {
 	die "LOST CONNECTION while sending $code\n";
@@ -413,11 +421,19 @@ sub get_response
 {
     $STARTED = time;
     $LOADPAGE = 0;
+    $LOADPAGE_URI = undef;
+    $LOADPAGE_TIME = 2;
     $WAIT = 0;
+    $LAST_MESSAGE = "";
     @NOTES = ();
 
-    my $select = IO::Select->new($SOCK);
+#    my $timeout_long = 1.5;
+#    my $timeout_short = 0.001;
+#    my $timeout = $timeout_short;
     my $timeout = 1.5;
+
+
+    my $select = IO::Select->new($SOCK);
     my $c = $r->connection;
     my $client_fn = $c->fileno(0); # Direction right?!
 #    warn "$$: Client output filenumber is $client_fn\n";
@@ -440,20 +456,23 @@ sub get_response
     my $buffer = '';
     while( 1 )
     {
-	if( $select->can_read( $timeout ) )
+	unless( $data )
 	{
-	    my $rv = $SOCK->recv($buffer,BUFSIZ, 0);
-	    unless( defined $rv and length $buffer)
+	    if( $select->can_read( $timeout ) )
 	    {
-		# EOF from client
-		warn "$$: Nothing in socket $SOCK\n";
-		warn "$$: rv: ".Dumper($rv);
-		warn "$$: buffer: ".Dumper($buffer);
-		warn "$$: EOF!\n";
-		last;
-	    }
+		my $rv = $SOCK->recv($buffer,BUFSIZ, 0);
+		unless( defined $rv and length $buffer)
+		{
+		    # EOF from client
+		    warn "$$: Nothing in socket $SOCK\n";
+		    warn "$$: rv: ".Dumper($rv);
+		    warn "$$: buffer: ".Dumper($buffer);
+		    warn "$$: EOF!\n";
+		    last;
+		}
 
-	    $data .= $buffer;
+		$data .= $buffer;
+	    }
 	}
 
 	if( $data )
@@ -484,6 +503,7 @@ sub get_response
 		{
 		    warn( sprintf "$$: Got %s: %s\n", $code,
 			  join '-', split /\0/, $row );
+		    warn sprintf "$$:   at %.2f\n", Time::HiRes::time;
 		}
 
 
@@ -566,17 +586,21 @@ sub get_response
 			last;
 		    }
 		}
+		elsif( $code eq 'LOADPAGE' )
+		{
+		    ( $LOADPAGE_URI, $LOADPAGE_TIME ) =
+		      split(/\0/, $row);
+		    warn "$$: Loadpage $LOADPAGE_URI in $LOADPAGE_TIME secs\n";
+		}
 		elsif( $code eq 'NOTE' )
 		{
 		    push @NOTES, split(/\0/, $row);
-		    unless( $LOADPAGE )
+		    if( $LOADPAGE )
 		    {
-			$chunks += send_loadpage();
-		    }
-
-		    while( my $note = shift @NOTES )
-		    {
-			send_message($note);
+			while( my $note = shift @NOTES )
+			{
+			    send_message($note);
+			}
 		    }
 		}
 		else
@@ -595,14 +619,15 @@ sub get_response
 	{
 	    if( $LOADPAGE )
 	    {
-		send_message("Processing...");
+		send_message_waiting();
 		while( my $note = shift @NOTES )
 		{
 		    send_message($note);
 		}
 	    }
-	    elsif( ($r->content_type eq "text/html" ) and
-		   (time > $STARTED + 1 ) and
+	    elsif( $LOADPAGE_URI and
+		   ($r->content_type eq "text/html" ) and
+		   (time > $STARTED + $LOADPAGE_TIME - 1 ) and
 		   (not $r->header_only ) and
 		   not $WAIT
 		 )
@@ -618,7 +643,7 @@ sub get_response
 
 sub send_loadpage
 {
-    my $sr = $r->lookup_uri("/pf/loading.html");
+    my $sr = $r->lookup_uri($LOADPAGE_URI);
     my $filename = $sr->filename;
     if( open IN, $filename )
     {
@@ -628,6 +653,12 @@ sub send_loadpage
 	close IN;
 	$r->rflush;
 	warn "$$: LOADPAGE sent to browser\n";
+
+	while( my $note = shift @NOTES )
+	{
+	    send_message($note);
+	}
+
 	return 1;
     }
     else
@@ -693,12 +724,27 @@ sub send_body
 sub send_message
 {
     my( $msg ) = @_;
+    $LAST_MESSAGE = $msg;
     chomp $msg;
     $msg =~ s/\n/\\n/g;
 
     warn "$$: Sending message to browser: $msg\n";
-    $r->print("<script type=\"text/javascript\">document.f.messages.value += \"$msg\\n\"</script>\n");
+    $r->print("<script type=\"text/javascript\">document.f.messages.value += \"$msg\\n\";bottom();</script>\n");
     $r->rflush;
+}
+
+sub send_message_waiting
+{
+    my $msg = "Processing...";
+    if( $msg eq $LAST_MESSAGE )
+    {
+	$r->print("<script type=\"text/javascript\">e=document.f.messages;e.value = e.value.substring(0,e.value.length-1)+\".\\n\";bottom();</script>\n");
+    $r->rflush;
+    }
+    else
+    {
+	send_message($msg);
+    }
 }
 
 1;
