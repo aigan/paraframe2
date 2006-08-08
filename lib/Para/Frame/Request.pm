@@ -595,10 +595,13 @@ subclass of that class.
 
 This is short for calling C<$req-E<gt>session-E<gt>user>
 
+Returns undef if the request doesn't have a session.
+
 =cut
 
 sub user
 {
+    return undef unless $_[0]->{'s'};
     return shift->session->user;
 }
 
@@ -679,6 +682,14 @@ sub header_only { $_[0]->{'header_only'} }
 
 
 #######################################################################
+
+=head2 uploaded
+
+  $req->uploaded( $filefiled )
+
+Calls L<Para::Frame::Uploaded/new>
+
+=cut
 
 sub uploaded { Para::Frame::Uploaded->new($_[1]) }
 
@@ -1454,7 +1465,8 @@ sub send_code
     # To get a response, use get_cmd_val()
 
     $_[1] ||= 1; # Must be at least one param
-    debug(3, "Sending code: ".join("-", @_));
+#    debug( 1, "Sending code: ".join("-", @_));
+#    debug sprintf "  at %.2f\n", Time::HiRes::time;
 
     if( $Para::Frame::FORK )
     {
@@ -2070,9 +2082,11 @@ sub cancelled
 
 sub note
 {
-    my $req = shift;
+    my( $req, $note ) = @_;
 
-    return $req->send_code('NOTE', @_ );
+    debug($note);
+    $note =~ s/\n/\\n/g;
+    return $req->send_code('NOTE', $note );
 }
 
 
