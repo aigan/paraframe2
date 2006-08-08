@@ -343,6 +343,25 @@ sub last_step
     return $_[0]->{'last_step'};
 }
 
+=head2 loadpage
+
+  $site->loadpage
+
+Returns the C<loadpage> to be used while generatiung the result for
+pages that takes more than a couple of seconds to prepare. This should
+be a html page set up in the same way as the default.
+
+Should be an URL path.
+
+Defaults to C<$home/pf/loading.html>.
+
+=cut
+
+sub loadpage
+{
+    return $_[0]->{'loadpage'} || $_[0]->home_url_path . "/pf/loading.html";
+}
+
 =head2 login_page
 
   $site->login_page
