@@ -87,7 +87,7 @@ our $BGJOBDATE  ;
 our $BGJOBNR    ;
 our @BGJOBS_PENDING;       # New jobs to be added in background
 our $TERMINATE  ;
-our $IN_STARTUP;           # True until we reach the watchdog loop
+our $IN_STARTUP ;          # True until we reach the watchdog loop
 our $ACTIVE_PIDFILE;       # The PID indicated by existing pidfile
 our $LAST       ;          # The last entering of the main loop
 
@@ -220,7 +220,7 @@ sub main_loop
 	$LEVEL ++;
     }
 
-    $LAST = time; # To give ingo about if it's time to yield
+    $LAST = time; # To give info about if it's time to yield
 
     debug(4,"Entering main_loop at level $LEVEL",1) if $LEVEL;
     print "MAINLOOP $LEVEL\n" unless $Para::Frame::FORK;
@@ -252,6 +252,7 @@ sub main_loop
 		    switch_req(undef);
 #		    debug "From main loop";
 		    get_value( $client );
+		    $timeout = TIMEOUT_SHORT; # Get next thing
 		}
 	    }
 
@@ -597,7 +598,7 @@ sub get_value
 		# Take care of this in the interest of clearing out
 		# the buffer
 
-		debug "Addign client $ready\n";
+		debug 2, "Addign client $ready\n";
 
 		add_client( $ready );
 		next;
@@ -607,7 +608,7 @@ sub get_value
 		my $orig_req = $REQ;
 		my $req = $REQUEST{$ready};
 
-		debug "Switching req to client $ready";
+		debug 2, "Switching req to client $ready";
 
 		switch_req($req);
 		eval
@@ -632,7 +633,7 @@ sub get_value
 
 	    if( my $req = $REQUEST{$client} )
 	    {
-		debug $req->logging->debug_data;
+		debug 1, $req->logging->debug_data;
 	    }
 
 	    cluck "trace for $client";
@@ -642,11 +643,14 @@ sub get_value
 
     while(1)
     {
+#	debug sprintf "  Took %.2f secs\n", (Time::HiRes::time - $time );
+
 	# Read data from client.
 	my $data='';
+#	debug( 1, "Read data...");
 	my $rv = $client->recv($data,POSIX::BUFSIZ, 0);
+#	debug( 1, sprintf "  done at %.2f", Time::HiRes::time);
 
-#	debug("Read data...");
 
 	if( defined $rv and length $data )
 	{
@@ -659,7 +663,7 @@ sub get_value
 		close_callback($client,'eof');
 	    }
 
-#	    debug "Nothing more in inbuffer";
+#	    debug 2, "Nothing more in inbuffer";
 	    return 0;
 	}
 
@@ -675,7 +679,7 @@ sub get_value
 	    }
 	    else
 	    {
-		debug "Strange INBUFFER content: $INBUFFER{$client}\n";
+		debug 1, "Strange INBUFFER content: $INBUFFER{$client}\n";
 		$INBUFFER{$client} = '';
 		$DATALENGTH{$client} = 0;
 		close_callback($client);
@@ -706,7 +710,7 @@ sub get_value
 	    if( $INBUFFER{$client} =~ s/^(\w+)\x00// )
 	    {
 		my( $code ) = $1;
-#		debug "GOT code $code: $INBUFFER{$client}";
+#		debug 1, "GOT code $code: $INBUFFER{$client}";
 		if( $code eq 'REQ' )
 		{
 		    my $record = $INBUFFER{$client};
@@ -716,10 +720,10 @@ sub get_value
 
 		    $INBUFFER{$client} = $rest;
 		    $DATALENGTH{$client} = 0;
-#		    debug "Left ".length($rest)." bytes in buffer: $rest";
+#		    debug 1, "Left ".length($rest)." bytes in buffer: $rest";
 
 		    handle_request( $client, \$record );
-		    close_callback($client);
+#		    close_callback($client);
 		    return 0; ### SPECIAL CASE
 		}
 		elsif( $code eq 'CANCEL' )
@@ -824,7 +828,7 @@ sub get_value
 
 	    $INBUFFER{$client} = $rest;
 	    $DATALENGTH{$client} = 0;
-#	    debug "Left ".length($rest)." bytes in buffer: $rest";
+#	    debug 1, "Left ".length($rest)." bytes in buffer: $rest";
 	    return 0 unless length($rest);
 	}
     }
@@ -1150,7 +1154,7 @@ sub handle_request
     if( my $page_result =
 	$req->session->{'page_result'}{ $req->page->orig_url_path } )
     {
-	debug "Sending stored page result";
+	debug 1, "Sending stored page result";
 	my $page = $req->page;
 	$page->set_headers( $page_result->[0] );
 	if( length ${$page_result->[1]} ) # May be header only
@@ -1200,6 +1204,7 @@ sub handle_request
     }
     else
     {
+	$req->send_code('LOADPAGE', $req->site->loadpage, 2);
 	$req->setup_jobs;
 	$req->after_jobs;
     }
@@ -1312,6 +1317,7 @@ sub run_hook
 {
     my( $class, $req, $label ) = (shift, shift, shift);
     if( debug > 3 )
+#    if( debug )
     {
 	unless( $label )
 	{
@@ -1882,6 +1888,7 @@ sub set_global_tt_params
 	'dump'            => \&Para::Frame::Utils::datadump,
 	'warn'            => sub{ warn($_[0],"\n");"" },
 	'debug'           => sub{ debug(@_) },
+        'note'            => sub{ $Para::Frame::REQ->note(@_); "" },
 	'emergency_mode'  => sub{ $Para::Frame::Watchdog::EMERGENCY_MODE },
 	'rand'            => sub{ int rand($_[0]) },
 	'uri'             => \&Para::Frame::Utils::uri,
