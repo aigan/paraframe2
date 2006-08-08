@@ -1658,6 +1658,8 @@ sub render_output
     my $site = $page->site;
     my $home = $site->home_url_path;
 
+    $req->note("Rendering page");
+
 
     my( $in, $ext ) = $page->find_template( $template );
 
@@ -2172,7 +2174,7 @@ sub send_in_chunks
     my $client = $req->client;
     my $length = length($$dataref);
 #    debug(4,"Sending ".length($$dataref)." bytes of data to client");
-    debug("Sending ".length($$dataref)." bytes of data to client");
+    debug(1, "Sending ".length($$dataref)." bytes of data to client");
     my $sent = 0;
     my $errcnt = 0;
 
