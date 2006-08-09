@@ -311,7 +311,7 @@ sub new_minimal
 	indent         => 1,              ## debug indentation
 	client         => $client,        ## Just the unique name
 	jobs           => [],             ## queue of actions to perform
-        resp           => [},             ## queue of client responses
+        resp           => [],             ## queue of client responses
 	env            => {},             ## No env mor minimals!
 	's'            => undef,          ## Session object
 	result         => undef,
