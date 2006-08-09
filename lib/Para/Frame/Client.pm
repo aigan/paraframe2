@@ -147,14 +147,14 @@ sub handler
     }
 
     my $reqline = $r->the_request;
-    warn "$$: Got $reqline\n" if $DEBUG;
+    warn substr(sprintf("[%s] %d: %s", scalar(localtime), $$, $reqline), 0, 79)."\n";
 
     ### Optimize for the common case.
     #
     # May be modified in req, but this value guides Loadpage
     #
     my $ctype = $r->content_type;
-    warn "$$: Orig ctype $ctype\n" if $ctype;
+    warn "$$: Orig ctype $ctype\n" if $ctype and $DEBUG;
     if( not $ctype )
     {
 	if( $r->filename =~ /\.tt$/ )
@@ -266,7 +266,7 @@ sub send_to_server
     }
     unless( print $SOCK "$length\x00$code\x00" . $$valref )
     {
-	die "LOST CONNECTION while sending $code\n";
+	die "$$: LOST CONNECTION while sending $code\n";
     }
     return 1;
 }
@@ -543,7 +543,8 @@ sub get_response
 		{
 		    unless( $LOADPAGE )
 		    {
-			$chunks += send_loadpage();
+			$chunks += send_loadpage()
+			  or die "This is not a good place to be";
 		    }
 		    send_reload($row);
 		    last;
@@ -579,7 +580,7 @@ sub get_response
 			send_headers() or last;
 			if( $code eq 'BODY' )
 			{
-			    $chunks += send_body();
+			    $chunks += send_body($data);
 			}
 			else # HEADER
 			{
@@ -593,7 +594,8 @@ sub get_response
 		{
 		    ( $LOADPAGE_URI, $LOADPAGE_TIME ) =
 		      split(/\0/, $row);
-		    warn "$$: Loadpage $LOADPAGE_URI in $LOADPAGE_TIME secs\n";
+		    warn "$$: Loadpage $LOADPAGE_URI in $LOADPAGE_TIME secs\n"
+		      if $DEBUG > 1;
 		}
 		elsif( $code eq 'NOTE' )
 		{
@@ -635,7 +637,6 @@ sub get_response
 		   not $WAIT
 		 )
 	    {
-		send_to_server( 'LOADPAGE' );
 		$chunks += send_loadpage();
 	    }
 	}
@@ -655,6 +656,7 @@ sub send_loadpage
 	$r->print(<IN>) or die $!;
 	close IN;
 	$r->rflush;
+	send_to_server( 'LOADPAGE' );
 	warn "$$: LOADPAGE sent to browser\n";
 
 	while( my $note = shift @NOTES )
@@ -666,7 +668,8 @@ sub send_loadpage
     }
     else
     {
-	die "$$: Cant open '$filename': $!\n";
+	warn "$$: Cant open '$filename': $!\n";
+	$WAIT = 1;
     }
 }
 
@@ -675,7 +678,7 @@ sub send_reload
     my( $url ) = @_;
     send_message("Page Ready!");
 
-    warn "$$: Tell browser to reload page\n";
+    warn "$$: Telling browser to reload page\n";
     $r->print("<script type=\"text/javascript\">window.location.href='$url';</script>");
     $r->rflush;
 }
@@ -695,18 +698,21 @@ sub send_headers
 
 sub send_body
 {
-    warn "$$: Waiting for body\n";
+    my $data = $_[0] || ''; # From buffer
+    warn "$$: Waiting for body\n" if $DEBUG;
     my $select = IO::Select->new($SOCK);
-    my $data = '';
     my $chunk = 1;
     my $timeout = 30; # May have to wait for yield
-    
-    unless( $select->can_read($timeout) )
-    {
-	die "No body ready to be read from $SOCK";
-    }
 
-    $SOCK->read($data, BUFSIZ) or die "No body to send";
+    unless( length $data )
+    {
+	unless( $select->can_read($timeout) )
+	{
+	    die "$$: No body ready to be read from $SOCK";
+	}
+
+	$SOCK->read($data, BUFSIZ) or die "$$: No body to send";
+    }
 
     while( length $data )
     {
@@ -731,7 +737,7 @@ sub send_message
     chomp $msg;
     $msg =~ s/\n/\\n/g;
 
-    warn "$$: Sending message to browser: $msg\n";
+    warn "$$: Sending message to browser: $msg\n" if $DEBUG > 1;
     $r->print("<script type=\"text/javascript\">document.f.messages.value += \"$msg\\n\";bottom();</script>\n");
     $r->rflush;
 }
