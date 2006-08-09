@@ -47,7 +47,7 @@ use constant BUFSIZ => 8192; # Posix buffersize
 our $SOCK;
 our $r;
 
-our $DEBUG = 5;
+our $DEBUG = 0;
 our $BACKUP_PORT;
 our $STARTED;
 our $LOADPAGE;
@@ -262,7 +262,7 @@ sub send_to_server
     if( $DEBUG > 3 )
     {
 	warn "$$: Sending $length - $code - $$valref\n";
-	warn sprintf "$$:   at %.2f\n", Time::HiRes::time;
+#	warn sprintf "$$:   at %.2f\n", Time::HiRes::time;
     }
     unless( print $SOCK "$length\x00$code\x00" . $$valref )
     {
@@ -488,9 +488,12 @@ sub get_response
 		next;
 	    }
 
-	    if( my $len = length $data )
+	    if( $DEBUG > 3 )
 	    {
-		warn "$$: $len bytes left in databuffer: $data\n";
+		if( my $len = length $data )
+		{
+		    warn "$$: $len bytes left in databuffer: $data\n";
+		}
 	    }
 
 	    # Code size max 16 chars
@@ -503,7 +506,7 @@ sub get_response
 		{
 		    warn( sprintf "$$: Got %s: %s\n", $code,
 			  join '-', split /\0/, $row );
-		    warn sprintf "$$:   at %.2f\n", Time::HiRes::time;
+#		    warn sprintf "$$:   at %.2f\n", Time::HiRes::time;
 		}
 
 
