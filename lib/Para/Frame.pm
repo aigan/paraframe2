@@ -629,7 +629,7 @@ sub get_value
 	if( time > $time + $timeout )
 	{
 	    warn "Data timeout!!!";
-	    exit 0; #### DEBUG !!!
+#	    exit 0; #### DEBUG !!!
 
 	    if( my $req = $REQUEST{$client} )
 	    {
