@@ -330,7 +330,7 @@ Default $template is previously set next_template
 
 Default $run = 'nop'
 
-All fields set by %attrs must exist in the form. (Maby as hidden
+All fields set by %attrs must exist in the form. (Maybe as hidden
 elements)
 
 A 'target' attribute will set the target frame for the form
