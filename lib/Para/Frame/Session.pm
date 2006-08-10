@@ -175,6 +175,11 @@ sub register_result_page
     my( $s, $url, $headers, $page_ref, $page_sender ) = @_;
     # URL should only be the path part
     debug "Registred the page result for $url";
+
+    unless( $page_sender )
+    {
+	confess "page sender not given";
+    }
     $s->{'page_result'}{$url} = [ $headers, $page_ref, $page_sender ];
 }
 
