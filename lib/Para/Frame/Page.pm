@@ -2271,6 +2271,65 @@ sub send_in_chunks
 
 #######################################################################
 
+sub send_stored_result
+{
+    my( $page, $page_result ) = @_;
+
+    my $req = $Para::Frame::REQ;
+    $page_result ||=
+      $req->session->{'page_result'}{ $page->orig_url_path };
+
+    debug 1, "Sending stored page result";
+    $page->set_headers( $page_result->[0] );
+    if( length ${$page_result->[1]} ) # May be header only
+    {
+	    if( $page_result->[2] eq 'utf8' )
+	    {
+		$page->ctype->set_charset("UTF-8");
+		$page->send_headers;
+		my $res = $req->get_cmd_val( 'BODY' );
+		if( $res eq 'LOADPAGE' )
+		{
+		    die "Was to slow to send the pregenerated page";
+		}
+		else
+		{
+		    binmode( $req->client, ':utf8');
+		    debug(4,"Transmitting in utf8 mode");
+		    $page->send_in_chunks( $page_result->[1] );
+		    binmode( $req->client, ':bytes');
+		}
+	    }
+	    else
+	    {
+		$page->send_headers;
+		my $res = $req->get_cmd_val( 'BODY' );
+		if( $res eq 'LOADPAGE' )
+		{
+		    die "Was to slow to send the pregenerated page";
+		}
+		else
+		{
+		    $page->send_in_chunks( $page_result->[1] );
+		}
+	    }
+	}
+	else
+	{
+	    $page->send_headers;
+	    my $res = $req->get_cmd_val( 'HEADER' );
+	    if( $res eq 'LOADPAGE' )
+	    {
+		die "Was to slow to send the pregenerated page";
+	    };
+	}
+	delete $req->session->{'page_result'}{ $req->page->orig_url_path };
+#	debug "Sending stored page result: done";
+}
+
+
+#######################################################################
+
 
 =head2 set_dirsteps
 
