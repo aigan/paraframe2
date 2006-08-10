@@ -24,6 +24,7 @@ Para::Frame::Session - Session handling
 =cut
 
 use strict;
+use Carp qw( confess );
 
 BEGIN
 {
