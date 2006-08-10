@@ -436,7 +436,6 @@ sub main_loop
 		warn "#>>\n";
 		warn map "#>> $_\n", split /\n/, $err->as_string;
 		warn "#>>\n";
-		exit 0; ############### DEBUG
 
 		my $emergency_level =
 		  Para::Frame::Watchdog::EMERGENCY_DEBUG_LEVEL;
