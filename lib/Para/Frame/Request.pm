@@ -104,7 +104,6 @@ sub new
 	client         => $client,
 	jobs           => [],             ## queue of jobs to perform
         actions        => [],             ## queue of actions to perform
-        resp           => [],             ## queue of client responses
 	'q'            => $q,
 	env            => $env,
 	's'            => undef,          ## Session object
@@ -311,7 +310,7 @@ sub new_minimal
 	indent         => 1,              ## debug indentation
 	client         => $client,        ## Just the unique name
 	jobs           => [],             ## queue of actions to perform
-        resp           => [],             ## queue of client responses
+        actions        => [],             ## queue of actions to perform
 	env            => {},             ## No env mor minimals!
 	's'            => undef,          ## Session object
 	result         => undef,
@@ -1466,7 +1465,7 @@ sub send_code
     # To get a response, use get_cmd_val()
 
     $_[1] ||= 1; # Must be at least one param
-#    debug( 1, "Sending code: ".join("-", @_));
+    debug( 3, "Sending code: ".join("-", @_)." ($req->{reqnum})");
 #    debug sprintf "  at %.2f\n", Time::HiRes::time;
 
     if( $Para::Frame::FORK )
@@ -1589,16 +1588,17 @@ sub get_cmd_val
 
     $req->send_code( @_ );
     Para::Frame::get_value( $req );
+    my $client = $req->client;
 
     # Something besides the answer may be waiting before the answer
 
-    while( not @{$req->{'resp'}} )
+    while( not @{$Para::Frame::RESPONSE{ $client }} )
     {
 	debug "No response registred. Getting next value:";
 	Para::Frame::get_value( $req );
     }
 
-    return shift @{$req->{'resp'}};
+    return shift @{$Para::Frame::RESPONSE{ $client }};
 }
 
 
@@ -1667,6 +1667,10 @@ sub yield
 	    }
 	}
     };
+    if( $@ )
+    {
+	debug "ERROR IN YIELD: $@";
+    }
     $req->{'in_yield'} --;
     Para::Frame::switch_req( $req );
 }
@@ -2073,9 +2077,67 @@ sub logging
 
 #######################################################################
 
+sub waiting
+{
+    return $_[0]->{'wait'};
+}
+
+
+#######################################################################
+
 sub cancelled
 {
     return $_[0]->{'cancel'};
+}
+
+
+#######################################################################
+
+sub cancel
+{
+    my( $req ) = @_;
+
+    return if $req->{'cancel'};
+
+    debug(0,"CANCEL req $req->{reqnum}");
+
+    $req->{'cancel'} = 1;
+
+    if( $req->{'childs'} )
+    {
+	debug "  Killing req childs";
+	foreach my $child ( values %Para::Frame::CHILD )
+	{
+	    my $creq = $child->req;
+	    my $cpid = $child->pid;
+	    if( $creq->{'reqnum'} == $req->{'reqnum'} )
+	    {
+		kill 9, $child->pid;
+	    }
+	}
+    }
+
+    if( my $orig_req = $req->original )
+    {
+	$orig_req->cancel;
+    }
+
+    if( $req->waiting )
+    {
+	foreach my $oreq ( values %Para::Frame::REQUEST )
+	{
+	    if( $oreq->original and ( $oreq->original->id == $req->id ) )
+	    {
+		$oreq->cancel;
+	    }
+	}
+    }
+
+    if( $req->{'active_reqest'} )
+    {
+	$req->{'active_reqest'}->cancel;
+	delete $req->{'active_reqest'};
+    }
 }
 
 
