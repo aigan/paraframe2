@@ -56,6 +56,7 @@ our $LOADPAGE_TIME;
 our $LAST_MESSAGE;
 our $WAIT;
 our @NOTES;
+our $REQNUM;
 
 =head1 DESCRIPTION
 
@@ -262,11 +263,12 @@ sub send_to_server
     if( $DEBUG > 3 )
     {
 	warn "$$: Sending $length - $code - $$valref\n";
-#	warn sprintf "$$:   at %.2f\n", Time::HiRes::time;
+	warn sprintf "$$:   at %.2f\n", Time::HiRes::time;
     }
     unless( print $SOCK "$length\x00$code\x00" . $$valref )
     {
-	die "$$: LOST CONNECTION while sending $code\n";
+	warn "$$: LOST CONNECTION while sending $code\n";
+	return 0;
     }
     return 1;
 }
@@ -364,6 +366,8 @@ sub print_error_page
     }
 
     $r->print("</body></html>\n");
+    $r->rflush;
+
     return 1;
 }
 
@@ -426,36 +430,35 @@ sub get_response
     $WAIT = 0;
     $LAST_MESSAGE = "";
     @NOTES = ();
+    $REQNUM = undef;
 
-#    my $timeout_long = 1.5;
-#    my $timeout_short = 0.001;
-#    my $timeout = $timeout_short;
     my $timeout = 1.5;
 
 
     my $select = IO::Select->new($SOCK);
     my $c = $r->connection;
-    my $client_fn = $c->fileno(0); # Direction right?!
-#    warn "$$: Client output filenumber is $client_fn\n";
-    my $client_fh = IO::Handle->new_from_fd($client_fn,'w');
+    my $client_fn = $c->fileno(1); # Direction right?!
+    my $client_select = IO::Select->new($client_fn);
 
-    unless( $client_fh ) # Lost connection
-    {
-	warn "$$: Lost connection to client $client_fn\n";
-	warn "$$:   Sending CANCEL to server\n";
-	send_to_server("CANCEL");
-	return 1;
-    }
-
-#    warn "$$: Client output filehandle is $client_fh\n";
-    my $client_select = IO::Select->new($client_fh);
-#    warn "$$: Client output select is $client_select\n";
 
     my $chunks = 0;
     my $data='';
     my $buffer = '';
     while( 1 )
     {
+
+	### Test connection
+	if( not $client_select->can_write(0.001)
+	    or  $client_select->can_read(0.001)
+	  )
+	{
+	    warn "$$: Lost connection to client $client_fn\n";
+	    warn "$$:   Sending CANCEL to server\n";
+	    send_to_server("CANCEL");
+	    return 1;
+	}
+
+
 	unless( $data )
 	{
 	    if( $select->can_read( $timeout ) )
@@ -465,9 +468,16 @@ sub get_response
 		{
 		    # EOF from client
 		    warn "$$: Nothing in socket $SOCK\n";
-		    warn "$$: rv: ".Dumper($rv);
-		    warn "$$: buffer: ".Dumper($buffer);
+		    warn "$$: rv: $rv\n";
+		    warn "$$: buffer: $buffer\n";
 		    warn "$$: EOF!\n";
+
+		    if( $LOADPAGE )
+		    {
+			send_message("\nServer vanished!");
+			sleep 3;
+			send_reload($r->uri);
+		    }
 		    last;
 		}
 
@@ -488,7 +498,7 @@ sub get_response
 		next;
 	    }
 
-	    if( $DEBUG > 3 )
+	    if( $DEBUG > 4 )
 	    {
 		if( my $len = length $data )
 		{
@@ -502,7 +512,7 @@ sub get_response
 	    {
 		my $code = $1;
 
-		if( $DEBUG > 4 )
+		if( $DEBUG > 3 )
 		{
 		    warn( sprintf "$$: Got %s: %s\n", $code,
 			  join '-', split /\0/, $row );
@@ -592,10 +602,13 @@ sub get_response
 		}
 		elsif( $code eq 'LOADPAGE' )
 		{
-		    ( $LOADPAGE_URI, $LOADPAGE_TIME ) =
+		    ( $LOADPAGE_URI, $LOADPAGE_TIME, $REQNUM ) =
 		      split(/\0/, $row);
-		    warn "$$: Loadpage $LOADPAGE_URI in $LOADPAGE_TIME secs\n"
-		      if $DEBUG > 1;
+		    if( $DEBUG > 1 )
+		    {
+			warn "$$: Loadpage $LOADPAGE_URI in $LOADPAGE_TIME secs\n";
+			warn "$$: REQ $REQNUM\n";
+		    }
 		}
 		elsif( $code eq 'NOTE' )
 		{
@@ -653,7 +666,7 @@ sub send_loadpage
     {
 	$LOADPAGE = 1;
 	send_headers();
-	$r->print(<IN>) or die $!;
+	$r->send_fd(*IN);
 	close IN;
 	$r->rflush;
 	send_to_server( 'LOADPAGE' );
@@ -708,10 +721,15 @@ sub send_body
     {
 	unless( $select->can_read($timeout) )
 	{
-	    die "$$: No body ready to be read from $SOCK";
+	    warn "$$: No body ready to be read from $SOCK";
+	    return 0;
 	}
 
-	$SOCK->read($data, BUFSIZ) or die "$$: No body to send";
+	unless( $SOCK->read($data, BUFSIZ) )
+	{
+	    warn "$$: No body to send";
+	    return 0;
+	}
     }
 
     while( length $data )
