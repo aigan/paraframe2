@@ -734,7 +734,8 @@ sub send_body
 
     while( length $data )
     {
-	unless( $r->print( \$data ) )
+	# Passing scalarrefs is buggy
+	unless( $r->print( $data ) )
 	{
 	    warn "$$: Faild to send chunk $chunk to client\n";
 	    warn "$$:   Sending CANCEL to server\n";
