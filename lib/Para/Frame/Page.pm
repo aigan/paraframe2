@@ -1864,25 +1864,7 @@ sub send_output
     }
     else
     {
-	# If not set, find out best way to send page
-	if( $page->{'page_sender'} )
-	{
-	    unless( $page->{'page_sender'} =~ /^(utf8|bytes)$/ )
-	    {
-		debug "Page sender $page->{page_sender} not recogized";
-	    }
-	}
-	else
-	{
-	    if( is_utf8  ${ $page->{'page_content'} } )
-	    {
-		$page->{'page_sender'} = 'utf8';
-	    }
-	    else
-	    {
-		$page->{'page_sender'} = 'bytes';
-	    }
-	}
+	my $sender = $page->sender;
 
 	if( $req->header_only )
 	{
@@ -1898,11 +1880,11 @@ sub send_output
 	    }
 	    if( $res eq 'LOADPAGE' )
 	    {
-		$req->session->register_result_page($url_norm, $page->{'headers'}, $page->{'page_content'}, $page->{'page_sender'});
+		$req->session->register_result_page($url_norm, $page->{'headers'}, $page->{'page_content'}, $sender);
 		$req->send_code('PAGE_READY', $page->url->as_string);
 	    }
 	}
-	elsif( $page->{'page_sender'} eq 'utf8' )
+	elsif( $sender eq 'utf8' )
 	{
 	    my $res;
 	    if( $req->in_loadpage )
@@ -1917,7 +1899,7 @@ sub send_output
 	    }
 	    if( $res eq 'LOADPAGE' )
 	    {
-		$req->session->register_result_page($url_norm, $page->{'headers'}, $page->{'page_content'}, $page->{'page_sender'});
+		$req->session->register_result_page($url_norm, $page->{'headers'}, $page->{'page_content'}, $sender);
 		$req->send_code('PAGE_READY', $page->url->as_string);
 	    }
 	    elsif( $res eq 'SEND' )
@@ -1946,7 +1928,7 @@ sub send_output
 	    }
 	    if( $res eq 'LOADPAGE' )
 	    {
-		$req->session->register_result_page($url_norm, $page->{'headers'}, $page->{'page_content'}, $page->{'page_sender'});
+		$req->session->register_result_page($url_norm, $page->{'headers'}, $page->{'page_content'}, $sender );
 		$req->send_code('PAGE_READY', $page->url->as_string);
 	    }
 	    elsif( $res eq 'SEND' )
@@ -1961,6 +1943,43 @@ sub send_output
     }
     debug "send_output: done";
 }
+
+#######################################################################
+
+=head2 sender
+
+  $p->sender
+
+  $p->sender( $code )
+
+=cut
+
+sub sender
+{
+    my( $page, $code ) = @_;
+
+    if( $code )
+    {
+	unless( $code =~ /^(utf8|bytes)$/ )
+	{
+	    confess "Page sender $code not recogized";
+	}
+	$page->{'page_sender'} = $code;
+    }
+    elsif( not $page->{'page_sender'} )
+    {
+	if( is_utf8  ${ $page->{'page_content'} } )
+	{
+	    $page->{'page_sender'} = 'utf8';
+	}
+	else
+	{
+	    $page->{'page_sender'} = 'bytes';
+	}
+    }
+    return $page->{'page_sender'};
+}
+
 
 #######################################################################
 
@@ -2013,7 +2032,8 @@ sub forward
     }
 
     $page->output_redirection($url_norm );
-    $req->session->register_result_page($url_norm, $page->{'headers'}, $page->{'page_content'}, $page->{'page_sender'});
+
+    $req->session->register_result_page($url_norm, $page->{'headers'}, $page->{'page_content'}, $page->sender);
 }
 
 
@@ -2279,52 +2299,54 @@ sub send_stored_result
     $page_result ||=
       $req->session->{'page_result'}{ $page->orig_url_path };
 
-    debug 1, "Sending stored page result";
+    debug 0, "Sending stored page result";
     $page->set_headers( $page_result->[0] );
     if( length ${$page_result->[1]} ) # May be header only
     {
-	    if( $page_result->[2] eq 'utf8' )
+	if( $page_result->[2] eq 'utf8' )
+	{
+	    $page->ctype->set_charset("UTF-8");
+	    $page->send_headers;
+	    my $res = $req->get_cmd_val( 'BODY' );
+	    if( $res eq 'LOADPAGE' )
 	    {
-		$page->ctype->set_charset("UTF-8");
-		$page->send_headers;
-		my $res = $req->get_cmd_val( 'BODY' );
-		if( $res eq 'LOADPAGE' )
-		{
-		    die "Was to slow to send the pregenerated page";
-		}
-		else
-		{
-		    binmode( $req->client, ':utf8');
-		    debug(4,"Transmitting in utf8 mode");
-		    $page->send_in_chunks( $page_result->[1] );
-		    binmode( $req->client, ':bytes');
-		}
+		die "Was to slow to send the pregenerated page";
 	    }
 	    else
 	    {
-		$page->send_headers;
-		my $res = $req->get_cmd_val( 'BODY' );
-		if( $res eq 'LOADPAGE' )
-		{
-		    die "Was to slow to send the pregenerated page";
-		}
-		else
-		{
-		    $page->send_in_chunks( $page_result->[1] );
-		}
+		binmode( $req->client, ':utf8');
+		debug(4,"Transmitting in utf8 mode");
+		$page->send_in_chunks( $page_result->[1] );
+		binmode( $req->client, ':bytes');
 	    }
 	}
 	else
 	{
 	    $page->send_headers;
-	    my $res = $req->get_cmd_val( 'HEADER' );
+	    my $res = $req->get_cmd_val( 'BODY' );
 	    if( $res eq 'LOADPAGE' )
 	    {
 		die "Was to slow to send the pregenerated page";
-	    };
+	    }
+	    else
+	    {
+		$page->send_in_chunks( $page_result->[1] );
+	    }
 	}
-	delete $req->session->{'page_result'}{ $req->page->orig_url_path };
-#	debug "Sending stored page result: done";
+    }
+    else
+    {
+	$page->send_headers;
+	my $res = $req->get_cmd_val( 'HEADER' );
+	if( $res eq 'LOADPAGE' )
+	{
+	    die "Was to slow to send the pregenerated page";
+	};
+    }
+
+    delete $req->session->{'page_result'}{ $req->page->orig_url_path };
+
+    #debug "Sending stored page result: done";
 }
 
 
