@@ -2193,8 +2193,8 @@ sub send_in_chunks
 
     my $client = $req->client;
     my $length = length($$dataref);
-#    debug(4,"Sending ".length($$dataref)." bytes of data to client");
-    debug(1, "Sending ".length($$dataref)." bytes of data to client");
+    debug(4,"Sending ".length($$dataref)." bytes of data to client");
+#    debug(1, "Sending ".length($$dataref)." bytes of data to client");
     my $sent = 0;
     my $errcnt = 0;
 
@@ -2229,10 +2229,10 @@ sub send_in_chunks
 		    }
 
 		    debug(1,"  Tries to recover...",1);
-		    
+
 		    $errcnt++;
 		    $req->yield( 0.9 );
-		    
+
 		    if( $errcnt >= 100 )
 		    {
 			debug(0,"Got over 100 failures to send chunk $i");
@@ -2255,10 +2255,10 @@ sub send_in_chunks
 		else
 		{
 		    debug("  Failed to send data to client\n  Tries to recover...",1);
-		    
+
 		    $errcnt++;
 		    $req->yield( 1.2 );
-		    
+
 		    if( $errcnt >= 10 )
 		    {
 			debug(0,"Got over 10 failures to send $length chars of data");
@@ -2305,7 +2305,7 @@ sub send_stored_result
     {
 	if( $page_result->[2] eq 'utf8' )
 	{
-	    debug "  in UTF8";
+	    debug 4, "  in UTF8";
 	    $page->ctype->set_charset("UTF-8");
 	    $page->send_headers;
 	    my $res = $req->get_cmd_val( 'BODY' );
@@ -2323,7 +2323,7 @@ sub send_stored_result
 	}
 	else
 	{
-	    debug "  in Latin-1";
+	    debug 4, "  in Latin-1";
 	    $page->send_headers;
 	    my $res = $req->get_cmd_val( 'BODY' );
 	    if( $res eq 'LOADPAGE' )
@@ -2338,7 +2338,7 @@ sub send_stored_result
     }
     else
     {
-	debug "  as HEADER";
+	debug 4, "  as HEADER";
 	$page->send_headers;
 	my $res = $req->get_cmd_val( 'HEADER' );
 	if( $res eq 'LOADPAGE' )
