@@ -299,8 +299,8 @@ sub connect_to_server
 
 	last if $SOCK;
 
-#	if( $try >= 20 )
-	if( $try >= 3 )
+	if( $try >= 20 )
+#	if( $try >= 3 )
 	{
 	    warn "$$:   Giving up!\n";
 	    return undef;
