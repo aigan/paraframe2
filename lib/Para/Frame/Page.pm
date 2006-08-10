@@ -2305,6 +2305,7 @@ sub send_stored_result
     {
 	if( $page_result->[2] eq 'utf8' )
 	{
+	    debug "  in UTF8";
 	    $page->ctype->set_charset("UTF-8");
 	    $page->send_headers;
 	    my $res = $req->get_cmd_val( 'BODY' );
@@ -2322,6 +2323,7 @@ sub send_stored_result
 	}
 	else
 	{
+	    debug "  in Latin-1";
 	    $page->send_headers;
 	    my $res = $req->get_cmd_val( 'BODY' );
 	    if( $res eq 'LOADPAGE' )
@@ -2336,6 +2338,7 @@ sub send_stored_result
     }
     else
     {
+	debug "  as HEADER";
 	$page->send_headers;
 	my $res = $req->get_cmd_val( 'HEADER' );
 	if( $res eq 'LOADPAGE' )
