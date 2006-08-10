@@ -47,6 +47,7 @@ WriteMakefile(
 	          'DateTime::Format::HTTP'     => 0.00,
 		  'File::Spec'                 => 3.05,
 		  'IO'                         => 1.21,
+	          'IO::Socket'                 => 1.29,
 		  'Digest::MD5'                => 2.33,
 		  'Time::Piece'                => 1.08,
 		  'BerkeleyDB'                 => 0.26,
