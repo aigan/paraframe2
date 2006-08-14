@@ -1769,6 +1769,10 @@ sub render_output
 		    $new_error_tt = $error_tt = "/page_not_found.tt";
 		    $page->set_http_status(404);
 		}
+		elsif( $error->type eq 'cancel' )
+		{
+		    throw('cancel', "request cancelled");
+		}
 		else
 		{
 		    $new_error_tt = $error_tt = '/error.tt';
