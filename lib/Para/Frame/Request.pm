@@ -1590,11 +1590,21 @@ sub get_cmd_val
 
     $req->send_code( @_ );
     Para::Frame::get_value( $req );
-    my $client = $req->client;
 
     # Something besides the answer may be waiting before the answer
 
-    while( not @{$Para::Frame::RESPONSE{ $client }} )
+    my $queue;
+    if( my $areq = $req->{'active_reqest'} )
+    {
+	# We expects response in the active_request
+	$queue = $Para::Frame::RESPONSE{ $areq->client };
+    }
+    else
+    {
+	$queue = $Para::Frame::RESPONSE{ $req->client };
+    }
+
+    while( not @$queue )
     {
 	if( $req->{'cancel'} )
 	{
@@ -1604,7 +1614,7 @@ sub get_cmd_val
 	Para::Frame::get_value( $req );
     }
 
-    return shift @{$Para::Frame::RESPONSE{ $client }};
+    return shift @$queue;
 }
 
 
