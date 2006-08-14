@@ -2120,6 +2120,14 @@ sub cancelled
 
 #######################################################################
 
+sub active
+{
+    return $_[0]->{'active_reqest'};
+}
+
+
+#######################################################################
+
 sub cancel
 {
     my( $req ) = @_;
@@ -2176,7 +2184,8 @@ sub note
 
     debug($note);
     $note =~ s/\n/\\n/g;
-    return $req->send_code('NOTE', $note );
+    my $creq = $req->original || $req; # client req
+    return $creq->send_code('NOTE', $note );
 }
 
 
