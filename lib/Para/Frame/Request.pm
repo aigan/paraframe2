@@ -240,6 +240,7 @@ sub new_subrequest
 
     ### Register the client, if it was created now
     $Para::Frame::REQUEST{$client} ||= $req;
+    $Para::Frame::RESPONSE{$client} ||= [];
 
     $req->minimal_init( $args ); ### <<--- INIT
 
@@ -285,6 +286,7 @@ sub new_bgrequest
     my $client = "background-$Para::Frame::REQNUM";
     my $req = Para::Frame::Request->new_minimal($Para::Frame::REQNUM, $client);
     $Para::Frame::REQUEST{$client} = $req;
+    $Para::Frame::RESPONSE{$client} = [];
     Para::Frame::switch_req( $req, 1 );
     $req->minimal_init;
     warn "\n\n$Para::Frame::REQNUM $msg\n";
