@@ -265,6 +265,7 @@ sub send_to_server
 	warn "$$: Sending $length - $code - $$valref\n";
 	warn sprintf "$$:   at %.2f\n", Time::HiRes::time;
     }
+
     unless( print $SOCK "$length\x00$code\x00" . $$valref )
     {
 	warn "$$: LOST CONNECTION while sending $code\n";
@@ -448,8 +449,8 @@ sub get_response
     {
 
 	### Test connection
-	if( not $client_select->can_write(0.001)
-	    or  $client_select->can_read(0.001)
+	if( not $client_select->can_write(0)
+	    or  $client_select->can_read(0)
 	  )
 	{
 	    warn "$$: Lost connection to client $client_fn\n";
@@ -633,24 +634,24 @@ sub get_response
 		return 0;
 	    }
 	}
-	else
+	elsif( $LOADPAGE )
 	{
-	    if( $LOADPAGE )
+	    send_message_waiting();
+	}
+
+
+	if( not $LOADPAGE and
+	    (time > $STARTED + $LOADPAGE_TIME - 1 ) and
+	    $LOADPAGE_URI and
+	    ($r->content_type eq "text/html" ) and
+	    (not $r->header_only ) and
+	    not $WAIT
+	    )
+	{
+	    $chunks += send_loadpage();
+	    while( my $note = shift @NOTES )
 	    {
-		send_message_waiting();
-		while( my $note = shift @NOTES )
-		{
-		    send_message($note);
-		}
-	    }
-	    elsif( $LOADPAGE_URI and
-		   ($r->content_type eq "text/html" ) and
-		   (time > $STARTED + $LOADPAGE_TIME - 1 ) and
-		   (not $r->header_only ) and
-		   not $WAIT
-		 )
-	    {
-		$chunks += send_loadpage();
+		send_message($note);
 	    }
 	}
     }
