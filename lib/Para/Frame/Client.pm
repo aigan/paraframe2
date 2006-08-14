@@ -767,7 +767,7 @@ sub send_message_waiting
     my $msg = "Processing...";
     if( $msg eq $LAST_MESSAGE )
     {
-	$r->print("<script type=\"text/javascript\">e=document.f.messages;e.value = e.value.substring(0,e.value.length-1)+\".\\n\";bottom();</script>\n");
+	$r->print("<script type=\"text/javascript\">e=document.f.messages;e.value = e.value.substring(0,e.value.length-2)+\"..\\n\";bottom();</script>\n");
     $r->rflush;
     }
     else
