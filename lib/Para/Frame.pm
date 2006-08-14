@@ -586,6 +586,8 @@ sub get_value
     if( ref $client eq 'Para::Frame::Request' )
     {
 	my $req = $client;
+	return undef if $req->{'cancel'}; ## Let caller handle it
+
 	$client = $req->client;
 	if( $client =~ /^background/ )
 	{
@@ -825,8 +827,7 @@ sub handle_code
 	$DATALENGTH{$client} = 0;
 
 	$req->cancel;
-
-	throw('cancel', "request cancelled");
+	return 0;
     }
     elsif( $code eq 'RESP' )
     {
