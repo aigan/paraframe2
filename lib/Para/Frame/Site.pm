@@ -359,7 +359,8 @@ Defaults to C<$home/pf/loading.html>.
 
 sub loadpage
 {
-    return $_[0]->{'loadpage'} || $_[0]->home_url_path . "/pf/loading.html";
+    return $_[0]->home_url_path .
+      ( $_[0]->{'loadpage'} || "/pf/loading.html" );
 }
 
 =head2 login_page
