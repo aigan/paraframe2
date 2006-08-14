@@ -1594,6 +1594,10 @@ sub get_cmd_val
 
     while( not @{$Para::Frame::RESPONSE{ $client }} )
     {
+	if( $req->{'cancel'} )
+	{
+	    throw('cancel', "request cancelled");
+	}
 	debug "No response registred. Getting next value:";
 	Para::Frame::get_value( $req );
     }
@@ -1672,7 +1676,18 @@ sub yield
 	debug "ERROR IN YIELD: $@";
     }
     $req->{'in_yield'} --;
+
+    if( $req->{'cancel'} ) # DEBUG
+    {
+	debug 2, "Should close down this req soon";
+    }
+
     Para::Frame::switch_req( $req );
+
+    if( $req->{'cancel'} )
+    {
+	throw('cancel', "request cancelled");
+    }
 }
 
 
