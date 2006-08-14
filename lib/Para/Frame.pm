@@ -579,7 +579,7 @@ sub get_value
 	}
 
 	undef $Para::Frame::Client::SOCK;
-	return undef;
+	return 0;
     }
 
 
@@ -620,9 +620,7 @@ sub fill_buffer
 
     debug 4, "Get value from $client";
 
-    my $rest = ''; # Part of next record
     my $timeout = 5;
-    my $length_buffer = 0;
 
   PROCESS:
     {
@@ -642,7 +640,7 @@ sub fill_buffer
 #	sleep 1;
 
 
-	$length_buffer = length( $INBUFFER{$client}||='' );
+	my $length_buffer = length( $INBUFFER{$client}||='' );
 
 #	debug "Length is $length_buffer of ".($DATALENGTH{$client}||'?');
 
@@ -736,10 +734,8 @@ sub fill_buffer
 		else
 		{
 		    debug 1, "Strange INBUFFER content: $INBUFFER{$client}\n";
-		    $INBUFFER{$client} = '';
-		    $DATALENGTH{$client} = 0;
-		    close_callback($client);
-		    return undef;
+		    close_callback($client, "Faulty inbuffer");
+		    return 0;
 		}
 	    }
 
@@ -774,7 +770,8 @@ sub handle_code
     unless( $INBUFFER{$client} =~ s/^(\w+)\x00// )
     {
 	debug(0,"No code given: $INBUFFER{$client}");
-	die "What now?";
+	close_callback($client,'faulty input');
+	return 0;
     }
 
 
@@ -808,7 +805,7 @@ sub handle_code
 		    close_callback($client);
 		    return 0;
 		}
-		last; # Something else is waitning
+		# Something else is waitning
 	    }
 	}
 
@@ -891,6 +888,8 @@ sub handle_code
     else
     {
 	debug(0,"Strange CODE: $code");
+	close_callback($client, "Faulty code");
+	return 0;
     }
 
     $DATALENGTH{$client} = 0;
