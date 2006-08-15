@@ -1851,7 +1851,7 @@ sub send_output
     # without an ending '/'
 
     my $url = $page->orig_url_path;
-    my $url_norm = $req->normalized_url( $url );
+    my $url_norm = $req->normalized_url( $page->url_path_slash );
 
 #    debug "Original url: $url";
 

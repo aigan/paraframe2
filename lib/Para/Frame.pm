@@ -664,13 +664,8 @@ sub fill_buffer
 		    debug "Lost connection to $client";
 		    if( my $req = $REQUEST{ $client } )
 		    {
-			# May be becase queue full
-			die "Lost connection to req $req->{reqnum}";
-			#$req->cancel;
+			$req->cancel;
 		    }
-
-		    debug "Target length:  ".($length_buffer||'-');
-		    debug "Buffer content: ".$INBUFFER{$client};
 
 		    close_callback($client,'eof');
 		    return 0; # Is this right?
