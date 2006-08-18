@@ -1598,10 +1598,18 @@ sub get_cmd_val
     {
 	# We expects response in the active_request
 	$queue = $Para::Frame::RESPONSE{ $areq->client };
+	unless( $queue )
+	{
+	    throw('cancel', "request $areq->{reqnum} decomposed");
+	}
     }
     else
     {
 	$queue = $Para::Frame::RESPONSE{ $req->client };
+	unless( $queue )
+	{
+	    throw('cancel', "request $req->{reqnum} decomposed");
+	}
     }
 
     while( not @$queue )
@@ -1610,7 +1618,7 @@ sub get_cmd_val
 	{
 	    throw('cancel', "request cancelled");
 	}
-	debug "No response registred. Getting next value:";
+#	debug "No response registred. Getting next value:";
 	Para::Frame::get_value( $req );
     }
 
