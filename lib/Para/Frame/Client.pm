@@ -43,11 +43,13 @@ BEGIN
 use Para::Frame::Reload;
 
 use constant BUFSIZ => 8192; # Posix buffersize
+use constant TRIES => 20; # 20 connection tries
+
+our $DEBUG = 0;
 
 our $SOCK;
 our $r;
 
-our $DEBUG = 0;
 our $BACKUP_PORT;
 our $STARTED;
 our $LOADPAGE;
@@ -57,6 +59,7 @@ our $LAST_MESSAGE;
 our $WAIT;
 our @NOTES;
 our $REQNUM;
+
 
 =head1 DESCRIPTION
 
@@ -132,46 +135,49 @@ sub handler
 
     my $q = new CGI;
     $|=1;
-
-    warn "$$: Client started\n" if $DEBUG;
+    my $ctype = $r->content_type;
 
     my $port = $dirconfig->{'port'};
     if( $BACKUP_PORT )
     {
 	$port = $BACKUP_PORT;
     }
-
-    unless( $port )
+    else
     {
-	print_error_page("No port configured for communication with the Paraframe server");
-	return 1;
-    }
+	warn "$$: Client started\n" if $DEBUG;
 
-    my $reqline = $r->the_request;
-    warn substr(sprintf("[%s] %d: %s", scalar(localtime), $$, $reqline), 0, 79)."\n";
+	unless( $port )
+	{
+	    print_error_page("No port configured for communication with the Paraframe server");
+	    return 1;
+	}
 
-    ### Optimize for the common case.
-    #
-    # May be modified in req, but this value guides Loadpage
-    #
-    my $ctype = $r->content_type;
-    warn "$$: Orig ctype $ctype\n" if $ctype and $DEBUG;
-    if( not $ctype )
-    {
-	if( $r->filename =~ /\.tt$/ )
+	my $reqline = $r->the_request;
+	warn substr(sprintf("[%s] %d: %s", scalar(localtime), $$, $reqline), 0, 79)."\n";
+
+	### Optimize for the common case.
+	#
+	# May be modified in req, but this value guides Loadpage
+	#
+	warn "$$: Orig ctype $ctype\n" if $ctype and $DEBUG;
+	if( not $ctype )
+	{
+	    if( $r->filename =~ /\.tt$/ )
+	    {
+		$ctype = $r->content_type('text/html');
+	    }
+	}
+	elsif( $ctype eq "httpd/unix-directory" )
 	{
 	    $ctype = $r->content_type('text/html');
 	}
+	else
+	{
+	    warn "$$: declining $ctype\n";
+	    return DECLINED;
+	}
     }
-    elsif( $ctype eq "httpd/unix-directory" )
-    {
-	$ctype = $r->content_type('text/html');
-    }
-    else
-    {
-	warn "$$: declining $ctype\n";
-	return DECLINED;
-    }
+
 
     my @tempfiles = ();
     my $params = {};
@@ -300,8 +306,7 @@ sub connect_to_server
 
 	last if $SOCK;
 
-	if( $try >= 20 )
-#	if( $try >= 3 )
+	if( $try >= TRIES )
 	{
 	    warn "$$:   Giving up!\n";
 	    return undef;
@@ -331,6 +336,7 @@ sub print_error_page
     {
 	if( $BACKUP_PORT = $dirconfig->{'backup_port'} )
 	{
+	    warn "$$: Using backup port $BACKUP_PORT\n";
 	    handler($r);
 	    $BACKUP_PORT = 0;
 	    return;
@@ -339,6 +345,7 @@ sub print_error_page
 
     if( my $host = $dirconfig->{'backup_redirect'} )
     {
+	warn "$$: Refering to backup site\n";
 	my $uri_out = "http://$host$path";
 	$r->status( 302 );
 	$r->header_out('Location', $uri_out );
@@ -348,6 +355,7 @@ sub print_error_page
     }
 
     my $errcode = 500;
+    warn "$$: Printing error page\n";
     $r->status_line( $errcode." ".$error );
     $r->no_cache(1);
     $r->send_http_header("text/html");
