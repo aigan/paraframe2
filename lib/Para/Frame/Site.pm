@@ -175,6 +175,46 @@ sub add
     return $site;
 }
 
+=head2 clone
+
+  $site->clone( $hostname )
+
+  $site->clone( \%params )
+
+Adds a site based on C<$site>, but for a new host.
+
+Returns: the new site
+
+=cut
+
+sub clone
+{
+    my( $site, $params_in ) = @_;
+
+    my $params;
+    if( ref $params_in )
+    {
+	$params = $params_in;
+    }
+    else
+    {
+	$params =
+	{
+	 webhost => $params_in,
+	};
+    }
+
+    debug sprintf "Cloning %s as %s", $site->host, $params->{'webhost'};
+
+    foreach my $key ( keys %$site )
+    {
+	next if $key =~ /^(webhost|aliases|name|code|home)$/;
+	$params->{$key} = $site->{$key};
+    }
+
+    return Para::Frame::Site->add($params);
+}
+
 =head2 get
 
   Para::Frame::Site->get( $name )
@@ -197,9 +237,72 @@ sub get
 
     no warnings 'uninitialized';
 
+#    cluck "getting default" if $name eq 'default'; ### DEBUG
+
     debug 3, "Looking up site $name";
-    return $DATA{$name} or
-      croak "Site $name is not registred";
+#    debug "Returning ".datadump($DATA{$name});
+
+    return $DATA{$name} ||
+	croak "Site $name is not registred";
+}
+
+=head2 get_by_req
+
+  Para::Frame::Site->get_by_req( $req )
+
+Gets the site matching the req
+
+If a site match is not found, and L<Para::Frame/site_auto> is set,
+creating a new site for the host. It will use the first match of a)
+the host without the port part, b) L<Para::Frame/site_auto> and c)
+C<default>.
+
+Returns: A L<Para::Frame::Site> object
+
+=cut
+
+sub get_by_req
+{
+    my( $this, $req ) = @_;
+
+    die unless $req->isa('Para::Frame::Request');
+
+    if( my $site_name = $req->dirconfig->{'site'} )
+    {
+	return Para::Frame::Site->get( $site_name );
+    }
+
+    my $hostname = $req->host_from_env;
+    if( my $site = $DATA{ $hostname } )
+    {
+	return $site;
+    }
+
+    my $auto = $Para::Frame::CFG->{'site_auto'};
+
+    unless( $auto )
+    {
+	die sprintf "No site for %s registred", $hostname;
+    }
+
+    if($hostname =~ /:\d+$/)
+    {
+	my $hostname_alt = $req->host_without_port;
+	if( my $site_alt = $DATA{ $hostname_alt } )
+	{
+	    return $site_alt->clone($hostname);
+	}
+    }
+
+    if( $auto =~ /\w/ )
+    {
+	if( my $site_alt = $DATA{ $auto } )
+	{
+	    return $site_alt->clone($hostname);
+	}
+    }
+
+    return $this->get('default')->clone($hostname);
 }
 
 =head2 name
