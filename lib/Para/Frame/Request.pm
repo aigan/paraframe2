@@ -744,22 +744,22 @@ sub uri2file
 
     if( $file )
     {
+#	debug "Storing URI2FILE in key $key: $file";
 	return $URI2FILE{ $key } = $file;
     }
 
     if( $file = $URI2FILE{ $key } )
     {
+#	debug "Return  URI2FILE for    $key: $file";
 	return $file;
     }
-
-#    debug "uri2file key $key";
 
     confess "url missing" unless $url;
 
 #    warn "    From client\n";
     $file = $req->get_cmd_val( 'URI2FILE', $url );
 
-    debug(4, "Storing URI2FILE in key $key");
+    debug(4, "Storing URI2FILE in key $key: $file");
     $URI2FILE{ $key } = $file;
     return $file;
 }
