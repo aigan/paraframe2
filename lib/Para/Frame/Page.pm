@@ -180,7 +180,7 @@ sub new
 
 
     # TODO: Use URL for extracting the site
-    my $site = $page->set_site( $args->{site} || $page->req->site || 'default' );
+    my $site = $page->set_site( $args->{site} || $page->req->site );
 
     if( my $ctype = $args->{ctype} )
     {
@@ -222,8 +222,14 @@ sub response_page
 	die "req missing";
     }
 
-    my $site_name = $req->dirconfig->{'site'} || $req->host_from_env;
-    my $site = Para::Frame::Site->get( $site_name );
+    my $site = Para::Frame::Site->get_by_req( $req );
+
+    unless( $site->host eq $req->host_from_env )
+    {
+	die sprintf "Site %s doesn't match req host %s",
+	    $site->host, $req->host_from_env;
+    }
+
 
     my $page = $class->new({
 			    site  => $site,
@@ -401,8 +407,8 @@ sub orig_url
     my $scheme = $site->scheme;
     my $host = $site->host;
     my $url_string = sprintf("%s://%s%s",
-			     $site->scheme,
-			     $site->host,
+			     $scheme,
+			     $host,
 			     $page->{orig_url_name});
 
     return Para::Frame::URI->new($url_string);
@@ -1320,12 +1326,11 @@ sub find_template
     {
 	my $destroot = $site->home->sys_path;
 	my $dir = $req->uri2file( $path_full );
+	debug 4, "destroot: $destroot";
+	debug 4, "dir(pre): $dir";
+
 	$dir =~ s/^$destroot// or
 	  die "destroot $destroot not part of $dir";
-#	debug "destroot: $destroot";
-#	debug "dir: $dir";
-
-
 
 	my $paraframedir = $Para::Frame::CFG->{'paraframe'};
 
@@ -1945,7 +1950,7 @@ sub send_output
 	    }
 	}
     }
-    debug "send_output: done";
+#    debug "send_output: done";
 }
 
 #######################################################################
