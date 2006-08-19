@@ -1535,6 +1535,12 @@ L<Para::Frame::Site/appback>.
 
 Must be defined
 
+=head3 site_auto
+
+If true, accepts hosts in request even if no matching site has been
+created.  See L<Para::Frame::Site/get_by_req>. C<site_auto> can also
+be the name of a site to use for the template site.
+
 =head3 time_zone
 
 Sets the time zone for L<Para::Frame::Time>.
