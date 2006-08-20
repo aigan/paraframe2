@@ -559,7 +559,7 @@ sub chmod_file
     #
     $mode = $mode & ~ $umask;
 
-    if( debug() > 3 )
+    if( debug() > 4 )
     {
 	debug(sprintf     "orig umask is 0%.4o", $orig_umask);
 	if( defined $new_umask )
