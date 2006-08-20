@@ -1226,8 +1226,7 @@ sub handle_request
     warn "# $client\n" if debug() > 4;
 
     ### Redirected from another page?
-    if( my $page_result =
-	$req->session->{'page_result'}{ $req->page->orig_url_path } )
+    if( $req->session->{'page_result'}{ $req->page->orig_url_path } )
     {
 	$req->page->send_stored_result;
     }
