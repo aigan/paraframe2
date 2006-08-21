@@ -576,7 +576,7 @@ sub send
       MX:
 	foreach my $mailhost ( @mailhost_list )
 	{
-	    debug(0,"Connecting to $mailhost",1);
+	    $req->note("Connecting to $mailhost");
 
 	    # TODO: Specify hello string...
 	    my $smtp = Net::SMTP->new( Host    => $mailhost,
@@ -597,7 +597,7 @@ sub send
 	    {
 		if( $smtp )
 		{
-		    debug(0,sprintf("Connected to %s", $smtp->domain));
+		    $req->note(sprintf("Connected to %s", $smtp->domain));
 		    debug(0,"Sending mail from $envelope_from_addr_str");
 		    debug(0,"Sending mail to $to_addr_str");
 		    $smtp->mail($envelope_from_addr_str) or last SEND;
@@ -608,18 +608,21 @@ sub send
 		    $smtp->quit() or last SEND;
 
 		    # Success!
-		    debug(2,"Success",-2);
+		    debug(2,"Success",-1);
 		    $res->{'good'}{$to_addr_str} ||= [];
 		    push @{$res->{'good'}{$to_addr_str}}, $smtp->message();
 		    last TRY;
 		}
-		$err_msg .= debug(0,"No answer from mx $mailhost",-1);
+		$err_msg .= "No answer from mx $mailhost";
+		$req->note("No answer from mx $mailhost");
 		next MX;
 	    }
 
 	    $res->{'bad'}{$to_addr_str} ||= [];
 	    push @{$res->{'bad'}{$to_addr_str}}, $smtp->message();
-	    $err_msg .= debug(0,"Error response from $mailhost: ".$smtp->message());
+	    my $mailhost_err_msg = "Error response from $mailhost: ".$smtp->message();
+	    $err_msg .= $mailhost_err_msg;
+	    $req->note($mailhost_err_msg);
 	    debug(-1);
 	}
 	debug(0,"Address bad");
