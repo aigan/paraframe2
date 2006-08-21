@@ -835,7 +835,8 @@ sub precompile
     my $safecnt = 0;
     while( $destfile !~ /$filename$/ )
     {
-	# TODO: Make this inteo a method
+	debug "$destfile doesn't end with $filename";
+	# TODO: Make this into a method
 	die "Loop" if $safecnt++ > 100;
 	debug "Creating dir $destfile";
 	create_dir($destfile);
@@ -1117,7 +1118,10 @@ The L<Para::Frame::Request/preffered_language> value.
 
 =item me
 
-Holds the L<Para::Frame::Request/url_path>.
+Holds the L<Para::Frame::File/url_path_slash> for the page, except if
+an L</error_page_selected> in which case we set it to
+L</orig_url_path>. (For making it easier to link back to the intended
+page)
 
 =item q
 
@@ -1150,12 +1154,17 @@ sub set_tt_params
 
     my $req = $page->req;
     my $site = $page->site;
+    my $me = $page->url_path_slash;
+    if( $page->error_page_selected )
+    {
+	$me = $page->orig_url_path;
+    }
 
     # Keep alredy defined params  # Static within a request
     $page->add_params({
 	'page'            => $page,
 
-	'me'              => $page->url_path_slash,
+	'me'              => $me,
 
 	'u'               => $Para::Frame::U,
 	'lang'            => $req->language->preferred, # calculate once
@@ -1465,12 +1474,17 @@ sub find_template
 			my $parser = $burner->parser;
 
 			debug(3,"Parsing");
-			my $parsedoc = $parser->parse( $filetext )
+			my $metadata =
+			{
+			 name => $filename,
+			 time => $mod_time,
+			};
+			my $parsedoc = $parser->parse( $filetext, $metadata )
 			    or throw('template', "parse error:\nFile: $filename\n".
 				     $parser->error);
 
-			$parsedoc->{ METADATA }{'name'} = $filename;
-			$parsedoc->{ METADATA }{'modtime'} = $mod_time;
+#			$parsedoc->{ METADATA }{'name'} = $filename;
+#			$parsedoc->{ METADATA }{'modtime'} = $mod_time;
 
 			debug(3,"Writing compiled file");
 			create_dir(dirname $compfile);
@@ -1856,7 +1870,7 @@ sub send_output
     # without an ending '/'
 
     my $url = $page->orig_url_path;
-    my $url_norm = $req->normalized_url( $page->url_path_slash );
+    my $url_norm = $req->normalized_url( $url );
 
 #    debug "Original url: $url";
 
@@ -1889,7 +1903,7 @@ sub send_output
 	    }
 	    if( $res eq 'LOADPAGE' )
 	    {
-		$req->session->register_result_page($url_norm, $page->{'headers'}, $page->{'page_content'}, $sender);
+		$req->session->register_result_page($page->url_path_slash, $page->{'headers'}, $page->{'page_content'}, $sender);
 		$req->send_code('PAGE_READY', $page->url->as_string);
 	    }
 	}
@@ -1908,7 +1922,7 @@ sub send_output
 	    }
 	    if( $res eq 'LOADPAGE' )
 	    {
-		$req->session->register_result_page($url_norm, $page->{'headers'}, $page->{'page_content'}, $sender);
+		$req->session->register_result_page($page->url_path_slash, $page->{'headers'}, $page->{'page_content'}, $sender);
 		$req->send_code('PAGE_READY', $page->url->as_string);
 	    }
 	    elsif( $res eq 'SEND' )
@@ -1937,7 +1951,7 @@ sub send_output
 	    }
 	    if( $res eq 'LOADPAGE' )
 	    {
-		$req->session->register_result_page($url_norm, $page->{'headers'}, $page->{'page_content'}, $sender );
+		$req->session->register_result_page($page->url_path_slash, $page->{'headers'}, $page->{'page_content'}, $sender );
 		$req->send_code('PAGE_READY', $page->url->as_string);
 	    }
 	    elsif( $res eq 'SEND' )
