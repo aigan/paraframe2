@@ -64,7 +64,7 @@ use constant TIMEOUT_SERVER_STARTUP    =>  45;
 use constant TIMEOUT_CONNECTION_CHECK  =>  60;
 use constant LIMIT_CONNECTION_TRIES    =>   5;
 use constant TIMEOUT_CREATE_FORK       =>   5;
-use constant EMERGENCY_DEBUG_LEVEL     =>   5;
+use constant EMERGENCY_DEBUG_LEVEL     =>   2;
 
 sub debug; # Use special version of debug
 
