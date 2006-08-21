@@ -2160,6 +2160,7 @@ sub cancel
 		kill 9, $child->pid;
 	    }
 	}
+	$req->{'childs'} = 0;
     }
 
     if( my $orig_req = $req->original )
@@ -2167,7 +2168,7 @@ sub cancel
 	$orig_req->cancel;
     }
 
-    if( $req->waiting )
+    if( $req->{'wait'} )
     {
 	foreach my $oreq ( values %Para::Frame::REQUEST )
 	{
@@ -2176,6 +2177,7 @@ sub cancel
 		$oreq->cancel;
 	    }
 	}
+	$req->{'wait'} = 0;
     }
 
     if( $req->{'active_reqest'} )
@@ -2183,6 +2185,11 @@ sub cancel
 	$req->{'active_reqest'}->cancel;
 	delete $req->{'active_reqest'};
     }
+
+#    if( $req->{'in_yield'} )
+#    {
+#	debug "This req is in yield";
+#    }
 }
 
 
