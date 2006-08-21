@@ -37,6 +37,7 @@ use Para::Frame::Utils qw( throw catch debug timediff package_to_module get_from
 use Para::Frame::Time qw( date );
 use Para::Frame::List;
 use Para::Frame::DBIx::Table;
+use Para::Frame::DBIx::State;
 
 
 use base qw( Exporter );
@@ -1633,14 +1634,19 @@ sub report_error
 	my( $subroutine ) = (caller(1))[3];
 	$subroutine =~ s/.*:://;
 
+	my $state = $dbix->state;
+
 	debug(0,"DBIx $subroutine error");
 	$@ =~ s/ at \/.*//;
 	my $error = catch($@);
 	my $info = $error->info;
 	chomp $info;
 
+	my $state_desc = $state->desc;
+
 	debug "Error number: $DBI::err";
 	debug "Status: $DBI::state";
+
 	unless( $STATE_RECONNECTING or $dbix->dbh->ping )
 	{
 	    $STATE_RECONNECTING = 1;
@@ -1664,9 +1670,14 @@ sub report_error
 	    return $res;
 	}
 
-	my $at = "...".shortmess();
-	my $values = join ", ",map defined($_)?"'$_'":'<undef>', @$valref;
-	throw('dbi', "$info\nValues: $values\n$at");
+	my $msg = "$state_desc\n$info\n";
+	if( @$valref )
+	{
+	    my $values = join ", ",map defined($_)?"'$_'":'<undef>', @$valref;
+	    $msg .= "Values: $values\n";
+	}
+	$msg .= "...".shortmess();
+	throw('dbi', $msg);
     }
 }
 
@@ -1754,6 +1765,23 @@ DB.
 sub bool
 {
     die "bool not implemented";
+}
+
+
+
+#######################################################################
+
+=head2 state
+
+  $dbix->state
+
+Returns: a L<Para::Frame::DBIx::State> object representing the current state.
+
+=cut
+
+sub state
+{
+    return Para::Frame::DBIx::State->new($_[0]);
 }
 
 
