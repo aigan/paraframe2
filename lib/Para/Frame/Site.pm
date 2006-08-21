@@ -53,6 +53,7 @@ use Para::Frame::Utils qw( throw debug fqdn datadump );
 use Para::Frame::Dir;
 
 our %DATA; # hostname -> siteobj
+our %ALIAS; # secondary names
 
 sub _new
 {
@@ -160,16 +161,17 @@ sub add
     debug "Registring site ".$site->name;
 
     $DATA{ $site->host } ||= $site;
-    $DATA{'default'}     ||= $site;
+    $ALIAS{ $site->host }||= $site;
+    $ALIAS{'default'}    ||= $site;
 
     foreach my $alias (@{$params->{'aliases'}})
     {
-	$DATA{ $alias } = $site;
+	$ALIAS{ $alias } ||= $site;
     }
 
     if( my $alias = $params->{'code'} )
     {
-	$DATA{ $alias } = $site;
+	$ALIAS{ $alias } ||= $site;
     }
 
     return $site;
@@ -242,7 +244,7 @@ sub get
     debug 3, "Looking up site $name";
 #    debug "Returning ".datadump($DATA{$name});
 
-    return $DATA{$name} ||
+    return $DATA{$name} || $ALIAS{$name} ||
 	croak "Site $name is not registred";
 }
 
@@ -285,10 +287,15 @@ sub get_by_req
 	die sprintf "No site for %s registred", $hostname;
     }
 
+    if( my $site_alt = $ALIAS{ $hostname } )
+    {
+	return $site_alt->clone($hostname);
+    }
+
     if($hostname =~ /:\d+$/)
     {
 	my $hostname_alt = $req->host_without_port;
-	if( my $site_alt = $DATA{ $hostname_alt } )
+	if( my $site_alt = $DATA{ $hostname_alt } || $ALIAS{ $hostname_alt } )
 	{
 	    return $site_alt->clone($hostname);
 	}
@@ -296,7 +303,7 @@ sub get_by_req
 
     if( $auto =~ /\w/ )
     {
-	if( my $site_alt = $DATA{ $auto } )
+	if( my $site_alt = $DATA{ $auto } || $ALIAS{ $auto } )
 	{
 	    return $site_alt->clone($hostname);
 	}
