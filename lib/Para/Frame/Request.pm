@@ -1467,12 +1467,12 @@ sub send_code
     # To get a response, use get_cmd_val()
 
     $_[1] ||= 1; # Must be at least one param
-    debug( 3, "Sending code: ".join("-", @_)." ($req->{reqnum})");
+    debug( 3, "Sending code: ".join("-", @_)." ($req->{reqnum}) ".$req->client);
 #    debug sprintf "  at %.2f\n", Time::HiRes::time;
 
     if( $Para::Frame::FORK )
     {
-	debug("redirecting to parent");
+	debug(2, "redirecting to parent");
 	my $code = shift;
 	my $port = $Para::Frame::CFG->{'port'};
 	my $client = $req->client;
@@ -1602,6 +1602,7 @@ sub get_cmd_val
 	{
 	    throw('cancel', "request $areq->{reqnum} decomposed");
 	}
+#	debug "Looking for response in areq ".$areq->client;
     }
     else
     {
@@ -1610,6 +1611,7 @@ sub get_cmd_val
 	{
 	    throw('cancel', "request $req->{reqnum} decomposed");
 	}
+#	debug "Looking for response in req ".$req->client;
     }
 
     while( not @$queue )

@@ -338,12 +338,12 @@ sub parent
 
     if( $f->{'url_norm'} =~ /\/$/ )
     {
-	debug "Getting parent for page index";
+	debug 2, "Getting parent for page index";
 	return $f->dir->parent;
     }
     else
     {
-	debug "Getting dir for page";
+	debug 2, "Getting dir for page";
 	return $f->dir;
     }
 }

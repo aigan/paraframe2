@@ -123,7 +123,7 @@ sub return
 {
     my( $result, $message ) = @_;
 
-    debug(0,"Returning child result for $Para::Frame::REQ->{reqnum}");
+    debug(1,"Returning child result for $Para::Frame::REQ->{reqnum}");
 
     $result->message( $message ) if $message;
     my $data = safeFreeze $result;
