@@ -609,7 +609,8 @@ sub get_response
 			last;
 		    }
 		}
-		elsif( $code eq 'LOADPAGE' )
+		elsif( $code eq 'LOADPAGE' or
+		       $code eq 'USE_LOADPAGE' )
 		{
 		    ( $LOADPAGE_URI, $LOADPAGE_TIME, $REQNUM ) =
 		      split(/\0/, $row);
