@@ -562,9 +562,20 @@ sub get_value
 		if( $code eq 'RESP' )
 		{
 		    my $val = $_;
-		    my $req = $REQUEST{ $client };
-		    debug(1,"RESP $val ($req->{reqnum})");
-		    push @{$RESPONSE{ $client }}, $val;
+		    my $aclient = $client;
+		    if( ref $client eq 'Para::Frame::Request' )
+		    {
+			$aclient = $client->client;
+
+			debug(1,"RESP $val ($client->{reqnum}/ $aclient)");
+		    }
+		    else
+		    {
+			my $req = $REQUEST{ $client };
+			debug(1,"RESP $val ($req->{reqnum}/$client)");
+		    }
+
+		    push @{$RESPONSE{ $aclient }}, $val;
 		    return 1;
 		}
 		else
