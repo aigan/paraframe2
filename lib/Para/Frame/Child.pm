@@ -38,7 +38,7 @@ BEGIN
 
 use Para::Frame::Reload;
 
-use Para::Frame::Utils qw( debug );
+use Para::Frame::Utils qw( debug throw );
 use Para::Frame::Request;
 use Para::Frame::Child::Result;
 
@@ -169,6 +169,12 @@ sub yield
     $req->{'in_yield'} --;
 
     Para::Frame::switch_req( $req );
+
+    if( $req->{'cancel'} )
+    {
+	throw('cancel', "request cancelled");
+    }
+
     return $child->{'result'};
 }
 
