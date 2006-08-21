@@ -842,7 +842,7 @@ sub handle_code
 	debug(2,"RESP $val ($req->{reqnum})");
 	push @{$RESPONSE{ $client }}, $val;
     }
-    elsif( $code eq 'URI2FILE' )
+    elsif( $code eq 'URI2FILE' ) # CHILD msg
     {
 	# redirect request from child to client (via this parent)
 	#
@@ -862,6 +862,23 @@ sub handle_code
 	debug(2,"Returning answer $file");
 
 	$client->send( join( "\0", 'RESP', $file ) . "\n" );
+    }
+    elsif( $code eq 'NOTE' ) # CHILD msg
+    {
+	# redirect request from child to client (via this parent)
+	#
+	my $val = $INBUFFER{$client};
+	$val =~ s/^(.+?)\x00// or die "Faulty val: $val";
+	my $caller_clientaddr = $1;
+
+	debug(2,"NOTE($val) recieved");
+
+	# Calling uri2file in the right $REQ
+	my $current_req = $REQ;
+	my $req = $REQUEST{ $caller_clientaddr } or
+	  die "Client $caller_clientaddr not registred";
+
+	$req->note($val);
     }
     elsif( $code eq 'LOADPAGE' )
     {
@@ -1243,7 +1260,7 @@ sub handle_request
     }
     else
     {
-	$req->send_code('LOADPAGE', $req->site->loadpage, 2, $REQNUM);
+	$req->send_code('USE_LOADPAGE', $req->site->loadpage, 2, $REQNUM);
 	$req->setup_jobs;
 	$req->after_jobs;
     }
