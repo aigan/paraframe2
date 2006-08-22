@@ -1080,7 +1080,7 @@ sub run_action
 
 	if( $Para::Frame::FORK )
 	{
-	    warn "  Fork failed to return result\n";
+	    debug "  Fork failed to return result\n";
 	    exit;
 	}
 	1;
