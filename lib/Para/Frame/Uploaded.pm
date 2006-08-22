@@ -46,9 +46,7 @@ Uploaded files are taken care of in L<Para::Frame::Client>
 
 They are temporarily saved in C</tmp/paraframe/>. The filename is the
 client process id followed by the fieldname with nonalfanum chars
-removed. An ENV is set with the prefix C<paraframe-upload-> that has
-the full filename as the value. The file is deleted directly after the
-request!
+removed. The file is deleted directly after the request!
 
 Use L</save_as> to store the file.
 
@@ -81,26 +79,18 @@ sub new
 
     $fieldname or throw('incomplete', "fieldname param missing");
 
-    my $fieldkey = $fieldname;
-    $fieldkey =~ s/[^\w_\-]//g; # Make it a normal filename
+#    my $fieldkey = $fieldname;
+#    $fieldkey =~ s/[^\w_\-]//g; # Make it a normal filename
 
     my $filename =  $q->param($fieldname)
       or throw('incomplete', "$fieldname missing");
 
-    my $infile = $req->env->{"paraframe-upload-$fieldkey"} or
-      die "No file handler \n".Dumper($req->env);
+    my $uploaded = $req->{'files'}{$fieldname};
 
-    my $uploaded = bless
-    {
-     filename => $filename,
-     fieldname => $fieldname,
-     fieldkey => $fieldkey,
-     infile => $infile,
-    }, $class;
+    $uploaded->{ filename } = $q->param($fieldname);
+    $uploaded->{ fieldname } = $fieldname;
 
-#    $q->param($fieldname, 'testar'); # Doesn't work
-
-    return $uploaded;
+    return bless $uploaded, $class;
 }
 
 sub move_to
@@ -132,9 +122,10 @@ sub save_as
 {
     my( $uploaded, $destfile, $args ) = @_;
 
-    debug "Should save $uploaded->{infile} as $destfile";
-
     $args ||= {};
+    my $fromfile = $uploaded->{tempfile};
+
+    debug "Should save $fromfile as $destfile";
 
     if( $destfile =~ m{^//([^/]+)(.+)} )
     {
@@ -152,8 +143,6 @@ sub save_as
 	    $username = $args->{'username'};
 	}
 
-	my $fromfile = $uploaded->{infile};
-
 	local $SIG{CHLD} = 'DEFAULT';
 	my $scp = Net::SCP->new({host=>$host, user=>$username});
 	debug "Connected to $host as $username";
@@ -162,7 +151,7 @@ sub save_as
     }
     else
     {
-	copy( $uploaded, $destfile ) or
+	copy( $fromfile, $destfile ) or
 	  die "Failed to copy $uploaded to $destfile: $!";
     }
 
@@ -184,7 +173,72 @@ Creates and returns an L<IO::File> object
 sub fh
 {
     my( $uploaded ) = shift;
-    return IO::File->new( $uploaded->{'infile'}, @_ );
+    return IO::File->new( $uploaded->{'tempfile'}, @_ );
+}
+
+
+#######################################################################
+
+=head2 info
+
+  $uploaded->info
+
+  $uploaded->info( $item )
+
+Returns a hash from L<CGI> C<uploadInfo()>, ot the specified C<$item>.
+
+=cut
+
+sub info
+{
+    my( $uploaded, $item ) = @_;
+
+    if( $item )
+    {
+	return $uploaded->{'info'}{$item};
+    }
+    else
+    {
+	return $uploaded->{'info'};
+    }
+}
+
+
+#######################################################################
+
+=head2 content_type
+
+  $uploaded->content_type
+
+Returns the best guess of the content type. It may be taken from
+L</info> or the file extension or the internal content of the file.
+
+=cut
+
+sub content_type
+{
+    my( $uploaded ) = @_;
+
+    return $uploaded->{'info'}{'Content-Type'};
+}
+
+
+#######################################################################
+
+=head2 tempfile
+
+  $uploaded->tempfile
+
+Retuns the full path of the temporary file, that will be removed after
+this request.
+
+=cut
+
+sub tempfile
+{
+    my( $uploaded ) = @_;
+
+    return $uploaded->{'tempfile'};
 }
 
 
