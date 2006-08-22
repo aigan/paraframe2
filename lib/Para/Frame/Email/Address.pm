@@ -36,7 +36,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw reset_hashref fqdn );
+use Para::Frame::Utils qw( throw reset_hashref fqdn debug );
 
 use overload '""' => \&as_string;
 use overload 'eq' => \&equals;
@@ -290,7 +290,7 @@ sub _validate
       HOST:
 	foreach my $host ( @host_list )
 	{
-	    warn "Guess $host\n";
+	    debug "Guess $host";
 	    my $res   = Net::DNS::Resolver->new;
 	    my $query = $res->query($host);
 	    if ($query)
@@ -299,13 +299,13 @@ sub _validate
 		{
 		    next unless $rr->type eq "A";
 		    push @mailhost_list, $host;
-		    warn "  Yes, maby.\n";
+		    debug "  Yes, maby.";
 		    next HOST;
 		}
 	    }
 	    else
 	    {
-		warn "  No answer...\n";
+		debug "  No answer...";
 	    }
 	}
 	if( @mailhost_list )
@@ -322,7 +322,7 @@ sub _validate
   MX:
     foreach my $mailhost ( @mailhost_list )
     {
-	warn "\tConnecting to $mailhost\n";
+	debug "Connecting to $mailhost";
       TRY:
 	for my $i (1..3) # hotmail is stupid
 	{
@@ -335,27 +335,29 @@ sub _validate
 	    {
 		if( $smtp )
 		{
-		    warn "\tConnected\n";
+		    debug "Connected";
 		    # Returns localhost if host nonexistant
 		    my $domain = $smtp->domain();
 		    $domain or last SEND;
-		    warn "\tDomain: $domain\n";
+		    debug "Domain: $domain";
 		    $smtp->quit() or last SEND;
-		    warn "Success\n";
-		    warn "Warnings:\n$err_msg\n" if $err_msg;
+		    debug "Success";
+		    debug "Warnings:\n$err_msg" if $err_msg;
 		    return 1;
 		}
-		warn "\tNo answer from $mailhost\n";
+		debug "No answer from $mailhost";
 		$err_msg .= "No answer from mx $mailhost\n" if $i == 1;
-		sleep 2;
+
+		sleep(2); # We are inside a fork!
+
 		next TRY;
 	    }
-	    warn "\tError response from $mailhost: ".$smtp->message()."\n";
+	    debug "Error response from $mailhost: ".$smtp->message();
 	    $err_msg .= "Error response from $mailhost: ".$smtp->message()."\n";
 	}
 	next MX;
     }
-    warn "\tAddress bad\n";
+    debug "Address bad";
     $a->{'error_msg'} = $err_msg;
     return 0;
 }
