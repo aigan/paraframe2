@@ -59,7 +59,8 @@ our $LAST_MESSAGE;
 our $WAIT;
 our @NOTES;
 our $REQNUM;
-
+our %PARAMS;
+our %FILES;
 
 =head1 DESCRIPTION
 
@@ -138,7 +139,7 @@ sub handler
     my $ctype = $r->content_type;
 
     my $port = $dirconfig->{'port'};
-    if( $BACKUP_PORT )
+    if( $BACKUP_PORT ) # Is resetted later
     {
 	$port = $BACKUP_PORT;
     }
@@ -176,36 +177,44 @@ sub handler
 	    warn "$$: declining $ctype\n";
 	    return DECLINED;
 	}
+
+	%PARAMS = ();
+	%FILES = ();
+
+	foreach my $key ( $q->param )
+	{
+	    if( $q->upload($key) )
+	    {
+		warn "$$: param $key is a filehandle\n";
+
+		my $val = $q->param($key);
+		my $info = $q->uploadInfo($val);
+
+	    $PARAMS{$key} = "$val"; # Remove GLOB from value
+
+		my $keyfile = $key;
+		$keyfile =~ s/[^\w_\-]//g; # Make it a normal filename
+		my $dest = "/tmp/paraframe/$$-$keyfile";
+		copy_to_file( $dest, $q->upload($key) ) or return 1;
+
+		my $uploaded =
+		{
+		 tempfile => $dest,
+		 info     => $info,
+		};
+
+		$FILES{$key} = $uploaded;
+	    }
+	    else
+	    {
+		$PARAMS{$key} = $q->param_fetch($key);
+	    }
+	}
     }
 
 
-    my @tempfiles = ();
-    my $params = {};
-    foreach my $key ( $q->param )
-    {
-	if( $q->upload($key) )
-	{
-	    warn "$$: param $key is a filehandle\n";
-	    my $val = $q->param($key);
-	    $params->{$key} = "$val"; # Remove GLOB from value
 
-	    my $keyfile = $key;
-	    $keyfile =~ s/[^\w_\-]//g; # Make it a normal filename
-	    my $dest = "/tmp/paraframe/$$-$keyfile";
-	    copy_to_file( $dest, $q->upload($key) ) or return 1;
-	    $ENV{"paraframe-upload-$keyfile"} = $dest;
-	    push @tempfiles, $dest;
-	    warn "$$: Setting ENV paraframe-upload-$keyfile\n";
-	}
-	else
-	{
-	    $params->{$key} = $q->param_fetch($key);
-	}
-    }
-
-
-
-    my $value = freeze [ $params,  \%ENV, $r->uri, $r->filename, $ctype, $dirconfig, $r->header_only ];
+    my $value = freeze [ \%PARAMS,  \%ENV, $r->uri, $r->filename, $ctype, $dirconfig, $r->header_only, \%FILES ];
 
     my $try = 0;
     while()
@@ -248,8 +257,9 @@ sub handler
 	}
     }
 
-    foreach my $tempfile (@tempfiles)
+    foreach my $filefield (values %FILES)
     {
+	my $tempfile = $filefield->{tempfile};
 	warn "$$: Removing tempfile $tempfile\n";
 	unlink $tempfile or warn "$$:   failed: $!\n";;
     }
@@ -609,7 +619,8 @@ sub get_response
 			last;
 		    }
 		}
-		elsif( $code eq 'LOADPAGE' or
+		# Retrieving name of loadpage
+		elsif( $code eq 'LOADPAGE' or    # deprecated
 		       $code eq 'USE_LOADPAGE' )
 		{
 		    ( $LOADPAGE_URI, $LOADPAGE_TIME, $REQNUM ) =
@@ -620,6 +631,7 @@ sub get_response
 			warn "$$: REQ $REQNUM\n";
 		    }
 		}
+		# Message to display during loading
 		elsif( $code eq 'NOTE' )
 		{
 		    push @NOTES, split(/\0/, $row);
