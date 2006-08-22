@@ -651,7 +651,22 @@ sub is_from_client
 Returns the dirconfig hashref. See L<Apache/SERVER CONFIGURATION
 INFORMATION> C<dir_config>.
 
-The param C<site> is used by L<Para::Frame::Page/response_page>.
+Params:
+
+C<site>: Used by L<Para::Frame::Page/response_page>. If C<site> is set
+to C<ignore>, the L<Para::Frame::Client> will decline all requests and
+let thenext apache handler take care of it.
+
+C<action>: Used by L</setup_jobs>
+
+C<port>: Used by L<Para::Frame::Client>
+
+C<backup_port>: Used by L<Para::Frame::Client>
+
+C<backup_redirect>: Used by L<Para::Frame::Client>
+
+C<backup>: Used by L<Para::Frame::Client>
+
 
 =cut
 
@@ -843,8 +858,13 @@ sub normalized_url
 }
 
 #######################################################################
-# Set up things from params
-#
+
+=head2 setup_jobs
+
+Set up things from params.
+
+=cut
+
 sub setup_jobs
 {
     my( $req ) = @_;
