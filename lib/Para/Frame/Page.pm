@@ -2223,9 +2223,9 @@ sub send_in_chunks
 
     unless( $length )
     {
-	confess "We got nothing to send (for req $req)";
+	debug "We got nothing to send (for req $req)";
+	return 1;
     }
-
 
     eval
     {
