@@ -1245,7 +1245,7 @@ sub css_header
     {
 	$p =
 	{
-	 'persistent' => ['pf/default.css'],
+	 'persistent' => ['pf/css/default.tt'],
 	};
     }
 
