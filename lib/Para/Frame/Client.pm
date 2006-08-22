@@ -747,8 +747,8 @@ sub send_body
 
 	unless( $SOCK->read($data, BUFSIZ) )
 	{
-	    warn "$$: No body to send";
-	    return 0;
+	    warn "$$: The body was empty\n"; # Problably an empty file
+	    return 1;
 	}
     }
 
