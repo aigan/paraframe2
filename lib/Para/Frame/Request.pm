@@ -76,7 +76,7 @@ sub new
     my( $class, $reqnum, $client, $recordref ) = @_;
 
     my( $value ) = thaw( $$recordref );
-    my( $params, $env, $orig_url, $orig_filename, $content_type, $dirconfig, $header_only ) = @$value;
+    my( $params, $env, $orig_url, $orig_filename, $content_type, $dirconfig, $header_only, $files ) = @$value;
 
     # Modify $env for non-mod_perl mode
     $env->{'REQUEST_METHOD'} = 'GET';
@@ -105,6 +105,7 @@ sub new
 	jobs           => [],             ## queue of jobs to perform
         actions        => [],             ## queue of actions to perform
 	'q'            => $q,
+        'files'        => $files,         ## Uploaded files
 	env            => $env,
 	's'            => undef,          ## Session object
 	lang           => undef,          ## Chosen language
