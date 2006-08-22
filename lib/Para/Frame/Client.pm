@@ -172,11 +172,9 @@ sub handler
 	{
 	    $ctype = $r->content_type('text/html');
 	}
-	else
-	{
-	    warn "$$: declining $ctype\n";
-	    return DECLINED;
-	}
+
+	### We let the daemon decide what to do with non-tt pages
+
 
 	%PARAMS = ();
 	%FILES = ();
