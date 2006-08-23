@@ -1,0 +1,43 @@
+[% META otitle='Index över filer' %]
+
+[%
+	dir = page.dir;
+%]
+
+<h1>Index $dir.path_slash</h1>
+
+<table class="admin">
+<tr><td>
+   [% IF dir.url_path_slash == site.home.url_path_slash %]
+   <a href=".."><img src="/icons/back.gif" border="0"> Parent Directory</a>
+   [% ELSE %]
+   <a href="$dir.parent.url_path/admin-index.tt"><img src="/icons/back.gif" border="0"> Parent Directory</a>
+   [% END %]
+</td></tr>
+[% FOREACH item IN dir.files %]
+   <tr>
+   [% IF item.is_dir %]
+   <td>
+      <a href="$item.name/admin-index.tt"><img src="/icons/folder.gif" border="0"></a>
+      <a href="$item.name/admin-index.tt">[% item.name %]</a>
+   </td>
+   <td>
+      [% IF item.has_index %]
+         HAS INDEX
+      [% ELSE %]
+         NO INDEX
+      [% END %]
+   </td>
+   [% ELSE %]
+   <td>
+      <a href="$item.name"><img src="/icons/text.gif" border="0"></a>
+      <a href="$item.name">[% item.name %]</a>
+   </td>
+   <td>
+     [% item.title %]
+   </td>
+   [% END %]
+   <td>...</td>
+   </tr>
+[% END %]
+</table>
