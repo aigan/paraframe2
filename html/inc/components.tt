@@ -178,3 +178,23 @@
 $content
 </div>
 [% END %]
+
+[% BLOCK imgexpand %]
+[%
+   DEFAULT global.paraframe_formcount=0;
+   global.paraframe_formcount = global.paraframe_formcount + 1;
+   paraframe_display='none';
+   paraframe_label_display='block';
+   DEFAULT label_expand_img = "$home/pf/images/button.expand.down.gif";
+   DEFAULT label_hide_img = label_expand_img;
+   DEFAULT id_label = "paraframe_fid_${global.paraframe_formcount}_label";
+   DEFAULT id_block = "paraframe_fid_${global.paraframe_formcount}";
+   DEFAULT label = "";
+   DEFAULT class_expand = "paraframe_imgexpand";
+   DEFAULT class_expanded = "paraframe_imgexpanded";
+%]
+<span class="$class_expand" id="$id_label"><a href="javascript:showhide('$id_block')">$label <img alt="v" src="$label_expand_img"></a></span>
+<div class="$class_expanded" id='$id_block' style="display:$paraframe_display">
+$content
+</div>
+[% END %]
