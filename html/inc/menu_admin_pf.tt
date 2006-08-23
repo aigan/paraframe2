@@ -1,16 +1,28 @@
+<style>
+.paraframe_menu_bottom_pf a
+{
+    color: black;
+    border: 2px buttonface outset;
+    background: buttonface;
+    padding: 1 6px 1 6px;
+}
+.paraframe_menu_bottom_pf a:hover
+{
+    background-color: lightyellow;
+    color: black;
+}
+.paraframe_menu_bottom_pf a:active:hover
+{
+  padding: 0px 5px 0px 7px;
+  border-style: inset;
+}
+
+</style>
 <div class="paraframe_menu_bottom_pf">
 <div style="float: right; padding: 0.3em">Debug at level [% debug %]</div>
 
-[% IF page.is_index %]
-   [% IF page.url_path == site.home_url_path %]
-      [%+ go("Home", site.home.url_path_slash) %]
-   [% ELSE %]
-      [%+ go("Up", page.parent.url_path_slash) %]
-   [% END %]
-[% ELSE %]
-   [%+ go("Index", page.dir.url_path_slash) %]
-[% END %]
-[%+ go("Reload", me, 'nop') %]
+[%+ go("Index", "$page.dir.url_path/admin-index.tt") %]
+[%+ jump("Reload", me) %]
 [%+ go("Debug", "$home/pf/config/debuglist.tt", 'mark') %]
 [%+ go("Configure", "$home/pf/config/", 'mark') %]
 [%+ go("Show source", "$home/pf/cms/source.tt", 'mark') %]
