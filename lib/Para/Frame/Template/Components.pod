@@ -188,10 +188,27 @@ expanded state, the class C<paraframe_expanded> is used.
 
 See L<Template::Manual::Directives/Processing Other Template Files and Blocks>
 
-=head2 tr2
+=head2 imgexpand
 
-Draws a html C<tr> with the class C<odd> or C<even> for usage in a
-C<FORACH>. Use C<css> for presenting the rows in diffrent styles.
+  [% WRAPPER expand label=$mylabel %params %]
+     $content
+  [% END %]
+
+Draws a widget with C<label> and a img button. Click that label to
+expand the C<$content>. Default C<label> is an empty string.
+
+C<class_expand> is used for the label and button. Default is C<paraframe_imgexpand>.
+
+C<class_expanded> is used for the C<$content>. Default is C<paraframe_imgexpanded>.
+
+The content block gets C<id_block>. Default uses a counter.
+
+The label gets the id C<id_label>. Default uses a counter.
+
+The image beside the label uses C<label_expand_img>. Default is
+C<$home/pf/images/button.expand.down.gif>.
+
+The params above can be given as params to the wrapper.
 
 =head1 SEE ALSO
 
