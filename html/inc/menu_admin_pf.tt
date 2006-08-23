@@ -20,6 +20,4 @@
 [% ELSE %]
    [%+ go("Turn Admin on", me, 'session_vars_update', session_vars_update='admin_mode', admin_mode=1) %]
 [% END %]
-
-</p>
 </div>
