@@ -61,7 +61,7 @@ methods / variables) or as templates for inclusion or defined template
 macros.
 
 These are the standard widgets defined as Perl code.  See also the
-standard L<Para::Frame::Template::components>.
+standard L<Para::Frame::Template::Components>.
 
 =head1 Exported objects
 
