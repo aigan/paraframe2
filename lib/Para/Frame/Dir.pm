@@ -20,14 +20,6 @@ package Para::Frame::Dir;
 
 Para::Frame::Dir - Represents a directory in the site
 
-=head1 DESCRIPTION
-
-Represents a directory in the site.
-
-
-
-There are corresponding methods here to L<Para::Frame::Page>.
-
 =cut
 
 use strict;
@@ -50,6 +42,15 @@ use Para::Frame::Utils qw( throw debug datadump catch );
 use Para::Frame::List;
 use Para::Frame::Page;
 
+=head1 DESCRIPTION
+
+Represents a directory in the site.
+
+This class inherits from L<Para::Frame::File>.
+
+There are corresponding methods here to L<Para::Frame::Page>.
+
+=cut
 
 #######################################################################
 
@@ -66,9 +67,8 @@ sub initiate
 {
     my( $dir ) = @_;
 
-    my $sys_name = $dir->sys_name;
-    my $mtime = (stat($sys_name))[9];
-
+    my $sys_path = $dir->sys_path;
+    my $mtime = (stat($sys_path))[9];
     if( $dir->{initiated} )
     {
 	return 1 unless $mtime > $dir->{mtime};
@@ -78,16 +78,16 @@ sub initiate
 
     my %files;
 
-    my $d = IO::Dir->new($sys_name) or die $!;
+    my $d = IO::Dir->new($sys_path) or die $!;
 
-    debug "Reading ".$sys_name;
+    debug "Reading ".$sys_path;
 
     while(defined( my $name = $d->read ))
     {
 	next if $name =~ /^\.\.?$/;
 
 	my $f = {};
-	my $path = $sys_name.'/'.$name;
+	my $path = $sys_path.'/'.$name;
 
 #	debug "Statting $path";
 	my $st = lstat($path);
@@ -173,9 +173,10 @@ sub files
 {
     my( $dir ) = @_;
 
+    debug "Called dir.files";
     $dir->initiate;
 
-#    debug "Directory initiated";
+    debug "Directory initiated";
 
     my @list;
     foreach my $name ( sort keys %{$dir->{file}} )
@@ -189,24 +190,24 @@ sub files
 	next if $name =~ $dir->{hidden};
 
 	my $url = $dir->{url_name}.'/'.$name;
-#	debug "Adding $url";
+	debug "Adding $url";
 	if( $dir->{file}{$name}{directory} )
 	{
-#	    debug "  As a Dir";
+	    debug "  As a Dir";
 	    push @list, $dir->new({ site => $dir->site,
 				    url  => $url.'/',
 				  });
 	}
 	elsif( $name =~ /\.tt$/ )
 	{
-#	    debug "  As a Page";
+	    debug "  As a Page";
 	    push @list, Para::Frame::Page->new({ site => $dir->site,
 						 url  => $url,
 					       });
 	}
 	else
 	{
-#	    debug "  As a File";
+	    debug "  As a File";
 	    push @list, Para::Frame::File->new({ site => $dir->site,
 						 url  => $url,
 					       });
@@ -246,13 +247,25 @@ sub parent
 
 True if there is a (readable) C<index.tt> in this dir.
 
-TODO: Doesn't yet check for index.xx.tt et al.
+Also handles multiple language versions.
 
 =cut
 
 sub has_index
 {
-    return -r $_[0]->sys_name_path . 'index.tt';
+    my( $dir ) = @_;
+
+    my $path = $dir->sys_path_slash;
+
+    return 1 if -r  $path . 'index.tt';
+
+    my $language = $dir->req->language->alternatives || ['en'];
+    foreach my $lang ( @$language)
+    {
+	my $filename = $path.'index.'.$lang.'.tt';
+	return 1 if -r $filename;
+    }
+    return 0;
 }
 
 #######################################################################
