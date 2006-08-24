@@ -4,7 +4,8 @@
     color: black;
     border: 2px buttonface outset;
     background: buttonface;
-    padding: 1 6px 1 6px;
+    padding: 1px 6px 1px 6px;
+    text-decoration: none;
 }
 .paraframe_menu_bottom_pf a:hover
 {
