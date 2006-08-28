@@ -32,8 +32,8 @@
       <a href="$item.name">[% item.name %]</a><br>
      [% tmpl.otitle || tmpl.title %]
    </td>
-   <td>[% tmpl.pf_source_file %]
-       [% IF tmpl.pf_source_version; tmpl.pf_source_version; END %]<br>
+   <td>[% tmpl.pf_source_file +%]
+       [% IF tmpl.pf_source_version; 'v'; tmpl.pf_source_version; END %]<br>
        [% IF tmpl.pf_compiled_date %]<span style="float: right">[% date(tmpl.pf_compiled_date) %]</span>[% END %]
        [% IF tmpl.pf_compiled_by_name %] by [% tmpl.pf_compiled_by_name; END %]
    </td>
