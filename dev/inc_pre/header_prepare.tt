@@ -17,6 +17,14 @@
         next_template = '[* next_template *]'
 	default_template = '[* default_template *]'
 %]
+[% META
+	otitle = '[* otitle *]'
+	pf_source_file = '[* pf_source_file *]'
+	pf_compiled_by_id = '[* u.id *]'
+	pf_compiled_by_name = '[* u.username *]'
+        pf_compiled_date = '[* pf_compiled_date *]'
+        pf_source_version = '[* pf_source_version *]'
+%]
 
 [% IF level and u.level < level;
       THROW denied "Du måste vara minst nivå $level";
