@@ -50,7 +50,7 @@ BEGIN
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug fqdn datadump );
-use Para::Frame::Dir;
+use Para::Frame::Site::Dir;
 
 our %DATA; # hostname -> siteobj
 our %ALIAS; # secondary names
@@ -387,7 +387,7 @@ sub uri2file
 
   $site->home
 
-Returns the L<Para::Frame::Dir> object for the L</home>.
+Returns the L<Para::Frame::Site::Dir> object for the L</home>.
 
 =cut
 
@@ -401,9 +401,9 @@ sub home
     {
 #	debug "Creating dir obj for home '$_[0]->{home_url_path}/' for $_[0]";
 	return $_[0]->{'home'} =
-	    Para::Frame::Dir->new({site => $_[0],
-				   url  => $_[0]->{'home_url_path'}.'/',
-				  });;
+	    Para::Frame::Site::Dir->new({site => $_[0],
+					 url  => $_[0]->{'home_url_path'}.'/',
+					});;
     }
 }
 
@@ -819,8 +819,8 @@ sub params
 
   $site->dir( $url )
 
-Returns a L<Rit::Frame::Dir> object, similar to the
-L<Rit::Frame::Page> object.
+Returns a L<Rit::Frame::Site::Dir> object, similar to the
+L<Rit::Frame::Site::Page> object.
 
 TODO: What is this used for?!
 
@@ -828,9 +828,9 @@ TODO: What is this used for?!
 
 sub dir
 {
-    return Para::Frame::Dir->new({site => $_[0],
-				  url  => $_[1],
-				 });
+    return Para::Frame::Site::Dir->new({site => $_[0],
+					url  => $_[1],
+				       });
 }
 
 

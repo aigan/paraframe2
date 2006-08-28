@@ -50,7 +50,7 @@ use Para::Frame::Child::Result;
 use Para::Frame::Site;
 use Para::Frame::Change;
 use Para::Frame::URI;
-use Para::Frame::Page;
+use Para::Frame::Site::Page;
 use Para::Frame::Utils qw( compile throw debug catch idn_decode datadump );
 use Para::Frame::L10N;
 use Para::Frame::Logging;
@@ -156,7 +156,7 @@ sub init
     }
     $req->{'result'}  = Para::Frame::Result->new();  # Before Session
 
-    $req->{'page'}    = Para::Frame::Page->response_page($req);
+    $req->{'page'}    = Para::Frame::Site::Page->response_page($req);
 
     $req->{'site'}    = $req->{'page'}->site;
 
@@ -361,7 +361,7 @@ sub minimal_init
 {
     my( $req, $args ) = @_;
 
-#    my $page = $req->{'page'} = Para::Frame::Page->new($req);
+#    my $page = $req->{'page'} = Para::Frame::Site::Page->new($req);
 
     my $site_in = $args->{'site'};
     unless( $site_in )
@@ -545,7 +545,7 @@ sub set_language
 
   $req->page
 
-Returns the L<Para::Frame::Page> object.
+Returns the L<Para::Frame::Site::Page> object.
 
 =cut
 
@@ -653,7 +653,7 @@ INFORMATION> C<dir_config>.
 
 Params:
 
-C<site>: Used by L<Para::Frame::Page/response_page>. If C<site> is set
+C<site>: Used by L<Para::Frame::Site::Page/response_page>. If C<site> is set
 to C<ignore>, the L<Para::Frame::Client> will decline all requests and
 let thenext apache handler take care of it.
 
