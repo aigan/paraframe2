@@ -35,11 +35,10 @@ BEGIN
     print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
-use base 'Para::Frame::File';
-
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug datadump catch );
 use Para::Frame::List;
+use Para::Frame::Site::Page;
 use Para::Frame::Page;
 
 =head1 DESCRIPTION
@@ -136,6 +135,17 @@ See L<Para::Frame::File>
 
 #######################################################################
 
+sub pageclass
+{
+    return "Para::Frame::Page";
+}
+
+sub fileclass
+{
+    return "Para::Frame::File";
+}
+
+
 =head2 dirs
 
 Returns a L<Para::Frame::List> with L<Para::Frame::Dir> objects.
@@ -144,6 +154,7 @@ Returns a L<Para::Frame::List> with L<Para::Frame::Dir> objects.
 
 sub dirs
 {
+    die "not implemented";
     my( $dir ) = @_;
 
     $dir->initiate;
@@ -190,28 +201,31 @@ sub files
 	next if $name =~ $dir->{hidden};
 
 	my $url = $dir->{url_name}.'/'.$name;
-	debug "Adding $url";
+#	debug "Adding $url";
 	if( $dir->{file}{$name}{directory} )
 	{
-	    debug "  As a Dir";
+#	    debug "  As a Dir";
 	    push @list, $dir->new({ site => $dir->site,
 				    url  => $url.'/',
 				  });
 	}
 	elsif( $name =~ /\.tt$/ )
 	{
-	    debug "  As a Page";
-	    push @list, Para::Frame::Page->new({ site => $dir->site,
-						 url  => $url,
-					       });
+#	    debug "  As a Page";
+	    push @list, $dir->pageclass->new({ site => $dir->site,
+					       url  => $url,
+					       keep_langpart => 1,
+					     });
 	}
 	else
 	{
-	    debug "  As a File";
-	    push @list, Para::Frame::File->new({ site => $dir->site,
-						 url  => $url,
-					       });
+#	    debug "  As a File";
+	    push @list, $dir->fileclass->new({ site => $dir->site,
+					       url  => $url,
+					     });
 	}
+
+	$dir->req->may_yield;
     }
 
     return Para::Frame::List->new(\@list);
@@ -230,6 +244,7 @@ L<Para::Frame::Site/home>.
 
 sub parent
 {
+    die "not implemented";
     my( $dir ) = @_;
 
     my $home = $dir->site->home_url_path;
@@ -270,9 +285,75 @@ sub has_index
 
 #######################################################################
 
+=head2 page
+
+Returns the page, if existing, as a L<Para::Frame::Site::Page> or
+L<Para::Frame::Page>.
+
+=cut
+
+sub page
+{
+    my( $dir ) = @_;
+
+    if( $dir->isa('Para::Frame::Site::Dir' ) )
+    {
+	my $page = Para::Frame::Site::Page->new({
+						 url => $dir->url_path,
+						 site => $dir->site,
+						});
+	return $page;
+    }
+    else
+    {
+	return Para::Frame::Page->
+	    new({
+		 filename => $dir->sys_path_slash,
+		});
+    }
+}
+
+#######################################################################
+
 sub is_dir
 {
     return 1;
+}
+
+#######################################################################
+
+sub has_dir
+{
+    my( $dir, $dir2 ) = @_;
+
+    if( -d $dir->sys_path_slash.$dir2 )
+    {
+	return 1;
+    }
+
+    return 0;
+}
+
+#######################################################################
+
+sub get
+{
+    my( $dir, $file ) = @_;
+
+    if( $dir->isa('Para::Frame::Site::Dir') )
+    {
+	my $url = $dir->url_path_slash.$file;
+	return Para::Frame::Site::File->new({site => $dir->site,
+					     url  => $url,
+					    });
+    }
+    else
+    {
+	my $filename = $dir->sys_path_slash.$file;
+	return Para::Frame::File->new({
+				       filename => $filename,
+				      });
+    }
 }
 
 #######################################################################
