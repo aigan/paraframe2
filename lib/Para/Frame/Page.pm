@@ -387,7 +387,7 @@ sub precompile
     my $filename = $page_dest->name;
 
     my $destfile = $page_dest->sys_path;
-    debug "Compiling from $srcfile -> $destfile";
+#    debug "Compiling from $srcfile -> $destfile";
 
     my $safecnt = 0;
     while( $destfile !~ /$filename$/ )
