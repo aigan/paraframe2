@@ -36,6 +36,7 @@ sub handler
     else
     {
 	$req->cookies->remove('lang');
+	$req->set_language($req->env->{HTTP_ACCEPT_LANGUAGE});
 	return "Tog bort språkval";
     }
 }
