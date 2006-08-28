@@ -75,14 +75,13 @@ BEGIN
     print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
-use base 'Para::Frame::File';
-
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug create_dir chmod_file idn_encode idn_decode datadump catch );
 use Para::Frame::Request::Ctype;
 use Para::Frame::URI;
 use Para::Frame::L10N qw( loc );
 use Para::Frame::Dir;
+use Para::Frame::Time qw( now );
 
 
 #######################################################################
@@ -99,27 +98,6 @@ use Para::Frame::Dir;
 
 Creates a Page object.
 
-The supported arguments are
-
-Required arguments:
-
-  url: The path to the page in the site or a L<URI> object
-
-  site: The name of the site as a string
-
-Optional arguments:
-
-  req: the Request object
-
-  ctype: The (default) content-type to use for the page
-
-
-C<url> is set by L</set_template>, C<site> is set by
-L<Para::Frame::File/set_site>, C<req> defaults to the dynamicly using
-the current request and C<ctype> is set by L</ctype>.
-
-This constructor is usually called by L</response_page>.
-
 =cut
 
 sub new
@@ -127,6 +105,11 @@ sub new
     my( $this, $args ) = @_;
     my $class = ref($this) || $this;
     die "DEPRECATED" unless ref $args eq 'HASH';
+
+    if( $class eq 'Para::Frame::Page' )
+    {
+	croak "class should be Site or Nonsite";
+    }
 
     $args ||= {};
 
@@ -167,79 +150,32 @@ sub new
 	weaken( $page->{'req'} );
     }
 
-
-    # Set URL
-    #
-    my $url_in = $args->{url};
-    defined $url_in or croak "url param missing ".datadump($args);
-    if( UNIVERSAL::isa $url_in, 'URI' )
-    {
-	$url_in = $args->{url}->path;
-    }
-    $page->{orig_url_name} = $url_in;
-
-
-    # TODO: Use URL for extracting the site
-    my $site = $page->set_site( $args->{site} || $page->req->site );
-
     if( my $ctype = $args->{ctype} )
     {
 	$page->ctype( $ctype );
     }
 
-    $page->set_template( $page->{orig_url_name}, 1 );
 
-#    debug "Returning page $page";
+    if( $args->{url} )
+    {
+	if( $args->{'filename'} )
+	{
+	    die "Don't specify filename with url";
+	}
+    }
+    elsif( my $filename = $args->{'filename'} )
+    {
+	-r $filename or die "Can't read $filename: $!";
+	$page->{'sys_name'} = $filename;
+    }
+    else
+    {
+	die "Filename missing";
+    }
 
     return $page;
 }
 
-
-#######################################################################
-
-=head2 response_page
-
-  Para::Frame::Page->response_page( $req )
-
-Creates and initiates the page object for the request. (Not used for
-page objects not to be used as the response page.)
-
-Gets the site to use from L<Para::Frame::Request/dirconfig> or from
-L<Para::Frame::Request/host_from_env>.
-
-Calls L</new> with the url and ctype from the request.
-
-Returns: a L<Para::Frame::Page> object
-
-=cut
-
-sub response_page
-{
-    my( $this, $req ) = @_;
-    my $class = ref($this) || $this;
-    unless( ref $req eq 'Para::Frame::Request' )
-    {
-	die "req missing";
-    }
-
-    my $site = Para::Frame::Site->get_by_req( $req );
-
-    unless( $site->host eq $req->host_from_env )
-    {
-	die sprintf "Site %s doesn't match req host %s",
-	    $site->host, $req->host_from_env;
-    }
-
-
-    my $page = $class->new({
-			    site  => $site,
-			    url   => $req->{'orig_url'},
-			    ctype => $req->{'orig_ctype'},
-			    req   => $req,
-			   });
-
-    return $page;
-}
 
 #######################################################################
 
@@ -253,43 +189,6 @@ See L<Para::Frame::File/Accessors>
 #######################################################################
 
 
-=head2 url_path_tmpl
-
-The path and filename in http on the host. With the language part
-removed.
-
-=cut
-
-sub url_path_tmpl
-{
-    return $_[0]->{'tmpl_url_name'} || $_[0]->url_path_slash;
-}
-
-#######################################################################
-
-=head2 path_tmpl
-
-The path to the template, including the filename, relative the site
-home, begining with a slash.
-
-=cut
-
-sub path_tmpl
-{
-    my( $page ) = @_;
-
-    my $home = $page->site->home_url_path;
-    my $template = $page->url_path_tmpl;
-    my( $site_url ) = $template =~ /^$home(.+?)$/
-      or confess "Couldn't get site_url from $template under $home";
-    return $site_url;
-}
-
-
-
-#######################################################################
-
-
 =head2 is_index
 
 True if this is a C</index.tt>
@@ -298,6 +197,7 @@ True if this is a C</index.tt>
 
 sub is_index
 {
+    die "not implemented";
     if( $_[0]->{'url_norm'} =~ /\/$/ )
     {
 	return 1;
@@ -306,145 +206,6 @@ sub is_index
     {
 	return 0;
     }
-}
-
-
-#######################################################################
-
-=head2 error_page_selected
-
-  $page->erro_page_selected
-
-True if an error page has been selected
-
-=cut
-
-sub error_page_selected
-{
-    return $_[0]->{'error_template'} ? 1 : 0;
-}
-
-#######################################################################
-
-
-=head2 error_page_not_selected
-
-  $page->error_page_not_selected
-
-True if an error page has not been selected
-
-=cut
-
-sub error_page_not_selected
-{
-    return $_[0]->{'error_template'} ? 0 : 1;
-}
-
-#######################################################################
-
-
-=head2 headers
-
-  $p->headers
-
-Returns: the http headers to be sent to the client as a list of
-listrefs of key/val pairs.
-
-=cut
-
-sub headers
-{
-    return @{$_[0]->{'headers'}};
-}
-
-
-#######################################################################
-
-=head2 orig
-
-  $p->orig
-
-Returns: the original url as a L<Para::Frame::File> object.
-
-TODO: Cache object
-
-=cut
-
-sub orig
-{
-    my( $page ) = @_;
-
-    unless( $page->{'orig'} )
-    {
-	$page->{'orig'} =
-	  Para::Frame::File->new({
-				  url => $page->{orig_url_name},
-				  site => $page->site,
-				  no_check => 1,
-				 });
-    }
-    return $page->{'orig'};
-}
-
-
-#######################################################################
-
-=head2 orig_url
-
-  $p->orig_url
-
-Returns: the original L<URI> object (given then the pageobject was
-created), including the scheme, host and port. (But using the current
-site info.)
-
-=cut
-
-sub orig_url
-{
-    my( $page ) = @_;
-
-    my $site = $page->site;
-    my $scheme = $site->scheme;
-    my $host = $site->host;
-    my $url_string = sprintf("%s://%s%s",
-			     $scheme,
-			     $host,
-			     $page->{orig_url_name});
-
-    return Para::Frame::URI->new($url_string);
-}
-
-
-#######################################################################
-
-=head2 orig_url_path
-
-  $p->orig_url_path
-
-Returns: The original URL path. Dirs may or may not have a trailing
-slash.
-
-=cut
-
-sub orig_url_path
-{
-    return $_[0]->{'orig_url_name'};
-}
-
-
-#######################################################################
-
-=head2 redirection
-
-  $p->redirection
-
-Returns the page we will redirect to, or undef.
-
-=cut
-
-sub redirection
-{
-    return $_[0]->{'redirect'};
 }
 
 
@@ -476,6 +237,7 @@ Returns: The L<Template::Document> object
 
 sub template
 {
+    die "not implemented";
     my( $page ) = @_;
 
     my( $tmpl ) = $page->find_template( $page->url_path_tmpl );
@@ -542,215 +304,6 @@ sub renderer
 
 #######################################################################
 
-=head2 set_headers
-
-  $p->set_headers( [[$key,$val], [$key2,$val2], ... ] )
-
-Same as L</add_header>, but replaces any existing headers.
-
-=cut
-
-sub set_headers
-{
-    my( $page, $headers ) = @_;
-
-    $page->{'headers'} = $headers;
-}
-
-#######################################################################
-
-
-=head2 add_header
-
-  $p->add_header( [[$key,$val], [$key2,$val2], ... ] )
-
-Adds one or more http response headers.
-
-This sets headers to be used if this page is sent to the client. They
-can be changed until they are actually sent.
-
-=cut
-
-sub add_header
-{
-    push @{ shift->{'headers'}}, [@_];
-}
-
-#######################################################################
-
-=head2 set_template
-
-  $p->set_template( $url_path )
-
-  $p->set_template( $url_path, $always_move_flag )
-
-C<$url_path> should be the URL path including the filename. This can
-later be retrieved by L</url_path_tmpl>.
-
-Redirection to other pages can be done by using this method. Even from
-inside a page being generated.
-
-To forward to a page not handled by the paraframe server, use
-L</redirect>.
-
-Apache can possibly be rewriting the name of the file. For example the
-url C</this.tt> may be translated to, based on Apache config, to
-C</var/www/that.tt>.
-
-The url_path to file translation is used for getting the directory of
-the url_path. But we assume that the filename part of the URL
-represents an actual file, regardless of the uri2file translation. If
-the translation goes to another file, that file will be ignored and
-the file named like that in the URL will be used.
-
-For example: If the site path is C</var/www> and we have a path
-translation in the apache config that translates C</one/two.tt> to
-C</var/www/three/four.tt> we will be using the url_path
-C</var/www/three/two.tt> using the dir but disregarding the filename
-change.
-
-We want to tell browsers/spiders if any redirection is a permanent or
-temporary one. We assume it's a temporary one unless
-C<$always_move_flag> is true. But if just one move is of temporary
-nature, keep that value. This will only be used if we are ending up
-redirecting to another page.
-
-The content type is set to C<text/html> if this is a C<.tt> file.
-
-=cut
-
-sub set_template
-{
-    my( $page, $url_in, $always_move ) = @_;
-
-    # For setting a template diffrent from the URL
-
-    if( UNIVERSAL::isa $url_in, 'URI' )
-    {
-	$url_in = $url_in->path;
-    }
-
-    if( $url_in =~ /^http/ )
-    {
-	# template param should NOT include the http://hostname part
-	croak "Tried to set a template to $url_in";
-    }
-
-    my $req = $page->req;
-    my $url_norm = $req->normalized_url( $url_in );
-
-    # We can't remove language part bacause this code is used during
-    # precompilation
-    $url_norm =~ s/\.\w\w(\.\w{2,3})$/$1/; # Remove language part
-
-    my $template = $url_norm;
-    my $url_name = $url_norm;
-
-    if( $template =~ /\/$/ )
-    {
-	# Template indicates a dir. Make it so
-	$template .= "index.tt";
-    }
-
-    $url_name =~ s/\/$//; # Remove trailins slash
-
-    debug(3,"setting template to $template");
-    debug(3,"setting url_norm to $url_norm");
-
-    $page->{tmpl_url_name}     = $template;
-    $page->{url_norm}          = $url_norm;
-    $page->{url_name}          = $url_name;
-    $page->{sys_name}          = undef;
-
-    $page->ctype->set("text/html") if $template =~ /\.tt$/;
-    $page->{'moved_temporarily'} ||= 1 unless $always_move;
-
-    return $template;
-}
-
-=head2 set_error_template
-
-  $p->set_error_template( $path_tmpl )
-
-Calls L</set_template> for setting the template. Sets a flag for
-remembering that this is an error response page.
-
-NB! Should be called with a L</path_tmpl> and not a
-L<url_path_tmpl>. We will prepend the L<Para::Frame::Site/home>
-part.
-
-This is done because we may change site that displays the error page.
-That also means that the site changed to, must find that template.
-
-=cut
-
-
-#######################################################################
-
-sub set_error_template
-{
-    my( $page, $error_tt ) = @_;
-
-    # $page->{'error_template'} holds the resolved template, inkluding
-    # the $home prefix
-
-    debug 2, "Setting error template to $error_tt";
-
-    # We want to set the error in the original request
-    if( my $req = $page->req->original )
-    {
-	if( $req->page ne $page )
-	{
-	    debug "Calling original req set_error_template";
-	    return $req->page->set_error_template($error_tt);
-	}
-	debug "The original request had the same page obj";
-    }
-
-    my $home = $page->site->home_url_path;
-    return $page->{'error_template'} =
-      $page->set_template( $home . $error_tt );
-}
-
-
-#######################################################################
-
-=head2 ctype
-
-  $p->ctype
-
-  $p->ctype( $content_type )
-
-Returns the content type to use in the http response, in the form
-of a L<Para::Frame::Request::Ctype> object.
-
-If C<$content_type> is defiend, sets the content type using
-L<Para::Frame::Request::Ctype/set>.
-
-=cut
-
-sub ctype
-{
-    my( $page, $content_type ) = @_;
-
-    # Needs $REQ
-
-    unless( $page->{'ctype'} )
-    {
-	$page->{'ctype'} = Para::Frame::Request::Ctype->new($page->req);
-    }
-
-    if( $content_type )
-    {
-	$page->{'ctype'}->set( $content_type );
-    }
-
-    return $page->{'ctype'};
-}
-
-
-#######################################################################
-
 =head2 add_params
 
   $p->add_params( \%params )
@@ -804,34 +357,38 @@ sub add_params
 
 =head2 precompile
 
-  $req->precompile( $srcfile )
+  $page->precompile( \%args )
 
-  $req->precompile( $srcfile, \%args )
+Send same args as for L</new> for creating the new page from thre
+source C<$page>. Also takes:
 
   arg type defaults to html_pre
   arg language defaults to undef
 
-$srcfile is the absolute system path to the template.
-
-The destination file is the original url: L</orig>.
+Returns: The new compiled page
 
 =cut
 
 sub precompile
 {
-    my( $page, $srcfile, $args ) = @_;
+    my( $page, $args ) = @_;
 
     my $req = $page->req;
 
     $args ||= {};
 
+    my $srcfile = $page->sys_path;
+    my $page_dest = Para::Frame::Site::Page->new($args);
+
     my( $res, $error );
 
     my $type = $args->{'type'} || 'html_pre';
 
-    my $filename = $page->orig->name;
+    my $filename = $page_dest->name;
 
-    my $destfile = $page->orig->sys_path;
+    my $destfile = $page_dest->sys_path;
+    debug "Compiling from $srcfile -> $destfile";
+
     my $safecnt = 0;
     while( $destfile !~ /$filename$/ )
     {
@@ -840,33 +397,40 @@ sub precompile
 	die "Loop" if $safecnt++ > 100;
 	debug "Creating dir $destfile";
 	create_dir($destfile);
-	$page->orig->{'sys_name'} = undef;
-	$destfile = $page->orig->sys_path;
+	$page_dest->{'sys_name'} = undef;
+	$destfile = $page_dest->sys_path;
     }
 
-    my $dir = $page->dir;
+    my $dir = $page_dest->dir;
 
     if( debug > 1 )
     {
 	debug "srcfile     : $srcfile";
-	debug "destfile_web: ".$page->url_path_slash;
+	debug "destfile_web: ".$page_dest->url_path_slash;
 	debug "destfile    : $destfile";
 	debug "destdir     : ".$dir->sys_path;
 	debug "type        : $type";
     }
 
 
-    $page->set_dirsteps( $dir->sys_path_slash );
+    $page_dest->set_dirsteps( $dir->sys_path_slash );
+
+
 
     my $fh = new IO::File;
     $fh->open( "$srcfile" ) or die "Failed to open '$srcfile': $!\n";
+    $page_dest->add_params({
+			    pf_source_file => $srcfile,
+			    pf_compiled_date => now->iso8601,
+			    pf_source_version => $page->vcs_version(),
+			   });
 
-    $page->set_tt_params;
+    $page_dest->set_tt_params;
 
-    $page->set_burner_by_type($type);
-    $res = $page->burn( $fh, $destfile );
+    $page_dest->set_burner_by_type($type);
+    $res = $page_dest->burn( $fh, $destfile );
     $fh->close;
-    $error = $page->burner->error unless $res;
+    $error = $page_dest->burner->error unless $res;
 
     if( $error )
     {
@@ -876,69 +440,16 @@ sub precompile
 	if( ref $error and $error->info =~ /not found/ )
 	{
 	    debug "Subtemplate for precompile not found";
-	    my $incpathstring = join "", map "- $_\n", @{$page->incpath};
+	    my $incpathstring = join "", map "- $_\n",
+		@{$page_dest->incpath};
 	    $part->add_message("Include path is\n$incpathstring");
 	}
 
 	die $part;
     }
 
-    return 1;
+    return $page_dest;
 }
-
-#######################################################################
-
-=head2 redirect
-
-  $p->redirect( $url )
-
-  $p->redirect( $url, $permanently_flag )
-
-This is for redirecting to a page not handled by the paraframe.
-
-The actual redirection will be done then all the jobs are
-finished. Error in the jobs could result in a redirection to an
-error page instead.
-
-The C<$url> should be a full url string starting with C<http:> or
-C<https:> or just the path under the curent host.
-
-If C<$permanently_flag> is true, sets the http header for indicating
-that the requested page permanently hase moved to this page.
-
-For redirection to a TT page handled by the same paraframe daemon, use
-L</set_template>.
-
-=cut
-
-sub redirect
-{
-    my( $page, $url, $permanently ) = @_;
-
-   $page->{'moved_temporarily'} ||= 1 unless $permanently;
-
-    $page->{'redirect'} = $url;
-}
-
-
-#######################################################################
-
-=head2 set_http_status
-
-  $p->set_http_status( $status )
-
-Used internally by L</render_output> for sending the http_status of
-the response page to the client.
-
-=cut
-
-sub set_http_status
-{
-    my( $page, $status ) = @_;
-    return 0 if $status < 100;
-    return $page->req->send_code( 'AR-PUT', 'status', $status );
-}
-
 
 #######################################################################
 
@@ -956,6 +467,7 @@ Returns: L</incpath>
 
 sub paths
 {
+    die "not implemented";
     my( $page ) = @_;
 
     unless( $page->incpath )
@@ -1150,6 +662,7 @@ The <Para;;Frame::Site> object.
 
 sub set_tt_params
 {
+    die "not implemented";
     my( $page ) = @_;
 
     my $req = $page->req;
@@ -1282,6 +795,7 @@ that can be parsed to a L<Para::Frame::Burner> object.
 
 sub find_template
 {
+    die "not implemented";
     my( $page, $template ) = @_;
     my $req = $page->req;
 
@@ -1308,7 +822,7 @@ sub find_template
     # We should not try to find templates including lang
     if( $ext_full =~ /^\.(\w\w)\.tt$/ )
     {
-	debug "Trying to get template with specific lang ext";
+	debug "Trying to get template with specific lang ext ($template)";
 	$language = [$1];
 	$ext_full = '.tt';
     }
@@ -1550,9 +1064,11 @@ sub find_template
 }
 
 
-sub load_compiled  ############ function!
+#######################################################################
+
+sub load_compiled
 {
-    my( $file ) = @_;
+    my( $page, $file ) = @_;
     my $compiled;
 
     # From Template::Provider::_load_compiled:
@@ -1566,35 +1082,6 @@ sub load_compiled  ############ function!
 	throw('compile', "compiled template $compiled: $@");
     }
     return $compiled;
-}
-
-
-#######################################################################
-
-=head2 fallback_error_page
-
-  $p->fallback_error_page
-
-Returns a scalar ref with HTML to use if the normal error response
-templates did not work.
-
-=cut
-
-sub fallback_error_page
-{
-    my( $page ) = @_;
-
-    my $out = "";
-    $out .= "<p>500: Failure to render failure page\n";
-    $out .= "<pre>\n";
-    $out .= $page->req->result->as_string;
-    $out .= "</pre>\n";
-    if( my $backup = $page->site->backup_host )
-    {
-	my $path = $page->url->path;
-	$out .= "<p>Try to get the page from  <a href=\"http://$backup$path\">$backup</a> instead</p>\n"
-	}
-    return \$out;
 }
 
 
@@ -1665,6 +1152,7 @@ Returns: True on success and 0 on failure
 
 sub render_output
 {
+    die "not implemented";
     my( $page ) = @_;
 
     my $req = $page->req;
@@ -1825,555 +1313,6 @@ sub render_output
     return 1;
 }
 
-
-
-#######################################################################
-
-=head2 send_output
-
-  $p->send_output
-
-Sends the previously generated page to the client.
-
-If the URL should change, sends a redirection header and stores the
-generated page in the session to be sent as a response to the future
-request to for the new URL.
-
-Sends the headers followd by the page content.
-
-If the content is in UTF8, sends the page in UTF8.
-
-For large pages, sends the page in chunks.
-
-=cut
-
-sub send_output
-{
-    my( $page ) = @_;
-
-    my $req = $page->req;
-
-    # Forward if URL differs from url_path
-
-    if( debug > 2 )
-    {
-	debug(0,"Sending output to ".$page->orig_url_path);
-	debug(0,"Sending the page ".$page->url_path);
-	unless( $page->error_page_not_selected )
-	{
-	    debug(0,"An error page was selected");
-	}
-    }
-
-
-    # forward if requested url ends in '/index.tt' or if it is a dir
-    # without an ending '/'
-
-    my $url = $page->orig_url_path;
-    my $url_norm = $req->normalized_url( $url );
-
-#    debug "Original url: $url";
-
-    if( $url ne $url_norm )
-    {
-	debug "!!! $url ne $url_norm";
-	$page->forward($url_norm);
-    }
-    elsif( $page->error_page_not_selected and
-	$url ne $page->url_path_slash )
-    {
-	debug "!!! $url ne ".$page->url_path_slash;
-	$page->forward();
-    }
-    else
-    {
-	my $sender = $page->sender;
-
-	if( $req->header_only )
-	{
-	    my $res;
-	    if( $req->in_loadpage )
-	    {
-		$res = "LOADPAGE";
-	    }
-	    else
-	    {
-		$page->send_headers;
-		$res = $req->get_cmd_val( 'HEADER' );
-	    }
-	    if( $res eq 'LOADPAGE' )
-	    {
-		$req->session->register_result_page($page->url_path_slash, $page->{'headers'}, $page->{'page_content'}, $sender);
-		$req->send_code('PAGE_READY', $page->url->as_string);
-	    }
-	}
-	elsif( $sender eq 'utf8' )
-	{
-	    my $res;
-	    if( $req->in_loadpage )
-	    {
-		$res = "LOADPAGE";
-	    }
-	    else
-	    {
-		$page->ctype->set_charset("UTF-8");
-		$page->send_headers;
-		$res = $req->get_cmd_val( 'BODY' );
-	    }
-	    if( $res eq 'LOADPAGE' )
-	    {
-		$req->session->register_result_page($page->url_path_slash, $page->{'headers'}, $page->{'page_content'}, $sender);
-		$req->send_code('PAGE_READY', $page->url->as_string);
-	    }
-	    elsif( $res eq 'SEND' )
-	    {
-		binmode( $req->client, ':utf8');
-		debug(4,"Transmitting in utf8 mode");
-		$req->send_in_chunks( $page->{'page_content'} );
-		binmode( $req->client, ':bytes');
-	    }
-	    else
-	    {
-		die "Strange response '$res'";
-	    }
-	}
-	else # Default
-	{
-	    my $res;
-	    if( $req->in_loadpage )
-	    {
-		$res = "LOADPAGE";
-	    }
-	    else
-	    {
-		$page->send_headers;
-		$res = $req->get_cmd_val( 'BODY' );
-	    }
-	    if( $res eq 'LOADPAGE' )
-	    {
-		$req->session->register_result_page($page->url_path_slash, $page->{'headers'}, $page->{'page_content'}, $sender );
-		$req->send_code('PAGE_READY', $page->url->as_string);
-	    }
-	    elsif( $res eq 'SEND' )
-	    {
-		$page->send_in_chunks( $page->{'page_content'} );
-	    }
-	    else
-	    {
-		die "Strange response '$res'";
-	    }
-	}
-    }
-#    debug "send_output: done";
-}
-
-#######################################################################
-
-=head2 sender
-
-  $p->sender
-
-  $p->sender( $code )
-
-=cut
-
-sub sender
-{
-    my( $page, $code ) = @_;
-
-    if( $code )
-    {
-	unless( $code =~ /^(utf8|bytes)$/ )
-	{
-	    confess "Page sender $code not recogized";
-	}
-	$page->{'page_sender'} = $code;
-    }
-    elsif( not $page->{'page_sender'} )
-    {
-	if( is_utf8  ${ $page->{'page_content'} } )
-	{
-	    $page->{'page_sender'} = 'utf8';
-	}
-	else
-	{
-	    $page->{'page_sender'} = 'bytes';
-	}
-    }
-    return $page->{'page_sender'};
-}
-
-
-#######################################################################
-
-=head2 forward
-
-  $p->forward( $url )
-
-Should only be called AFTER the page has been generated. It's used by
-L</send_output> and should not be used by others.
-
-C<$url> must be a normalized url path
-
-To request a forward, just use L</set_template> before the page is
-generated.
-
-To forward to a page not handled by the paraframe, use L</redirect>.
-
-=cut
-
-sub forward
-{
-    my( $page, $url_norm ) = @_;
-    my $req = $page->req;
-
-    my $site = $page->site;
-
-    $url_norm ||= $page->url_path_slash;
-
-
-    debug "Forwarding to $url_norm";
-
-    if( not( $page->{'page_content'} or $req->header_only ) )
-    {
-	cluck "forward() called without a generated page";
-	unless( $url_norm =~ /\.html$/ )
-	{
-	    $url_norm = $site->home_url_path."/error.tt";
-	}
-    }
-    elsif( $url_norm =~ /\.html$/ )
-    {
-	debug "Forward to html page: $url_norm";
-	my $referer = $req->referer;
-	debug "  Referer is $referer";
-	debug "  Cancelling forwarding";
-	$page->{url_norm} = $page->orig_url_path;
-	$page->{sys_name} = undef;
-	$page->send_output;
-	return;
-    }
-
-    $page->output_redirection($url_norm );
-
-    $req->session->register_result_page($url_norm, $page->{'headers'}, $page->{'page_content'}, $page->sender);
-}
-
-
-#######################################################################
-
-=head2 output_redirection
-
-  $p->output_redirection( $url )
-
-Internally used by L</forward> for sending redirection headers to the
-client.
-
-=cut
-
-sub output_redirection
-{
-    my( $page, $url_in ) = @_;
-    my $req = $page->req;
-
-    $url_in or die "URL missing";
-
-    # Default to temporary move.
-
-    my $url_out;
-
-    # URL module doesn't support punycode. Bypass module if we
-    # redirect to specified domain
-    #
-    if( $url_in =~ /^ https?:\/\/ (.*?) (: | \/ | $ ) /x )
-    {
-	my $host_in = $1;
-#	warn "  matched '$host_in' in '$url_in'!\n";
-	my $host_out = idn_encode( $host_in );
-#	warn "  Encoded to '$host_out'\n";
-	if( $host_in ne $host_out )
-	{
-	    $url_in =~ s/$host_in/$host_out/;
-	}
-
-	$url_out = $url_in;
-    }
-    else
-    {
-	my $url = Para::Frame::URI->new($url_in, 'http');
-	$url->host( idn_encode $req->http_host ) unless $url->host;
-	$url->port( $req->http_port ) unless $url->port;
-	$url->scheme('http');
-
-	$url_out =  $url->canonical->as_string;
-    }
-
-    debug(2,"--> Redirect to $url_out");
-
-    my $moved_permanently = $page->{'moved_temporarily'} ? 0 : 1;
-
-
-    my $res = $req->get_cmd_val( 'WAIT' );
-    if( $res eq 'LOADPAGE' )
-    {
-	$req->send_code('PAGE_READY', $url_out );
-	return;
-    }
-
-    if( $moved_permanently )
-    {
-	debug "MOVED PERMANENTLY";
-	$req->send_code( 'AR-PUT', 'status', 301 );
-	$req->send_code( 'AR-PUT', 'header_out', 'Cache-Control', 'public' );
-    }
-    else # moved temporarily
-    {
-	$req->send_code( 'AR-PUT', 'status', 302 );
-	$req->send_code( 'AR-PUT', 'header_out', 'Pragma', 'no-cache' );
-	$req->send_code( 'AR-PUT', 'header_out', 'Cache-Control', 'no-cache' );
-    }
-    $req->send_code( 'AR-PUT', 'header_out', 'Location', $url_out );
-
-    my $out = "Go to $url_out\n";
-    my $length = length( $out );
-
-    $req->send_code( 'AR-PUT', 'send_http_header', 'text/plain' );
-
-    if( $req->header_only )
-    {
-	$req->send_code( 'HEADER' );
-    }
-    else
-    {
-	$req->send_code( 'AR-PUT', 'header_out', 'Content-Length', $length );
-	$req->send_code( 'BODY' );
-	$req->client->send( $out );
-    }
-}
-
-
-#######################################################################
-
-=head2 send_headers
-
-  $p->send_headers()
-
-Used internally by L</send_output> for sending the HTTP headers to the
-client.
-
-=cut
-
-sub send_headers
-{
-    my( $page ) = @_;
-
-    my $req = $page->req;
-
-    my $client = $req->client;
-
-    $page->ctype->commit;
-
-    my %multiple; # Replace first, but add later headers
-    foreach my $header ( $page->headers )
-    {
-	if( $multiple{$header->[0]} ++ )
-	{
-	    debug(3,"Send header add @$header");
-	    $req->send_code( 'AT-PUT', 'add', @$header);
-	}
-	else
-	{
-	    debug(3,"Send header_out @$header");
-	    $req->send_code( 'AR-PUT', 'header_out', @$header);
-	}
-    }
-}
-
-
-#######################################################################
-
-=head2 send_in_chunks
-
-  $p->send_in_chunks( $dataref )
-
-Used internally by L</send_output> for sending the page in C<$dataref>
-to the client.
-
-It will try many times sending part by part. If a part failed to be
-sent, it will check if the connection has been canceled. It will also
-wait about a second for the client to recover, by doing a
-L<Para::Frame::Request/yield>.
-
-Returns: The number of characters sent. (That may be UTF8 characters.)
-
-=cut
-
-sub send_in_chunks
-{
-    my( $page, $dataref ) = @_;
-
-    my $req = $page->req;
-
-    my $client = $req->client;
-    my $length = length($$dataref);
-    debug(4,"Sending ".length($$dataref)." bytes of data to client");
-#    debug(1, "Sending ".length($$dataref)." bytes of data to client");
-    my $sent = 0;
-    my $errcnt = 0;
-
-    unless( $length )
-    {
-	debug "We got nothing to send (for req $req)";
-	return 1;
-    }
-
-    eval
-    {
-	if( $length > 64000 )
-	{
-	    my $chunk = 16384; # POSIX::BUFSIZ * 2
-	    for( my $i=0; $i<$length; $i+= $chunk )
-	    {
-		debug(4,"  Transmitting chunk from $i\n");
-		my $res = $client->send( substr $$dataref, $i, $chunk );
-		if( $res )
-		{
-		    $sent += $res;
-		    $errcnt = 0;
-		}
-		else
-		{
-		    debug(1,"  Failed to send chunk $i");
-
-		    if( $req->cancelled )
-		    {
-			debug("Request was cancelled. Giving up");
-			return $sent;
-		    }
-
-		    debug(1,"  Tries to recover...",1);
-
-		    $errcnt++;
-		    $req->yield( 0.9 );
-
-		    if( $errcnt >= 100 )
-		    {
-			debug(0,"Got over 100 failures to send chunk $i");
-			last;
-		    }
-		    debug(-1);
-		    redo;
-		}
-	    }
-	}
-	else
-	{
-	    while(1)
-	    {
-		$sent = $client->send( $$dataref );
-		if( $sent )
-		{
-		    last;
-		}
-		else
-		{
-		    debug("  Failed to send data to client\n  Tries to recover...",1);
-
-		    $errcnt++;
-		    $req->yield( 1.2 );
-
-		    if( $errcnt >= 10 )
-		    {
-			debug(0,"Got over 10 failures to send $length chars of data");
-			last;
-		    }
-		    debug(-1);
-		    redo;
-		}
-	    }
-	}
-	debug(4, "Transmitted $sent chars to client");
-    };
-    if( $@ )
-    {
-	my $err = catch($@);
-	unless( $Para::Frame::REQUEST{$client} )
-	{
-	    return 0;
-	}
-
-	debug "Faild to transmit to client";
-	debug $err->as_string;
-	return 0;
-    }
-
-    return $sent;
-}
-
-
-
-#######################################################################
-
-sub send_stored_result
-{
-    my( $page, $page_result ) = @_;
-
-    my $req = $Para::Frame::REQ;
-    $page_result ||=
-      $req->session->{'page_result'}{ $page->orig_url_path };
-
-    debug 0, "Sending stored page result";
-    $page->set_headers( $page_result->[0] );
-    if( length ${$page_result->[1]} ) # May be header only
-    {
-	if( $page_result->[2] eq 'utf8' )
-	{
-	    debug 4, "  in UTF8";
-	    $page->ctype->set_charset("UTF-8");
-	    $page->send_headers;
-	    my $res = $req->get_cmd_val( 'BODY' );
-	    if( $res eq 'LOADPAGE' )
-	    {
-		die "Was to slow to send the pregenerated page";
-	    }
-	    else
-	    {
-		binmode( $req->client, ':utf8');
-		debug(4,"Transmitting in utf8 mode");
-		$page->send_in_chunks( $page_result->[1] );
-		binmode( $req->client, ':bytes');
-	    }
-	}
-	else
-	{
-	    debug 4, "  in Latin-1";
-	    $page->send_headers;
-	    my $res = $req->get_cmd_val( 'BODY' );
-	    if( $res eq 'LOADPAGE' )
-	    {
-		die "Was to slow to send the pregenerated page";
-	    }
-	    else
-	    {
-		$page->send_in_chunks( $page_result->[1] );
-	    }
-	}
-    }
-    else
-    {
-	debug 4, "  as HEADER";
-	$page->send_headers;
-	my $res = $req->get_cmd_val( 'HEADER' );
-	if( $res eq 'LOADPAGE' )
-	{
-	    die "Was to slow to send the pregenerated page";
-	};
-    }
-
-    delete $req->session->{'page_result'}{ $req->page->orig_url_path };
-
-    #debug "Sending stored page result: done";
-}
 
 
 #######################################################################

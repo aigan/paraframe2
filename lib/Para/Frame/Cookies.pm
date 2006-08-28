@@ -95,7 +95,7 @@ sub add_to_header
     my $added = $cookies->added;
     my $page = $cookies->req->page;
 
-    unless( UNIVERSAL::isa($page, 'Para::Frame::Page') )
+    unless( UNIVERSAL::isa($page, 'Para::Frame::Site::Page') )
     {
 	confess "Page is '$page'";
     }
