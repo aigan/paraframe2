@@ -336,6 +336,21 @@ sub has_dir
 
 #######################################################################
 
+sub has_file
+{
+    my( $dir, $file ) = @_;
+
+    if( -f $dir->sys_path_slash.$file)
+    {
+	return 1;
+    }
+
+    warn "Not found: ".$dir->sys_path_slash.$file;
+    return 0;
+}
+
+#######################################################################
+
 sub get
 {
     my( $dir, $file ) = @_;
