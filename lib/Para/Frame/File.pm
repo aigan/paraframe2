@@ -394,6 +394,23 @@ sub vcs_version
 
 #######################################################################
 
+=head2 updated
+
+  $file->updated()
+
+Returns a L<Para::Frame::Time> object based on the files mtime.
+
+=cut
+
+sub updated
+{
+   my( $file ) = @_;
+
+   return Para::Frame::Time->get(stat($file->sys_path)->mtime);
+}
+
+#######################################################################
+
 1;
 
 =head1 SEE ALSO
