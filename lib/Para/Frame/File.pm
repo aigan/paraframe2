@@ -348,7 +348,7 @@ sub is_dir
 
 sub chmod
 {
-    return chmod_file(shift->sys_path, @_);
+    return chmod_file(shift->orig->sys_path, @_);
 }
 
 #######################################################################
