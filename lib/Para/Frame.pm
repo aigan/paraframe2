@@ -990,9 +990,9 @@ sub close_callback
 	# But it may be that the parent already is done. (See
 	# Para::Frame::Request->new_subrequest) )
 
-#	$::SRCNT++;
-#	debug "This was subrequest ending $::SRCNT";
-#	exit if $::SRCNT >= 10;
+	$::SRCNT++;
+	debug "This was subrequest ending $::SRCNT";
+	exit if $::SRCNT >= 10;
 
 	return;
     }
