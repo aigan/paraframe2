@@ -542,7 +542,7 @@ sub chmod_file
     confess unless $file;
 #    warn "Fix file $file\n"; ### DEBUG
 
-    my $fstat = stat($file) or die "Could not stat $file: $!";
+    my $fstat = stat($file) or confess "Could not stat $file: $!";
     my $fu = getpwuid( $fstat->uid ); # file user  obj
     my $fg = getgrgid( $fstat->gid ); # file group obj
     my $ru = getpwuid( $> );          # run  user  obj
