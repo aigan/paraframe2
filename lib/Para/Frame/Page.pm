@@ -384,9 +384,9 @@ sub precompile
 
     my $type = $args->{'type'} || 'html_pre';
 
-    my $filename = $page_dest->name;
+    my $filename = $page_dest->orig->name;
 
-    my $destfile = $page_dest->sys_path;
+    my $destfile = $page_dest->orig->sys_path;
 #    debug "Compiling from $srcfile -> $destfile";
 
     my $safecnt = 0;
@@ -398,7 +398,8 @@ sub precompile
 	debug "Creating dir $destfile";
 	create_dir($destfile);
 	$page_dest->{'sys_name'} = undef;
-	$destfile = $page_dest->sys_path;
+	$page_dest->{'orig'} = undef;
+	$destfile = $page_dest->orig->sys_path;
     }
 
     my $dir = $page_dest->dir;
@@ -406,7 +407,7 @@ sub precompile
     if( debug > 1 )
     {
 	debug "srcfile     : $srcfile";
-	debug "destfile_web: ".$page_dest->url_path_slash;
+	debug "destfile_web: ".$page_dest->orig->url_path_slash;
 	debug "destfile    : $destfile";
 	debug "destdir     : ".$dir->sys_path;
 	debug "type        : $type";
