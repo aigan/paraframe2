@@ -166,3 +166,17 @@ tr.odd
   padding: 0px 5px 0px 7px;
   border-style: inset;
 }
+
+/**************************************************/
+
+
+label:hover+input,
+label:hover+br+input,
+label:hover,
+input:hover,
+label:hover+textarea,
+label:hover+br+textarea
+{
+  background-color: lightyellow;
+  color: black;
+}
