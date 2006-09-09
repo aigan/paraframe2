@@ -1,3 +1,1260 @@
+2006-09-09  jonas <jonas@paranormal.se>
+
+	* html/pf/css/default.css: added button highlight
+
+	* html/inc/header.tt: introduces header_extra
+
+	* html/pf/css/default.css: added stuff
+
+	* html/inc/menu_admin_pf.tt: moved to css
+
+	* lib/Para/Frame/Site/Page.pm:
+	using both dev and html for compiled sites
+
+2006-09-06  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm:
+	added debug. There exists a loop posibility somewhere
+
+	* lib/Para/Frame/File.pm: using original path (with langpart)
+
+	* lib/Para/Frame/Page.pm: use original path for file operations
+
+	* lib/Para/Frame/Utils.pm: more debug
+
+2006-09-04  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/File.pm: Added updated()
+
+	* lib/Para/Frame/Dir.pm: added has_file()
+
+2006-08-28  jonas <jonas@paranormal.se>
+
+	* html/def/admin-index.tt: stylefix
+
+	* html/def/admin-index.tt: linkfix
+
+	* lib/Para/Frame/Page.pm: less debug
+
+	* lib/Para/Frame/Request/Ctype.pm: Refactored Page
+
+	* lib/Para/Frame/Nonsite/Dir.pm, lib/Para/Frame/Nonsite/Page.pm, lib/Para/Frame/Site/Dir.pm, lib/Para/Frame/Site/File.pm, lib/Para/Frame/Site/Page.pm:
+	New filed
+
+	* lib/Para/Frame/Action/language_set.pm: bugfix
+
+	* lib/Para/Frame/Site.pm, lib/Para/Frame/Request.pm: Refactored Page
+
+	* lib/Para/Frame/Page.pm, lib/Para/Frame/File.pm, lib/Para/Frame/Email.pm:
+	refactored Page
+
+	* lib/Para/Frame/Dir.pm: - refactored Page and extended
+	- added methods page(), has_dir() and get()
+
+	* lib/Para/Frame/Cookies.pm: refactored Page
+
+	* html/def/admin-index.tt: further development
+
+	* dev/inc_pre/header_prepare.tt: compilation metadata
+
+2006-08-27  jonas <jonas@paranormal.se>
+
+	* html/pf/images/loading.gif: More frames
+
+	* html/pf/images/loading.gif: Modified
+
+	* html/pf/images/loading.gif: New image
+
+2006-08-24  jonas <jonas@paranormal.se>
+
+	* html/inc/menu_admin_pf.tt: layout bugfix
+
+2006-08-23  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Dir.pm: bugfixes and expansion
+
+	* html/inc/menu_admin_pf.tt: - experimenting with reload link
+	- Index now goes to /def/admin-index.tt
+
+	* html/def/admin-index.tt: Fileindex view
+
+	* lib/Para/Frame/Widget.pm: doc linkfix
+
+	* html/inc/menu_admin_pf.tt: removed unmatched </p>
+
+	* lib/Para/Frame/Template/Components.pod: added docs for imgwrapper
+
+	* html/inc/components.tt: added imgexpand
+
+2006-08-22  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm, lib/Para/Frame/Email/Address.pm:
+	warn -> debug
+
+	* html/pf/js/csshover.htc, html/pf/js/csshover2.htc:
+	new ie-specific js files
+
+	* html/pf/images/button.expand.down.gif: new button
+
+	* lib/Para/Frame/Client.pm: handle empty files
+
+	* lib/Para/Frame/Page.pm: handling empty files
+
+	* lib/Para/Frame/Widget.pm: swhich back to default.css
+
+	* lib/Para/Frame/Request.pm: added docs
+
+	* html/pf/loading.html: use the css ext
+
+	* lib/Para/Frame/Client.pm: handle all that comoe our way
+
+	* html/pf/css/default.css:
+	Renamed file default.css, formerly default.tt
+
+	* html/pf/css/default.tt: Renamed from default.tt to default.css
+
+	* lib/Para/Frame/Widget.pm, html/pf/loading.html: new location of css
+
+	* html/pf/css/default.tt:
+	Renamed file css/default.tt, formerly default.css
+
+	* html/pf/default.css: Renamed from default.css to css/default.tt
+
+	* lib/Para/Frame/Uploaded.pm:
+	- now uses fileinfo part given by client to req->{files}
+	- added method info()
+	- added method content_type()
+	- added method tempfile()
+
+	* lib/Para/Frame/Request.pm: added a files field to request object
+
+	* lib/Para/Frame/Client.pm: added file-info fields to file uploads
+
+2006-08-21  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/DBIx/State.pm:
+	New class for ODBC SQLSTATE error messages
+
+	* lib/Para/Frame/Watchdog.pm:
+	The stable server should not increase the bug level too much on an unexpected error.
+
+	* lib/Para/Frame/Request.pm: some forking bugfixes
+
+	* lib/Para/Frame/Page.pm: - changed behaviour of TT param me
+	- stored compiled templates now remember which file they were compiled from
+	- We do not redirect to error templates. Keep the url but render the error template.
+
+	* lib/Para/Frame/DBIx.pm: - added method state()
+	- better error reporting
+
+	* lib/Para/Frame/Child.pm: check for cancelled requests
+
+	* lib/Para/Frame/Site.pm:
+	Now handling site aliases that before collided with hostnames. You can have a site karl.rit.se with code karl and still make an access to host karl (on local domain) make a clone of karl.rit.se.
+
+	* lib/Para/Frame/Client.pm:
+	changed LOADPAGE to USE_LOADPAGE for recieving message about which loadpage to use
+
+	* lib/Para/Frame.pm: added NOTE in handle_code()
+
+	* lib/Para/Frame/Email.pm: using $req->note()
+
+	* lib/Para/Frame/Request.pm: fixed copyright
+
+	* lib/Para/Frame/Child/Result.pm, lib/Para/Frame/Request.pm, lib/Para/Frame/File.pm:
+	less debug
+
+	* lib/Para/Frame.pm: bugfix in child-parent communication
+
+2006-08-20  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm: less debug
+
+	* lib/Para/Frame.pm: small code cleanup
+
+2006-08-19  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Client.pm: backup buggfix
+
+	* lib/Para/Frame/Site.pm: added clone() and get_by_req()
+
+	* lib/Para/Frame/Request.pm: debug tweaking
+
+	* lib/Para/Frame/Page.pm: using Para::Frame::Site->get_by_req()
+
+	* lib/Para/Frame.pm: documenting config variable site_auto
+
+2006-08-18  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: handling wansiched requests
+
+2006-08-15  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Page.pm, lib/Para/Frame.pm: bugfix
+
+2006-08-14  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Client.pm: bugfix for ms internet explorer
+
+	* lib/Para/Frame/Request.pm: bugfix, sending notes to the right client
+
+	* lib/Para/Frame/Request.pm: bugfix for active requests
+
+	* lib/Para/Frame/Request.pm: bugfix
+
+	* lib/Para/Frame/Request.pm: better handling of cancelled requests
+
+	* lib/Para/Frame/Page.pm: check if req was cancelled
+
+	* lib/Para/Frame.pm: better handling cancled reqs
+
+	* lib/Para/Frame/Site.pm: loadpage relative site home
+
+	* lib/Para/Frame/Client.pm: bugfix
+
+	* lib/Para/Frame.pm: handle invalid socket communications
+
+2006-08-10  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Client.pm: try longer time
+
+	* lib/Para/Frame/Page.pm: less debug
+
+	* lib/Para/Frame/Client.pm: bugfix
+
+	* lib/Para/Frame/Page.pm: more debug
+
+	* lib/Para/Frame/Session.pm: imported confess
+
+	* lib/Para/Frame.pm: not givning up on error
+
+	* lib/Para/Frame/Session.pm:
+	makes sure that page_sender is set in register_result_page()
+
+	* lib/Para/Frame/Page.pm: added sender()
+
+	* lib/Para/Frame/Request.pm: - added cancel()
+	- added waiting()
+	- now using %Para::Frame::RESPONSE for messages from apache
+
+	* lib/Para/Frame/Page.pm:
+	added send_stored_result(), code moved from Para::Frame
+
+	* lib/Para/Frame/DBIx.pm: buggfix
+
+	* lib/Para/Frame/Client.pm:
+	- added test for if browser client cancelled the request
+	- sends loadpage with $r->send_fd()
+	- changed some die to warn
+
+	* lib/Para/Frame.pm:
+	Rewritten a lot of code for handling socket communication
+
+	* Makefile.PL: added dependency
+
+2006-08-09  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/take_five.pm: Action for testing purposes
+
+	* lib/Para/Frame/Client.pm: debugging
+
+	* lib/Para/Frame/Request.pm: bugfix bugfix
+
+	* lib/Para/Frame/Request.pm: bugfix
+
+	* lib/Para/Frame.pm: Not exit on data timeout now
+
+	* lib/Para/Frame/Widget.pm: spelling
+
+	* lib/Para/Frame/Client.pm: less debug
+
+2006-08-08  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Site.pm: Added loadpage() method
+
+	* lib/Para/Frame/Result.pm:
+	Result messages also sent as notes to client
+
+	* lib/Para/Frame/Request.pm: - added docs
+	- note() now also send to debug
+
+	* lib/Para/Frame/Page.pm: Sent note in render_output()
+
+	* lib/Para/Frame/Client.pm: Works better now
+
+	* lib/Para/Frame.pm: added note() to tt params
+
+	* html/pf/loading.html: added javascript function bottom()
+
+2006-08-07  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Uploaded.pm: bugfix
+
+	* lib/Para/Frame/Uploaded.pm: Added fh() method
+
+2006-07-31  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Page.pm: Added WAIT command
+
+	* lib/Para/Frame/Client.pm: Handling page redirects
+
+	* lib/Para/Frame/Site.pm: Noting important...
+
+	* lib/Para/Frame/Session.pm: - added page_sender in page_result
+	- using cperl emacs mode
+
+	* lib/Para/Frame/Request.pm, lib/Para/Frame/Page.pm:
+	Client progress report feature added
+
+	* lib/Para/Frame/File.pm: stacktrace added
+
+	* lib/Para/Frame/Connection.pm: cperl fix
+
+	* lib/Para/Frame/Client.pm, lib/Para/Frame.pm:
+	Client progress report feature added
+
+	* html/pf/loading.html: initial version
+
+2006-07-20  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: more debug
+
+	* lib/Para/Frame/Page.pm: using default website as a last resort
+
+	* lib/Para/Frame/File.pm: more debug
+
+2006-07-19  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: - Supporting only sending headers
+	- Avoid warnings in HTTP::BrowserDetect
+
+	* lib/Para/Frame/Page.pm: Supporting only sening headers
+
+	* lib/Para/Frame/Client.pm: Testing reversal of fd direction
+
+	* lib/Para/Frame/Client.pm: Supports only sending header
+
+	* lib/Para/Frame/Client.pm: send_body() sends chunks instead of rows
+
+	* lib/Para/Frame.pm: bugfix
+
+2006-07-18  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: added method cancelled()
+
+	* lib/Para/Frame/Page.pm:
+	now sending code BODY to client instead of newline
+
+	* lib/Para/Frame/Logging.pm: bugfix
+
+	* lib/Para/Frame/Client.pm: tweaked debug
+
+	* lib/Para/Frame/Child.pm: using new method cancelled()
+
+	* lib/Para/Frame.pm, lib/Para/Frame/DBIx/mysql.pm: bugfix
+
+	* lib/Para/Frame/Client.pm:
+	Restructured and uses code BODY for beginning body part
+
+2006-07-17  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Site.pm:
+	- does not fall back to default in site lookup
+	- not using dirconfig for site home anymore
+
+	* lib/Para/Frame/Request.pm:
+	Should use the current site and not that of the parent request
+
+	* lib/Para/Frame/DBIx.pm, lib/Para/Frame/DBIx/Pg.pm, lib/Para/Frame/DBIx/Table.pm, lib/Para/Frame/DBIx/mysql.pm:
+	Added methods table() and tables() and the class Para::Frame::DBIx::Table
+
+	* lib/Para/Frame/DBIx.pm, lib/Para/Frame/DBIx/Pg.pm:
+	Using DB specific sublclasses to DBIx
+
+	* lib/Para/Frame/Site.pm: tweaked debug msg
+
+2006-07-14  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: remove lang part in normalize
+
+	* lib/Para/Frame/Page.pm: - added orig()
+	- remove lang part from URLs in set_template
+	- docfix
+	- precompile() now stores file in orig->sys_path
+
+	* lib/Para/Frame/File.pm:
+	- added arg no_check for not checking the existense of the file
+
+2006-07-13  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm: error handling bugfix
+
+	* lib/Para/Frame/Result.pm, lib/Para/Frame/Request.pm: less debug
+
+	* lib/Para/Frame/Dir.pm: ending with slash bugfix
+
+2006-07-12  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Site.pm: Added '/' to places needed
+
+	* lib/Para/Frame/Route.pm: bugfix in check_backtrack()
+
+	* lib/Para/Frame/Page.pm: less debug
+
+	* lib/Para/Frame/File.pm: url in constructor must be at least one char
+
+	* lib/Para/Frame/Dir.pm: bugfix in files()
+
+2006-07-11  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Page.pm:
+	make clear that this is a normalized url in forward()
+
+	* lib/Para/Frame.pm: bugfix
+
+	* html/inc/menu_admin_pf.tt, lib/Para/Frame/Dir.pm, lib/Para/Frame/File.pm, lib/Para/Frame/Page.pm, lib/Para/Frame/Request.pm:
+	Page/File/Dir bugfixes
+
+	* lib/Para/Frame/Site.pm: cache home obj
+
+	* lib/Para/Frame/File.pm: bugfixes
+
+	* lib/Para/Frame/Dir.pm: Using new() in File
+
+2006-07-10  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm, lib/Para/Frame/Utils.pm:
+	- home -> home_url_path
+
+	* lib/Para/Frame/Site.pm: - webhome -> home_url_path
+	- home() now returns a Dir object
+
+	* lib/Para/Frame/Route.pm, lib/Para/Frame/Request.pm:
+	- home -> home_url_path
+
+	* lib/Para/Frame/Page.pm: - moved path_base to File
+	- home -> home_url_path
+	- reworkled precompile()
+	- added method burner()
+	- added method set_burner_by_type()
+	- added method set_burner_by_ext()
+	- added method burn()
+	- modified paths()
+	- home -> home_url_path
+
+	* lib/Para/Frame/File.pm: - home -> home_url_path
+	- sys_name -> sys_path
+	- url_name -> url_path
+	- sys_path -> sys_path_slash
+
+	* lib/Para/Frame/Email.pm: home -> home_url_path
+
+	* lib/Para/Frame/Dir.pm: - url_name -> url_path
+	- url_path -> url_path_slash
+
+	* lib/Para/Frame/Cookies.pm: home -> home_url_path
+
+	* lib/Para/Frame/Burner.pm:
+	Sets the include_path to the actual Page object on each burn
+
+	* lib/Para/Frame/Widget.pm: Synced with Page changes
+
+	* lib/Para/Frame/Watchdog.pm: Maby fixed cpu procentage bug
+
+	* lib/Para/Frame/Utils.pm: Synced with Page change
+
+	* lib/Para/Frame/Site.pm:
+	Removed a deprecated method + small doc change
+
+	* lib/Para/Frame/Session.pm: Using url instqead of uri
+
+	* lib/Para/Frame/Route.pm:
+	Overall using url in stead of uri + synced with Page changes
+
+	* lib/Para/Frame/Request.pm: Synced with Page changes and documented
+
+	* lib/Para/Frame/Page.pm: Redesigned, expanded and documented
+
+	* lib/Para/Frame/List.pm, lib/Para/Frame/L10N.pm:
+	Synced with Page changes
+
+	* lib/Para/Frame/File.pm: New superclass to Page and Dir
+
+	* lib/Para/Frame/Email.pm: Synced with Page changes
+
+	* lib/Para/Frame/Dir.pm: developed
+
+	* lib/Para/Frame/Cookies.pm, lib/Para/Frame.pm:
+	Synced with Page changes
+
+	* html/inc/menu_admin_pf.tt: Synced with Dir changes
+
+2006-07-06  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: bugfixed return of action
+
+2006-07-05  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: small docs add
+
+	* lib/Para/Frame/Page.pm: Doc fix
+
+	* html/inc/components.tt: made paraframe_formcount a global variable
+
+2006-07-04  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Page.pm: bugfix
+
+	* lib/Para/Frame/Dir.pm: debug tweaking
+
+	* lib/Para/Frame/Dir.pm: Para::Frame::Dir class
+
+	* lib/Para/Frame/Page.pm: - added parent() and dir_url_name()
+	- deprecated a lot of methods; use Para::Frame::Dir instead
+
+	* html/inc/menu_admin_pf.tt, html/def/index.tt: uses new dir class
+
+2006-07-03  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/test_ipc.pm: using emacs mode cperl
+
+	* lib/Para/Frame.pm: - using emacs mode cperl
+	- docs spelling
+
+	* lib/Para/Frame/Site.pm: - using emacs mode cperl
+	- added methods uri2file() that will call coresponding method in Para::Frame::Request in the right request
+	- added mehods home_dir(), scheme() and dir()
+
+	* lib/Para/Frame/URI.pm, lib/Para/Frame/Route.pm:
+	using emacs mode cperl
+
+	* lib/Para/Frame/Request.pm: added docs
+
+	* lib/Para/Frame/Page.pm: added find_template doc
+
+	* lib/Para/Frame/List.pm: using emacs mode cperl
+
+	* lib/Para/Frame/Burner.pm: use cperl
+
+2006-06-17  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Email.pm: handle sender
+
+2006-06-13  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/test_ipc.pm: action for testing ipc
+
+	* lib/Para/Frame/Widget.pm: Changed behaviour of checkbox
+
+	* lib/Para/Frame/Result.pm: less debug
+
+	* lib/Para/Frame/Connection.pm: Cleanup. Now mostly works
+
+	* lib/Para/Frame.pm: IO::Socket::INET option Reuse now named ReuseAddr
+
+	* lib/Para/Frame/Action/user_login.pm, lib/Para/Frame/Page.pm:
+	using cperl
+
+2006-06-12  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Email/Address.pm: Specify the right EHLO string
+
+	* lib/Para/Frame/Client.pm: less debug
+
+	* lib/Para/Frame/Utils.pm: resolved conflict
+
+	* lib/Para/Frame/Request.pm: changed to cperl
+
+	* lib/Para/Frame/Email.pm: Set correct EHLO when sending emails
+
+2006-06-07  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/User.pm:
+	Make sure to use class and not object then class should be used
+
+	* lib/Para/Frame/Utils.pm: Debugging exceptions
+
+	* lib/Para/Frame/User.pm: new() not used...
+
+	* lib/Para/Frame/Result.pm: debugging empty exceptions
+
+2006-06-02  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: docfix and bugfix
+
+	* lib/Para/Frame/Widget.pm: filter from ekoby by fiddur
+
+2006-05-31  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm:
+	Makes a better job of detecting what the params to checkbox() is
+
+	* lib/Para/Frame/Result.pm: fixed undef error
+
+2006-05-29  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: Make checkbox worke without explicit value
+
+	* lib/Para/Frame/Route.pm: less debug
+
+	* html/inc/components.tt, lib/Para/Frame/Template/Components.pod, lib/Para/Frame/Widget.pm:
+	Moved checkbox and radio from components.tt to Widget.pm
+
+2006-05-28  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm:
+	extended input() and textarea() and added documentation
+
+2006-05-24  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Page.pm: bugfix
+
+	* lib/Para/Frame/Email.pm: changed Reply-To/reply_to param
+
+2006-05-23  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm: added debug debugging level
+
+	* lib/Para/Frame/Result.pm: fixed undef
+
+	* lib/Para/Frame/Page.pm: bugfixes for setting error template
+
+2006-05-19  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: error_backtrack bugfix
+
+	* lib/Para/Frame/Page.pm: docfix
+
+	* lib/Para/Frame.pm: bugfix
+
+2006-05-10  jonas <jonas@paranormal.se>
+
+	* html/inc/login_box.tt: translation
+
+	* lib/Para/Frame/Request/Ctype.pm:
+	Added weak reference to parent req in object
+
+	* lib/Para/Frame/Widget.pm:
+	set_error_template must now be called without $home
+
+	* lib/Para/Frame/Uploaded.pm: docfix
+
+	* lib/Para/Frame/Session.pm: made req param to constructor optional
+
+	* lib/Para/Frame/Result.pm: removed old reference to Clone
+
+	* lib/Para/Frame/Request.pm:
+	some classes constructed with $req given as param
+
+	* lib/Para/Frame/Page.pm:
+	- Added weak reference to parent req in object
+	- moved paths from Para::Frame::Burner to here
+	- set_error_template() is now called without $home part, fixing a bug for then the site is changed after the error page is set, as in a precompile
+
+	* lib/Para/Frame/Cookies.pm:
+	Added weak reference to parent req in object
+
+	* lib/Para/Frame/Burner.pm: - bugfixes
+	- moved paths() to Para::Frame::Page
+
+	* lib/Para/Frame.pm: undef fix
+
+2006-05-09  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: bugfix
+
+	* lib/Para/Frame/Widget.pm: translates buttons
+
+	* lib/Para/Frame/User.pm: Call session after_user_logout
+
+	* lib/Para/Frame/Session.pm: reset admin mode on user logout
+
+	* dev/inc_pre/form_start.tt: Use the other version instead
+
+	* lib/Para/Frame/Template/Plugin/Meta/Interpolate.pm:
+	Supports complex values
+
+	* html/inc/js.tt: better solution
+
+2006-05-08  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Route.pm: bugfix
+
+2006-05-03  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Time.pm:
+	Trying to handle timezones in a better way by not using Date::Manip as the first choise for parsing.
+
+	* Makefile.PL:
+	added dependency on DateTime::Format::Strptime and DateTime::Format::HTTP
+
+	* lib/Para/Frame.pm: Setting timezone with class method
+
+2006-04-27  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Time.pm: Added to docs
+
+	* lib/Para/Frame/Time.pm: Bugfix
+
+2006-04-26  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Time.pm: only make the DateTime object more specific
+
+	* lib/Para/Frame/DBIx.pm: bugfix. Don't change the time object
+
+	* lib/Para/Frame.pm: Give timezone at startup as debug
+
+	* Makefile.PL: Require DateTime 0.3
+
+	* lib/Para/Frame/Time.pm: docfix
+
+	* lib/Para/Frame/Time.pm: added stringify
+
+	* lib/Para/Frame/Route.pm: bugfix
+
+	* lib/Para/Frame/Template/Components.pod: added docref
+
+	* lib/Para/Frame/Page.pm: avoid undef warning
+
+	* lib/Para/Frame/Time.pm: - added loc()
+	- added set_stringify
+
+	* lib/Para/Frame/Route.pm: less debug
+
+	* lib/Para/Frame/List.pm: fixed undef
+
+	* lib/Para/Frame/DBIx.pm:
+	expanded report_error to reconnect and retry the SQL statement if necessary
+
+	* lib/Para/Frame/Burner.pm: docfix
+
+	* lib/Para/Frame.pm: - added do_hup()
+	- docfix
+	- added config locale
+	- added config time_stringify
+
+2006-04-24  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Email/Address.pm: more debug
+
+	* lib/Para/Frame/Widget.pm: added label support to input()
+
+	* lib/Para/Frame/Utils.pm: added datadump as a custom dumper interface
+
+	* lib/Para/Frame.pm: custom dumper interface
+
+	* html/def/error.tt: Adding step to default pages
+
+2006-04-18  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Email/Address.pm: added user() method
+
+	* lib/Para/Frame/Action/mark.pm:
+	changed behaviour. Bookmarks with the referer query rather than the current query.
+
+	* lib/Para/Frame/Widget.pm:
+	confirm_simple uses current page rather than the referer
+
+	* lib/Para/Frame/Route.pm: - added caller_uri() method
+	- better comparsion between joining steps
+	- added caller_is_next_step() method
+	- added size() and list() methods
+
+	* lib/Para/Frame/Request.pm: bugfixes
+
+	* lib/Para/Frame/Page.pm: avoides some undef values
+
+	* lib/Para/Frame/List.pm: added init(), hashref() and as_list()
+
+	* lib/Para/Frame/L10N.pm: Added 'en' as default site language
+
+	* lib/Para/Frame/DBIx.pm: added disconnect() method
+
+	* html/inc/form_start.tt: added 'me' as special value for template
+
+	* html/inc/debug.tt: Made route an object
+
+	* html/inc/components.tt:
+	- make step not show both backstep and regret if they go to the same place
+	- trimmed selects to remove ugly whitespace
+
+2006-04-12  jonas <jonas@paranormal.se>
+
+	* html/inc/debug.tt: html escape debug output
+
+	* lib/Para/Frame/L10N/sv.pm: bugfix
+
+	* lib/Para/Frame/Action/user_logout.pm: docfix
+
+	* lib/Para/Frame/Action/session_vars_update.pm: Added action
+
+	* lib/Para/Frame/Action/language_set.pm: added action
+
+	* lib/Para/Frame/Widget.pm: docfix
+
+	* lib/Para/Frame/Session.pm: added admin_mode()
+
+	* lib/Para/Frame/Result.pm: added incorporate()
+
+	* lib/Para/Frame/Request.pm: incorporate result from subrequests
+
+	* lib/Para/Frame/Page.pm: Misc bugfixes
+
+	* html/inc/menu_admin_pf.tt: button for turning admin mode on/off
+
+	* html/inc/form_start.tt: added admin_mode
+
+	* dev/inc_pre/form_start.tt: added admin mode
+
+2006-04-11  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Time.pm: bugfix
+
+2006-04-10  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Result/Part.pm: switched to english errors
+
+	* lib/Para/Frame/L10N/sv.pm: added translations for errors
+
+	* lib/Para/Frame/Page.pm:
+	only add prefix for errors that displays context, on template processing error
+
+2006-04-05  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm: bugfix
+
+2006-04-04  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: added uploaded() method
+
+	* lib/Para/Frame/Uploaded.pm: new module
+
+	* lib/Para/Frame/Connection.pm: docfix
+
+	* lib/Para/Frame/Client.pm: umask fix
+
+	* lib/Para/Frame/Result/Part.pm: handle Part objects in creation
+
+	* lib/Para/Frame/Page.pm: bugfix
+
+	* lib/Para/Frame/Session.pm: debug
+
+	* lib/Para/Frame/Request.pm: added send_to_daemon()
+
+	* lib/Para/Frame/Logging.pm, lib/Para/Frame/DBIx.pm: bugfix
+
+	* lib/Para/Frame/Connection.pm: new module
+
+	* lib/Para/Frame.pm: - bugfixes
+	- close connection on strange input
+
+2006-03-29  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Site.pm: Added backup_redirect
+
+	* lib/Para/Frame/Page.pm: Update the lang param each time
+
+2006-03-28  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/debug_change.pm: added support for watchlist
+
+	* lib/Para/Frame/Utils.pm:
+	enable using diffrent logging levels for diffrent functions
+
+	* lib/Para/Frame/Request.pm: added logging method
+
+	* html/pf/config/debuglist.tt, html/pf/config/inc/menu.tt, html/pf/config/index.tt, lib/Para/Frame/Logging.pm:
+	debug watchlist files
+
+	* html/inc/menu_admin_pf.tt: point debug to pf/config/debuglist.tt
+
+	* html/def/debug.tt: Moved most of it to config dir page
+
+	* lib/Para/Frame/Utils.pm: keep newlines
+
+2006-03-22  jonas <jonas@paranormal.se>
+
+	* html/inc/components.tt: removed space...
+
+	* html/def/confirm.tt, lib/Para/Frame/Site.pm: bugfix
+
+	* lib/Para/Frame/Site.pm: added sys_home and sys_home_path
+
+2006-03-21  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/List.pm:
+	A page size < 1 equals all hits on the same page
+
+	* lib/Para/Frame/Action/debug_change.pm: uses $session->set_debug()
+
+	* lib/Para/Frame/Session.pm: added debug_level() and set_debug()
+
+	* lib/Para/Frame.pm: Sending result pages in chunks
+
+2006-03-20  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: documented set_language
+
+	* lib/Para/Frame/L10N/sv.pm: bugfix
+
+	* lib/Para/Frame/Site.pm:
+	Don't implicitly create dirconfig if not existing
+
+	* lib/Para/Frame/Page.pm: spelling
+
+	* lib/Para/Frame/Request.pm: Added new_bgrequest
+
+	* lib/Para/Frame.pm: added new_bgrequest
+
+	* html/def/page_not_found.tt, html/inc/headline.tt, html/inc/title.tt, lib/Para/Frame.pm, lib/Para/Frame/L10N.pm, lib/Para/Frame/L10N/en.pm, lib/Para/Frame/L10N/sv.pm, lib/Para/Frame/Page.pm, lib/Para/Frame/Request.pm, lib/Para/Frame/Result/Part.pm, lib/Para/Frame/Template/Plugin/Meta/Interpolate.pm:
+	L10N
+
+2006-03-18  jonas <jonas@paranormal.se>
+
+	* html/pf/default.css: tweaking
+
+	* lib/Para/Frame/Request/Ctype.pm: fix undefs
+
+	* lib/Para/Frame/Change.pm: more debug
+
+2006-03-17  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm:
+	trim also trims duplicate spaces inside string
+
+2006-03-08  jonas <jonas@paranormal.se>
+
+	* demo/demoserver.pl: Support setting host, home and port as a param
+
+2006-03-07  jonas <jonas@paranormal.se>
+
+	* dev/inc_pre/header.tt: using favicon_header
+
+	* lib/Para/Frame.pm: trim...
+
+	* html/inc/debug.tt: access result through req
+
+	* html/inc/menu_top.tt: moved div from border
+
+	* html/inc/border_top.tt: moved div to header
+
+2006-03-06  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/user_login.pm: sets path in Cookie class
+
+	* lib/Para/Frame/Request.pm:
+	Places session init after page and site init
+
+	* lib/Para/Frame/Cookies.pm: - Makes home_path the default cookie path
+	- Added support of extra params for remove
+
+	* html/inc/js.tt: Supports hiding of TR, in both mozilla and ie
+
+	* html/inc/alternatives_box.tt: retrieves result via req
+
+	* lib/Para/Frame/Request.pm: less debug
+
+	* lib/Para/Frame/Widget.pm: copy style so that it's not modified
+
+	* lib/Para/Frame/Request.pm: less debug
+
+	* lib/Para/Frame/Page.pm: removed tt params result and browser
+
+	* lib/Para/Frame/Burner.pm: less debug
+
+	* html/inc/info_box.tt: gets result via req
+
+2006-03-02  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/user_login.pm: setting cookie path to site home
+
+	* lib/Para/Frame/Widget.pm: bugfix
+
+	* lib/Para/Frame/Utils.pm: error handling
+
+	* lib/Para/Frame/User.pm: added method clear_cookies()
+
+	* lib/Para/Frame/Cookies.pm: error handling
+
+	* html/inc/border_bottom.tt: renamed template
+
+	* lib/Para/Frame/Request.pm: Added id
+
+	* lib/Para/Frame/Page.pm:
+	- Language part is removed from url_path_tmpl already
+	- removed tt param reqnum. Use req.id instead
+
+	* html/inc/menu_top.tt: reqnum -> req.id
+
+2006-03-01  jonas <jonas@paranormal.se>
+
+	* html/inc/menu_admin_pf.tt:
+	Renamed file menu_admin_pf.tt, formerly menu_bottom_pf.tt
+
+	* html/inc/menu_bottom_pf.tt:
+	Renamed from menu_bottom_pf.tt to menu_admin_pf.tt
+
+	* lib/Para/Frame/Page.pm: Remove lang part of template_uri
+
+	* demo/demoserver.pl: misc changes
+
+	* html/inc/js.tt, html/pf/cms/source.tt, html/pf/js/pngfix.js:
+	png javascript fix
+
+	* html/inc/menu_bottom_pf.tt: Added admin mode link
+
+2006-02-28  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/user_login.pm: handles empty password
+
+	* lib/Para/Frame/Widget.pm: May use coderefs in css_header
+
+	* lib/Para/Frame/Request.pm: - Setting user on minimal_init
+	- added browser() method
+
+	* lib/Para/Frame/Page.pm: - added sys_dir
+	- setting param me on precompile
+	- uses Burner
+	- removed dir and filename from tt param
+
+	* lib/Para/Frame/Email.pm: uses Burner
+
+	* lib/Para/Frame.pm: user set in req init
+
+	* html/pf/default.css: - Places h1 under logo
+	- style fix for konqueror
+
+	* html/inc/menu_top.tt: put logo on all pages
+
+	* html/def/index.tt: uses page
+
+	* html/def/debug.tt: app debug shoule be implemented in another way
+
+	* dev/inc_pre/header.tt: css can change depending on browser, etc
+
+2006-02-27  jonas <jonas@paranormal.se>
+
+	* demo/demoserver.pl: Added a demoserv
+
+	* lib/Para/Frame/Widget.pm: Added defaults for favicon and css
+
+	* lib/Para/Frame/Site.pm: Added home_path()
+
+	* lib/Para/Frame/Route.pm: bugfix
+
+	* lib/Para/Frame/Page.pm: - Support parsing plain pages
+	- Uses new Burner methods
+	- Added some accessors
+
+	* lib/Para/Frame/Burner.pm:
+	Moved Burner config to Burner. Some new methods
+
+	* lib/Para/Frame.pm: Moved Burner config to Burner
+
+	* html/inc/border_bottom.tt, html/inc/border_top.tt, html/inc/components.tt, html/inc/debug.tt, html/inc/footer.tt, html/inc/menu_bottom.tt, html/inc/menu_bottom_pf.tt, html/inc/menu_top.tt, html/pf/.htaccess, html/pf/default.css, html/pf/images/favicon.ico, html/pf/images/favicon.png, html/pf/images/logo/paraframe-123x25.png, html/pf/images/logo/paraframe-245x50.png, html/pf/images/logo/paraframe-368x75.png, html/pf/images/logo/paraframe-490x100.png, html/pf/images/logo/paraframe-735x150.png, html/pf/images/logo/paraframe.png, html/pf/images/logo/paraframe.xcf, html/pf/images/logo/pf-150x95.png, html/pf/images/logo/pf-200x126.png, html/pf/images/logo/pf-300x189.png, html/pf/images/logo/pf-79x50.png, html/pf/images/logo/pf.png, html/pf/images/logo/pf.xcf:
+	Expanded default templates
+
+	* html/index.tt: Default page
+
+	* html/pf/images/arrow.down.png, html/pf/images/arrow.up.png, html/pf/styleswitch.js:
+	moved from ui
+
+2006-02-26  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Email/Address.pm: handles undef
+
+	* lib/Para/Frame/Email.pm: uses Page
+
+	* lib/Para/Frame/Request.pm: Bugfix. Hadnle multipple names for site
+
+	* lib/Para/Frame/User.pm: s -> session
+
+	* lib/Para/Frame/Request.pm: Create session before init
+
+	* lib/Para/Frame.pm: initialize request
+
+2006-02-23  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm: Making $VERSION availible
+
+	* lib/Para/Frame/Client.pm: Adds support for ingoring a directory
+
+2006-02-22  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: less debug
+
+	* lib/Para/Frame/Request.pm: Added method uri2file_clear
+
+	* lib/Para/Frame/Page.pm: Adds missing dirs
+
+	* html/inc/alternatives_box.tt: list -> alts
+
+	* lib/Para/Frame/Page.pm: more debug
+
+	* lib/Para/Frame/Page.pm: added debug
+
+	* lib/Para/Frame/Result/Part.pm:
+	extra methods for compability with Template::Exception
+
+	* lib/Para/Frame/Request.pm: Moves site method from Request to Page
+
+	* lib/Para/Frame/Page.pm: moved site method from Request to Page
+
+	* lib/Para/Frame.pm: bugfix
+
+	* lib/Para/Frame.pm: fixed undef
+
+2006-02-21  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Watchdog.pm: minor fix
+
+	* lib/Para/Frame/Watchdog.pm: bugfix
+
+	* lib/Para/Frame.pm: docfix
+
+	* lib/Para/Frame/Request.pm:
+	Initialize more things after global $REQ set
+
+	* lib/Para/Frame/Page.pm: less debug
+
+	* lib/Para/Frame/Cookies.pm: bugfixes
+
+	* lib/Para/Frame/Action/debug_change.pm, lib/Para/Frame/Action/mark.pm, lib/Para/Frame/Action/next_step.pm, lib/Para/Frame/Action/remove_step.pm, lib/Para/Frame/Action/server_reload.pm, lib/Para/Frame/Action/server_terminate.pm, lib/Para/Frame/Action/skip_step.pm, lib/Para/Frame/Action/user_login.pm, lib/Para/Frame/Action/user_logout.pm, lib/Para/Frame/Action/wait_for_req.pm, lib/Para/Frame/Burner.pm, lib/Para/Frame/Change.pm, lib/Para/Frame/Child.pm, lib/Para/Frame/Child/Result.pm, lib/Para/Frame/Client.pm, lib/Para/Frame/Cookies.pm, lib/Para/Frame/Request.pm, lib/Para/Frame/Request/Ctype.pm, lib/Para/Frame/Result/Part.pm, lib/Para/Frame/Session.pm, lib/Para/Frame/URI.pm, lib/Para/Frame/User.pm, lib/Para/Frame/Utils.pm, lib/Para/Frame/Watchdog.pm:
+	Added docs
+
+	* lib/Para/Frame.pm: added docs
+
+2006-02-20  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm: minor debug change
+
+	* lib/Para/Frame/Route.pm: Moved code to Page
+
+	* lib/Para/Frame/Request.pm: - Documentation
+	- Moved code to Page
+
+	* lib/Para/Frame/Page.pm: Documentation
+
+	* lib/Para/Frame/List.pm: Returns the corresponding item on $list->123
+
+	* lib/Para/Frame/Cookies.pm, lib/Para/Frame/Burner.pm:
+	Moved code to Page
+
+	* lib/Para/Frame.pm: moved code to Page
+
+2006-02-19  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Template/Plugin/Meta/Interpolate.pm:
+	Should not use print after startup
+
+	* lib/Para/Frame/Template/Plugin/Sorted_table.pm:
+	should not use print after startup
+
+	* lib/Para/Frame/Child/Result.pm: clarified docs
+
+	* lib/Para/Frame/Widget.pm: handling undefs
+
+	* lib/Para/Frame/Request.pm: bugfix for https usage
+
+	* lib/Para/Frame/Page.pm: addede docs
+
+	* lib/Para/Frame/List.pm: modification for working better with forks
+
+	* lib/Para/Frame/L10N.pm: Stub for localization module
+
+	* lib/Para/Frame/DBIx.pm: added method cached_forked_select_list()
+
+	* lib/Para/Frame/Child.pm: - clarified docs
+	- added debug
+
+	* lib/Para/Frame.pm: bugfix
+
+2006-02-15  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Template/Plugin/Sorted_table.pm: less debug
+
+	* lib/Para/Frame/Widget.pm: Added to docs
+
+	* lib/Para/Frame/Request.pm:
+	- Handling requests with specific language in url
+	- Handling static pages, bugfix
+
+	* lib/Para/Frame/List.pm: making class more tolerant
+
+	* lib/Para/Frame.pm: more debug
+
+	* lib/Para/Frame/Request.pm: Wait in yield if waiting for something
+
+2006-02-14  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Template/Overview.pod: documented js_extra.tt
+
+	* lib/Para/Frame/Utils.pm:
+	tweaked error handling, added run_error_hooks()
+
+	* lib/Para/Frame/Result.pm: Tweaked error handling
+
+	* lib/Para/Frame/List.pm:
+	Make this class a subclass to Template::Iterator to make it work in a template FOREACH
+
+	* lib/Para/Frame/Burner.pm: Handle undef
+
+	* lib/Para/Frame.pm:
+	tweaked error handling. Let watchdog restart on multiple error
+
+	* lib/Para/Frame/Template/Plugin/Meta/Interpolate.pm:
+	Using same type of version string as in other modules
+
+	* lib/Para/Frame/Template/Plugin/Sorted_table.pm:
+	New plugin for sorting and paganating tables
+
+	* lib/Para/Frame/Template/Components.pod: Documented tr2
+
+	* lib/Para/Frame/Widget.pm: Less debug
+
+	* lib/Para/Frame/Session.pm: added docs
+
+	* lib/Para/Frame/List.pm: - Added docs
+	- Removed code originating from Rit::Base::List
+
+	* lib/Para/Frame/DBIx.pm:
+	added cached_select_list for integration with Para::Frame::List
+
+2006-02-13  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/List.pm: Initial version
+
+	* lib/Para/Frame/Widget.pm:
+	jump() and forward() now uses the same code for href_class et al
+
+	* lib/Para/Frame/Session.pm:
+	Made place for stored Para::Frame::List objs
+
+	* lib/Para/Frame/DBIx.pm: select_list() now returns a Para::Frame::List
+
+	* html/inc/components.tt: - Support pagelist
+	- expand() bugfix
+
+	* lib/Para/Frame.pm: added docs
+
+	* lib/Para/Frame/Widget.pm: added favicon_header
+
+	* lib/Para/Frame/Utils.pm: docfix
+
+	* lib/Para/Frame/Time.pm, lib/Para/Frame/Site.pm: added docs
+
+	* lib/Para/Frame/Email.pm: updated docs
+
+	* MANIFEST: updated manifest
+
+	* lib/Para/Frame/DBIx.pm: added examples
+
+	* lib/Para/Frame.pm: Custom datetime format
+
+	* html/inc/header.tt: favicon
+
+	* Changes: updated
+
 2006-02-10  jonas <jonas@paranormal.se>
 
 	* lib/Para/Frame/Email/Address.pm: Added docs
