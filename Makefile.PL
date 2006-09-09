@@ -39,7 +39,7 @@ WriteMakefile(
 		  'HTTP::Request'              => 1.40,
 		  'URI::QueryParam'            => 0.00,
 		  'Date::Manip'                => 5.44,
-		  'DateTime'                   => 0.30,
+		  'DateTime'                   => 0.2901,
 		  'DateTime::Set'              => 0.22,
 		  'DateTime::TimeZone'         => 0.37,
 	          'DateTime::Format::Pg'       => 0.08,
