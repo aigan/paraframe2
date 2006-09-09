@@ -14,6 +14,7 @@
 
     [% PROCESS header_extra.tt %]
     [% PROCESS js.tt %]
+    [% IF header_extra; INCLUDE $header_extra; END %]
   </head>
 
   <body [% onload %][% IF body_class %] class="$body_class"[% END %]>
