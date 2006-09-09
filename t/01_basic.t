@@ -3,16 +3,24 @@ use strict;
 use warnings;
 use Data::Dumper;
 use Test::Warn;
-use Test::More tests => 22;
+use Test::More tests => 20;
 
 
 BEGIN { use_ok('Para::Frame'); }
 
-warning_like {Para::Frame::Site->add({})} qr/^Registring site \S+$/, "Adding site";
+warning_like {Para::Frame::Site->add({})} qr/^Registring site [\w\.]+$/, "Adding site";
 
-Para::Frame->configure({
+my $cfg_in =
+{
     approot => '/tmp/approot',
-});
+};
+warnings_like {Para::Frame->configure($cfg_in)}
+[ qr/^Timezone set to /,
+  qr/^Stringify now set$/,
+  qr/^Regestring ext tt to burner html$/,
+  qr/^Regestring ext css to burner plain$/,
+  ],
+    "Configuring";
 
 my $cfg = $Para::Frame::CFG;
 
@@ -20,11 +28,10 @@ is( $cfg->{'approot'}, '/tmp/approot', 'approot');
 is_deeply( $cfg->{'appfmly'}, [], 'appfmly');
 is( $cfg->{'dir_log'}, '/var/log', 'dir_log');
 is( $cfg->{'logfile'}, '/var/log/paraframe_7788.log', 'logfile');
-isa_ok( $cfg->{'th'}, 'HASH', 'th' );
-my $th = $cfg->{'th'};
-isa_ok( $th->{'plain'}, 'Para::Frame::Burner', 'th plain' );
-isa_ok( $th->{'html'}, 'Para::Frame::Burner', 'th html' );
-isa_ok( $th->{'html_pre'}, 'Para::Frame::Burner', 'th html_pre' );
+
+my $burner = Para::Frame::Burner->get_by_type('html');
+isa_ok( $burner, 'Para::Frame::Burner', 'burner html' );
+
 is_deeply( $cfg->{'appback'}, [], 'appback');
 is( $cfg->{'dir_var'}, '/var', 'dir_var');
 is( $cfg->{'port'}, 7788, 'port');
@@ -37,4 +44,3 @@ is( $cfg->{'paraframe_group'}, 'staff', 'paraframe_group');
 is( $cfg->{'time_zone'}, 'local', 'time_zone');
 is( $cfg->{'umask'}, 7, 'umask');
 is( $cfg->{'user_class'}, 'Para::Frame::User', 'user_class');
-
