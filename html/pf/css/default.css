@@ -50,7 +50,7 @@ input
 {
   background: $css.button;
   border-color: $css.border;
-  border-width: 0.3em;
+  border-width: 0.2em;
 }
 
 .paraframe_menu_top p
@@ -141,5 +141,28 @@ tr.odd
 
 .paraframe_box table
 {
+  border-style: inset;
+}
+
+/***********************************************/
+
+.paraframe_menu_bottom_pf a
+{
+    color: black;
+    border-width: 0.2em;
+    border-color: $css.border;
+    border-style: outset;
+    background: $css.button;
+    padding: 1px 6px 1px 6px;
+    text-decoration: none;
+}
+.paraframe_menu_bottom_pf a:hover
+{
+    background-color: lightyellow;
+    color: black;
+}
+.paraframe_menu_bottom_pf a:active:hover
+{
+  padding: 0px 5px 0px 7px;
   border-style: inset;
 }
