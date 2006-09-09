@@ -755,7 +755,7 @@ sub paths
 	my $type = $burner->{'type'};
 
 	my $site = $page->site;
-	my $subdir = 'inc' . $burner->subdir_suffix;
+
 
  	my $path_full = $page->dirsteps->[0];
 	my $destroot = $site->home->sys_path;
@@ -769,9 +769,37 @@ sub paths
 	}
 	my $paraframedir = $Para::Frame::CFG->{'paraframe'};
 	my $htmlsrc = $site->htmlsrc;
-	my $backdir = $site->is_compiled ? '/dev' : '/html';
 
-	debug 3, "Creating incpath for $dir with $backdir under $destroot ($type)";
+	my $subdir = 'inc' . $burner->subdir_suffix;
+
+	my @places;
+	if( $site->is_compiled )
+	{
+	    @places =
+	      (
+	       {
+		subdir => $subdir,
+		backdir => '/dev',
+	       },
+	       {
+		subdir => 'inc',
+		backdir => '/html',
+	       },
+	      );
+	}
+	else
+	{
+	    @places =
+	      (
+	       {
+		subdir => $subdir,
+		backdir => '/html',
+	       },
+	      );
+	}
+
+
+	debug 3, "Creating incpath for $dir under $destroot ($type)";
 
 	my @searchpath;
 
@@ -781,15 +809,20 @@ sub paths
 
 	    foreach my $appback (@{$site->appback})
 	    {
-		push @searchpath, $appback.$backdir.$step.$subdir.'/';
+		foreach my $place (@places)
+		{
+		    push @searchpath, ( $appback.$place->{'backdir'}.
+					$step.$place->{'subdir'}.'/'
+				      );
+		}
 	    }
 
-	    if( $site->is_compiled )
+	    foreach my $place (@places)
 	    {
-		push @searchpath,  $paraframedir.'/dev'.$step.$subdir.'/';
+		push @searchpath, ($paraframedir.$place->{'backdir'}.
+				   $step.$place->{'subdir'}.'/'
+				  );
 	    }
-
-	    push @searchpath,  $paraframedir.'/html'.$step.'inc/';
 	}
 
 
@@ -1345,7 +1378,7 @@ sub render_output
 		    {
 			debug "Subtemplate not found";
 			$new_error_tt = $error_tt = '/page_part_not_found.tt';
-			my $incpathstring = join "", map "- $_\n", @{$req->{'incpath'}};
+			my $incpathstring = join "", map "- $_\n", @{$page->incpath};
 			$part->add_message("Include path is\n$incpathstring");
 		    }
 		    else
