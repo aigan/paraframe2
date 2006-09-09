@@ -1,24 +1,3 @@
-<style>
-.paraframe_menu_bottom_pf a
-{
-    color: black;
-    border: 2px buttonface outset;
-    background: buttonface;
-    padding: 1px 6px 1px 6px;
-    text-decoration: none;
-}
-.paraframe_menu_bottom_pf a:hover
-{
-    background-color: lightyellow;
-    color: black;
-}
-.paraframe_menu_bottom_pf a:active:hover
-{
-  padding: 0px 5px 0px 7px;
-  border-style: inset;
-}
-
-</style>
 <div class="paraframe_menu_bottom_pf">
 <div style="float: right; padding: 0.3em">Debug at level [% debug %]</div>
 
