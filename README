@@ -52,6 +52,8 @@ PREREQUISITIES
 
     Also requires lsof
 
+    Template 2.15 has some important bugfixes for 2.14
+
 
 INSTALL
 
