@@ -56,6 +56,10 @@ The value can be any sort of URL.  Used to set form.f.action.
 Default template determined by L<Para::Frame::Route/plan_backtrack>
 in case of form submit with next_template being false.
 
+Paths beginning with a '/' will be apennded to the site home.
+
+As a special case, the string 'me' will expand to the current page.
+
 =head2 next_template_target
 
 Sets the target of the next template. It's the name of the browser window.
@@ -69,6 +73,9 @@ The value can be any sort of URL.  Used to set form.f.action.
 This will be used if both L</next_template> and
 L<Para::Frame::Route/plan_backtrack> returns undef.
 
+Paths beginning with a '/' will be apennded to the site home.
+
+As a special case, the string 'me' will expand to the current page.
 
 =head2 next_action
 
