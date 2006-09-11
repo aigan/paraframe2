@@ -88,6 +88,9 @@ our %Lexicon =
    'Template missing' =>
    'Mallfil saknas',
 
+   'Include path is' =>
+   'Sökvägen är',
+
   );
 
 1;
