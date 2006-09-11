@@ -18,7 +18,7 @@ WriteMakefile(
 		  'Time::HiRes'                => 1.66,
 		  'Carp'                       => 1.04,
 		  'Sys::CpuLoad'               => 0.02,
-		  'Template'                   => 2.14,
+		  'Template'                   => 2.15,
 		  'FreezeThaw'                 => 0.43,
 		  'File::Slurp'                => 0.00,
 		  'CGI'                        => 3.10,
