@@ -166,7 +166,8 @@ sub exception
 
   $result->error( $exception_obj )
 
-Creates a new error part and adds it to the result. Clears out $@
+Creates a new L<Para::Frame::Result::Part> and adds it to the
+result. Clears out $@
 
 Marks the part as hidden if it is of a type that should be hidden or
 if hide_all is set.
@@ -235,12 +236,29 @@ sub errcnt
 
 =head2 backtrack
 
-Returns true if we should backtrack because of the result.
+  $result->backtrack()
+
+  $result->backtrack(0)
+
+  $result->backtrack(1)
+
+If given a defined param, sets the switch to that value.
+
+Must be a number. The value will change by future errors.
+
+Returns:
+
+ true if we should backtrack because of the result.
 
 =cut
 
 sub backtrack
 {
+    if( defined $_[1] )
+    {
+	$_[0]->{'backtrack'} = $_[1];
+    }
+
     return $_[0]->{'backtrack'};
 }
 
