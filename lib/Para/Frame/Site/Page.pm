@@ -288,7 +288,7 @@ True if an error page has been selected
 
 =cut
 
-sub error_page_selected
+sub error_page_selected #error_template
 {
     return $_[0]->{'error_template'} ? 1 : 0;
 }
@@ -566,7 +566,7 @@ sub set_template
     else
     {
 	$url_norm = $req->normalized_url( $url_in );
-	debug "Removed langpart";
+#	debug "Removed langpart";
 	$url_norm =~ s/\.\w\w(\.\w{2,3})$/$1/; # Remove language part
     }
 
@@ -633,6 +633,10 @@ sub set_error_template
 	}
 	debug "The original request had the same page obj";
     }
+
+    # TODO:
+    # We may have to set a "target_template" for remembering what
+    # template the error template is talking about
 
     my $home = $page->site->home_url_path;
     return $page->{'error_template'} =
@@ -1379,11 +1383,13 @@ sub render_output
 			debug "Subtemplate not found";
 			$new_error_tt = $error_tt = '/page_part_not_found.tt';
 			my $incpathstring = join "", map "- $_\n", @{$page->incpath};
-			$part->add_message("Include path is\n$incpathstring");
+			$part->add_message(loc("Include path is")."\n$incpathstring");
+			$part->view_context(1);
+			$part->prefix_message(loc("During the processing of [_1]",$template)."\n");
 		    }
 		    else
 		    {
-			debug "Other template error";
+			debug "Other template file error";
 			$part->type('template');
 			$new_error_tt = $error_tt = '/error.tt';
 		    }
@@ -1431,6 +1437,11 @@ sub render_output
 		return 1;
 	    }
 
+	    # The template generating this error may not ge the
+	    # original URL
+
+	    # But that template url will be forgotten if we overwrite
+	    # it with the error template.
 
 	    $page->set_error_template( $error_tt );
 	    return 0;
