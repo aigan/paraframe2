@@ -3,7 +3,11 @@
    # call default_template instead of plan_bactrack directly
 
 form_action = next_template || plan_backtrack || default_template || default_step || me;
-IF form_action == 'me'; form_action=me; END;
+IF form_action == 'me';
+   form_action = me;
+ELSIF form_action.search('^/');
+   form_action = "$home$form_action";
+END;
 form_extra = "";
 IF template.onsubmit;
    form_extra = "$form_extra onsubmit='${template.onsubmit}'";
