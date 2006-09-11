@@ -1759,13 +1759,14 @@ sub configure
     my %th_default =
 	(
 	 PRE_PROCESS => 'header_prepare.tt',
-	 POST_PROCESS => 'footer.tt',
+	 POST_PROCESS => 'footer_prepare.tt',
 	 TRIM => 1,
 	 PRE_CHOMP => 1,
 	 POST_CHOMP => 1,
 	 RECURSION => 1,
 	 PLUGIN_BASE => $tt_plugins,
 	 ABSOLUTE => 1,
+#         DEBUG_ALL => 1,  # DEBUG
 #	 FILTERS =>
 #	 {
 #	     loc => \&Para::Frame::L10N::loc,
