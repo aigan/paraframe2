@@ -1317,7 +1317,9 @@ sub error_backtrack
   $req->referer
 
 Returns the LOCAL referer. Just the path part. If the referer
-was from another website, fall back to default
+was from another website, fall back to default.
+
+(This gives the previous caller page)
 
 Returns the URL path part as a string.
 
