@@ -22,7 +22,8 @@ Para::Frame::File - Represents a file in the site
 
 =head1 DESCRIPTION
 
-Let L<Para::Frame::Dir> and L<Para::Frame::Page> inherit from this.
+See also L<Para::Frame::Dir> L<Para::Frame::Site::File> and
+L<Para::Frame::Page>.
 
 =cut
 

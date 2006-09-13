@@ -45,9 +45,8 @@ use Para::Frame::Page;
 
 Represents a directory in the site.
 
-This class inherits from L<Para::Frame::File>.
-
-There are corresponding methods here to L<Para::Frame::Page>.
+See also L<Para::Frame::Site::Dir>, L<Para::Frame::File> and
+L<Para::Frame::Page>.
 
 =cut
 

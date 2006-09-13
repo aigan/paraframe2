@@ -22,8 +22,9 @@ Para::Frame::Site::File - Represents a file in the site
 
 =head1 DESCRIPTION
 
-Let L<Para::Frame::Site::Dir> and L<Para::Frame::Site::Page> inherit
-from this.
+This class inherits from L<Para::Frame::File>.
+
+This is the superclass of L<Para::Frame::Site::Page>.
 
 =cut
 

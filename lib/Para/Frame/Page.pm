@@ -26,6 +26,8 @@ Represents a page on a site with a specific URL.
 
 Inherits from L<Para::Frame::File>
 
+This is the superclass of <Para::Frame::Site::Page>.
+
 During lookup or generation of the page, the URL of the page can
 change. We differ between the original requested URL, the resulting
 URL and an URL for the template used.
