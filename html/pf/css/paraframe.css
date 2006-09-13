@@ -1,5 +1,5 @@
 /*** Some standard paraframe styles ***/
-[% css = cfg.css %]
+[% css = site.css %]
 
 /************ GENERAL FORMATTING *******************/
 
