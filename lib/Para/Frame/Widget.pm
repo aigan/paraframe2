@@ -1189,124 +1189,14 @@ sub filefield
 
 =head2 css_header
 
-  css_header( \%attrs )
-  css_header( $url )
-
-Draws a css header.
-
-Paths not beginning with / are relative to the site home.
-
-The style may be given by using L<Para::Frame::Template::Meta/css> or
-by setting a TT param either for the site or globaly.
-
-The persistant styles will always be used and is a ref to list of URLs.
-
-The alternate can be switched between using the browser, or via
-javascript, and is a ref to ha hash of stylenames and listrefs holding
-the URLs. The default points to which of the alternate styles to use
-if no special one is selected.
-
-The persitant and alternate list items may be coderefs. The code will
-be run with req as first param. They should return the paths for the
-stylefiles. Those may be translated as above.
-
-Example:
-    $attrs =
-     {
-      persistent => [ "css/default.css" ],
-      alternate =>
-      {
-       light => [ "css/light.css" ],
-       blue => [ sub{"css/blue.css"} ],
-      },
-      default => 'blue',
-     };
+Deprecated. Use $site->css->header() instead (L<Para::Frame::CSS/header>).
 
 =cut
 
 sub css_header
 {
-    my( $p ) = @_;
-
-    my $req = $Para::Frame::REQ;
-    my $home = $req->site->home_url_path;
-
-    if( $p )
-    {
-	unless( ref $p )
-	{
-	    $p =
-	    {
-	     'persistent' => [ $p ],
-	    };
-	}
-    }
-    else
-    {
-	$p =
-	{
-	 'persistent' => ['pf/css/default.css'],
-	};
-    }
-
-    my $default = $Para::Frame::U->style || $p->{'default'} || 'default';
-    my $persistent = $p->{'persistent'} || [];
-    my $alternate = $p->{'alternate'} || {};
-    $persistent = [$persistent] unless ref $persistent;
-
-    unless( $alternate->{$default} )
-    {
-	$default = $p->{'default'};
-    }
-
-    if( not $default )
-    {
-	# Just take any of them as a default
-	foreach my $key ( keys %$alternate )
-	{
-	    $default = $key;
-	    last;
-	}
-    }
-
-    my $out = "";
-
-    foreach my $style_in ( @$persistent )
-    {
-	my $style = $style_in;
-	$style = &$style($req) if UNIVERSAL::isa($style,'CODE');
-	$style =~ s/^([^\/])/$home\/$1/;
-	$out .= "<link rel=\"Stylesheet\" href=\"$style\" type=\"text/css\" />\n";
-    }
-
-    if( $default )
-    {
-	foreach my $style ( @{$alternate->{$default}} )
-	{
-	    $style = &$style($req) if UNIVERSAL::isa($style,'CODE');
-	    $style =~ s/^([^\/])/$home\/$1/;
-	    $out .= "<link rel=\"Stylesheet\" title=\"$default\" href=\"$style\" type=\"text/css\" />\n";
-	}
-    }
-
-    foreach my $title ( keys %$alternate )
-    {
-	next if $title eq $default;
-	foreach my $style ( @{$alternate->{$title}} )
-	{
-	    $style = &$style($req) if UNIVERSAL::isa($style,'CODE');
-	    $style =~ s/^([^\/])/$home\/$1/;
-	    $out .= "<link rel=\"alternate stylesheet\" title=\"$title\" href=\"$style\" type=\"text/css\" />\n";
-	}
-    }
-
-    return $out;
+    return "";
 }
-
-
-
-
-
 
 #######################################################################
 
