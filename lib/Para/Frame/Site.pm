@@ -51,6 +51,7 @@ BEGIN
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug fqdn datadump );
 use Para::Frame::Site::Dir;
+use Para::Frame::CSS;
 
 our %DATA; # hostname -> siteobj
 our %ALIAS; # secondary names
@@ -885,6 +886,20 @@ sub equals
 {
     # Uses perl obj stringification
     return( $_[0] eq $_[1] );
+}
+
+=head2 css
+
+  $site->css
+
+Returns a L<Para::Frame::CSS> object for the site.
+
+=cut
+
+sub css
+{
+    return $_[0]->{'css_obj'} ||=
+      Para::Frame::CSS->new($_[0]->{'css'});
 }
 
 
