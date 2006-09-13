@@ -205,13 +205,6 @@ sub set
 	}
     }
 
-    # Set resp header
-    #
-    if( $req->is_from_client )
-    {
-	$req->send_code( 'AR-PUT', 'header_out', 'Vary', 'negotiate,accept-language' );
-	$req->send_code( 'AR-PUT', 'header_out', 'Content-Language', $alternatives[0] );
-    }
 
     # Return object
     #
@@ -494,6 +487,34 @@ sub alternatives
 }
 
 
+
+=head2 set_headers
+
+  $lh->set_headers()
+
+Sets the headers based on the language used for the request
+
+=cut
+
+sub set_headers
+{
+    my( $lh ) = @_;
+
+    my $req = $Para::Frame::REQ;
+
+    # Set resp header
+    #
+    if( $req->is_from_client )
+    {
+	my $page = $req->page;
+	unless( $page->ctype->is("text/css") )
+	{
+	    # TODO: Use Page->set_header
+	    $req->send_code( 'AR-PUT', 'header_out', 'Vary', 'negotiate,accept-language' );
+	    $req->send_code( 'AR-PUT', 'header_out', 'Content-Language', $lh->alternatives->[0] );
+	}
+    }
+}
 
 
 1;
