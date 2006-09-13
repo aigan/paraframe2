@@ -56,9 +56,10 @@ The value can be any sort of URL.  Used to set form.f.action.
 Default template determined by L<Para::Frame::Route/plan_backtrack>
 in case of form submit with next_template being false.
 
-Paths beginning with a '/' will be apennded to the site home.
+Use L<Para::Frame::Template::Plugin::Meta::Interpolate> for prepending
+$home or setting it to $me.
 
-As a special case, the string 'me' will expand to the current page.
+Example: [% META next_template = '~$home/' %]
 
 =head2 next_template_target
 
@@ -73,9 +74,10 @@ The value can be any sort of URL.  Used to set form.f.action.
 This will be used if both L</next_template> and
 L<Para::Frame::Route/plan_backtrack> returns undef.
 
-Paths beginning with a '/' will be apennded to the site home.
+Use L<Para::Frame::Template::Plugin::Meta::Interpolate> for prepending
+$home or setting it to $me.
 
-As a special case, the string 'me' will expand to the current page.
+Example: [% META next_template = '~$home/' %]
 
 =head2 next_action
 
