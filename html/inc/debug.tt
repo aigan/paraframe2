@@ -15,7 +15,7 @@
 </h1>
 
 <ol>
-[% FOREACH part = req.result.part %]
+[% FOREACH part IN req.result.part %]
    <li>
       <code>[% part.type %]</code>
       <strong>--&gt;</strong><br>
@@ -26,7 +26,7 @@
 
 <h4>Route</h4>
 <ol>
-[% FOREACH step = route.list %]
+[% FOREACH step IN route.list %]
 <li>
    [% step %]
    [% IF loop.last %]
@@ -41,11 +41,11 @@
 <h4>Params</h4>
 <table>
 <tr><th>Name</th><th>Value</th></tr>
-[% FOREACH key = q.param %]
+[% FOREACH key IN q.param %]
    [% tr2 %]<td>[% key %]</td><td>
    [% IF q.param(key).size > 1 %]
       <ol>
-      [% FOREACH val = q.param(key) %]
+      [% FOREACH val IN q.param(key) %]
          <li>[% val %]
       [% END %]
       </ol>
@@ -65,7 +65,7 @@
 <h4>Cookies</h4>
 <table>
 <tr><th>Name</th><th>Value</th></tr>
-[% FOREACH key = q.cookie %]
+[% FOREACH key IN q.cookie %]
    [% tr2 %]<td>[% key %]</td><td>
       [% q.cookie(key) %]
 </td></tr>
