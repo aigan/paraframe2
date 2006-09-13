@@ -169,6 +169,27 @@ sub as_string
     return $ctype->{'ctype'} . $media;
 }
 
+=head2 is
+
+  $ctype->is( $ctype )
+
+=cut
+
+sub is
+{
+    my( $ctype, $str ) = @_;
+
+    if( $ctype->{'ctype'} eq $str )
+    {
+	return 1;
+    }
+    else
+    {
+	return 0;
+    }
+}
+
+
 sub commit
 {
     my( $ctype ) = @_;
