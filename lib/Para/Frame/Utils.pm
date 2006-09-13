@@ -26,12 +26,12 @@ use strict;
 use Carp qw(carp croak cluck confess shortmess);
 use locale;
 use Date::Manip;
-use File::stat;
+use File::stat;  # stat
 use File::Basename;
 use Cwd 'abs_path';
 use File::Spec;
-use User::grent;
-use User::pwent;
+use User::grent; # getgrgid getgrnam
+use User::pwent; # getpwuid
 use IO::Dir;
 use Data::Dumper;
 use CGI;
@@ -543,9 +543,12 @@ sub chmod_file
 #    warn "Fix file $file\n"; ### DEBUG
 
     my $fstat = stat($file) or confess "Could not stat $file: $!";
-    my $fu = getpwuid( $fstat->uid ); # file user  obj
-    my $fg = getgrgid( $fstat->gid ); # file group obj
-    my $ru = getpwuid( $> );          # run  user  obj
+    # file user  obj
+    my $fu = getpwuid( $fstat->uid ) or confess "Could not getpwuid $file": $!;
+    # file group obj
+    my $fg = getgrgid( $fstat->gid ) or confess "Could not getgrid $file": $!;
+    # run  user  obj
+    my $ru = getpwuid( $> )          or confess "Could not getpwuid $file": $!;
     my $fun = $fu->name;              # file user  name
     my $fgn = $fg->name;              # file group name
     my $run = $ru->name;              # run  user  name
