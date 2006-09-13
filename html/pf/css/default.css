@@ -1,5 +1,7 @@
 /*** Some standard paraframe styles ***/
-[% css = cfg.css %]
+[% import(site.css.params) %]
+
+[% debug("BODY background is $body_background") %]
 
 *
 {
@@ -8,7 +10,7 @@
 
 body
 {
-  background: $css.body_background;
+  background: $body_background;
   margin-right: 1.0em;
   margin-left: 1.0em;
   margin-top: 0em;
@@ -28,4 +30,11 @@ p
 h1
 {
   clear: left;
+}
+
+input
+{
+  background: $button;
+  border-color: $border;
+  border-width: 0.2em;
 }
