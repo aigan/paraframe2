@@ -1832,16 +1832,6 @@ sub configure
 
     # Making the version availible
     $CFG->{'version'} = $VERSION;
-
-    # Colours
-    $CFG->{'css'} =
-    {
-     body_background => '#CCB195',
-     main_background => '#ECD3B8',
-     border => '#784825',
-#     button => '#AB7046',
-     button => '#E1CA9C',
-    };
 }
 
 =head2 Session
