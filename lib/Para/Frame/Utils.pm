@@ -544,11 +544,11 @@ sub chmod_file
 
     my $fstat = stat($file) or confess "Could not stat $file: $!";
     # file user  obj
-    my $fu = getpwuid( $fstat->uid ) or confess "Could not getpwuid $file": $!;
+    my $fu = getpwuid( $fstat->uid ) or die "Could not get owner of $file";
     # file group obj
-    my $fg = getgrgid( $fstat->gid ) or confess "Could not getgrid $file": $!;
+    my $fg = getgrgid( $fstat->gid ) or die "Could not get group of $file";
     # run  user  obj
-    my $ru = getpwuid( $> )          or confess "Could not getpwuid $file": $!;
+    my $ru = getpwuid( $> )          or die "Could not get process user";
     my $fun = $fu->name;              # file user  name
     my $fgn = $fg->name;              # file group name
     my $run = $ru->name;              # run  user  name
