@@ -3,7 +3,7 @@ package Para::Frame::CSS;
 #=====================================================================
 #
 # DESCRIPTION
-#   Paranormal.se framework CSS clss
+#   Paranormal.se framework CSS class
 #
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
@@ -161,7 +161,7 @@ sub header
 
     if( $p )
     {
-#	debug "  Got css from tt param";
+#	debug "  Got css from tt param: ".datadump($p);
 	unless( ref $p )
 	{
 	    $p =
