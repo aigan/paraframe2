@@ -401,6 +401,7 @@ sub precompile
 	create_dir($destfile);
 	$page_dest->{'sys_name'} = undef;
 	$page_dest->{'orig'} = undef;
+	$req->uri2file_clear( $page_dest->orig->url_path );
 	$destfile = $page_dest->orig->sys_path;
     }
 

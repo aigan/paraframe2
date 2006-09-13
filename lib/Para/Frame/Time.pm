@@ -298,7 +298,7 @@ sub internet_date
 {
 #    my $old = setlocale(LC_TIME);
 #    setlocale(LC_TIME, "C");
-    my $res = strftime('%a, %d %b %Y %T %z', Para::Frame::Time->get($_[0]));
+    my $res = Para::Frame::Time->get($_[0])->strftime('%a, %d %b %Y %T %z');
 #    setlocale(LC_TIME, $old);
     return $res;
 }
