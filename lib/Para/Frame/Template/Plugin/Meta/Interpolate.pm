@@ -20,6 +20,10 @@ BEGIN
 
 =head1 SYNOPSIS
 
+  [% META next_template = '~$home/' %]
+
+Goes to the site home page next
+
   [% META title='-"404 - " _ loc("File not found")' %]
 
 The value is enclosed in C<''>. The initial C<-> tells us to
@@ -34,6 +38,10 @@ the translation function.
 
 If value starts with a '-', the rest of value will be evaluated as a TT
 expression. (No expressions are normally allowed in META.)
+
+If value starts with a '~', the rest of value will be evaluated as a
+TT string wint variable interpolation. It's the same as for '-' but
+with the extra "" around the value.
 
 It does not sets the variable if it's already true. That enables you
 to set it in another way.
@@ -72,6 +80,16 @@ sub new
 	if( $val =~ /^-(.*)/ )
 	{
 	    my $src = $st.' '.$1.' '.$et;
+#	    warn "$$: Parsing $template->{$key} => $src\n";
+	    $val = $context->process( \$src, {} );
+	    unless( $stash->get($key) )
+	    {
+		$stash->set($key, $val);
+	    }
+	}
+	elsif( $val =~ /^~(.*)/ )
+	{
+	    my $src = $st.' "'.$1.'" '.$et;
 #	    warn "$$: Parsing $template->{$key} => $src\n";
 	    $val = $context->process( \$src, {} );
 	    unless( $stash->get($key) )
