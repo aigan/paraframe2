@@ -477,6 +477,44 @@ sub set_headers
 
 #######################################################################
 
+=head2 set_header
+
+  $p->set_header( $key => $val )
+
+Replaces any existing header with the same key.
+
+Returns:
+
+The number of changes
+
+=cut
+
+sub set_header
+{
+    my( $page, $key, $val ) = @_;
+
+    my $changes = 0;
+    foreach my $part ( @{$page->{'headers'}} )
+    {
+	if( $key eq $part->[0] )
+	{
+	    $part->[1] = $val;
+	    $changes ++;
+	}
+    }
+
+    unless( $changes )
+    {
+	push @{$page->{'headers'}}, [$key,$val];
+	$changes ++;
+    }
+
+
+    return $changes;
+}
+
+#######################################################################
+
 
 =head2 add_header
 
@@ -1805,6 +1843,14 @@ sub send_headers
     my $req = $page->req;
 
     my $client = $req->client;
+
+    $req->lang->set_headers;               # lang
+
+    if( $page->ctype->is('text/css') )     # css
+    {
+	$page->site->css->set_headers($page);
+    }
+
 
     $page->ctype->commit;
 
