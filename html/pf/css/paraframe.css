@@ -1,14 +1,7 @@
 /*** Some standard paraframe styles ***/
-[% css = site.css %]
+[% import(site.css.params) %]
 
 /************ GENERAL FORMATTING *******************/
-
-input
-{
-  background: $css.button;
-  border-color: $css.border;
-  border-width: 0.2em;
-}
 
 label:hover+input,
 label:hover+br+input,
@@ -36,11 +29,11 @@ form
 
 .debug
 {
-  background: $css.main_background;
+  background: $main_background;
   padding: 1em;
   border-style: dotted;
   border-width: 0.0em 0.2em 0.2em 0.2em;
-  border-color: $css.border;
+  border-color: $border;
 }
 
 tr.even
@@ -58,18 +51,18 @@ tr.odd
 
 .paraframe_menu_top
 {
-  background: $css.body_background;
+  background: $body_background;
 }
 
 .paraframe_menu_bottom
 {
-  background: $css.main_background;
+  background: $main_background;
 }
 
 .paraframe_menu_bottom_pf
 {
-  background: $css.body_background;
-  border: 0.2em solid $css.border;
+  background: $body_background;
+/*  border: 0.2em solid $border; */
 }
 
 .paraframe_menu_top p
@@ -82,13 +75,13 @@ tr.odd
 
 .paraframe_main 
 {
-  background: $css.main_background;
+  background: $main_background;
   padding-right: 1em;
   padding-left: 1em;
   padding-bottom: 0.5em;
   border-style: solid;
   border-width: 0.2em 0.2em 0em 0.2em;
-  border-color: $css.border;
+  border-color: $border;
 }
 
 .paraframe_main p
@@ -134,15 +127,17 @@ tr.odd
   border-style: inset;
 }
 
-.paraframe_menu_bottom_pf a
+.paraframe_menu_bottom_pf a, .paraframe_menu_bottom_pf a:visited
 {
     color: black;
     border-width: 0.2em;
-    border-color: $css.border;
+    border-color: $border;
     border-style: outset;
-    background: $css.button;
-    padding: 1px 6px 1px 6px;
+    background: $button;
+    padding: 2px 6px 2px 6px;
     text-decoration: none;
+    font-family: Sans;
+    font-size: inherit;
 }
 .paraframe_menu_bottom_pf a:hover
 {
@@ -154,3 +149,44 @@ tr.odd
   padding: 0px 5px 0px 7px;
   border-style: inset;
 }
+.paraframe_menu_bottom_pf input[type="button"]
+{
+    border-color: $border;
+    background: $button;
+    border-width: 0.2em;
+    padding: 2px 6px 2px 6px;
+}
+
+.paraframe_menu_bottom_pf input[type="button"]:hover
+{
+    background-color: lightyellow;	
+}
+
+.paraframe_menu_admin_pf
+{
+	margin: 0;
+}
+
+/********* imgexpand **************/
+
+.paraframe_imgexpanded
+{
+      background: #EEFFEE;
+      border: 2px solid black;
+      padding: 0.5em 0em 0em 1em;
+      -moz-border-radius: 0.5em;
+      border-radius: 0.5em;
+}
+
+.paraframe_imgexpand
+{
+      background: #E0E0A0;
+      padding: 0.2em;
+}
+
+.paraframe_imgexpand img         { vertical-align: middle }
+.paraframe_imgexpand a:hover img { background: #FFFF00 }
+.paraframe_imgexpand a           { color: black }
+.paraframe_imgexpand a:hover     { background: #F0F0D0 }
+
+/****************************/
