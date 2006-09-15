@@ -875,10 +875,16 @@ sub handle_code
 
 	# Calling uri2file in the right $REQ
 	my $current_req = $REQ;
-	my $req = $REQUEST{ $caller_clientaddr } or
-	  die "Client $caller_clientaddr not registred";
 
-	$req->note($val);
+	if( my $req = $REQUEST{ $caller_clientaddr } )
+	{
+	    $req->note($val);
+	}
+	else
+	{
+	    # The note may have come from a background request
+	    debug 0, $val;
+	}
     }
     elsif( $code eq 'LOADPAGE' )
     {
