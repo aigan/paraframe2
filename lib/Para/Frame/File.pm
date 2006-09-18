@@ -395,15 +395,15 @@ sub vcs_version
 
 #######################################################################
 
-=head2 updated
+=head2 mtime
 
-  $file->updated()
+  $file->mtime()
 
 Returns a L<Para::Frame::Time> object based on the files mtime.
 
 =cut
 
-sub updated
+sub mtime
 {
    my( $file ) = @_;
 
