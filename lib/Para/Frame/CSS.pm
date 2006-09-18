@@ -76,30 +76,6 @@ sub new
 
 #######################################################################
 
-=head2 set_headers
-
-  $css->set_headers( $page )
-
-=cut
-
-sub set_headers
-{
-    my( $css, $page ) = @_;
-
-    my $updated = $css->{'modified'};
-    my $page_updated = $page->updated;
-    if( $page_updated > $updated )
-    {
-	$updated = $page_updated;
-    }
-
-    $page->set_header('Last-Modified' => $updated->internet_date);
-}
-
-
-
-#######################################################################
-
 =head2 params
 
 =cut
@@ -107,6 +83,22 @@ sub set_headers
 sub params
 {
     return $_[0]->{'params'};
+}
+
+
+
+#######################################################################
+
+=head2 updated
+
+Returns the time of the latest modification of the CSS parameters. It
+initiatyes to the time of the start of the server.
+
+=cut
+
+sub updated
+{
+    return Para::Frame::Time->get($_[0]->{'modified'});
 }
 
 
