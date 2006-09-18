@@ -1259,16 +1259,35 @@ sub handle_request
 		 );
     warn "# $client\n" if debug() > 4;
 
-    ### Redirected from another page?
-    if( $req->session->{'page_result'}{ $req->page->orig_url_path } )
+
+ RESPONSE:
     {
-	$req->page->send_stored_result;
-    }
-    else
-    {
-	$req->send_code('USE_LOADPAGE', $req->site->loadpage, 2, $REQNUM);
-	$req->setup_jobs;
-	$req->after_jobs;
+	### Redirected from another page?
+	my $page = $req->page;
+	if( $req->session->{'page_result'}{ $req->page->orig_url_path } )
+	{
+	    $page->send_stored_result;
+	}
+	else
+	{
+	    if( my $client_time = $req->http_if_modified_since )
+	    {
+#		debug "Is page modified since $client_time?";
+		if( my $mtime = $page->last_modified )
+		{
+#		    debug "Page was last modified $mtime";
+		    if( $mtime <= $client_time )
+		    {
+			$page->send_not_modified;
+			last RESPONSE;
+		    }
+		}
+	    }
+
+	    $req->send_code('USE_LOADPAGE', $req->site->loadpage, 2, $REQNUM);
+	    $req->setup_jobs;
+	    $req->after_jobs;
+	}
     }
 
     ### Clean up used globals
