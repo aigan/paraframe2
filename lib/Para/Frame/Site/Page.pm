@@ -1846,11 +1846,10 @@ sub send_headers
 
     $req->lang->set_headers;               # lang
 
-    if( $page->ctype->is('text/css') )     # css
+    if( my $last_modified = $page->last_modified )
     {
-	$page->site->css->set_headers($page);
+	$page->set_header('Last-Modified' => $last_modified->internet_date);
     }
-
 
     $page->ctype->commit;
 
@@ -2054,6 +2053,67 @@ sub send_stored_result
     delete $req->session->{'page_result'}{ $req->page->orig_url_path };
 
     #debug "Sending stored page result: done";
+}
+
+
+#######################################################################
+
+=head2 last_modified
+
+  $p->last_modified()
+
+This method should return the last modification date of the page in
+its rendered form.
+
+This function currently only works for CSS pages.
+
+For other pages, returns undef
+
+=cut
+
+sub last_modified
+{
+    my( $page ) = @_;
+
+    if( $page->ctype->is('text/css') )
+    {
+	my $updated = $page->site->css->updated;
+#	debug "CSS updated $updated";
+	my $page_updated = $page->mtime;
+#	debug "CSS template updated $page_updated";
+	if( $page_updated > $updated )
+	{
+	    $updated = $page_updated;
+	}
+	return $updated;
+    }
+
+    return undef;
+}
+
+
+#######################################################################
+
+=head2 send_not_modified
+
+  $p->send_not_modified()
+
+
+Just as send_output, but sends a header saying that the requested page
+has not been modified.
+
+=cut
+
+sub send_not_modified
+{
+    my( $page ) = @_;
+
+    debug "Not modified";
+    $page->set_http_status(304);
+    $page->req->set_header_only(1);
+    $page->send_output;
+
+    return 1;
 }
 
 
