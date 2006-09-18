@@ -1414,6 +1414,28 @@ sub incpath
 
 #######################################################################
 
+=head2 last_modified
+
+  $p->last_modified()
+
+This method should return the last modification date of the page in
+its rendered form.
+
+This page is located outside a site, thus it has no known modification
+date.
+
+Returns: undef
+
+=cut
+
+sub last_modified
+{
+    return undef;
+}
+
+
+#######################################################################
+
 =head1 Removed methods
 
 =head2 url_dir
