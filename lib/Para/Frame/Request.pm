@@ -698,6 +698,21 @@ sub browser
 sub header_only { $_[0]->{'header_only'} }
 
 
+#######################################################################
+
+
+
+sub set_header_only
+{
+    my( $req, $val ) = @_;
+    if( defined $val )
+    {
+	return $_[0]->{'header_only'} = $val;
+    }
+    return $_[0]->{'header_only'};
+}
+
+
 
 #######################################################################
 
@@ -1783,6 +1798,28 @@ Returns the port the client used in this request.
 sub http_port
 {
     return $ENV{SERVER_PORT} || undef;
+}
+
+
+#######################################################################
+
+=head2 http_if_modified_since
+
+  $req->http_if_modified_since
+
+Returns the time as an L<Para::Frame::Time> object.
+
+If no such time was given with the request, returns undef.
+
+=cut
+
+sub http_if_modified_since
+{
+    if( my $val = $ENV{HTTP_IF_MODIFIED_SINCE} )
+    {
+	return Para::Frame::Time->get($val);
+    }
+    return undef;
 }
 
 
