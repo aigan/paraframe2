@@ -139,6 +139,11 @@ sub identify_user
     my $u = $class->get( $username );
     unless( $u )
     {
+	if( $username eq 'guest' )
+	{
+	    die "Couldn't find user guest";
+	}
+
 	$req->result->message("Användaren $username existerar inte");
 	$class->clear_cookies;
 	$u = $class->identify_user( 'guest' );
