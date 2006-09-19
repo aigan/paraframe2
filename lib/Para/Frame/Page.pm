@@ -399,9 +399,9 @@ sub precompile
 	die "Loop" if $safecnt++ > 100;
 	debug "Creating dir $destfile";
 	create_dir($destfile);
+	$req->uri2file_clear( $page_dest->orig->url_path );
 	$page_dest->{'sys_name'} = undef;
 	$page_dest->{'orig'} = undef;
-	$req->uri2file_clear( $page_dest->orig->url_path );
 	$destfile = $page_dest->orig->sys_path;
     }
 
