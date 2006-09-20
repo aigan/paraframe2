@@ -1,8 +1,0 @@
-[% META title="Debug information"
-	next_action="debug_change"
-%]
-
-<p>[% step +%]
-[%+ go("Reload server", home, "server_reload") +%]
-[%+ go("Terminate server", home, "server_terminate") %]
-</p>
