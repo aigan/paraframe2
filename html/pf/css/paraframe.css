@@ -127,29 +127,7 @@ tr.odd
   border-style: inset;
 }
 
-.paraframe_menu_bottom_pf a, .paraframe_menu_bottom_pf a:visited
-{
-    color: black;
-    border-width: 0.2em;
-    border-color: $border;
-    border-style: outset;
-    background: $button;
-    padding: 2px 6px 2px 6px;
-    text-decoration: none;
-    font-family: Sans;
-    font-size: inherit;
-}
-.paraframe_menu_bottom_pf a:hover
-{
-    background-color: lightyellow;
-    color: black;
-}
-.paraframe_menu_bottom_pf a:active:hover
-{
-  padding: 0px 5px 0px 7px;
-  border-style: inset;
-}
-.paraframe_menu_bottom_pf input[type="button"]
+.paraframe_menu_admin input[type="button"]
 {
     border-color: $border;
     background: $button;
@@ -157,12 +135,12 @@ tr.odd
     padding: 2px 6px 2px 6px;
 }
 
-.paraframe_menu_bottom_pf input[type="button"]:hover
+.paraframe_menu_admin input[type="button"]:hover
 {
     background-color: lightyellow;	
 }
 
-.paraframe_menu_admin_pf
+.paraframe_menu_admin
 {
 	margin: 0;
 }
