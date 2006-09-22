@@ -30,6 +30,7 @@ use Proc::ProcessTable;
 use Time::HiRes;
 use Carp;
 use Data::Dumper;
+use Sys::CpuLoad;
 
 BEGIN
 {
@@ -157,9 +158,7 @@ sub check_process
     my $sys_time = Time::HiRes::time;
     if( $CHECKTIME )
     {
-	my $cpu_delta = ($time - $CPU_TIME) || 0.00001;
-	my $sys_delta = ($sys_time - $CHECKTIME) || 0.00001;
-	my $usage = $cpu_delta/$sys_delta/100; # Get percent
+	my( $usage ) = Sys::CpuLoad::load() * 100;
 	$CPU_USAGE = ($CPU_USAGE * 2 + $usage ) / 3;
 
 	if( debug > 3 or $CPU_USAGE > 30 or $size > LIMIT_MEMORY_NOTICE )
@@ -169,7 +168,6 @@ sub check_process
 	}
     }
 
-    $CPU_TIME = $time;
     $CHECKTIME = $sys_time;
     
     # Kill if server uses more than LIMIT_MEMORY MB of memory
