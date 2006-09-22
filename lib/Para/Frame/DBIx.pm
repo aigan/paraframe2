@@ -24,7 +24,7 @@ Para::Frame::DBIx - Wrapper module for DBI
 
 use strict;
 use DBI qw(:sql_types);
-use Carp qw( carp croak shortmess confess );
+use Carp qw( carp croak shortmess longmess confess );
 
 BEGIN
 {
@@ -1676,7 +1676,7 @@ sub report_error
 	    my $values = join ", ",map defined($_)?"'$_'":'<undef>', @$valref;
 	    $msg .= "Values: $values\n";
 	}
-	$msg .= "...".shortmess();
+	$msg .= "...".longmess();
 	throw('dbi', $msg);
     }
 }
