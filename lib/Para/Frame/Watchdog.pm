@@ -158,7 +158,8 @@ sub check_process
     my $sys_time = Time::HiRes::time;
     if( $CHECKTIME )
     {
-	my( $usage ) = Sys::CpuLoad::load() * 100;
+#	warn join '-', Sys::CpuLoad::load();
+	my( $usage ) = (Sys::CpuLoad::load())[0]*100;
 	$CPU_USAGE = ($CPU_USAGE * 2 + $usage ) / 3;
 
 	if( debug > 3 or $CPU_USAGE > 30 or $size > LIMIT_MEMORY_NOTICE )
