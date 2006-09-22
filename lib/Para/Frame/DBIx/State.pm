@@ -23,7 +23,7 @@ Para::Frame::DBIx::State - "SQLSTATE codes
 =cut
 
 use strict;
-use Carp qw( carp croak shortmess );
+use Carp qw( carp croak shortmess confess );
 
 BEGIN
 {
@@ -324,6 +324,11 @@ sub import
 #    debug datadump( \%CODE );
 }
 
+=head2 new
+
+  $dbix->state()
+
+=cut
 
 sub new
 {
@@ -332,8 +337,8 @@ sub new
 
     my $dbh = $dbix->dbh;
     my $state_code = $dbh->state;
-    my $state = $CODE{$state_code} or
-      die "Unrecognized state: $state_code";
+    my $state = $CODE{$state_code} || $CODE{'S1000'};
+#    or confess "Unrecognized state: $state_code";
 
     return bless
     {
