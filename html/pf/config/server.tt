@@ -4,7 +4,7 @@
 [% PROCESS menu.tt %]
 
 <p>[% step +%]
-[%+ go("Reload server", home, "server_reload") +%]
-[%+ go("Restart server", home, "server_restart") +%]
-[%+ go("Terminate server", home, "server_terminate") %]
+[%+ go("Reload server", "$home/", "server_reload") +%]
+[%+ go("Restart server", "$home/", "server_restart") +%]
+[%+ go("Terminate server", "$home/", "server_terminate") %]
 </p>
