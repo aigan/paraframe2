@@ -26,12 +26,10 @@ sub handler
 
     my $u = $Para::Frame::U;
 
-    unless( $u->level >= 42 )
+    unless( $u->has_root_access )
     {
 	throw("denied", "Neeeeej! Vill inte!");
     }
-
-    warn "Reloading server by request!\n";
 
     $Para::Frame::TERMINATE = 'HUP';
 
