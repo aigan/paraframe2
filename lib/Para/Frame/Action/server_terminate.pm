@@ -20,6 +20,8 @@ use strict;
 
 use Para::Frame::Utils qw( throw );
 
+use Para::Frame::Widget qw( confirm_simple );
+
 sub handler
 {
     my( $req ) = @_;
@@ -30,6 +32,8 @@ sub handler
     {
 	throw("denied", "Neeeeej! Vill inte!");
     }
+
+    confirm_simple();
 
     $Para::Frame::TERMINATE = 'TERM';
 
