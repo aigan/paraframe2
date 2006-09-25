@@ -170,7 +170,7 @@ sub check_process
     }
 
     $CHECKTIME = $sys_time;
-    
+
     # Kill if server uses more than LIMIT_MEMORY MB of memory
     if( $size > LIMIT_MEMORY )
     {
@@ -217,7 +217,7 @@ sub check_server_report
     {
 	my( $type, @args ) = get_server_message();
 	last unless $type;
-	
+
 	if( $type eq 'TERMINATE' )
 	{
 	    debug "Got request to terminate server";
@@ -287,7 +287,7 @@ sub restart_server
 	    $sent = 'TERM';
 	    $HARD_RESTART = 1;
 	    kill 'TERM', $pid;  ## Terminate server
-	    debug "  Sent hard TERM to $pid";	    
+	    debug "  Sent hard TERM to $pid";
 	}
 	elsif( time > $signal_time + $grace_time )
 	{
@@ -503,7 +503,7 @@ sub startup_in_fork
     # Better setting global $FH after the forking
     $fh->blocking(0); # No blocking
     $FH = $fh;
-    
+
     # Wait for server response
     wait_for_server_setup() or return 0;
 
@@ -588,15 +588,16 @@ sub debug
 
     if( $Para::Frame::DEBUG >= $level )
     {
-	my $prefix =  "#### Watchdog: ";
+	my $prefix =  "#### Watchdog ";
 
 	$message =~ s/^(\n*)//;
 	my $prespace = $1 || '';
 
 	chomp $message;
-	warn $prespace . $prefix . $message . "\n";
+	my $datestr = scalar(localtime);
+	warn $prespace . $prefix . $datestr . ": " . $message . "\n";
     }
-    
+
     return "";
 }
 
