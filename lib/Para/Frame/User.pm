@@ -384,6 +384,14 @@ sub style    { undef }
 sub session { $Para::Frame::REQ->session }
 sub route   { $Para::Frame::REQ->session->route }
 
+# Default implementation
+#
+sub has_root_access
+{
+    return $_[0]->level > 41 ? 1 : 0;
+}
+
+
 1;
 
 =head1 SEE ALSO
