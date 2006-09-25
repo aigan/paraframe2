@@ -35,6 +35,7 @@ use Carp qw( cluck confess carp croak );
 use Sys::CpuLoad;
 use DateTime::TimeZone;
 use DateTime::Format::Strptime;
+use Cwd qw( abs_path );
 
 our $VERSION;
 our $CVSVERSION;
@@ -355,6 +356,13 @@ sub main_loop
 			    # No restart
 			    debug "Executing TERM now";
 			    exit 0;
+			}
+			elsif( $TERMINATE eq 'RESTART' )
+			{
+			    # No restart
+			    debug "Executing RESTART now";
+			    Para::Frame->restart;
+			    die "Should never reach this point";
 			}
 			else
 			{
@@ -1070,6 +1078,10 @@ sub daemonize
 	exit 0;
     };
 
+    my $orig_name = $0;
+    $0 = abs_path($0);
+    warn "$orig_name resolved to $0\n";
+
     chdir '/'                 or die "Can't chdir to /: $!";
     defined(my $pid = fork)   or die "Can't fork: $!";
     if( $pid ) # In parent
@@ -1109,6 +1121,26 @@ sub daemonize
 	warn "\n\nStarted process $$ on ".now()."\n\n";
 	Para::Frame::main_loop();
     }
+}
+
+
+=head2 restart
+
+  Para::Frame->restart()
+
+Restarts the daemon. We asume that we will restart in the background,
+with a watchdog.
+
+=cut
+
+sub restart
+{
+    my( $class ) = @_;
+
+    $SERVER->close();
+    open STDOUT, '>/dev/null' or die "Can't write to /dev/null: $!";
+    system("$0&") == 0 or die "Exec failed";
+    exit 0;
 }
 
 
