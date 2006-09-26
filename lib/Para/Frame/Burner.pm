@@ -53,6 +53,8 @@ There are three standard burners.
 
 They are defined by L<Para::Frame/configure> in C<th>.
 
+The TT parameter C<page> must be defined during burning.
+
 =cut
 
 sub new
