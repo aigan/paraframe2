@@ -44,7 +44,7 @@ BEGIN
 use Para::Frame::Reload;
 
 use Para::Frame::Request;
-use Para::Frame::Utils qw( throw debug fqdn );
+use Para::Frame::Utils qw( throw debug fqdn datadump );
 use Para::Frame::Widget;
 use Para::Frame::Time qw( date );
 use Para::Frame::Email::Address;
@@ -418,8 +418,7 @@ sub send
 	throw('notfound', "Hittar inte e-postmallen ".$p->{'template'});
     }
 
-
-    my $burner = Para::Frame::Burner->get_by_type('plain');
+    my $burner = $page->set_burner_by_type('plain');
 
     if( debug )
     {
@@ -430,6 +429,8 @@ sub send
 
     # Clone params for protection from change
     my %params = %$p;
+
+    $params{'page'} = $page;
 
     my $data = "";
     $burner->burn( $tmpl, \%params, \$data ) or throw($burner->error);
