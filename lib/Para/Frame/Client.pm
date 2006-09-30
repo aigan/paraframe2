@@ -51,7 +51,7 @@ our $SOCK;
 our $r;
 
 our $BACKUP_PORT;
-our $STARTED;
+our $STARTED; # Got loadpage info at this time
 our $LOADPAGE;
 our $LOADPAGE_URI;
 our $LOADPAGE_TIME;
@@ -623,6 +623,7 @@ sub get_response
 		{
 		    ( $LOADPAGE_URI, $LOADPAGE_TIME, $REQNUM ) =
 		      split(/\0/, $row);
+		    $STARTED = time;
 		    if( $DEBUG > 1 )
 		    {
 			warn "$$: Loadpage $LOADPAGE_URI in $LOADPAGE_TIME secs\n";
