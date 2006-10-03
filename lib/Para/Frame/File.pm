@@ -31,6 +31,7 @@ use strict;
 use Carp qw( croak confess cluck );
 use File::stat; # exports stat
 #use Scalar::Util qw(weaken);
+use Number::Bytes::Human qw(format_bytes);
 
 BEGIN
 {
@@ -119,7 +120,7 @@ sub new
     {
 	$sys_name =~ s/([^\/])\/?$/$1\//;
     }
-    elsif( $sys_name and ($class eq "Para::Frame::File") )
+    elsif( $sys_name and (UNIVERSAL::isa( $class, "Para::Frame::File") ) )
     {
 	# Ok.
     }
@@ -333,6 +334,27 @@ sub sys_path_slash
 
 #######################################################################
 
+=head2 sys_base
+
+The path to the template from the system root, including the filename.
+But excluding the suffixes of the file along with the dots. For Dirs,
+excluding the trailing slash.
+
+=cut
+
+sub sys_base
+{
+    my( $page ) = @_;
+
+    my $path = $page->sys_path;
+    $path =~ /^(.*?)(\.\w\w)?\.\w{2,3}$/
+      or die "Couldn't get base from $path";
+    return $1;
+}
+
+
+#######################################################################
+
 sub is_page
 {
     return 0;
@@ -349,7 +371,7 @@ sub is_dir
 
 sub chmod
 {
-    return chmod_file(shift->orig->sys_path, @_);
+    return chmod_file(shift->sys_path, @_);
 }
 
 #######################################################################
@@ -408,6 +430,21 @@ sub mtime
    my( $file ) = @_;
 
    return Para::Frame::Time->get(stat($file->sys_path)->mtime);
+}
+
+#######################################################################
+
+=head2 filesize
+
+  $file->filesize()
+
+=cut
+
+sub filesize
+{
+   my( $file ) = @_;
+
+   return format_bytes(stat($file->sys_path)->size);
 }
 
 #######################################################################
