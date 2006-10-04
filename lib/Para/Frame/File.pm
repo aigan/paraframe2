@@ -371,7 +371,15 @@ sub is_dir
 
 sub chmod
 {
-    return chmod_file(shift->sys_path, @_);
+    my( $file ) = shift;
+    if( my $orig = $file->orig )
+    {
+	return chmod_file($orig->sys_path, @_);
+    }
+    else
+    {
+	return chmod_file($file->sys_path, @_);
+    }
 }
 
 #######################################################################
