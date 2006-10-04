@@ -1561,55 +1561,6 @@ C<$Para::Frame::CFG>
 
 These configuration params are used:
 
-=head3 locale
-
-Specifies what to set LC_ALL to, except LC_NUMERIC that is set to
-C.  The default is sv_SE.
-
-=head3 debug
-
-Sets global C<$Para::Frame::DEBUG> value that will be used as default
-debug value for all sessions. Also sets debug value for the
-C<Para::Frame::Client> then used from the server.
-
-Default is 0.
-
-=head3 dir_var
-
-The base for L</dir_log> and L</dir_run>.
-
-Default is C</var>
-
-=head3 dir_log
-
-The dir to store the paraframe log.
-
-Default is C<$dir_var/log>
-
-=head3 dir_run
-
-The dir to store the process pid.
-
-Default is C<$dir_var/run>
-
-=head3 paraframe
-
-The dir that holds paraframe.
-
-Default is C</usr/local/paraframe>
-
-=head3 paraframe_group
-
-The file group to set files to that are created.
-
-Default is C<staff>
-
-=head3 approot
-
-The path to application. This is the dir that holds the C<lib> and
-possibly the C<var> dirs. See L<Para::Frame::Site/approot>.
-
-Must be defined
 
 =head3 appback
 
@@ -1619,34 +1570,16 @@ L<Para::Frame::Site/appback>.
 
 Must be defined
 
-=head3 site_auto
 
-If true, accepts hosts in request even if no matching site has been
-created.  See L<Para::Frame::Site/get_by_req>. C<site_auto> can also
-be the name of a site to use for the template site.
+=head3 appbase
 
-=head3 time_zone
+A string that gives the base part of the package name for actions.
 
-Sets the time zone for L<Para::Frame::Time>.
+Must be defined
 
-Defaults to C<local>
+Example: If you set appbase to C<My::App>, the action C<my_action>
+will be looked for as L<My::App::Action::my_action>.
 
-=head3 time_format
-
-Sets the default presentation of times using
-L<Para::Frame::Time/format_datetime>
-
-Defaults to C<%Y-%m-%d %H.%M>
-
-=head3 time_stringify
-
-Calls L<Para::Frame::Time/set_stringify> with the param.
-
-=head3 umask
-
-The default umask for created files.
-
-Defaults C<0007>
 
 =head3 appfmly
 
@@ -1657,30 +1590,65 @@ C<appfmly> are tried. See L<Para::Frame::Site/appfmly>.
 
 Defaults to none.
 
-=head3 ttcdir
 
-The directory that holds the compiled templates.
+=head3 approot
 
-Defaults to L</appback> or L</approot> followed by C</var/ttc>.
+The path to application. This is the dir that holds the C<lib> and
+possibly the C<var> dirs. See L<Para::Frame::Site/approot>.
 
-=head3 tt_plugins
+Must be defined
 
-Adds a list of L<Template::Plugin> bases. Always adds
-L<Para::Frame::Template::Plugin>.
 
-Defaults to the empty list.
+=head3 bg_user_code
 
-=head3 port
+A coderef that generates a user object to be used for background jobs.
 
-The port top listen on for incoming requests.
+Defaults to code that C<get> C<guest> from L</user_class>.
 
-Defaults to C<7788>.
 
-=head3 pidfile
+=head3 debug
 
-The file to use for storing the paraframe pid.
+Sets global C<$Para::Frame::DEBUG> value that will be used as default
+debug value for all sessions. Also sets debug value for the
+C<Para::Frame::Client> then used from the server.
 
-Defaults to L</dir_run> followed by C</parframe_$port.pid>
+Default is 0.
+
+
+=head3 dir_log
+
+The dir to store the paraframe log.
+
+Default is C<$dir_var/log>
+
+
+=head3 dir_run
+
+The dir to store the process pid.
+
+Default is C<$dir_var/run>
+
+
+=head3 dir_var
+
+The base for L</dir_log> and L</dir_run>.
+
+Default is C</var>
+
+
+=head3 l10n_class
+
+The class to use for localizations. Should be a subclass to
+L<Para::Frame::L10N>.
+
+Defaults to C<Para::Frame::L10N>
+
+
+=head3 locale
+
+Specifies what to set LC_ALL to, except LC_NUMERIC that is set to
+C.  The default is sv_SE.
+
 
 =head3 logfile
 
@@ -1688,25 +1656,49 @@ The file to use for logging.
 
 Defaults to L</dir_log> followed by C</parframe_$port.log>
 
-=head3 user_class
 
-The class to use for user identification. Should be a subclass to
-L<Para::Frame::User>.
+=head3 paraframe
 
-Defaults to C<Para::Frame::User>
+The dir that holds paraframe.
+
+Default is C</usr/local/paraframe>
+
+
+=head3 paraframe_group
+
+The file group to set files to that are created.
+
+Default is C<staff>
+
+
+=head3 pidfile
+
+The file to use for storing the paraframe pid.
+
+Defaults to L</dir_run> followed by C</parframe_$port.pid>
+
+
+=head3 port
+
+The port top listen on for incoming requests.
+
+Defaults to C<7788>.
+
 
 =head3 session_class
 
-The class to use for sessopms- Should be a subclass to
+The class to use for sessions. Should be a subclass to
 L<Para::Frame::Session>.
 
 Defaults to C<Para::Frame::Session>
 
-=head3 bg_user_code
 
-A coderef that generates a user object to be used for background jobs.
+=head3 site_auto
 
-Defaults to code that C<get> C<guest> from L</user_class>.
+If true, accepts hosts in request even if no matching site has been
+created.  See L<Para::Frame::Site/get_by_req>. C<site_auto> can also
+be the name of a site to use for the template site.
+
 
 =head3 th
 
@@ -1728,6 +1720,57 @@ Example for adding a filter to the html burner:
   });
 
 See also L<Para::Frame::Burner>
+
+
+=head3 time_zone
+
+Sets the time zone for L<Para::Frame::Time>.
+
+Defaults to C<local>
+
+
+=head3 time_format
+
+Sets the default presentation of times using
+L<Para::Frame::Time/format_datetime>
+
+Defaults to C<%Y-%m-%d %H.%M>
+
+
+=head3 time_stringify
+
+Calls L<Para::Frame::Time/set_stringify> with the param.
+
+
+=head3 tt_plugins
+
+Adds a list of L<Template::Plugin> bases. Always adds
+L<Para::Frame::Template::Plugin>.
+
+Defaults to the empty list.
+
+
+=head3 ttcdir
+
+The directory that holds the compiled templates.
+
+Defaults to L</appback> or L</approot> followed by C</var/ttc>.
+
+
+=head3 umask
+
+The default umask for created files.
+
+Defaults C<0007>
+
+
+=head3 user_class
+
+The class to use for user identification. Should be a subclass to
+L<Para::Frame::User>.
+
+Defaults to C<Para::Frame::User>
+
 
 =cut
 
