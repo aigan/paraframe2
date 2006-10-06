@@ -172,8 +172,15 @@ Creates and returns an L<IO::File> object
 
 sub fh
 {
+    debug "In Para::Frame::Uploaded->fh";
     my( $uploaded ) = shift;
-    return IO::File->new( $uploaded->{'tempfile'}, @_ );
+#    return IO::File->new( $uploaded->{'tempfile'}, @_ );
+
+    my $fh = IO::File->new( $uploaded->{'tempfile'}, @_ );
+    my $mode = (stat($uploaded->{'tempfile'}))[2];
+    debug sprintf("Permissions are %04o\n", $mode & 07777);
+
+    return $fh;
 }
 
 
