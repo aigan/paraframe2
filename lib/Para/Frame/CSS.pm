@@ -43,8 +43,8 @@ sub new
     # Colours
     my $css_params =
     {
-     body_background => '#CCB195',
-     main_background => '#ECD3B8',
+     body_background => '#FFFFFF',
+     main_background => '#FFFFFF',
      border => '#784825',
      button => '#E1CA9C',
     };
@@ -149,11 +149,11 @@ sub header
     my $req = $Para::Frame::REQ;
     my $home = $req->site->home_url_path;
 
-#    debug "Choosing a css config";
+    debug 2, "Choosing a css config";
 
     if( $p )
     {
-#	debug "  Got css from tt param: ".datadump($p);
+	debug 2, "  Got css from tt param: ".datadump($p);
 	unless( ref $p )
 	{
 	    $p =
@@ -164,20 +164,20 @@ sub header
     }
     else
     {
-	if( $css->{'persisten'} or $css->{'alternate'} )
+	if( $css->{'persistent'} or $css->{'alternate'} )
 	{
-#	    debug "Got css from site css";
+	    debug 2, "Got css from site css";
 	    $p = $css;
 	}
 	elsif( $Para::Frame::CFG->{'css'}{'persistent'} or
 	       $Para::Frame::CFG->{'css'}{'alternate'} )
 	{
-#	    debug "Got css from main config";
+	    debug 2, "Got css from main config";
 	    $p = $Para::Frame::CFG->{'css'};
 	}
 	else
 	{
-#	    debug "Falling back to default css";
+	    debug 2, "Falling back to default css";
 	    $p =
 	    {
 	     'persistent' => ['pf/css/paraframe.css',
