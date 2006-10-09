@@ -168,3 +168,13 @@ tr.odd
 .paraframe_imgexpand a:hover     { background: #F0F0D0 }
 
 /****************************/
+
+p#pi
+{
+	text-align: right;
+}
+
+p#pi img
+{
+	border: 0;
+}
