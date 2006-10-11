@@ -211,7 +211,7 @@ sub get_results
 
     unless( $length )
     {
-	$child->{'data'} =~ /^(\d{1,5})\0/;
+	$child->{'data'} =~ /^(\d{1,7})\0/ or die;
 	$length = $1;
     }
     # Length of prefix
