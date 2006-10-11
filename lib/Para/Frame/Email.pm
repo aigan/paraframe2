@@ -407,10 +407,10 @@ sub send
     my @try = ref $p->{'to'} eq 'ARRAY' ? @{$p->{'to'}} : $p->{'to'};
 
     my $url = "$home/email/".$p->{'template'};
-    my $page = Para::Frame::Site::Page->new({
-					     url => $url,
-					     site => $site,
-					    });
+    my $page = Para::Frame::Page->new({
+				       url => $url,
+				       site => $site,
+				      });
 
     my( $tmpl ) = $page->template;
     if( not $tmpl )

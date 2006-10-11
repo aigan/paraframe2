@@ -22,8 +22,7 @@ Para::Frame::File - Represents a file in the site
 
 =head1 DESCRIPTION
 
-See also L<Para::Frame::Dir> L<Para::Frame::Site::File> and
-L<Para::Frame::Page>.
+See also L<Para::Frame::Dir> and L<Para::Frame::Page>.
 
 =cut
 
@@ -40,10 +39,10 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw debug datadump catch chmod_file );
+use Para::Frame::Utils qw( throw debug datadump catch chmod_file create_dir );
 use Para::Frame::List;
 use Para::Frame::Page;
-use Para::Frame::Nonsite::Dir;
+use Para::Frame::Dir;
 
 #######################################################################
 
@@ -61,14 +60,6 @@ sub new
     my( $this, $args ) = @_;
     my $class = ref($this) || $this;
 
-    # Doesn't nbeed to check ::File
-    if( $class eq 'Para::Frame::Dir' )
-    {
-	die "class should be Site or Nonsite";
-    }
-
-#    debug datadump $args;
-
     $args ||= {};
 
     my $file = bless
@@ -80,12 +71,15 @@ sub new
      sys_name       => undef,
      req            => undef,
      hidden         => undef,
+     umask          => undef, ## defaults for files and dirs
     }, $class;
 
     my $no_check = $args->{no_check} || 0;
 
 
     $file->{hidden} = $args->{hidden} || qr/(^\.|^CVS$|~$)/;
+
+    $file->{'umask'} = $args->{'umask'} || undef;
 
     if( my $req = $args->{req} )
     {
@@ -104,10 +98,6 @@ sub new
 	elsif( UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
 	{
 	    $url_in =~ s/([^\/])\/?$/$1\//;
-	}
-	elsif( $class eq 'Para::Frame::File' )
-	{
-	    confess "class should be Site";
 	}
 
 #	debug datadump \@_;
@@ -148,7 +138,7 @@ sub new
 	    if( -d $sys_name )
 	    {
 		$sys_name =~ s/([^\/])\/?$/$1\//;
-		bless $file, $file->dirclass;
+		bless $file, 'Para::Frame::Dir';
 	    }
 	}
 
@@ -156,13 +146,28 @@ sub new
 	$file->{sys_name} = $sys_name;  # Without dir trailing slash
     }
 
+    if( my $site = $file->site )
+    {
+	# Check that url is part of the site
+	my $home = $site->home_url_path;
+	unless( $url_in =~ /^$home/ )
+	{
+	    confess "URL '$url_in' is out of bound for site: ".datadump($args);
+	}
+
+	my $url_name = $url_in;
+	$url_name =~ s/\/$//; # Remove trailins slash
+
+	$file->{url_norm} = $url_in;    # With dir trailing slash
+	$file->{url_name} = $url_name;  # Without dir trailing slash
+    }
+
     return $file;
 }
 
-sub dirclass
+sub site
 {
-    # Assume we would get class from ::Site::File otherwise
-    return "Para::Frame::Nonsite::Dir";
+    return $_[0]->{'site'};
 }
 
 sub req
@@ -217,16 +222,19 @@ sub initiate
 
 =head1 Accessors
 
+Prefix url_ gives the path of the dir in http on the host
+
 Prefix sys_ gives the path of the dir in the filesystem
+
+No prefix gives the path of the dir relative the site root in url_path
 
 path_base excludes the suffix of the filename
 
-For dirs: always exclude the trailing slash, except for path_slash
+path_tmpl gives the path and filename
 
-  sys_path       sys_path_tmpl
-  sys_base
-  name           #filename
-  base           #basename
+path gives the preffered URL for the file
+
+For dirs: always exclude the trailing slash, except for path_slash
 
 =cut
 
@@ -241,8 +249,9 @@ instead get the parent dir.
 
 sub parent
 {
-    die "not implemented";
     my( $f ) = @_;
+
+    my $site = $f->site or confess "Not implemented";
 
     if( $f->{'url_norm'} =~ /\/$/ )
     {
@@ -272,18 +281,52 @@ L<Para::Frame::Site/home>.
 
 sub dir
 {
-    my( $f ) = @_;
+    my( $f, $args ) = @_;
+
+    $args ||= {};
 
     unless( $f->{'dir'} )
     {
-	$f->sys_path =~ m/(.*)\// or return undef;
-        my $filename = $1;
-        $f->{'dir'} = Para::Frame::Nonsite::Dir->
-	    new({filename=>$filename});
+	if( $f->site )
+	{
+	    my $url_path = $f->dir_url_path;
+	    $f->{'dir'} = Para::Frame::Dir->new({site => $f->site,
+						 url  => $url_path.'/',
+						 %$args,
+						});
+	}
+	else
+	{
+	    $f->sys_path =~ m/(.*)\// or return undef;
+	    my $filename = $1;
+	    $f->{'dir'} = Para::Frame::Dir->
+	      new({
+		   filename=>$filename,
+		   %$args,
+		  });
+	}
     }
 
     return $f->{'dir'};
 }
+
+#######################################################################
+
+=head2 dir_url_path
+
+The URL path to the template, excluding the filename, relative the site
+home, begining but not ending with a slash. May be an empty string.
+
+=cut
+
+sub dir_url_path
+{
+    my( $page ) = @_;
+    my $template = $page->url_path_tmpl or confess "Site not given";
+    $template =~ /^(.*?)\/[^\/]*$/;
+    return $1||'';
+}
+
 
 #######################################################################
 
@@ -304,6 +347,104 @@ sub name
 
 #######################################################################
 
+
+=head2 path
+
+The preffered URL for the file, relative the site home, begining with
+a slash. And for dirs, not ending with a slash.
+
+=cut
+
+sub path
+{
+    my( $f ) = @_;
+
+    my $site = $f->site or confess "No site given";
+    my $home = $site->home_url_path;
+    my $url_path = $f->url_path;
+    my( $site_url ) = $url_path =~ /^$home(.*?)$/
+      or confess "Couldn't get site_url from $url_path under $home";
+    return $site_url;
+}
+
+#######################################################################
+
+
+=head2 path_slash
+
+The preffered URL for the file, relative the site home, begining with
+a slash. And for dirs, ending with a slash.
+
+=cut
+
+sub path_slash
+{
+    my( $f ) = @_;
+
+    my $site = $f->site or confess "No site given";
+    my $home = $site->home_url_path;
+    my $url_path = $f->url_path_slash;
+    my( $site_url ) = $url_path =~ /^$home(.+?)$/
+      or confess "Couldn't get site_url from $url_path under $home";
+    return $site_url;
+}
+
+#######################################################################
+
+
+
+=head2 set_site
+
+  $f->set_site( $site )
+
+Sets the site to use for this request.
+
+C<$site> should be the name of a registred L<Para::Frame::Site> or a
+site object.
+
+The site must use the same host as the request.
+
+The method works similarly to L<Para::Frame::Request/set_site>
+
+Returns: The site object
+
+=cut
+
+sub set_site
+{
+    my( $f, $site_in ) = @_;
+
+    $site_in or confess "site param missing";
+
+    my $site = Para::Frame::Site->get( $site_in );
+
+    # Check that site matches the client
+    #
+    if( my $req = $f->req )
+    {
+	unless( $req->client =~ /^background/ )
+	{
+	    if( my $orig = $req->original )
+	    {
+		unless( $orig->site->host eq $site->host )
+		{
+		    my $site_name = $site->name;
+		    my $orig_name = $orig->site->name;
+		    debug "Host mismatch";
+		    debug "orig site: $orig_name";
+		    debug "New name : $site_name";
+		    confess "set_site called";
+		}
+	    }
+	}
+    }
+
+    return $f->{'site'} = $site;
+}
+
+
+#######################################################################
+
 =head2 sys_path
 
 The path from the system root. Excluding the last '/' for dirs.
@@ -312,7 +453,37 @@ The path from the system root. Excluding the last '/' for dirs.
 
 sub sys_path
 {
-    return $_[0]->{'sys_name'} ||= $_[0]->site->uri2file($_[0]->url_path_tmpl);
+    my( $f ) = @_;
+
+    unless(  $f->{'sys_name'} )
+    {
+	$f->site or confess "Not implemented";
+
+	my $req = $f->req;
+	my $site = $f->site;
+	$f->url_path =~ /([^\/]+)$/ or
+	  die "fixme ".$f->url_path.' - '.datadump($f);
+	my( $name ) = $1;
+	my $sys_name = $site->uri2file($f->url_path);
+	my $safecnt = 0;
+	my $umask = $f->{'umask'};# or debug "No umask for $f->{url_name}";
+	while( $sys_name !~ /$name$/ )
+	{
+#	    debug "$sys_name doesn't end with $name";
+	    die "Loop" if $safecnt++ > 100;
+	    debug "Creating dir $sys_name (with umask $umask)";
+	    create_dir($sys_name, {umask=>$umask});
+	    $req->uri2file_clear( $f->url_path );
+	    $f->{'sys_name'} = undef;
+	    $f->{'orig'} = undef;
+	    $sys_name = $site->uri2file($f->url_path);
+#	    debug "  Now got $sys_name";
+	}
+#	debug sprintf "Lookup %s -> %s", $f->url_path, $sys_name;
+	$f->{'sys_name'} = $sys_name;
+    }
+
+    return $f->{'sys_name'};
 }
 
 
@@ -352,6 +523,105 @@ sub sys_base
     return $1;
 }
 
+
+#######################################################################
+
+=head2 url
+
+Returns the L<URI> object, including the scheme, host and port.
+
+=cut
+
+sub url
+{
+    my( $page ) = @_;
+
+    my $site = $page->site or confess "No site given";
+    my $scheme = $site->scheme;
+    my $host = $site->host;
+    my $url_string = sprintf("%s://%s%s",
+			     $site->scheme,
+			     $site->host,
+			     $page->{url_norm});
+
+    return Para::Frame::URI->new($url_string);
+}
+
+
+#######################################################################
+
+
+=head2 url_path
+
+The URL for the file in http on the host. For dirs, excluding trailing
+slash.
+
+
+=cut
+
+sub url_path
+{
+    return $_[0]->{'url_name'} or confess "No site given";
+}
+
+
+#######################################################################
+
+
+=head2 url_path_slash
+
+This is the PREFERRED URL for the file in http on the host. For dirs,
+including trailing slash.
+
+=cut
+
+sub url_path_slash
+{
+    return $_[0]->{'url_norm'} or confess "No site given";
+}
+
+
+#######################################################################
+
+
+=head2 url_path_tmpl
+
+The path and filename in http on the host. With the language part
+removed. For L<Para::Frame::Page> this differs from L</url_path>.  For
+dirs, including trailing slash.
+
+=cut
+
+sub url_path_tmpl
+{
+    return $_[0]->url_path_slash or die "No site given";
+}
+
+#######################################################################
+
+
+=head2 base
+
+The path to the template, including the filename, relative the site
+home, begining with a slash. But excluding the suffixes of the file
+along with the dots. For Dirs, excluding the trailing slash.
+
+=cut
+
+sub base
+{
+    my( $page ) = @_;
+
+    my $site = $page->site or confess "No site given";
+    my $home = $site->home_url_path;
+    my $template = $page->url_path_tmpl;
+    $template =~ /^$home(.*?)(\.\w\w)?\.\w{2,3}$/
+      or die "Couldn't get base from $template under $home";
+    return $1;
+}
+
+
+#######################################################################
 
 #######################################################################
 
