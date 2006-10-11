@@ -103,7 +103,7 @@ sub set
 
     my $class = ref($this) || $this;
 
-    debug 2, "Decide on a language";
+    debug 3, "Decide on a language";
 
     my( $req ) = $Para::Frame::REQ;
 
