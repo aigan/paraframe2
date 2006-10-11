@@ -75,7 +75,7 @@ sub next_row
     foreach my $str ( $csv->fields )
     {
 #	warn "  Val $str\n";
-	from_to($str, 'cp437', "iso-8859-1");
+#	from_to($str, 'cp437', "iso-8859-1");
 #	warn "  Now $str\n\n";
 	push @row, $str;
     }
