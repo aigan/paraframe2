@@ -24,7 +24,7 @@ Para::Frame::Site::Page - Represents the response page for a req
 
 Represents a page on a site with a specific URL.
 
-Inherits from L<Para::Frame:Site:::File>
+Inherits from L<Para::Frame::File>
 
 During lookup or generation of the page, the URL of the page can
 change. We differ between the original requested URL, the resulting
@@ -75,15 +75,15 @@ BEGIN
     print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
-use base qw( Para::Frame::Page Para::Frame::Site::File );
+use base qw( Para::Frame::Page );
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug create_dir chmod_file idn_encode idn_decode datadump catch );
 use Para::Frame::Request::Ctype;
 use Para::Frame::URI;
 use Para::Frame::L10N qw( loc );
-use Para::Frame::Site::Dir;
-use Para::Frame::Site::File;
+use Para::Frame::Dir;
+use Para::Frame::File;
 use Para::Frame::Page;
 
 
@@ -97,72 +97,11 @@ use Para::Frame::Page;
 
 =head2 new
 
-  Para::Frame::Site::Page->new( \%args )
-
-Creates a Page object.
-
-The supported arguments are
-
-Required arguments:
-
-  url: The path to the page in the site or a L<URI> object
-
-  site: The name of the site as a string
-
-Optional arguments:
-
-  req: the Request object
-
-  ctype: The (default) content-type to use for the page
-
-
-C<url> is set by L</set_template>, C<site> is set by
-L<Para::Frame::Site::File/set_site>, C<req> defaults to the dynamicly using
-the current request and C<ctype> is set by L</ctype>.
+See L<Para::Frame::Page>
 
 This constructor is usually called by L</response_page>.
 
 =cut
-
-sub new
-{
-    my( $this, $args ) = @_;
-    my $class = ref($this) || $this;
-    die "DEPRECATED" unless ref $args eq 'HASH';
-
-    $args ||= {};
-
-    my $page = $class->SUPER::new($args);
-
-    # Set URL
-    #
-    my $url_in = $args->{url};
-    defined $url_in or croak "url param missing ".datadump($args);
-    if( UNIVERSAL::isa $url_in, 'URI' )
-    {
-	$url_in = $args->{url}->path;
-    }
-    $page->{orig_url_name} = $url_in;
-
-
-    # TODO: Use URL for extracting the site
-    my $site = $page->set_site( $args->{site} || $page->req->site );
-
-    my $always_move = defined $args->{always_move} ?
-	$args->{always_move} : 1;
-    my $keep_langpart = $args->{keep_langpart} || 0;
-
-    $page->set_template( $page->{orig_url_name},
-			 {
-			  always_move => $always_move,
-			  keep_langpart => $keep_langpart,
-			 });
-
-#    debug "Returning page $page";
-
-    return $page;
-}
-
 
 #######################################################################
 
@@ -214,7 +153,7 @@ sub response_page
 
 =head1 Accessors
 
-See L<Para::Frame::Site::File/Accessors>
+See L<Para::Frame::File/Accessors>
 
 =cut
 
@@ -333,7 +272,7 @@ sub headers
 
   $p->orig
 
-Returns: the original url as a L<Para::Frame::Site::File> object.
+Returns: the original url as a L<Para::Frame::File> object.
 
 TODO: Cache object
 
@@ -345,12 +284,15 @@ sub orig
 
     unless( $page->{'orig'} )
     {
+	my $umask = $page->{umask} or confess "No umask";
+
 	$page->{'orig'} =
-	    Para::Frame::Site::File->new({
-					  url => $page->{orig_url_name},
-					  site => $page->site,
-					  no_check => 1,
-					 });
+	    Para::Frame::File->new({
+				    url => $page->{orig_url_name},
+				    site => $page->site,
+				    no_check => 1,
+				    umask => $umask,
+				   });
     }
     return $page->{'orig'};
 }
@@ -924,7 +866,7 @@ The L<Para::Frame::Request/preffered_language> value.
 
 =item me
 
-Holds the L<Para::Frame::Site::File/url_path_slash> for the page, except if
+Holds the L<Para::Frame::File/url_path_slash> for the page, except if
 an L</error_page_selected> in which case we set it to
 L</orig_url_path>. (For making it easier to link back to the intended
 page)

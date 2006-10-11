@@ -43,6 +43,10 @@ use Para::Frame::Utils qw( throw debug datadump catch );
 use Para::Frame::List;
 use Para::Frame::Page;
 
+die "Deprecated";
+
+#######################################################################
+
 =head1 DESCRIPTION
 
 Represents a directory in the site.

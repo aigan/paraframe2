@@ -30,7 +30,7 @@ BEGIN
     print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
-use base qw( Para::Frame::Dir Para::Frame::File );
+die "Deprecated";
 
 #######################################################################
 

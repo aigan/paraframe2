@@ -35,6 +35,8 @@ BEGIN
     print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
+use base qw( Para::Frame::File );
+
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug datadump catch );
 use Para::Frame::List;
@@ -134,16 +136,6 @@ See L<Para::Frame::File>
 
 #######################################################################
 
-sub pageclass
-{
-    return "Para::Frame::Page";
-}
-
-sub fileclass
-{
-    return "Para::Frame::File";
-}
-
 
 =head2 dirs
 
@@ -153,8 +145,9 @@ Returns a L<Para::Frame::List> with L<Para::Frame::Dir> objects.
 
 sub dirs
 {
-    die "not implemented";
     my( $dir ) = @_;
+
+    $dir->site or confess "Not implemented";
 
     $dir->initiate;
 
@@ -211,17 +204,17 @@ sub files
 	elsif( $name =~ /\.tt$/ )
 	{
 #	    debug "  As a Page";
-	    push @list, $dir->pageclass->new({ site => $dir->site,
-					       url  => $url,
-					       keep_langpart => 1,
-					     });
+	    push @list, Para::Frame::Page->new({ site => $dir->site,
+						 url  => $url,
+						 keep_langpart => 1,
+					       });
 	}
 	else
 	{
 #	    debug "  As a File";
-	    push @list, $dir->fileclass->new({ site => $dir->site,
-					       url  => $url,
-					     });
+	    push @list, Para::Frame::File->new({ site => $dir->site,
+						 url  => $url,
+					       });
 	}
 
 	$dir->req->may_yield;
@@ -243,8 +236,9 @@ L<Para::Frame::Site/home>.
 
 sub parent
 {
-    die "not implemented";
     my( $dir ) = @_;
+
+    $dir->parent or confess "Not implemented";
 
     my $home = $dir->site->home_url_path;
     my( $pdirname ) = $dir->{'url_name'} =~ /^($home.*)\/./ or return undef;
@@ -357,9 +351,9 @@ sub get
     if( $dir->isa('Para::Frame::Site::Dir') )
     {
 	my $url = $dir->url_path_slash.$file;
-	return Para::Frame::Site::File->new({site => $dir->site,
-					     url  => $url,
-					    });
+	return Para::Frame::File->new({site => $dir->site,
+				       url  => $url,
+				      });
     }
     else
     {

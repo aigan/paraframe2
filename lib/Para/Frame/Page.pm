@@ -77,6 +77,8 @@ BEGIN
     print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
+use base qw( Para::Frame::File );
+
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug create_dir chmod_file idn_encode idn_decode datadump catch );
 use Para::Frame::Request::Ctype;
@@ -106,12 +108,7 @@ sub new
 {
     my( $this, $args ) = @_;
     my $class = ref($this) || $this;
-    die "DEPRECATED" unless ref $args eq 'HASH';
-
-    if( $class eq 'Para::Frame::Page' )
-    {
-	croak "class should be Site or Nonsite";
-    }
+    confess "DEPRECATED: ".datadump($args) unless ref $args eq 'HASH';
 
     $args ||= {};
 
@@ -142,6 +139,7 @@ sub new
      initiated      => 0,              ## Initiating file info
      sys_name       => undef,          ## Cached sys path
      burner         => undef,          ## burner used for page
+     umask          => undef,          ## defaults for files and dirs
     }, $class;
 
     $page->{'params'} = {%$Para::Frame::PARAMS};
@@ -157,13 +155,41 @@ sub new
 	$page->ctype( $ctype );
     }
 
+    $page->{'umask'} = $args->{'umask'} || undef;
 
-    if( $args->{url} )
+    if( my $url_in = $args->{url} )
     {
 	if( $args->{'filename'} )
 	{
 	    die "Don't specify filename with url";
 	}
+
+	# Set URL
+	#
+	if( UNIVERSAL::isa $url_in, 'URI' )
+	{
+	    $url_in = $args->{url}->path;
+	}
+	$page->{orig_url_name} = $url_in;
+
+
+	### Place object in Para::Frame::Site::Page
+	#
+	bless $page, "Para::Frame::Site::Page";
+
+	# TODO: Use URL for extracting the site
+	my $site = $page->set_site( $args->{site} || $page->req->site );
+
+	my $always_move = defined $args->{always_move} ?
+	  $args->{always_move} : 1;
+	my $keep_langpart = $args->{keep_langpart} || 0;
+
+	$page->set_template( $page->{orig_url_name},
+			     {
+			      always_move => $always_move,
+			      keep_langpart => $keep_langpart,
+			     });
+
     }
     elsif( my $filename = $args->{'filename'} )
     {
@@ -172,7 +198,7 @@ sub new
     }
     else
     {
-	die "Filename missing";
+	die "Filename missing: ".datadump($args);
     }
 
     return $page;
@@ -361,11 +387,14 @@ sub add_params
 
   $page->precompile( \%args )
 
+TODO: Move to Site::Page
+
 Send same args as for L</new> for creating the new page from thre
 source C<$page>. Also takes:
 
   arg type defaults to html_pre
   arg language defaults to undef
+  arg umask defaults to 02
 
 Returns: The new compiled page
 
@@ -378,37 +407,40 @@ sub precompile
     my $req = $page->req;
 
     $args ||= {};
+    $args->{'umask'} ||= 02;
 
     my $srcfile = $page->sys_path;
-    my $page_dest = Para::Frame::Site::Page->new($args);
+    my $page_dest = Para::Frame::Page->new($args);
 
     my( $res, $error );
 
     my $type = $args->{'type'} || 'html_pre';
 
-    my $filename = $page_dest->orig->name;
+#    my $filename = $page_dest->orig->name;
 
     my $destfile = $page_dest->orig->sys_path;
 #    debug "Compiling from $srcfile -> $destfile";
+#
+#    my $safecnt = 0;
+#    while( $destfile !~ /$filename$/ )
+#    {
+#	debug "$destfile doesn't end with $filename";
+#	# TODO: Make this into a method
+#	die "Loop" if $safecnt++ > 100;
+#	debug "Creating dir $destfile";
+#	create_dir($destfile);
+#	$req->uri2file_clear( $page_dest->orig->url_path );
+#	$page_dest->{'sys_name'} = undef;
+#	$page_dest->{'orig'} = undef;
+#	$destfile = $page_dest->orig->sys_path;
+#    }
 
-    my $safecnt = 0;
-    while( $destfile !~ /$filename$/ )
-    {
-	debug "$destfile doesn't end with $filename";
-	# TODO: Make this into a method
-	die "Loop" if $safecnt++ > 100;
-	debug "Creating dir $destfile";
-	create_dir($destfile);
-	$req->uri2file_clear( $page_dest->orig->url_path );
-	$page_dest->{'sys_name'} = undef;
-	$page_dest->{'orig'} = undef;
-	$destfile = $page_dest->orig->sys_path;
-    }
-
-    my $dir = $page_dest->dir;
+    my $dir = $page_dest->dir({no_check=>1});
 
     if( debug > 1 )
     {
+	debug "nonorig     : ".$page_dest->name;
+#	debug "filename    : $filename";
 	debug "srcfile     : $srcfile";
 	debug "destfile_web: ".$page_dest->orig->url_path_slash;
 	debug "destfile    : $destfile";
@@ -428,6 +460,11 @@ sub precompile
 			    pf_compiled_date => now->iso8601,
 			    pf_source_version => $page->vcs_version(),
 			   });
+
+    if( my $params = $args->{'params'} )
+    {
+	$page_dest->add_params($params);
+    }
 
     $page_dest->set_tt_params;
 
