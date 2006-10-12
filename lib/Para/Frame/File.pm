@@ -461,10 +461,10 @@ sub sys_path
 
 	my $req = $f->req;
 	my $site = $f->site;
-	$f->url_path =~ /([^\/]+)$/ or
-	  die "fixme ".$f->url_path.' - '.datadump($f);
+	$f->url_path =~ /(^|[^\/]+)$/ or
+	  confess "fixme ".$f->url_path.' - '.datadump($f);
 	my( $name ) = $1;
-	my $sys_name = $site->uri2file($f->url_path);
+	my $sys_name = $site->uri2file($f->url_path_slash);
 	my $safecnt = 0;
 	my $umask = $f->{'umask'};# or debug "No umask for $f->{url_name}";
 	while( $sys_name !~ /$name$/ )
