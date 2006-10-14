@@ -338,7 +338,7 @@ sub has_file
 	return 1;
     }
 
-    warn "Not found: ".$dir->sys_path_slash.$file;
+    debug "Not found: ".$dir->sys_path_slash.$file;
     return 0;
 }
 
