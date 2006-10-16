@@ -238,7 +238,7 @@ sub parent
 {
     my( $dir ) = @_;
 
-    $dir->parent or confess "Not implemented";
+    $dir->site or confess "Not implemented";
 
     my $home = $dir->site->home_url_path;
     my( $pdirname ) = $dir->{'url_name'} =~ /^($home.*)\/./ or return undef;

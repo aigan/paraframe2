@@ -642,9 +642,9 @@ sub is_dir
 sub chmod
 {
     my( $file ) = shift;
-    if( my $orig = $file->orig )
+    if( $file->can('orig') )
     {
-	return chmod_file($orig->sys_path, @_);
+	return chmod_file($file->orig->sys_path, @_);
     }
     else
     {
