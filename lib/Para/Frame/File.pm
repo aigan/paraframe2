@@ -48,10 +48,20 @@ use Para::Frame::Dir;
 
 =head2 new
 
-  Para::Frame::File->new($req)
+  Para::Frame::File->new( $params )
 
 Creates a File object. It should be initiated before used. (Done by
 the methods here.)
+
+params:
+
+  no_check
+  hidden
+  umask
+  req
+  filename
+  url
+  site
 
 =cut
 
@@ -116,14 +126,32 @@ sub new
     }
     else
     {
-	die "Filename missing ($class): ".datadump($args);
+	confess "Filename missing ($class): ".datadump($args);
     }
 
     unless( $no_check )
     {
 	unless( -r $sys_name )
 	{
-	    confess "The file $sys_name is not found (or readable)";
+	    if( $class eq "Para::Frame::Dir" )
+	    {
+		if( $args->{create_missing_dirs} )
+		{
+		    create_dir($sys_name,
+			       {
+				umask => $file->{'umask'},
+			       });
+		}
+	    }
+
+	    if( not -e $sys_name )
+	    {
+		confess "The file $sys_name is not found";
+	    }
+	    elsif( not -r $sys_name )
+	    {
+		confess "The file $sys_name is not readable";
+	    }
 	}
 
 	if( $class eq "Para::Frame::Dir" )
@@ -270,11 +298,25 @@ sub parent
 
 =head2 dir
 
+  $f->dir()
+
+  $f->dir( \%params )
+
 Gets the directory for the file.  But parent for the page C<index.tt>
 or a L<Para::Frame::Dir> should be the parent dir.
 
-Returns undef if we trying to get the parent of the
-L<Para::Frame::Site/home>.
+The params are sent to L<Para::Frame::Dir/new>.
+
+params:
+
+create_missing_dirs: defaults to 1
+
+
+Returns
+
+A L<Para::Frame::Dir>.
+
+undef if we trying to get the parent of the L<Para::Frame::Site/home>
 
 =cut
 
@@ -287,6 +329,11 @@ sub dir
 
     unless( $f->{'dir'} )
     {
+	unless( defined $args->{create_missing_dirs} )
+	{
+	    $args->{create_missing_dirs} = 1;
+	}
+
 	if( $f->site )
 	{
 	    my $url_path = $f->dir_url_path;
@@ -364,6 +411,29 @@ sub path
     my $url_path = $f->url_path;
     my( $site_url ) = $url_path =~ /^$home(.*?)$/
       or confess "Couldn't get site_url from $url_path under $home";
+    return $site_url;
+}
+
+#######################################################################
+
+
+=head2 path_tmpl
+
+The preffered URL for the file, relative the site home, begining with
+a slash, but including the template name. For dirs, this would be
+C<index.tt>.
+
+=cut
+
+sub path_tmpl
+{
+    my( $f ) = @_;
+
+    my $site = $f->site or confess "No site given";
+    my $home = $site->home_url_path;
+    my $url_path_tmpl = $f->url_path_tmpl;
+    my( $site_url ) = $url_path_tmpl =~ /^$home(.*?)$/
+      or confess "Couldn't get site_url from $url_path_tmpl under $home";
     return $site_url;
 }
 
@@ -461,26 +531,13 @@ sub sys_path
 
 	my $req = $f->req;
 	my $site = $f->site;
-	$f->url_path =~ /(^|[^\/]+)$/ or
-	  confess "fixme ".$f->url_path.' - '.datadump($f);
-	my( $name ) = $1;
-	my $sys_name = $site->uri2file($f->url_path_slash);
-	my $safecnt = 0;
 	my $umask = $f->{'umask'};# or debug "No umask for $f->{url_name}";
-	while( $sys_name !~ /$name$/ )
-	{
-#	    debug "$sys_name doesn't end with $name";
-	    die "Loop" if $safecnt++ > 100;
-	    debug "Creating dir $sys_name (with umask $umask)";
-	    create_dir($sys_name, {umask=>$umask});
-	    $req->uri2file_clear( $f->url_path );
-	    $f->{'sys_name'} = undef;
-	    $f->{'orig'} = undef;
-	    $sys_name = $site->uri2file($f->url_path);
-#	    debug "  Now got $sys_name";
-	}
-#	debug sprintf "Lookup %s -> %s", $f->url_path, $sys_name;
-	$f->{'sys_name'} = $sys_name;
+#	debug "----> Looking up sys_name based on url_path_slash";
+	$f->{'sys_name'} = $site->uri2file_create($f->url_path_tmpl,
+						  {
+						   umask => $f->{'umask'},
+						  }
+						 );
     }
 
     return $f->{'sys_name'};
