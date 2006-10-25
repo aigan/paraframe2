@@ -140,10 +140,11 @@ sub response_page
 
 
     my $page = $class->new({
-			    site  => $site,
-			    url   => $req->{'orig_url'},
-			    ctype => $req->{'orig_ctype'},
-			    req   => $req,
+			    site     => $site,
+			    url      => $req->{'orig_url'},
+			    ctype    => $req->{'orig_ctype'},
+			    req      => $req,
+			    language => $req->language,
 			   });
 
     return $page;
@@ -365,6 +366,10 @@ sub redirection
 
   $p->template()
 
+  $p->template($params)
+
+C<$params> will be sent to L</find_template>.
+
 Returns the (current) L<Template::Document> object for this page, as
 returned by L</find_template> given L</url_path_tmpl>.
 
@@ -387,9 +392,10 @@ Returns: The L<Template::Document> object
 
 sub template
 {
-    my( $page ) = @_;
+    my( $page, $params ) = @_;
 
-    my( $tmpl ) = $page->find_template( $page->url_path_tmpl );
+#    debug "->template calling find_template with ".datadump($params);
+    my( $tmpl ) = $page->find_template( $page->url_path_tmpl, $params );
 
     return $tmpl;
 }
@@ -482,6 +488,8 @@ sub add_header
 
   $p->set_template( $url_path, $always_move_flag )
 
+  $p->set_template( $url_path, $always_move_flag, $params )
+
 C<$url_path> should be the URL path including the filename. This can
 later be retrieved by L</url_path_tmpl>.
 
@@ -515,6 +523,12 @@ redirecting to another page.
 
 The content type is set to C<text/html> if this is a C<.tt> file.
 
+params:
+
+  keep_langpart
+  create_missing_dirs
+  no_check
+
 =cut
 
 sub set_template
@@ -523,46 +537,74 @@ sub set_template
 
     # For setting a template diffrent from the URL
 
-    my $always_move = $args->{'always_move'} || 0;
-
-    if( UNIVERSAL::isa $url_in, 'URI' )
-    {
-	$url_in = $url_in->path;
-    }
-
-    if( $url_in =~ /^http/ )
-    {
-	# template param should NOT include the http://hostname part
-	croak "Tried to set a template to $url_in";
-    }
-
     my $req = $page->req;
-    my $url_norm;
 
-    if( $args->{keep_langpart} )
+    my( $template, $url_norm, $url_name );
+
+    if( UNIVERSAL::isa($url_in, 'Para::Frame::Page') )
     {
-	$url_norm = $url_in;
+	confess "check this";
+
+	$template = $url_in->{tmpl_url_name};
+	$url_norm = $url_in->{url_norm};
+	$url_name = $url_in->{url_name};
     }
     else
     {
-	$url_norm = $req->normalized_url( $url_in );
-#	debug "Removed langpart";
-	$url_norm =~ s/\.\w\w(\.\w{2,3})$/$1/; # Remove language part
+	if( UNIVERSAL::isa $url_in, 'URI' )
+	{
+	    $url_in = $url_in->path;
+	}
+
+	if( $url_in =~ /^http/ )
+	{
+	    # template param should NOT include the http://hostname part
+	    croak "Tried to set a template to $url_in";
+	}
+
+
+	####### TEMPLATE -> url_path_tmpl
+	#
+	$template = $url_in;
+	if( $template =~ /\/$/ )
+	{
+	    # Template indicates a dir. Make it so
+	    $template .= "index.tt";
+	}
+
+	if( my $lang = $args->{'language'} )
+	{
+	    my $code = $lang->preferred;
+	    if( $template =~ /\/([^\/]+)(\.\w{2})\.tt$/ )
+	    {
+		unless( $2 eq $code )
+		{
+		    confess "Language mismatch ($template != $code)";
+		}
+	    }
+	    else
+	    {
+		debug "Setting language to $code";
+		$template =~ s/\/([^\/]+)\.tt$/\/$1.$code.tt/;
+	    }
+	}
+
+
+	####### URL_NORM -> url_path_slash
+	#
+	$url_norm = $req->normalized_url( $url_in, $args );
+
+
+	####### URL_NAME -> url_path
+	#
+	$url_name = $url_norm;
+	$url_name =~ s/\/$//; # Remove trailins slash
+
+	#######
+
+	debug(3,"setting template to $template");
+	debug(3,"setting url_norm to $url_norm");
     }
-
-    my $template = $url_norm;
-    my $url_name = $url_norm;
-
-    if( $template =~ /\/$/ )
-    {
-	# Template indicates a dir. Make it so
-	$template .= "index.tt";
-    }
-
-    $url_name =~ s/\/$//; # Remove trailins slash
-
-    debug(3,"setting template to $template");
-    debug(3,"setting url_norm to $url_norm");
 
     $page->{tmpl_url_name}     = $template;
     $page->{url_norm}          = $url_norm;
@@ -570,6 +612,8 @@ sub set_template
     $page->{sys_name}          = undef;
 
     $page->ctype->set("text/html") if $template =~ /\.tt$/;
+
+    my $always_move = $args->{'always_move'} || 0;
     $page->{'moved_temporarily'} ||= 1 unless $always_move;
 
     return $template;
@@ -949,28 +993,42 @@ sub set_tt_params
 
 =head2 find_template
 
-  returns ($doc, $ext) where $doc is a L<Template::Document> objetct
+  $page->find_template( $path_slash )
+
+  $page->find_template( $path_slash, $params )
+
+params:
+
+C<create_missing_dirs>: if true, creates missing dirs in the
+filesystem up to the part there the file would have been.
+
+Returns:
+
+C<($doc, $ext)> where $doc is a L<Template::Document> objetct
 that can be parsed to a L<Para::Frame::Burner> object.
 
 =cut
 
 sub find_template
 {
-    my( $page, $template ) = @_;
+    my( $page, $template, $params ) = @_;
     my $req = $page->req;
 
-    debug(2,"Finding template $template");
+    $params ||= {};
+
+    debug(2,"Finding template $template with params ".datadump($params));
     my( $in );
 
     my $site = $page->site;
 #    debug("The site is".Dumper($site));
 
 
-    my( $base_name, $path_full, $ext_full ) = fileparse( $template, qr{\..*} );
+    my( $base_name, $dir_path_slash, $ext_full )
+      = fileparse( $template, qr{\..*} );
 
     if( debug > 3 )
     {
-	debug(0,"path: $path_full");
+	debug(0,"path: $dir_path_slash");
 	debug(0,"name: $base_name");
 	debug(0,"ext : $ext_full");
 	cluck unless $ext_full;
@@ -997,9 +1055,22 @@ sub find_template
     }
 
     # Also used by &Para::Frame::Burner::paths
-    $page->set_dirsteps( $req->uri2file( $path_full )."/" );
+    my $dir_sys_path;
+    if( $params->{'create_missing_dirs'} )
+    {
+#	debug "  Creating missing dirs";
+	$dir_sys_path = $req->uri2file_create( $dir_path_slash );
+    }
+    else
+    {
+#	debug "  NOT creating missing dirs";
+	$dir_sys_path = $req->uri2file( $dir_path_slash );
+    }
 
-    my @searchpath = $req->uri2file($path_full)."/";
+#    debug "Dir sys path is $dir_sys_path";
+    $page->set_dirsteps( $dir_sys_path . '/' );
+
+    my @searchpath = $dir_sys_path . '/';
 
     if( $site->is_compiled )
     {
@@ -1008,7 +1079,7 @@ sub find_template
     else
     {
 	my $destroot = $site->home->sys_path;
-	my $dir = $req->uri2file( $path_full );
+	my $dir = $dir_sys_path;
 	debug 4, "destroot: $destroot";
 	debug 4, "dir(pre): $dir";
 
