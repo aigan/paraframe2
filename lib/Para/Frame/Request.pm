@@ -28,7 +28,7 @@ use CGI::Cookie;
 use FreezeThaw qw( thaw );
 use HTTP::BrowserDetect;
 use IO::File;
-use Carp qw(cluck croak carp confess );
+use Carp qw(cluck croak carp confess longmess );
 use LWP::UserAgent;
 use HTTP::Request;
 use Template::Document;
@@ -51,11 +51,13 @@ use Para::Frame::Site;
 use Para::Frame::Change;
 use Para::Frame::URI;
 use Para::Frame::Site::Page;
-use Para::Frame::Utils qw( compile throw debug catch idn_decode datadump );
 use Para::Frame::L10N;
 use Para::Frame::Logging;
 use Para::Frame::Connection;
 use Para::Frame::Uploaded;
+
+use Para::Frame::Utils qw( compile throw debug catch idn_decode
+                           datadump create_dir );
 
 our %URI2FILE;
 
@@ -752,24 +754,38 @@ sub in_yield
 
   $req->uri2file( $url, $file )
 
+  $req->uri2file( $url, undef, $return_partial )
+
 This does the Apache URL to filename translation
 
 Directory URLs must end in '/'. The URL '' is not valid.
 
-The answer is cached.
+The answer is cached. Remove an url from the cache with
+L<uri2file_clear>.
 
 If given a C<$file> uses that as a translation and caches is.
 
 (This method may have to create a pseudoclient connection to get the
 information.)
 
+If C<$return_partial> is true, we will return a part of the path
+instead of throwing an exception.
+
+Returns:
+
+The file without '/' for dirs
+
+Exceptions:
+
+Throws a notfound exception if translation results in a file there the
+last part differs from the one sent in. That would be the case then
+the directory doesn't exist or for unsupported url translations.
+
 =cut
 
 sub uri2file
 {
-    my( $req, $url, $file ) = @_;
-
-    # This will return file without '/' for dirs
+    my( $req, $url, $file, $return_partial ) = @_;
 
     my $key = $req->host . $url;
 
@@ -790,8 +806,72 @@ sub uri2file
 #    warn "    From client\n";
     $file = $req->get_cmd_val( 'URI2FILE', $url );
 
+    $url =~ /\/([^\/\?]*)\/?(\?.*)?$/ or
+      confess "url doesn't start with slash: $url";
+    my( $last_part ) = $1;
+
+#    cluck "Comparing $file with $url ($last_part)"; ### DEBUG
+
+    unless( $file =~ /$last_part\/?(\?.*)?$/ )
+    {
+#	debug "  NO MATCH";
+	if( $return_partial )
+	{
+#	    debug "  Returning partial url";
+	    return $file;
+	}
+	throw('notfound', longmess "Path $file doesn't match $url ($last_part)");
+    }
+
     debug(4, "Storing URI2FILE in key $key: $file");
     $URI2FILE{ $key } = $file;
+    return $file;
+}
+
+
+#######################################################################
+
+=head2 uri2file_create
+
+  $req->uri2file_create( $url, $params )
+
+The same as L</uri2file> but creates the directory path if it's
+missing.  It will not create the actual file.
+
+C<$params> will be sent to L<Para::Frame::Utils/create_dir>. If undef,
+defaults to the umask 002.
+
+Returns the result from L</uri2file>.
+
+=cut
+
+sub uri2file_create
+{
+    my( $req, $url, $params ) = @_;
+
+    unless( $params )
+    {
+	$params =
+	{
+	 umask => 002,
+	};
+    }
+
+    my $safecnt = 0;
+    $url =~ /\/([^\/\?]*)\/?(\?.*)?$/ or
+      confess "url doesn't start with slash: $url";
+    my( $last_part ) = $1;
+    my $file = $req->uri2file( $url, undef, 1 );
+#    debug "Comparing $file with $url ($last_part)"; ### DEBUG
+
+    while( $file !~ /$last_part\/?(\?.*)?$/ )
+    {
+	die "Loop" if $safecnt++ > 100;
+	debug "  Creating dir $file with params ".datadump($params);
+	create_dir($file, $params);
+	$file = $req->uri2file($url, undef, 1);
+    }
+
     return $file;
 }
 
@@ -836,36 +916,66 @@ sub uri2file_clear
 
   $req->normalized_url( $url )
 
+  $req->normalized_url( $url, $params )
+
 Gives the proper version of the URL. Ending index.tt will be
 removed. This is used for redirecting (forward) the browser if
 nesessary.
 
 C<$url> must be the path part as a string.
 
-Returns the path part as a string.
+params:
+
+  create_missing_dirs
+  no_check
+
+Returns:
+
+  the path part as a string
 
 =cut
 
 sub normalized_url
 {
-    my( $req, $url ) = @_;
+    my( $req, $url, $params ) = @_;
 
     $url ||= $req->page->orig_url_path;
+    $params ||= {};
 
-#    if( $url =~ s/\/index.tt$/\// )
-    if( $url =~ s/\/index(\.\w{2,3})?\.tt$/\// )
+#    debug "Normalizing $url";
+
+    if( $params->{keep_langpart} )
     {
-#	debug "Normal   url: $url";
-	return $url;
+	$url =~ s/\/index.tt(\?.*)?$/\/$1/;
+    }
+    else
+    {
+	$url =~ s/\/index(\.\w{2})?\.tt(\?.*)?$/\/$2/ or
+	  $url =~ s/\.\w{2}\.tt(\?.*)?$/.tt$1/;
+
     }
 
-    my $url_file = $req->uri2file( $url );
-    if( -d $url_file and $url !~ /\/(\?.*)?$/ )
+
+
+    unless( $params->{no_check} )
     {
-	$url =~ s/\?/\/?/
-	    or $url .= '/';
-#	debug "Normal   url: $url";
-	return $url;
+	my $url_file;
+	if( $params->{create_missing_dirs} )
+	{
+#	    debug "  Create missing dirs";
+	    $url_file = $req->uri2file_create( $url );
+	}
+	else
+	{
+	    $url_file = $req->uri2file( $url );
+	}
+
+	if( -d $url_file and $url !~ /\/(\?.*)?$/ )
+	{
+	    $url =~ s/\?/\/?/
+	      or $url .= '/';
+	    return $url;
+	}
     }
 
 #    debug "Normal   url: $url";
@@ -875,6 +985,8 @@ sub normalized_url
 #######################################################################
 
 =head2 setup_jobs
+
+  $req->setup_jobs()
 
 Set up things from params.
 
@@ -2263,6 +2375,21 @@ sub note
     $note =~ s/\n/\\n/g;
     my $creq = $req->original || $req; # client req
     return $creq->send_code('NOTE', $note );
+}
+
+
+#######################################################################
+
+sub set_response_page
+{
+    my( $req, $page ) = @_;
+
+    unless( UNIVERSAL::isa($page, 'Para::Frame::Page') )
+    {
+	confess "Page invalid: $page";
+    }
+
+    $req->{'page'} = $page;
 }
 
 
