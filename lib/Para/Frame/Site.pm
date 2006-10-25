@@ -384,6 +384,42 @@ sub uri2file
 
 #######################################################################
 
+=head2 uri2file_create
+
+  $site->uri2file_create( $url, $params )
+
+Same as L<Para::Frame::Request/uri2file>_create, but looks up the file for
+the current site.
+
+We will use the current request or create a new request if the sites
+doesn't match.
+
+=cut
+
+sub uri2file_create
+{
+    my( $site ) = shift;
+
+    my $req = $Para::Frame::REQ;
+    my $req_site = $req->site;
+
+    if( $site->equals($req_site) )
+    {
+	return $req->uri2file_create(@_);
+    }
+    else
+    {
+	my $args = {};
+	$args->{'site'} = $site;
+	return $req->new_subrequest($args,
+				    \&Para::Frame::Request::uri2file,
+				    @_ );
+    }
+}
+
+
+#######################################################################
+
 =head2 home
 
   $site->home
