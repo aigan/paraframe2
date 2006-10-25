@@ -405,7 +405,7 @@ sub create_dir
 	{
 	    confess "$dir is not a directory";
 	}
-	mkdir $dir, 0700;
+	mkdir $dir, 0700 or die $!;
 	chmod_dir( $dir, $params );
     }
 }
