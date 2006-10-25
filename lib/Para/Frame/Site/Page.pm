@@ -1602,7 +1602,7 @@ sub send_output
 	    }
 	    else
 	    {
-		$page->ctype->set_charset("UTF-8");
+		$page->ctype->set_charset("utf-8");
 		$page->send_headers;
 		$res = $req->get_cmd_val( 'BODY' );
 	    }
@@ -1615,7 +1615,7 @@ sub send_output
 	    {
 		binmode( $req->client, ':utf8');
 		debug(4,"Transmitting in utf8 mode");
-		$req->send_in_chunks( $page->{'page_content'} );
+		$page->send_in_chunks( $page->{'page_content'} );
 		binmode( $req->client, ':bytes');
 	    }
 	    else
@@ -2022,7 +2022,7 @@ sub send_stored_result
 	if( $page_result->[2] eq 'utf8' )
 	{
 	    debug 4, "  in UTF8";
-	    $page->ctype->set_charset("UTF-8");
+	    $page->ctype->set_charset("utf-8");
 	    $page->send_headers;
 	    my $res = $req->get_cmd_val( 'BODY' );
 	    if( $res eq 'LOADPAGE' )
