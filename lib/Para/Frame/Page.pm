@@ -102,6 +102,20 @@ use Para::Frame::Time qw( now );
 
 Creates a Page object.
 
+params:
+
+
+  no_check
+  hidden
+  umask: defaults to 002
+  req
+  page
+  filename
+  url
+  site
+  create_missing_dirs
+  language
+
 =cut
 
 sub new
@@ -112,17 +126,28 @@ sub new
 
     $args ||= {};
 
+    if( $args->{'page'} )
+    {
+	# NOTE: Doesn't take any other args
+	return $args->{'page'};
+    }
+
+
+#    debug "new Page ".datadump($args);
+
     my $page = bless
     {
-     orig_url_name  => undef, ## prev url_name
-     orig           => undef, ## a File obj for the orig url
-     tmpl_url_name  => undef, ## prev template
-     url_name       => undef, ## prev template_url
-     url_norm       => undef, ## ends in slash for dirs
+     orig           => undef,          ## a File obj for the orig url
+     orig_url_name  => undef,          ## prev url_name
+     tmpl_url_name  => undef,          ## prev template
+     url_name       => undef,          ## prev template_url
+     url_norm       => undef,          ## ends in slash for dirs
+     sys_name       => undef,          ## Cached sys path
 
-     error_template => undef,          ## if diffrent from template
+     error_template => undef,          ## if diffrent from url_norm
 
 
+     umask          => undef,          ## defaults for files and dirs
      headers        => [],             ## Headers to be sent to the client
      moved_temporarily => 0,           ## ... or permanently?
      redirect       => undef,          ## ... to other server
@@ -137,9 +162,7 @@ sub new
      req            => undef,
      dir            => undef,          ## Cached Para::Frame::Dir obj
      initiated      => 0,              ## Initiating file info
-     sys_name       => undef,          ## Cached sys path
      burner         => undef,          ## burner used for page
-     umask          => undef,          ## defaults for files and dirs
     }, $class;
 
     $page->{'params'} = {%$Para::Frame::PARAMS};
@@ -155,7 +178,9 @@ sub new
 	$page->ctype( $ctype );
     }
 
-    $page->{'umask'} = $args->{'umask'} || undef;
+    $page->{'umask'} = $args->{'umask'} || 002;
+
+    my $no_check = $args->{no_check} || 0;
 
     if( my $url_in = $args->{url} )
     {
@@ -188,17 +213,23 @@ sub new
 			     {
 			      always_move => $always_move,
 			      keep_langpart => $keep_langpart,
+			      no_check => $no_check,
+			      create_missing_dirs => $args->{create_missing_dirs},
+			      language => $args->{language},
 			     });
 
     }
     elsif( my $filename = $args->{'filename'} )
     {
-	-r $filename or die "Can't read $filename: $!";
+	unless( $no_check )
+	{
+	    -r $filename or die "Can't read $filename: $!";
+	}
 	$page->{'sys_name'} = $filename;
     }
     else
     {
-	die "Filename missing: ".datadump($args);
+	confess "Filename missing: ".datadump($args);
     }
 
     return $page;
@@ -395,6 +426,9 @@ source C<$page>. Also takes:
   arg type defaults to html_pre
   arg language defaults to undef
   arg umask defaults to 02
+  arg create_missing_dirs
+  arg params
+  arg page
 
 Returns: The new compiled page
 
@@ -418,22 +452,7 @@ sub precompile
 
 #    my $filename = $page_dest->orig->name;
 
-    my $destfile = $page_dest->orig->sys_path;
-#    debug "Compiling from $srcfile -> $destfile";
-#
-#    my $safecnt = 0;
-#    while( $destfile !~ /$filename$/ )
-#    {
-#	debug "$destfile doesn't end with $filename";
-#	# TODO: Make this into a method
-#	die "Loop" if $safecnt++ > 100;
-#	debug "Creating dir $destfile";
-#	create_dir($destfile);
-#	$req->uri2file_clear( $page_dest->orig->url_path );
-#	$page_dest->{'sys_name'} = undef;
-#	$page_dest->{'orig'} = undef;
-#	$destfile = $page_dest->orig->sys_path;
-#    }
+    my $destfile = $page_dest->sys_path;
 
     my $dir = $page_dest->dir({no_check=>1});
 
@@ -442,7 +461,7 @@ sub precompile
 	debug "nonorig     : ".$page_dest->name;
 #	debug "filename    : $filename";
 	debug "srcfile     : $srcfile";
-	debug "destfile_web: ".$page_dest->orig->url_path_slash;
+	debug "destfile_web: ".$page_dest->url_path_tmpl;
 	debug "destfile    : $destfile";
 	debug "destdir     : ".$dir->sys_path;
 	debug "type        : $type";
@@ -472,6 +491,8 @@ sub precompile
     $res = $page_dest->burn( $fh, $destfile );
     $fh->close;
     $error = $page_dest->burner->error unless $res;
+
+    $page_dest->chmod($args);
 
     if( $error )
     {
