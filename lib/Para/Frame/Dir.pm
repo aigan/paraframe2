@@ -26,6 +26,7 @@ use strict;
 use Carp qw( croak confess cluck );
 use IO::Dir;
 use File::stat; # exports stat
+use File::Remove;
 use Scalar::Util qw(weaken);
 #use Dir::List; ### Not used...
 
@@ -362,6 +363,18 @@ sub get
 				       filename => $filename,
 				      });
     }
+}
+
+#######################################################################
+
+sub remove
+{
+    my( $dir ) = @_;
+
+    my $dirname = $dir->sys_path;
+    debug "Removing dir $dirname";
+    File::Remove::remove( \1, $dirname )
+	or die "Failed to remove $dirname: $!";
 }
 
 #######################################################################
