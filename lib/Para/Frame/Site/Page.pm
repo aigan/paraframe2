@@ -537,7 +537,7 @@ sub set_template
 
     # For setting a template diffrent from the URL
 
-    debug("set_template $url_in ".datadump($args,1)); ### DEBUG
+#    debug("set_template $url_in ".datadump($args,1)); ### DEBUG
 
     my $req = $page->req;
 
@@ -1018,7 +1018,7 @@ sub find_template
 
     $params ||= {};
 
-    debug("find_template $template with ".datadump($params,1));
+#    debug("find_template $template with ".datadump($params,1));
     my( $in );
 
     my $site = $page->site;
@@ -1359,8 +1359,8 @@ sub render_output
     my $home = $site->home_url_path;
 
     $req->note("Rendering page");
-    debug "For req ".$req->id;
-    cluck datadump($page,1); ### DEBUG
+#    debug "For req ".$req->id;
+#    cluck datadump($page,1); ### DEBUG
 
     my( $in, $ext ) = $page->find_template( $template );
 

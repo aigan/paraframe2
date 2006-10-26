@@ -2391,8 +2391,8 @@ sub set_response_page
 	confess "Page invalid: $page";
     }
 
-    debug "Setting response page to ".datadump($page,1);
-    debug "For req ".$req->id;
+#    debug "Setting response page to ".datadump($page,1);
+#    debug "For req ".$req->id;
 
     $req->{'page'} = $page;
 }
