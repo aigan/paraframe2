@@ -1,4 +1,4 @@
-#  $Id$  -*-perl-*-
+#  $Id$  -*-cperl-*-
 package Para::Frame::Action::language_set;
 #=====================================================================
 #
@@ -25,20 +25,28 @@ sub handler
     my( $req ) = @_;
 
     my $q = $req->q;
+    my $msg;
 
     if( my $lc = $q->param('lang') )
     {
 	$req->cookies->add({
 			    'lang' => $lc,
 			   });
-	return "Ändrade språket till $lc";
+	$msg = "Changed language to $lc";
     }
     else
     {
 	$req->cookies->remove('lang');
 	$req->set_language($req->env->{HTTP_ACCEPT_LANGUAGE});
-	return "Tog bort språkval";
+
+	$msg = "Removed the language choice";
     }
+
+    # May have to change page
+    my $page = $req->page;
+    $page->set_template( $page->url_path_slash );
+
+    return $msg;
 }
 
 1;
