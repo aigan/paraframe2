@@ -158,7 +158,8 @@ sub init
     }
     $req->{'result'}  = Para::Frame::Result->new();  # Before Session
 
-    $req->{'page'}    = Para::Frame::Site::Page->response_page($req);
+    my $page = Para::Frame::Site::Page->response_page($req);
+    $req->{'page'}    = $req->set_response_page( $page );
 
     $req->{'site'}    = $req->{'page'}->site;
 
@@ -1129,7 +1130,7 @@ sub run_action
 	if( $@ )
 	{
 	    # What went wrong?
-	    debug(3,$@);
+	    debug(1,$@); # DEBUG def level 3
 
 	    if( $@ =~ /^Can\'t locate $file/ )
 	    {
@@ -1256,7 +1257,6 @@ sub run_action
 sub after_jobs
 {
     my( $req ) = @_;
-    my $page = $req->page;
 
     debug 4, "In after_jobs";
 
@@ -1305,6 +1305,7 @@ sub after_jobs
     if( $req->in_last_job )
     {
 	# Redirection requestd?
+	my $page = $req->page; # May have changed
 	if( $page->error_page_not_selected and $page->redirection )
 	{
 	    $req->cookies->add_to_header;
@@ -1329,6 +1330,7 @@ sub after_jobs
 	}
 
 	# The renderer may have set a redirection page
+	$page = $req->page; # May have changed
 	if( $page->redirection )
 	{
 	    $req->cookies->add_to_header;
@@ -2388,6 +2390,9 @@ sub set_response_page
     {
 	confess "Page invalid: $page";
     }
+
+    debug "Setting response page to ".datadump($page,1);
+    debug "For req ".$req->id;
 
     $req->{'page'} = $page;
 }
