@@ -115,6 +115,7 @@ params:
   site
   create_missing_dirs
   language
+  keep_langpart
 
 =cut
 
@@ -132,8 +133,7 @@ sub new
 	return $args->{'page'};
     }
 
-
-#    debug "new Page ".datadump($args);
+#    debug "new Page ".datadump($args,1);
 
     my $page = bless
     {
@@ -442,6 +442,7 @@ sub precompile
 
     $args ||= {};
     $args->{'umask'} ||= 02;
+    $args->{'keep_langpart'} = 1;
 
     my $srcfile = $page->sys_path;
     my $page_dest = Para::Frame::Page->new($args);
