@@ -537,6 +537,8 @@ sub set_template
 
     # For setting a template diffrent from the URL
 
+    debug("set_template $url_in ".datadump($args,1)); ### DEBUG
+
     my $req = $page->req;
 
     my( $template, $url_norm, $url_name );
@@ -563,9 +565,14 @@ sub set_template
 	}
 
 
+	####### URL_NORM -> url_path_slash
+	#
+	$url_norm = $req->normalized_url( $url_in, $args );
+
+
 	####### TEMPLATE -> url_path_tmpl
 	#
-	$template = $url_in;
+	$template = $url_norm;
 	if( $template =~ /\/$/ )
 	{
 	    # Template indicates a dir. Make it so
@@ -574,7 +581,7 @@ sub set_template
 
 	if( my $lang = $args->{'language'} )
 	{
-	    my $code = $lang->preferred;
+	    my $code = $lang->code;
 	    if( $template =~ /\/([^\/]+)(\.\w{2})\.tt$/ )
 	    {
 		unless( $2 eq $code )
@@ -588,11 +595,6 @@ sub set_template
 		$template =~ s/\/([^\/]+)\.tt$/\/$1.$code.tt/;
 	    }
 	}
-
-
-	####### URL_NORM -> url_path_slash
-	#
-	$url_norm = $req->normalized_url( $url_in, $args );
 
 
 	####### URL_NAME -> url_path
@@ -1016,7 +1018,7 @@ sub find_template
 
     $params ||= {};
 
-    debug(2,"Finding template $template with params ".datadump($params));
+    debug("find_template $template with ".datadump($params,1));
     my( $in );
 
     my $site = $page->site;
@@ -1113,7 +1115,7 @@ sub find_template
 	debug $searchstr;
     }
 
-    debug(4,"Check $ext",1);
+    debug(4,"Check ".($ext||'<no ext>'),1);
     foreach my $path ( @searchpath )
     {
 	unless( $path )
@@ -1129,7 +1131,7 @@ sub find_template
 	# Handle dirs
 	if( -d $path.$base_name.$ext_full )
 	{
-	    die "Found a directory: $path$base_name$ext_full\nShould redirect";
+	    confess "Found a directory: $path$base_name$ext_full\nShould redirect";
 	}
 
 
@@ -1357,7 +1359,8 @@ sub render_output
     my $home = $site->home_url_path;
 
     $req->note("Rendering page");
-
+    debug "For req ".$req->id;
+    cluck datadump($page,1); ### DEBUG
 
     my( $in, $ext ) = $page->find_template( $template );
 
