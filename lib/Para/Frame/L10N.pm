@@ -488,6 +488,22 @@ sub alternatives
 
 
 
+=head2 code
+
+  $lh->code
+
+Returnes the first language alternative from L</alternatives> as a
+string of two characters.
+
+=cut
+
+sub code
+{
+    return $_[0]->{'alternatives'}[0];
+}
+
+
+
 =head2 set_headers
 
   $lh->set_headers()
