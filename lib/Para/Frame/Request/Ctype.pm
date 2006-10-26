@@ -58,7 +58,8 @@ sub new
     return $ctype;
 }
 
-sub req    { $_[0]->{'req'} }
+# TODO: May be copled to a page for an previous request
+sub req    { $_[0]->{'req'} || $Para::Frame::REQ }
 
 =head2 set
 
