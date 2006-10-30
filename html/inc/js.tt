@@ -19,6 +19,9 @@ function showhide(whichLayer) {
 }
 [% PROCESS js_extra.tt %]
 </script>
-<!--[if lt IE 7.]>
-<script defer type="text/javascript" src="$home/pf/js/pngfix.js"></script>
-<![endif]-->
+[% IF req.cfg.ie7 %]
+   [%# compliance patch for microsoft browsers #%]
+   <!--[if lt IE 7]><script src="[% req.cfg.ie7 %]/ie7-standard-p.js" type="text/javascript"></script><![endif]-->
+[% ELSE %]
+   <!--[if lt IE 7.]><script defer type="text/javascript" src="$home/pf/js/pngfix.js"></script><![endif]-->
+[% END %]
