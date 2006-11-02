@@ -198,3 +198,44 @@ $content
 $content
 </div>
 [% END %]
+
+
+[% BLOCK roundbox %]
+  [% DEFAULT title="" %]
+  [% DEFAULT imgdir="$home/img/dark_box/" %]
+  [% DEFAULT class="round_box" %]
+  [% DEFAULT format="png" %]
+  <table class="$class" cellspacing="0" cellpadding="0">
+    <tr class="top">
+      <td class="h_left"><img alt="/" src="[% imgdir %]h_left_wh.$format"/></td>
+      <td class="h_bg"><h3>[% title %]</h3></td>
+      <td class="h_right"><img alt="\" src="[% imgdir %]h_right_w.$format"/></td>
+    </tr>
+    <tr>
+      <td class="s_left">&nbsp;</td>
+      <td class="content">[% content %]</td>
+      <td class="s_right">&nbsp;</td>
+    </tr>
+    <tr>
+      <td class="b_left"><img alt="\" src="[% imgdir %]b_height.$format"/></td>
+      <td class="b_bg"></td>
+      <td class="b_right"><img alt="/" src="[% imgdir %]b_height.$format"/></td>
+      <!-- redundant second pic, but looks good in w3m -->
+    </tr>
+  </table>
+[% END %]
+
+[% MACRO roundbox_subtitle(subtitle) BLOCK %]
+  [% DEFAULT subtitle="SUBTITLE" %]
+    </td>
+    <td class="s_right">&nbsp;</td>
+  </tr>
+  <tr>
+    <td class="m_s_left">&nbsp;</td>
+    <td class="m_bg"><h3>[% subtitle %]</h3></td>
+    <td class="m_s_right">&nbsp;</td>
+  </tr>
+  <tr>
+    <td class="s_left">&nbsp;</td>
+    <td class="content">
+[% END %]

@@ -1,0 +1,77 @@
+[% MACRO roundbox(class, imgdir, color, background, s_width) BLOCK %]
+  [% DEFAULT format = "png" %]
+  table.$class {
+    margin-bottom:  10px;
+    width:	    100%;
+    border:	    none;
+    cell-spacing:   none;
+    z-index:	    10;
+  }
+  
+  table.$class td.h_bg {
+    background:	    url("[% imgdir %]h_bg.$format") repeat-x right top;
+    font-size:	    11px;
+    font-weight:    bold;
+    font-style:	    italic;
+    line-height:    1.5em;
+  }
+  
+  table.$class td.h_bg h3, table.$class td.m_bg h3 {
+    border:	    none;
+    margin-left:    1em;
+    margin-top:     0.3em;
+  }
+  
+  table.$class td.h_left {
+    background:	    url("[% imgdir %]h_left.$format") no-repeat right top;
+    [% IF s_width %]
+      width:	    [% s_width %]px;
+    [% END %]
+  }
+  
+  table.$class td.h_right {
+    background:	    url("[% imgdir %]h_right.$format") no-repeat right top;
+    [% IF s_width %]
+      width:	    [% s_width %]px;
+    [% END %]
+  }
+  
+  table.$class td.s_left {
+    background:	    url("[% imgdir %]s_left.$format") repeat-y right top;
+  }
+  
+  table.$class td.s_right {
+    background:	    url("[% imgdir %]s_right.$format") repeat-y right top;
+  }
+  
+  table.$class td.m_s_left {
+    background:	    url("[% imgdir %]m_s_left.$format") no-repeat right top;
+  }
+  
+  table.$class td.m_bg {
+    background:	    url("[% imgdir %]m_bg.$format") repeat-x right top;
+  }
+  
+  table.$class td.m_s_right {
+    background:	    url("[% imgdir %]m_s_right.$format") no-repeat right top;
+  }
+  
+  table.$class td.b_left {
+    background:	    url("[% imgdir %]b_left.$format") no-repeat right top;
+  }
+  
+  table.$class td.b_bg {
+    background:	    url("[% imgdir %]b_bg.$format") repeat-x right top;
+  }
+  
+  table.$class td.b_right {
+    background:	    url("[% imgdir %]b_right.$format") no-repeat right top;
+  }
+  
+  table.$class td.content {
+    background:	    [% background %];
+    color:	    [% color %];
+    font-weight:    bold;
+    padding-top:    0.5em;
+  }
+[% END %]

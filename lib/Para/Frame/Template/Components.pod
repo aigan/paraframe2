@@ -215,3 +215,63 @@ The params above can be given as params to the wrapper.
 L<Para::Frame>, L<Para::Frame::Widget>
 
 =cut
+
+=head2 roundbox
+
+  In .css:
+    [% PROCESS css_components.tt %]
+    [% roundbox($classname, $imgdir, $color, $background, $s_width) %]
+
+  In .tt:
+    [% WRAPPER roundbox imgdir=$imgdir title=$mytitle class=$classname %]
+      Some contents...
+
+      [% roundbox_subtitle($subtitle1) %]
+      Some more...
+
+      [% roundbox_subtitle($subtitle2) %]
+      Some more...
+    [% END %]
+
+Draws a widget with rounded corners (or rather, with a frame of
+png's).
+
+  $s_width is width (in px) of the side (A).
+  $imgdir is concatenated with the following:
+
+Header:
+  h_bg.png	   - Background of header
+		     1 × Ay px, Repeated in X
+  h_left.png	   - Left of header (rounded corner)
+  		     Ax × Ay px, Not repeated
+  h_right.png	   - Right of header (rounded corner)
+  		     Bx × Ay px, Not repeated
+  h_left_wh.png    - Forced min-size of left and top border
+		     Ax × Ay px, transparent
+  h_right_w.png    - Forced min-width of right border
+		     Bx × 1 px, transparent
+
+Sides:
+  s_left.png	   - Left side
+		     Ax × 1 px, Repeated in Y
+  s_right.png	   - Right side
+		     Ax × 1 px, Repeated in Y
+
+Subtitle:
+  m_bg.png	   - Subtitle background
+		     1 × Cy px, Repeated in X
+  m_s_left.png	   - Left of subtitle
+		     A x Cy px, Not repeated
+  m_s_right.png    - Right of subtitle
+		     A × Cy px, Not repeated
+
+Bottom:
+  b_bg.png	   - Bottom border
+		     1 × By px, Repeated in X
+  b_left.png	   - Bottom left corner
+		     A × By px, Not repeated
+  b_right.png	   - Bottom right corner
+		     A × By px, Not repeated
+  b_height.png     - Forced min-height of bottom border
+		     1 × By px, transparent
+
