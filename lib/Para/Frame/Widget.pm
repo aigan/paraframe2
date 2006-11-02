@@ -154,7 +154,7 @@ sub slider
 	if( defined $current and ($current >=  ($min + $i*$delta - $delta/2)) and
 	      ($current <  ($min + $i*$delta + $delta/2)))
 	{
-	    $checked[$i] = "checked";
+	    $checked[$i] = 'checked="checked"';
 	}
 
 	$widget .= "<input type=\"radio\" name=\"$field\" value=\"$val[$i]\" $checked[$i]>\n";
@@ -311,7 +311,7 @@ sub submit
     my $name = '';
     $name = "name=\"$setval\"" if $setval;
 
-    return "<input type=\"submit\" $name value=\"$label_out\">";
+    return "<input type=\"submit\" $name value=\"$label_out\"/>";
 }
 
 #######################################################################
@@ -360,7 +360,7 @@ sub go
     }
 
     my $query = join '', map sprintf("document.f.$_.value='%s';", $attr->{$_}), keys %$attr;
-    return "<input type=\"button\" value=\"$label\" onClick=\"${query}go('$template', '$run')\" $extra />";
+    return "<input type=\"button\" value=\"$label\" onclick=\"${query}go('$template', '$run')\" $extra />";
 }
 
 sub go_js
@@ -445,7 +445,7 @@ sub forward_url
 	    push @parts, sprintf("%s=%s", $key, $q->escape($value));
 	}
     }
-    my $query = join '&', @parts;
+    my $query = join '&amp;', @parts;
     $query and $query = '?'.$query;
     return $template.$query;
 }
@@ -613,7 +613,7 @@ sub selectorder
     my( $id, $size ) = @_;
 
     my $result = "<select name=\"placeobj_$id\">\n";
-    $result .= "<option selected>--\n";
+    $result .= "<option selected=\"selected\">--\n";
     for(my $i=1;$i<=$size;$i++)
     {
 	$result .= sprintf("<option value=\"$i\">%.2d\n", $i);
@@ -1004,7 +1004,7 @@ sub checkbox
 
     if( $checked and $checked ne 'f')
     {
-	$extra .= " checked";
+	$extra .= ' checked="checked"';
     }
 
     if( $prefix )
@@ -1017,7 +1017,7 @@ sub checkbox
 	$suffix = $separator . $suffix;
     }
 
-    return sprintf('%s<input type="checkbox" name="%s" value="%s"%s>%s',
+    return sprintf('%s<input type="checkbox" name="%s" value="%s"%s/>%s',
 		   $prefix,
 		   CGI->escapeHTML( $field ),
 		   CGI->escapeHTML( $value ),
@@ -1133,7 +1133,7 @@ sub radio
 
     if( $checked and $checked ne 'f')
     {
-	$extra .= " checked";
+	$extra .= ' checked="checked"';
     }
 
     if( $prefix )

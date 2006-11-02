@@ -1,74 +1,79 @@
 <div class="debug">
-[% IF emergency_mode %]
-<h1 class="important">Crashed $emergency_mode times</h1>
-[% END %]
+  [% IF emergency_mode %]
+  <h1 class="important">Crashed $emergency_mode times</h1>
+  [% END %]
 
-<h1>[% IF req.result.errcnt %]
-   [% IF req.result.errcnt == 1 %]
-      [% req.result.errcnt %] error
-   [% ELSE %]
-      [% req.result.errcnt %] errors
-   [% END %]
-[% ELSE %]
-   No errors
-[% END %]
-</h1>
-
-<ol>
-[% FOREACH part IN req.result.part %]
-   <li>
-      <code>[% part.type %]</code>
-      <strong>--&gt;</strong><br>
-      <code>[% part.message | html | html_line_break %]</code>
-   </li>
-[% END %]
-</ol>
-
-<h4>Route</h4>
-<ol>
-[% FOREACH step IN route.list %]
-<li>
-   [% step %]
-   [% IF loop.last %]
-      [% backstep %]
-      [% regret %]
-      [% remove_step %]
-   [% END %]
-</li>
-[% END %]
-</ol>
-
-<h4>Params</h4>
-<table>
-<tr><th>Name</th><th>Value</th></tr>
-[% FOREACH key IN q.param %]
-   [% tr2 %]<td>[% key %]</td><td>
-   [% IF q.param(key).size > 1 %]
-      <ol>
-      [% FOREACH val IN q.param(key) %]
-         <li>[% val %]
-      [% END %]
-      </ol>
-   [% ELSE %]
-      [% IF key == 'passwd' %]
-         ********
-      [% ELSIF key == 'debug_info' %]
+  <h1>
+    [% IF req.result.errcnt %]
+      [% IF req.result.errcnt == 1 %]
+        [% req.result.errcnt %] error
       [% ELSE %]
-         [% q.param(key) %]
+        [% req.result.errcnt %] errors
       [% END %]
-   [% END %]
-</td></tr>
-[% END %]
-</table>
+    [% ELSE %]
+      No errors
+    [% END %]
+  </h1>
+
+  [% IF req.result.part %]
+    <ol>
+      [% FOREACH part IN req.result.part %]
+        <li>
+          <code>[% part.type %]</code>
+          <strong>--&gt;</strong><br/>
+          <code>[% part.message | html | html_line_break %]</code>
+        </li>
+      [% END %]
+    </ol>
+  [% END %]
+
+  [% IF route.list.size >= 1 %]
+    <h4>Route</h4>
+    <ol>
+      [% FOREACH step IN route.list %]
+        <li>
+          [% step %]
+          [% IF loop.last %]
+    	  [% backstep %]
+    	  [% regret %]
+    	  [% remove_step %]
+          [% END %]
+        </li>
+      [% END %]
+    </ol>
+  [% END %]
+
+  <h4>Params</h4>
+  <table>
+    <tr><th>Name</th><th>Value</th></tr>
+    [% FOREACH key IN q.param %]
+      [% tr2 %]<td>[% key %]</td><td>
+      [% IF q.param(key).size > 1 %]
+        <ol>
+          [% FOREACH val IN q.param(key) %]
+          <li>[% val %]
+          [% END %]
+        </ol>
+      [% ELSE %]
+        [% IF key == 'passwd' %]
+	  ********
+        [% ELSIF key == 'debug_info' %]
+        [% ELSE %]
+          [% q.param(key) %]
+        [% END %]
+      [% END %]
+      </td></tr>
+    [% END %]
+  </table>
 
 
-<h4>Cookies</h4>
-<table>
-<tr><th>Name</th><th>Value</th></tr>
-[% FOREACH key IN q.cookie %]
-   [% tr2 %]<td>[% key %]</td><td>
+  <h4>Cookies</h4>
+  <table>
+    <tr><th>Name</th><th>Value</th></tr>
+    [% FOREACH key IN q.cookie %]
+      [% tr2 %]<td>[% key %]</td><td>
       [% q.cookie(key) %]
-</td></tr>
-[% END %]
-</table>
+      </td></tr>
+    [% END %]
+  </table>
 </div>

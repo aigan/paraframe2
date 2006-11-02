@@ -11,8 +11,8 @@ IF template.next_template_target;
    form_extra = "$form_extra target='${template.next_action_target}'";
 END;
 
-DEFAULT form_method = "POST";
-IF form_method == "POST";
+DEFAULT form_method = "post";
+IF form_method == "post";
   DEFAULT form_enctype = "multipart/form-data";
 END;
 IF form_enctype;

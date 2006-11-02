@@ -1,8 +1,8 @@
 <div class="paraframe_menu_admin">
-<div style="float: right; padding: 0.3em; font-size:0.8em">Debug at level [% debug %]<br>
+<div style="float: right; padding: 0.3em; font-size:0.8em">Debug at level [% debug %]<br/>
 Request [% req.id %] @ port [% cfg.port %]</div>
 
-<a href="[% forward_url %]"><img alt="Reload" src="$home/pf/images/reload-26.png"></a>
+<a href="[% forward_url %]"><img alt="Reload" src="$home/pf/images/reload-26.png"/></a>
 
 [%+ go("Index", "$page.dir.url_path/admin-index.tt") %]
 [%+ go("Debug", "$home/pf/config/debuglist.tt", 'mark') %]

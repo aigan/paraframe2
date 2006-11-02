@@ -824,7 +824,7 @@ sub uri
 	    push @parts, sprintf("%s=%s", $key, CGI->escape($value));
 	}
     }
-    my $query = join '&', @parts;
+    my $query = join '&amp;', @parts;
     $query and $query = '?'.$query;
 
     debug(4, "Returning URI $template$query");
