@@ -778,8 +778,8 @@ The file without '/' for dirs
 
 Exceptions:
 
-Throws a notfound exception if translation results in a file there the
-last part differs from the one sent in. That would be the case then
+Throws a notfound exception if translation results in a file where the
+last part differs from the one sent in. That would be the case when
 the directory doesn't exist or for unsupported url translations.
 
 =cut
