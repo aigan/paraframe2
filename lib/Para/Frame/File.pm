@@ -81,9 +81,9 @@ sub new
 
     my $key = $sys_in || ($site_in->code . $url_in);
 
-    if( $Para::Frame::File::Cache{ $key } )
+    if( my $file = $Para::Frame::File::Cache{ $key } )
     {
-	return $Para::Frame::File::Cache{ $key };
+	return $file;
     }
 
 #    debug "--------> CREATING file $key";
@@ -393,7 +393,7 @@ sub initiate
 	return 1 unless $mtime > $f->{mtime};
     }
 
-    debug "Initiating $name";
+#    debug "Initiating $name";
 
     $f->{mtime} = $mtime;
     $f->{readable} = -r _;

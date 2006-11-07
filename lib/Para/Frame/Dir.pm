@@ -414,7 +414,7 @@ sub create
 
     if( $dir->exist )
     {
-	debug sprintf "Dir %s exist. Chmodding", $dir->desig;
+#	debug sprintf "Dir %s exist. Chmodding", $dir->desig;
 	$dir->chmod($args);
 	return $dir;
     }

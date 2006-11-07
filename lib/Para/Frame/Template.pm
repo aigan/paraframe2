@@ -111,9 +111,11 @@ sub document
 {
     my( $tmpl ) = @_;
 
-    unless( $tmpl->{'document'} )
+    #Cache within a req
+
+    unless( $Para::Frame::REQ->{'document'}{$tmpl} )
     {
-	debug "Getting doc for ".$tmpl->sysdesig;
+#	debug "Getting doc for ".$tmpl->sysdesig;
 
 	my $req = $Para::Frame::REQ;
 
@@ -127,7 +129,7 @@ sub document
 
 
 
-	debug "Compdir: $compdir";
+#	debug "Compdir: $compdir";
 
 	my( $doc, $ltime);
 
@@ -184,12 +186,12 @@ sub document
 	#
 	unless( $doc )
 	{
-	    debug("Reading file");
+#	    debug("Reading file");
 	    $mod_time = time; # The new time of reading file
 	    my $tmpltext = $tmpl->content;
 	    my $parser = $burner->parser;
 
-	    debug("Parsing");
+#	    debug("Parsing");
 	    $req->note("Compiling ".$tmpl->sys_path);
 	    my $metadata =
 	    {
@@ -200,7 +202,7 @@ sub document
 		or throw('template', "parse error:\nFile: $tmplname\n".
 			 $parser->error);
 
-	    debug("Writing compiled file");
+#	    debug("Writing compiled file");
 	    $compfile->dir->create;
 
 	    Template::Document->write_perl_file($compfile->sys_path, $parsedoc);
@@ -215,10 +217,10 @@ sub document
 		[$doc, $mod_time];
 	}
 
-	$tmpl->{'document'} = $doc;
+	return $Para::Frame::REQ->{'document'}{$tmpl} = $doc;
     }
 
-    return $tmpl->{'document'};
+    return $Para::Frame::REQ->{'document'}{$tmpl};
 }
 
 #######################################################################
@@ -497,21 +499,13 @@ sub precompile
 		       pf_source_version => $tmpl->vcs_version(),
 		      });
 
-    debug "PF params added";
-
     if( my $params = $args->{'params'} )
     {
 	$rend->add_params($params);
     }
 
-    debug "Extra params added";
-
     $rend->set_tt_params;
-
-    debug "BURNING $destfile";
     my $res = $rend->burn( $fh, $destfile );
-    debug "BURNING DONE";
-
     $fh->close;
 
     my $error = $rend->burner->error unless $res;
