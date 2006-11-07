@@ -273,7 +273,7 @@ sub find
     my( $this, $page ) = @_;
     my $class = ref($this) || $this;
 
-    debug "Finding page ".$page->sysdesig . "($page)";
+#    debug "Finding page ".$page->sysdesig . "($page)";
 
     my $req = $Para::Frame::REQ;
 
@@ -344,7 +344,7 @@ sub find
 	}
 
 	# We look for both tt and html regardless of it the file was called as .html
-	debug(0,"Check $path",1);
+#	debug(0,"Check $path",1);
 	die "dir_redirect failed" unless $base_name;
 
 	# Handle dirs
@@ -359,7 +359,7 @@ sub find
 	{
 #	    debug("Check $langcode");
 	    my $tmplname = $path.$base_name.$langcode.$ext_full;
-	    debug "Looking at $tmplname";
+#	    debug "Looking at $tmplname";
 	    my $tmpl = $class->new_possible_sysfile($tmplname);
 
 	    if( $tmpl->exist )
@@ -479,7 +479,7 @@ sub precompile
     my $destfile = $dest->sys_path;
 
     #Normalize page URL
-    $dest = $dest->normalize;
+    my $page = $dest->normalize;
 
     my $dir = $dest->dir;
 
@@ -487,7 +487,7 @@ sub precompile
     my $fh = new IO::File;
     $fh->open( "$srcfile" ) or die "Failed to open '$srcfile': $!\n";
 
-    my $rend = $dest->renderer(undef, {template => $tmpl} );
+    my $rend = $page->renderer(undef, {template => $tmpl} );
 
     $rend->set_burner_by_type($args->{'type'} || 'html_pre');
 

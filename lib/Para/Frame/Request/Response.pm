@@ -1141,7 +1141,7 @@ sub render_output
     my( $resp ) = @_;
 
     my $renderer = $resp->renderer;
-    debug "Renderer is $renderer";
+#    debug "Renderer is $renderer";
 
     if( my $content = $renderer->render_output() )
     {

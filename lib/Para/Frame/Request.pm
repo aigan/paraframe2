@@ -813,7 +813,7 @@ sub uri2file
 
     if( $file )
     {
-	debug "Storing URI2FILE in key $key: $file";
+#	debug "Storing URI2FILE in key $key: $file";
 	return $URI2FILE{ $key } = $file;
     }
 

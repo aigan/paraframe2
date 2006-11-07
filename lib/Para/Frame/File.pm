@@ -160,7 +160,7 @@ sub new
 #	# Resolve relative parts in the path
 #	$sys_name = abs_path( $sys_name );
 
-	debug "File $sys_name exist";
+#	debug "File $sys_name exist";
 
 	if( -d $sys_name or
 	    UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
@@ -1011,7 +1011,7 @@ sub target
 
     $args ||= {};
 
-    debug "Finding the target for ".$file->desig." with ".datadump($args,2);
+#    debug "Finding the target for ".$file->desig." with ".datadump($args,2);
 
     my $target = $file->{'url_norm'} || $file->{'sys_norm'};
 
@@ -1046,7 +1046,7 @@ sub target_with_lang
 
     $args ||= {};
 
-    debug "Finding the target for ".$file->desig." with ".datadump($args,2);
+#    debug "Finding the target for ".$file->desig." with ".datadump($args,2);
 
     my $target = $file->{'url_norm'} || $file->{'sys_norm'};
 
@@ -1103,7 +1103,7 @@ sub target_without_lang
 
     $args ||= {};
 
-    debug "Finding the target for ".$file->desig." with ".datadump($args,2);
+#    debug "Finding the target for ".$file->desig." with ".datadump($args,2);
 
     my $target = $file->{'url_norm'} || $file->{'sys_norm'};
 
@@ -1142,7 +1142,7 @@ sub template
     #
     #Cache within a req
 
-    debug "Looking for template for $f";
+#    debug "Looking for template for $f";
 
     return $Para::Frame::REQ->{'file2template'}{$f} ||=
       Para::Frame::Template->find($f);
