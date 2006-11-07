@@ -20,7 +20,7 @@ WriteMakefile(
 		  'Sys::CpuLoad'               => 0.02,
 		  'Template'                   => 2.15,
 		  'FreezeThaw'                 => 0.43,
-		  'File::Slurp'                => 0.00,
+		  'File::Slurp'                => 9999.09,
 		  'CGI'                        => 3.10,
 		  'CGI::Cookie'                => 1.25,
 		  'DBI'                        => 1.48,

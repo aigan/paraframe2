@@ -45,7 +45,7 @@ use Para::Frame::Reload;
 use constant BUFSIZ => 8192; # Posix buffersize
 use constant TRIES => 20; # 20 connection tries
 
-our $DEBUG = 0;
+our $DEBUG = 5;
 
 our $SOCK;
 our $r;
@@ -713,6 +713,10 @@ sub send_reload
     send_message("Page Ready!");
 
     warn "$$: Telling browser to reload page\n";
+
+    # More compatible..?
+    # self.location.replace('$url');
+
     $r->print("<script type=\"text/javascript\">window.location.href='$url';</script>");
     $r->rflush;
 }

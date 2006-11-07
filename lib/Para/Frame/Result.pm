@@ -152,6 +152,12 @@ sub exception
 	confess "Exception without a cause ($@) for Result ".datadump($result);
     }
 
+    if( UNIVERSAL::isa($error, 'Para::Frame::Result::Part') )
+    {
+	debug "!!!!! THIS ERROR ALREADY PROCESSED !!!!!!";
+	return $error;
+    }
+
     run_error_hooks($error);
 
     return $result->error( $error );

@@ -313,6 +313,46 @@ sub get_by_req
     return $this->get('default')->clone($hostname);
 }
 
+#######################################################################
+
+=head2 get_page
+
+=cut
+
+sub get_page
+{
+    my( $site, $url_in, $args ) = @_;
+
+    $args ||= {};
+
+    $args->{'site'} = $site;
+    $args->{'url'}  = $site->home_url_path . $url_in;
+
+    return Para::Frame::File->new($args);
+}
+
+
+#######################################################################
+
+=head2 get_possible_page
+
+=cut
+
+sub get_possible_page
+{
+    my( $site, $url_in, $args ) = @_;
+
+    $args ||= {};
+    $args->{'file_may_not_exist'} = 1;
+    $args->{'site'} = $site;
+    $args->{'url'}  = $site->home_url_path . $url_in;
+
+    return Para::Frame::File->new($args);
+}
+
+
+#######################################################################
+
 =head2 name
 
   $site->name
@@ -352,6 +392,8 @@ sub code
 
   $site->uri2file( $uri, $file )
 
+  $site->uri2file( $uri, $file, $may_not_exist )
+
 Same as L<Para::Frame::Request/uri2file>, but looks up the file for
 the current site.
 
@@ -369,12 +411,14 @@ sub uri2file
 
     if( $site->equals($req_site) )
     {
+#	debug "Getting uri2file from request";
 	return $req->uri2file(@_);
     }
     else
     {
 	my $args = {};
 	$args->{'site'} = $site;
+	debug "Getting uri2file from SUBREQUEST";
 	return $req->new_subrequest($args,
 				    \&Para::Frame::Request::uri2file,
 				    @_ );
@@ -383,41 +427,41 @@ sub uri2file
 
 
 #######################################################################
-
-=head2 uri2file_create
-
-  $site->uri2file_create( $url, $params )
-
-Same as L<Para::Frame::Request/uri2file>_create, but looks up the file for
-the current site.
-
-We will use the current request or create a new request if the sites
-doesn't match.
-
-=cut
-
-sub uri2file_create
-{
-    my( $site ) = shift;
-
-    my $req = $Para::Frame::REQ;
-    my $req_site = $req->site;
-
-    if( $site->equals($req_site) )
-    {
-	return $req->uri2file_create(@_);
-    }
-    else
-    {
-	my $args = {};
-	$args->{'site'} = $site;
-	return $req->new_subrequest($args,
-				    \&Para::Frame::Request::uri2file,
-				    @_ );
-    }
-}
-
-
+#
+#=head2 uri2file_create
+#
+#  $site->uri2file_create( $url, $params )
+#
+#Same as L<Para::Frame::Request/uri2file>_create, but looks up the file for
+#the current site.
+#
+#We will use the current request or create a new request if the sites
+#doesn't match.
+#
+#=cut
+#
+#sub uri2file_create
+#{
+#    my( $site ) = shift;
+#
+#    my $req = $Para::Frame::REQ;
+#    my $req_site = $req->site;
+#
+#    if( $site->equals($req_site) )
+#    {
+#	return $req->uri2file_create(@_);
+#    }
+#    else
+#    {
+#	my $args = {};
+#	$args->{'site'} = $site;
+#	return $req->new_subrequest($args,
+#				    \&Para::Frame::Request::uri2file,
+#				    @_ );
+#    }
+#}
+#
+#
 #######################################################################
 
 =head2 home
@@ -437,10 +481,13 @@ sub home
     else
     {
 #	debug "Creating dir obj for home '$_[0]->{home_url_path}/' for $_[0]";
-	return $_[0]->{'home'} =
+#	debug "Looking for home";
+	$_[0]->{'home'} =
 	  Para::Frame::Dir->new({site => $_[0],
 				 url  => $_[0]->{'home_url_path'}.'/',
-				});;
+				});
+	debug "Site home: ".$_[0]->{'home'}->sys_path_slash;
+	return $_[0]->{'home'};
     }
 }
 
@@ -856,8 +903,7 @@ sub params
 
   $site->dir( $url )
 
-Returns a L<Rit::Frame::Dir> object, similar to the
-L<Rit::Frame::Site::Page> object.
+Returns a L<Rit::Frame::Dir> object.
 
 TODO: What is this used for?!
 
@@ -889,6 +935,29 @@ sub languages
 {
     return $_[0]->{'languages'} || $Para::Frame::CFG->{'languages'} || [];
 }
+
+#######################################################
+
+=head2 supports_language
+
+  $site->support_language( $langcode )
+
+Returns true if given code is one of the supported
+
+=cut
+
+sub supports_language
+{
+    my( $site, $code_in ) = @_;
+
+    foreach my $langcode (@{$site->languages})
+    {
+	return 1 if $langcode eq $code_in;
+    }
+    return 0;
+}
+
+#######################################################
 
 
 sub htmlsrc # src dir for precompile or for getting inc files

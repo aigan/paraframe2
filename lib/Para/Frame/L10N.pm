@@ -99,27 +99,28 @@ the environment variable C<HTTP_ACCEPT_LANGUAGE> in turn.
 
 sub set
 {
-    my( $this, $language_in ) = @_;
+    my( $this, $language_in, $args ) = @_;
 
     my $class = ref($this) || $this;
 
     debug 3, "Decide on a language";
 
-    my( $req ) = $Para::Frame::REQ;
-
-    # TODO: Handle L10N for pages with diffrent sites in same request
-
-    # Get site languages
-    #
-    my $site_languages = [];
-    if( my $page = $req->page )
+    $args ||= {};
+    my( $site, $req );
+    if( my $page = $args->{'page'} )
     {
-	$site_languages = $page->site->languages;
+	$site = $page->site;
     }
     else
     {
-	$site_languages = $req->site->languages;
+	$req = $args->{'req'} || $Para::Frame::REQ;
+	$site = $req->site;
     }
+
+    # Get site languages
+    #
+    my $site_languages = $site->languages;
+
     unless( @$site_languages )
     {
 	debug 2, "  No site language specified";
@@ -135,7 +136,7 @@ sub set
 
     # get input language
     #
-    if( $req->is_from_client )
+    if( $req and $req->is_from_client )
     {
 	$language_in ||= $req->q->param('lang')
 	             ||  $req->q->cookie('lang')
@@ -419,9 +420,9 @@ sub preferred
 
     my $req = $Para::Frame::REQ;
     my $site;
-    if( $req->page )
+    if( $req->is_from_client )
     {
-	$site = $req->page->site;
+	$site = $req->response->page->site;
     }
     else
     {
@@ -522,8 +523,7 @@ sub set_headers
     #
     if( $req->is_from_client )
     {
-	my $page = $req->page;
-	unless( $page->ctype->is("text/css") )
+	unless( $req->response->ctype->is("text/css") )
 	{
 	    # TODO: Use Page->set_header
 	    $req->send_code( 'AR-PUT', 'header_out', 'Vary', 'negotiate,accept-language' );

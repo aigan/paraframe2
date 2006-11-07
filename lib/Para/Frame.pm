@@ -1295,22 +1295,23 @@ sub handle_request
  RESPONSE:
     {
 	### Redirected from another page?
-	my $page = $req->page;
-	if( $req->session->{'page_result'}{ $req->page->orig_url_path } )
+	my $resp = $req->response;
+	my $key = $req->original_url_string;
+	if( $req->session->{'page_result'}{ $key } )
 	{
-	    $page->send_stored_result;
+	    $resp->send_stored_result;
 	}
 	else
 	{
 	    if( my $client_time = $req->http_if_modified_since )
 	    {
 #		debug "Is page modified since $client_time?";
-		if( my $mtime = $page->last_modified )
+		if( my $mtime = $resp->last_modified )
 		{
 #		    debug "Page was last modified $mtime";
 		    if( $mtime <= $client_time )
 		    {
-			$page->send_not_modified;
+			$resp->send_not_modified;
 			last RESPONSE;
 		    }
 		}

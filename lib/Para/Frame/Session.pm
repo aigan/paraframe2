@@ -24,7 +24,7 @@ Para::Frame::Session - Session handling
 =cut
 
 use strict;
-use Carp qw( confess );
+use Carp qw( confess cluck );
 
 BEGIN
 {
@@ -167,21 +167,19 @@ sub after_request
     # This is the url of the previous request. Not necessarily the
     # referer of the next request.
 
-    $s->{'referer'} = Para::Frame::URI->new($req->normalized_url);
+    $s->{'referer'} = Para::Frame::URI->new($req->page->url_path_slash);
     $s->{'referer'}->query_form(store_params());
 }
 
 sub register_result_page
 {
-    my( $s, $url, $headers, $page_ref, $page_sender ) = @_;
-    # URL should only be the path part
+    my( $s, $resp ) = @_;
+
+    my $url = $resp->page->url_path_slash;
+
     debug "Registred the page result for $url";
 
-    unless( $page_sender )
-    {
-	confess "page sender not given";
-    }
-    $s->{'page_result'}{$url} = [ $headers, $page_ref, $page_sender ];
+    $s->{'page_result'}{$url} = $resp;
 }
 
 =head2 id

@@ -41,8 +41,6 @@ use base qw( Para::Frame::File );
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug datadump catch );
 use Para::Frame::List;
-use Para::Frame::Site::Page;
-use Para::Frame::Page;
 
 =head1 DESCRIPTION
 
@@ -205,10 +203,9 @@ sub files
 	elsif( $name =~ /\.tt$/ )
 	{
 #	    debug "  As a Page";
-	    push @list, Para::Frame::Page->new({ site => $dir->site,
-						 url  => $url,
-						 keep_langpart => 1,
-					       });
+	    push @list, Para::Frame::Template->new({ site => $dir->site,
+						     url  => $url,
+						   });
 	}
 	else
 	{
@@ -230,23 +227,50 @@ sub files
 
 We get the parent L<Para::Frame::Dir> object.
 
-Returns undef if we trying to get the parent of the
+Returns C<undef> if we are trying to get the parent of the
 L<Para::Frame::Site/home>.
+
+If not a site file, returns undef if we are trying to get the parent
+of the system root.
+
+Returns:
+
+ a L<Para::Frame::Dir> object
 
 =cut
 
 sub parent
 {
-    my( $dir ) = @_;
+    my( $dir, $args ) = @_;
 
-    $dir->site or confess "Not implemented";
+    $args ||= {};
 
-    my $home = $dir->site->home_url_path;
-    my( $pdirname ) = $dir->{'url_name'} =~ /^($home.*)\/./ or return undef;
+    unless( $dir->{'parent'}  )
+    {
+	unless( $dir->exist )
+	{
+	    $args->{'file_may_not_exist'} = 1;
+	}
 
-    return $dir->new({site => $dir->site,
-		      url  => $pdirname.'/',
-		     });
+	if( my $site = $dir->site )
+	{
+	    my $home = $site->home_url_path;
+	    my( $pdir_path ) = $dir->url_path =~ /^($home.*)\/./
+	      or return undef;
+	    $args->{'site'} = $site;
+	    $args->{'url'} = $pdir_path.'/';
+	}
+	else
+	{
+	    my( $pdir_path ) = $dir->sys_path =~ /^(.*)\/./
+	      or return undef;
+	    $args->{'filename'} = $pdir_path.'/';
+	}
+
+	$dir->{'parent'} = $dir->new($args);
+    }
+
+    return $dir->{'parent'};
 }
 
 
@@ -275,36 +299,6 @@ sub has_index
 	return 1 if -r $filename;
     }
     return 0;
-}
-
-#######################################################################
-
-=head2 page
-
-Returns the page, if existing, as a L<Para::Frame::Site::Page> or
-L<Para::Frame::Page>.
-
-=cut
-
-sub page
-{
-    my( $dir ) = @_;
-
-    if( $dir->isa('Para::Frame::Site::Dir' ) )
-    {
-	my $page = Para::Frame::Site::Page->new({
-						 url => $dir->url_path,
-						 site => $dir->site,
-						});
-	return $page;
-    }
-    else
-    {
-	return Para::Frame::Page->
-	    new({
-		 filename => $dir->sys_path_slash,
-		});
-    }
 }
 
 #######################################################################
@@ -345,24 +339,43 @@ sub has_file
 
 #######################################################################
 
+sub get_virtual
+{
+    return $_[0]->get($_[1],{'file_may_not_exist'=>1});
+}
+
+#######################################################################
+
 sub get
 {
-    my( $dir, $file ) = @_;
+    my( $dir, $file_in, $args ) = @_;
 
-    if( $dir->isa('Para::Frame::Site::Dir') )
+    $args ||= {};
+
+    # Validate $file
+    unless( $file_in =~ /\// )
     {
-	my $url = $dir->url_path_slash.$file;
-	return Para::Frame::File->new({site => $dir->site,
-				       url  => $url,
-				      });
+	$file_in = '/'.$file_in;
+    }
+
+    unless( $dir->exist )
+    {
+	$args->{'file_may_not_exist'} = 1;
+    }
+
+    if( my $site = $dir->site )
+    {
+	my $url_str = $dir->url_path.$file_in;
+	$args->{'site'} = $site;
+	$args->{'url'} = $url_str;
     }
     else
     {
-	my $filename = $dir->sys_path_slash.$file;
-	return Para::Frame::File->new({
-				       filename => $filename,
-				      });
+	my $filename = $dir->sys_path.$file_in;
+	$args->{'filename'} = $filename;
     }
+
+    return Para::Frame::File->new($args);
 }
 
 #######################################################################
@@ -373,8 +386,51 @@ sub remove
 
     my $dirname = $dir->sys_path;
     debug "Removing dir $dirname";
+    $dir->{'exist'} = 0;
+    $dir->{initiated} = 0;
     File::Remove::remove( \1, $dirname )
 	or die "Failed to remove $dirname: $!";
+}
+
+#######################################################################
+
+=head2 create
+
+  $dir->create()
+
+  $dir->create(\%args )
+
+Creates the directory, including parent directories.
+
+All created dirs is chmod and chgrp to ritframe standard.
+
+Passes C<%args> to L</create> and L</chmod>.
+
+=cut
+
+sub create
+{
+    my( $dir, $args ) = @_;
+
+    if( $dir->exist )
+    {
+	debug sprintf "Dir %s exist. Chmodding", $dir->desig;
+	$dir->chmod($args);
+	return $dir;
+    }
+
+    $args ||= {};
+#    my $dirname = $dir->sys_path;
+
+    $dir->parent->create($args);
+
+    debug "Creating dir ".$dir->desig;
+    mkdir $dir->sys_path, 0700 or die $!;
+    $dir->{'exist'} = 1;
+    $dir->{initiated} = 0;
+    $dir->chmod($args);
+
+    return $dir;
 }
 
 #######################################################################

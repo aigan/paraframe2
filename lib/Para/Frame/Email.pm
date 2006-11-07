@@ -418,7 +418,7 @@ sub send
 	throw('notfound', "Hittar inte e-postmallen ".$p->{'template'});
     }
 
-    my $burner = $page->set_burner_by_type('plain');
+    my $burner = $tmpl->set_burner_by_type('plain');
 
     if( debug )
     {
@@ -433,7 +433,8 @@ sub send
     $params{'page'} = $page;
 
     my $data = "";
-    $burner->burn( $tmpl, \%params, \$data ) or throw($burner->error);
+    $burner->burn( $tmpl->sys_path, \%params, \$data )
+      or throw($burner->error);
 
     if( $p->{'pgpsign'} )
     {

@@ -86,6 +86,8 @@ use Para::Frame::Dir;
 use Para::Frame::File;
 use Para::Frame::Page;
 
+die "DEPRECATED";
+
 
 #######################################################################
 
@@ -123,31 +125,22 @@ Returns: a L<Para::Frame::Site::Page> object
 
 sub response_page
 {
-    my( $this, $req ) = @_;
-    my $class = ref($this) || $this;
-    unless( ref $req eq 'Para::Frame::Request' )
-    {
-	die "req missing";
-    }
+    die "deprecated";
 
-    my $site = Para::Frame::Site->get_by_req( $req );
-
-    unless( $site->host eq $req->host_from_env )
-    {
-	die sprintf "Site %s doesn't match req host %s",
-	    $site->host, $req->host_from_env;
-    }
-
-
-    my $page = $class->new({
-			    site     => $site,
-			    url      => $req->{'orig_url'},
-			    ctype    => $req->{'orig_ctype'},
-			    req      => $req,
-			    language => $req->language,
-			   });
-
-    return $page;
+#    my( $this, $req ) = @_;
+#    my $class = ref($this) || $this;
+#    unless( ref $req eq 'Para::Frame::Request' )
+#    {
+#	die "req missing";
+#    }
+#
+#    my $page = $class->new({
+#			    url      => $req->{'orig_url'},
+#			    ctype    => $req->{'orig_ctype'},
+#			    req      => $req,
+#			   });
+#
+#    return $page;
 }
 
 #######################################################################
@@ -220,33 +213,17 @@ sub is_index
 
 #######################################################################
 
-=head2 error_page_selected
+=head2 is_error_page
 
-  $page->erro_page_selected
+  $page->is_error_page
 
-True if an error page has been selected
+True if this is an error page
 
 =cut
 
-sub error_page_selected #error_template
+sub is_error_page
 {
     return $_[0]->{'error_template'} ? 1 : 0;
-}
-
-#######################################################################
-
-
-=head2 error_page_not_selected
-
-  $page->error_page_not_selected
-
-True if an error page has not been selected
-
-=cut
-
-sub error_page_not_selected
-{
-    return $_[0]->{'error_template'} ? 0 : 1;
 }
 
 #######################################################################
@@ -281,21 +258,24 @@ TODO: Cache object
 
 sub orig
 {
-    my( $page ) = @_;
+    confess "deprecated";
 
-    unless( $page->{'orig'} )
-    {
-	my $umask = $page->{umask} or confess "No umask";
-
-	$page->{'orig'} =
-	    Para::Frame::File->new({
-				    url => $page->{orig_url_name},
-				    site => $page->site,
-				    no_check => 1,
-				    umask => $umask,
-				   });
-    }
-    return $page->{'orig'};
+#    my( $page ) = @_;
+#
+#
+#    unless( $page->{'orig'} )
+#    {
+#	my $umask = $page->{umask} or confess "No umask";
+#
+#	$page->{'orig'} =
+#	    Para::Frame::File->new({
+#				    url => $page->{orig_url_name},
+#				    site => $page->site,
+#				    no_check => 1,
+#				    umask => $umask,
+#				   });
+#    }
+#    return $page->{'orig'};
 }
 
 
@@ -313,17 +293,19 @@ site info.)
 
 sub orig_url
 {
-    my( $page ) = @_;
+    confess "deprecated";
 
-    my $site = $page->site;
-    my $scheme = $site->scheme;
-    my $host = $site->host;
-    my $url_string = sprintf("%s://%s%s",
-			     $scheme,
-			     $host,
-			     $page->{orig_url_name});
-
-    return Para::Frame::URI->new($url_string);
+#    my( $page ) = @_;
+#
+#    my $site = $page->site;
+#    my $scheme = $site->scheme;
+#    my $host = $site->host;
+#    my $url_string = sprintf("%s://%s%s",
+#			     $scheme,
+#			     $host,
+#			     $page->{orig_url_name});
+#
+#    return Para::Frame::URI->new($url_string);
 }
 
 
@@ -340,7 +322,8 @@ slash.
 
 sub orig_url_path
 {
-    return $_[0]->{'orig_url_name'};
+    confess "deprecated";
+#    return $_[0]->{'orig_url_name'};
 }
 
 
@@ -482,7 +465,7 @@ sub add_header
 
 #######################################################################
 
-=head2 set_template
+=head2 set_template - DEPRECATED
 
   $p->set_template( $url_path )
 
@@ -531,13 +514,14 @@ params:
 
 =cut
 
-sub set_template
+sub initialize_url
 {
-    my( $page, $url_in, $args ) = @_;
+    my( $page, $args ) = @_;
 
     # For setting a template diffrent from the URL
 
-#    debug("set_template $url_in ".datadump($args,1)); ### DEBUG
+    my $url_in = $page->{orig_url_name};
+    debug("set_template $url_in ".datadump($args,1)); ### DEBUG
 
     my $req = $page->req;
 
@@ -604,8 +588,9 @@ sub set_template
 
 	#######
 
-	debug(3,"setting template to $template");
-	debug(3,"setting url_norm to $url_norm");
+	# DEBUG at 3
+	debug(0,"setting template to $template");
+	debug(0,"setting url_norm to $url_norm");
     }
 
     $page->{tmpl_url_name}     = $template;
@@ -621,7 +606,7 @@ sub set_template
     return $template;
 }
 
-=head2 set_error_template
+=head2 set_error_template - DEPRECATED
 
   $p->set_error_template( $path_tmpl )
 
@@ -643,6 +628,8 @@ That also means that the site changed to, must find that template.
 sub set_error_template
 {
     my( $page, $error_tt ) = @_;
+
+    confess "deprecated";
 
     # $page->{'error_template'} holds the resolved template, inkluding
     # the $home prefix
@@ -727,7 +714,7 @@ If C<$permanently_flag> is true, sets the http header for indicating
 that the requested page permanently hase moved to this page.
 
 For redirection to a TT page handled by the same paraframe daemon, use
-L</set_template>.
+L<Para::Frame::Request/set_response_page>.
 
 =cut
 
@@ -913,7 +900,7 @@ The L<Para::Frame::Request/preffered_language> value.
 =item me
 
 Holds the L<Para::Frame::File/url_path_slash> for the page, except if
-an L</error_page_selected> in which case we set it to
+an L<Para::Frame::Request/error_page_selected> in which case we set it to
 L</orig_url_path>. (For making it easier to link back to the intended
 page)
 
@@ -949,9 +936,9 @@ sub set_tt_params
     my $req = $page->req;
     my $site = $page->site;
     my $me = $page->url_path_slash;
-    if( $page->error_page_selected )
+    if( $req->error_page_selected )
     {
-	$me = $page->orig_url_path;
+	$me = $req->original_page->url_path;
     }
 
     # Keep alredy defined params  # Static within a request
@@ -1497,7 +1484,7 @@ sub render_output
 	    # But that template url will be forgotten if we overwrite
 	    # it with the error template.
 
-	    $page->set_error_template( $error_tt );
+	    $req->set_error_response_page($home.$error_tt);
 	    return 0;
 	};
     }
@@ -1546,9 +1533,9 @@ sub send_output
 
     if( debug > 2 )
     {
-	debug(0,"Sending output to ".$page->orig_url_path);
+#	debug(0,"Sending output to ".$page->orig_url_path);
 	debug(0,"Sending the page ".$page->url_path);
-	unless( $page->error_page_not_selected )
+	unless( $req->error_page_not_selected )
 	{
 	    debug(0,"An error page was selected");
 	}
@@ -1558,22 +1545,23 @@ sub send_output
     # forward if requested url ends in '/index.tt' or if it is a dir
     # without an ending '/'
 
-    my $url = $page->orig_url_path;
-    my $url_norm = $req->normalized_url( $url );
+    my $url_in  = $req->original_url;
+    my $url_out = $page->url_path_slash;
+#    my $url_norm = $req->normalized_url( $url );
 
 #    debug "Original url: $url";
 
-    if( $url ne $url_norm )
+    if( $url_in ne $url_out )
     {
-	debug "!!! $url ne $url_norm";
-	$page->forward($url_norm);
+	debug "!!! $url_in ne $url_out";
+	$page->forward($url_out);
     }
-    elsif( $page->error_page_not_selected and
-	$url ne $page->url_path_slash )
-    {
-	debug "!!! $url ne ".$page->url_path_slash;
-	$page->forward();
-    }
+#    elsif( $req->error_page_not_selected and
+#	$url ne $page->url_path_slash )
+#    {
+#	debug "!!! $url ne ".$page->url_path_slash;
+#	$page->forward();
+#    }
     else
     {
 	my $sender = $page->sender;
@@ -1704,7 +1692,8 @@ L</send_output> and should not be used by others.
 
 C<$url> must be a normalized url path
 
-To request a forward, just use L</set_template> before the page is
+To request a forward, just use
+L<Para::Frame::Request/set_response_page> before the page is
 generated.
 
 To forward to a page not handled by the paraframe, use L</redirect>.
@@ -1737,8 +1726,9 @@ sub forward
 	my $referer = $req->referer;
 	debug "  Referer is $referer";
 	debug "  Cancelling forwarding";
-	$page->{url_norm} = $page->orig_url_path;
-	$page->{sys_name} = undef;
+	$page = $req->set_response_page($req->original_page);
+#	$page->{url_norm} = $page->orig_url_path;
+#	$page->{sys_name} = undef;
 	$page->send_output;
 	return;
     }
@@ -2015,8 +2005,12 @@ sub send_stored_result
     my( $page, $page_result ) = @_;
 
     my $req = $Para::Frame::REQ;
+
+    # TODO: Use a better key for handling nested requests
+    my $key = $req->original_url;
+
     $page_result ||=
-      $req->session->{'page_result'}{ $page->orig_url_path };
+      $req->session->{'page_result'}{ $key };
 
     debug 0, "Sending stored page result";
     $page->set_headers( $page_result->[0] );
@@ -2066,7 +2060,7 @@ sub send_stored_result
 	};
     }
 
-    delete $req->session->{'page_result'}{ $req->page->orig_url_path };
+    delete $req->session->{'page_result'}{ $key };
 
     #debug "Sending stored page result: done";
 }

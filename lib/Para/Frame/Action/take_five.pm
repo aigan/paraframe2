@@ -7,11 +7,11 @@ sub handler
 {
     my( $req ) = @_;
 
-    for(1..5)
+    for(1..15)
     {
 	sleep 1;
 	$req->yield;
-	$req->note("Round $_");
+#	$req->note("Round $_");
     }
 
 

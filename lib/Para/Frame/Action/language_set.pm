@@ -27,11 +27,14 @@ sub handler
     my $q = $req->q;
     my $msg;
 
+    # TODO: Check if old eq new
+
     if( my $lc = $q->param('lang') )
     {
 	$req->cookies->add({
 			    'lang' => $lc,
 			   });
+	$req->set_language($lc);
 	$msg = "Changed language to $lc";
     }
     else
@@ -43,8 +46,7 @@ sub handler
     }
 
     # May have to change page
-    my $page = $req->page;
-    $page->set_template( $page->url_path_slash );
+    $req->reset_response;
 
     return $msg;
 }

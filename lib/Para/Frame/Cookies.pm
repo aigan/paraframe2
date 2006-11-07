@@ -23,7 +23,7 @@ Para::Frame::Cookies - Represent the cookies to send back to a client
 =cut
 
 use strict;
-use Carp;
+use Carp qw( confess );
 use vars qw( $VERSION );
 use CGI::Cookie;
 use Data::Dumper;
@@ -93,11 +93,11 @@ sub add_to_header
     my( $cookies ) = @_;
 
     my $added = $cookies->added;
-    my $page = $cookies->req->page;
+    my $resp = $cookies->req->response;
 
     foreach my $cookie ( @$added )
     {
-	$page->add_header( 'Set-Cookie', $cookie->as_string );
+	$resp->add_header( 'Set-Cookie', $cookie->as_string );
     }
 }
 

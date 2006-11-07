@@ -23,7 +23,7 @@ Para::Frame::Burner - Creates output from a template
 =cut
 
 use strict;
-use Carp qw( croak cluck );
+use Carp qw( croak cluck confess );
 use Data::Dumper;
 use Template;
 use Template::Exception;
@@ -52,8 +52,6 @@ There are three standard burners.
   html_pre = The burner for precompiling of tt pages
 
 They are defined by L<Para::Frame/configure> in C<th>.
-
-The TT parameter C<page> must be defined during burning.
 
 =cut
 
@@ -175,7 +173,7 @@ sub get_by_ext
 {
     my( $this, $ext ) = @_;
 
-    $ext or die "ext missing";
+    $ext or confess "ext missing";
 
     if( my $burner = $EXT{$ext} )
     {
@@ -317,22 +315,21 @@ sub error_hash #not used
 
 =head2 burn
 
-  $burner->burn( @params )
+  $burner->burn( $renderer, @tt_process_params )
 
 Calls L<Template/process> with the given params.
 
-The params must have C<page> containing the page object
-
 Example:
 
-  $burner->burn( $in, $page->{'params'}, \$out)
+  $burner->burn( $renderer, $in, $page->{'params'}, \$out)
 
 =cut
 
 sub burn
 {
     my $th = shift->th();
-    $th->{'pf_include_path'}[0] = $_[1]->{'page'};
+    my $renderer = shift;
+    $th->{'pf_include_path'}[0] = $renderer;
     return $th->process(@_);
 }
 

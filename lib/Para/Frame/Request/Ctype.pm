@@ -23,7 +23,7 @@ Para::Frame::Request::Ctype - The request response content type
 =cut
 
 use strict;
-use Carp qw( cluck );
+use Carp qw( cluck confess );
 use Scalar::Util qw(weaken);
 
 BEGIN
@@ -33,11 +33,11 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( debug );
+use Para::Frame::Utils qw( debug datadump );
 
 =head1 DESCRIPTION
 
-You get this object by using L<Para::Frame::Site::Page/ctype>.
+You get this object by using L<Para::Frame::Page/ctype>.
 
 =cut
 
@@ -167,6 +167,8 @@ sub as_string
 	$media = sprintf "; charset=%s", $ctype->{'charset'};
     }
 
+    confess "No ctype: ".datadump($ctype,2) unless $ctype->{'ctype'};
+
     return $ctype->{'ctype'} . $media;
 }
 
@@ -180,7 +182,9 @@ sub is
 {
     my( $ctype, $str ) = @_;
 
-    if( $ctype->{'ctype'} eq $str )
+    confess() unless( $str );
+
+    if( ($ctype->{'ctype'}||'') eq $str )
     {
 	return 1;
     }
@@ -221,6 +225,6 @@ Jonas Liljegren E<lt>jonas@paranormal.seE<gt>
 
 =head1 SEE ALSO
 
-L<Para::Frame::Site::Page>
+L<Para::Frame::Page>
 
 =cut

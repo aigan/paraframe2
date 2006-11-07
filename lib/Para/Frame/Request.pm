@@ -50,11 +50,11 @@ use Para::Frame::Child::Result;
 use Para::Frame::Site;
 use Para::Frame::Change;
 use Para::Frame::URI;
-use Para::Frame::Site::Page;
 use Para::Frame::L10N;
 use Para::Frame::Logging;
 use Para::Frame::Connection;
 use Para::Frame::Uploaded;
+use Para::Frame::Request::Response;
 
 use Para::Frame::Utils qw( compile throw debug catch idn_decode
                            datadump create_dir );
@@ -78,7 +78,7 @@ sub new
     my( $class, $reqnum, $client, $recordref ) = @_;
 
     my( $value ) = thaw( $$recordref );
-    my( $params, $env, $orig_url, $orig_filename, $content_type, $dirconfig, $header_only, $files ) = @$value;
+    my( $params, $env, $orig_url_string, $orig_filename, $content_type, $dirconfig, $header_only, $files ) = @$value;
 
     # Modify $env for non-mod_perl mode
     $env->{'REQUEST_METHOD'} = 'GET';
@@ -102,6 +102,8 @@ sub new
 
     my $req =  bless
     {
+        resp           => undef,
+        orig_resp      => undef,
 	indent         => 1,              ## debug indentation
 	client         => $client,
 	jobs           => [],             ## queue of jobs to perform
@@ -113,11 +115,12 @@ sub new
 	lang           => undef,          ## Chosen language
 	browser        => undef,          ## browser detection object
 	result         => undef,
-	orig_url       => $orig_url,
+	orig_url_string => $orig_url_string,
 	orig_ctype     => $content_type,
 	referer        => $q->referer,    ## The referer of this page
 	dirconfig      => $dirconfig,     ## Apache $r->dir_config
         page           => undef,          ## The page requested
+        orig_page      => undef,          ## Original page requested
 	childs         => 0,              ## counter in parent
 	in_yield       => 0,              ## inside a yield
 	child_result   => undef,          ## the child res if in child
@@ -131,10 +134,10 @@ sub new
     }, $class;
 
     # Cache uri2file translation
-    $req->uri2file( $orig_url, $orig_filename, $req);
+    $req->uri2file( $orig_url_string, $orig_filename, $req);
 
     # Log some info
-    warn "# http://".$req->http_host."$orig_url\n";
+    warn "# http://".$req->http_host."$orig_url_string\n";
 
     return $req;
 }
@@ -158,14 +161,11 @@ sub init
     }
     $req->{'result'}  = Para::Frame::Result->new();  # Before Session
 
-    my $page = Para::Frame::Site::Page->response_page($req);
-    $req->{'page'}    = $req->set_response_page( $page );
-
-    $req->{'site'}    = $req->{'page'}->site;
+    $req->set_site;
+    $req->set_language;   # Needs site
+    $req->reset_response; # Needs lang
 
     $req->{'s'}       = Para::Frame->Session->new($req);
-
-    $req->set_language;
 
 
     $req->{'s'}->route->init;
@@ -364,8 +364,6 @@ sub minimal_init
 {
     my( $req, $args ) = @_;
 
-#    my $page = $req->{'page'} = Para::Frame::Site::Page->new($req);
-
     my $site_in = $args->{'site'};
     unless( $site_in )
     {
@@ -533,11 +531,33 @@ L<Para::Frame/l10n_class>.
 
 sub set_language
 {
-    my( $req, $language_in ) = @_;
+    my( $req, $language_in, $args ) = @_;
+
+    $args ||= {};
+
+    $args->{'req'} = $req;
 
 #    debug "Setting language";
-    $req->{'lang'} = $Para::Frame::CFG->{'l10n_class'}->set( $language_in )
-      or die "Couldn't set language";
+    $req->{'lang'} = $Para::Frame::CFG->{'l10n_class'}->
+      set( $language_in, $args )
+	or die "Couldn't set language";
+}
+
+
+#######################################################################
+
+
+=head2 response
+
+  $req->response
+
+Returns the L<Para::Frame::Request::Response> object.
+
+=cut
+
+sub response
+{
+    return $_[0]->{'resp'} || confess "Response not set";
 }
 
 
@@ -548,13 +568,14 @@ sub set_language
 
   $req->page
 
-Returns the L<Para::Frame::Site::Page> object.
+Returns a L<Para::Frame::File> object from
+L<Para::Frame::Request::Response/page>.
 
 =cut
 
 sub page
 {
-    return $_[0]->{'page'} or confess "Page not set";
+    return $_[0]->response->page || confess "Page not set";
 }
 
 
@@ -656,9 +677,9 @@ INFORMATION> C<dir_config>.
 
 Params:
 
-C<site>: Used by L<Para::Frame::Site::Page/response_page>. If C<site> is set
-to C<ignore>, the L<Para::Frame::Client> will decline all requests and
-let thenext apache handler take care of it.
+C<site>: Used by L<Para::Frame::Request/reset_response>. If
+C<site> is set to C<ignore>, the L<Para::Frame::Client> will decline
+all requests and let thenext apache handler take care of it.
 
 C<action>: Used by L</setup_jobs>
 
@@ -786,13 +807,13 @@ the directory doesn't exist or for unsupported url translations.
 
 sub uri2file
 {
-    my( $req, $url, $file, $return_partial ) = @_;
+    my( $req, $url, $file, $may_not_exist ) = @_;
 
     my $key = $req->host . $url;
 
     if( $file )
     {
-#	debug "Storing URI2FILE in key $key: $file";
+	debug "Storing URI2FILE in key $key: $file";
 	return $URI2FILE{ $key } = $file;
     }
 
@@ -816,15 +837,20 @@ sub uri2file
     unless( $file =~ /$last_part\/?(\?.*)?$/ )
     {
 #	debug "  NO MATCH";
-	if( $return_partial )
+	if( $may_not_exist )
 	{
-#	    debug "  Returning partial url";
-	    return $file;
+	    # Extrapolate the file from url
+	    $url =~ /(.*)(\/[^\/]+\/?)$/;
+	    debug "  Looking up URL $1";
+	    $file = $req->uri2file( $1, undef, 1 ) . $2;
 	}
-	throw('notfound', longmess "Path $file doesn't match $url ($last_part)");
+	else
+	{
+	    throw('notfound', longmess "Path $file doesn't match $url ($last_part)");
+	}
     }
 
-    debug(4, "Storing URI2FILE in key $key: $file");
+#    debug(0, "Storing URI2FILE in key $key: $file");
     $URI2FILE{ $key } = $file;
     return $file;
 }
@@ -832,7 +858,7 @@ sub uri2file
 
 #######################################################################
 
-=head2 uri2file_create
+=head2 uri2file_create - DEPRECATED
 
   $req->uri2file_create( $url, $params )
 
@@ -848,6 +874,8 @@ Returns the result from L</uri2file>.
 
 sub uri2file_create
 {
+    confess "Deprecated";
+
     my( $req, $url, $params ) = @_;
 
     unless( $params )
@@ -940,7 +968,8 @@ sub normalized_url
 {
     my( $req, $url, $params ) = @_;
 
-    $url ||= $req->page->orig_url_path;
+    $url or confess "deprecated";
+    #  ||= $req->page->orig_url_path;
     $params ||= {};
 
 #    debug "Normalizing $url";
@@ -998,9 +1027,6 @@ sub setup_jobs
     my( $req ) = @_;
 
     my $q = $req->q;
-
-    # Custom renderer?
-    $req->page->set_renderer( $q->param('renderer') );
 
     # Setup actions
     my $actions = [];
@@ -1130,7 +1156,7 @@ sub run_action
 	if( $@ )
 	{
 	    # What went wrong?
-	    debug(1,$@); # DEBUG def level 3
+	    debug(3,$@);
 
 	    if( $@ =~ /^Can\'t locate $file/ )
 	    {
@@ -1224,6 +1250,8 @@ sub run_action
 	    exit;
 	}
 
+	# TODO: Use handle_error()
+
 	debug(0,"ACTION FAILED!");
 	debug(1,$@,-1);
 	my $part = $req->result->exception;
@@ -1237,7 +1265,8 @@ sub run_action
 		    my $error_tt = "/login.tt";
 		    $part->hide(1);
 		    $req->session->route->bookmark;
-		    $req->page->set_error_template( $error_tt );
+		    my $home = $req->site->home_url_path;
+		    $req->set_error_response( $home.$error_tt );
 		}
 	    }
 	}
@@ -1305,44 +1334,39 @@ sub after_jobs
     if( $req->in_last_job )
     {
 	# Redirection requestd?
-	my $page = $req->page; # May have changed
-	if( $page->error_page_not_selected and $page->redirection )
+	my $resp = $req->response; # May have changed
+	if( $resp->is_no_error and $resp->redirection )
 	{
 	    $req->cookies->add_to_header;
- 	    $page->output_redirection( $page->redirection );
+ 	    $resp->output_redirection( $resp->redirection );
 	    return $req->done;
 	}
 
 
 	Para::Frame->run_hook( $req, 'before_render_output');
 
-	my $render_result = 0;
-	if( $page->renderer )
-	{
-	    # Using custom renderer
-	    $render_result = &{$page->renderer}( $req );
-
-	    # TODO: Handle error...
-	}
-	else
-	{
-	    $render_result = $page->render_output;
-	}
+	# May be a custom renderer
+	my $render_result = $resp->render_output();
 
 	# The renderer may have set a redirection page
-	$page = $req->page; # May have changed
-	if( $page->redirection )
+	my $new_resp = $req->response; # May have changed
+	if( $new_resp->redirection )
 	{
 	    $req->cookies->add_to_header;
- 	    $page->output_redirection( $page->redirection );
+ 	    $new_resp->output_redirection( $resp->redirection );
 	    return $req->done;
 	}
 	elsif( $render_result )
 	{
 	    $req->cookies->add_to_header;
- 	    $page->send_output;
+ 	    $new_resp->send_output;
 	    return $req->done;
 	}
+	else
+	{
+	    $req->handle_error( $resp );
+	}
+
 	$req->add_job('after_jobs');
     }
 
@@ -1406,32 +1430,14 @@ sub in_loadpage
 sub error_backtrack
 {
     my( $req ) = @_;
-    my $page = $req->page;
 
-    if( $req->result->backtrack and not $page->error_page_selected )
+    if( $req->result->backtrack and not $req->error_page_selected )
     {
 	debug(2,"Backtracking to previuos page because of errors");
 	my $previous = $req->referer;
 	if( $previous )
 	{
-	    # It must be in the site dir
-	    my $destroot = $page->site->home->sys_path;
-	    my $dir = $req->uri2file( $previous );
-	    unless( $dir =~ m/^$destroot/ )
-	    {
-		$previous = $page->site->home_url_path."/error.tt";
-	    }
-
-	    $page->set_template( $previous );
-
-	    # It must be a template
-	    unless( $page->url_path_tmpl =~ /\.tt/ )
-	    {
-		$previous = $page->site->home_url_path."/error.tt";
-		$page->set_template( $previous );
-	    }
-
-	    debug(3,"Previous is $previous");
+	    $req->set_response( $previous );
 	}
 	return 1;
     }
@@ -1975,11 +1981,17 @@ Returns: The site object
 
 sub set_site
 {
-    my( $req, $site_in ) = @_;
+    my( $req, $site_in, $args ) = @_;
 
-    $site_in or confess "site param missing";
-
-    my $site = Para::Frame::Site->get( $site_in );
+    my $site;
+    if( $site_in )
+    {
+	$site = Para::Frame::Site->get( $site_in );
+    }
+    else
+    {
+	 $site = Para::Frame::Site->get_by_req( $req );
+    }
 
     # Check that site matches the client
     #
@@ -1993,6 +2005,18 @@ sub set_site
 		my $orig_name = $orig->site->name;
 		debug "Host mismatch";
 		debug "orig site: $orig_name";
+		debug "New name : $site_name";
+		confess "set_site called";
+	    }
+	}
+	else
+	{
+	    unless( $site->host eq $req->host_from_env )
+	    {
+		my $site_name = $site->name;
+		my $req_site_name = $req->host_from_env;
+		debug "Host mismatch";
+		debug "Req site : $req_site_name";
 		debug "New name : $site_name";
 		confess "set_site called";
 	    }
@@ -2382,21 +2406,306 @@ sub note
 
 #######################################################################
 
-sub set_response_page
+=head2 set_response_path
+
+=cut
+
+sub set_response_path
 {
-    my( $req, $page ) = @_;
-
-    unless( UNIVERSAL::isa($page, 'Para::Frame::Page') )
-    {
-	confess "Page invalid: $page";
-    }
-
-#    debug "Setting response page to ".datadump($page,1);
-#    debug "For req ".$req->id;
-
-    $req->{'page'} = $page;
+    my( $req, $path ) = @_;
+    my $home_path = $req->site->home_url_path;
+    return $req->set_response($home_path.$path);
 }
 
+#######################################################################
+
+=head2 set_response
+
+=cut
+
+sub set_response
+{
+    my( $req, $url_in, $args ) = @_;
+
+    my $url = $url_in;
+
+    my $resp;
+    $args ||= {};
+
+    $args->{'req'} = $req;
+    $args->{'url'} = $url_in;
+
+    eval
+    {
+	$resp = $req->{'resp'} = Para::Frame::Request::Response->new($args);
+
+	# It must be a template
+	unless( $resp->page->template )
+	{
+	    die "$url wasn't a TT page";
+	}
+	1;
+    };
+    if( $@ )
+    {
+	debug $@;
+	$url = $req->site->home_url_path."/error.tt";
+	$resp = $req->{'resp'} = Para::Frame::Request::Response->new($args);
+    }
+
+    debug "Response set to ".$resp->desig;
+    return $resp;
+}
+
+
+#######################################################################
+
+=head2 set_error_response
+
+=cut
+
+sub set_error_response
+{
+    my( $req, $url_in, $args ) = @_;
+
+    $args ||= {};
+    $args->{'is_error_response'} = 1;
+
+    return $req->set_response( $url_in, $args );
+}
+
+
+#######################################################################
+
+=head2 reset_response
+
+  $req->reset_response()
+
+Uses current L</page> if existing.
+
+If this is the first time, sets the URL from the req as the original
+page. The original page can be retrieved from L</original_page>.
+
+Should be used if we may want to use another template based on a
+changed language or something else in the context htat has changed.
+
+Calls L</set_response> and returns that response.
+
+=cut
+
+sub reset_response
+{
+    my( $req ) = @_;
+
+    my $args = {};
+    my $url;
+
+    # Clear out page2template cache
+    $Para::Frame::REQ->{'file2template'} = {};
+
+    if( my $resp = $req->{'resp'} )
+    {
+	$url = $resp->page->url_path_slash;
+	return $req->set_response( $url, $args );
+    }
+    else
+    {
+	$url = $req->{'orig_url_string'};
+	$args->{'ctype'} = $req->{'orig_ctype'};
+	my $resp = $req->set_response( $url, $args );
+	return $req->{'orig_resp'} = $resp;
+    }
+}
+
+
+#######################################################################
+
+=head2 error_page_selected
+
+  $req->error_page_selected
+
+True if an error page has been selected
+
+=cut
+
+sub error_page_selected
+{
+    return $_[0]->response->is_error_response;
+}
+
+#######################################################################
+
+
+=head2 error_page_not_selected
+
+  $req->error_page_not_selected
+
+True if an error page has not been selected
+
+=cut
+
+sub error_page_not_selected
+{
+    return $_[0]->response->is_error_response ? 0 : 1;
+}
+
+
+#######################################################################
+
+=head2 original_response
+
+  $req->original_response
+
+=cut
+
+sub original_response
+{
+    return $_[0]->{'orig_resp'};
+}
+
+
+#######################################################################
+
+=head2 original_page
+
+  $req->original_page
+
+=cut
+
+sub original_page
+{
+    confess "deprecated";
+    return $_[0]->{'orig_page'};
+}
+
+
+#######################################################################
+
+=head2 original_url
+
+  $req->original_url
+
+=cut
+
+sub original_url
+{
+    confess "deprecated";
+    return $_[0]->{'orig_url'};
+}
+
+#######################################################################
+
+=head2 original_url_string
+
+  $req->original_url_string
+
+=cut
+
+sub original_url_string
+{
+    return $_[0]->{'orig_url_string'};
+}
+
+#######################################################################
+
+=head2 handle_error
+
+=cut
+
+sub handle_error
+{
+    my( $req, $resp ) = @_;
+
+    $resp or confess "resp missing";
+
+    my $part = $req->result->exception();
+    my $error = $part->error;
+
+    unless( $error )
+    {
+	confess "Failed to retrieve the error?!";
+    }
+
+    my $rend = $resp->renderer;
+    my $page = $resp->page;
+
+    if( $part->view_context )
+    {
+	$part->prefix_message(loc("During the processing of [_1]",$page->path)."\n");
+    }
+
+    my $new_resp = $req->response; # May have change
+
+    # Has a new response been selected
+    if( $new_resp ne $resp )
+    {
+	# Let the $req->after_jobs() render the new response
+	return 0;
+    }
+
+    my $error_tt; # A new page to render (the path string)
+
+    if( $error->type eq 'file' )
+    {
+	if( $error->info =~ /not found/ )
+	{
+	    debug "Subtemplate not found";
+	    $error_tt = '/page_part_not_found.tt';
+	    my $incpathstring = join "", map "- $_\n", @{$rend->paths};
+	    $part->add_message(loc("Include path is")."\n$incpathstring");
+	    $part->view_context(1);
+	    $part->prefix_message(loc("During the processing of [_1]",$page->path)."\n");
+	}
+	else
+	{
+	    debug "Other template file error";
+	    $part->type('template');
+	    $error_tt = '/error.tt';
+	}
+	debug $error->as_string();
+    }
+    elsif( $error->type eq 'denied' )
+    {
+	if( $req->session->u->level == 0 )
+	{
+	    # Ask to log in
+	    $error_tt = "/login.tt";
+	    $req->result->hide_part('denied');
+	    unless( $req->{'no_bookmark_on_failed_login'} )
+	    {
+		$req->session->route->bookmark();
+	    }
+	}
+	else
+	{
+	    $error_tt = "/denied.tt";
+	    $req->session->route->plan_next($req->referer);
+	}
+    }
+    elsif( $error->type eq 'notfound' )
+    {
+	$error_tt = "/page_not_found.tt";
+	$page->set_http_status(404);
+    }
+    elsif( $error->type eq 'cancel' )
+    {
+	throw('cancel', "request cancelled");
+    }
+    else
+    {
+	$error_tt = '/error.tt';
+    }
+
+
+    # Avoid recursive failure
+    if( $page->path eq $error_tt ) # Same error page again?
+    {
+	$new_resp->set_content( $resp->fallback_error_page );
+	return 1;
+    }
+
+    return 0;
+}
 
 #######################################################################
 

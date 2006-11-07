@@ -374,7 +374,7 @@ sub check_backtrack
     my $page = $req->page;
 
     # No backtracking if an error page is selected
-    return if $page->error_page_selected;
+    return if $req->error_page_selected;
 
     # The CGI module doesn't handle query data in URL after a form POST
 #    debug "-- check for backtrack";
@@ -539,7 +539,7 @@ sub get_next
 
 #	debug_query("AFTER");
 
-	$page->set_template( $step->path );
+	$page->set_response_page( $step->path );
 	$req->setup_jobs; # Takes care of any run keys in query string
 	$req->add_job('after_jobs');
 
@@ -550,7 +550,7 @@ sub get_next
 	debug(1,"!!  No more steps in route");
 	debug 1, "!!    Using default step, breaking path";
 	$q->delete_all;
-	$page->set_template($default);
+	$page->set_response_page($default);
     }
     else
     {
@@ -563,7 +563,7 @@ sub get_next
 	else
 	{
 	    debug 1, "!!    Using default step";
-	    $page->set_template($default);
+	    $page->set_response_page($default);
 	}
 
     }
@@ -612,7 +612,7 @@ sub skip_step
 
 
 	# Now setup the params for the caller
-	
+
 	debug "Got $caller_page";
 
 	$route->replace_query( $q, $caller_page->query );
@@ -631,7 +631,7 @@ sub skip_step
 
     $dest ||= $route->default || $page->site->home->url_path_slash;
 
-    $page->set_template($dest);
+    $page->set_response_page($dest);
 }
 
 

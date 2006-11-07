@@ -1,4 +1,4 @@
-#  $Id$  -*-perl-*-
+#  $Id$  -*-cperl-*-
 package Para::Frame::Logging;
 #=====================================================================
 #
@@ -75,7 +75,7 @@ sub debug_data
 
     if( $req->is_from_client )
     {
-	my $orig_url_path = $page->orig_url_path;
+	my $orig_url_path = $req->original_response->page->url_path_slash;
 	$out .= "Orig url: $orig_url_path\n";
 
 	if( my $redirect = $page->{'redirect'} )
