@@ -89,10 +89,23 @@ sub new
 	}
 	else
 	{
-	    $Para::Frame::REQ->prepend_action('find_page');
-#	    throw('notfound', "No template found for ".$page->url_path);
-	}
+	    my $url_path = $page->url_path;
+	    my $tried_to_find = $Para::Frame::REQ->{'tried_to_find'} ||= {};
+#	    debug datadump($tried_to_find);
+	    unless( $tried_to_find->{ $url_path } ++ )
+	    {
+		my $orig_url_path = $Para::Frame::REQ->original_url_string;
+#		debug "Comparing $url_path with $orig_url_path";
+		if( $url_path eq $Para::Frame::REQ->original_url_string )
+		{
+		    # Try to find the page
+		    $Para::Frame::REQ->prepend_action('find_page');
+		    return $rend;
+		}
+	    }
 
+	    throw('notfound', "No template found for $url_path");
+	}
     }
 
     return $rend;
