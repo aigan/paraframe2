@@ -171,13 +171,13 @@ sub init
 
     $req->set_site;
     $req->set_language;   # Needs site
-    $req->setup_jobs;
-    $req->reset_response; # Needs lang and jobs
+#    $req->setup_jobs;
+#    $req->reset_response; # Needs lang and jobs
 
     $req->{'s'}       = Para::Frame->Session->new($req);
 
 
-    $req->{'s'}->route->init;
+#    $req->{'s'}->route->init;
 }
 
 
@@ -841,17 +841,17 @@ sub uri2file
       confess "url doesn't start with slash: $url";
     my( $last_part ) = $1;
 
-#    cluck "Comparing $file with $url ($last_part)"; ### DEBUG
+#    debug "Comparing $file with $url ($last_part)"; ### DEBUG
 
     unless( $file =~ /$last_part\/?(\?.*)?$/ )
     {
-#	debug "  NO MATCH";
+#	debug "  NO MATCH ($file !~ $last_part\$)";
 	if( $may_not_exist )
 	{
 	    # Extrapolate the file from url
-	    $url =~ /(.*)(\/[^\/]+\/?)$/;
-	    debug "  Looking up URL $1";
-	    $file = $req->uri2file( $1, undef, 1 ) . $2;
+	    my( $dirstr, $endstr ) = $url =~ /(.*\/)([^\/]+)\/?$/;
+#	    debug "  Splitting $url in $dirstr + $endstr";
+	    $file = $req->uri2file( $dirstr, undef, 1 ) . '/' . $endstr;
 	}
 	else
 	{
@@ -2718,7 +2718,7 @@ sub handle_error
 
 
     # Has a new response been selected
-    if( $new_resp and ($new_resp ne $resp) )
+    if( $new_resp and $resp and ($new_resp ne $resp) )
     {
 	# Let the $req->after_jobs() render the new response
 	return 0;
@@ -2811,6 +2811,23 @@ sub handle_error
     }
 
     return 0;
+}
+
+#######################################################################
+
+sub send_stored_result
+{
+    my( $req ) = @_;
+
+    # TODO: Use a better key for handling nested requests
+    my $key = $req->original_url_string;
+
+    my $resp = $req->session->{'page_result'}{ $key };
+    $req->{'resp'} = $resp;
+    $resp->{'req'} = $req;
+    $resp->send_stored_result;
+    delete $req->session->{'page_result'}{ $key };
+    return 1;
 }
 
 #######################################################################
