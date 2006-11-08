@@ -139,8 +139,6 @@ sub new
      'moved_temporarily' => undef,
     };
 
-    my $ctype_str = $args->{'ctype'};
-
     if( my $req = $args->{req} )
     {
 	$resp->{req} = $req;
@@ -153,8 +151,6 @@ sub new
 	{
 	    $args->{'renderer'} ||= $q->param('renderer');
 	}
-
-	$ctype_str ||= $req->{'orig_ctype'};
     }
 
     $args->{'resp'} = $resp;
@@ -168,30 +164,15 @@ sub new
 
     $args->{'file_may_not_exist'} = 1;
     my $page = $resp->{'page'} = Para::Frame::File->new($args)->normalize;
-#    debug "---> Response ($resp) uses page ".$page->url_path;
-    my $rend = $resp->{'renderer'} = $page->renderer($args->{'renderer'}, $args);
-#    debug "---> Response renderer          ".$resp->renderer;
-#    debug "---> Response renderer page     ".$resp->renderer->page->url_path;
-
-    # Rendering template may be set diffrent from the actual page!
-    #
-    my $tmpl = $rend->template;
-    if( $tmpl and $tmpl->suffix eq 'tt' )
-    {
-	$ctype_str = "text/html";
-    }
-
-    if( $ctype_str )
-    {
-	$resp->ctype->set($ctype_str);
-    }
 
     unless( $args->{'always_move'} || 0 )
     {
 	$page->{'moved_temporarily'} = 1;
     }
 
-    return $resp;
+    $resp->{'renderer'} = $page->renderer($args->{'renderer'}, $args);
+
+     return $resp;
 }
 
 
@@ -858,6 +839,22 @@ sub send_headers
 
     my $client = $req->client;
 
+    my $ctype = $resp->ctype;
+    unless( $ctype->is_defined )
+    {
+	my $ctype_str = $resp->renderer->content_type_string
+	    || $req->original_content_type_string;
+	if( $ctype_str )
+	{
+	    $resp->ctype->set($ctype_str);
+	    debug "<---------- CTYPE set to $ctype_str";
+	}
+	else
+	{
+	    debug "******** No ctype for response";
+	}
+    }
+
     $req->lang->set_headers;               # lang
 
     if( my $last_modified = $resp->last_modified )
@@ -865,7 +862,7 @@ sub send_headers
 	$resp->set_header('Last-Modified' => $last_modified->internet_date);
     }
 
-    $resp->ctype->commit;
+    $ctype->commit;
 
     my %multiple; # Replace first, but add later headers
     foreach my $header ( $resp->headers )
@@ -1023,7 +1020,11 @@ sub send_stored_result
 
     # Use the old headers
     # CHECK: Any current changes may dissapear
+
     $resp->{'headers'} = $stored_resp->{'headers'};
+    $resp->{'ctype'}   = $stored_resp->{'ctype'};
+    $resp->{'renderer'} = $stored_resp->{'renderer'};
+
 #    debug "Headers now a copy of ".datadump($stored_resp->{'headers'});
 
     if( my $content = $stored_resp->{'content'} ) # May be header only
@@ -1138,6 +1139,16 @@ Returns: the renderer to be used, if not the standard renderer
 
 sub renderer
 {
+# Args are sent to new()
+#    unless( $_[0]->{'renderer'} )
+#    {
+#	my( $resp, $args ) = @_;
+#
+#	$args ||= {};
+#	my $rend = $resp->{'renderer'} = $page->renderer($args->{'renderer'}, $args);
+#	return $rend;
+#    }
+
     return $_[0]->{'renderer'};
 }
 
