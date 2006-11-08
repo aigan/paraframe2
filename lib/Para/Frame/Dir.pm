@@ -125,7 +125,7 @@ sub initiate
 	$f->{'ascii'} = -T _;
 	$f->{'binary'} = -B _;
 
-	die "Stat failed?! ".datadump([$f, $st]) unless $f->{size};
+	die "Stat failed?! ".datadump([$name, $f, $st]) unless $f->{size};
 
 	$files{$name} = $f;
     }
