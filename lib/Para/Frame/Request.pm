@@ -139,6 +139,14 @@ sub new
     # Log some info
     warn "# http://".$req->http_host."$orig_url_string\n";
 
+    # Handle Apache internal redirection
+    if( my $redirect_uri = $ENV{REDIRECT_URL} || $ENV{'REDIRECT_SCRIPT_URI'} )
+    {
+	warn "# Redirected from $redirect_uri\n";
+	$req->{'orig_url_string'} = $redirect_uri;
+    }
+
+
     return $req;
 }
 
@@ -1345,6 +1353,13 @@ sub after_jobs
 
 	Para::Frame->run_hook( $req, 'before_render_output');
 
+#	#
+#	debug "----> Resp $resp";
+#	debug "----> Resp page is ".$resp->page->url_path;
+#	debug "----> Resp page is ".$resp->renderer->page->url_path;
+#	#
+
+
 	# May be a custom renderer
 	my $render_result = $resp->render_output();
 
@@ -1364,7 +1379,7 @@ sub after_jobs
 	}
 	else
 	{
-	    $req->handle_error( $resp );
+	    $req->handle_error({ response => $resp });
 	}
 
 	$req->add_job('after_jobs');
@@ -2434,23 +2449,38 @@ sub set_response
 
     $args->{'req'} = $req;
     $args->{'url'} = $url_in;
+    $args->{'site'} ||= $req->site;
+
+    if( ref $url_in )
+    {
+	confess "Not a string: $url_in";
+    }
 
     eval
     {
 	$resp = $req->{'resp'} = Para::Frame::Request::Response->new($args);
 
 	# It must be a template
-	unless( $resp->page->template )
+	unless( $resp->renderer->template )
 	{
-	    die "$url wasn't a TT page";
+	    die "***** $url wasn't a TT page";
 	}
 	1;
     };
     if( $@ )
     {
+	debug "ERROR DURING RESPONSE INIT:";
 	debug $@;
-	$url = $req->site->home_url_path."/error.tt";
-	$resp = $req->{'resp'} = Para::Frame::Request::Response->new($args);
+	debug "Handling error:";
+
+	$req->handle_error($args);
+	$resp = $req->{'resp'}; # Changed in handle_error
+
+#	$args->{'template'} = $req->site->home->
+#	  get_virtual('error.tt')->template;
+#	$args->{'is_error_response'} = 1;
+#	debug "Set error response $url";
+#	$resp = $req->{'resp'} = Para::Frame::Request::Response->new($args);
     }
 
     debug "Response set to ".$resp->desig;
@@ -2614,9 +2644,27 @@ sub original_url_string
 
 sub handle_error
 {
-    my( $req, $resp ) = @_;
+    my( $req, $args_in ) = @_;
 
-    $resp or confess "resp missing";
+    $args_in ||= {};
+
+    my( $resp, $rend, $url, $site, $http_status );
+
+    if( $resp = $args_in->{'response'} )
+    {
+	$url = $resp->page->url_path_slash;
+	$site = $resp->page->site;
+	$rend = $resp->renderer;
+    }
+    elsif( $url = $args_in->{'url'} )
+    {
+	$site = $req->site;
+    }
+    else
+    {
+	confess "Missing args ".datadump($args_in,2);
+    }
+
 
     my $part = $req->result->exception();
     my $error = $part->error;
@@ -2626,18 +2674,17 @@ sub handle_error
 	confess "Failed to retrieve the error?!";
     }
 
-    my $rend = $resp->renderer;
-    my $page = $resp->page;
-
     if( $part->view_context )
     {
-	$part->prefix_message(loc("During the processing of [_1]",$page->path)."\n");
+	$part->prefix_message(loc("During the processing of [_1]",$url)."\n");
     }
 
-    my $new_resp = $req->response; # May have change
+    # May not be defined yet...
+    my $new_resp = $req->{'resp'}; # May have change
+
 
     # Has a new response been selected
-    if( $new_resp ne $resp )
+    if( $new_resp and ($new_resp ne $resp) )
     {
 	# Let the $req->after_jobs() render the new response
 	return 0;
@@ -2651,10 +2698,13 @@ sub handle_error
 	{
 	    debug "Subtemplate not found";
 	    $error_tt = '/page_part_not_found.tt';
-	    my $incpathstring = join "", map "- $_\n", @{$rend->paths};
-	    $part->add_message(loc("Include path is")."\n$incpathstring");
+	    if( $rend )
+	    {
+		my $incpathstring = join "", map "- $_\n", @{$rend->paths};
+		$part->add_message(loc("Include path is")."\n$incpathstring");
+	    }
 	    $part->view_context(1);
-	    $part->prefix_message(loc("During the processing of [_1]",$page->path)."\n");
+	    $part->prefix_message(loc("During the processing of [_1]",$url)."\n");
 	}
 	else
 	{
@@ -2685,7 +2735,7 @@ sub handle_error
     elsif( $error->type eq 'notfound' )
     {
 	$error_tt = "/page_not_found.tt";
-	$page->set_http_status(404);
+	$http_status = 404;
     }
     elsif( $error->type eq 'cancel' )
     {
@@ -2698,10 +2748,33 @@ sub handle_error
 
 
     # Avoid recursive failure
-    if( $page->path eq $error_tt ) # Same error page again?
+    if( $resp )
     {
-	$new_resp->set_content( $resp->fallback_error_page );
-	return 1;
+	my $tmpl = $resp->renderer->template or
+	  confess "No template for respone";
+	debug sprintf "Comparing %s with %s", $tmpl->path, $error_tt;
+	if($tmpl->path eq $error_tt ) # Same error page again?
+	{
+	    $resp->set_content( $resp->fallback_error_page );
+	    return 1;
+	}
+    }
+
+
+
+    my $args =
+    {
+     'template' => $req->site->home->get_virtual($error_tt)->template,
+     'is_error_response' => 1,
+     'req' => $req,
+     'url' => $url,
+     'site' => $site,
+    };
+    $new_resp = $req->{'resp'} = Para::Frame::Request::Response->new($args);
+
+    if( $http_status )
+    {
+	$new_resp->set_http_status(404);
     }
 
     return 0;

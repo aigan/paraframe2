@@ -76,11 +76,24 @@ sub new
     };
 
 
-    $rend->{'page'} = $args->{'page'}
-	or confess "page param missing";
+    my $page = $rend->{'page'} = $args->{'page'}
+      or confess "page param missing";
+
+#    debug "=======> Created renderer for page ".$page->url_path;
 
     # Cache template
-    $rend->{'template'} = $args->{'template'} || $rend->{'page'}->template;
+    my $tmpl = $rend->{'template'} = $args->{'template'} || $page->template;
+
+    unless( ref $tmpl )
+    {
+	unless( $tmpl )
+	{
+	    throw('notfound', "No template found for ".$page->url_path);
+	}
+
+	confess "Template $tmpl not an object";
+    }
+
 
     $rend->{'params'} = {%$Para::Frame::PARAMS};
 #    $rend->{'umask'} = $args->{'umask'} || 002;
@@ -131,6 +144,11 @@ sub render_output
     $Para::Frame::REQ->note("Rendering page");
 
     my $tmpl = $rend->template;
+    unless( $tmpl )
+    {
+	cluck "Template not found";
+	throw('notfound', "Couldn't find a template for ".$rend->page->url_path);
+    }
 
     my $in = $tmpl->document;
 

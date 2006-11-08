@@ -101,6 +101,8 @@ This constructor is usually called by L<Para::Frame::Request/set_response>.
 
 params:
 
+  template => used in renderer->new
+
   req
   site
   language
@@ -166,10 +168,15 @@ sub new
 
     $args->{'file_may_not_exist'} = 1;
     my $page = $resp->{'page'} = Para::Frame::File->new($args)->normalize;
-    $resp->{'renderer'} = $page->renderer($args->{'renderer'}, $args);
+#    debug "---> Response ($resp) uses page ".$page->url_path;
+    my $rend = $resp->{'renderer'} = $page->renderer($args->{'renderer'}, $args);
+#    debug "---> Response renderer          ".$resp->renderer;
+#    debug "---> Response renderer page     ".$resp->renderer->page->url_path;
 
-    my $tmpl = $page->template;
-    if( $tmpl->suffix eq 'tt' )
+    # Rendering template may be set diffrent from the actual page!
+    #
+    my $tmpl = $rend->template;
+    if( $tmpl and $tmpl->suffix eq 'tt' )
     {
 	$ctype_str = "text/html";
     }
