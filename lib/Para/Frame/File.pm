@@ -80,9 +80,14 @@ sub new
     my $site_in = $args->{'site'};
 
     my $key = $sys_in;
-    unless( $key )
+    if( $key )
+    {
+	confess "Not a string: $sys_in" if ref $sys_in;
+    }
+    else
     {
 	confess "Missing site" unless $site_in;
+	confess "Not a string: $url_in" if ref $url_in;
 	$key = $site_in->code . $url_in;
     }
 
@@ -106,7 +111,7 @@ sub new
      'dirsteps'       => undef,
     }, $class;
 
-    $file->{hidden} = $args->{hidden} || qr/(^\.|^CVS$|~$)/;
+    $file->{hidden} = $args->{hidden} || qr/(^\.|^CVS$|\#$|~$)/;
 
     my $may_not_exist = $args->{'file_may_not_exist'} || 0;
     my $exist;
@@ -137,7 +142,7 @@ sub new
 	my $site = $file->set_site( $site_in || $req->site );
 
 	# $sys_name is without trailing slash
-	$sys_name = $site->uri2file($url_in );
+	$sys_name = $site->uri2file($url_in, undef, $may_not_exist );
 
 	# $sys_norm is undef
     }
@@ -156,7 +161,7 @@ sub new
     # $sys_name is defined
     # $sys_norm is undef
 
-    debug "Constructing $sys_name";
+#    debug "Constructing $sys_name";
 
     if( -r $sys_name )
     {
@@ -268,18 +273,18 @@ sub new
     else
     {
 	# Place in site based on sys_path
-	debug "Try to place in site";
+#	debug "Try to place in site";
 
 	foreach my $site_maby ( values %Para::Frame::Site::DATA )
 	{
 	    my $sys_home = $site_maby->home->sys_path_slash;
-	    debug "Checking $sys_home";
+#	    debug "Checking $sys_home";
 	    if( $file->{'sys_norm'} =~ /^$sys_home(.*)/ )
 	    {
 		# May not be a correct translation
 		my $url_norm = $site_maby->home->url_path_slash.$1;
-		debug "Translating $url_norm";
-		my $sys_name = $site_maby->uri2file($url_norm);
+#		debug "Translating $url_norm";
+		my $sys_name = $site_maby->uri2file($url_norm, undef, $may_not_exist);
 
 		unless( $sys_name eq $file->{'sys_name'} )
 		{
@@ -337,7 +342,7 @@ sub new
 	  $Para::Frame::File::Cache{ $key } = $file;
     }
 
-    debug "CREATED ".$file->sysdesig;
+#    debug "CREATED ".$file->sysdesig;
 
     return $file;
 }
@@ -918,9 +923,14 @@ sub base_name
     my( $f ) = @_;
 
     my $template = $f->name;
-    $template =~ /^(.*?)(\.\w\w)?\.\w{2,3}$/
-      or die "Couldn't get base from $template";
-    return $1;
+    if( $template =~ /^(.*?)(\.\w\w)?\.\w{2,4}$/ )
+    {
+	return $1;
+    }
+    else
+    {
+	return $template;
+    }
 }
 
 
@@ -1392,7 +1402,8 @@ sub renderer
 
     $args ||= {};
 
-    $args->{'page'} ||= $f;
+    $args->{'page'} = $f;
+#    debug "======> ".$args->{'page'}->url_path;
 
     $renderer_in ||= $args->{'renderer'};
 
