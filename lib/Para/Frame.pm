@@ -1271,44 +1271,50 @@ sub handle_request
     $RESPONSE{ $client } = []; ### Client response queue
     switch_req( $req, 1 );
 
+    #################
+
     $req->init;
 
-    # Authenticate user identity
-    my $user_class = $Para::Frame::CFG->{'user_class'};
-    $user_class->identify_user;     # Will set $s->{user}
-    $user_class->authenticate_user;
-
-    ### Debug info
-    my $t = now();
-    my $s = $req->s;
-    warn sprintf("# %s %s - %s\n# Sid %s - Uid %d - debug %d\n",
-		 $t->ymd,
-		 $t->hms('.'),
-		 $req->client_ip,
-		 $s->id,
-		 $s->u->id,
-		 $s->{'debug'},
-		 );
-    warn "# $client\n" if debug() > 4;
 
 
  RESPONSE:
     {
 	### Redirected from another page?
-	my $resp = $req->response;
 	my $key = $req->original_url_string;
 	if( $req->session->{'page_result'}{ $key } )
 	{
-	    $resp->send_stored_result;
+	    $req->send_stored_result;
 	}
 	else
 	{
+
+	    # Authenticate user identity
+	    my $user_class = $Para::Frame::CFG->{'user_class'};
+	    $user_class->identify_user;     # Will set $s->{user}
+	    $user_class->authenticate_user;
+
+	    ### Debug info
+	    my $t = now();
+	    my $s = $req->s;
+	    warn sprintf("# %s %s - %s\n# Sid %s - Uid %d - debug %d\n",
+			 $t->ymd,
+			 $t->hms('.'),
+			 $req->client_ip,
+			 $s->id,
+			 $s->u->id,
+			 $s->{'debug'},
+			);
+	    warn "# $client\n" if debug() > 4;
+
+	    $req->setup_jobs;
+	    $req->reset_response; # Needs lang and jobs
+	    $req->session->route->init;
+
+	    my $resp = $req->response;
 	    if( my $client_time = $req->http_if_modified_since )
 	    {
-#		debug "Is page modified since $client_time?";
 		if( my $mtime = $resp->last_modified )
 		{
-#		    debug "Page was last modified $mtime";
 		    if( $mtime <= $client_time )
 		    {
 			$resp->send_not_modified;
