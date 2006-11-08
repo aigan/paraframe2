@@ -79,7 +79,12 @@ sub new
     my $url_in = $args->{'url'};
     my $site_in = $args->{'site'};
 
-    my $key = $sys_in || ($site_in->code . $url_in);
+    my $key = $sys_in;
+    unless( $key )
+    {
+	confess "Missing site" unless $site_in;
+	$key = $site_in->code . $url_in;
+    }
 
     if( my $file = $Para::Frame::File::Cache{ $key } )
     {
@@ -151,6 +156,8 @@ sub new
     # $sys_name is defined
     # $sys_norm is undef
 
+    debug "Constructing $sys_name";
+
     if( -r $sys_name )
     {
 	$exist = 1;
@@ -220,6 +227,7 @@ sub new
 	{
 	    if( $url_norm and $url_norm =~ /\/$/ )
 	    {
+		debug "Blessing as a dir";
 		bless $file, 'Para::Frame::Dir';
 		$sys_norm = $sys_name . '/';
 	    }
@@ -260,19 +268,23 @@ sub new
     else
     {
 	# Place in site based on sys_path
+	debug "Try to place in site";
 
 	foreach my $site_maby ( values %Para::Frame::Site::DATA )
 	{
 	    my $sys_home = $site_maby->home->sys_path_slash;
+	    debug "Checking $sys_home";
 	    if( $file->{'sys_norm'} =~ /^$sys_home(.*)/ )
 	    {
 		# May not be a correct translation
-		my $url_norm = '/'.$1;
+		my $url_norm = $site_maby->home->url_path_slash.$1;
+		debug "Translating $url_norm";
 		my $sys_name = $site_maby->uri2file($url_norm);
 
 		unless( $sys_name eq $file->{'sys_name'} )
 		{
-		    confess "Path translation mismatch: $sys_name != $file->{sys_name}";
+		    debug "Path translation mismatch: $sys_name != $file->{sys_name}! Skipping this site";
+		    next;
 		}
 
 		my $url_name = $url_norm;
@@ -421,6 +433,50 @@ sub initiate
     }
 
     return $f->{initiated} = 1;
+}
+
+#######################################################################
+
+sub set_depends_on
+{
+    my( $tmpl, $depends ) = @_;
+
+    unless( ref $depends eq 'ARRAY' )
+    {
+	confess "Wrong input: ".datadump( $depends );
+    }
+
+    $tmpl->{'depends_on'} = $depends;
+}
+
+
+#######################################################################
+
+=head2 is_updated
+
+Checks in the templates this has been compiled from has changed
+
+=cut
+
+sub is_updated
+{
+    my( $tmpl ) = @_;
+
+    if( $tmpl->exist )
+    {
+	$tmpl->{'depends_on'} ||= [];
+      SRC:
+	foreach my $src (@{$tmpl->{'depends_on'}})
+	{
+	    if( $tmpl->mtime_as_epoch >= $src->mtime_as_epoch )
+	    {
+		next SRC;
+	    }
+	    return 1;
+	}
+	return 0;
+    }
+    return 1;
 }
 
 #######################################################################
@@ -582,13 +638,30 @@ sub dir_url_path
 
 The template filename without the path.
 
-For dirs, the dir name without the path.
+For dirs, the dir name without the path and without trailing slash.
 
 =cut
 
 sub name
 {
     $_[0]->sys_path =~ /\/([^\/]+)\/?$/
+	or die "Couldn't get filename from ".$_[0]->sys_path;
+    return $1;
+}
+
+#######################################################################
+
+=head2 name_slash
+
+The template filename without the path.
+
+For dirs, the dir name without the path but with the trailing slash.
+
+=cut
+
+sub name_slash
+{
+    $_[0]->sys_path_slash =~ /\/([^\/]+\/?)$/
 	or die "Couldn't get filename from ".$_[0]->sys_path;
     return $1;
 }

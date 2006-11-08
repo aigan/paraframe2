@@ -398,50 +398,6 @@ sub find
 
 #######################################################################
 
-sub set_depends_on
-{
-    my( $tmpl, $depends ) = @_;
-
-    unless( ref $depends eq 'ARRAY' )
-    {
-	confess "Wrong input: ".datadump( $depends );
-    }
-
-    $tmpl->{'depends_on'} = $depends;
-}
-
-
-#######################################################################
-
-=head2 is_updated
-
-Checks in the templates this has been compiled from has changed
-
-=cut
-
-sub is_updated
-{
-    my( $tmpl ) = @_;
-
-    if( $tmpl->exist )
-    {
-	$tmpl->{'depends_on'} ||= [];
-      SRC:
-	foreach my $src (@{$tmpl->{'depends_on'}})
-	{
-	    if( $tmpl->mtime_as_epoch >= $src->mtime_as_epoch )
-	    {
-		next SRC;
-	    }
-	    return 1;
-	}
-	return 0;
-    }
-    return 1;
-}
-
-#######################################################################
-
 
 =head2 precompile
 

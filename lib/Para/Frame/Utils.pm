@@ -514,6 +514,8 @@ sub chmod_file
 {
     my( $file, $mode, $params ) = @_;
 
+    confess "File was a ref" if ref $file;
+
     $params ||= {};
 
     my $orig_umask = umask;

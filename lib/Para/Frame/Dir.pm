@@ -67,13 +67,24 @@ sub initiate
     my( $dir ) = @_;
 
     my $sys_path = $dir->sys_path;
-    my $mtime = (stat($sys_path))[9];
-    if( $dir->{initiated} )
+    my $dir_st = stat($sys_path);
+
+    unless( $dir_st )
     {
-	return 1 unless $mtime > $dir->{mtime};
+	debug "Couldn't find $sys_path!";
+	$dir->{'initiated'} = 0;
+	$dir->{'exist'} = 0;
+	return 0;
     }
 
-    $dir->{mtime} = $mtime;
+    my $mtime = $dir_st->mtime;
+
+    if( $dir->{'initiated'} )
+    {
+	return 1 unless $mtime > $dir->{'mtime'};
+    }
+
+    $dir->{'mtime'} = $mtime;
 
     my %files;
 
@@ -96,32 +107,33 @@ sub initiate
 	    $st = stat($path);
 	}
 
-	$f->{readable} = -r _;
-	$f->{writable} = -w _;
-	$f->{executable} = -x _;
-	$f->{owned} = -o _;
-	$f->{size} = -s _;
-	$f->{plain_file} = -f _;
-	$f->{directory} = -d _;
-#	$f->{named_pipe} = -p _;
-#	$f->{socket} = -S _;
-#	$f->{block_special_file} = -b _;
-#	$f->{character_special_file} = -c _;
-#	$f->{tty} = -t _;
-#	$f->{setuid} = -u _;
-#	$f->{setgid} = -g _;
-#	$f->{sticky} = -k _;
-	$f->{ascii} = -T _;
-	$f->{binary} = -B _;
+	$f->{'readable'} = -r _;
+	$f->{'writable'} = -w _;
+	$f->{'executable'} = -x _;
+	$f->{'owned'} = -o _;
+	$f->{'size'} = -s _;
+	$f->{'plain_file'} = -f _;
+	$f->{'directory'} = -d _;
+#	$f->{'named_pipe'} = -p _;
+#	$f->{'socket'} = -S _;
+#	$f->{'block_special_file'} = -b _;
+#	$f->{'character_special_file'} = -c _;
+#	$f->{'tty'} = -t _;
+#	$f->{'setuid'} = -u _;
+#	$f->{'setgid'} = -g _;
+#	$f->{'sticky'} = -k _;
+	$f->{'ascii'} = -T _;
+	$f->{'binary'} = -B _;
 
 	die "Stat failed?! ".datadump([$f, $st]) unless $f->{size};
 
 	$files{$name} = $f;
     }
 
-    $dir->{file} = \%files;
+    $dir->{'file'} = \%files;
 
-    return $dir->{initiated} = 1;
+
+    return $dir->SUPER::initiate();
 }
 
 
@@ -175,44 +187,49 @@ sub files
 {
     my( $dir ) = @_;
 
-    debug "Called dir.files";
     $dir->initiate;
 
-    debug "Directory initiated";
+    my( $base, $argname );
+    my $args = {};
+    if( my $site = $dir->site )
+    {
+	$args->{'site'} = $dir->site;
+	$base = $dir->url_path_slash;
+	$argname = 'url';
+    }
+    else
+    {
+	$base = $dir->sys_path_slash;
+	$argname = 'filename';
+    }
 
     my @list;
-    foreach my $name ( sort keys %{$dir->{file}} )
+    foreach my $name ( sort keys %{$dir->{'file'}} )
     {
-	unless( $dir->{file}{$name}{readable} )
+	unless( $dir->{'file'}{$name}{'readable'} )
 	{
 	    debug "File $name not readable";
 	    next;
 	}
 
-	next if $name =~ $dir->{hidden};
+	next if $name =~ $dir->{'hidden'};
 
-	my $url = $dir->{url_name}.'/'.$name;
-#	debug "Adding $url";
-	if( $dir->{file}{$name}{directory} )
+	$args->{$argname} = $base . $name;
+	debug "Adding $name";
+	if( $dir->{'file'}{$name}{'directory'} )
 	{
-#	    debug "  As a Dir";
-	    push @list, $dir->new({ site => $dir->site,
-				    url  => $url.'/',
-				  });
+	    debug "  As a Dir";
+	    push @list, $dir->new($args);
 	}
 	elsif( $name =~ /\.tt$/ )
 	{
-#	    debug "  As a Page";
-	    push @list, Para::Frame::Template->new({ site => $dir->site,
-						     url  => $url,
-						   });
+	    debug "  As a Page";
+	    push @list, Para::Frame::Template->new($args);
 	}
 	else
 	{
-#	    debug "  As a File";
-	    push @list, Para::Frame::File->new({ site => $dir->site,
-						 url  => $url,
-					       });
+	    debug "  As a File";
+	    push @list, Para::Frame::File->new($args);
 	}
 
 	$dir->req->may_yield;
@@ -353,7 +370,7 @@ sub get
     $args ||= {};
 
     # Validate $file
-    unless( $file_in =~ /\// )
+    unless( $file_in =~ /^\// )
     {
 	$file_in = '/'.$file_in;
     }
