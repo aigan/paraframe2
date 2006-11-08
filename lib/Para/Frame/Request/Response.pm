@@ -843,16 +843,8 @@ sub send_headers
     unless( $ctype->is_defined )
     {
 	my $ctype_str = $resp->renderer->content_type_string
-	    || $req->original_content_type_string;
-	if( $ctype_str )
-	{
-	    $resp->ctype->set($ctype_str);
-	    debug "<---------- CTYPE set to $ctype_str";
-	}
-	else
-	{
-	    debug "******** No ctype for response";
-	}
+	  || $req->original_content_type_string || 'text/plain';
+	$ctype->set($ctype_str);
     }
 
     $req->lang->set_headers;               # lang
@@ -1007,29 +999,15 @@ sub send_in_chunks
 
 sub send_stored_result
 {
-    my( $resp, $stored_resp ) = @_;
+    my( $resp ) = @_;
 
     my $req = $resp->req;
 
-    # TODO: Use a better key for handling nested requests
-    my $key = $req->original_url_string;
-
-    $stored_resp ||= $req->session->{'page_result'}{ $key };
-
     debug 0, "Sending stored page result";
 
-    # Use the old headers
-    # CHECK: Any current changes may dissapear
-
-    $resp->{'headers'} = $stored_resp->{'headers'};
-    $resp->{'ctype'}   = $stored_resp->{'ctype'};
-    $resp->{'renderer'} = $stored_resp->{'renderer'};
-
-#    debug "Headers now a copy of ".datadump($stored_resp->{'headers'});
-
-    if( my $content = $stored_resp->{'content'} ) # May be header only
+    if( my $content = $resp->{'content'} ) # May be header only
     {
-	if( $stored_resp->sender eq 'utf8' )
+	if( $resp->sender eq 'utf8' )
 	{
 	    debug 4, "  in UTF8";
 	    $resp->ctype->set_charset("utf-8");
@@ -1072,8 +1050,6 @@ sub send_stored_result
 	    die "Was to slow to send the pregenerated page";
 	};
     }
-
-    delete $req->session->{'page_result'}{ $key };
 
     #debug "Sending stored page result: done";
 }
