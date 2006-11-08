@@ -45,7 +45,7 @@ use Para::Frame::Reload;
 use constant BUFSIZ => 8192; # Posix buffersize
 use constant TRIES => 20; # 20 connection tries
 
-our $DEBUG = 5;
+our $DEBUG = 0;
 
 our $SOCK;
 our $r;
