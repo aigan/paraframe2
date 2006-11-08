@@ -94,7 +94,7 @@ sub initiate
 
     while(defined( my $name = $d->read ))
     {
-	next if $name =~ /^\.\.?$/;
+	next if $name =~ $dir->{'hidden'};
 
 	my $f = {};
 	my $path = $sys_path.'/'.$name;
@@ -125,7 +125,7 @@ sub initiate
 	$f->{'ascii'} = -T _;
 	$f->{'binary'} = -B _;
 
-	die "Stat failed?! ".datadump([$name, $f, $st]) unless $f->{size};
+	die "Stat failed for $name (zero size) ".datadump([$f, $st]) unless $f->{size};
 
 	$files{$name} = $f;
     }
@@ -429,6 +429,7 @@ sub create
 {
     my( $dir, $args ) = @_;
 
+    $dir->initiate;
     if( $dir->exist )
     {
 #	debug sprintf "Dir %s exist. Chmodding", $dir->desig;
