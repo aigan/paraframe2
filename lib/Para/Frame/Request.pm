@@ -50,7 +50,7 @@ use Para::Frame::Child::Result;
 use Para::Frame::Site;
 use Para::Frame::Change;
 use Para::Frame::URI;
-use Para::Frame::L10N;
+use Para::Frame::L10N qw( loc );
 use Para::Frame::Logging;
 use Para::Frame::Connection;
 use Para::Frame::Uploaded;
@@ -171,7 +171,8 @@ sub init
 
     $req->set_site;
     $req->set_language;   # Needs site
-    $req->reset_response; # Needs lang
+    $req->setup_jobs;
+    $req->reset_response; # Needs lang and jobs
 
     $req->{'s'}       = Para::Frame->Session->new($req);
 
@@ -235,8 +236,8 @@ sub new_subrequest
 	my $site = Para::Frame::Site->get( $site_in );
 	if( $original_req->site->host ne $site->host )
 	{
-	    debug "Host mismatch ".$site->host;
-	    debug "Changing the client of the subrequest";
+#	    debug "Host mismatch ".$site->host;
+#	    debug "Changing the client of the subrequest";
 	    $client = "background-$Para::Frame::REQNUM";
 	}
     }
@@ -1052,7 +1053,38 @@ sub setup_jobs
     }
     # We will not execute later actions if one of them fail
     $req->{'actions'} = $actions;
-#    warn "Actions are now ".datadump($actions);
+#    cluck "Actions are now ".datadump($actions); ### DEBUG
+}
+
+
+#######################################################################
+
+sub add_action
+{
+    my( $req ) = shift;
+    debug(2,"Added action @_ for $req->{reqnum}");
+    push @{ $req->{'actions'} }, @_;
+    if( $req->in_last_job )
+    {
+	$req->add_job('after_jobs');
+    }
+}
+
+
+#######################################################################
+
+sub prepend_action
+{
+    my( $req ) = shift;
+    debug("====> Prepended action @_ for $req->{reqnum}");
+    unshift @{ $req->{'actions'} }, @_;
+    if( $req->in_last_job )
+    {
+	$req->add_job('after_jobs');
+    }
+#    debug "Jobs: @{${$req->{'jobs'}}[0]}";
+#    debug "ACTIONS: @{ $req->{'actions'} }";
+
 }
 
 
@@ -1127,6 +1159,8 @@ sub run_action
     my( $req, $run, @args ) = @_;
 
     return 1 if $run eq 'nop'; #shortcut
+
+#    debug "==> RUN ACTION $run";
 
     my $site = $req->site;
 
@@ -1295,7 +1329,9 @@ sub after_jobs
 {
     my( $req ) = @_;
 
-    debug 4, "In after_jobs";
+#    debug 4, "In after_jobs";
+#    debug "======> In after_jobs";
+#    debug "ACTIONS: @{ $req->{'actions'} }";
 
     # Take a planned action unless an error has been encountered
     if( my $action = shift @{ $req->{'actions'} } )
@@ -1481,6 +1517,8 @@ sub referer
 
     my $site = $req->page->site;
 
+#    debug "LOOKING FOR A REFERER";
+
   TRY:
     {
 	# Explicit caller_page could be given
@@ -1494,6 +1532,7 @@ sub referer
 	if( my $url = $req->q->referer )
 	{
 	    $url = Para::Frame::URI->new($url);
+#	    debug "May use referer ".$url->as_string;
 	    last if $url->host_port ne $req->host_with_port;
 
 	    debug 2, "Referer from current http req ($url)";
@@ -1504,17 +1543,18 @@ sub referer
 	if( my $url = $req->{'referer'} )
 	{
 	    $url = Para::Frame::URI->new($url);
+#	    debug "May use referer ".$url->as_string;
 	    last if $url->host_port ne $req->host_with_port;
 
 	    debug 2, "Referer from original http req";
 	    return $url->path;
 	}
 
-	# This could be confusing if several browser windows uses the same
-	# session
-	#
-	debug 1, "Referer from session";
-	return $req->session->referer->path if $req->session->referer;
+#	# This could be confusing if several browser windows uses the same
+#	# session
+#	#
+#	debug 1, "Referer from session";
+#	return $req->session->referer->path if $req->session->referer;
     }
 
     debug 1, "Referer from default value";
@@ -2459,12 +2499,6 @@ sub set_response
     eval
     {
 	$resp = $req->{'resp'} = Para::Frame::Request::Response->new($args);
-
-	# It must be a template
-	unless( $resp->renderer->template )
-	{
-	    die "***** $url wasn't a TT page";
-	}
 	1;
     };
     if( $@ )
@@ -2475,12 +2509,6 @@ sub set_response
 
 	$req->handle_error($args);
 	$resp = $req->{'resp'}; # Changed in handle_error
-
-#	$args->{'template'} = $req->site->home->
-#	  get_virtual('error.tt')->template;
-#	$args->{'is_error_response'} = 1;
-#	debug "Set error response $url";
-#	$resp = $req->{'resp'} = Para::Frame::Request::Response->new($args);
     }
 
     debug "Response set to ".$resp->desig;
@@ -2541,7 +2569,6 @@ sub reset_response
     else
     {
 	$url = $req->{'orig_url_string'};
-	$args->{'ctype'} = $req->{'orig_ctype'};
 	my $resp = $req->set_response( $url, $args );
 	return $req->{'orig_resp'} = $resp;
     }
@@ -2634,6 +2661,13 @@ sub original_url
 sub original_url_string
 {
     return $_[0]->{'orig_url_string'};
+}
+
+#######################################################################
+
+sub original_content_type_string
+{
+    return $_[0]->{'orig_ctype'};
 }
 
 #######################################################################
@@ -2750,17 +2784,16 @@ sub handle_error
     # Avoid recursive failure
     if( $resp )
     {
-	my $tmpl = $resp->renderer->template or
-	  confess "No template for respone";
-	debug sprintf "Comparing %s with %s", $tmpl->path, $error_tt;
-	if($tmpl->path eq $error_tt ) # Same error page again?
+	if( my $tmpl = $resp->renderer->template )
 	{
-	    $resp->set_content( $resp->fallback_error_page );
-	    return 1;
+	    debug sprintf "Comparing %s with %s", $tmpl->path, $error_tt;
+	    if($tmpl->path eq $error_tt ) # Same error page again?
+	    {
+		$resp->set_content( $resp->fallback_error_page );
+		return 1;
+	    }
 	}
     }
-
-
 
     my $args =
     {
@@ -2783,7 +2816,7 @@ sub handle_error
 #######################################################################
 
 
-
+warn "Loaded  Para::Frame::Request\n";
 1;
 
 
