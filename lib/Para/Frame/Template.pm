@@ -275,7 +275,7 @@ sub find
     my( $this, $page ) = @_;
     my $class = ref($this) || $this;
 
-    debug "Finding page ".$page->sysdesig . "($page)";
+    debug "Finding page ".$page->sysdesig;
 
     my $req = $Para::Frame::REQ;
 
