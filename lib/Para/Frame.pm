@@ -49,11 +49,11 @@ BEGIN
 
 use Para::Frame::Reload;
 use Para::Frame::Watchdog;
+use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump );
 use Para::Frame::Request;
 use Para::Frame::Widget;
 use Para::Frame::Burner;
 use Para::Frame::Time qw( now );
-use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump );
 use Para::Frame::Email::Address;
 use Para::Frame::L10N;
 
@@ -1318,7 +1318,6 @@ sub handle_request
 	    }
 
 	    $req->send_code('USE_LOADPAGE', $req->site->loadpage, 2, $REQNUM);
-	    $req->setup_jobs;
 	    $req->after_jobs;
 	}
     }
