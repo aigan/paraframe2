@@ -24,13 +24,7 @@ Para::Frame::Renderer::TT - Renders a TT page
 
 use strict;
 use Carp qw( croak confess cluck );
-#use IO::File;
-#use Encode qw( is_utf8 );
-#use File::Basename; # exports fileparse, basename, dirname
-#use File::stat; # exports stat
-#use File::Slurp; # Exports read_file, write_file, append_file, overwrite_file, read_dir
-#use Scalar::Util qw(weaken);
-#use Data::Dumper;
+use Template::Exception;
 
 BEGIN
 {
@@ -81,22 +75,25 @@ sub new
 
 #    debug "=======> Created renderer for page ".$page->url_path;
 
+    $rend->{'params'} = {%$Para::Frame::PARAMS};
+
+
     # Cache template
     my $tmpl = $rend->{'template'} = $args->{'template'} || $page->template;
 
     unless( ref $tmpl )
     {
-	unless( $tmpl )
+	if( $tmpl )
 	{
-	    throw('notfound', "No template found for ".$page->url_path);
+	    confess "Template $tmpl not an object";
+	}
+	else
+	{
+	    $Para::Frame::REQ->prepend_action('find_page');
+#	    throw('notfound', "No template found for ".$page->url_path);
 	}
 
-	confess "Template $tmpl not an object";
     }
-
-
-    $rend->{'params'} = {%$Para::Frame::PARAMS};
-#    $rend->{'umask'} = $args->{'umask'} || 002;
 
     return $rend;
 }
@@ -146,8 +143,9 @@ sub render_output
     my $tmpl = $rend->template;
     unless( $tmpl )
     {
-	cluck "Template not found";
-	throw('notfound', "Couldn't find a template for ".$rend->page->url_path);
+	# Set up error for later retrieval
+	$@ = Template::Exception->new('notfound', "Couldn't find a template for ".$rend->page->url_path);
+	return 0;
     }
 
     my $in = $tmpl->document;
@@ -156,7 +154,7 @@ sub render_output
     if( not $burner )
     {
 	debug "Getting '$in' as a static page";
-	$rend->get_static( $in, \$out );
+	$rend->get_static( $in, \$out ) or return 0;
     }
     else
     {
@@ -483,6 +481,14 @@ sub template
 
 #######################################################################
 
+sub set_template
+{
+    return $_[0]->{'template'} = $_[1];
+}
+
+
+#######################################################################
+
 
 =head2 paths
 
@@ -593,6 +599,21 @@ sub paths
     return $rend->{'incpath'};
 }
 
+
+#######################################################################
+
+sub content_type_string
+{
+    my( $rend ) = @_;
+
+    my $tmpl = $rend->template;
+    if( $tmpl and $tmpl->suffix eq 'tt' )
+    {
+	return "text/html";
+    }
+
+    return undef;
+}
 
 #######################################################################
 
