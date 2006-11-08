@@ -57,6 +57,11 @@ sub new
     }, $class;
     weaken( $ctype->{'req'} );
 
+    if( my $ctype_string = $req->original_content_type_string )
+    {
+	$ctype->set( $ctype_string );
+    }
+
     return $ctype;
 }
 
@@ -225,6 +230,11 @@ sub commit
     {
 	$ctype->{'charset'} = "iso-8859-1";
 	$ctype->{'changed'} ++;
+    }
+
+    if( $ctype->is('httpd/unix-directory') )
+    {
+	$ctype->set('text/html');
     }
 
     if( $ctype->{'changed'} )
