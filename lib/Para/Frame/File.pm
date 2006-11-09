@@ -93,6 +93,7 @@ sub new
 
     if( my $file = $Para::Frame::File::Cache{ $key } )
     {
+#	debug "Found cached file ".$file->sysdesig;
 	return $file;
     }
 
@@ -111,7 +112,7 @@ sub new
      'dirsteps'       => undef,
     }, $class;
 
-    $file->{hidden} = $args->{hidden} || qr/(^\.|^CVS$|\#$|~$)/;
+    $file->{'hidden'} = $args->{'hidden'} || qr/(^\.|^CVS$|\#$|~$)/;
 
     my $may_not_exist = $args->{'file_may_not_exist'} || 0;
     my $exist;
@@ -353,8 +354,12 @@ sub reset
 {
     my( $f ) = @_;
 
-    $f->{initiated} = 0;
+#    debug "Resetting ".$f->sysdesig;
+
+    $f->{'initiated'} = 0;
     $f->initiate;
+
+#    debug "Now       ".$f->sysdesig;
 }
 
 
@@ -412,6 +417,7 @@ sub initiate
 
 #    debug "Initiating $name";
 
+    $f->{'exist'} = 1;
     $f->{mtime} = $mtime;
     $f->{readable} = -r _;
     $f->{writable} = -w _;
@@ -1068,7 +1074,8 @@ sub sysdesig
 
     my $sys_path = $file->{'sys_norm'} || '<unknown>';
     my $path_slash = $file->site ? $file->path_slash : '<unknown>';
-    return sprintf "%s (%s)", $sys_path, $path_slash;
+    my $date_str = $file->exist ? $file->mtime : '<not found>';
+    return sprintf "%s (%s) %s", $sys_path, $path_slash, $date_str;
 }
 
 
@@ -1145,6 +1152,7 @@ sub target_with_lang
     {
 	my $language = $args->{'language'} || $Para::Frame::REQ->language;
 	$code = $language->code;
+#	debug datadump $language;
     }
 
     if( $target =~ /\/([^\/]+)(\.\w\w)\.tt$/ )
@@ -1156,7 +1164,7 @@ sub target_with_lang
     }
     else
     {
-	debug "Setting language to $code";
+#	debug "Setting language to $code";
 	$target =~ s/ \/([^\/]+)\.tt$ /\/$1.$code.tt/x;
     }
 
@@ -1171,6 +1179,8 @@ sub target_with_lang
 #	debug "------> FILE";
 	$args->{'filename'} = $target;
     }
+
+    debug "TARGET $target";
 
     $args->{'file_may_not_exist'} = 1;
 
@@ -1225,10 +1235,25 @@ sub template
     #
     #Cache within a req
 
-#    debug "Looking for template for $f";
+#    debug "Looking for template for $f ".$f->sysdesig;
 
-    return $Para::Frame::REQ->{'file2template'}{$f} ||=
-      Para::Frame::Template->find($f);
+    my $f2t = $Para::Frame::REQ->{'file2template'} ||= {};
+    unless( $f2t->{$f} )
+    {
+	my $finder = $Para::Frame::REQ->dirconfig->{'find'} ||
+	  $Para::Frame::REQ->site->find_class;
+
+	if( $finder )
+	{
+	    return $f2t->{$f} = $finder->find($f) ||
+	      Para::Frame::Template->find($f);
+	}
+	else
+	{
+	    return $f2t->{$f} = Para::Frame::Template->find($f);
+	}
+    }
+    return $f2t->{$f};
 }
 
 #######################################################################
