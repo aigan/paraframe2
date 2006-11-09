@@ -56,6 +56,8 @@ use Para::Frame::CSS;
 our %DATA; # hostname -> siteobj
 our %ALIAS; # secondary names
 
+#######################################################
+
 sub _new
 {
     my( $this, $params ) = @_;
@@ -87,6 +89,8 @@ sub _new
 
     return $site;
 }
+
+#######################################################
 
 =head2 add
 
@@ -178,6 +182,8 @@ sub add
     return $site;
 }
 
+#######################################################
+
 =head2 clone
 
   $site->clone( $hostname )
@@ -218,6 +224,8 @@ sub clone
     return Para::Frame::Site->add($params);
 }
 
+#######################################################
+
 =head2 get
 
   Para::Frame::Site->get( $name )
@@ -248,6 +256,8 @@ sub get
     return $DATA{$name} || $ALIAS{$name} ||
 	croak "Site $name is not registred";
 }
+
+#######################################################
 
 =head2 get_by_req
 
@@ -368,6 +378,8 @@ sub name
     return $_[0]->{'name'} || $_[0]->webhost;
 }
 
+#######################################################
+
 =head2 code
 
   $site->code
@@ -426,43 +438,8 @@ sub uri2file
 }
 
 
-#######################################################################
-#
-#=head2 uri2file_create
-#
-#  $site->uri2file_create( $url, $params )
-#
-#Same as L<Para::Frame::Request/uri2file>_create, but looks up the file for
-#the current site.
-#
-#We will use the current request or create a new request if the sites
-#doesn't match.
-#
-#=cut
-#
-#sub uri2file_create
-#{
-#    my( $site ) = shift;
-#
-#    my $req = $Para::Frame::REQ;
-#    my $req_site = $req->site;
-#
-#    if( $site->equals($req_site) )
-#    {
-#	return $req->uri2file_create(@_);
-#    }
-#    else
-#    {
-#	my $args = {};
-#	$args->{'site'} = $site;
-#	return $req->new_subrequest($args,
-#				    \&Para::Frame::Request::uri2file,
-#				    @_ );
-#    }
-#}
-#
-#
-#######################################################################
+#######################################################
+
 
 =head2 home
 
@@ -490,6 +467,8 @@ sub home
 	return $_[0]->{'home'};
     }
 }
+
+#######################################################
 
 =head2 home_url_path
 
@@ -537,6 +516,8 @@ sub last_step
     return $_[0]->{'last_step'};
 }
 
+#######################################################
+
 =head2 loadpage
 
   $site->loadpage
@@ -556,6 +537,8 @@ sub loadpage
     return $_[0]->home_url_path .
       ( $_[0]->{'loadpage'} || "/pf/loading.html" );
 }
+
+#######################################################
 
 =head2 login_page
 
@@ -579,6 +562,8 @@ sub login_page
 	$_[0]->home_url_path.'/';
 }
 
+#######################################################
+
 =head2 logout_page
 
   $site->logout_page
@@ -596,6 +581,8 @@ sub logout_page
     return $_[0]->{'logout_page'} ||
 	$_[0]->home_url_path.'/';
 }
+
+#######################################################
 
 =head2 host
 
@@ -624,6 +611,8 @@ sub host
     return $_[0]->webhost;
 }
 
+#######################################################
+
 =head2 webhost
 
   $site->webhost
@@ -636,6 +625,8 @@ sub webhost
 {
     return $_[0]->{'webhost'} || fqdn();
 }
+
+#######################################################
 
 =head2 scheme
 
@@ -655,8 +646,7 @@ sub scheme
     return "http";
 }
 
-=cut
-
+#######################################################
 
 =head2 loopback
 
@@ -677,6 +667,8 @@ sub loopback
     return $_[0]->{'loopback'} || $_[0]->home_url_path.'/';
 }
 
+#######################################################
+
 =head2 backup_host
 
   $site->backup_host
@@ -691,6 +683,8 @@ sub backup_host
 {
     return $_[0]->{'backup_host'};
 }
+
+#######################################################
 
 =head2 host_without_port
 
@@ -707,6 +701,8 @@ sub host_without_port
     $webhost =~ s/:\d+$//;
     return $webhost;
 }
+
+#######################################################
 
 =head2 host_with_port
 
@@ -731,6 +727,8 @@ sub host_with_port
     }
 }
 
+#######################################################
+
 =head2 port
 
   $site->port
@@ -745,6 +743,8 @@ sub port
     $webhost =~ m/:(\d+)$/;
     return $1 || 80;
 }
+
+#######################################################
 
 =head2 appbase
 
@@ -766,6 +766,8 @@ sub appbase
 
     return $site->{'appbase'} || $Para::Frame::CFG->{'appbase'};
 }
+
+#######################################################
 
 =head2 appfmly
 
@@ -798,6 +800,8 @@ sub appfmly
     return $family;
 }
 
+#######################################################
+
 =head2 approot
 
   $site->approot
@@ -815,6 +819,8 @@ sub approot
 
     return $site->{'approot'} || $Para::Frame::CFG->{'approot'};
 }
+
+#######################################################
 
 =head2 appback
 
@@ -842,6 +848,8 @@ sub appback
     return $site->{'appback'} || $Para::Frame::CFG->{'appback'};
 }
 
+#######################################################
+
 
 =head2 send_email
 
@@ -867,6 +875,8 @@ sub send_email
 
     return 1;
 }
+
+#######################################################
 
 =head2 backup_redirect
 
@@ -969,15 +979,21 @@ sub htmlsrc # src dir for precompile or for getting inc files
 	  $site->home->sys_path;
 }
 
+#######################################################
+
 sub is_compiled
 {
     return $_[0]->{'is_compiled'} || 0;
 }
 
+#######################################################
+
 sub set_is_compiled
 {
     return $_[0]->{'is_compiled'} = $_[1];
 }
+
+#######################################################
 
 =head2 equals
 
@@ -993,6 +1009,8 @@ sub equals
     return( $_[0] eq $_[1] );
 }
 
+#######################################################
+
 =head2 css
 
   $site->css
@@ -1007,6 +1025,16 @@ sub css
       Para::Frame::CSS->new($_[0]->{'css'});
 }
 
+
+#######################################################
+
+sub find_class
+{
+    return $_[0]->{'find_class'} ||
+      $Para::Frame::CFG->{'find_class'};
+}
+
+#######################################################
 
 1;
 
