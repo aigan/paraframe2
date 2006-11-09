@@ -91,6 +91,9 @@ our %Lexicon =
    'Include path is' =>
    'Sökvägen är',
 
+   'Click for calendar' =>
+   'Klicka för kalender',
+
   );
 
 1;
