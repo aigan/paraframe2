@@ -174,6 +174,7 @@ sub init
 #    $req->setup_jobs;
 #    $req->reset_response; # Needs lang and jobs
 
+    # Needs site
     $req->{'s'}       = Para::Frame->Session->new($req);
 
 
@@ -514,11 +515,6 @@ Returns the L10N language handler object.
 sub lang { return $_[0]->language }
 sub language
 {
-#    carp "Returning language obj $_[0]->{'lang'}";
-#    unless( UNIVERSAL::isa $_[0]->{'lang'},'Para::Frame::L10N')
-#    {
-#	croak "Lanugage obj of wrong type: ".datadump($_[0]->{'lang'});
-#    }
     return $_[0]->{'lang'} or croak "Language not initialized";
 }
 
@@ -2699,6 +2695,9 @@ sub handle_error
 	confess "Missing args ".datadump($args_in,2);
     }
 
+    ##################
+    debug longmess $@;
+    ##################
 
     my $part = $req->result->exception();
     my $error = $part->error;
