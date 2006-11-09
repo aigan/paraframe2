@@ -170,9 +170,9 @@ sub new
 	$page->{'moved_temporarily'} = 1;
     }
 
-    $resp->{'renderer'} = $page->renderer($args->{'renderer'}, $args);
+    $resp->{'renderer_args'} = $args;
 
-     return $resp;
+    return $resp;
 }
 
 
@@ -1115,15 +1115,16 @@ Returns: the renderer to be used, if not the standard renderer
 
 sub renderer
 {
+
 # Args are sent to new()
-#    unless( $_[0]->{'renderer'} )
-#    {
-#	my( $resp, $args ) = @_;
-#
-#	$args ||= {};
-#	my $rend = $resp->{'renderer'} = $page->renderer($args->{'renderer'}, $args);
-#	return $rend;
-#    }
+    unless( $_[0]->{'renderer'} )
+    {
+	my( $resp ) = @_;
+	my $args = $resp->{'renderer_args'} || {};
+
+	return $resp->{'renderer'}
+	    = $resp->{'page'}->renderer($args->{'renderer'}, $args);
+    }
 
     return $_[0]->{'renderer'};
 }
