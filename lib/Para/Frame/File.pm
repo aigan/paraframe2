@@ -1245,11 +1245,13 @@ sub template
 
 	if( $finder )
 	{
+	    debug sprintf "%s->find(%s)", $finder, $f->sysdesig;
 	    return $f2t->{$f} = $finder->find($f) ||
 	      Para::Frame::Template->find($f);
 	}
 	else
 	{
+	    debug sprintf "Para::Frame::Template->find(%s)", $f->sysdesig;
 	    return $f2t->{$f} = Para::Frame::Template->find($f);
 	}
     }
