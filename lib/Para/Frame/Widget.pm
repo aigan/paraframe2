@@ -697,8 +697,6 @@ Attributes:
 
   separator: adds the unescaped string between label and input tag
 
-  tdlabel: sets the separator to '<td>'
-
   id: used for label. Defaults to C<$field>
 
 All other attributes are directly added to the input tag, with the
