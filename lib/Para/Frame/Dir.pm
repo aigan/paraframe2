@@ -215,20 +215,20 @@ sub files
 	next if $name =~ $dir->{'hidden'};
 
 	$args->{$argname} = $base . $name;
-	debug "Adding $name";
+#	debug "Adding $name";
 	if( $dir->{'file'}{$name}{'directory'} )
 	{
-	    debug "  As a Dir";
+#	    debug "  As a Dir";
 	    push @list, $dir->new($args);
 	}
 	elsif( $name =~ /\.tt$/ )
 	{
-	    debug "  As a Page";
+#	    debug "  As a Page";
 	    push @list, Para::Frame::Template->new($args);
 	}
 	else
 	{
-	    debug "  As a File";
+#	    debug "  As a File";
 	    push @list, Para::Frame::File->new($args);
 	}
 

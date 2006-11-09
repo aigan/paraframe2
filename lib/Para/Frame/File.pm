@@ -323,7 +323,7 @@ sub new
     if(  my $cached = $Para::Frame::File::Cache{$file->{'sys_norm'}} )
     {
 	$Para::Frame::File::Cache{ $key } = $cached;
-	debug "---> GOT FROM CACHE";
+#	debug "---> GOT FROM CACHE";
 
 	# Upgrade with URL info if given
 	if( $file->{'url_name'} and not $cached->{'url_name'} )
@@ -1015,18 +1015,18 @@ sub vcs_version
        my $cvsdir = $dir->get('CVS');
        my $fh = new IO::File;
        my $filename = $cvsdir->sys_path.'/Entries';
-       debug "Checking $filename";
+#       debug "Checking $filename";
        $fh->open( $filename ) or die "Failed to open '$filename': $!\n";
        while(<$fh>)
        {
 	   if( m(^\/(.+?)\/(.+?)\/) )
 	   {
 	       next unless $1 eq $name;
-	       debug "  Returning $2";
+#	       debug "  Returning $2";
 	       return $2;
 	   }
        }
-       debug "  No version found";
+#       debug "  No version found";
    }
    return undef;
 }
