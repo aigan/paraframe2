@@ -170,6 +170,7 @@ sub new
 	$page->{'moved_temporarily'} = 1;
     }
 
+    # Renderer sets page to current (normalized) page
     $resp->{'renderer_args'} = $args;
 
     return $resp;
@@ -1121,6 +1122,7 @@ sub renderer
     {
 	my( $resp ) = @_;
 	my $args = $resp->{'renderer_args'} || {};
+	$args->{'page'} = $resp->page;
 
 	return $resp->{'renderer'}
 	    = $resp->{'page'}->renderer($args->{'renderer'}, $args);
