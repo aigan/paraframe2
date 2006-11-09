@@ -43,6 +43,10 @@ Calendar._SDN = new Array
  "Lør",
  "Søn");
 
+// First day of the week. "0" means display Sunday first, "1" means display
+// Monday first, etc.
+Calendar._FD = 1;
+
 // full month names
 Calendar._MN = new Array
 ("Januar",
@@ -101,8 +105,9 @@ Calendar._TT["NEXT_YEAR"] = "Neste år (hold for meny)";
 Calendar._TT["SEL_DATE"] = "Velg dato";
 Calendar._TT["DRAG_TO_MOVE"] = "Dra for å flytte";
 Calendar._TT["PART_TODAY"] = " (idag)";
-Calendar._TT["MON_FIRST"] = "Vis mandag først";
-Calendar._TT["SUN_FIRST"] = "Vis søndag først";
+
+Calendar._TT["DAY_FIRST"] = "Vis %s først";
+Calendar._TT["WEEKEND"] = "0,6";
 Calendar._TT["CLOSE"] = "Lukk";
 Calendar._TT["TODAY"] = "Idag";
 Calendar._TT["TIME_PART"] = "(Shift-)Klikk eller dra for å endre verdi";
