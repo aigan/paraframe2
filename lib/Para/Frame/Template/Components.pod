@@ -275,3 +275,14 @@ Bottom:
   b_height.png     - Forced min-height of bottom border
 		     1 × By px, transparent
 
+=head2 calendar
+  In (e.g.) header_extra.tt
+    [% INCLUDE calendar_init.tt style="$css_path" %]
+
+  In .tt
+    [% calendar($name, $value, %params) %]
+
+  Draws a calendar widget that returns the selected date to the input field specified.
+  Uses input to draw the input field, forwards input's standard parameters and also "class" and "style".
+  The field's id defaults to the fieldname.
+  Use one of the supplied css-files in /html/pf/js/calendar (either as is or as a template for a new style).
