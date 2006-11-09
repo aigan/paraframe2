@@ -125,12 +125,7 @@ sub add
 
     $extra ||= {};
 
-    unless( $req->page )
-    {
-	confess "no page";
-    }
-
-    $extra->{-path} ||= $req->page->site->home->url_path_slash;
+    $extra->{-path} ||= $req->site->home->url_path_slash;
 
     foreach my $key ( keys %$settings )
     {
@@ -178,7 +173,7 @@ sub remove
     }
 
     $extra ||= {};
-    $extra->{-path} ||= $req->page->site->home->url_path_slash;
+    $extra->{-path} ||= $req->site->home->url_path_slash;
     $extra->{-expires} ||= "-1h";
 
 
