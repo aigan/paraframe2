@@ -275,7 +275,7 @@ sub find
     my( $this, $page ) = @_;
     my $class = ref($this) || $this;
 
-    debug "Finding page ".$page->sysdesig;
+#   debug "Finding template for page ".$page->sysdesig;
 
     my $req = $Para::Frame::REQ;
 
@@ -439,7 +439,7 @@ sub precompile
     #Normalize page URL
     my $page = $dest->normalize;
 
-    my $dir = $dest->dir;
+    my $dir = $dest->dir->create($args); # With umask
 
     my $srcfile = $tmpl->sys_path;
     my $fh = new IO::File;
@@ -461,12 +461,14 @@ sub precompile
     }
 
     $rend->set_tt_params;
+#    debug "BURNING TO $destfile";
     my $res = $rend->burn( $fh, $destfile );
     $fh->close;
 
     my $error = $rend->burner->error unless $res;
 
     $dest->chmod($args);
+    $dest->reset();
 
     if( $error )
     {
