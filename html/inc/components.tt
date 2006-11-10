@@ -241,7 +241,7 @@ $content
 [% END %]
 
 [% MACRO calendar(field, value) BLOCK %]
-  [% DEFAULT value=loc('Click for calendar') %]
+  [%# DEFAULT value=loc('Click for calendar') %]
   [% DEFAULT id=field %]
   [% input( field, value, size=size, maxlength=maxlength, tdlabel=tdlabel, label=label, label_class=label_class, separator=separator, id=id, class=class, style=style) %]
   <script type="text/javascript">
