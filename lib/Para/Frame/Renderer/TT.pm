@@ -423,7 +423,7 @@ sub add_params
 		next;
 	    }
 	    $param->{$key} = $val;
-	    debug(2, "Add TT param $key: $val");
+	    debug(3, "Add TT param $key: $val");
 	}
      }
 }
