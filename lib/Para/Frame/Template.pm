@@ -137,7 +137,7 @@ sub document
 	#
 	if( my $rec = $Para::Frame::Cache::td{$tmplname} )
 	{
-	    debug("Found in MEMORY");
+#	    debug("Found in MEMORY");
 	    ( $doc, $ltime) = @$rec;
 	    if( $ltime <= $mod_time )
 	    {
@@ -157,7 +157,7 @@ sub document
 	{
 	    if( $compfile->is_plain_file )
 	    {
-		debug("Found in COMPILED file");
+#		debug("Found in COMPILED file");
 
 		my $ltime = $compfile->mtime_as_epoch;
 		if( $ltime <= $mod_time )
@@ -173,7 +173,7 @@ sub document
 		{
 		    $doc = $compfile->load_compiled();
 
-		    debug("Loading ".$compfile->sys_path);
+#		    debug("Loading ".$compfile->sys_path);
 
 		    # Save to memory cache (loadtime)
 		    $Para::Frame::Cache::td{$tmplname} =
@@ -266,7 +266,7 @@ sub sysdesig
 
 Returns:
 
-A L<Para::Frame::Template> object
+A L<Para::Frame::Template> object or undef
 
 =cut
 
@@ -287,6 +287,13 @@ sub find
 
     my $site = $page->site
       or confess sprintf "Page %s not part of a site", $page->sysdesig;
+
+    my $suffix = $page->suffix;
+    unless( $suffix )
+    {
+	return undef;
+    }
+
 
     # Reasonable default?
     my $lang = $req->language;
@@ -335,7 +342,7 @@ sub find
     }
 
     my $base_name = $page->base_name;
-    my $ext_full = '.' . $page->suffix;
+    my $ext_full = '.' . $suffix;
 
     foreach my $path ( @searchpath )
     {
