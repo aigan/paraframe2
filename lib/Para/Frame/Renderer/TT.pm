@@ -78,7 +78,7 @@ sub new
     $rend->{'params'} = {%$Para::Frame::PARAMS};
 
 
-    # Cache template
+    # Cache template -- May throw an exception -- may return undef
     my $tmpl = $rend->{'template'} = $args->{'template'} || $page->template;
 
     unless( ref $tmpl )
@@ -89,6 +89,9 @@ sub new
 	}
 	else
 	{
+	  ### FIXME
+
+
 	    my $url_path = $page->url_path;
 	    my $tried_to_find = $Para::Frame::REQ->{'tried_to_find'} ||= {};
 #	    debug datadump($tried_to_find);
@@ -116,7 +119,7 @@ sub new
 
 =head2 render_output
 
-  $p->render_output()
+  $p->render_output( $outref )
 
 Burns the page and stores the result.
 
@@ -131,7 +134,7 @@ Returns: True on success and 0 on failure
 
 sub render_output
 {
-    my( $rend ) = @_;
+    my( $rend, $outref ) = @_;
 
 #    # Maby we have a page generated already
 #    return 1 if $resp->{'content'};
@@ -146,8 +149,6 @@ sub render_output
 	confess "No page ".datadump($rend,2);
     }
 
-    my $out = "";
-
     my $site = $page->site;
     my $home = $site->home_url_path;
 
@@ -156,9 +157,7 @@ sub render_output
     my $tmpl = $rend->template;
     unless( $tmpl )
     {
-	# Set up error for later retrieval
-	$@ = Template::Exception->new('notfound', "Couldn't find a template for ".$rend->page->url_path);
-	return 0;
+	throw('notfound', "Couldn't find a template for ".$rend->page->url_path);
     }
 
     my $in = $tmpl->document;
@@ -167,16 +166,17 @@ sub render_output
     if( not $burner )
     {
 	debug "Getting '$in' as a static page";
-	$rend->get_static( $in, \$out ) or return 0;
+	$rend->get_static( $in, $outref ) or return 0;
     }
     else
     {
 	$rend->set_tt_params;
-
-	$rend->burn($in, \$out) or return 0;
+#	debug "BURNING";
+	$rend->burn($in, $outref) or return 0;
     }
 
-    return( \$out );
+#    debug "BURNING DONE";
+    return 1;
 }
 
 
