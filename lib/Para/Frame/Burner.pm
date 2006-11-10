@@ -353,7 +353,19 @@ sub burn
     my $th = shift->th();
     my $renderer = shift;
     $th->{'pf_include_path'}[0] = $renderer;
-    return $th->process(@_);
+#    debug "Burning with $th @_";
+    my $res = $th->process(@_);
+    if( $res )
+    {
+#	debug "Burning successful";
+	return $res;
+    }
+    else
+    {
+	my $err = $th->error();
+#	debug "Checking out error: ".datadump($err);
+	die( $err );
+    }
 }
 
 #######################################################################
@@ -363,6 +375,8 @@ sub burn
   $burner->error
 
 Returns the L<Template::Exception> from the burning, if any.
+
+# TODO: Take care of result early, and save the info
 
 =cut
 
