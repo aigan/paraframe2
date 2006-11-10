@@ -773,7 +773,7 @@ sub set_site
 		    debug "Host mismatch";
 		    debug "orig site: $orig_name";
 		    debug "New name : $site_name";
-		    confess "set_site called";
+#		    confess "set_site called";
 		}
 	    }
 	}
