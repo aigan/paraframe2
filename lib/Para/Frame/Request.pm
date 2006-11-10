@@ -133,9 +133,6 @@ sub new
         in_loadpage    => 0,              ## client uses loadpage
     }, $class;
 
-    # Cache uri2file translation
-    $req->uri2file( $orig_url_string, $orig_filename, $req);
-
     # Log some info
     warn "# http://".$req->http_host."$orig_url_string\n";
 
@@ -568,6 +565,14 @@ sub response
 
 #######################################################################
 
+sub response_if_existing
+{
+    return $_[0]->{'resp'};
+}
+
+
+#######################################################################
+
 
 =head2 page
 
@@ -818,7 +823,8 @@ sub uri2file
 
     if( $file )
     {
-#	debug "Storing URI2FILE in key $key: $file";
+#	confess "DEPRECATED";
+	debug "Storing URI2FILE in key $key: $file";
 	return $URI2FILE{ $key } = $file;
     }
 
@@ -833,79 +839,35 @@ sub uri2file
 #    warn "    From client\n";
     $file = $req->get_cmd_val( 'URI2FILE', $url );
 
-    $url =~ /\/([^\/\?]*)\/?(\?.*)?$/ or
-      confess "url doesn't start with slash: $url";
-    my( $last_part ) = $1;
-
-#    debug "Comparing $file with $url ($last_part)"; ### DEBUG
-
-    unless( $file =~ /$last_part\/?(\?.*)?$/ )
-    {
+#    $url =~ /\/([^\/\?]*)\/?(\?.*)?$/ or
+#      confess "url doesn't start with slash: $url";
+#    my( $last_part ) = $1;
+#
+##    debug "Comparing $file with $url ($last_part)"; ### DEBUG
+#
+#    unless( $file =~ /$last_part\/?(\?.*)?$/ )
+#    {
 #	debug "  NO MATCH ($file !~ $last_part\$)";
-	if( $may_not_exist )
-	{
-	    # Extrapolate the file from url
-	    my( $dirstr, $endstr ) = $url =~ /(.*\/)([^\/]+)\/?$/;
+#	if( $may_not_exist )
+#	{
+#	    # Extrapolate the file from url
+#	    my( $dirstr, $endstr ) = $url =~ /(.*\/)([^\/]+)\/?$/;
 #	    debug "  Splitting $url in $dirstr + $endstr";
-	    $file = $req->uri2file( $dirstr, undef, 1 ) . '/' . $endstr;
-	}
-	else
-	{
-	    throw('notfound', longmess "Path $file doesn't match $url ($last_part)");
-	}
-    }
+#	    $file = $req->uri2file( $dirstr, undef, 1 ) . '/' . $endstr;
+#	}
+#	else
+#	{
+#	    throw('notfound', longmess "Path $file doesn't match $url ($last_part)");
+#	}
+#    }
+
+    # To be backward compatible, remove the last slash from client
+    # response
+    #
+    $file =~ s/\/$//;
 
 #    debug(0, "Storing URI2FILE in key $key: $file");
     $URI2FILE{ $key } = $file;
-    return $file;
-}
-
-
-#######################################################################
-
-=head2 uri2file_create - DEPRECATED
-
-  $req->uri2file_create( $url, $params )
-
-The same as L</uri2file> but creates the directory path if it's
-missing.  It will not create the actual file.
-
-C<$params> will be sent to L<Para::Frame::Utils/create_dir>. If undef,
-defaults to the umask 002.
-
-Returns the result from L</uri2file>.
-
-=cut
-
-sub uri2file_create
-{
-    confess "Deprecated";
-
-    my( $req, $url, $params ) = @_;
-
-    unless( $params )
-    {
-	$params =
-	{
-	 umask => 002,
-	};
-    }
-
-    my $safecnt = 0;
-    $url =~ /\/([^\/\?]*)\/?(\?.*)?$/ or
-      confess "url doesn't start with slash: $url";
-    my( $last_part ) = $1;
-    my $file = $req->uri2file( $url, undef, 1 );
-#    debug "Comparing $file with $url ($last_part)"; ### DEBUG
-
-    while( $file !~ /$last_part\/?(\?.*)?$/ )
-    {
-	die "Loop" if $safecnt++ > 100;
-	debug "  Creating dir $file with params ".datadump($params);
-	create_dir($file, $params);
-	$file = $req->uri2file($url, undef, 1);
-    }
-
     return $file;
 }
 
@@ -2507,7 +2469,7 @@ sub set_response
 	$resp = $req->{'resp'}; # Changed in handle_error
     }
 
-    debug "Response set to ".$resp->desig;
+#    debug "Response set to ".$resp->desig;
     return $resp;
 }
 
@@ -2684,7 +2646,7 @@ sub handle_error
     {
 	$url = $resp->page->url_path_slash;
 	$site = $resp->page->site;
-	$rend = $resp->renderer;
+	$rend = $resp->renderer_if_existing;
     }
     elsif( $url = $args_in->{'url'} )
     {
@@ -2696,7 +2658,7 @@ sub handle_error
     }
 
     ##################
-    debug longmess $@;
+    debug $@;
     ##################
 
     my $part = $req->result->exception();
@@ -2781,7 +2743,7 @@ sub handle_error
 
 
     # Avoid recursive failure
-    if( $resp )
+    if( $resp and $resp->renderer_if_existing )
     {
 	if( my $tmpl = $resp->renderer->template )
 	{
