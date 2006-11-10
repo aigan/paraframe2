@@ -178,35 +178,40 @@ sub new
 	if( -d $sys_name or
 	    UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
 	{
-	    unless( -d $sys_name )
+	    if( -d $sys_name )
 	    {
-		croak "The file $sys_name is not a dir";
-	    }
-
-	    unless( UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
-	    {
-		unless( $class eq 'Para::Frame::File' )
+		$sys_norm = $sys_name . '/';
+		if( $url_name )
 		{
-		    croak "The file $sys_name is a dir (not a $class)";
+		    $url_norm = $url_name . '/';
 		}
 
-		bless $file, 'Para::Frame::Dir';
+		unless( UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
+		{
+		    unless( $class eq 'Para::Frame::File' )
+		    {
+			croak "The file $sys_name is a dir (not a $class)";
+		    }
+		    bless $file, 'Para::Frame::Dir';
+		}
 	    }
-
-	    $sys_norm = $sys_name . '/';
-	    if( $url_name )
+	    else
 	    {
-		$url_norm = $url_name . '/';
+	        cluck"The file $sys_name is not a dir";
+		bless $file, 'Para::Frame::File';
 	    }
 	}
-	else
+
+	unless( -d $sys_name )
 	{
+	    $sys_name =~ s/\/$//;
 	    $sys_norm = $sys_name;
 
 	    # Compare with $url_norm
 	    if( $url_norm and $url_norm =~ /\/$/ )
 	    {
-		croak "The URL  $url_norm is not a dir";
+		cluck "The URL $url_norm is not a dir";
+		$url_norm =~ s/\/$//;
 	    }
 	}
 
@@ -566,6 +571,9 @@ params:
 none
 
 Returns
+
+May not return a dir. It may be another type of file in the case then
+this file was hypothetical.
 
 A L<Para::Frame::Dir>
 
@@ -1227,6 +1235,14 @@ sub target_without_lang
 
 #######################################################################
 
+=head2 template
+
+Returns:
+
+A L<Para::Frame::Template> object or undef
+
+=cut
+
 sub template
 {
     my( $f ) = @_;
@@ -1245,13 +1261,13 @@ sub template
 
 	if( $finder )
 	{
-	    debug sprintf "%s->find(%s)", $finder, $f->sysdesig;
+#	    debug sprintf "%s->find(%s)", $finder, $f->sysdesig;
 	    return $f2t->{$f} = $finder->find($f) ||
 	      Para::Frame::Template->find($f);
 	}
 	else
 	{
-	    debug sprintf "Para::Frame::Template->find(%s)", $f->sysdesig;
+#	    debug sprintf "Para::Frame::Template->find(%s)", $f->sysdesig;
 	    return $f2t->{$f} = Para::Frame::Template->find($f);
 	}
     }
@@ -1473,7 +1489,10 @@ sub dirsteps
     {
 	my( $f ) = @_;
 
+	# I'ts possible ->dir returns an ordinary file. In that case,
+	# fake it;
 	my $path_full = $f->dir->sys_path_slash;
+	$path_full =~ s/\/?$/\//; # Just in case...
 
 	my $path_home = $f->site->home->sys_path;
 	debug 3, "Setting dirsteps for $path_full";
