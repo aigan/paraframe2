@@ -2012,13 +2012,16 @@ sub set_site
     {
 	if( my $orig = $req->original )
 	{
-	    unless( $orig->site->host eq $site->host )
+	    my $orig_site = $orig->site;
+	    unless( $orig_site->host eq $site->host )
 	    {
 		my $site_name = $site->name;
-		my $orig_name = $orig->site->name;
+		my $site_host = $site->host;
+		my $orig_name = $orig_site->name;
+		my $orig_host = $orig_site->host;
 		debug "Host mismatch";
-		debug "orig site: $orig_name";
-		debug "New name : $site_name";
+		debug "orig site: $orig_host -> $orig_name";
+		debug "New name : $site_host -> $site_name";
 		confess "set_site called";
 	    }
 	}
@@ -2027,10 +2030,11 @@ sub set_site
 	    unless( $site->host eq $req->host_from_env )
 	    {
 		my $site_name = $site->name;
+		my $site_host = $site->host;
 		my $req_site_name = $req->host_from_env;
 		debug "Host mismatch";
 		debug "Req site : $req_site_name";
-		debug "New name : $site_name";
+		debug "New name : $site_host -> $site_name";
 		confess "set_site called";
 	    }
 	}
