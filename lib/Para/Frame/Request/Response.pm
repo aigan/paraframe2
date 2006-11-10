@@ -1101,7 +1101,7 @@ sub equals
 
 sub set_content
 {
-    $_[0]->{'content'} = $_[1];
+    return $_[0]->{'content'} = $_[1];
 }
 
 #######################################################################
@@ -1133,19 +1133,37 @@ sub renderer
 
 #######################################################################
 
+sub renderer_if_existing
+{
+    return $_[0]->{'renderer'};
+}
+
+#######################################################################
+
 sub render_output
 {
     my( $resp ) = @_;
 
-    my $renderer = $resp->renderer;
-#    debug "Renderer is $renderer";
-
-    if( my $content = $renderer->render_output() )
+    return eval
     {
-	$resp->set_content( $content );
-	return $content;
-    }
+#	debug "Rendering output";
+	# May throw exceptions
+	my $renderer = $resp->renderer;
+#	debug "Using renderer $renderer";
+	my $content = "";
 
+	# May throw exceptions -- May return false
+	if( $renderer->render_output(\$content) )
+	{
+#	    debug "Storing content";
+	    $resp->set_content( \$content );
+#	    debug "Returning true";
+	    return 1;
+	}
+#	debug "Returning false";
+	return 0;
+    };
+#    debug "Got an error";
     return 0;
 }
 
