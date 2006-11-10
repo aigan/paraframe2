@@ -1,5 +1,4 @@
 #!/usr/bin/perl -w
-
 #  $Id$  -*-cperl-*-
 package Para::Frame::Client;
 #=====================================================================
@@ -546,9 +545,7 @@ sub get_response
 		# Get filename for this URI
 		elsif( $code eq 'URI2FILE' )
 		{
-		    my $uri = $row;
-		    my $sr = $r->lookup_uri($uri);
-		    my $file = $sr->filename;
+		    my $file = uri2file($row);
 		    send_to_server( 'RESP', \$file );
 		}
 		# Get response of Apace Request command execution
@@ -681,6 +678,7 @@ sub get_response
 
 sub send_loadpage
 {
+    # Must be existing page...
     my $sr = $r->lookup_uri($LOADPAGE_URI);
     my $filename = $sr->filename;
     if( open IN, $filename )
@@ -798,6 +796,12 @@ sub send_message_waiting
     {
 	send_message($msg);
     }
+}
+
+sub uri2file
+{
+    my $sr = $r->lookup_uri($_[0]);
+    return( $sr->filename.($sr->path_info||'') );
 }
 
 1;
