@@ -71,7 +71,7 @@ sub initiate
 
     unless( $dir_st )
     {
-	debug "Couldn't find $sys_path!";
+	debug "Couldn't find dir $sys_path!";
 	$dir->{'initiated'} = 0;
 	$dir->{'exist'} = 0;
 	return 0;
