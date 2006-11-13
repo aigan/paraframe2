@@ -34,6 +34,7 @@ use Number::Bytes::Human qw(format_bytes);
 use File::Slurp qw(slurp); # May export read_file, write_file, append_file, overwrite_file, read_dir
 use Cwd 'abs_path';
 use File::Copy qw(); # NOT exports copy
+use File::Remove;
 
 BEGIN
 {
@@ -90,6 +91,8 @@ sub new
 	confess "Not a string: $url_in" if ref $url_in;
 	$key = $site_in->code . $url_in;
     }
+    # Key should be the same with or without trailing slash
+    $key =~ s/\/$//;
 
     if( my $file = $Para::Frame::File::Cache{ $key } )
     {
@@ -1500,6 +1503,77 @@ sub dirsteps
 	$f->{'dirsteps'} = [ Para::Frame::Utils::dirsteps( $path_full, $path_home ) ];
     }
     return $_[0]->{'dirsteps'};
+}
+
+
+#######################################################################
+
+sub remove
+{
+    my( $f ) = @_;
+
+    my $filename = $f->sys_path;
+    debug "Removing file $filename";
+    $f->{'exist'} = 0;
+    $f->{initiated} = 0;
+    File::Remove::remove( $filename )
+	or die "Failed to remove $filename: $!";
+    return $f;
+}
+
+
+#######################################################################
+
+=head2 as_dir
+
+This should be a dir. Make it so if it isn't.
+
+Returns the file as a dir object
+
+=cut
+
+sub as_dir
+{
+    my( $f ) = @_;
+
+    my $desig = $f->desig;
+    if( ref($f) ne 'Para::Frame::File' )
+    {
+	confess "$desig dosen't seem to be a dir";
+    }
+
+    debug "Converting $desig to a dir";
+
+    unless( $f->exist )
+    {
+	$f->{'initiated'} = 0;
+	my $sys_name = $f->sys_path;
+	if( -r $sys_name )
+	{
+	    unless( -d $sys_name )
+	    {
+		confess "File $desig is not a dir";
+	    }
+	}
+
+	$f->{'url_norm'} .= '/';
+	$f->{'sys_norm'} .= '/';
+
+	bless( $f, "Para::Frame::Dir");
+	$f->initialize;
+	return $f;
+    }
+
+    my $parent = $f->dir;
+    my $name = $f->name . '/'; # A dir
+    $f->remove;
+    $f = $parent->create($name);
+    unless( $f->is_dir )
+    {
+	confess "Failed to make a dir out of $desig";
+    }
+
+    return $f;
 }
 
 

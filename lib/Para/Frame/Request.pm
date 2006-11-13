@@ -1365,6 +1365,10 @@ sub after_jobs
  	    $new_resp->output_redirection( $resp->redirection );
 	    return $req->done;
 	}
+	elsif( $resp ne $new_resp )
+	{
+	    # Let us redo the page rendering
+	}
 	elsif( $render_result )
 	{
 	    $req->cookies->add_to_header;
@@ -2423,6 +2427,51 @@ sub note
 
 #######################################################################
 
+sub set_page
+{
+    my( $req, $page_in ) = @_;
+
+    my $page_old = $req->response->page;
+    my $page_old_str = $page_old->sys_path_slash;
+    my $page_new;
+
+    if( ref $page_in )
+    {
+	$page_new = $page_in;
+    }
+    else
+    {
+	$page_new = Para::Frame::File->new({
+					    url => $page_in,
+					    site => $req->site,
+					    file_may_not_exist => 1,
+					   });
+    }
+
+    if( $page_new->sys_path_slash ne $page_old_str )
+    {
+	$req->set_response( $page_in );
+    }
+    else
+    {
+	$page_new = $page_old;
+    }
+
+    return $page_new;
+}
+
+
+#######################################################################
+
+sub set_page_path
+{
+    my( $req, $path ) = @_;
+    my $home_path = $req->site->home_url_path;
+    return $req->set_page($home_path.$path);
+}
+
+#######################################################################
+
 =head2 set_response_path
 
 =cut
@@ -2455,7 +2504,9 @@ sub set_response
 
     if( ref $url_in )
     {
-	confess "Not a string: $url_in";
+	# Assume a page obj
+	$args->{'url'} = $url_in->url_path_slash;
+	$args->{'site'} = $url_in->site;
     }
 
     eval

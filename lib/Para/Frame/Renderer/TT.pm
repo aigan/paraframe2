@@ -160,6 +160,12 @@ sub render_output
 	throw('notfound', "Couldn't find a template for ".$rend->page->url_path);
     }
 
+    unless( ref $tmpl eq 'Para::Frame::Template' )
+    {
+	confess "$tmpl is not a template";
+    }
+
+
     my $in = $tmpl->document;
 
     my $burner = $rend->burner;
