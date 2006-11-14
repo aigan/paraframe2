@@ -492,8 +492,16 @@ sub page
 
 #######################################################################
 
+=head2 template
+
+May not be defined
+
+=cut
+
 sub template
 {
+
+#    debug "Returning template ".$_[0]->{'template'}->sysdesig;
     return $_[0]->{'template'};
 }
 
