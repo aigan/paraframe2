@@ -88,16 +88,29 @@ sub new
     else
     {
 	confess "Missing site" unless $site_in;
-	confess "Not a string: $url_in" if ref $url_in;
+	if( ref $url_in )
+	{
+	    $url_in = $url_in->url_path_slash;
+	}
 	$key = $site_in->code . $url_in;
     }
     # Key should be the same with or without trailing slash
     $key =~ s/\/$//;
 
-    if( my $file = $Para::Frame::File::Cache{ $key } )
+ SHORTCUT:
     {
-#	debug "Found cached file ".$file->sysdesig;
-	return $file;
+	if( my $file = $Para::Frame::File::Cache{ $key } )
+	{
+	    if( $class ne 'Para::Frame::File' )
+	    {
+		if( ref($file) ne $class )
+		{
+		    debug "Stored file not of the right class";
+		    last SHORTCUT;
+		}
+	    }
+	    return $file;
+	}
     }
 
 #    debug "--------> CREATING file $key";
@@ -326,12 +339,10 @@ sub new
 	}
     }
 
-    $file->initialize( $args );
-
-    if(  my $cached = $Para::Frame::File::Cache{$file->{'sys_norm'}} )
+    if(  my $cached = $Para::Frame::File::Cache{$file->{'sys_name'}} )
     {
 	$Para::Frame::File::Cache{ $key } = $cached;
-#	debug "---> GOT FROM CACHE";
+	debug "---> GOT FROM CACHE";
 
 	# Upgrade with URL info if given
 	if( $file->{'url_name'} and not $cached->{'url_name'} )
@@ -343,13 +354,29 @@ sub new
 	    $cached->{'site'}     = $file->{'site'};
 	}
 
+	if( ref($file) ne ref($cached) )
+	{
+	    my $class_from = ref($cached);
+	    my $class_to   = ref($file);
+	    debug "Changing class of cached file from $class_from to $class_to";
+
+	    # In case of dir
+	    $cached->{'url_norm'} = $file->{'url_norm'};
+	    $cached->{'sys_norm'} = $file->{'sys_norm'};
+	    bless( $cached, ref($file) );
+	}
+
+	$cached->{'initiated'} = 0;
+
 	$file = $cached;
     }
     else
     {
-	$Para::Frame::File::Cache{$file->{'sys_norm'}} =
+	$Para::Frame::File::Cache{$file->{'sys_name'}} =
 	  $Para::Frame::File::Cache{ $key } = $file;
     }
+
+    $file->initialize( $args );
 
 #    debug "CREATED ".$file->sysdesig;
 
@@ -1254,7 +1281,7 @@ sub template
     #
     #Cache within a req
 
-#    debug "Looking for template for $f ".$f->sysdesig;
+#    debug "Looking for template for ".$f->sysdesig;
 
     my $f2t = $Para::Frame::REQ->{'file2template'} ||= {};
     unless( $f2t->{$f} )
@@ -1264,13 +1291,13 @@ sub template
 
 	if( $finder )
 	{
-#	    debug sprintf "%s->find(%s)", $finder, $f->sysdesig;
+	    debug sprintf "%s->find(%s)", $finder, $f->sysdesig;
 	    return $f2t->{$f} = $finder->find($f) ||
 	      Para::Frame::Template->find($f);
 	}
 	else
 	{
-#	    debug sprintf "Para::Frame::Template->find(%s)", $f->sysdesig;
+	    debug sprintf "Para::Frame::Template->find(%s)", $f->sysdesig;
 	    return $f2t->{$f} = Para::Frame::Template->find($f);
 	}
     }
