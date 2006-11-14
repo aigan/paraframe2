@@ -1606,6 +1606,48 @@ sub as_dir
 
 #######################################################################
 
+=head2 as_template
+
+This should be a Template. Make it so if it isn't.
+
+Returns the file as a template object
+
+=cut
+
+sub as_template
+{
+    my( $f ) = @_;
+
+    my $desig = $f->desig;
+    if( ref($f) ne 'Para::Frame::File' )
+    {
+	confess "$desig dosen't seem to be a template";
+    }
+
+    debug "Converting $desig to a template";
+
+    unless( $f->exist )
+    {
+	my $sys_name = $f->sys_path;
+	if( -r $sys_name )
+	{
+	    if( -d $sys_name )
+	    {
+		confess "File $desig is a dir";
+	    }
+	}
+    }
+
+    $f->{'initiated'} = 0;
+    bless( $f, "Para::Frame::Template");
+    $f->initialize;
+
+    return $f;
+}
+
+
+#######################################################################
+
 
 1;
 
