@@ -539,7 +539,7 @@ sub get_next
 
 #	debug_query("AFTER");
 
-	$page->set_response_page( $step->path );
+	$req->set_response( $step->path );
 	$req->setup_jobs; # Takes care of any run keys in query string
 	$req->add_job('after_jobs');
 
@@ -550,7 +550,7 @@ sub get_next
 	debug(1,"!!  No more steps in route");
 	debug 1, "!!    Using default step, breaking path";
 	$q->delete_all;
-	$page->set_response_page($default);
+	$req->set_response($default);
     }
     else
     {
@@ -563,7 +563,7 @@ sub get_next
 	else
 	{
 	    debug 1, "!!    Using default step";
-	    $page->set_response_page($default);
+	    $req->set_response($default);
 	}
 
     }
@@ -631,7 +631,7 @@ sub skip_step
 
     $dest ||= $route->default || $page->site->home->url_path_slash;
 
-    $page->set_response_page($dest);
+    $req->set_response($dest);
 }
 
 
