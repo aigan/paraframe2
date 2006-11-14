@@ -2811,9 +2811,12 @@ sub handle_error
 	}
     }
 
+    # default URL
+    $url ||= $site->home->get_virtual($error_tt);
+
     my $args =
     {
-     'template' => $req->site->home->get_virtual($error_tt)->template,
+     'template' => $site->home->get_virtual($error_tt)->template,
      'is_error_response' => 1,
      'req' => $req,
      'url' => $url,
