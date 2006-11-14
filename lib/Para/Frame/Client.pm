@@ -492,7 +492,7 @@ sub get_response
 		    {
 			send_message("\nServer vanished!");
 			sleep 3;
-			send_reload($r->uri);
+			send_reload($r->uri, "Retrying...");
 		    }
 		    last;
 		}
@@ -707,8 +707,10 @@ sub send_loadpage
 
 sub send_reload
 {
-    my( $url ) = @_;
-    send_message("Page Ready!");
+    my( $url, $message ) = @_;
+
+    $message ||= "Page Ready!";
+    send_message($message);
 
     warn "$$: Telling browser to reload page\n";
 
