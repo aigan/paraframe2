@@ -18,7 +18,7 @@ package Para::Frame::Action::user_login;
 
 use strict;
 
-use Para::Frame::Utils qw( throw passwd_crypt debug );
+use Para::Frame::Utils qw( throw passwd_crypt debug datadump );
 
 sub handler
 {
@@ -28,9 +28,9 @@ sub handler
 
     # Validation
     #
-    my $username = $q->param('username')
+    my $username = join('',$q->param('username'))
 	or throw('incomplete', "Namn saknas\n");
-    my $password = $q->param('password') || "";
+    my $password = join('',$q->param('password')) || "";
     my $remember = $q->param('remember_login') || 0;
 
     $password or throw('incomplete', "Ange lösenord också");
