@@ -2796,6 +2796,7 @@ sub handle_error
 	$error_tt = '/error.tt';
     }
 
+    my $error_tt_template = $site->home->get_virtual($error_tt)->template;
 
     # Avoid recursive failure
     if( $resp and $resp->renderer_if_existing )
@@ -2803,7 +2804,8 @@ sub handle_error
 	if( my $tmpl = $resp->renderer->template )
 	{
 	    debug sprintf "Comparing %s with %s", $tmpl->path, $error_tt;
-	    if($tmpl->path eq $error_tt ) # Same error page again?
+	    # Same error page again?
+	    if($tmpl->path eq $error_tt_template->path )
 	    {
 		$resp->set_content( $resp->fallback_error_page );
 		return 1;
@@ -2816,7 +2818,7 @@ sub handle_error
 
     my $args =
     {
-     'template' => $site->home->get_virtual($error_tt)->template,
+     'template' => $error_tt_template,
      'is_error_response' => 1,
      'req' => $req,
      'url' => $url,
