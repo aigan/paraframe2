@@ -1330,6 +1330,9 @@ sub handle_request
 	    }
 	    else
 	    {
+		# We must deliver the session cookie. It is needed by
+		# future loadpages!
+
 		debug "This is the first request in this session";
 	    }
 
