@@ -1274,14 +1274,14 @@ sub handle_request
     #################
 
     $req->init;
-
+    my $session = $req->session;
 
 
  RESPONSE:
     {
 	### Redirected from another page?
 	my $key = $req->original_url_string;
-	if( $req->session->{'page_result'}{ $key } )
+	if( $session->{'page_result'}{ $key } )
 	{
 	    $req->send_stored_result;
 	}
@@ -1295,20 +1295,20 @@ sub handle_request
 
 	    ### Debug info
 	    my $t = now();
-	    my $s = $req->s;
-	    warn sprintf("# %s %s - %s\n# Sid %s - Uid %d - debug %d\n",
+	    warn sprintf("# %s %s - %s\n# Sid %s - %d - Uid %d - debug %d\n",
 			 $t->ymd,
 			 $t->hms('.'),
 			 $req->client_ip,
-			 $s->id,
-			 $s->u->id,
-			 $s->{'debug'},
+			 $session->id,
+			 $session->count,
+			 $session->u->id,
+			 $session->{'debug'},
 			);
 	    warn "# $client\n" if debug() > 4;
 
 	    $req->setup_jobs;
 	    $req->reset_response; # Needs lang and jobs
-	    $req->session->route->init;
+	    $session->route->init;
 
 	    my $resp = $req->response;
 	    if( my $client_time = $req->http_if_modified_since )
@@ -1323,7 +1323,16 @@ sub handle_request
 		}
 	    }
 
-	    $req->send_code('USE_LOADPAGE', $req->site->loadpage, 2, $REQNUM);
+	    # Do not send loadpage if we didn't got a session object
+	    if( $session->count )
+	    {
+		$req->send_code('USE_LOADPAGE', $req->site->loadpage, 2, $REQNUM);
+	    }
+	    else
+	    {
+		debug "This is the first request in this session";
+	    }
+
 	    $req->after_jobs;
 	}
     }
