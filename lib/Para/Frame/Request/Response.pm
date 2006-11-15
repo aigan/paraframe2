@@ -519,7 +519,6 @@ sub send_output
 
     if( debug > 2 )
     {
-#	debug(0,"Sending output to ".$page->orig_url_path);
 	debug(0,"Sending the page ".$page->url_path);
 	unless( $req->error_page_not_selected )
 	{
@@ -542,12 +541,6 @@ sub send_output
 	debug "!!! $url_in ne $url_out";
 	$resp->forward($url_out);
     }
-#    elsif( $req->error_page_not_selected and
-#	$url ne $page->url_path_slash )
-#    {
-#	debug "!!! $url ne ".$page->url_path_slash;
-#	$page->forward();
-#    }
     else
     {
 	my $sender = $resp->sender;
@@ -614,6 +607,7 @@ sub send_output
 	    }
 	    if( $result eq 'LOADPAGE' )
 	    {
+		debug "Got Loadpage during send_output...";
 		$req->session->register_result_page($resp);
 		$req->send_code('PAGE_READY', $page->url->as_string);
 	    }
