@@ -737,7 +737,7 @@ sub input
     my $separator = delete($params->{'separator'}) || '';
     if( my $tdlabel = delete $params->{'tdlabel'} )
     {
-	$separator = "<td>";
+	$separator = "</td><td>";
 	$params->{'label'} = $tdlabel;
     }
     if( my $label = delete $params->{'label'} )
@@ -798,6 +798,8 @@ Attributes:
 
   label: draws a label before the field with the given text
 
+  tdlabel: Sets C<label> and separates it with a C<td> tag.
+
   label_class: Adds a class to the C<label> tag
 
   separator: adds the unescaped string between label and input tag
@@ -833,6 +835,11 @@ sub textarea
     my $extra = "";
     my $prefix = "";
     my $separator = delete $params->{'separator'} || '';
+    if( my $tdlabel = delete $params->{'tdlabel'} )
+    {
+	$separator = "</td><td>";
+	$params->{'label'} = $tdlabel;
+    }
     if( my $label = delete $params->{'label'} )
     {
 	my $id = $params->{id} || $key;
