@@ -1323,6 +1323,8 @@ sub handle_request
 		}
 	    }
 
+	    # TODO: Do not use loadpage for non-html mimetypes
+
 	    # Do not send loadpage if we didn't got a session object
 	    if( $session->count )
 	    {

@@ -678,6 +678,25 @@ sub get_response
 
 sub send_loadpage
 {
+
+    # TODO: In order for not getting mixups then one session has
+    # several loadpages for the same URL, we must differentiate them
+    # with the request number.  The best way to do this is to redirect
+    # the browser to the loadpage with the reqnumber in the URL. Then
+    # the original page is reloadad the reqnumber will be found in the
+    # referer and can be used to return the right generated page.
+
+    # We must handle the case then paraframe fails. That should prompt
+    # the client to resend the request again, to the reborn demon or
+    # to a backup demon. -- In order to resend the request, we must
+    # keep the POST data. But if the client returns a ref to a
+    # loadpage, the POST data will be lost.
+
+    # On the other hand. In case of a crash, we should probably notify
+    # the daemon that, in the case of posts, the visitor should retry
+    # the action in the new session.
+
+
     # Must be existing page...
     my $sr = $r->lookup_uri($LOADPAGE_URI);
     my $filename = $sr->filename;
@@ -718,6 +737,7 @@ sub send_reload
     # self.location.replace('$url');
 
     $r->print("<script type=\"text/javascript\">window.location.href='$url';</script>");
+#    $r->print("<script type=\"text/javascript\">self.location.replace('$url');</script>");
     $r->rflush;
 }
 
