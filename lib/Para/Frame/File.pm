@@ -72,7 +72,7 @@ sub new
 {
     my( $this, $args ) = @_;
     my $class = ref($this) || $this;
-    my $req = $Para::Frame::req;
+    my $req = $Para::Frame::REQ;
 
     $args ||= {};
 
@@ -297,7 +297,27 @@ sub new
 	# Place in site based on sys_path
 #	debug "Try to place in site";
 
-	foreach my $site_maby ( values %Para::Frame::Site::DATA )
+	# If we are going to check all the registred sites, we must be
+	# sure that those sites realy are handled by this paraframe
+	# server and that they are set up correctly. If not; we will
+	# get dangling subrequests and this request will freeze.
+
+	# TODO: Check all registred sites at startup to make sure that
+	# they are functional.
+
+	my @check_sites = ();
+	if( $Para::Frame::CFG->{'site_autodetect'} )
+	{
+	    @check_sites = values %Para::Frame::Site::DATA;
+	}
+
+	if( my $req_site = $req->site )
+	{
+	    # Check current site first
+	    unshift @check_sites, $req_site;
+	}
+
+	foreach my $site_maby ( @check_sites )
 	{
 	    my $sys_home = $site_maby->home->sys_path_slash;
 #	    debug "Checking $sys_home";
