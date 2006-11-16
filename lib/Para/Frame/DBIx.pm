@@ -1,4 +1,4 @@
-#  $Id$  -*-perl-*-
+#  $Id$  -*-cperl-*-
 package Para::Frame::DBIx;
 #=====================================================================
 #
@@ -160,7 +160,7 @@ sub new
 	$connect = [$connect] unless ref $connect eq 'ARRAY';
 
 	# Default DBI options
-	$connect->[3] ||= 
+	$connect->[3] ||=
 	{
 	    RaiseError => 1,
 	    ShowErrorStatement => 1,
@@ -235,7 +235,7 @@ sub new
 
 #				      confess("-- rollback...");
 
-			      if( $dbix->dbh->err() )
+			      if( $dbix->dbh and $dbix->dbh->err() )
 			      {
 				  $$inforef .= "\n". $dbix->dbh->errstr();
 				  $$typeref ||= 'dbi';
