@@ -189,11 +189,12 @@ $content
    DEFAULT label_hide_img = label_expand_img;
    DEFAULT id_label = "paraframe_fid_${global.paraframe_formcount}_label";
    DEFAULT id_block = "paraframe_fid_${global.paraframe_formcount}";
+   DEFAULT img_placement = "after";
    DEFAULT label = "";
    DEFAULT class_expand = "paraframe_imgexpand";
    DEFAULT class_expanded = "paraframe_imgexpanded";
 %]
-<span class="$class_expand" id="$id_label"><a href="javascript:showhide('$id_block')">$label <img alt="v" src="$label_expand_img"></a></span>
+<span class="$class_expand" id="$id_label"><a href="javascript:showhide('$id_block')">[% IF img_placement == "before" %]<img alt="v" src="$label_expand_img"> [% END %]$label[% UNLESS img_placement == "before" %] <img alt="v" src="$label_expand_img">[% END %]</a></span>
 <div class="$class_expanded" id='$id_block' style="display:$paraframe_display">
 $content
 </div>
