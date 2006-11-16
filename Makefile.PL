@@ -54,6 +54,7 @@ WriteMakefile(
 		  'IDNA::Punycode'             => 0.02,
 		  'Unicode::MapUTF8'           => 1.09,
 		  'Proc::ProcessTable'         => 0.39,
+	          'List::Uniq'                 => 0.10,
 		  'Test::More'                 => 0.61,
 		  'Test::Warn'                 => 0.08,
 	      },
