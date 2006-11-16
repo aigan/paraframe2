@@ -373,14 +373,11 @@ sub find
 
 	    if( $tmpl->exist )
 	    {
-		debug("Using $tmplname");
-		debug(-2);
+#		debug("Using $tmplname");
 		return $tmpl;
 	    }
 	}
-	debug(-1);
     }
-    debug(-1);
 
     # Check if site should be compiled but hasn't been yet
     #
