@@ -239,10 +239,27 @@ sub reload
 
     if( $@ )
     {
+	my $error_out = "";
+	foreach my $row ( split /\n/, $errors )
+	{
+	    next if $row =~ /^Subroutine .{1,50} redefined at/;
+	    $error_out .= "* $row\n";
+	}
+
+	if( $error_out )
+	{
+	    $error_out .= "* -----------------------\n";
+	}
+
+	foreach my $row ( split /\n/, $@ )
+	{
+	    next if $row =~ /^Compilation failed/;
+	    $error_out .= "* $row\n";
+	}
+
 	warn "*************************\n";
 	warn "****  COMPILATION FAILED: $module\n";
-	warn map "* $_\n", split /\n/, $errors;
-	warn map "* $_\n", split /\n/, $@;
+	warn $error_out;
 	warn "*************************\n";
 
 	# Set a global error state
