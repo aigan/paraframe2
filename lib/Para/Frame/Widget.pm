@@ -224,7 +224,7 @@ sub jump
     if( $template )
     {
 	return sprintf("<a href=\"%s\"%s>%s</a>",
-		       Para::Frame::Utils::uri( $template, $attr ),
+		       CGI->escapeHTML( $uri ),
 		       $extra,
 		       CGI->escapeHTML( $label ),
 		       );
