@@ -884,7 +884,8 @@ sub dirsteps
     while( length( $path ) > $length )
     {
 	push @step, $path;
-	$path =~ s/[^\/]+\/$//;
+	# May possibly be a path with '//' in it!
+	$path =~ s/[^\/]*\/$//;
     }
 
 #    debug("Returning dirsteps\n");
