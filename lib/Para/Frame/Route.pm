@@ -25,7 +25,7 @@ Para::Frame::Route - Backtracking and planning steps in a session
 use strict;
 use Data::Dumper;
 use URI::QueryParam;
-use Carp;
+use Carp qw(cluck);
 
 BEGIN
 {
@@ -440,7 +440,7 @@ sub bookmark
     # This should default to the PREVIUS page in most cases
     my $url = Para::Frame::URI->new($url_str );
 
-    debug(1,"!!Ads a bookmark ($url)");
+    debug(1,"!!Adds a bookmark ($url)");
 
 #    if( $url->query_param )
 #    {
