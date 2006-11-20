@@ -839,34 +839,13 @@ sub uri2file
 #    warn "    From client\n";
     $file = $req->get_cmd_val( 'URI2FILE', $url );
 
-#    $url =~ /\/([^\/\?]*)\/?(\?.*)?$/ or
-#      confess "url doesn't start with slash: $url";
-#    my( $last_part ) = $1;
-#
-##    debug "Comparing $file with $url ($last_part)"; ### DEBUG
-#
-#    unless( $file =~ /$last_part\/?(\?.*)?$/ )
-#    {
-#	debug "  NO MATCH ($file !~ $last_part\$)";
-#	if( $may_not_exist )
-#	{
-#	    # Extrapolate the file from url
-#	    my( $dirstr, $endstr ) = $url =~ /(.*\/)([^\/]+)\/?$/;
-#	    debug "  Splitting $url in $dirstr + $endstr";
-#	    $file = $req->uri2file( $dirstr, undef, 1 ) . '/' . $endstr;
-#	}
-#	else
-#	{
-#	    throw('notfound', longmess "Path $file doesn't match $url ($last_part)");
-#	}
-#    }
 
     # To be backward compatible, remove the last slash from client
     # response
     #
     $file =~ s/\/$//;
 
-#    debug(0, "Storing URI2FILE in key $key: $file");
+    debug(3, "Storing URI2FILE in key $key: $file");
     $URI2FILE{ $key } = $file;
     return $file;
 }
