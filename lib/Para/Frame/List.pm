@@ -395,20 +395,20 @@ sub as_list
 
 #######################################################################
 
-=head2 as_elements
+=head2 as_array
 
-  $l->as_elements()
+  $l->as_array()
 
 Similar to L<List::Object/array> and L<IO::Handle/getlines>. See also
 L</get_all> and L</as_list>.
 
 Returns:
 
-The list as a list. (Not a ref)
+The list as a list. (Not a ref) (And not realy an array either...)
 
 =cut
 
-sub as_elements
+sub as_array
 {
     unless( $_[0]->{'materialized'} > 1 )
     {
@@ -420,15 +420,15 @@ sub as_elements
 
 #######################################################################
 
-=head2 as_raw_elements
+=head2 as_raw_array
 
-  $l->as_raw_elements()
+  $l->as_raw_array()
 
 Returns the unmaterialized list as a list of elements (not ref).
 
 =cut
 
-sub as_raw_elements
+sub as_raw_array
 {
     unless( $_[0]->{'populated'} > 1 )
     {
