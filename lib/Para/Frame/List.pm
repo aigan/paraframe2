@@ -585,14 +585,17 @@ sub from_page
 
     debug 2, "From $start to $end";
 
+    my $res;
     if( $end - $start )
     {
-	return $l->slice($start, $end);
+	$res = $l->slice($start, $end);
     }
     else
     {
-	return $l->new_empty();
+	$res = $l->new_empty();
     }
+
+    return $res;
 }
 
 #######################################################################
@@ -1085,13 +1088,15 @@ sub limit
 
 The first record is returned, if defined, along with the STATUS_OK
 value.  If there is no target data, or the data is an empty set, then
-undef is returned with the STATUS_DONE value.
+undef is returned with the STATUS_DONE value as the second element in the return list.
 
 Compatible with L<Template::Iterator>. Similar to
 L<List::Object/first> and L<Class::DBI::Iterator/first>.  Not the same
 as ouer L</first>.
 
 Calls L</reset> if the iterator index isn't at the start (at -1).
+
+
 
 =cut
 
@@ -1106,9 +1111,26 @@ sub get_first
 	$l->reset;
     }
 
-    # Should only return one value
+    # Should only return all values from get_next
+    return( $l->get_next );
+}
 
-    return( ($l->get_next)[0] );
+
+
+#######################################################################
+
+=head2 get_first_element
+
+  $l->get_first_element
+
+The same as L</get_first> except that it only returns ONE value, that
+may be undef.
+
+=cut
+
+sub get_first_element
+{
+    return(($_[0]->get_first)[0]);
 }
 
 
@@ -1121,7 +1143,7 @@ sub get_first
 
 The last record is returned, if defined, along with the STATUS_OK
 value.  If there is no target data, or the data is an empty set, then
-undef is returned with the STATUS_DONE value.
+undef is returned with the STATUS_DONE value as the second element in the return list.
 
 Similar to L<List::Object/last>.  Not the same as ouer L</last>.
 
@@ -1134,6 +1156,24 @@ sub get_last
 
     $l->{'INDEX'} = $l->max + 1;
     return $l->get_prev;
+}
+
+
+
+#######################################################################
+
+=head2 get_last_element
+
+  $l->get_last_element
+
+The same as L</get_last> except that it only returns ONE value, that
+may be undef.
+
+=cut
+
+sub get_last_element
+{
+    return( ($_[0]->get_last)[0] );
 }
 
 
@@ -1184,7 +1224,7 @@ This method is implemented with L</get_next_raw> and L</materialize>.
 
 Returns
 
-The next element and a status
+The next element and a status as the two elements in the return list
 
 =cut
 
@@ -1210,6 +1250,22 @@ sub get_next
     {
 	return $elem;
     }
+}
+
+#######################################################################
+
+=head2 get_next_element
+
+  $l->get_next_element()
+
+The same as L</get_next> except that it only returns ONE value, that
+may be undef.
+
+=cut
+
+sub get_next_element
+{
+    return( ($_[0]->get_next_element)[0] );
 }
 
 #######################################################################
@@ -1267,6 +1323,10 @@ See also L</prev>.
 
 This method is implemented with L</get_prev_raw> and L</materialize>.
 
+Returns
+
+The prev element and a status as the two elements in the return list
+
 =cut
 
 sub get_prev
@@ -1290,6 +1350,22 @@ sub get_prev
     {
 	return $elem;
     }
+}
+
+#######################################################################
+
+=head2 get_prev_element
+
+  $l->get_prev_element()
+
+The same as L</get_prev> except that it only returns ONE value, that
+may be undef.
+
+=cut
+
+sub get_prev_element
+{
+    return( ($_[0]->get_prev)[0] );
 }
 
 #######################################################################
