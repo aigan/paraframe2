@@ -9,7 +9,7 @@ package Para::Frame::List;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -23,11 +23,11 @@ Para::Frame::List - Methods for list manipulation
 =cut
 
 use strict;
-use Carp qw( carp croak shortmess confess );
+use Carp qw( carp croak shortmess confess cluck );
 use Data::Dumper;
 use List::Util;
 use Template::Constants;
-
+use Scalar::Util;
 
 BEGIN
 {
@@ -36,28 +36,74 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw catch debug timediff package_to_module );
+use Para::Frame::Utils qw( throw catch debug timediff datadump );
 use Para::Frame::Widget qw( forward );
 
-our %OBJ; # Store obj info
+use overload
+  '@{}' => 'as_arrayref_by_overload',
+  'bool' => sub{carp "* Bool"; $_[0]->size},
+  '""' => 'stringify_by_overload',
+  '.' => 'concatenate_by_overload',
+#  '.' => sub{$_[0]}, # No change!
+#  '.=' => sub{$_[0]}, # No change!
+  'fallback' => 0;
 
 use base qw( Template::Iterator );
 
 =head2 DESCRIPTION
 
-The object is a ref to the list it contains. All list operations can
-be used as usual. Example:
+The object is overloaded to be used as a ref to the list it
+contains. All list operations can be used as usual. Example:
 
   my $l = Para::Frame::List->new( \@biglist );
   my $first_element = $l->[0];
   my $last_element = pop @$l;
 
-The iteration methods is compatible with L<Template::Iterator>. The
-iterator status codes are taken from L<Template::Constants>.
+The iteration methods is compatible with (and inherits from)
+L<Template::Iterator>. (The iterator status codes are taken from
+L<Template::Constants>.)
 
-NB! The method max .. ???
+=head2 BACKGROUND
 
-The object also has the following methods.
+Since L<Para::Frame> is built for use with L<Template>, it implements
+the L<Template::Iterator> class.
+
+But this class is extanded to provide more useful things. Primarely:
+
+ * Iteration
+ * Initialize list elements on demand
+ * Split list into pages
+ * Access metadata about the list
+ * Modify the list
+
+There are a large amount of diffrent implementation of iterators and
+List classes.  I will try to keep the method names clear and mention
+choises from other modules.
+
+This module is subclassable.
+
+We should implement all methods in a way that allow subclasses to only
+initiate and hold the specified used parts in memory, maby by using
+tie.
+
+
+TODO: Implement the rest of the array modification methods()
+
+TODO: Use a tied array var for overload, in order to update metadata
+on change.
+
+
+Subclasses that don't want to load the whole list in memory should
+implement:
+
+  max()
+  size()
+  get_next_raw()
+  get_prev_raw()
+
+Subclasses that want to construct the list on demand should implement:
+
+  populate_all()
 
 =cut
 
@@ -65,72 +111,120 @@ The object also has the following methods.
 
 =head2 new
 
-  $l = Para::Frame::List->new( \@list )
+  $l = $class->new( \@list )
 
-  $l = Para::Frame::List->new( \@list, \%params )
+  $l = $class->new( \@list, \%params )
 
 Availible params are:
 
   page_size      (default is 20 )
   display_pages  (default is 10 )
 
-Extra info about the object is stored in a class variable. Objects
-returned from a hash has to be recreated to register the object in the
-class variable. This will reset all the metadata.
+Compatible with L<Template::Iterator/new>.
 
-  $l = Para::Frame::List->new( $l )
+Returns:
+
+A an object blessed in C<$class>
 
 =cut
 
 sub new
 {
-    my( $this, $listref, $p ) = @_;
+    my( $this, $data_in, $args ) = @_;
     my $class = ref($this) || $this;
 
-    $listref ||= [];
-
-    if( UNIVERSAL::isa($listref, "Para::Frame::List") )
+    if( $data_in and UNIVERSAL::isa($data_in, "Para::Frame::List") )
     {
-	# For recreating an object returned from a fork
-	return $listref if $OBJ{$listref};
+	return $data_in;
     }
 
-    # Removes other things like overload
-    unless( ref $listref eq 'ARRAY' )
+#    carp "New search list WITH ".datadump($data_in);
+
+    my $data;
+    $args ||= {};
+    my $l = bless
     {
-	unless( UNIVERSAL::isa($listref, "ARRAY") )
+     'INDEX'         => -1,    # Before first element
+     'materialized'  => 0,     # 1 for partly and 2 for fully materialized
+     'materializer'  => undef,
+     '_DATA'         => undef,
+     'populated'     => 0,     # 1 for partly and 2 for fully populated
+     '_OBJ'          => undef, # the corresponding list of materalized elements
+     'limit'         => 0,
+     'page_size'     => ($args->{'page_size'} || 20 ),
+     'display_pages' => ($args->{'display_pages'} || 10),
+     'stored_id'     => undef,
+     'stored_time'   => undef,
+    }, $class;
+
+    if( $data_in )
+    {
+	# Removes other things like overload
+	if( ref $data_in eq 'ARRAY' )
 	{
-	    my $type = ref $listref;
-	    die "$type is not an array ref";
+	    $data = $data_in;
 	}
+	else
+	{
+	    unless( UNIVERSAL::isa($data_in, "ARRAY") )
+	    {
+		my $type = ref $data_in;
+		die "$type is not an array ref";
+	    }
 
-	$listref = [@$listref];
+	    $data = [@$data_in];
+	}
+#	debug "Placing DATA in listobj ".datadump($data);
+
+
+	$l->{'_DATA'} = $data;
     }
 
-    my $l = bless $listref, $class;
+    $l->init( $args );
 
-    debug 3, "Adding list obj $l";
+    if( my $mat_in =  $args->{'materializer'} )
+    {
+	# After the init
+	$l->set_materializer( $mat_in );
+    }
 
-    $p ||= {};
-
-    $p->{page_size} ||= 20;
-    $p->{display_pages} ||= 10;
-
-    $OBJ{$l} = $p;
-
-    $l->init;
+    if( $l->{'_DATA'} )
+    {
+	# After the init
+	$l->on_populate_all;
+    }
 
     return $l;
 }
 
-sub DESTROY
+
+#######################################################################
+
+=head2 new_empty
+
+=cut
+
+sub new_empty
 {
-    my( $l ) = @_;
+    my( $this ) = @_;
+    my $class = ref($this) || $this;
 
-    debug 3, "Removing list obj $l";
-    delete $OBJ{$l};
+    my $l = bless
+    {
+     'INDEX'         => -1,    # Before first element
+     'materialized'  => 2,     # 1 for partly and 2 for fully materialized
+     'materializer'  => undef,
+     '_DATA'         => [],
+     'populated'     => 2,     # 1 for partly and 2 for fully populated
+     '_OBJ'          => [], # the corresponding list of materalized elements
+     'limit'         => 0,
+     'page_size'     => 0,
+     'display_pages' => 0,
+     'stored_id'     => undef,
+     'stored_time'   => undef,
+    }, $class;
 
-    return 1;
+    return $l;
 }
 
 
@@ -141,9 +235,7 @@ sub DESTROY
   $l->init
 
 Called by L</new> for additional initializing. Subclasses can use this
-for filling the list with data or adding more properties. The object
-is an array ref of the actual list. All other properties resides in
-$Para::Frame::List::OBJ{$l}
+for filling the list with data or adding more properties.
 
 =cut
 
@@ -155,35 +247,305 @@ sub init
 
 #######################################################################
 
-=head2 hashref
-
-  $l->hashref
-
-Returns $Para::Frame::List::OBJ{$l}
+=head2 set_materializer
 
 =cut
 
-sub hashref
+sub set_materializer
 {
-    return $OBJ{$_[0]};
+    my( $l, $mat_in ) = @_;
+
+    $l->{'materializer'} = $mat_in;
+
+    $l->{'_OBJ'} = [];
+
+    return $l->{'materializer'};
 }
+
+
+#######################################################################
+
+=head2 as_arrayref
+
+  $l->as_arrayref()
+
+See also L</get_all> and L</as_list>.  Most other modules misses a
+comparable method.
+
+This method is used by the array dereferencing overload.
+
+Returns:
+
+A ref to the internal list of elements returned by
+L</materialize_all>.
+
+=cut
+
+sub as_arrayref
+{
+    unless( $_[0]->{'materialized'} > 1 )
+    {
+	return $_[0]->materialize_all;
+    }
+    return $_[0]->{'_OBJ'};
+}
+
+sub as_arrayref_by_overload
+{
+    unless( UNIVERSAL::isa($_[0],'HASH') ) ### DEBUG
+    {
+	confess "Wrong type ".datadump($_[0]);
+    }
+
+    unless( $_[0]->{'materialized'} > 1 )
+    {
+	return $_[0]->materialize_all;
+    }
+    carp "* OVERLOAD arrayref for list obj used";
+    return $_[0]->{'_OBJ'};
+}
+
+
+#######################################################################
+
+=head2 concatenate
+
+implemented concatenate_by_overload()
+
+=cut
+
+sub concatenate_by_overload
+{
+    my( $l, $str, $is_rev ) = @_;
+    carp "* OVERLOAD concatenate for list obj used";
+
+    my $lstr = $l->stringify_by_overload();
+    if( $is_rev )
+    {
+	return $str.$lstr;
+    }
+    else
+    {
+	return $lstr.$str;
+    }
+}
+
+#######################################################################
+
+=head2 stringify
+
+stringify_by_overload() method defined
+
+=cut
+
+sub stringify_by_overload
+{
+    return ref($_[0])."=".Scalar::Util::refaddr($_[0]);
+}
+
+#######################################################################
+
+=head2 as_raw_arrayref
+
+  $l->as_arrayref()
+
+Returns the internal arrayref to the unmaterialized elements.
+
+=cut
+
+sub as_raw_arrayref
+{
+    unless( $_[0]->{'populated'} > 1 )
+    {
+	return $_[0]->populate_all;
+    }
+    return $_[0]->{'_DATA'};
+}
+
 
 
 #######################################################################
 
 =head2 as_list
 
-  $l->as_list
+  $l->as_list()
 
-Same as $l in itself, except that it returns a list rather than a listref if wantarray.
+Compatible with L<Template::Iterator>.
+
+See also L</get_all> and L</elements>.
+
+Returns:
+
+Returns:
+
+A ref to the internal list of elements returned by
+L</materialize_all>.
 
 =cut
 
 sub as_list
 {
-    return wantarray ? @{$_[0]} : $_[0];
+    unless( $_[0]->{'materialized'} > 1 )
+    {
+	return $_[0]->materialize_all;
+    }
+    return $_[0]->{'_OBJ'};
 }
 
+
+#######################################################################
+
+=head2 as_elements
+
+  $l->as_elements()
+
+Similar to L<List::Object/array> and L<IO::Handle/getlines>. See also
+L</get_all> and L</as_list>.
+
+Returns:
+
+The list as a list. (Not a ref)
+
+=cut
+
+sub as_elements
+{
+    unless( $_[0]->{'materialized'} > 1 )
+    {
+	return $_[0]->materialize_all;
+    }
+    return @{$_[0]->{'_OBJ'}};
+}
+
+
+#######################################################################
+
+=head2 as_raw_elements
+
+  $l->as_raw_elements()
+
+Returns the unmaterialized list as a list of elements (not ref).
+
+=cut
+
+sub as_raw_elements
+{
+    unless( $_[0]->{'populated'} > 1 )
+    {
+	return $_[0]->populate_all;
+    }
+    return @{$_[0]->{'_DATA'}};
+}
+
+
+#######################################################################
+
+=head2 populate_all
+
+  $l->populate_all()
+
+Reimplement this if the content should be set on demand in a subclass.
+
+Returns:
+
+The raw data listref of unmateralized elements.
+
+=cut
+
+sub populate_all
+{
+    unless( $_[0]->{'populated'} > 1 )
+    {
+	$_[0]->{'_DATA'} = [];
+	$_[0]->on_populate_all;
+    }
+
+    return $_[0]->{'_DATA'};
+}
+
+#######################################################################
+
+=head2 on_populate_all
+
+  $l->on_populate_all()
+
+=cut
+
+sub on_populate_all
+{
+    my( $l ) = @_;
+
+    $l->{'_DATA'} ||= [];  # Should have been defined
+    $l->{'populated'} = 2; # Mark as fully populated
+
+    if( my $lim = $l->{'limit'} )
+    {
+	if( $lim > scalar(@{$l->{'_DATA'}}) )
+	{
+	    splice @{$l->{'_DATA'}}, 0, $lim;
+	}
+    }
+
+    unless( $l->{'materializer'} )
+    {
+#	debug "**** OBJ=DATA for ".datadump($l); ### DEBUG
+	$l->{'materialized'} = 2;
+	return $l->{'_OBJ'} = $l->{'_DATA'} ||= []; # Should have been defined
+    }
+    return  $l->{'_DATA'};
+}
+
+#######################################################################
+
+=head2 materialize_all
+
+  $l->materialize_all()
+
+If L</materializer> is set, calls it for each unmaterialized element
+and returns a ref to an array of the materialized elements
+
+In no materialization is needed, just returns the existing data as an
+array ref.
+
+=cut
+
+sub materialize_all
+{
+    if( my $level = $_[0]->{'materialized'} < 2 )
+    {
+	my( $l ) = @_;
+	$l->populate_all;
+	if( my $mat = $l->{'materializer'} )
+	{
+	    my $max = $l->max();
+	    if( $level < 1 ) # Nothing initialized
+	    {
+		my @objs;
+		for( my $i=0; $i<=$max; $i++ )
+		{
+		    push @objs, &{$mat}( $l, $i );
+		}
+		$l->{'_OBJ'} = \@objs;
+	    }
+	    else # partly initialized
+	    {
+		my $objs = $l->{'_OBJ'};
+		for( my $i=0; $i<=$max; $i++ )
+		{
+		    next if defined $objs->[$i];
+		    $objs->[$i] = &{$mat}( $l, $i );
+		}
+	    }
+	}
+	else
+	{
+#	    debug "****2 OBJ=DATA for ".datadump($l); ### DEBUG
+	    $l->{'materialized'} = 2;
+	    $l->{'_OBJ'} = $l->{'_DATA'} ||= []; # Should be defined beforee this
+	}
+    }
+    return $_[0]->{'_OBJ'};
+}
 
 #######################################################################
 
@@ -191,6 +553,8 @@ sub as_list
 
   $l->from_page( $pagenum )
   $l->from_page
+
+TODO: Use Array::Window
 
 Returns a ref to a list of elements corresponding to the given
 C<$page> based on the L</page_size>. If no C<$pagenum>
@@ -206,21 +570,139 @@ sub from_page
 
 #    @pagelist = ();
 
-    my $obj = $OBJ{$l};
-
-    if( $obj->{page_size} < 1 )
+    if( $l->{'page_size'} < 1 )
     {
 	return $l;
     }
 
-    my $start = $obj->{page_size} * ($page-1);
-    my $end = List::Util::min( $start + $obj->{page_size}, scalar(@$l))-1;
+    my $start = $l->{'page_size'} * ($page-1);
+    my $end = List::Util::max( $start,
+			       List::Util::min(
+					       $start + $l->{'page_size'},
+					       $l->size,
+					      ) -1,
+			     );
 
     debug 2, "From $start to $end";
 
-    return [ @{$l}[$start..$end] ];
-
+    if( $end - $start )
+    {
+	return $l->slice($start, $end);
+    }
+    else
+    {
+	return $l->new_empty();
+    }
 }
+
+#######################################################################
+
+=head2 slice
+
+  $l->slice( $start )
+  $l->slice( $start, $end )
+  $l->slice( $start, $end, \%args )
+
+Similar to L<Class::DBI::Iterator/slice>.
+
+Uses L</set_index> and L</get_next_raw> and L</index>.
+
+Returns:
+
+A L<Para::Frame::List> created with the same L</type>,
+L</allow_undef> and L</materializer> args.
+
+=cut
+
+sub slice
+{
+    my( $l, $start, $end, $args ) = @_;
+
+    $start ||= 0;
+
+    $args ||= {};
+    $args->{'type'} ||= $l->{'type'};
+    $args->{'allow_undef'} ||= $l->{'allow_undef'};
+    $args->{'materializer'} ||= $l->{'materializer'};
+
+    carp "Slicing $l at $start with ".datadump($args);
+    unless( $args->{'materializer'} )
+    {
+	debug "Coming from ".datadump( $l ); ### DEBUG
+    }
+
+    if( $l->{'populated'} > 1 )
+    {
+	$end ||= $l->max;
+	return Para::Frame::List->new([@{$l->{'_DATA'}}[$start..$end]], $args);
+    }
+    else
+    {
+	my @data;
+	$l->set_index( $start - 1 );
+
+	$end ||= $l->{'limit'};
+	if( $end )
+	{
+	    while( my $raw = $l->get_next_raw() )
+	    {
+		push @data, $raw;
+		last if $l->index >= $end;
+	    }
+	}
+	else
+	{
+	    while( my $raw = $l->get_next_raw() )
+	    {
+		push @data, $raw;
+	    }
+	}
+
+	return Para::Frame::List->new(\@data, $args);
+    }
+}
+
+#######################################################################
+
+=head2 set_index
+
+  $l->set_index($pos)
+
+Similar to L<Tie::Array::Iterable/set_index> and L<IO::Seekable/seek>.
+Most iterator classes doesn't have a comparable method.
+
+Valid positions range from -1 (before first element) to C<$size + 1>
+(after last element).
+
+If C<$pos> is C<-1>, calls L</reset>.
+
+=cut
+
+sub set_index
+{
+    my( $l, $pos ) = @_;
+
+    if( $pos < -1 )
+    {
+	throw('out_of_range', "Position $pos invalid");
+    }
+
+    my $max = $l->max;
+
+    if( $pos > $max + 1 )
+    {
+	throw('out_of_range', "Position $pos invalid");
+    }
+
+    if( $pos == -1 )
+    {
+	$l->reset;
+	return -1;
+    }
+
+    return $l->{'INDEX'} = $pos;
+}
+
 
 #######################################################################
 
@@ -237,24 +719,21 @@ sub store
 {
     my( $l ) = @_;
 
-    my $obj = $OBJ{$l};
-
-    unless( $obj->{'stored_id'} )
+    unless( $l->{'stored_id'} )
     {
 	my $session =  $Para::Frame::REQ->user->session;
 	my $id = $session->{'listid'} ++;
 
-	# Remove previous from cache
-	if( my $prev = delete $session->{list}{$id - 1} )
-	{
+#	# Remove previous from cache
+#	if( my $prev = delete $session->{list}{$id - 1} )
+#	{
 #	    debug "Removed $prev (".($id-1).")";
-	}
+#	}
 
-	$obj->{'stored_id'} = $id;
-	$obj->{stored_time} = time;
-#	$obj->{expire_time} = time + 60*5;
+	$l->{'stored_id'} = $id;
+	$l->{stored_time} = time;
 
-	$session->{list}{$id} = $l;
+	$session->{'list'}{$id} = $l;
 
 	debug "storing list $id";
     }
@@ -277,9 +756,7 @@ sub id
 {
     my( $l ) = @_;
 
-    my $obj = $OBJ{$l};
-
-    return $obj->{'stored_id'};
+    return $l->{'stored_id'};
 }
 
 #######################################################################
@@ -296,14 +773,12 @@ sub pages
 {
     my( $l ) = @_;
 
-    my $obj = $OBJ{$l};
-
-    if( $obj->{page_size} < 1 )
+    if( $l->{'page_size'} < 1 )
     {
 	return 1;
     }
 
-    return int( (scalar(@$l) - 1) / $obj->{page_size} ) + 1;
+    return int( $l->max / $l->{'page_size'} ) + 1;
 }
 
 #######################################################################
@@ -347,11 +822,9 @@ sub pagelist
 
     $pagenum ||= $req->q->param('table_page') || 1;
 
-    my $obj = $OBJ{$l};
-
 #    debug "Creating pagelist for $l";
 
-    my $dpages = $obj->{display_pages};
+    my $dpages = $l->{'display_pages'};
     my $pages = $l->pages;
 
     if( $pages <= 1 )
@@ -434,7 +907,7 @@ Returns the C<page_size> set for this object.
 
 sub page_size
 {
-    return $OBJ{$_[0]}{page_size};
+    return $_[0]->{'page_size'};
 }
 
 
@@ -450,7 +923,7 @@ Sets and returns the given C<$page_size>
 
 sub set_page_size
 {
-    $OBJ{$_[0]}{page_size} = int($_[1]);
+    $_[0]->{'page_size'} = int($_[1]);
     return "";
 }
 
@@ -467,7 +940,7 @@ Returns how many pages that should be listed by L</pagelist>.
 
 sub display_pages
 {
-    return $OBJ{$_[0]}{display_pages};
+    return $_[0]->{'display_pages'};
 }
 
 
@@ -481,21 +954,10 @@ Sets and returns the given L</display_pages>.
 
 sub set_display_pages
 {
-    $OBJ{$_[0]}{display_pages} = int($_[1]);
+    $_[0]->{'display_pages'} = int($_[1]);
     return "";
 }
 
-
-#######################################################################
-
-=head2 sth
-
-=cut
-
-sub sth
-{
-    return $OBJ{$_[0]}{sth};
-}
 
 #######################################################################
 
@@ -510,15 +972,15 @@ elements that isn't plain scalars.
 
 sub as_string
 {
-    my ($self) = @_;
+    my ($l) = @_;
 
-    unless( ref $self )
+    unless( ref $l )
     {
-#	warn "  returning $self\n";
-	return $self;
+#	warn "  returning $l\n";
+	return $l;
     }
 
-    my $list = $self->as_list;
+    my $list = $l->as_arrayref;
 
     my $val = "";
 
@@ -540,13 +1002,13 @@ sub as_string
     }
     else
     {
-	if( ref $self->[0] )
+	if( ref $list->[0] )
 	{
-	    $val .= $self->[0]->as_string;
+	    $val .= $list->[0]->as_string;
 	}
 	else
 	{
-	    $val .= $self->[0];
+	    $val .= $list->[0];
 	}
     }
 
@@ -556,22 +1018,46 @@ sub as_string
 
 #######################################################################
 
-=head2 size
+=head2 set_limit
 
-  $l->size
+  $l->set_limit( $limit )
 
-Returns the number of elements in this list.
+Limit the number of elements in the list.
+
+A limit of C<$limit> or C<undef> means no limit.
+
+Setting a limit smaller than the original length will make the
+elements beyond the limit unavailible, if they already was populated.
+Later setting a larger limit will not make more of the elements
+availible.
+
+The limit is applied in L</on_populate_all>, then retrieving elements
+and in L</size> and L</max>.
+
+The number of elements before the applied limit, if known, can be
+retrieved from L</original_size>.
+
+The limit may be larger than the elements in the list.
+
+Similar to L<IO::Seekable/truncate> except that it doesn't delete
+anything. Similar to limit in SQL.
+
+TODO: Check for limit on array change
+
+Returns:
+
+The limit set, or 0
 
 =cut
 
-sub size
+sub set_limit
 {
-#    my $size = scalar @{$_[0]};
-#    warn "Size is $size\n";
-#    return $size;
+    my( $l, $limit ) = @_;
 
-    return scalar @{$_[0]};
+    # TODO: Validate the value
+    return $l->{'limit'} = $limit || 0;
 }
+
 
 #######################################################################
 
@@ -579,27 +1065,15 @@ sub size
 
   $l->limit()
 
-  $l->limit( $limit )
+Returns:
 
-  $l->limit( 0 )
-
-Limit the number of elements in the list. Returns the first C<$limit>
-items.
-
-Default C<$limit> is 10.  Set the limit to 0 to get all items.
-
-Returns: A List with the first C<$limit> items.
+The current limit set by L</set_limit>
 
 =cut
 
 sub limit
 {
-    my( $list, $limit ) = @_;
-
-    $limit = 10 unless defined $limit;
-    return $list if $limit < 1;
-    return $list if $list->size <= $limit;
-    return $list->new( [@{$list}[0..($limit-1)]] );
+    return $_[0]->{'limit'} ||= 0;
 }
 
 
@@ -609,74 +1083,247 @@ sub limit
 
   $l->get_first
 
-Initialises the object for iterating through the target data set.  The
-first record is returned, if defined, along with the STATUS_OK value.
-If there is no target data, or the data is an empty set, then undef
-is returned with the STATUS_DONE value.
+The first record is returned, if defined, along with the STATUS_OK
+value.  If there is no target data, or the data is an empty set, then
+undef is returned with the STATUS_DONE value.
+
+Compatible with L<Template::Iterator>. Similar to
+L<List::Object/first> and L<Class::DBI::Iterator/first>.  Not the same
+as ouer L</first>.
+
+Calls L</reset> if the iterator index isn't at the start (at -1).
 
 =cut
 
 sub get_first
 {
     my( $l ) = @_;
-    my $obj = $OBJ{$l};
 
-    my $size = scalar @$l;
-    my $index = 0;
+#    debug "GETTING first element of list";
 
-    return (undef, Template::Constants::STATUS_DONE) unless $size;
+    if( $l->{'INDEX'} > -1 )
+    {
+	$l->reset;
+    }
 
-    # initialise various counters, flags, etc.
-    @$obj{ qw( SIZE INDEX COUNT FIRST LAST ) }
-      = ( $size, $index, 1, 1, $size > 1 ? 0 : 1, undef );
-    @$obj{ qw( PREV NEXT ) } = ( undef, $l->[ $index + 1 ]);
+    # Should only return one value
 
-    return $l->[ $index ];
+    return( ($l->get_next)[0] );
 }
 
 
 
 #######################################################################
 
+=head2 get_last
+
+  $l->get_last
+
+The last record is returned, if defined, along with the STATUS_OK
+value.  If there is no target data, or the data is an empty set, then
+undef is returned with the STATUS_DONE value.
+
+Similar to L<List::Object/last>.  Not the same as ouer L</last>.
+
+
+=cut
+
+sub get_last
+{
+    my( $l ) = @_;
+
+    $l->{'INDEX'} = $l->max + 1;
+    return $l->get_prev;
+}
+
+
+
+#######################################################################
+
+=head2 reset
+
+  $l->reset()
+
+Sets the index to C<-1>, before the first element.
+
+Similar to L<Array::Iterator::Reusable/reset>,
+L<Class::DBI::Iterator/reset>, L<Class::PObject::Iterator/reset>,
+L<Tie::Array::Iterable/from_start> and L<List::Object/rewind>.
+
+Returns:
+
+true
+
+=cut
+
+sub reset
+{
+    $_[0]->{'INDEX'} = -1;
+    return 1;
+}
+
+
+#######################################################################
+
 =head2 get_next
 
-  $l->get_next
+  $l->get_next()
 
-Called repeatedly to access successive elements in the data set.
-Should only be called after calling get_first() or a warning will
-be raised and (undef, STATUS_DONE) returned.
+Called repeatedly to access successive elements in the data set. Is
+usually called after calling L</get_first>.
+
+Compatible with L<Template::Iterator/get_next>.  Most other Iterator
+classes call this method C<next()>. But our L</next> is not the same.
+
+Similar to L<List::Object/next>, L<Array::Iterator/getNext>,
+L<Class::DBI::Iterator/next>, L<Class::PObject::Iterator/next>,
+L<Tie::Array::Iterable/next>, L<Iterator/value>,
+L<IO::Seekable/getline> and Java C<next()>.
+
+This method is implemented with L</get_next_raw> and L</materialize>.
+
+Returns
+
+The next element and a status
 
 =cut
 
 sub get_next
 {
     my( $l ) = @_;
-    my $obj = $OBJ{$l};
 
-    my( $index ) = $obj->{INDEX};
+    my( $elem, $status ) = $l->get_next_raw;
 
-    # warn about incorrect usage
-    unless( defined $index )
+    if( $status )
     {
-        my ($pack, $file, $line) = caller();
-        warn("iterator get_next() called before get_first() at $file line $line\n");
-        return( undef, Template::Constants::STATUS_DONE );   ## RETURN ##
+#	debug "GET_NEXT got a status $status";
+	return( $elem, $status );
     }
 
-    # if there's still some data to go...
-    if( $index < $#$l )
+    my $i = $l->{'INDEX'};
+    if( my $mat = $l->{'materializer'} )
     {
-        # update counters and flags
-        $index++;
-        @$obj{ qw( INDEX COUNT FIRST LAST ) }
-	  = ( $index, $index + 1, 0, $index == $#$l ? 1 : 0 );
-        @$obj{ qw( PREV NEXT ) } = @$l[ $index - 1, $index + 1 ];
-        return $l->[ $index ];                           ## RETURN ##
+	$l->{'materialized'} ||= 1;
+	return $l->{'_OBJ'}[ $i ] ||= &{$mat}( $l, $i );
     }
     else
     {
-        return (undef, Template::Constants::STATUS_DONE);   ## RETURN ##
+	return $elem;
     }
+}
+
+#######################################################################
+
+=head2 get_next_raw
+
+  $l->get_next_raw()
+
+Used as a backend for L</get_next>.
+
+Increments the index.
+
+Returns:
+
+The next element and a status
+
+=cut
+
+sub get_next_raw
+{
+    my( $l ) = @_;
+
+    my $i = ++ $l->{'INDEX'};
+    my $max = $l->max;
+#    debug "MAX is $max";
+#    debug "INDEX is $i";
+
+    if( $i > $max )
+    {
+	# Compatible with Template::Iterator
+	return(undef, Template::Constants::STATUS_DONE);   ## RETURN ##
+    }
+
+    unless( $l->{'populated'} > 1 )
+    {
+	$l->populate_all;
+    }
+
+    return $l->{'_DATA'}[$i];
+}
+
+
+#######################################################################
+
+=head2 get_prev
+
+  $l->get_prev()
+
+May be called after calling L</get_last>.
+
+Similar to L<Array::Iterator::BiDirectional/getPrevious>,
+L<Tie::Array::Iterable/prev> and Java C<previous()>.
+
+See also L</prev>.
+
+This method is implemented with L</get_prev_raw> and L</materialize>.
+
+=cut
+
+sub get_prev
+{
+    my( $l ) = @_;
+
+    my( $elem, $status ) = $l->get_prev_raw;
+
+    if( $status )
+    {
+	return( $elem, $status );
+    }
+
+    my $i = $l->{'INDEX'};
+    if( my $mat = $l->{'materializer'} )
+    {
+	$l->{'materialized'} ||= 1;
+	return $l->{'_OBJ'}[ $i ] ||= &{$mat}( $l, $i );
+    }
+    else
+    {
+	return $elem;
+    }
+}
+
+#######################################################################
+
+=head2 get_prev_raw
+
+  $l->get_prev_raw()
+
+Used as a backend for L</get_prev>.
+
+Returns:
+
+The prev element and decrement the index.
+
+=cut
+
+sub get_prev_raw
+{
+    my( $l ) = @_;
+
+    my $i = -- $l->{'INDEX'};
+
+    if( $i < 0 )
+    {
+	# Compatible with Template::Iterator
+	return(undef, Template::Constants::STATUS_DONE);   ## RETURN ##
+    }
+
+    unless( $l->{'populated'} > 1 )
+    {
+	$l->populate_all;
+    }
+
+    return $l->{'_DATA'}[$i];
 }
 
 
@@ -686,42 +1333,82 @@ sub get_next
 
   $l->get_all
 
-Method which returns all remaining items in the iterator as a Perl list
-reference.  May be called at any time in the life-cycle of the iterator.
-The get_first() method will be called automatically if necessary, and
-then subsequent get_next() calls are made, storing each returned
-result until the list is exhausted.
+Method which returns all remaining items in the iterator as a Perl
+list reference.  May be called at any time in the life-cycle of the
+iterator.  The L</get_first> method will be called automatically if
+necessary, and then subsequent L</get_next> calls are made, storing
+each returned result until the list is exhausted.
+
+Compatible with L<Template::Iterator/get_all>.
+
+Sets the index on the last element. (Not the place after the element.)
+
+Returns:
+
+A ref to an array of the remaining elements, materialized.
+
+If iterator already at the last index or later, returns C<undef> as
+the first value and L<Template::Constants/STATUS_DONE> as the second.
 
 =cut
 
 sub get_all
 {
     my( $l ) = @_;
-    my $obj = $OBJ{$l};
 
-    my($index) = $obj->{INDEX}||0;
-    my @data;
+    my $index = $l->{'INDEX'};
+    my $max = $l->max;
 
-    debug "get_all - index $index max $#$l";
+    debug "get_all - index $index max $#{$l->{_DATA}}";
 
     # if there's still some data to go...
-    if ($index < $#$l)
+    if( $index < $max )
     {
-        $index++;
-        @data = @{ $l }[ $index..$#$l ];
+	$l->materialize_all;
 
-        # update counters and flags
-        @$obj{ qw( INDEX COUNT FIRST LAST ) }
-	  = ( $#$l, $#$l + 1, 0, 1 );
+        $index++;
+        my @data = @{ $l->{'_OBJ'} }[ $index .. $max ];
+	$l->{'INDEX'} = $max;
 
         return \@data;                                      ## RETURN ##
     }
     else
     {
+	# Compatible with Template::Iterator
         return (undef, Template::Constants::STATUS_DONE);   ## RETURN ##
     }
 }
 
+
+
+#######################################################################
+
+=head2 size
+
+  $l->size()
+
+Similar to L<List::Object/count>, L<Array::Iterator/getLength>,
+L<Class::DBI::Iterator/count>,
+L<Class::MakeMethods::Template::Generic/count> and java C<getSize()>.
+
+Compatible with L<Template::Iterator/size>.
+
+Returns:
+
+The number of elements in this list
+
+=cut
+
+sub size
+{
+#    carp "* Fetching size of List";
+    unless( $_[0]->{'populated'} > 1 )
+    {
+	$_[0]->populate_all;
+    }
+
+    return scalar @{$_[0]->{'_DATA'}};
+}
 
 
 #######################################################################
@@ -733,30 +1420,43 @@ sub get_all
 Returns the maximum index number (i.e. the index of the last element)
 which is equivalent to size() - 1.
 
+Compatible with L<Template::Iterator/max>
+
 =cut
 
 sub max
 {
-    my( $l ) = @_;
+    unless( $_[0]->{'populated'} > 1 )
+    {
+	$_[0]->populate_all;
+    }
 
-    return $#$l;
+    return $#{$_[0]->{'_DATA'}};
 }
-
 
 
 #######################################################################
 
 =head2 index
 
-  $l->index
+  $l->index()
 
 Returns the current index number which is in the range 0 to max().
+
+L<Template::Iterator/index> has the range C<0> to L</max>.  This
+module allows the range C<-1> to L</max>C<+1>.
+
+Similar to L<Array::Iterator/currentIndex>,
+L<Tie::Array::Iterable/index>, L<IO::Seekable/tell> and Java
+C<getPosition>.
+
+Heres hoping that nothing breaks...
 
 =cut
 
 sub index
 {
-    return $OBJ{$_[0]}{INDEX};
+    return $_[0]->{'INDEX'};
 }
 
 
@@ -765,16 +1465,18 @@ sub index
 
 =head2 count
 
-  $l->count
+  $l->count()
 
 Returns the current iteration count in the range 1 to size().  This is
 equivalent to index() + 1.
+
+Compatible with L<Template::Iterator/count>.
 
 =cut
 
 sub count
 {
-    return $OBJ{$_[0]}{COUNT};
+    return $_[0]->{'INDEX'}+1;
 }
 
 
@@ -785,13 +1487,20 @@ sub count
   $l->first
 
 Returns a boolean value to indicate if the iterator is currently on
-the first iteration of the set.
+the first iteration of the set. Ie, index C<0>.
+
+Compatible with L<Template::Iterator/first>.
+
+Similar to L<Array::Iterator::Circular/isStart> and
+L<Tie::Array::Iterable/at_start>.
+
+See also L</get_first>.
 
 =cut
 
 sub first
 {
-    return $OBJ{$_[0]}{FIRST};
+    return $_[0]->{'INDEX'} == 0 ? 1 : 0;
 }
 
 #######################################################################
@@ -803,11 +1512,19 @@ sub first
 Returns a boolean value to indicate if the iterator is currently on
 the last iteration of the set.
 
+Compatible with L<Template::Iterator/last>.
+
+Similar to L<Array::Iterator::Circular/isEnd>,
+L<Iterator/is_exhausted>, L<Tie::Array::Iterable/at_end> and
+L<IO::Seekable/eof>.
+
+See also L</get_last>.
+
 =cut
 
 sub last
 {
-    return $OBJ{$_[0]}{LAST};
+    return $_[0]->{'INDEX'} == $_[0]->max ? 1 : 0;
 }
 
 #######################################################################
@@ -819,11 +1536,17 @@ sub last
 Returns the previous item in the data set, or undef if the iterator is
 on the first item.
 
+Compatible with L<Template::Iterator/prev>.
+
+Similar to L<Array::Iterator::BiDirectional/lookBack>.
+
+See also L</get_prev>.
+
 =cut
 
 sub prev
 {
-    return $OBJ{$_[0]}{PREV};
+    return $_[0]->get( $_[0]->{'INDEX'} - 1 );
 }
 
 #######################################################################
@@ -835,30 +1558,174 @@ sub prev
 Returns the next item in the data set or undef if the iterator is on
 the last item.
 
+Compatible with L<Template::Iterator/next>.
+
 =cut
 
 sub next
 {
-    return $OBJ{$_[0]}{NEXT};
+    return $_[0]->get( $_[0]->{'INDEX'} + 1 );
 }
 
 
+#######################################################################
 
-our$AUTOLOAD;
-sub AUTOLOAD
+=head2 has_next
+
+ $l->has_next
+
+Similar to L<List::Object/has_next>, L<Array::Iterator/hasNext> and
+Java C<hasNext>.
+
+Returns:
+
+A bool
+
+=cut
+
+sub has_next
 {
-    my $list = shift;
-    my $item = $AUTOLOAD;
-    $item =~ s/.*:://;
-    return if $item eq 'DESTROY';
+    my( $l ) = @_;
 
-    if( $item =~ /^\d+$/ )
-    {
-	return $list->[$item];
-    }
+    my( $elem, $status ) = $l->get_next_raw();
+    $l->{'INDEX'} --;
+    return $status ? 0 : 1;
 
-    confess("Method $item not recognized");
 }
+
+
+#######################################################################
+
+=head2 has_prev
+
+ $l->has_prev
+
+Similar to L<Array::Iterator::BiDirectional/hasPrevious> and Java
+C<hasPrevious>.
+
+Returns:
+
+A bool
+
+=cut
+
+sub has_prev
+{
+    my( $l ) = @_;
+
+    my( $elem, $status ) = $l->get_prev_raw();
+    $l->{'INDEX'} ++;
+    return $status ? 0 : 1;
+
+}
+
+#######################################################################
+
+=head2 current
+
+  $l->current()
+
+Similar to L<Array::Iterator/current> and
+L<Tie::Array::Iterable/value>.
+
+Implemented with L</get_next>
+
+Returns:
+
+The element (materialized) at the current index.
+
+=cut
+
+sub current
+{
+    $_[0]->{'INDEX'} --;
+    return $_[0]->get_next();
+}
+
+#######################################################################
+
+=head2 get_by_index
+
+  $l->get_by_index( $index )
+
+Similar to L<List::Object/get>.
+
+Implemented with L</set_index> and L</get_next>.
+
+Returns:
+
+The element (materialized) at the current index.
+
+=cut
+
+sub get_by_index
+{
+    $_[0]->set_index( $_[1] - 1 );
+    return $_[0]->get_next();
+}
+
+#######################################################################
+
+=head2 clear
+
+  $l->clear()
+
+Similar to L<List::Object/clear>
+
+=cut
+
+sub clear
+{
+    my( $l ) = @_;
+
+    $l->reset;
+#    debug "****3 OBJ=DATA for ".datadump($l); ### DEBUG
+    $l->{'_DATA'} = $l->{'_OBJ'} = [];
+    $l->{'materialized'} = 0;
+    return 1;
+}
+
+
+#######################################################################
+
+sub obj_as_string
+{
+    carp "Returning a stringification of a list";
+    return "A Para::Frame::List obj";
+}
+
+
+#######################################################################
+
+
+sub test
+{
+    my( $l ) = @_;
+
+
+    debug "The obj: ".$l;
+}
+
+
+#######################################################################
+
+=head2 set_type
+
+The class or datatype of all the content in the list
+
+ TODO: Validate content with this
+
+=cut
+
+sub set_type
+{
+    return $_[0]->{'type'} = $_[1];
+}
+
+
+
+#######################################################################
+
 
 
 
