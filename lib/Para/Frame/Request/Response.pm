@@ -474,12 +474,13 @@ sub fallback_error_page
 {
     my( $resp ) = @_;
 
+    my $req = $resp->req;
     my $out = "";
     $out .= "<p>500: Failure to render failure page\n";
     $out .= "<pre>\n";
-    $out .= $resp->req->result->as_string;
+    $out .= $req->result->as_string;
     $out .= "</pre>\n";
-    if( my $backup = $resp->site->backup_host )
+    if( my $backup = $req->site->backup_host )
     {
 	my $path = $resp->page->url_path;
 	$out .= "<p>Try to get the page from  <a href=\"http://$backup$path\">$backup</a> instead</p>\n"
