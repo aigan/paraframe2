@@ -179,6 +179,10 @@ sub new
 
 #######################################################################
 
+=head2 desig
+
+=cut
+
 sub desig
 {
     my( $resp ) = @_;
@@ -201,6 +205,10 @@ sub page
 
 #######################################################################
 
+=head2 req
+
+=cut
+
 sub req
 {
     return $_[0]->{'req'} || $Para::Frame::REQ;
@@ -210,7 +218,7 @@ sub req
 
 =head2 is_error_response
 
-  $page->is_error_response
+  $resp->is_error_response
 
 True if this is an error response
 
@@ -225,7 +233,7 @@ sub is_error_response
 
 =head2 is_error
 
-  $page->is_error
+  $resp->is_error
 
 True if this is an error response
 
@@ -240,7 +248,7 @@ sub is_error
 
 =head2 is_no_error
 
-  $page->is_no_error
+  $resp->is_no_error
 
 True if this is not an error response
 
@@ -253,10 +261,26 @@ sub is_no_error
 
 #######################################################################
 
+=head2 set_is_error
+
+  $resp->set_is_error()
+
+  $resp->set_is_error(0)
+
+=cut
+
+sub set_is_error
+{
+    my $flag = defined( $_[0] ) ? $_[0] : 1;
+    $_[0]->{'is_error_response'} = $flag;
+}
+
+#######################################################################
+
 
 =head2 headers
 
-  $p->headers
+  $resp->headers
 
 Returns: the http headers to be sent to the client as a list of
 listrefs of key/val pairs.
@@ -274,7 +298,7 @@ sub headers
 
 =head2 redirection
 
-  $p->redirection
+  $resp->redirection
 
 Returns the page we will redirect to, or undef.
 
@@ -290,7 +314,7 @@ sub redirection
 
 =head2 set_headers
 
-  $p->set_headers( [[$key,$val], [$key2,$val2], ... ] )
+  $resp->set_headers( [[$key,$val], [$key2,$val2], ... ] )
 
 Same as L</add_header>, but replaces any existing headers.
 
@@ -314,7 +338,7 @@ sub set_headers
 
 =head2 set_header
 
-  $p->set_header( $key => $val )
+  $resp->set_header( $key => $val )
 
 Replaces any existing header with the same key.
 
@@ -354,7 +378,7 @@ sub set_header
 
 =head2 add_header
 
-  $p->add_header( [[$key,$val], [$key2,$val2], ... ] )
+  $resp->add_header( [[$key,$val], [$key2,$val2], ... ] )
 
 Adds one or more http response headers.
 
@@ -373,9 +397,9 @@ sub add_header
 
 =head2 ctype
 
-  $p->ctype
+  $resp->ctype
 
-  $p->ctype( $content_type )
+  $resp->ctype( $content_type )
 
 Returns the content type to use in the http response, in the form
 of a L<Para::Frame::Request::Ctype> object.
@@ -409,9 +433,9 @@ sub ctype
 
 =head2 redirect
 
-  $p->redirect( $url )
+  $resp->redirect( $url )
 
-  $p->redirect( $url, $permanently_flag )
+  $resp->redirect( $url, $permanently_flag )
 
 This is for redirecting to a page not handled by the paraframe.
 
@@ -444,7 +468,7 @@ sub redirect
 
 =head2 set_http_status
 
-  $p->set_http_status( $status )
+  $resp->set_http_status( $status )
 
 Used internally by L</render_output> for sending the http_status of
 the response page to the client.
@@ -463,7 +487,7 @@ sub set_http_status
 
 =head2 fallback_error_page
 
-  $p->fallback_error_page
+  $resp->fallback_error_page
 
 Returns a scalar ref with HTML to use if the normal error response
 templates did not work.
@@ -473,6 +497,8 @@ templates did not work.
 sub fallback_error_page
 {
     my( $resp ) = @_;
+
+    confess "DEPRECATED";
 
     my $req = $resp->req;
     my $out = "";
@@ -629,9 +655,9 @@ sub send_output
 
 =head2 sender
 
-  $p->sender
+  $resp->sender
 
-  $p->sender( $code )
+  $resp->sender( $code )
 
 =cut
 
@@ -666,7 +692,7 @@ sub sender
 
 =head2 forward
 
-  $p->forward( $url )
+  $resp->forward( $url )
 
 Should only be called AFTER the page has been generated. It's used by
 L</send_output> and should not be used by others.
@@ -726,7 +752,7 @@ sub forward
 
 =head2 output_redirection
 
-  $p->output_redirection( $url )
+  $resp->output_redirection( $url )
 
 Internally used by L</forward> for sending redirection headers to the
 client.
@@ -820,7 +846,7 @@ sub output_redirection
 
 =head2 send_headers
 
-  $p->send_headers()
+  $resp->send_headers()
 
 Used internally by L</send_output> for sending the HTTP headers to the
 client.
@@ -873,7 +899,7 @@ sub send_headers
 
 =head2 send_in_chunks
 
-  $p->send_in_chunks( $dataref )
+  $resp->send_in_chunks( $dataref )
 
 Used internally by L</send_output> for sending the page in C<$dataref>
 to the client.
@@ -992,6 +1018,10 @@ sub send_in_chunks
 
 
 #######################################################################
+
+=head2 send_stored_result
+
+=cut
 
 sub send_stored_result
 {
@@ -1128,12 +1158,31 @@ sub renderer
 
 #######################################################################
 
+=head2 set_rendere
+
+=cut
+
+sub set_renderer
+{
+    return $_[0]->{'renderer'} = $_[1];
+}
+
+#######################################################################
+
+=head2 renerer_if_existing
+
+=cut
+
 sub renderer_if_existing
 {
     return $_[0]->{'renderer'};
 }
 
 #######################################################################
+
+=head2 render_output
+
+=cut
 
 sub render_output
 {
