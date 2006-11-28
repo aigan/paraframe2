@@ -55,6 +55,7 @@ use Para::Frame::Logging;
 use Para::Frame::Connection;
 use Para::Frame::Uploaded;
 use Para::Frame::Request::Response;
+use Para::Frame::Renderer::HTML_Fallback;
 
 use Para::Frame::Utils qw( compile throw debug catch idn_decode
                            datadump create_dir );
@@ -1013,7 +1014,7 @@ sub add_action
 sub prepend_action
 {
     my( $req ) = shift;
-    debug("====> Prepended action @_ for $req->{reqnum}");
+#    debug("====> Prepended action @_ for $req->{reqnum}");
     unshift @{ $req->{'actions'} }, @_;
     if( $req->in_last_job )
     {
@@ -2784,11 +2785,18 @@ sub handle_error
 	{
 	    my $tmpl_base = $tmpl->base;
 	    my $error_base = $error_tt_template->base;
-	    debug sprintf "Comparing %s with %s", $tmpl_base, $error_base;
+#	    debug sprintf "Comparing %s with %s", $tmpl_base, $error_base;
 	    # Same error page again?
 	    if($tmpl_base eq $error_base )
 	    {
-		$resp->set_content( $resp->fallback_error_page );
+		my $args =
+		{
+		 resp => $resp,
+		 req => $req,
+		};
+		my $err_rend = Para::Frame::Renderer::HTML_Fallback->new($args);
+		$resp->set_renderer($err_rend);
+		$resp->set_is_error;
 		return 1;
 	    }
 	}
@@ -2831,6 +2839,15 @@ sub send_stored_result
     delete $req->session->{'page_result'}{ $key };
     return 1;
 }
+
+#######################################################################
+
+sub test_die
+{
+    croak "WILL DIE";
+    return "you think?";
+}
+
 
 #######################################################################
 
