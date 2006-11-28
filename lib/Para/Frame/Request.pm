@@ -2782,9 +2782,11 @@ sub handle_error
     {
 	if( my $tmpl = $resp->renderer->template )
 	{
-	    debug sprintf "Comparing %s with %s", $tmpl->path, $error_tt;
+	    my $tmpl_base = $tmpl->base;
+	    my $error_base = $error_tt_template->base;
+	    debug sprintf "Comparing %s with %s", $tmpl_base, $error_base;
 	    # Same error page again?
-	    if($tmpl->path eq $error_tt_template->path )
+	    if($tmpl_base eq $error_base )
 	    {
 		$resp->set_content( $resp->fallback_error_page );
 		return 1;
