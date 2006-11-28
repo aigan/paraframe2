@@ -12,7 +12,7 @@
     background:	    url("[% imgdir %]h_bg.$format") repeat-x right top;
     font-size:	    11px;
     font-weight:    bold;
-    font-style:	    italic;
+[%#    font-style:	    italic; %]
     line-height:    1.5em;
   }
   
