@@ -1119,16 +1119,16 @@ sub get_first
 
 #######################################################################
 
-=head2 get_first_element
+=head2 get_first_nos
 
-  $l->get_first_element
+  $l->get_first_nos
 
 The same as L</get_first> except that it only returns ONE value, that
 may be undef.
 
 =cut
 
-sub get_first_element
+sub get_first_nos
 {
     return(($_[0]->get_first)[0]);
 }
@@ -1162,16 +1162,16 @@ sub get_last
 
 #######################################################################
 
-=head2 get_last_element
+=head2 get_last_nos
 
-  $l->get_last_element
+  $l->get_last_nos
 
 The same as L</get_last> except that it only returns ONE value, that
 may be undef.
 
 =cut
 
-sub get_last_element
+sub get_last_nos
 {
     return( ($_[0]->get_last)[0] );
 }
@@ -1254,18 +1254,18 @@ sub get_next
 
 #######################################################################
 
-=head2 get_next_element
+=head2 get_next_nos
 
-  $l->get_next_element()
+  $l->get_next_nos()
 
 The same as L</get_next> except that it only returns ONE value, that
 may be undef.
 
 =cut
 
-sub get_next_element
+sub get_next_nos
 {
-    return( ($_[0]->get_next_element)[0] );
+    return( ($_[0]->get_next_nos)[0] );
 }
 
 #######################################################################
@@ -1354,16 +1354,16 @@ sub get_prev
 
 #######################################################################
 
-=head2 get_prev_element
+=head2 get_prev_nos
 
-  $l->get_prev_element()
+  $l->get_prev_nos()
 
 The same as L</get_prev> except that it only returns ONE value, that
 may be undef.
 
 =cut
 
-sub get_prev_element
+sub get_prev_nos
 {
     return( ($_[0]->get_prev)[0] );
 }
