@@ -1879,9 +1879,7 @@ sub randomized
 #######################################################################
 
 
-sub test    debug "--> randomizing list";
-
-
+sub test
 {
     my( $l ) = @_;
 
