@@ -1301,8 +1301,6 @@ sub template
     #
     #Cache within a req
 
-#    debug "Looking for template for ".$f->sysdesig;
-
     my $f2t = $Para::Frame::REQ->{'file2template'} ||= {};
     unless( $f2t->{$f} )
     {
@@ -1317,7 +1315,7 @@ sub template
 	}
 	else
 	{
-	    debug sprintf "Para::Frame::Template->find(%s)", $f->sysdesig;
+#	    debug sprintf "Para::Frame::Template->find(%s)", $f->sysdesig;
 	    return $f2t->{$f} = Para::Frame::Template->find($f);
 	}
     }

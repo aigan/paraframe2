@@ -466,7 +466,7 @@ sub home
 	  Para::Frame::Dir->new({site => $_[0],
 				 url  => $_[0]->{'home_url_path'}.'/',
 				});
-	debug "Site home: ".$_[0]->{'home'}->sys_path_slash;
+#	debug "Site home: ".$_[0]->{'home'}->sys_path_slash;
 	return $_[0]->{'home'};
     }
 }
