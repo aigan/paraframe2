@@ -485,6 +485,10 @@ sub get_static
 
 #######################################################################
 
+=head2 page
+
+=cut
+
 sub page
 {
     return $_[0]->{'page'};
@@ -507,6 +511,10 @@ sub template
 
 
 #######################################################################
+
+=head2 set_template
+
+=cut
 
 sub set_template
 {
@@ -628,6 +636,10 @@ sub paths
 
 
 #######################################################################
+
+=head2 content_type_string
+
+=cut
 
 sub content_type_string
 {
