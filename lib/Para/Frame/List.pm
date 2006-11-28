@@ -119,6 +119,10 @@ Availible params are:
 
   page_size      (default is 20 )
   display_pages  (default is 10 )
+  limit          (default is 0 == unlimited)
+  materializer   (default is undef == list is material)
+  type           (default is undef)
+  allow_undef    (default is undef)
 
 Compatible with L<Template::Iterator/new>.
 
@@ -150,7 +154,7 @@ sub new
      '_DATA'         => undef,
      'populated'     => 0,     # 1 for partly and 2 for fully populated
      '_OBJ'          => undef, # the corresponding list of materalized elements
-     'limit'         => 0,
+     'limit'         => ($args->{'limit'} || 0 ),
      'page_size'     => ($args->{'page_size'} || 20 ),
      'display_pages' => ($args->{'display_pages'} || 10),
      'stored_id'     => undef,
@@ -159,10 +163,21 @@ sub new
 
     if( $data_in )
     {
+	my $limit = $l->{'limit'};
+
 	# Removes other things like overload
 	if( ref $data_in eq 'ARRAY' )
 	{
-	    $data = $data_in;
+
+	    if( $limit )
+	    {
+		$l->{'original_size'} = scalar(@$data_in);
+		$data = [ @{$data_in}[0..$limit] ];
+	    }
+	    else
+	    {
+		$data = $data_in;
+	    }
 	}
 	else
 	{
@@ -172,10 +187,17 @@ sub new
 		die "$type is not an array ref";
 	    }
 
-	    $data = [@$data_in];
+	    if( $limit )
+	    {
+		$l->{'original_size'} = scalar(@$data_in);
+		$data = [ @{$data_in}[0..$limit] ];
+	    }
+	    else
+	    {
+		$data = [ @{$data_in} ];
+	    }
 	}
 #	debug "Placing DATA in listobj ".datadump($data);
-
 
 	$l->{'_DATA'} = $data;
     }
@@ -608,6 +630,8 @@ sub from_page
 
 Similar to L<Class::DBI::Iterator/slice>.
 
+If C<%args> is not given, clones the args of C<$l>.
+
 Uses L</set_index> and L</get_next_raw> and L</index>.
 
 Returns:
@@ -623,10 +647,7 @@ sub slice
 
     $start ||= 0;
 
-    $args ||= {};
-    $args->{'type'} ||= $l->{'type'};
-    $args->{'allow_undef'} ||= $l->{'allow_undef'};
-    $args->{'materializer'} ||= $l->{'materializer'};
+    $args ||= $l->clone_props;
 
     carp "Slicing $l at $start with ".datadump($args);
     unless( $args->{'materializer'} )
@@ -637,7 +658,23 @@ sub slice
     if( $l->{'populated'} > 1 )
     {
 	$end ||= $l->max;
-	return Para::Frame::List->new([@{$l->{'_DATA'}}[$start..$end]], $args);
+	if( $l->{'materialized'} > 1 )
+	{
+	    undef $args->{'materializer'}; # Already done
+	    my $data = [@{$l->{'_OBJ'}}[$start..$end]];
+	    return  Para::Frame::List->new($data, $args);
+	}
+
+	my $data = [@{$l->{'_DATA'}}[$start..$end]];
+	my $slize =  Para::Frame::List->new($data, $args);
+
+	if( $l->{'materialized'} == 1 ) # partly
+	{
+	    $slize->{'_OBJ'} = [@{$l->{'_OBJ'}}[$start..$end]];
+	    $slize->{'materialized'} = 1;
+	}
+
+	return $slize;
     }
     else
     {
@@ -1034,8 +1071,7 @@ elements beyond the limit unavailible, if they already was populated.
 Later setting a larger limit will not make more of the elements
 availible.
 
-The limit is applied in L</on_populate_all>, then retrieving elements
-and in L</size> and L</max>.
+The limit is applied directly.
 
 The number of elements before the applied limit, if known, can be
 retrieved from L</original_size>.
@@ -1057,7 +1093,23 @@ sub set_limit
 {
     my( $l, $limit ) = @_;
 
-    # TODO: Validate the value
+    if( $limit )
+    {
+	if( $limit < $l->size )
+	{
+	    if( $l->{'populated'} > 1 )
+	    {
+		# Changes the array size
+		$#{$l->{'_DATA'}} = ($limit-1);
+
+		if( $l->{'materialized'} )
+		{
+		    $#{$l->{'_OBJ'}} = ($limit-1);
+		}
+	    }
+	}
+    }
+
     return $l->{'limit'} = $limit || 0;
 }
 
@@ -1486,6 +1538,16 @@ sub size
     return scalar @{$_[0]->{'_DATA'}};
 }
 
+#######################################################################
+
+=head2 original_size
+
+=cut
+
+sub original_size
+{
+    return $_[0]->{'original_size'} ||= $_[0]->size;
+}
 
 #######################################################################
 
@@ -1764,6 +1826,10 @@ sub clear
 
 #######################################################################
 
+=head2 obj_as_string
+
+=cut
+
 sub obj_as_string
 {
     carp "Returning a stringification of a list";
@@ -1773,11 +1839,51 @@ sub obj_as_string
 
 #######################################################################
 
+=head2 randomized
 
-sub test
+  $l->randomized
+
+Doesn't modify the object
+
+Returns:
+
+A new list with the content in random order, but with the same properties
+
+=cut
+
+sub randomized
 {
     my( $l ) = @_;
 
+    unless( $l->{'populated'} > 1 )
+    {
+	debug "    populating";
+	$l->populate_all;
+    }
+
+    my $args = $l->clone_props;
+    my $data = $l->{'_DATA'};
+
+    if( $l->{'materialized'} > 1 )
+    {
+	debug "    using materialized list";
+	undef $args->{'materializer'}; # Already done
+	$data = $l->{'_OBJ'};
+    }
+
+    debug "Returning randomized list";
+    return $l->new([List::Util::shuffle(@$data)], $args);
+}
+
+
+#######################################################################
+
+
+sub test    debug "--> randomizing list";
+
+
+{
+    my( $l ) = @_;
 
     debug "The obj: ".$l;
 }
@@ -1799,6 +1905,29 @@ sub set_type
 }
 
 
+
+#######################################################################
+
+=head2 clone_props
+
+=cut
+
+sub clone_props
+{
+    my( $l ) = @_;
+
+    my $args =
+    {
+     'type' => $l->{'type'},
+     'allow_undef' => $l->{'allow_undef'},
+     'materializer' => $l->{'materializer'},
+     'page_size' => $l->{'page_size'},
+     'display_pages' => $l->{'display_pages'},
+     'limit'         => $l->{'limit'},
+    };
+
+    return $args;
+}
 
 #######################################################################
 
