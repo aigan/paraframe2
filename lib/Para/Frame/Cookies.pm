@@ -26,7 +26,6 @@ use strict;
 use Carp qw( confess );
 use vars qw( $VERSION );
 use CGI::Cookie;
-use Data::Dumper;
 use Scalar::Util qw(weaken);
 
 BEGIN
@@ -36,7 +35,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( debug );
+use Para::Frame::Utils qw( debug datadump );
 
 =head1 DESCRIPTION
 
@@ -51,6 +50,8 @@ an action instead, or in your user class.
 For B<reading> cookies sent by the client, use the L</hash> method.
 
 =cut
+
+#######################################################################
 
 sub new
 {
@@ -74,9 +75,15 @@ sub new
     return $cookies;
 }
 
+#######################################################################
+
 sub req    { $_[0]->{'req'} }
 
+#######################################################################
+
 sub added  { $_[0]->{'added'} }
+
+#######################################################################
 
 =head2 hash
 
@@ -87,6 +94,41 @@ Returns a hashref of cookies. (?)
 =cut
 
 sub hash   { $_[0]->{'hash'} }
+
+#######################################################################
+
+=head2 get_val
+
+Get SINGLE or MULTIPLE values depending on  context
+
+=cut
+
+sub get_val
+{
+    my( $cookies, $key ) = @_;
+
+    foreach my $added ( @{$cookies->{'added'}} )
+    {
+#	debug "Looking at ".datadump $added;
+	if( $added->name eq $key )
+	{
+	    my $val = $added->value;
+#	    debug "Returning from added $key: $val";
+	    return $val;
+	}
+    }
+
+    if( my $target = $cookies->{'hash'}{$key} )
+    {
+	my $val = $target->value;
+#	debug "Returning from added $key: $val";
+	return $val;
+    }
+
+    return undef;
+}
+
+#######################################################################
 
 sub add_to_header
 {
@@ -100,6 +142,8 @@ sub add_to_header
 	$resp->add_header( 'Set-Cookie', $cookie->as_string );
     }
 }
+
+#######################################################################
 
 =head2 add
 
@@ -140,6 +184,38 @@ sub add
     }
 }
 
+#######################################################################
+
+=head2 add_by_jar
+
+=cut
+
+sub add_by_jar
+{
+    my( $cookies ) = shift;
+
+    my %arg;
+    @arg{qw(ver key val path domain port path_spec secure expires discard hash)} = @_;
+
+    my $extra = {};
+
+    if( $arg{'secure'} )
+    {
+	$extra->{'-secure'} = 1;
+    }
+
+    if( $arg{'expires'} )
+    {
+	$extra->{'-expires'} = $arg{'expires'};
+    }
+
+    $cookies->add({ $arg{'key'} => $arg{'val'} }, $extra);
+
+    return 1;
+}
+
+#######################################################################
+
 =head2 remove
 
   $cookies->remove( @cookie_names )
@@ -153,6 +229,8 @@ Removes the named cookies from the client, using HTTP headers.
 Default C<-path> is the L<Para::Frame::Site/home>
 
 =cut
+
+#######################################################################
 
 sub remove
 {
@@ -188,6 +266,8 @@ sub remove
     }
 }
 
+#######################################################################
+
 =head2 as_html
 
   $cookies->as_html
@@ -213,6 +293,8 @@ sub as_html
 
     return $desc;
 }
+
+#######################################################################
 
 1;
 
