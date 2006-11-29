@@ -39,7 +39,7 @@ L</host> as param.
 =cut
 
 use strict;
-use Carp qw( croak cluck );
+use Carp qw( croak cluck confess );
 use Data::Dumper;
 
 BEGIN
@@ -165,7 +165,11 @@ sub add
 
     debug "Registring site ".$site->name;
 
-    $DATA{ $site->host } ||= $site;
+    my $home = $site->home_url_path || '';
+    my $key = $site->host . $home;
+
+    $DATA{ $key }        ||= $site;
+    $ALIAS{ $key }       ||= $site;
     $ALIAS{ $site->host }||= $site;
     $ALIAS{'default'}    ||= $site;
 
@@ -255,6 +259,66 @@ sub get
 
     return $DATA{$name} || $ALIAS{$name} ||
 	croak "Site $name is not registred";
+}
+
+#######################################################
+
+=head2 get_by_url
+
+  Para::Frame::Site->get_by_url( $url )
+
+Returns the site registred (by L</add>) under the given C<$url>.
+
+Handles multiple site under the same host.
+
+Returns: A L<Para::Frame::Site> object
+
+Exceptions: Croaks if site nor found
+
+TODO: Handle other ports
+
+=cut
+
+sub get_by_url
+{
+    my( $this, $url_in ) = @_;
+
+    my $url;
+    if( UNIVERSAL::isa($url_in, 'URI') )
+    {
+	if( my $port = $url_in->port )
+	{
+	    if( $port != 80 )
+	    {
+		confess "FIXME";
+	    }
+	}
+	$url = $url_in->host . $url_in->path;
+    }
+    elsif( ref $url_in )
+    {
+	confess "Can't handle $url_in";
+    }
+    else
+    {
+	$url = lc( $url_in );
+	$url =~ s/^https?://;
+	$url =~ s/\/\///g; # Both host identifier and double in path
+	$url =~ s/\/$//;
+    }
+
+    my $url_given = $url;
+    while( length $url )
+    {
+	if( my $site = $DATA{ $url } )
+	{
+	    return $site;
+	}
+
+	$url =~ s/\/[^\/]+$// or last;
+    }
+
+    croak "Site $url_given is not registred";
 }
 
 #######################################################
@@ -378,6 +442,23 @@ sub name
     return $_[0]->{'name'} || $_[0]->webhost;
 }
 
+#######################################################################
+
+=head2 desig
+
+  $site->desig
+
+Returns the C<name> of the site.
+
+Default to L</host>.
+
+=cut
+
+sub desig
+{
+    return $_[0]->{'name'} || $_[0]->webhost;
+}
+
 #######################################################
 
 =head2 code
@@ -431,8 +512,10 @@ sub uri2file
 	my $args = {};
 	$args->{'site'} = $site;
 	debug "Getting uri2file from SUBREQUEST";
-	debug "This site is $site : ".$site->code;
-	debug "Req  site is $req_site : ".$req_site->code;
+	debug "URI site is: ".$site->code;
+	debug "Req site is: ".$req_site->code;
+	debug "For $_[0]";
+	cluck;
 
 	return $req->new_subrequest($args,
 				    \&Para::Frame::Request::uri2file,
