@@ -286,7 +286,7 @@ sub new
 	my $home = $site->home_url_path;
 	unless( $url_name =~ /^$home/ )
 	{
-	    confess "URL '$url_in' is out of bound for site: ".datadump($args);
+	    confess sprintf "URL '%s' is out of bound for site %s: %s", $url_in, $site->name, datadump($args,1);
 	}
 
 	$file->{'url_norm'} = $url_norm;  # With dir trailing slash
