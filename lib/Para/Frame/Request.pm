@@ -2487,9 +2487,25 @@ sub set_response
 
     if( ref $url_in )
     {
-	# Assume a page obj
-	$args->{'url'} = $url_in->url_path_slash;
-	$args->{'site'} = $url_in->site;
+	if( UNIVERSAL::isa($url_in, 'URI') )
+	{
+	    $args->{'url'} = $url_in->path;
+	    if( my $hostname = $url_in->host )
+	    {
+		my $site = Para::Frame::Site->get_by_url($url_in);
+		$args->{'site'} = $site;
+	    }
+	}
+	elsif( UNIVERSAL::isa($url_in, 'Para::Frame::File') )
+	{
+	    # Assume a page obj
+	    $args->{'url'} = $url_in->url_path_slash;
+	    $args->{'site'} = $url_in->site;
+	}
+	else
+	{
+	    confess "URL $url_in not recognized";
+	}
     }
 
     eval
