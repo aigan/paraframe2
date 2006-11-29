@@ -1276,7 +1276,7 @@ sub handle_request
     $req->init or do
     {
 	debug "Ignoring this request";
-	$req->after_jobs;
+	$req->done;
 	return;
     };
 
