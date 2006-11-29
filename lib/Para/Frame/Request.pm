@@ -167,7 +167,7 @@ sub init
     }
     $req->{'result'}  = Para::Frame::Result->new();  # Before Session
 
-    $req->set_site;
+    $req->set_site or return undef;
     $req->set_language;   # Needs site
 #    $req->setup_jobs;
 #    $req->reset_response; # Needs lang and jobs
@@ -177,6 +177,8 @@ sub init
 
 
 #    $req->{'s'}->route->init;
+
+    return 1;
 }
 
 
@@ -2019,7 +2021,8 @@ sub set_site
 		debug "Host mismatch";
 		debug "Req site : $req_site_name";
 		debug "New name : $site_host -> $site_name";
-		confess "set_site called";
+		carp "set_site called";
+		return undef;
 	    }
 	}
     }

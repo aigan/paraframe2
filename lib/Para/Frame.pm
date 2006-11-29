@@ -1273,7 +1273,13 @@ sub handle_request
 
     #################
 
-    $req->init;
+    $req->init or do
+    {
+	debug "Ignoring this request";
+	$req->after_jobs;
+	return;
+    };
+
     my $session = $req->session;
 
 
