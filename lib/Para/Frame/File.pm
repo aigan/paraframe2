@@ -147,6 +147,10 @@ sub new
 	}
 	elsif( UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
 	{
+	    if( $url_name =~ /\.\w{2,4}$/ )
+	    {
+		confess "File $url_name doesn't look like a dir";
+	    }
 	    $url_norm = $url_name . '/';
 	}
 	else
