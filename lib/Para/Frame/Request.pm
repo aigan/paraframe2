@@ -2547,6 +2547,22 @@ sub set_error_response
 
 #######################################################################
 
+=head2 set_error_response_path
+
+=cut
+
+sub set_error_response_path
+{
+    my( $req, $path, $args ) = @_;
+    $args ||= {};
+    $args->{'is_error_response'} = 1;
+    my $home_path = $req->site->home_url_path;
+    return $req->set_response($home_path.$path, $args);
+}
+
+
+#######################################################################
+
 =head2 reset_response
 
   $req->reset_response()
