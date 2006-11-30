@@ -50,6 +50,9 @@ use overload
 
 use base qw( Template::Iterator );
 
+# LOOK! REDEFINES shift, push, pop, unshift, splice, join
+
+
 =head2 DESCRIPTION
 
 The object is overloaded to be used as a ref to the list it
@@ -139,7 +142,13 @@ sub new
 
     if( $data_in and UNIVERSAL::isa($data_in, "Para::Frame::List") )
     {
-	return $data_in;
+	if( ref $data_in eq $class )
+	{
+	    return $data_in;
+	}
+
+	# Creating new arrayref
+	$data_in = [$data_in->as_array];
     }
 
 #    carp "New search list WITH ".datadump($data_in);
@@ -154,11 +163,11 @@ sub new
      '_DATA'         => undef,
      'populated'     => 0,     # 1 for partly and 2 for fully populated
      '_OBJ'          => undef, # the corresponding list of materalized elements
-     'limit'         => ($args->{'limit'} || 0 ),
-     'page_size'     => ($args->{'page_size'} || 20 ),
-     'display_pages' => ($args->{'display_pages'} || 10),
-     'stored_id'     => undef,
-     'stored_time'   => undef,
+#     'limit'         => ($args->{'limit'} || 0 ),
+#     'page_size'     => ($args->{'page_size'} || 20 ),
+#     'display_pages' => ($args->{'display_pages'} || 10),
+#     'stored_id'     => undef,
+#     'stored_time'   => undef,
     }, $class;
 
     if( $data_in )
@@ -219,6 +228,37 @@ sub new
     return $l;
 }
 
+#######################################################################
+
+=head2 new_any
+
+=cut
+
+sub new_any
+{
+    my( $this, $data_in, $args ) = @_;
+    my $class = ref($this) || $this;
+
+   if( $data_in )
+   {
+       if( UNIVERSAL::isa($data_in, "Para::Frame::List") )
+       {
+	   return $class->new( $data_in, $args );
+       }
+
+       if( UNIVERSAL::isa($data_in, "ARRAY") )
+       {
+	   return $class->new( $data_in, $args );
+       }
+       else
+       {
+	   return $class->new( [$data_in], $args );
+       }
+   }
+
+    return $class->new_empty();
+}
+
 
 #######################################################################
 
@@ -239,11 +279,11 @@ sub new_empty
      '_DATA'         => [],
      'populated'     => 2,     # 1 for partly and 2 for fully populated
      '_OBJ'          => [], # the corresponding list of materalized elements
-     'limit'         => 0,
-     'page_size'     => 0,
-     'display_pages' => 0,
-     'stored_id'     => undef,
-     'stored_time'   => undef,
+#     'limit'         => 0,
+#     'page_size'     => 0,
+#     'display_pages' => 0,
+#     'stored_id'     => undef,
+#     'stored_time'   => undef,
     }, $class;
 
     return $l;
@@ -434,7 +474,7 @@ sub as_array
 {
     unless( $_[0]->{'materialized'} > 1 )
     {
-	return $_[0]->materialize_all;
+	$_[0]->materialize_all;
     }
     return @{$_[0]->{'_OBJ'}};
 }
@@ -454,7 +494,7 @@ sub as_raw_array
 {
     unless( $_[0]->{'populated'} > 1 )
     {
-	return $_[0]->populate_all;
+	$_[0]->populate_all;
     }
     return @{$_[0]->{'_DATA'}};
 }
@@ -508,7 +548,7 @@ sub on_populate_all
 	}
     }
 
-    unless( $l->{'materializer'} )
+    unless( $l->{'materializer'} and $l->size )
     {
 #	debug "**** OBJ=DATA for ".datadump($l); ### DEBUG
 	$l->{'materialized'} = 2;
@@ -592,15 +632,16 @@ sub from_page
 
 #    @pagelist = ();
 
-    if( $l->{'page_size'} < 1 )
+    my $page_size = $l->page_size;
+    if( $page_size < 1 )
     {
 	return $l;
     }
 
-    my $start = $l->{'page_size'} * ($page-1);
+    my $start = $page_size * ($page-1);
     my $end = List::Util::max( $start,
 			       List::Util::min(
-					       $start + $l->{'page_size'},
+					       $start + $page_size,
 					       $l->size,
 					      ) -1,
 			     );
@@ -813,12 +854,28 @@ sub pages
 {
     my( $l ) = @_;
 
-    if( $l->{'page_size'} < 1 )
+    my $page_size = $l->page_size;
+    if( $page_size < 1 )
     {
 	return 1;
     }
 
-    return int( $l->max / $l->{'page_size'} ) + 1;
+    return int( $l->max / $page_size ) + 1;
+}
+
+#######################################################################
+
+=head2 page_size
+
+  $l->page_size
+
+Returns the C<page_size> set for this object.
+
+=cut
+
+sub page_size
+{
+    return $_[0]->{'page_size'} ||= 20;
 }
 
 #######################################################################
@@ -864,7 +921,7 @@ sub pagelist
 
 #    debug "Creating pagelist for $l";
 
-    my $dpages = $l->{'display_pages'};
+    my $dpages = $l->display_pages;
     my $pages = $l->pages;
 
     if( $pages <= 1 )
@@ -935,22 +992,6 @@ sub pagelist
 }
 
 
-#######################################################################
-
-=head2 page_size
-
-  $l->page_size
-
-Returns the C<page_size> set for this object.
-
-=cut
-
-sub page_size
-{
-    return $_[0]->{'page_size'};
-}
-
-
 ######################################################################
 
 =head2 set_page_size
@@ -980,13 +1021,13 @@ Returns how many pages that should be listed by L</pagelist>.
 
 sub display_pages
 {
-    return $_[0]->{'display_pages'};
+    return $_[0]->{'display_pages'} ||= 10;
 }
 
 
 #######################################################################
 
-=head2 display_pages
+=head2 set_display_pages
 
 Sets and returns the given L</display_pages>.
 
@@ -1927,6 +1968,20 @@ sub clone_props
     return $args;
 }
 
+#######################################################################
+
+#=head2 shift
+#
+#=cut
+#
+#sub shift
+#{
+#    my($l) = @_;
+#
+#
+#}
+#
+#
 #######################################################################
 
 
