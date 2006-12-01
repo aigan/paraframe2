@@ -649,7 +649,7 @@ sub from_page
     debug 2, "From $start to $end";
 
     my $res;
-    if( $end - $start )
+    if( $end - $start >= 0 )
     {
 	$res = $l->slice($start, $end);
     }
