@@ -1313,8 +1313,7 @@ sub confirm_simple
     #
     $req->session->route->plan_next(uri($page->url_path, store_params()));
 
-    my $home = $site->home_url_path;
-    $req->set_error_response_page($home.'/confirm.tt');
+    $req->set_error_response_path('/confirm.tt');
     my $result = $req->result;
 
     $result->{'info'}{'confirm'} =
