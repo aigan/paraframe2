@@ -160,8 +160,7 @@ sub set_charset
     if( $ctype->{'charset'}||'' ne $charset )
     {
 	$ctype->{'charset'} = $charset;
-	warn "  Setting charset to $charset\n";
-	$ctype->{'changed'} ++ if $ctype->{'ctype'};
+	$ctype->{'changed'} ++;
     }
 }
 
