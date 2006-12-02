@@ -19,18 +19,18 @@
    <tr>
    [% IF item.is_dir %]
    <td>
-      <a href="$item.name/admin-index.tt"><img src="/icons/folder.gif" border="0" style="float: left"></a>
-      <a href="$item.name/admin-index.tt">[% item.name %]</a><br>
+      <a href="[% item.name | uri | html %]/admin-index.tt"><img src="/icons/folder.gif" border="0" style="float: left"></a>
+      <a href="[% item.name | uri | html %]/admin-index.tt">[% item.name | html %]</a><br>
       [% IF item.has_index %]
-         [% item.page.title %]
+         [% item.page.title | html %]
       [% END %]
    </td>
    [% ELSE %]
    <td>
       [% tmpl = item.template %]
-      <a href="$item.name"><img src="/icons/text.gif" style="float: left; border: 0"></a>
-      <a href="$item.name">[% item.name %]</a><br>
-     [% tmpl.otitle || tmpl.title %]
+      <a href="[% item.name | uri | html %]"><img src="/icons/text.gif" style="float: left; border: 0"></a>
+      <a href="[% item.name | uri | html %]">[% item.name | html %]</a><br>
+     [% tmpl.title | html %]
    </td>
    <td>[% tmpl.pf_source_file +%]
        [% IF tmpl.pf_source_version; 'v'; tmpl.pf_source_version; END %]<br>
