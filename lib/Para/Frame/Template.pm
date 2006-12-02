@@ -129,7 +129,8 @@ sub document
 
 	my $mod_time = $tmpl->mtime_as_epoch;
 
-	my $burner = Para::Frame::Burner->get_by_ext( $tmpl->suffix );
+	my $burner = Para::Frame::Burner->get_by_ext( $tmpl->suffix )
+	    or confess "No burner found for ".$tmpl->sysdesig;
 	my $compdir = $burner->compile_dir;
 	my $tmplname = $tmpl->sys_path;
 
@@ -298,6 +299,12 @@ sub find
 
     my $suffix = $page->suffix;
     unless( $suffix )
+    {
+	return undef;
+    }
+
+    # Check that this file is handled by TT
+    unless( Para::Frame::Burner->get_by_ext( $suffix ) )
     {
 	return undef;
     }
