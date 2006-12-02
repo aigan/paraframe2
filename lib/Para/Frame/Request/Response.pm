@@ -64,7 +64,7 @@ redirection to a new page.
 use strict;
 use Carp qw( croak confess cluck );
 use IO::File;
-use Encode qw( is_utf8 );
+use Encode qw( is_utf8 decode );
 use File::Basename; # exports fileparse, basename, dirname
 use File::stat; # exports stat
 use File::Slurp; # Exports read_file, write_file, append_file, overwrite_file, read_dir
@@ -569,8 +569,6 @@ sub send_output
     }
     else
     {
-	my $sender = $resp->sender;
-
 	if( $req->header_only )
 	{
 	    my $result;
@@ -589,61 +587,66 @@ sub send_output
 		$req->send_code('PAGE_READY', $page->url->as_string);
 	    }
 	}
-	elsif( $sender eq 'utf8' )
+	else
 	{
-	    my $result;
-	    if( $req->in_loadpage )
+	    my $sender = $resp->set_sender_and_repair_content;
+
+	    if( $sender eq 'utf8' )
 	    {
-		$result = "LOADPAGE";
+		my $result;
+		if( $req->in_loadpage )
+		{
+		    $result = "LOADPAGE";
+		}
+		else
+		{
+		    $resp->ctype->set_charset("utf-8");
+		    $resp->send_headers;
+		    $result = $req->get_cmd_val( 'BODY' );
+		}
+		if( $result eq 'LOADPAGE' )
+		{
+		    $req->session->register_result_page($resp);
+		    $req->send_code('PAGE_READY', $page->url->as_string);
+		}
+		elsif( $result eq 'SEND' )
+		{
+		    binmode( $req->client, ':utf8');
+		    debug(4,"Transmitting in utf8 mode");
+		    $resp->send_in_chunks( $resp->{'content'} );
+		    binmode( $req->client, ':bytes');
+		}
+		else
+		{
+		    die "Strange response '$result'";
+		}
 	    }
-	    else
+	    else # Default
 	    {
-		$resp->ctype->set_charset("utf-8");
-		$resp->send_headers;
-		$result = $req->get_cmd_val( 'BODY' );
-	    }
-	    if( $result eq 'LOADPAGE' )
-	    {
-		$req->session->register_result_page($resp);
-		$req->send_code('PAGE_READY', $page->url->as_string);
-	    }
-	    elsif( $result eq 'SEND' )
-	    {
-		binmode( $req->client, ':utf8');
-		debug(4,"Transmitting in utf8 mode");
-		$resp->send_in_chunks( $resp->{'content'} );
-		binmode( $req->client, ':bytes');
-	    }
-	    else
-	    {
-		die "Strange response '$result'";
-	    }
-	}
-	else # Default
-	{
-	    my $result;
-	    if( $req->in_loadpage )
-	    {
-		$result = "LOADPAGE";
-	    }
-	    else
-	    {
-		$resp->send_headers;
-		$result = $req->get_cmd_val( 'BODY' );
-	    }
-	    if( $result eq 'LOADPAGE' )
-	    {
-		debug "Got Loadpage during send_output...";
-		$req->session->register_result_page($resp);
-		$req->send_code('PAGE_READY', $page->url->as_string);
-	    }
-	    elsif( $result eq 'SEND' )
-	    {
-		$resp->send_in_chunks( $resp->{'content'} );
-	    }
-	    else
-	    {
-		die "Strange response '$result'";
+		my $result;
+		if( $req->in_loadpage )
+		{
+		    $result = "LOADPAGE";
+		}
+		else
+		{
+		    $resp->send_headers;
+		    $result = $req->get_cmd_val( 'BODY' );
+		}
+		if( $result eq 'LOADPAGE' )
+		{
+		    debug "Got Loadpage during send_output...";
+		    $req->session->register_result_page($resp);
+		    $req->send_code('PAGE_READY', $page->url->as_string);
+		}
+		elsif( $result eq 'SEND' )
+		{
+		    $resp->send_in_chunks( $resp->{'content'} );
+		}
+		else
+		{
+		    die "Strange response '$result'";
+		}
 	    }
 	}
     }
@@ -686,6 +689,46 @@ sub sender
     return $resp->{'sender'};
 }
 
+
+#######################################################################
+
+=head2 set_sender_and_repair_content
+
+=cut
+
+sub set_sender_and_repair_content
+{
+    my( $resp ) = @_;
+
+    unless( $resp->{'sender'} )
+    {
+	if( is_utf8 ${ $resp->{'content'} } )
+	{
+	    $resp->{'sender'} = 'utf8';
+	}
+	else
+	{
+	    if( ${ $resp->{'content'} } =~ /Ã/ )
+	    {
+		### REPAIR
+		$_ = ${ $resp->{'content'} };
+		my $out = "";
+		while( length )
+		{
+		    $out .= decode('UTF-8', $_, Encode::FB_QUIET);
+		    $out .= decode('ISO-8859-1', substr($_,0,1), Encode::FB_QUIET);
+		}
+		$resp->{'content'} = \$out;
+		$resp->{'sender'} = 'utf8';
+	    }
+	    else
+	    {
+		$resp->{'sender'} = 'bytes';
+	    }
+	}
+    }
+    return $resp->{'sender'};
+}
 
 #######################################################################
 
