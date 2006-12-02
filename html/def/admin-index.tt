@@ -27,15 +27,15 @@
    </td>
    [% ELSE %]
    <td>
-      [% tmpl = item.template %]
+      [% doc = item.document %]
       <a href="[% item.name | uri | html %]"><img src="/icons/text.gif" style="float: left; border: 0"></a>
       <a href="[% item.name | uri | html %]">[% item.name | html %]</a><br>
-     [% tmpl.title | html %]
+     [% doc.title || doc.otitle | html %]
    </td>
-   <td>[% tmpl.pf_source_file +%]
-       [% IF tmpl.pf_source_version; 'v'; tmpl.pf_source_version; END %]<br>
-       [% IF tmpl.pf_compiled_date %]<span style="float: right">[% date(tmpl.pf_compiled_date) %]</span>[% END %]
-       [% IF tmpl.pf_compiled_by_name %] by [% tmpl.pf_compiled_by_name; END %]
+   <td>[% doc.pf_source_file +%]
+       [% IF doc.pf_source_version; ' v'; doc.pf_source_version; END %]<br>
+       [% IF doc.pf_compiled_date %]<span style="float: right">[% date(doc.pf_compiled_date) %]</span>[% END %]
+       [% IF doc.pf_compiled_by_name %] by [% doc.pf_compiled_by_name; END %]
    </td>
    [% END %]
    </tr>
