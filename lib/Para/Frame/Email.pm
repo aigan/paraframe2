@@ -9,7 +9,7 @@ package Para::Frame::Email;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -53,6 +53,11 @@ use Para::Frame::Email::Address;
 
 Put the email templates under C<$home/email/>.
 
+=cut
+
+
+#######################################################################
+
 =head2 new
 
   Para::Frame::Email->new( \%params )
@@ -93,6 +98,9 @@ sub new
     return $e;
 }
 
+
+#######################################################################
+
 =head2 set
 
   $e->set( \%params )
@@ -115,6 +123,9 @@ sub set
     return $e->{params};
 }
 
+
+#######################################################################
+
 =head2 params
 
   $e->params
@@ -127,6 +138,9 @@ sub params
 {
     return $_[0]->{params};
 }
+
+
+#######################################################################
 
 =head2 good
 
@@ -156,6 +170,9 @@ sub good
     return wantarray ? keys %{$e->{'result'}{'good'}} : $e->{'result'}{'good'};
 }
 
+
+#######################################################################
+
 =head2 bad
 
   $listref = $e->bad()
@@ -182,6 +199,9 @@ sub bad
     return wantarray ? keys %{$e->{'result'}{'bad'}} : $e->{'result'}{'bad'};
 }
 
+
+#######################################################################
+
 =head2 error_msg
 
   $e->error_msg
@@ -194,6 +214,9 @@ sub error_msg
 {
     return $_[0]->{error_msg} || "";
 }
+
+
+#######################################################################
 
 =head2 send_in_fork
 
@@ -238,6 +261,9 @@ sub send_in_fork
     return $fork;
 }
 
+
+#######################################################################
+
 =head2 send_in_background
 
   Para::Frame::Email->send_in_background( \%params )
@@ -269,6 +295,9 @@ sub send_in_background
     });
     return 1;
 }
+
+
+#######################################################################
 
 =head2 send_by_proxy
 
@@ -303,6 +332,9 @@ sub send_by_proxy
 
     return $e->send($p_in);
 }
+
+
+#######################################################################
 
 =head2 send
 
@@ -658,12 +690,18 @@ sub send
     }
 }
 
+
+#######################################################################
+
 sub encode_mimewords
 {
     my $string = MIME::Words::encode_mimewords($_[0]);
     $string =~ s/\?= =\?ISO-8859-1\?Q\?/?= =?ISO-8859-1?Q?_/g;
     return $string;
 }
+
+
+#######################################################################
 
 =head2 pgpsign
 
@@ -756,6 +794,9 @@ Enter the index of the signing key you wish to use: ";
     $cert->uid($kb->primary_uid);
     $cert;
 }
+
+#######################################################################
+
 
 1;
 

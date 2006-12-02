@@ -9,7 +9,7 @@ package Para::Frame::Reload;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -103,7 +103,6 @@ interruptions, if possible.
 
 use strict;
 use vars qw( %COMPILED %INCS %CALLER %IMPORTS );
-use Data::Dumper;
 
 BEGIN
 {
@@ -114,6 +113,13 @@ BEGIN
 
 our $DEBUG = 0;
 
+
+#######################################################################
+
+=head2 import
+
+=cut
+
 sub import
 {
     my $class = shift;
@@ -121,6 +127,13 @@ sub import
 
     $class->register_module($package, $file);
 }
+
+
+#######################################################################
+
+=head2 register_module
+
+=cut
 
 sub register_module
 {
@@ -188,6 +201,13 @@ sub register_module
 
 }
 
+
+#######################################################################
+
+=head2 check_for_updates
+
+=cut
+
 sub check_for_updates
 {
 #    $Exporter::Verbose = 1; # DEBUG
@@ -205,6 +225,13 @@ sub check_for_updates
 	}
     }
 }
+
+
+#######################################################################
+
+=head2 reload
+
+=cut
 
 sub reload
 {
@@ -286,6 +313,13 @@ sub reload
     $COMPILED{$module} = $mtime;
 }
 
+
+#######################################################################
+
+=head2 call_import
+
+=cut
+
 sub call_import
 {
     my( $class, $pkgname ) = @_;
@@ -296,7 +330,6 @@ sub call_import
 
 		warn "    $pkgname can import\n" if $DEBUG;
 		my $module = package_to_module( $pkgname );
-#		warn Dumper( \%CALLER );
 		if( my $called = $CALLER{ $pkgname } )
 		{
 		    warn "      has been called\n" if $DEBUG;
@@ -326,7 +359,6 @@ sub call_import
 			    };
                             ";
 			    warn "          Defining the callbacksub:\n$callbacksub\n" if $DEBUG > 1;
-#			    warn Dumper( \%Para::Frame::Reload::IMPORTS );
 			    eval $callbacksub;
 			    $coderef = $callerpkg->can("on_reload__$importsubname");
 			}
@@ -342,6 +374,13 @@ sub call_import
 		}
 
 }
+
+
+#######################################################################
+
+=head2 modules_importing_from_us
+
+=cut
 
 sub modules_importing_from_us
 {
@@ -365,8 +404,15 @@ sub modules_importing_from_us
 }
 
 
-# Defined in Para::Frame::Utils but given here to avoid cyclic dependency
-#
+#######################################################################
+
+=head2 package_to_module
+
+NOTE: Defined in Para::Frame::Utils but given here to avoid cyclic
+dependency
+
+=cut
+
 sub package_to_module
 {
     my $package = shift;
@@ -374,6 +420,13 @@ sub package_to_module
     $package .= ".pm";
     return $package;
 }
+
+
+#######################################################################
+
+=head2 module_to_package
+
+=cut
 
 sub module_to_package
 {
@@ -383,7 +436,7 @@ sub module_to_package
     return $module;
 }
 
-
+#######################################################################
 
 1;
 

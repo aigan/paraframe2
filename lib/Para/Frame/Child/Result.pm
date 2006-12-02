@@ -1,4 +1,4 @@
-#  $Id$  -*-perl-*-
+#  $Id$  -*-cperl-*-
 package Para::Frame::Child::Result;
 #=====================================================================
 #
@@ -27,7 +27,6 @@ Para::Frame::Child::Result - Representing a child process result from CHILDs vie
 use strict;
 use vars qw( $VERSION );
 use FreezeThaw qw( safeFreeze );
-use Data::Dumper;
 
 BEGIN
 {
@@ -59,6 +58,12 @@ C<$result> while in PARENT.
 
 All parts of the object must survive L<FreezeThaw>.
 
+=cut
+
+
+#######################################################################
+
+=head2 new
 
 =cut
 
@@ -77,6 +82,9 @@ sub new
 
     return $result;
 }
+
+
+#######################################################################
 
 =head2 message
 
@@ -102,6 +110,9 @@ sub message
     }
     return wantarray ? @{$result->{'message'}} : $result->{'message'}[-1];
 }
+
+
+#######################################################################
 
 =head2 return
 
@@ -141,6 +152,9 @@ sub return
     exit;  # don't forget this
 }
 
+
+#######################################################################
+
 =head2 exception
 
   $fork->exception( $exception )
@@ -170,10 +184,11 @@ sub exception
 	push @{$result->{'exception'}}, $exception;
     }
 
-#    warn "child result content after exception: ".Dumper($result);
-
     return wantarray ? @{$result->{'exception'}} : $result->{'exception'}[0];
 }
+
+
+#######################################################################
 
 =head2 on_return
 
@@ -224,6 +239,9 @@ sub on_return
     return wantarray ? @{$result->{'on_return'}} : $result->{'on_return'};
 }
 
+
+#######################################################################
+
 =head2 pid
 
   $fork->pid;
@@ -242,6 +260,9 @@ sub pid
     }
     return $result->{'pid'};
 }
+
+
+#######################################################################
 
 =head2 status
 
@@ -263,8 +284,10 @@ sub status
     return $result->{'status'};
 }
 
-=head2 in_child
 
+#######################################################################
+
+=head2 in_child
 
   $fork->in_child
 
@@ -277,8 +300,10 @@ sub in_child
     return 1;
 }
 
-=head2 in_parent
 
+#######################################################################
+
+=head2 in_parent
 
   $fork->in_parent
 
@@ -290,6 +315,9 @@ sub in_parent
 {
     return 0;
 }
+
+
+#######################################################################
 
 1;
 

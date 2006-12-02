@@ -30,7 +30,6 @@ You create a new part by using L<Para::Frame::Result/error>.
 =cut
 
 use strict;
-use Data::Dumper;
 use Carp qw( carp shortmess croak );
 use Template::Exception;
 
@@ -160,6 +159,12 @@ our $ERROR_TYPE =
 };
 
 
+#######################################################################
+
+=head2 new
+
+=cut
+
 sub new
 {
     my( $this, $params ) = @_;
@@ -193,13 +198,16 @@ sub new
 }
 
 
-############### Compatible with Template::Exception
+
+#######################################################################
 
 =head2 info
 
   $part->info
 
 Returns the error info by L<Template::Exception> info().
+
+Compatible with L<Template::Exception>.
 
 =cut
 
@@ -210,6 +218,9 @@ sub info
     return $part->error->info;
 }
 
+
+#######################################################################
+
 =head2 type
 
   $part->type
@@ -219,6 +230,8 @@ sub info
 Returns the error type by L<Template::Exception> type().
 
 If C<$type> is defined, sets it.
+
+Compatible with L<Template::Exception>.
 
 =cut
 
@@ -235,10 +248,23 @@ sub type
 }
 
 
+#######################################################################
+
+=head2 type_info
+
+=cut
+
 sub type_info
 {
     return $_[0]->error->type_info;
 }
+
+
+#######################################################################
+
+=head2 text
+
+=cut
 
 sub text
 {
@@ -264,6 +290,10 @@ sub text
 
 ######################################################
 
+=head2 error_type
+
+=cut
+
 sub error_type
 {
     if( $_[0]->{'error'} )
@@ -271,6 +301,9 @@ sub error_type
 	return $_[0]->{'error'}->type;
     }
 }
+
+
+#######################################################################
 
 =head2 error
 
@@ -284,6 +317,9 @@ sub error
 {
     return $_[0]->{'error'};
 }
+
+
+#######################################################################
 
 =head2 title
 
@@ -317,6 +353,9 @@ sub title
 	  sprintf "\u%s error...", loc($type);
     }
 }
+
+
+#######################################################################
 
 =head2 message
 
@@ -354,6 +393,9 @@ sub message
 
     return join "\n", @message;
 }
+
+
+#######################################################################
 
 =head2 hide
 
@@ -403,6 +445,9 @@ sub hide
     }
 }
 
+
+#######################################################################
+
 =hide2 border
 
   $part->border
@@ -417,6 +462,9 @@ sub border
 {
     $_[0]->{'border'} || $ERROR_TYPE->{$_[0]->type}{'border'}||'black';
 }
+
+
+#######################################################################
 
 =head2 bg
 
@@ -433,6 +481,9 @@ sub bg
     $_[0]->{'bg'} || $ERROR_TYPE->{$_[0]->type}{'bg'}||'#AAAAFF';
 }
 
+
+#######################################################################
+
 =head2 width
 
   $part->width
@@ -448,6 +499,9 @@ sub width
 {
     $_[0]->{'width'} || $ERROR_TYPE->{$_[0]->type}{'width'}||3;
 }
+
+
+#######################################################################
 
 =head2 view_context
 
@@ -497,6 +551,9 @@ sub view_context
     }
 }
 
+
+#######################################################################
+
 =head2 no_backtrack
 
   $part->no_backtrack
@@ -545,6 +602,9 @@ sub no_backtrack
     }
 }
 
+
+#######################################################################
+
 =head2 context
 
   $part->context
@@ -564,6 +624,9 @@ sub context
     return $part->{'context'};
 }
 
+
+#######################################################################
+
 =head2 context_line
 
   $part->context_line
@@ -582,6 +645,13 @@ sub context_line
     }
     return $part->{'context_line'};
 }
+
+
+#######################################################################
+
+=head2 set_context
+
+=cut
 
 sub set_context
 {
@@ -610,6 +680,9 @@ sub set_context
     }
 }
 
+
+#######################################################################
+
 =head2 prefix_message
 
   $part->prefix_message
@@ -635,6 +708,9 @@ sub prefix_message
     }
     return $part->{'prefix_message'};
 }
+
+
+#######################################################################
 
 =head2 add_message
 
@@ -662,6 +738,9 @@ sub add_message
 
     return $part->message;
 }
+
+
+#######################################################################
 
 =head2 as_string
 
@@ -697,6 +776,8 @@ sub as_string
     }
     return $out;
 }
+
+#######################################################################
 
 1;
 

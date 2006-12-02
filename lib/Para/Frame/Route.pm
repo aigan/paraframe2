@@ -23,7 +23,6 @@ Para::Frame::Route - Backtracking and planning steps in a session
 =cut
 
 use strict;
-use Data::Dumper;
 use URI::QueryParam;
 use Carp qw(cluck);
 
@@ -108,6 +107,8 @@ bottom of the route stack, rather than on top.
 =cut
     ;
 
+
+#######################################################################
 
 =head2 plan_backtrack
 
@@ -284,6 +285,9 @@ sub new
     $route->clear;
     return $route;
 }
+
+
+#######################################################################
 
 sub clear
 {
@@ -725,6 +729,10 @@ sub steps
 }
 
 
+#######################################################################
+
+# Use steps instead?
+
 sub size
 {
     return scalar @{$_[0]->{'route'}};
@@ -752,6 +760,10 @@ sub default
 
 #######################################################################
 
+=head2 replace_query
+
+=cut
+
 sub replace_query
 {
     my( $this, $q, $query_string ) = @_;
@@ -763,16 +775,18 @@ sub replace_query
     $ENV{QUERY_STRING} = $query_string;
     $q->delete_all;
     delete $q->{'.url_param'};
-#    warn Dumper \%ENV;
     $q->init($query_string) if $query_string;
 
-#    warn Dumper $q;
     return $q;
 }
 
 
 
 #######################################################################
+
+=head2 debug_query
+
+=cut
 
 sub debug_query
 {
@@ -794,12 +808,20 @@ sub debug_query
 
 #######################################################################
 
+=head2 list
+
+=cut
+
 sub list
 {
     return Para::Frame::List->new($_[0]->{'route'});
 }
 
 #######################################################################
+
+=head2 on_configure
+
+=cut
 
 sub on_configure
 {

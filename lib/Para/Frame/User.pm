@@ -1,4 +1,4 @@
-#  $Id$  -*-perl-*-
+#  $Id$  -*-cperl-*-
 package Para::Frame::User;
 #=====================================================================
 #
@@ -9,7 +9,7 @@ package Para::Frame::User;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -99,33 +99,13 @@ templates.
 
 =head1 Methods
 
-=head2 name
-
-The real name of the user.  Default is 'Gäst'.
-
-=head2 username
-
-A unique handle for the user, following the rules of a unix username.
-Default is 'guest'.
-
-=head2 uid
-
-A unique integer identifier for the user.  Default is 0.
-
-=head2 level
-
-The access level for the user.  A user can access everything with a
-level less than or equal to her level.  Default is 0.
-
 =cut
 
-#sub new
-#{
-#    my( $class ) = @_;
-#
-#    $class->identify_user();
-#    $class->authenticate_user();
-#}
+#######################################################################
+
+=head2 identify_user
+
+=cut
 
 sub identify_user
 {
@@ -152,6 +132,13 @@ sub identify_user
     $class->change_current_user( $u );
     return $u;
 }
+
+
+#######################################################################
+
+=head2 authenticate_user
+
+=cut
 
 sub authenticate_user
 {
@@ -215,10 +202,8 @@ sub authenticate_user
     return 1;
 }
 
-sub verify_user # NOT USED
-{
-    throw('action', "Not used");
-}
+
+#######################################################################
 
 =head2 get
 
@@ -252,6 +237,9 @@ sub get # Reimplement this method
     return $u;
 }
 
+
+#######################################################################
+
 =head2 verify_password
 
   $u->verify_password( $encrypted_password )
@@ -271,6 +259,9 @@ sub verify_password # Reimplement this method
     throw('validation', "Not implemented");
     0;
 }
+
+
+#######################################################################
 
 =head2 logout
 
@@ -305,6 +296,13 @@ sub logout
 	unless $Para::Frame::U->level == 0;
 }
 
+
+#######################################################################
+
+=head2 clear_cookies
+
+=cut
+
 sub clear_cookies
 {
     my( $class ) = @_;
@@ -314,6 +312,9 @@ sub clear_cookies
     $cookies->add({'username' => 'guest'});
     $cookies->remove('password');
 }
+
+
+#######################################################################
 
 =head2 change_current_user
 
@@ -329,6 +330,9 @@ sub change_current_user
     return $Para::Frame::U unless $Para::Frame::REQ;
     return $Para::Frame::REQ->session->{'user'} = $Para::Frame::U;
 }
+
+
+#######################################################################
 
 =head2 become_temporary_user
 
@@ -349,6 +353,9 @@ sub become_temporary_user
     return $_[0]->change_current_user( $_[1] );
 }
 
+
+#######################################################################
+
 =head2 revert_from_temporary_user
 
   $u->revert_from_temporary_user
@@ -367,30 +374,81 @@ sub revert_from_temporary_user
     return $Para::Frame::U;
 }
 
+#######################################################################
 
+=head2 name
 
+The real name of the user.  Default is 'Gäst'.
 
-# Create accessors
-#
+=cut
+
 sub name     { $_[0]->{'name'} }
+
+#######################################################################
+
+=head2 username
+
+A unique handle for the user, following the rules of a unix username.
+Default is 'guest'.
+
+=cut
+
 sub username { $_[0]->{'username'} }
+
+#######################################################################
+
+=head2 uid
+
+A unique integer identifier for the user.  Default is 0.
+
+=cut
+
 sub uid      { $_[0]->{'uid'} }
+
 sub id       { $_[0]->{'uid'} }
+
+#######################################################################
+
+=head2 level
+
+The access level for the user.  A user can access everything with a
+level less than or equal to her level.  Default is 0.
+
+=cut
+
 sub level    { $_[0]->{'level'} }
+
+#######################################################################
+
+=head2 style
+
+=cut
+
 sub style    { undef }
+
+
+#######################################################################
 
 # Shortcuts
 #
+# TODO: Remove the use of these!
+
 sub session { $Para::Frame::REQ->session }
 sub route   { $Para::Frame::REQ->session->route }
 
-# Default implementation
-#
+
+#######################################################################
+
+=head2 has_root_access
+
+=cut
+
 sub has_root_access
 {
     return $_[0]->level > 41 ? 1 : 0;
 }
 
+#######################################################################
 
 1;
 

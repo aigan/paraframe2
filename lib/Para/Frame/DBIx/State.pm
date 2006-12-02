@@ -18,7 +18,7 @@ package Para::Frame::DBIx::State;
 
 =head1 NAME
 
-Para::Frame::DBIx::State - "SQLSTATE codes
+Para::Frame::DBIx::State - SQLSTATE codes
 
 =cut
 
@@ -38,6 +38,8 @@ our %CLASS;
 our %CODE;
 our %LABEL;
 
+
+#######################################################################
 
 ### SQLSTATE data taken from
 # http://www.postgresql.org/docs/8.1/interactive/errcodes-appendix.html
@@ -270,6 +272,12 @@ EOD
   ;
 
 
+#######################################################################
+
+=head2 import
+
+=cut
+
 sub import
 {
     open(my $fh, '<', \$DATA) or die $!;
@@ -324,6 +332,9 @@ sub import
 #    debug datadump( \%CODE );
 }
 
+
+#######################################################################
+
 =head2 new
 
   $dbix->state()
@@ -347,6 +358,13 @@ sub new
      errstr => $dbh->errstr,
     }, $class;
 }
+
+
+#######################################################################
+
+=head2 is
+
+=cut
 
 sub is
 {
@@ -376,40 +394,92 @@ sub is
     }
 }
 
+
+#######################################################################
+
+=head2 class_code
+
+=cut
+
 sub class_code
 {
     return $_[0]->{'state'}{'class'}{'code'};
 }
+
+
+#######################################################################
+
+=head2 class_name
+
+=cut
 
 sub class_name
 {
     return $_[0]->{'state'}{'class'}{'name'};
 }
 
+
+#######################################################################
+
+=head2 code
+
+=cut
+
 sub code
 {
     return $_[0]->{'state'}{'code'};
 }
+
+
+#######################################################################
+
+=head2 desc
+
+=cut
 
 sub desc
 {
     return $_[0]->{'state'}{'desc'};
 }
 
+
+#######################################################################
+
+=head2 label
+
+=cut
+
 sub label
 {
     return $_[0]->{'state'}{'label'};
 }
+
+
+#######################################################################
+
+=head2 is_error
+
+=cut
 
 sub is_error
 {
     return $_[0]->{'err'} ? 1 : 0;
 }
 
+
+#######################################################################
+
+=head2 is_success
+
+=cut
+
 sub is_success
 {
     return $_[0]->{'err'} ? 0 : 1;
 }
+
+
+#######################################################################
 
 1;
 

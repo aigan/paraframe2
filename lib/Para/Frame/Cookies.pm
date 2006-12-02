@@ -53,6 +53,10 @@ For B<reading> cookies sent by the client, use the L</hash> method.
 
 #######################################################################
 
+=head2 new
+
+=cut
+
 sub new
 {
     my( $class, $req ) = @_;
@@ -77,9 +81,17 @@ sub new
 
 #######################################################################
 
+=head2 req
+
+=cut
+
 sub req    { $_[0]->{'req'} }
 
 #######################################################################
+
+=head2 added
+
+=cut
 
 sub added  { $_[0]->{'added'} }
 
@@ -129,6 +141,10 @@ sub get_val
 }
 
 #######################################################################
+
+=head2 add_to_header
+
+=cut
 
 sub add_to_header
 {
@@ -231,6 +247,10 @@ Default C<-path> is the L<Para::Frame::Site/home>
 =cut
 
 #######################################################################
+
+=head2 remove
+
+=cut
 
 sub remove
 {

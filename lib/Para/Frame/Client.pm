@@ -28,7 +28,6 @@ use CGI;
 use IO::Socket;
 use IO::Select;
 use FreezeThaw qw( freeze );
-use Data::Dumper;
 use Apache::Constants qw( :common );
 use Time::HiRes;
 
@@ -121,6 +120,9 @@ suggesting to go to this site. The link is constructad in the same way
 as for L</backup_redirect>.
 
 =cut
+
+
+#######################################################################
 
 sub handler
 {
@@ -266,6 +268,9 @@ sub handler
     return 1;
 }
 
+
+#######################################################################
+
 sub send_to_server
 {
     my( $code, $valref ) = @_;
@@ -286,6 +291,9 @@ sub send_to_server
     }
     return 1;
 }
+
+
+#######################################################################
 
 sub connect_to_server
 {
@@ -325,6 +333,9 @@ sub connect_to_server
     warn "$$: Established connection on port $port\n" if $DEBUG > 3;
     return $SOCK;
 }
+
+
+#######################################################################
 
 sub print_error_page
 {
@@ -387,6 +398,9 @@ sub print_error_page
     return 1;
 }
 
+
+#######################################################################
+
 sub copy_to_file
 {
     my( $filename, $fh ) = @_;
@@ -419,6 +433,9 @@ sub copy_to_file
     return 1;
 }
 
+
+#######################################################################
+
 sub create_dir
 {
     my( $dir ) = @_;
@@ -436,6 +453,9 @@ sub create_dir
     mkdir $dir, 02711;
     umask $orig_umask;
 }
+
+
+#######################################################################
 
 sub get_response
 {
@@ -676,6 +696,9 @@ sub get_response
     return $chunks;
 }
 
+
+#######################################################################
+
 sub send_loadpage
 {
 
@@ -724,6 +747,9 @@ sub send_loadpage
     }
 }
 
+
+#######################################################################
+
 sub send_reload
 {
     my( $url, $message ) = @_;
@@ -741,6 +767,9 @@ sub send_reload
     $r->rflush;
 }
 
+
+#######################################################################
+
 sub send_headers
 {
     my $content_type = $r->content_type;
@@ -753,6 +782,9 @@ sub send_headers
     $r->rflush;
     return 1;
 }
+
+
+#######################################################################
 
 sub send_body
 {
@@ -794,6 +826,9 @@ sub send_body
     return $chunk;
 }
 
+
+#######################################################################
+
 sub send_message
 {
     my( $msg ) = @_;
@@ -805,6 +840,9 @@ sub send_message
     $r->print("<script type=\"text/javascript\">document.f.messages.value += \"$msg\\n\";bottom();</script>\n");
     $r->rflush;
 }
+
+
+#######################################################################
 
 sub send_message_waiting
 {
@@ -820,11 +858,17 @@ sub send_message_waiting
     }
 }
 
+
+#######################################################################
+
 sub uri2file
 {
     my $sr = $r->lookup_uri($_[0]);
     return( $sr->filename.($sr->path_info||'') );
 }
+
+
+#######################################################################
 
 1;
 

@@ -9,7 +9,7 @@ package Para::Frame::Email::Address;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -27,7 +27,6 @@ use Net::DNS;
 use Net::SMTP;
 use Mail::Address;
 use Carp qw( carp confess );
-use Data::Dumper;
 
 BEGIN
 {
@@ -49,6 +48,9 @@ stringifies to L</as_string> and uses L</equals> for C<eq>/C<ne>
 comparsions.
 
 =cut
+
+
+#######################################################################
 
 =head2 parse
 
@@ -112,6 +114,9 @@ sub parse
     return $a;
 }
 
+
+#######################################################################
+
 =head2 as_string
 
   $a->as_string
@@ -121,6 +126,9 @@ Returns a string using L<Mail::Address/address>
 =cut
 
 sub as_string { $_[0]->{addr}->address }
+
+
+#######################################################################
 
 =head2 user
 
@@ -132,6 +140,9 @@ Returns a string using L<Mail::Address/user>
 
 sub user { $_[0]->{addr}->user }
 
+
+#######################################################################
+
 =head2 address
 
   $a->address
@@ -141,6 +152,9 @@ Returns a string using L<Mail::Address/address>
 =cut
 
 sub address { $_[0]->{addr}->address }
+
+
+#######################################################################
 
 =head2 host
 
@@ -152,6 +166,9 @@ Returns a string using L<Mail::Address/host>
 
 sub host { $_[0]->{addr}->host }
 
+
+#######################################################################
+
 =head2 format
 
  $a->format
@@ -161,6 +178,9 @@ Returns a string using L<Mail::Address/format>
 =cut
 
 sub format { $_[0]->{addr}->format }
+
+
+#######################################################################
 
 =head2 format_human
 
@@ -184,6 +204,9 @@ sub format_human
     }
 }
 
+
+#######################################################################
+
 =head2 name
 
   $a->name
@@ -196,6 +219,9 @@ sub name
 {
     return shift->{addr}->name(@_);
 }
+
+
+#######################################################################
 
 =head2 desig
 
@@ -224,6 +250,9 @@ sub desig
 # 
 #     return $a;    
 # }
+
+
+#######################################################################
 
 =head2 validate
 
@@ -362,6 +391,9 @@ sub _validate
     return 0;
 }
 
+
+#######################################################################
+
 =head2 error_msg
 
   $a->error_msg
@@ -374,6 +406,9 @@ sub error_msg
 {
     return $_[0]->{'error_msg'};
 }
+
+
+#######################################################################
 
 =head2 equals
 
@@ -412,9 +447,19 @@ sub equals
     return $a->as_string eq $a2_as_string;
 }
 
+
+#######################################################################
+
 =head1 Global TT params
 
 Adds C<email> as an global tt param. Uses L</parse>.
+
+=cut
+
+
+#######################################################################
+
+=head2 on_configure
 
 =cut
 

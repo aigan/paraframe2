@@ -33,7 +33,6 @@ object, or by creating another object with diffrent preferences.
 
 use strict;
 use Carp qw(cluck croak carp confess shortmess );
-use Data::Dumper;
 
 BEGIN
 {
@@ -42,7 +41,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw debug );
+use Para::Frame::Utils qw( throw debug datadump );
 
 use base qw(Locale::Maketext);
 
@@ -59,6 +58,9 @@ BEGIN
     @Para::Frame::L10N::EXPORT_OK = qw( loc );
 
 }
+
+
+#######################################################################
 
 =head2 loc
 
@@ -77,6 +79,9 @@ sub loc (@)
 {
     return $Para::Frame::REQ->{'lang'}->maketext(@_);
 }
+
+
+#######################################################################
 
 =head2 set
 
@@ -129,7 +134,7 @@ sub set
 	$lh->{'alternatives'} = \@alternatives;
 	unless( UNIVERSAL::isa $lh,'Para::Frame::L10N')
 	{
-	    croak "Lanugage obj of wrong type: ".Dumper($lh);
+	    croak "Lanugage obj of wrong type: ".datadump($lh);
 	}
 	return $lh;
     }
@@ -180,8 +185,6 @@ sub set
 
     my %accept = map { $_, 1 } @$site_languages;
 
-#    warn "Acceptable choices are: ".Dumper(\%accept)."\n";
-
     my @alternatives;
     foreach my $prio ( sort {$b <=> $a} keys %priority )
     {
@@ -214,7 +217,7 @@ sub set
 
     unless( UNIVERSAL::isa $lh,'Para::Frame::L10N')
     {
-	croak "Lanugage obj of wrong type: ".Dumper($lh);
+	croak "Lanugage obj of wrong type: ".datadump($lh);
     }
 
     debug 2, "Lang priority is: @alternatives";
@@ -224,6 +227,8 @@ sub set
     return $lh;
 }
 
+
+#######################################################################
 
 =head2 get_handle
 
@@ -262,6 +267,9 @@ sub get_handle
     return $lh;
 }
 
+
+#######################################################################
+
 =head2 fallback_maketext
 
   $lh->fallback_maketext( $phrase )
@@ -278,6 +286,9 @@ sub fallback_maketext
 {
     return shift->{'fallback'}->maketext(@_);
 }
+
+
+#######################################################################
 
 =head2 compute
 
@@ -383,6 +394,7 @@ sub compute
     return $value;
 }
 
+
 #######################################################################
 
 =head2 preferred
@@ -472,6 +484,9 @@ sub preferred
     return $site->languages->[0] || 'en';
 }
 
+
+#######################################################################
+
 =head2 alternatives
 
   $lh->alternatives
@@ -488,6 +503,7 @@ sub alternatives
 }
 
 
+#######################################################################
 
 =head2 code
 
@@ -504,6 +520,7 @@ sub code
 }
 
 
+#######################################################################
 
 =head2 set_headers
 
@@ -532,6 +549,7 @@ sub set_headers
     }
 }
 
+#######################################################################
 
 1;
 

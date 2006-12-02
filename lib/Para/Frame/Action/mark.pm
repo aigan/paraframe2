@@ -1,4 +1,4 @@
-#  $Id$  -*-perl-*-
+#  $Id$  -*-cperl-*-
 package Para::Frame::Action::mark;
 #=====================================================================
 #
@@ -17,7 +17,6 @@ package Para::Frame::Action::mark;
 #=====================================================================
 
 use strict;
-use Data::Dumper;
 
 use Para::Frame::Utils qw( uri store_params);
 

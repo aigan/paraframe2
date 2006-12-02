@@ -1,4 +1,22 @@
+#  $Id$  -*-cperl-*-
 package Para::Frame::Spreadsheet::Excel;
+#=====================================================================
+#
+# DESCRIPTION
+#   Paranormal.se framework Excel spreadsheet class
+#
+# We are in the PARENT, looking at the child result
+#
+# AUTHOR
+#   Jonas Liljegren   <jonas@paranormal.se>
+#
+# COPYRIGHT
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#
+#   This module is free software; you can redistribute it and/or
+#   modify it under the same terms as Perl itself.
+#
+#=====================================================================
 
 =head1 NAME
 
@@ -22,6 +40,13 @@ use Para::Frame::Reload;
 
 use base 'Para::Frame::Spreadsheet';
 
+
+#######################################################################
+
+=head2 init
+
+=cut
+
 sub init
 {
     my( $sh ) = @_;
@@ -36,6 +61,13 @@ sub init
     $sh->{'col_min'}    = $sheet->{MinCol};
     $sh->{'col_max'}    = $sheet->{MaxCol};
 }
+
+
+#######################################################################
+
+=head2 next_row
+
+=cut
 
 sub next_row
 {
@@ -77,11 +109,20 @@ sub next_row
     return \@row;
 }
 
+
+#######################################################################
+
+=head2 row_number
+
+=cut
+
 sub row_number
 {
     return shift->{'row_number'};
+
 }
 
+#######################################################################
 
 1;
 

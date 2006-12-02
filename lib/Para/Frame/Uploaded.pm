@@ -23,7 +23,6 @@ Para::Frame::Uploaded - Class for uploaded files
 =cut
 
 use strict;
-use Data::Dumper;
 use File::Copy; # copy, move
 use Net::SCP;
 use IO::File;
@@ -92,6 +91,9 @@ sub new
 
     return bless $uploaded, $class;
 }
+
+
+#######################################################################
 
 sub move_to
 {

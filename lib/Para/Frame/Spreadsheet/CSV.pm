@@ -1,4 +1,20 @@
+#  $Id$  -*-cperl-*-
 package Para::Frame::Spreadsheet::CSV;
+#=====================================================================
+#
+# DESCRIPTION
+#   Paranormal.se framework CSV spreadsheet class
+#
+# AUTHOR
+#   Jonas Liljegren   <jonas@paranormal.se>
+#
+# COPYRIGHT
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#
+#   This module is free software; you can redistribute it and/or
+#   modify it under the same terms as Perl itself.
+#
+#=====================================================================
 
 =head1 NAME
 
@@ -24,6 +40,12 @@ use Para::Frame::Reload;
 use base 'Para::Frame::Spreadsheet';
 
 
+#######################################################################
+
+=head2 init
+
+=cut
+
 sub init
 {
     my( $sh ) = @_;
@@ -40,6 +62,13 @@ sub init
 
     $sh->{'pos'} = 0; # Assuming we start at the beginning
 }
+
+
+#######################################################################
+
+=head2 next_row
+
+=cut
 
 sub next_row
 {
@@ -83,6 +112,13 @@ sub next_row
     return \@row;
 }
 
+
+#######################################################################
+
+=head2 row_number
+
+=cut
+
 sub row_number
 {
     my $cfh = select shift->{fh};
@@ -92,6 +128,9 @@ sub row_number
 
 #    return shift->{fh}->input_line_number;
 }
+
+
+#######################################################################
 
 1;
 

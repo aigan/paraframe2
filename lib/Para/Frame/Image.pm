@@ -45,6 +45,10 @@ use Para::Frame::Utils qw( throw debug datadump catch );
 
 #######################################################################
 
+=head2 magick
+
+=cut
+
 sub magick
 {
     my( $img ) = @_;
@@ -58,6 +62,13 @@ sub magick
     return $img->{'magick'};
 }
 
+
+#######################################################################
+
+=head2 reset
+
+=cut
+
 sub reset
 {
     my( $img ) =@_;
@@ -65,20 +76,48 @@ sub reset
     delete $img->{'magick'};
 }
 
+
+#######################################################################
+
+=head2 clone
+
+=cut
+
 sub clone
 {
     return $_[0]->new({filename=>$_[0]->sys_path});
 }
+
+
+#######################################################################
+
+=head2 width
+
+=cut
 
 sub width
 {
     return $_[0]->magick->Get('width');
 }
 
+
+#######################################################################
+
+=head2 height
+
+=cut
+
 sub height
 {
     return $_[0]->magick->Get('height');
 }
+
+
+#######################################################################
+
+=head2 resize_normal
+
+=cut
 
 sub resize_normal
 {
@@ -90,10 +129,24 @@ sub resize_normal
 			 });
 }
 
+
+#######################################################################
+
+=head2 resize_thumb
+
+=cut
+
 sub resize_thumb
 {
     return $_[0]->resize_thumb_y;
 }
+
+
+#######################################################################
+
+=head2 resize_thumb_y
+
+=cut
 
 sub resize_thumb_y
 {
@@ -103,6 +156,14 @@ sub resize_thumb_y
 			  t => 't',
 			 });
 }
+
+
+#######################################################################
+
+=head2 resoze_thumb_x
+
+=cut
+
 sub resize_thumb_x
 {
     return $_[0]->resize({
@@ -111,6 +172,13 @@ sub resize_thumb_x
 			  t => 'tx',
 			 });
 }
+
+
+#######################################################################
+
+=head2 resize
+
+=cut
 
 sub resize
 {
@@ -162,6 +230,13 @@ sub resize
     return $new;
 }
 
+
+#######################################################################
+
+=head2 save_as
+
+=cut
+
 sub save_as
 {
     my( $img, $filename_new, $arg ) = @_;
@@ -173,12 +248,26 @@ sub save_as
     return $new;
 }
 
+
+#######################################################################
+
+=head2 sys_base
+
+=cut
+
 sub sys_base
 {
     my $base = $_[0]->SUPER::sys_base;
     $base =~ s/-\w+$//;
     return $base;
 }
+
+
+#######################################################################
+
+=head2 rotate
+
+=cut
 
 sub rotate
 {
@@ -189,6 +278,13 @@ sub rotate
     $im->Rotate(degrees=>$deg, color=>'black');
     return $img->commit;
 }
+
+
+#######################################################################
+
+=head2 commit
+
+=cut
 
 sub commit
 {

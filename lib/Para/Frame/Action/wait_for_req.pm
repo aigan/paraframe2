@@ -1,4 +1,4 @@
-#  $Id$  -*-perl-*-
+#  $Id$  -*-cperl-*-
 package Para::Frame::Action::wait_for_req;
 #=====================================================================
 #
@@ -18,7 +18,6 @@ package Para::Frame::Action::wait_for_req;
 #=====================================================================
 
 use strict;
-use Data::Dumper;
 
 use Para::Frame::Utils qw( debug );
 

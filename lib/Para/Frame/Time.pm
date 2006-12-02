@@ -29,7 +29,6 @@ Para::Frame::Time - Parses, calculates and presents dates and times
 use strict;
 #use POSIX qw(locale_h);
 use Carp qw( cluck carp );
-use Data::Dumper;
 use Date::Manip; # UnixDate ParseDate
 use DateTime; # Should use 0.3, but not required
 use DateTime::Duration;
@@ -87,6 +86,9 @@ L</format_datetime> (?).
 TODO: Check what it uses for stringification...
 
 =cut
+
+
+#######################################################################
 
 =head2 get
 
@@ -187,6 +189,9 @@ sub get
     return bless($date, $class)->init;
 }
 
+
+#######################################################################
+
 =head2 init
 
 =cut
@@ -201,6 +206,7 @@ sub init
 }
 
 
+#######################################################################
 
 =head2 now
 
@@ -218,6 +224,9 @@ sub now
     return $now;
 }
 
+
+#######################################################################
+
 =head2 date
 
   date($any_string) #exportable
@@ -231,6 +240,8 @@ sub date
     return Para::Frame::Time->get(@_);
 }
 
+
+#######################################################################
 
 =head2 timespan
 
@@ -268,6 +279,8 @@ sub timespan
 }
 
 
+#######################################################################
+
 =head2 duration
 
   duration( %params ) #exportable
@@ -281,6 +294,8 @@ sub duration
     return DateTime::Duration->new( @_ );
 }
 
+
+#######################################################################
 
 =head2 internet_date
 
@@ -303,16 +318,8 @@ sub internet_date
     return $res;
 }
 
-sub cdate
-{
-    die "depprecated";
 
-    # TODO: Remove me. This is not realy a cdate format. Used for
-    # fromatting dates for the DB. Change to use the specific dbix
-    # datetime_format function
-
-    $_[0]->clone->set_time_zone($TZ)->strftime('%Y-%m-%d %H:%M:%S');
- }
+#######################################################################
 
 =head2 format_datetime
 
@@ -324,9 +331,11 @@ Returns a string using the format given by L<Para::Frame/configure>.
 
 sub format_datetime
 {
-#    warn "In format $FORMAT: ".Dumper($_[0]);
     return $FORMAT->format_datetime($_[0]);
 }
+
+
+#######################################################################
 
 =head2 stamp
 
@@ -341,6 +350,9 @@ sub stamp
     $_[0]->format_datetime;
 }
 
+
+#######################################################################
+
 =head2 desig
 
   $t->desig
@@ -354,6 +366,9 @@ sub desig
     $_[0]->format_datetime;
 }
 
+
+#######################################################################
+
 =head2 plain
 
   $t->plain
@@ -366,6 +381,9 @@ sub plain
 {
     $_[0]->format_datetime;
 }
+
+
+#######################################################################
 
 =head2 loc
 
@@ -383,6 +401,7 @@ sub loc($)
 }
 
 
+#######################################################################
 
 =head2 sysdesig
 
@@ -397,7 +416,11 @@ sub sysdesig
     return sprintf("Date %s", $_[0]->strftime('%Y-%m-%d %H.%M.%S %z' ));
 }
 
+
+#######################################################################
+
 sub defined { 1 }
+
 
 #######################################################################
 
@@ -493,8 +516,6 @@ sub set_stringify
 
     return $STRINGIFY;
 }
-
-
 
 
 #######################################################################

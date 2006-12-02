@@ -24,7 +24,6 @@ Para::Frame::Burner - Creates output from a template
 
 use strict;
 use Carp qw( croak cluck confess );
-use Data::Dumper;
 use Template;
 use Template::Exception;
 use Template::Config;
@@ -300,6 +299,10 @@ sub add_filters
 
 #######################################################################
 
+=head2 context
+
+=cut
+
 sub context
 {
     return $_[0]->th->context;
@@ -307,13 +310,21 @@ sub context
 
 #######################################################################
 
+=head2 compile_dir
+
+=cut
+
 sub compile_dir
 {
-    die Dumper $_[0]->{'config'} unless $_[0]->{'config'}{ COMPILE_DIR };
+    die datadump($_[0]->{'config'}) unless $_[0]->{'config'}{ COMPILE_DIR };
     return $_[0]->{'config'}{ COMPILE_DIR };
 }
 
 #######################################################################
+
+=head2 parser
+
+=cut
 
 sub parser
 {
@@ -321,6 +332,10 @@ sub parser
 }
 
 #######################################################################
+
+=head2 provider
+
+=cut
 
 sub providers
 {
@@ -386,12 +401,15 @@ sub error
     my $th = $_[0]->{'used'}{$Para::Frame::REQ};
     return undef unless $th;
     my $error = $th->error or return 0;
-#    warn Dumper $error;
     $error = Template::Exception->new('template',$error) unless ref $error;
     return $error;
 }
 
 #######################################################################
+
+=head2 subdir_suffix
+
+=cut
 
 sub subdir_suffix
 {

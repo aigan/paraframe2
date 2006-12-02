@@ -23,7 +23,6 @@ Para::Frame::Connection - Connection class for daemon IPC
 =cut
 
 use strict;
-use Data::Dumper;
 use Carp qw( cluck confess );
 use POSIX;
 
@@ -34,7 +33,10 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( debug );
+use Para::Frame::Utils qw( debug datadump );
+
+
+#######################################################################
 
 =head2 new
 
@@ -78,6 +80,13 @@ sub new
     return $conn;
 }
 
+
+#######################################################################
+
+=head2 reset_buffer
+
+=cut
+
 sub reset_buffer
 {
     my( $conn ) = @_;
@@ -85,6 +94,13 @@ sub reset_buffer
     $conn->{inbuffer} = \ "";
     $conn->{datalength} = undef;
 }
+
+
+#######################################################################
+
+=head2 disconnect
+
+=cut
 
 sub disconnect
 {
@@ -95,6 +111,13 @@ sub disconnect
     $conn->{'socket'}->shutdown(2);
 }
 
+
+#######################################################################
+
+=head2 ping
+
+=cut
+
 sub ping
 {
     my( $conn ) = @_;
@@ -104,6 +127,13 @@ sub ping
     debug "Got $$res";
     return $res;
 }
+
+
+#######################################################################
+
+=head2 get_cmd_val
+
+=cut
 
 sub get_cmd_val
 {
@@ -118,9 +148,16 @@ sub get_cmd_val
     return $res;
 }
 
+
+#######################################################################
+
+=head2 send_code
+
+=cut
+
 sub send_code
 {
-    warn Dumper \@_;
+    warn datadump(\@_);
     my( $conn, $code, $valref, $extra ) = @_;
 
     die "Too many args in send_code (@_)" if $extra;
@@ -137,6 +174,13 @@ sub send_code
 	die "LOST CONNECTION while sending $code\n";
     }
 }
+
+
+#######################################################################
+
+=head2 get_value
+
+=cut
 
 sub get_value
 {
@@ -258,6 +302,9 @@ sub get_value
 	return undef;
     }
 }
+
+
+#######################################################################
 
 
 1;

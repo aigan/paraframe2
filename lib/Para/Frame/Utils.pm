@@ -9,7 +9,7 @@ package Para::Frame::Utils;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -104,6 +104,8 @@ sub in ($@)
 }
 
 
+#######################################################################
+
 =head2 trim
 
   trim(\$string)
@@ -135,6 +137,8 @@ sub trim
 }
 
 
+#######################################################################
+
 =head2 make_passwd
 
   make_passwd()
@@ -161,6 +165,8 @@ sub make_passwd
 }
 
 
+#######################################################################
+
 =head2 random
 
   random()
@@ -176,6 +182,9 @@ sub random
 
     return int rand( $top ) + 1;
 }
+
+
+#######################################################################
 
 =head2 throw
 
@@ -220,6 +229,8 @@ sub throw
     # not reached
 }
 
+
+#######################################################################
 
 =head2 catch
 
@@ -337,6 +348,13 @@ sub catch
     return $error;
 }
 
+
+#######################################################################
+
+=head2 run_error_hooks
+
+=cut
+
 sub run_error_hooks
 {
     confess "error hook expected an exception" unless $_[0];
@@ -357,6 +375,8 @@ sub run_error_hooks
     return $_[0];
 }
 
+
+#######################################################################
 
 =head2 create_dir
 
@@ -411,6 +431,8 @@ sub create_dir
 }
 
 
+#######################################################################
+
 =head2 create_file
 
   create_file( $filename )
@@ -458,8 +480,6 @@ sub chmod_tree
     $skip_h ||= {};
     return if $skip_h->{$dir} ++;
 
-#    warn Dumper $params;
-
     chmod_dir( $dir, $params );
 
     my $d = new IO::Dir $dir;
@@ -479,6 +499,8 @@ sub chmod_tree
     $d->close;
 }
 
+
+#######################################################################
 
 =head2 chmod_file
 
@@ -684,6 +706,8 @@ sub chmod_file
 }
 
 
+#######################################################################
+
 =head2 chmod_dir
 
   chmod_dir( $dir )
@@ -722,6 +746,8 @@ sub chmod_dir
 }
 
 
+#######################################################################
+
 =head2 package_to_module
 
   package_to_module( $package )
@@ -739,6 +765,8 @@ sub package_to_module
 }
 
 
+#######################################################################
+
 =head2 module_to_package
 
   module_to_package( $module )
@@ -755,6 +783,8 @@ sub module_to_package
     return $module;
 }
 
+
+#######################################################################
 
 =head2 uri_path
 
@@ -781,6 +811,9 @@ sub uri_path
     }
     return $template;
 }
+
+
+#######################################################################
 
 =head2 uri
 
@@ -834,8 +867,7 @@ sub uri
 }
 
 
-
-###########################################
+#######################################################################
 
 =head2 dirsteps
 
@@ -896,6 +928,8 @@ sub dirsteps
 }
 
 
+#######################################################################
+
 sub compile
 {
     my( $filename ) = @_;
@@ -928,6 +962,9 @@ sub compile
     return require $filename;
 }
 
+
+#######################################################################
+
 =head2 passwd_crypt
 
   passwd_crypt( $password )
@@ -951,6 +988,9 @@ sub passwd_crypt
     return md5_hex( $passwd, $ip );
 }
 
+
+#######################################################################
+
 =head2 deunicode
 
   deunicode( $text )
@@ -968,6 +1008,9 @@ sub deunicode
     }
     return $_[0];
 }
+
+
+#######################################################################
 
 =head2 paraframe_dbm_open
 
@@ -1003,6 +1046,9 @@ sub paraframe_dbm_open
 
     return \%db;
 }
+
+
+#######################################################################
 
 =head2 elapsed_time
 
@@ -1096,6 +1142,8 @@ sub elapsed_time
 }
 
 
+#######################################################################
+
 =head2 idn_decode
 
   idn_decode( $domain )
@@ -1132,6 +1180,9 @@ sub idn_decode
 
     return $Para::Frame::Utils::TRANSCODED{ $domain } = join '.', @decoded;
 }
+
+
+#######################################################################
 
 =head2 idn_encode
 
@@ -1172,6 +1223,9 @@ sub idn_encode
     return $domain . $port;
 }
 
+
+#######################################################################
+
 =head2 store_params
 
   store_params()
@@ -1191,9 +1245,11 @@ sub store_params
 	$state->{ $key } = [ $q->param( $key ) ];
     }
 
-#    warn "Returning state :".Dumper($state);
     return $state;
 }
+
+
+#######################################################################
 
 =head2 clear_params
 
@@ -1223,6 +1279,9 @@ sub clear_params
     }
 }
 
+
+#######################################################################
+
 =head2 add_params
 
   add_params( \%saved )
@@ -1243,6 +1302,9 @@ sub add_params
     }
 }
 
+
+#######################################################################
+
 =head2 restore_params
 
   restore_params( \%saved )
@@ -1260,6 +1322,9 @@ sub restore_params
     $q->delete_all();
     add_params($state);
 }
+
+
+#######################################################################
 
 =head2 debug
 
@@ -1354,6 +1419,9 @@ sub debug
     return $message . "\n";
 }
 
+
+#######################################################################
+
 =head2 reset_hashref
 
   reset_hashref( $hashref, \%params )
@@ -1387,7 +1455,7 @@ sub reset_hashref
 }
 
 
-#########################################################
+#######################################################################
 
 =head2 timediff
 
@@ -1406,7 +1474,7 @@ sub timediff
 }
 
 
-#########################################################
+#######################################################################
 
 sub extract_query_params
 {
@@ -1422,7 +1490,7 @@ sub extract_query_params
 }
 
 
-#########################################################
+#######################################################################
 
 =head2 fqdn
 
@@ -1497,6 +1565,7 @@ sub retrieve_from_url
 }
 
 
+#######################################################################
 
 =head2 get_from_fork
 
@@ -1524,6 +1593,8 @@ sub get_from_fork
 }
 
 
+#######################################################################
+
 =head2 validate
 
   validate( $value, $type )
@@ -1544,6 +1615,7 @@ sub validate
 }
 
 
+#######################################################################
 
 =head2 datadump
 
@@ -1569,13 +1641,12 @@ sub datadump
     }
 }
 
+#######################################################################
 
 1;
 
 
 # maxof minof: use List::Util
-
-
 
 
 =head1 SEE ALSO

@@ -29,7 +29,6 @@ use POSIX;
 use Proc::ProcessTable;
 use Time::HiRes;
 use Carp;
-use Data::Dumper;
 use Sys::CpuLoad;
 
 BEGIN
@@ -84,6 +83,13 @@ kill it if there is any. Works fine for restarting your daemon.
 
 =cut
 
+
+#######################################################################
+
+=head2 startup
+
+=cut
+
 sub startup
 {
     my( $class, $use_logfile )  = @_;
@@ -116,6 +122,13 @@ sub startup
     return startup_in_fork();
 }
 
+
+#######################################################################
+
+=head2 watch_loop
+
+=cut
+
 sub watch_loop
 {
     $Para::Frame::IN_STARTUP = 0; # Startup succeeded
@@ -142,6 +155,13 @@ sub watch_loop
     debug "escaped watchdog main loop";
     exit 1;
 }
+
+
+#######################################################################
+
+=head2 check_process
+
+=cut
 
 sub check_process
 {
@@ -195,6 +215,13 @@ sub check_process
     }
 }
 
+
+#######################################################################
+
+=head2 wait_for_server_startup
+
+=cut
+
 sub wait_for_server_setup
 {
     my( $type, $level ) = get_server_message(TIMEOUT_SERVER_STARTUP);
@@ -211,6 +238,13 @@ sub wait_for_server_setup
     return 1;
 }
 
+
+#######################################################################
+
+=head2 check_server_port
+
+=cut
+
 sub check_server_report
 {
     while()
@@ -226,6 +260,13 @@ sub check_server_report
 	}
     }
 }
+
+
+#######################################################################
+
+=head2 terminate_server
+
+=cut
 
 sub terminate_server
 {
@@ -250,6 +291,13 @@ sub terminate_server
 	sleep 1;
     }
 }
+
+
+#######################################################################
+
+=head2 restart_server
+
+=cut
 
 sub restart_server
 {
@@ -299,6 +347,13 @@ sub restart_server
     }
 }
 
+
+#######################################################################
+
+=head2 get_server_message
+
+=cut
+
 sub get_server_message
 {
     my( $timeout ) = @_;
@@ -342,6 +397,13 @@ sub get_server_message
     }
     return undef;
 }
+
+
+#######################################################################
+
+=head2 check_connection
+
+=cut
 
 sub check_connection
 {
@@ -401,6 +463,13 @@ sub check_connection
     return 1;
 }
 
+
+#######################################################################
+
+=head2 on_crash
+
+=cut
+
 sub on_crash
 {
     $CRASHCOUNTER ++;
@@ -414,6 +483,13 @@ sub on_crash
 
     return startup_in_fork();
 }
+
+
+#######################################################################
+
+=head2 watchdog_crash
+
+=cut
 
 sub watchdog_crash
 {
@@ -447,6 +523,10 @@ sub watchdog_crash
 
     return 0; # Make caller go back to main loop
 }
+
+=head2 startup_in_fork
+
+=cut
 
 sub startup_in_fork
 {
@@ -514,6 +594,13 @@ sub startup_in_fork
     return 1;
 }
 
+
+#######################################################################
+
+=head2 REAPER
+
+=cut
+
 sub REAPER
 {
     # Taken from example in perl doc
@@ -573,6 +660,13 @@ sub REAPER
     $SIG{CHLD} = \&REAPER;  # still loathe sysV
 }
 
+
+#######################################################################
+
+=head2 debug
+
+=cut
+
 sub debug
 {
     my( $level, $message ) = @_;
@@ -601,6 +695,13 @@ sub debug
     return "";
 }
 
+
+#######################################################################
+
+=head2 get_procinfo
+
+=cut
+
 sub get_procinfo
 {
     my( $pid ) = @_;
@@ -624,6 +725,13 @@ sub get_procinfo
     return $p;
 }
 
+
+#######################################################################
+
+=head2 send_to_server
+
+=cut
+
 sub send_to_server
 {
     my( $code, $valref ) = @_;
@@ -644,6 +752,13 @@ sub send_to_server
     return $sock;
 }
 
+
+#######################################################################
+
+=head2 open_logfile
+
+=cut
+
 sub open_logfile
 {
     my $log = $Para::Frame::CFG->{'logfile'};
@@ -653,6 +768,13 @@ sub open_logfile
 
     chmod_file($log);
 }
+
+
+#######################################################################
+
+=head2 kill_competition
+
+=cut
 
 sub kill_competition
 {
@@ -697,6 +819,13 @@ sub kill_competition
     return 0;
 }
 
+
+#######################################################################
+
+=head2 get_lsof
+
+=cut
+
 sub get_lsof
 {
     my( $args ) = @_;
@@ -711,7 +840,6 @@ sub get_lsof
     }
     else
     {
-	warn Dumper $args;
 	die "not implemented (no port given)";
     }
 
@@ -818,6 +946,13 @@ sub get_lsof
     return \@list;
 }
 
+
+#######################################################################
+
+=head2 get_lsof_parse_message
+
+=cut
+
 sub get_lsof_parse_message
 {
     my( $msg ) = @_;
@@ -833,6 +968,13 @@ sub get_lsof_parse_message
 	debug $msg;
     }
 }
+
+
+#######################################################################
+
+=head2 configure
+
+=cut
 
 sub configure
 {
@@ -855,6 +997,13 @@ sub configure
     };
 }
 
+
+#######################################################################
+
+=head2 END
+
+=cut
+
 END
 {
     # Resetting signal handlers
@@ -870,6 +1019,7 @@ END
     }
 }
 
+#######################################################################
 
 =head1 SEE ALSO
 

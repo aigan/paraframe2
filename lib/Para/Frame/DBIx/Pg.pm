@@ -39,6 +39,9 @@ use Para::Frame::DBIx::Table;
 
 use base "Para::Frame::DBIx";
 
+
+#######################################################################
+
 =head2 init
 
   $dbix->init( \%args )
@@ -58,6 +61,13 @@ sub init
     $dbix->{'datetime_formatter'} = 'DateTime::Format::Pg';
 }
 
+
+#######################################################################
+
+=head2 bool
+
+=cut
+
 sub bool
 {
     return 'f' unless $_[1];
@@ -66,6 +76,8 @@ sub bool
 }
 
 
+#######################################################################
+
 =head2 tables
 
   $dbix->tables
@@ -73,7 +85,6 @@ sub bool
 Returns: a L<Para::Frame::List> of L<Para::Frame::DBIx::Table> objects
 
 =cut
-
 
 sub tables
 {
@@ -92,6 +103,7 @@ sub tables
 }
 
 
+#######################################################################
 
 =head2 table
 
@@ -101,7 +113,6 @@ Returns: a L<Para::Frame::DBIx::Table> object for the table, or undef
 if not exists;
 
 =cut
-
 
 sub table
 {
@@ -121,6 +132,8 @@ sub table
 	return undef;
     }
 }
+
+#######################################################################
 
 1;
 

@@ -152,6 +152,12 @@ In some/public/file.tt :
 =cut
 
 
+#######################################################################
+
+=head2 startup
+
+=cut
+
 sub startup
 {
     my( $class ) = @_;
@@ -193,6 +199,8 @@ sub startup
     warn "Setup complete, accepting connections\n";
 }
 
+#######################################################################
+
 =head2 watchdog_startup
 
   Para::Frame->watchdog_startup
@@ -208,6 +216,13 @@ sub watchdog_startup
     Para::Frame::Watchdog->startup();
     Para::Frame::Watchdog->watch_loop();
 }
+
+
+#######################################################################
+
+=head2 main_loop
+
+=cut
 
 sub main_loop
 {
@@ -474,6 +489,12 @@ sub main_loop
 }
 
 
+#######################################################################
+
+=head2 switch_req
+
+=cut
+
 sub switch_req
 {
     # $_[0] => the new $req
@@ -527,6 +548,13 @@ sub switch_req
     }
 }
 
+
+#######################################################################
+
+=head2 add_client
+
+=cut
+
 sub add_client
 {
     my( $client ) = @_;
@@ -547,6 +575,13 @@ sub add_client
 
 #    debug("New client connected: $client");
 }
+
+
+#######################################################################
+
+=head2 get_value
+
+=cut
 
 sub get_value
 {
@@ -634,6 +669,12 @@ sub get_value
     return 0;
 }
 
+
+#######################################################################
+
+=head2 fill_buffer
+
+=cut
 
 sub fill_buffer
 {
@@ -762,6 +803,13 @@ sub fill_buffer
 
     return 1;
 }
+
+
+#######################################################################
+
+=head2 handle_code
+
+=cut
 
 sub handle_code
 {
@@ -936,6 +984,13 @@ sub handle_code
     return length( $rest );
 }
 
+
+#######################################################################
+
+=head2 nonblock
+
+=cut
+
 sub nonblock
 {
     my $socket=shift;
@@ -949,6 +1004,13 @@ sub nonblock
     fcntl($socket, F_SETFL, $flags | O_NONBLOCK)
 	or die "Can't make socket nonblocking: $!\n";
 }
+
+
+#######################################################################
+
+=head2 close_callback
+
+=cut
 
 sub close_callback
 {
@@ -1021,6 +1083,13 @@ sub close_callback
     }
 }
 
+
+#######################################################################
+
+=head2 REAPER
+
+=cut
+
 sub REAPER
 {
     # Taken from example in perl doc
@@ -1049,6 +1118,9 @@ sub REAPER
     }
     $SIG{CHLD} = \&REAPER;  # still loathe sysV
 }
+
+
+#######################################################################
 
 =head2 daemonize
 
@@ -1124,6 +1196,8 @@ sub daemonize
 }
 
 
+#######################################################################
+
 =head2 restart
 
   Para::Frame->restart()
@@ -1143,6 +1217,12 @@ sub restart
     exit 0;
 }
 
+
+#######################################################################
+
+=head2 add_background_jobs_conditional
+
+=cut
 
 sub add_background_jobs_conditional
 {
@@ -1185,6 +1265,13 @@ sub add_background_jobs_conditional
 
     add_background_jobs($delta, $sysload);
 }
+
+
+#######################################################################
+
+=head2 add_background_jobs
+
+=cut
 
 sub add_background_jobs
 {
@@ -1251,9 +1338,13 @@ sub add_background_jobs
     $BGJOBNR   = $REQNUM;
 }
 
-##############################################
-# Handle the request
-#
+
+#######################################################################
+
+=head2 handle_request
+
+=cut
+
 sub handle_request
 {
     my( $client, $recordref ) = @_;
@@ -1350,6 +1441,9 @@ sub handle_request
 
     ### Clean up used globals
 }
+
+
+#######################################################################
 
 =head2 add_hook
 
@@ -1452,6 +1546,13 @@ sub add_hook
     push @{$HOOK{$label}}, $code;
 }
 
+
+#######################################################################
+
+=head2 run_hook
+
+=cut
+
 sub run_hook
 {
     my( $class, $req, $label ) = (shift, shift, shift);
@@ -1505,6 +1606,9 @@ sub run_hook
     return 1;
 }
 
+
+#######################################################################
+
 =head2 add_global_tt_params
 
   Para::Frame->add_global_tt_params( \%params )
@@ -1525,6 +1629,9 @@ sub add_global_tt_params
     }
 }
 
+
+#######################################################################
+
 =head2 do_hup
 
 Will tell watchdog to restart server by forking.
@@ -1535,6 +1642,13 @@ sub do_hup
 {
     $TERMINATE = 'HUP';
 }
+
+
+#######################################################################
+
+=head2 write_pidfile
+
+=cut
 
 sub write_pidfile
 {
@@ -1549,11 +1663,25 @@ sub write_pidfile
     $ACTIVE_PIDFILE = $pid;
 }
 
+
+#######################################################################
+
+=head2 remove_pidfile
+
+=cut
+
 sub remove_pidfile
 {
     my $pidfile = $Para::Frame::CFG->{'pidfile'};
     unlink $pidfile or warn "Failed to remove $pidfile: $!\n";
 }
+
+
+#######################################################################
+
+=head2 END
+
+=cut
 
 END
 {
@@ -1564,6 +1692,12 @@ END
     }
 }
 
+
+#######################################################################
+
+=head2 open_logfile
+
+=cut
 
 sub open_logfile
 {
@@ -1960,6 +2094,9 @@ sub configure
     $CFG->{'version'} = $VERSION;
 }
 
+
+#######################################################################
+
 =head2 Session
 
   Para::Frame->Session
@@ -1973,7 +2110,10 @@ sub Session
     $CFG->{'session_class'};
 }
 
-=head3 User
+
+#######################################################################
+
+=head2 User
 
   Para::Frame->User
 
@@ -1986,10 +2126,12 @@ sub User
     $CFG->{'user_class'};
 }
 
-=head3 dir
+
+#######################################################################
+
+=head2 dir
 
 Returns the L</paraframe> dir.
-
 
 =cut
 
@@ -1997,7 +2139,6 @@ sub dir
 {
     return $CFG->{'paraframe'};
 }
-
 
 
 #######################################################################
@@ -2082,7 +2223,8 @@ sub set_global_tt_params
 
 1;
 
-#########################################################
+
+#######################################################################
 
 
 =head1 AUTHOR

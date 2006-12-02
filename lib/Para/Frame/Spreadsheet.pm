@@ -1,4 +1,20 @@
+#  $Id$  -*-cperl-*-
 package Para::Frame::Spreadsheet;
+#=====================================================================
+#
+# DESCRIPTION
+#   Paranormal.se framework Spreadsheet class
+#
+# AUTHOR
+#   Jonas Liljegren   <jonas@paranormal.se>
+#
+# COPYRIGHT
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#
+#   This module is free software; you can redistribute it and/or
+#   modify it under the same terms as Perl itself.
+#
+#=====================================================================
 
 =head1 NAME
 
@@ -8,7 +24,6 @@ Para::Frame::Spreadsheet - Access data in diffrent source formats in a uniform w
 
 use strict;
 use vars qw( $VERSION );
-use Data::Dumper;
 
 
 BEGIN
@@ -18,8 +33,8 @@ BEGIN
       unless $Para::Frame::QUIET;
 }
 
-use Para::Frame::Utils qw( throw );
 use Para::Frame::Reload;
+use Para::Frame::Utils qw( throw datadump );
 
 =head1 SYNOPSIS
 
@@ -48,6 +63,11 @@ Handles mostly CSV and XML.
 
 =head1 Methods
 
+=cut
+
+
+#######################################################################
+
 =head2 new
 
 =cut
@@ -61,7 +81,7 @@ sub new
 
     unless( $fh->isa("IO::Handle") or $fh->isa("Fh")  )
     {
-	die Dumper $fh;
+	die datadump( $fh );
 	throw('action', "No filehandle given: $fh");
     }
 
@@ -92,6 +112,13 @@ sub new
     return $sh;
 }
 
+
+#######################################################################
+
+=head2 get_headers
+
+=cut
+
 sub get_headers
 {
     my( $sh ) = @_;
@@ -111,12 +138,26 @@ sub get_headers
     return scalar @$row;
 }
 
+
+#######################################################################
+
+=head2 headers
+
+=cut
+
 sub headers
 {
     my( $sh ) = @_;
 
     return $sh->{'cols'};
 }
+
+
+#######################################################################
+
+=head2 rowhash
+
+=cut
 
 sub rowhash
 {
@@ -136,12 +177,22 @@ sub rowhash
     return $sh->{'rowhash'};
 }
 
+
+#######################################################################
+
+=head2 next_rowhash
+
+=cut
+
 sub next_rowhash
 {
     my( $sh ) = @_;
     $sh->{'rowhash'} = undef;
     return $sh->rowhash;
 }
+
+
+#######################################################################
 
 1;
 

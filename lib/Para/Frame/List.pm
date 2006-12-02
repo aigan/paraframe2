@@ -24,7 +24,6 @@ Para::Frame::List - Methods for list manipulation
 
 use strict;
 use Carp qw( carp croak shortmess confess cluck );
-use Data::Dumper;
 use List::Util;
 use Template::Constants;
 use Scalar::Util;

@@ -40,7 +40,6 @@ L</host> as param.
 
 use strict;
 use Carp qw( croak cluck confess );
-use Data::Dumper;
 
 BEGIN
 {

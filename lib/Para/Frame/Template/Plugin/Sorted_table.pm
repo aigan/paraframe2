@@ -1,4 +1,20 @@
+#  $Id$  -*-cperl-*-
 package Para::Frame::Template::Plugin::Sorted_table;
+#=====================================================================
+#
+# DESCRIPTION
+#   Paranormal.se framework tablesort TT plugin
+#
+# AUTHOR
+#   Jonas Liljegren   <jonas@paranormal.se>
+#
+# COPYRIGHT
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#
+#   This module is free software; you can redistribute it and/or
+#   modify it under the same terms as Perl itself.
+#
+#=====================================================================
 
 =head1 NAME
 
@@ -9,8 +25,6 @@ Para::Frame::Template::Plugin::Sorted_table
 use Template::Plugin;
 use base "Template::Plugin";
 use strict;
-
-use Data::Dumper;
 
 use Para::Frame::Utils qw( debug );
 
@@ -25,6 +39,9 @@ BEGIN
 See L<Para::Frame::List/pagelist>
 
 =cut
+
+
+#######################################################################
 
 sub new
 {
@@ -42,6 +59,8 @@ sub new
 
     return bless {}, $class;
 }
+
+#######################################################################
 
 1;
 

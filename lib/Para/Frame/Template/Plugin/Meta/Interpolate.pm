@@ -1,4 +1,20 @@
+#  $Id$  -*-cperl-*-
 package Para::Frame::Template::Plugin::Meta::Interpolate;
+#=====================================================================
+#
+# DESCRIPTION
+#   Paranormal.se framework Interpolation TT plugin
+#
+# AUTHOR
+#   Jonas Liljegren   <jonas@paranormal.se>
+#
+# COPYRIGHT
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#
+#   This module is free software; you can redistribute it and/or
+#   modify it under the same terms as Perl itself.
+#
+#=====================================================================
 
 =head1 NAME
 
@@ -9,8 +25,6 @@ Para::Frame::Template::Plugin::Meta::Interpolate - Allow evaluation of META para
 use Template::Plugin;
 use base "Template::Plugin";
 use strict;
-
-use Data::Dumper;
 
 BEGIN
 {
@@ -59,6 +73,9 @@ do it as above.
 
 #warn "$$: Compiling Para::Frame::Template::Plugin::Meta::Interpolate\n";
 
+
+#######################################################################
+
 sub new
 {
     my( $self, $context, @params ) = @_;
@@ -105,6 +122,8 @@ sub new
 
     return $self;
 }
+
+#######################################################################
 
 1;
 

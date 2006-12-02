@@ -43,6 +43,10 @@ You get this object by using L<Para::Frame::Page/ctype>.
 
 #######################################################################
 
+=head2 new
+
+=cut
+
 sub new
 {
     my( $class, $req ) = @_;
@@ -213,12 +217,20 @@ sub is
 
 #######################################################################
 
+=head2 is_defined
+
+=cut
+
 sub is_defined
 {
     return $_[0]->{'ctype'} ? 1 : 0;
 }
 
 #######################################################################
+
+=head2 commit
+
+=cut
 
 sub commit
 {

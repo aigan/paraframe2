@@ -35,6 +35,13 @@ use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug datadump );
 use Para::Frame::Time qw( now );
 
+
+#######################################################################
+
+=head2 new
+
+=cut
+
 sub new
 {
     my( $this, $args ) = @_;
@@ -242,6 +249,8 @@ sub header
     return $out;
 }
 
+
+#######################################################################
 
 1;
 

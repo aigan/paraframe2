@@ -9,7 +9,7 @@ package Para::Frame::Widget;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -24,7 +24,6 @@ Para::Frame::Widget - Common template widgets
 
 use strict;
 use Carp qw( cluck confess croak );
-use Data::Dumper;
 use IO::File;
 use CGI;
 

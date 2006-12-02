@@ -23,7 +23,6 @@ Para::Frame::Result - Holds the results of actions and exceptions
 =cut
 
 use strict;
-use Data::Dumper;
 use Carp qw( carp shortmess croak confess );
 use Template::Exception;
 
@@ -54,6 +53,9 @@ The info hash is accessed in the template as C<result.info>.
 
 
 =cut
+
+
+#######################################################################
 
 sub new
 {
@@ -87,6 +89,9 @@ sub new
     return $result;
 }
 
+
+#######################################################################
+
 sub message
 {
     my( $result, @messages ) = @_;
@@ -105,6 +110,9 @@ sub message
 	$Para::Frame::REQ->note($msg);
     }
 }
+
+
+#######################################################################
 
 =head2 exception
 
@@ -163,6 +171,8 @@ sub exception
     return $result->error( $error );
 }
 
+
+#######################################################################
 
 =head2 error
 
@@ -229,6 +239,9 @@ sub error
     return $part;
 }
 
+
+#######################################################################
+
 =head2 errcnt
 
 Returns the number of errors in the result.
@@ -239,6 +252,9 @@ sub errcnt
 {
     return $_[0]->{'errcnt'};
 }
+
+
+#######################################################################
 
 =head2 backtrack
 
@@ -268,6 +284,9 @@ sub backtrack
     return $_[0]->{'backtrack'};
 }
 
+
+#######################################################################
+
 =head2 parts
 
 Returns a reference to a list of all L<Para::Frame::Result::Part>
@@ -279,6 +298,9 @@ sub parts
 {
     return $_[0]->{'part'};
 }
+
+
+#######################################################################
 
 =head2 error_parts
 
@@ -304,6 +326,9 @@ sub error_parts
     return \@res;
 }
 
+
+#######################################################################
+
 =head2 info_parts
 
 Returns all visible info parts.
@@ -327,6 +352,9 @@ sub info_parts
 
     return \@res;
 }
+
+
+#######################################################################
 
 =head2 find
 
@@ -352,6 +380,9 @@ sub find
     debug "  No such part";
     return undef;
 }
+
+
+#######################################################################
 
 =head2 hide_part
 
@@ -396,6 +427,9 @@ sub hide_part
     return undef;
 }
 
+
+#######################################################################
+
 =head2 as_string
 
 Returns the result in string format.
@@ -413,6 +447,9 @@ sub as_string
     }
     return $out;
 }
+
+
+#######################################################################
 
 =head2 incorporate
 
@@ -447,7 +484,7 @@ sub incorporate
     return 1;
 }
 
-
+#######################################################################
 
 1;
 

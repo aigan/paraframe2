@@ -69,7 +69,6 @@ use File::Basename; # exports fileparse, basename, dirname
 use File::stat; # exports stat
 use File::Slurp; # Exports read_file, write_file, append_file, overwrite_file, read_dir
 use Scalar::Util qw(weaken);
-use Data::Dumper;
 
 BEGIN
 {

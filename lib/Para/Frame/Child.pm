@@ -28,7 +28,6 @@ use strict;
 use vars qw( $VERSION );
 use FreezeThaw qw( thaw );
 use File::Slurp;
-use Data::Dumper;
 
 BEGIN
 {
@@ -61,7 +60,12 @@ there are any exceptions, the first of them is given to
 L<Para::Frame::Result/exception>. If no exceptins was found, all the
 L<Para::Frame::Child::Result/on_return> are run.
 
+=cut
 
+
+#######################################################################
+
+=head2 register
 
 =cut
 
@@ -87,6 +91,13 @@ sub register
 
     return $child;
 }
+
+
+#######################################################################
+
+=head2 deregister
+
+=cut
 
 sub deregister
 {
@@ -143,6 +154,9 @@ sub deregister
 
 }
 
+
+#######################################################################
+
 =head2 yield
 
   $fork->yield
@@ -177,6 +191,13 @@ sub yield
 
     return $child->{'result'};
 }
+
+
+#######################################################################
+
+=head2 get_results
+
+=cut
 
 sub get_results
 {
@@ -223,7 +244,6 @@ sub get_results
 #    warn "  got data: $data\n";
     my( $result ) = thaw( substr $child->{'data'}, $plength );
 #    warn "  result: $result\n"; ### DEBUG
-#    warn Dumper $result; ### DEBUG
     $child->{'result'} = $result;
     debug 2, "Data result stored";
 
@@ -250,6 +270,9 @@ sub get_results
     return $result;
 }
 
+
+#######################################################################
+
 =head2 req
 
   $fork->req
@@ -263,6 +286,9 @@ sub req
     return $_[0]->{'req'};
 }
 
+
+#######################################################################
+
 =head2
 
   $fork->pid
@@ -275,6 +301,9 @@ sub pid
 {
     return $_[0]->{'pid'};
 }
+
+
+#######################################################################
 
 =head2 status
 
@@ -296,6 +325,9 @@ sub status
     return $child->{'status'};
 }
 
+
+#######################################################################
+
 =head2 result
 
   $fork->result
@@ -310,6 +342,9 @@ sub result
     return $_[0]->{'result'};
 }
 
+
+#######################################################################
+
 =head2 in_child
 
   $fork->in_child
@@ -323,6 +358,9 @@ sub in_child
     return 0;
 }
 
+
+#######################################################################
+
 =head2 in_parent
 
   $fork->in_parent
@@ -335,6 +373,9 @@ sub in_parent
 {
     return 1;
 }
+
+
+#######################################################################
 
 =head2 failed
 
@@ -358,6 +399,9 @@ sub failed
     }
 }
 
+
+#######################################################################
+
 =head2 succeeded
 
   $fork->succeeded
@@ -379,6 +423,9 @@ sub succeeded
 	return 1;
     }
 }
+
+
+#######################################################################
 
 1;
 
