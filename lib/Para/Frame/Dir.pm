@@ -90,7 +90,7 @@ sub initiate
 
     my $d = IO::Dir->new($sys_path) or die $!;
 
-    debug "Reading ".$sys_path;
+    debug 2, "Reading ".$sys_path;
 
     while(defined( my $name = $d->read ))
     {
