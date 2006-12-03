@@ -514,7 +514,6 @@ sub uri2file
 	debug "URI site is: ".$site->code;
 	debug "Req site is: ".$req_site->code;
 	debug "For $_[0]";
-	cluck;
 
 	return $req->new_subrequest($args,
 				    \&Para::Frame::Request::uri2file,
