@@ -285,14 +285,15 @@ sub get_by_url
     my $url;
     if( UNIVERSAL::isa($url_in, 'URI') )
     {
-	if( my $port = $url_in->port )
+	my $port = $url_in->port || 80;
+	if( $port != 80 )
 	{
-	    if( $port != 80 )
-	    {
-		confess "FIXME";
-	    }
+	    $url = $url_in->host_port . $url_in->path;
 	}
-	$url = $url_in->host . $url_in->path;
+	else
+	{
+	    $url = $url_in->host . $url_in->path;
+	}
     }
     elsif( ref $url_in )
     {
