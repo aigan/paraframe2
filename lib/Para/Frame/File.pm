@@ -147,7 +147,7 @@ sub new
 	}
 	elsif( UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
 	{
-	    if( $url_name =~ /\.\w{2,4}$/ )
+	    if( $url_name =~ /\.\w{2,4}\/?$/ )
 	    {
 		confess "File $url_name doesn't look like a dir";
 	    }
@@ -198,6 +198,11 @@ sub new
 	if( -d $sys_name or
 	    UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
 	{
+	    if( $sys_name =~ /\.\w{2,4}\/?$/ )
+	    {
+		confess "File $sys_name doesn't look like a dir";
+	    }
+
 	    if( -d $sys_name )
 	    {
 		$sys_norm = $sys_name . '/';
@@ -258,6 +263,11 @@ sub new
 	{
 	    if( $url_norm and $url_norm =~ /\/$/ )
 	    {
+		if( $url_norm =~ /\.\w{2,4}\/?$/ )
+		{
+		    confess "File $url_norm doesn't look like a dir";
+		}
+
 		debug "Blessing as a dir";
 		bless $file, 'Para::Frame::Dir';
 		$sys_norm = $sys_name . '/';
@@ -269,6 +279,11 @@ sub new
 	}
 	elsif( UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
 	{
+	    if( $sys_name =~ /\.\w{2,4}\/?$/ )
+	    {
+		confess "File $sys_name doesn't look like a dir";
+	    }
+
 	    $sys_norm = $sys_name . '/';
 	}
 	else
