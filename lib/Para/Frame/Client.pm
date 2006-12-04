@@ -480,6 +480,7 @@ sub get_response
     my $chunks = 0;
     my $data='';
     my $buffer = '';
+    my $partial = 0;
     while( 1 )
     {
 
@@ -495,7 +496,7 @@ sub get_response
 	}
 
 
-	unless( $data )
+	if( not($data) or $partial )
 	{
 	    if( $select->can_read( $timeout ) )
 	    {
@@ -527,10 +528,13 @@ sub get_response
 	    if( $data =~ s/^([^\n]+)\n// )
 	    {
 		$row = $1;
+		$partial = 0;
 	    }
 	    else
 	    {
-		warn "$$: Partial data: $data\n";
+#		warn "$$: Partial data: $data\n";
+		warn "$$: Partial data...\n";
+		$partial++;
 		next;
 	    }
 
