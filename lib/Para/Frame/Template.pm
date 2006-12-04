@@ -420,21 +420,31 @@ sub find
 
 =head2 precompile
 
-TODO: REWRITE
+  $dest->precompile( \%args )
 
-  $page->precompile( \%args )
+C<$dest> is the template resulting from the compilation. It's the
+place there the precompiled template should be saved. You may get the
+C<$dest> from a L<Para::Frame::Dir/get_virtual> and it should be a
+(virual) file recognized as a template, for example by givin it a
+C<.tt> file suffix.
+
+The template to be used for the construction of this template is given
+by the arg C<template>.
 
 Send same args as for L</new> for creating the new page from thre
 source C<$page>. Also takes:
 
+  arg template
   arg type defaults to html_pre
-  arg language defaults to undef
   arg umask defaults to 02
-  arg create_missing_dirs
   arg params
-  arg page
 
-Returns: The new compiled page
+The C<$dest> is normalized with L<Para::Frame::File/normalize>. It's
+this normalized page that is rendered. That will be the object
+availible in the template during rendering as the C<page> variable
+(both during the precompile and during later renderings).
+
+Returns: C<$dest>
 
 =cut
 
@@ -450,20 +460,19 @@ sub precompile
     my $tmpl = $args->{'template'};
     unless($tmpl)
     {
+	debug "CHECK THIS: ".datadump($tmpl,2);
 	$tmpl = $dest->template;
     }
 
     my $destfile = $dest->sys_path;
-
-    #Normalize page URL
-    my $page = $dest->normalize;
-
     my $dir = $dest->dir->create($args); # With umask
 
     my $srcfile = $tmpl->sys_path;
     my $fh = new IO::File;
-    $fh->open( "$srcfile" ) or die "Failed to open '$srcfile': $!\n";
+    $fh->open( $srcfile ) or die "Failed to open '$srcfile': $!\n";
 
+    #Normalize page URL
+    my $page = $dest->normalize;
     my $rend = $page->renderer(undef, {template => $tmpl} );
 
     $rend->set_burner_by_type($args->{'type'} || 'html_pre');

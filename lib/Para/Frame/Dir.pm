@@ -370,6 +370,10 @@ sub has_file
 
 =head2 get_virtual
 
+  $dir->get_virtual( $filename )
+
+Adds the arg C<file_may_not_exist> and calls L</get>.
+
 =cut
 
 sub get_virtual
@@ -380,6 +384,15 @@ sub get_virtual
 #######################################################################
 
 =head2 get
+
+  $dir->get( $filename, \%args )
+
+Possible args are
+
+  file_may_not_exist
+
+$filename can contain '/' for specifying a subdir. An '/' will be
+added to the beginning if missing.
 
 =cut
 

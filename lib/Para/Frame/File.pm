@@ -1381,6 +1381,13 @@ sub template
 
 =head2 normalize
 
+Removes language parts and C<index.tt> from URLs.
+
+  $f->normalize()
+
+If that changes the URL, returns a new L<Para::Frame::File> object,
+with the flag C<may_not_exist>.
+
 =cut
 
 sub normalize
@@ -1591,6 +1598,19 @@ sub load_compiled
 
 
 =head2 renderer
+
+  $f->renderer( $renderer. \%args )
+
+The default renderer is L<Para::Frame::Renderer::TT>.
+
+C<$renderer> should be C<undef> for using the default, or the name of
+a renderer class that must have C<::Renderer::> in it's name, or a ref
+in which case it's taken to be a renderer object.
+
+Any C<%args> are given to the renderer constructor -- usually
+L<Para::Frame::Renderer::TT/new>.
+
+The C<page> arg is always set to L<$f>.
 
 =cut
 
