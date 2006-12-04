@@ -822,6 +822,7 @@ sub uri2file
 {
     my( $req, $url, $file, $may_not_exist ) = @_;
 
+    $url =~ s/\?.*//; # Remove query part if given
     my $key = $req->host . $url;
 
     if( $file )
