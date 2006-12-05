@@ -46,8 +46,7 @@ use Para::Frame::List;
 
 Represents a directory in the site.
 
-See also L<Para::Frame::Site::Dir>, L<Para::Frame::File> and
-L<Para::Frame::Page>.
+Inherits from L<Para::Frame::File>.
 
 =cut
 
