@@ -53,24 +53,36 @@ sub handler
 
     my $password_encrypted = passwd_crypt( $password );
 
-    if( $user_class->authenticate_user( $password_encrypted ) )
+    #Also catch exceptions
+    my $msg = eval
     {
-	$req->cookies->add({
-	    'username' => $username,
-	    'password' => $password_encrypted,
-	},{
-	    @extra,
-	});
+	if( $user_class->authenticate_user( $password_encrypted ) )
+	{
+	    $req->cookies->add({
+				'username' => $username,
+				'password' => $password_encrypted,
+			       },{
+				  @extra,
+				 });
 
-	$q->delete('username');
-	$q->delete('password');
+	    $q->delete('username');
+	    $q->delete('password');
 
-	$req->run_hook('user_login', $u);
+	    $req->run_hook('user_login', $u);
 
-	return "$username loggar in";
+	    return "$username loggar in";
+	}
+    };
+    if( $@ )
+    {
+	$u = $user_class->get('guest');
+	$user_class->change_current_user( $u );
+	die $@;
     }
 
-    return "Inloggningen misslyckades\n";
+    $msg ||= "Inloggningen misslyckades";
+
+    return $msg;
 }
 
 1;
