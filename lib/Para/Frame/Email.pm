@@ -439,9 +439,10 @@ sub send
     my @try = ref $p->{'to'} eq 'ARRAY' ? @{$p->{'to'}} : $p->{'to'};
 
     my $url = "$home/email/".$p->{'template'};
-    my $page = Para::Frame::Page->new({
+    my $page = Para::Frame::File->new({
 				       url => $url,
 				       site => $site,
+				       file_may_not_exist => 1,
 				      });
 
     my( $tmpl ) = $page->template;
@@ -450,13 +451,9 @@ sub send
 	throw('notfound', "Hittar inte e-postmallen ".$p->{'template'});
     }
 
-    my $burner = $tmpl->set_burner_by_type('plain');
+    my $rend = $tmpl->renderer;
 
-    if( debug )
-    {
-	my $providers =  $burner->providers;
-	debug(0,"Plain include path is: @{$providers->[0]->include_path()}");
-    }
+    my $burner = $rend->set_burner_by_type('plain');
 
 
     # Clone params for protection from change
@@ -465,7 +462,7 @@ sub send
     $params{'page'} = $page;
 
     my $data = "";
-    $burner->burn( $tmpl->sys_path, \%params, \$data )
+    $burner->burn( $rend, $tmpl->sys_path, \%params, \$data )
       or throw($burner->error);
 
     if( $p->{'pgpsign'} )
