@@ -22,7 +22,7 @@ Para::Frame::File - Represents a file in the site
 
 =head1 DESCRIPTION
 
-See also L<Para::Frame::Dir> and L<Para::Frame::Page>.
+See also L<Para::Frame::Dir> and L<Para::Frame::Template>.
 
 =cut
 
@@ -1341,6 +1341,10 @@ sub target_without_lang
 #######################################################################
 
 =head2 template
+
+  $f->template()
+
+For finding the template to use for rendering the URL of C<$f>.
 
 Returns:
 

@@ -37,7 +37,7 @@ use Para::Frame::Utils qw( debug datadump );
 
 =head1 DESCRIPTION
 
-You get this object by using L<Para::Frame::Page/ctype>.
+You get this object by using L<Para::Frame::Request::Response/ctype>.
 
 =cut
 
@@ -268,6 +268,6 @@ Jonas Liljegren E<lt>jonas@paranormal.seE<gt>
 
 =head1 SEE ALSO
 
-L<Para::Frame::Page>
+L<Para::Frame::Request::Response>
 
 =cut
