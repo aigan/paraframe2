@@ -441,10 +441,14 @@ sub as_string
     my( $result ) = @_;
 
     my $out = "";
-    foreach my $part (@{ $result->parts })
+    my @parts = @{ $result->parts };
+
+    for( my $i=0; $i<=$#parts; $i++ )
     {
-	$out .= $part->as_string . "\n";
+	$out .= "--- Part $i ---\n";
+	$out .= $parts[$i]->as_string . "\n";
     }
+    $out .= "---\n";
     return $out;
 }
 
