@@ -24,7 +24,7 @@ Para::Frame::Renderer::HTML_Fallback - Renders an error page
 
 use strict;
 use Carp qw( croak confess cluck );
-
+use CGI;
 BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
@@ -94,7 +94,7 @@ sub render_output
     my $out = "";
     $out .= "<p>500: Failure to render failure page\n";
     $out .= "<pre>\n";
-    $out .= $req->result->as_string;
+    $out .= CGI->escapeHTML($req->logging->debug_data)."\n\n";
     $out .= "</pre>\n";
     if( my $backup = $req->site->backup_host )
     {
