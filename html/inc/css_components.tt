@@ -4,7 +4,6 @@
     margin-bottom:  10px;
     width:	    100%;
     border:	    none;
-    cell-spacing:   none;
     z-index:	    10;
   }
   
