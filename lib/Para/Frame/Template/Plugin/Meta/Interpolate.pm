@@ -54,7 +54,7 @@ If value starts with a '-', the rest of value will be evaluated as a TT
 expression. (No expressions are normally allowed in META.)
 
 If value starts with a '~', the rest of value will be evaluated as a
-TT string wint variable interpolation. It's the same as for '-' but
+TT string with variable interpolation. It's the same as for '-' but
 with the extra "" around the value.
 
 It does not sets the variable if it's already true. That enables you
@@ -97,7 +97,7 @@ sub new
 	if( $val =~ /^-(.*)/ )
 	{
 	    my $src = $st.' '.$1.' '.$et;
-#	    warn "$$: Parsing $template->{$key} => $src\n";
+#	    warn "Parsing $template->{$key} => $src\n";
 	    $val = $context->process( \$src, {} );
 	    unless( $stash->get($key) )
 	    {
@@ -107,7 +107,7 @@ sub new
 	elsif( $val =~ /^~(.*)/ )
 	{
 	    my $src = $st.' "'.$1.'" '.$et;
-#	    warn "$$: Parsing $template->{$key} => $src\n";
+#	    warn "Parsing $template->{$key} => $src\n";
 	    $val = $context->process( \$src, {} );
 	    unless( $stash->get($key) )
 	    {
