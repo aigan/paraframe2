@@ -137,7 +137,7 @@ tr.odd
       border: 2px solid black;
       padding: 0.5em 0em 0em 1em;
       -moz-border-radius: 0.5em;
-      border-radius: 0.5em;
+/*      border-radius: 0.5em; */
 }
 
 .paraframe_imgexpand
