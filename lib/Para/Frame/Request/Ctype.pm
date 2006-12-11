@@ -57,7 +57,6 @@ sub new
      ctype   => undef,
      charset => undef,
      changed => 0,
-     req     => $req,
     }, $class;
     weaken( $ctype->{'req'} );
 
@@ -68,11 +67,6 @@ sub new
 
     return $ctype;
 }
-
-#######################################################################
-
-# TODO: May be copled to a page for an previous request
-sub req    { $_[0]->{'req'} || $Para::Frame::REQ }
 
 #######################################################################
 
@@ -252,7 +246,7 @@ sub commit
     {
 	my $string = $ctype->as_string;
 	debug(3,"Setting ctype string to $string");
-	$ctype->req->send_code( 'AR-PUT', 'content_type', $string);
+	$Para::Frame::REQ->send_code( 'AR-PUT', 'content_type', $string);
 	$ctype->{'changed'} = 0;
     }
     return 1;
