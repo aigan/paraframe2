@@ -381,7 +381,7 @@ sub new
     if(  my $cached = $Para::Frame::File::Cache{$file->{'sys_name'}} )
     {
 	$Para::Frame::File::Cache{ $key } = $cached;
-	debug "---> GOT FROM CACHE";
+	debug 2, "---> GOT FROM CACHE";
 
 	# Upgrade with URL info if given
 	if( $file->{'url_name'} and not $cached->{'url_name'} )
@@ -1346,6 +1346,8 @@ sub target_without_lang
 
 For finding the template to use for rendering the URL of C<$f>.
 
+Uses C<dirconfig find> or L<Para::Frame::Site/find_class>.
+
 Returns:
 
 A L<Para::Frame::Template> object or undef
@@ -1605,6 +1607,9 @@ sub load_compiled
 
   $f->renderer( $renderer. \%args )
 
+For gettign the renderer used for a request response, see
+L<Para::Frame::Request::Response/renderer>.
+
 The default renderer is L<Para::Frame::Renderer::TT>.
 
 C<$renderer> should be C<undef> for using the default, or the name of
@@ -1615,6 +1620,8 @@ Any C<%args> are given to the renderer constructor -- usually
 L<Para::Frame::Renderer::TT/new>.
 
 The C<page> arg is always set to L<$f>.
+
+Returns a new renderer object each time it is called.
 
 =cut
 
@@ -1724,7 +1731,7 @@ sub as_dir
 	confess "$desig dosen't seem to be a dir";
     }
 
-    debug "Converting $desig to a dir";
+    debug 2, "Converting $desig to a dir";
 
     unless( $f->exist )
     {
