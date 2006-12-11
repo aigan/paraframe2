@@ -704,6 +704,10 @@ C<backup_redirect>: Used by L<Para::Frame::Client>
 
 C<backup>: Used by L<Para::Frame::Client>
 
+C<find>: Used by L<Para::Frame::File/template>
+
+C<loadpage>: Used by L<Para::Frame/handle_request>. If C<loadpage> is
+set to C<no>, a loadpage will not be sent.
 
 =cut
 
@@ -2571,7 +2575,7 @@ sub set_error_response_path
 Uses current L</page> if existing.
 
 If this is the first time, sets the URL from the req as the original
-page. The original page can be retrieved from L</original_page>.
+page. The original page can be retrieved via L</original_response>.
 
 Should be used if we may want to use another template based on a
 changed language or something else in the context htat has changed.
@@ -2649,35 +2653,6 @@ sub original_response
     return $_[0]->{'orig_resp'};
 }
 
-
-#######################################################################
-
-=head2 original_page
-
-  $req->original_page
-
-=cut
-
-sub original_page
-{
-    confess "deprecated";
-    return $_[0]->{'orig_page'};
-}
-
-
-#######################################################################
-
-=head2 original_url
-
-  $req->original_url
-
-=cut
-
-sub original_url
-{
-    confess "deprecated";
-    return $_[0]->{'orig_url'};
-}
 
 #######################################################################
 
