@@ -38,6 +38,8 @@ use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw catch debug timediff datadump );
 use Para::Frame::Widget qw( forward );
 
+# bool overload should use get_next_raw to find
+
 use overload
   '@{}' => 'as_arrayref_by_overload',
   'bool' => sub{carp "* Bool"; $_[0]->size},
