@@ -484,38 +484,6 @@ sub set_http_status
 
 #######################################################################
 
-=head2 fallback_error_page
-
-  $resp->fallback_error_page
-
-Returns a scalar ref with HTML to use if the normal error response
-templates did not work.
-
-=cut
-
-sub fallback_error_page
-{
-    my( $resp ) = @_;
-
-    confess "DEPRECATED";
-
-    my $req = $resp->req;
-    my $out = "";
-    $out .= "<p>500: Failure to render failure page\n";
-    $out .= "<pre>\n";
-    $out .= $req->result->as_string;
-    $out .= "</pre>\n";
-    if( my $backup = $req->site->backup_host )
-    {
-	my $path = $resp->page->url_path;
-	$out .= "<p>Try to get the page from  <a href=\"http://$backup$path\">$backup</a> instead</p>\n"
-	}
-    return \$out;
-}
-
-
-#######################################################################
-
 =head2 send_output
 
   $resp->send_output
@@ -832,10 +800,16 @@ sub output_redirection
     }
     else
     {
-	my $url = Para::Frame::URI->new($url_in, 'http');
+	my $scheme = 'http';
+	unless( ref $url_in )
+	{
+	    $scheme = $req->site->scheme;
+	}
+
+	my $url = Para::Frame::URI->new($url_in, $scheme);
 	$url->host( idn_encode $req->http_host ) unless $url->host;
 	$url->port( $req->http_port ) unless $url->port;
-	$url->scheme('http');
+	$url->scheme($scheme);
 
 	$url_out =  $url->canonical->as_string;
     }
