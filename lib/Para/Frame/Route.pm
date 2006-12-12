@@ -706,7 +706,7 @@ sub clear_special_params
     $q->delete('renderer');
     $q->delete('destination');
 
-    if( $ENV{QUERY_STRING} eq 'backtrack' )
+    if( ($ENV{QUERY_STRING}||'') eq 'backtrack' )
     {
 	delete $ENV{QUERY_STRING};
     }
