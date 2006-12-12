@@ -198,7 +198,7 @@ sub new
 	if( -d $sys_name or
 	    UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
 	{
-	    if( $sys_name =~ /\.\w{2,4}\/?$/ )
+	    if( $sys_name =~ /\.(tt|html?|css)\/?$/ )
 	    {
 		confess "File $sys_name doesn't look like a dir";
 	    }
