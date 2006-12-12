@@ -283,16 +283,19 @@ sub get_by_url
     my( $this, $url_in ) = @_;
 
     my $url;
+
+    # Sort https under its port number
+
     if( UNIVERSAL::isa($url_in, 'URI') )
     {
 	my $port = $url_in->port || 80;
-	if( $port != 80 )
+	if( $port == 80 )
 	{
-	    $url = $url_in->host_port . $url_in->path;
+	    $url = $url_in->host . $url_in->path;
 	}
 	else
 	{
-	    $url = $url_in->host . $url_in->path;
+	    $url = $url_in->host_port . $url_in->path;
 	}
     }
     elsif( ref $url_in )
@@ -717,10 +720,8 @@ sub webhost
 
   $site->scheme
 
-Returns the scheme part of the request uri. It's probably either http
+Returns the scheme part of the URLs under this site. It's probably either http
 or https.
-
-We currently just returns the string 'http'.
 
 Use this in the L<Para::Frame::URI> constructor.
 
@@ -728,7 +729,14 @@ Use this in the L<Para::Frame::URI> constructor.
 
 sub scheme
 {
-    return "http";
+    if( $_[0]->{'webhost'} =~ /:443$/ )
+    {
+	return 'https';
+    }
+    else
+    {
+	return 'http';
+    }
 }
 
 #######################################################
