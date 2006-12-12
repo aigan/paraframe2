@@ -745,7 +745,7 @@ sub forward
 	my $referer = $req->referer;
 	debug "  Referer is $referer";
 	debug "  Cancelling forwarding";
-	$resp = $req->set_response($req->original_page);
+	$resp = $req->set_response($req->original_url_string);
 #	$page->{url_norm} = $page->orig_url_path;
 #	$page->{sys_name} = undef;
 	$resp->send_output;
