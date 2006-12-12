@@ -365,6 +365,10 @@ sub print_error_page
     {
 	warn "$$: Refering to backup site\n";
 	my $uri_out = "http://$host$path";
+	if( $host =~ s/:443$// )
+	{
+	    $uri_out = "https://$host$path";
+	}
 	$r->status( 302 );
 	$r->header_out('Location', $uri_out );
 	$r->send_http_header("text/html");
