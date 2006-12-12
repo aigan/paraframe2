@@ -694,7 +694,7 @@ sub slice
     carp "Slicing $l at $start with ".datadump($args);
     unless( $args->{'materializer'} )
     {
-	debug "Coming from ".datadump( $l ); ### DEBUG
+#	debug "Coming from ".datadump( $l ); ### DEBUG
     }
 
     if( $l->{'populated'} > 1 )
