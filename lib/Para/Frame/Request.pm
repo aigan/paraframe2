@@ -1674,9 +1674,14 @@ sub send_code
 
 	    my $webhost = $site->webhost;
 	    my $webpath = $site->loopback;
+	    my $scheme = 'http';
+	    if( $site->port == 443 ) # HTTPS
+	    {
+		$scheme = 'https';
+	    }
 
 	    my $query = "run=wait_for_req&req=$client";
-	    my $url = "http://$webhost$webpath?$query";
+	    my $url = "$scheme://$webhost$webpath?$query";
 
 	    my $ua = LWP::UserAgent->new;
 	    my $lwpreq = HTTP::Request->new(GET => $url);
@@ -1899,6 +1904,10 @@ sub http_host
 	{
 	    return idn_decode( $host );
 	}
+	elsif( $server_port == 443 )
+	{
+	    return idn_decode( $host );
+	}
 	else
 	{
 	    return idn_decode( "$host:$server_port" );
@@ -1922,6 +1931,31 @@ Returns the port the client used in this request.
 sub http_port
 {
     return $ENV{SERVER_PORT} || undef;
+}
+
+
+#######################################################################
+
+=head2 http_scheme
+
+  $req->http_scheme
+
+Returns the scheme the client used in this request.
+
+Either http or https
+
+=cut
+
+sub http_scheme
+{
+    if( $ENV{SERVER_PORT} == 443 )
+    {
+	return "https";
+    }
+    else
+    {
+	return "http";
+    }
 }
 
 
@@ -2794,11 +2828,11 @@ sub handle_error
     {
 	if( my $tmpl = $resp->renderer->template )
 	{
-	    my $tmpl_base = $tmpl->base;
-	    my $error_base = $error_tt_template->base;
+	    my $tmpl_sys_base = $tmpl->sys_base;
+	    my $error_sys_base = $error_tt_template->sys_base;
 #	    debug sprintf "Comparing %s with %s", $tmpl_base, $error_base;
 	    # Same error page again?
-	    if($tmpl_base eq $error_base )
+	    if($tmpl_sys_base eq $error_sys_base )
 	    {
 		my $args =
 		{
