@@ -266,7 +266,7 @@ sub new
 	}
 	elsif( not -r $sys_name )
 	{
-	    confess "The file $sys_norm is not readable";
+	    confess "The file $sys_name is not readable";
 	}
 
 	# determine if dir by class or input
@@ -1793,13 +1793,13 @@ sub as_template
 {
     my( $f ) = @_;
 
-    my $desig = $f->desig;
+    my $desig = $f->sysdesig;
     if( ref($f) ne 'Para::Frame::File' )
     {
 	confess "$desig dosen't seem to be a template";
     }
 
-    debug "Converting $desig to a template";
+    debug 2, "Converting $desig to a template";
 
     unless( $f->exist )
     {
