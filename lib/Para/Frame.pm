@@ -164,7 +164,7 @@ sub startup
 
     # Site pages
     #
-    unless( Para::Frame::Site->get('default') )
+    unless( $Para::Frame::CFG->{'site_class'}->get('default') )
     {
 	croak "No default site registred";
     }
@@ -1932,6 +1932,13 @@ The class to use for user identification. Should be a subclass to
 L<Para::Frame::User>.
 
 Defaults to C<Para::Frame::User>
+
+
+=head3 languages
+
+A ref to an array of scalar two letter strings of the language codes
+the sites supports. This config will be the default if no list is
+given to the specific site. See L<Para::Frame::Site/languages>.
 
 
 =cut

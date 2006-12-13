@@ -234,7 +234,7 @@ sub new_subrequest
 
     if( my $site_in = $args->{'site'} )
     {
-	my $site = Para::Frame::Site->get( $site_in );
+	my $site = $Para::Frame::CFG->{'site_class'}->get( $site_in );
 	if( $original_req->site->host ne $site->host )
 	{
 #	    debug "Host mismatch ".$site->host;
@@ -2024,11 +2024,11 @@ sub set_site
     my $site;
     if( $site_in )
     {
-	$site = Para::Frame::Site->get( $site_in );
+	$site = $Para::Frame::CFG->{'site_class'}->get( $site_in );
     }
     else
     {
-	 $site = Para::Frame::Site->get_by_req( $req );
+	 $site = $Para::Frame::CFG->{'site_class'}->get_by_req( $req );
     }
 
     # Check that site matches the client
@@ -2531,7 +2531,7 @@ sub set_response
 	    $args->{'url'} = $url_in->path;
 	    if( my $hostname = $url_in->host )
 	    {
-		my $site = Para::Frame::Site->get_by_url($url_in);
+		my $site = $Para::Frame::CFG->{'site_class'}->get_by_url($url_in);
 		$args->{'site'} = $site;
 	    }
 	}

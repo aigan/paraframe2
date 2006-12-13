@@ -865,7 +865,7 @@ sub set_site
 
     $site_in or confess "site param missing";
 
-    my $site = Para::Frame::Site->get( $site_in );
+    my $site = $Para::Frame::CFG->{'site_class'}->get( $site_in );
 
     # Check that site matches the client
     #
