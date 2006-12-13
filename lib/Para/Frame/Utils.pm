@@ -189,7 +189,10 @@ sub random
 =head2 throw
 
   throw( $error, $info, $output )
+  throw( $error, $info )
+  throw( $info )
   throw( $exception )
+  throw( $error, \%args )
 
 $error is the name of the exception. $info tells whats went wrong.
 $output shows where things get wrong, if its related to a place in a
@@ -197,6 +200,12 @@ block of text.
 
 Use your own or one of the standard exceptions from
 L<Para::Frame::Result/Exceptions>
+
+Supported args are:
+
+  info
+  output
+  error_template
 
 =cut
 
