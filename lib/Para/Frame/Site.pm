@@ -224,7 +224,7 @@ sub clone
 	$params->{$key} = $site->{$key};
     }
 
-    return Para::Frame::Site->add($params);
+    return $site->add($params);
 }
 
 #######################################################
@@ -349,7 +349,7 @@ sub get_by_req
 
     if( my $site_name = $req->dirconfig->{'site'} )
     {
-	return Para::Frame::Site->get( $site_name );
+	return $this->get( $site_name );
     }
 
     my $hostname = $req->host_from_env;
