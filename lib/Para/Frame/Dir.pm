@@ -93,7 +93,7 @@ sub initiate
 
     while(defined( my $name = $d->read ))
     {
-	next if $name =~ $dir->{'hidden'};
+	next if $name =~ m/^\.\.?$/;
 
 	my $f = {};
 	my $path = $sys_path.'/'.$name;
@@ -104,6 +104,11 @@ sub initiate
 	{
 	    $f->{symbolic_link} = readlink($path);
 	    $st = stat($path);
+	}
+
+	if( $name =~ $dir->{'hide'} )
+	{
+	    $f->{'hidden'} = 1;
 	}
 
 	$f->{'readable'} = -r _;
@@ -155,16 +160,25 @@ Returns a L<Para::Frame::List> with L<Para::Frame::Dir> objects.
 
 sub dirs
 {
-    my( $dir ) = @_;
+    my( $dir, $args ) = @_;
 
     $dir->site or confess "Not implemented";
 
     $dir->initiate;
 
+    $args ||= {};
+    my $include_hidden = $args->{'include_hidden'} || 0;
+
     my @list;
     foreach my $name ( keys %{$dir->{file}} )
     {
 	next unless $dir->{file}{$name}{directory};
+
+	unless( $include_hidden )
+	{
+	    next if $dir->{file}{$name}{'hidden'};
+	}
+
 	my $url = $dir->{url_name}.'/'.$name;
 	push @list, $dir->new({ site => $dir->site,
 				url  => $url,
@@ -172,6 +186,20 @@ sub dirs
     }
 
     return Para::Frame::List->new(\@list);
+}
+
+#######################################################################
+
+=head2 all_files
+
+Returns a L<Para::Frame::List> with L<Para::Frame::File> objects.  Not
+skipping hidden files.
+
+=cut
+
+sub all_files
+{
+    return $_[0]->files({include_hidden=>1});
 }
 
 #######################################################################
@@ -184,12 +212,14 @@ Returns a L<Para::Frame::List> with L<Para::Frame::File> objects.
 
 sub files
 {
-    my( $dir ) = @_;
+    my( $dir, $args ) = @_;
 
     $dir->initiate;
 
+    $args ||= {};
+    my $include_hidden = $args->{'include_hidden'} || 0;
+
     my( $base, $argname );
-    my $args = {};
     if( my $site = $dir->site )
     {
 	$args->{'site'} = $dir->site;
@@ -205,17 +235,21 @@ sub files
     my @list;
     foreach my $name ( sort keys %{$dir->{'file'}} )
     {
-	unless( $dir->{'file'}{$name}{'readable'} )
+	my $f = $dir->{'file'}{$name};
+	unless( $f->{'readable'} )
 	{
 	    debug "File $name not readable";
 	    next;
 	}
 
-	next if $name =~ $dir->{'hidden'};
+	unless( $include_hidden )
+	{
+	    next if $f->{'hidden'};
+	}
 
 	$args->{$argname} = $base . $name;
 #	debug "Adding $name";
-	if( $dir->{'file'}{$name}{'directory'} )
+	if( $f->{'directory'} )
 	{
 #	    debug "  As a Dir";
 	    push @list, $dir->new($args);
@@ -431,6 +465,10 @@ sub get
 
 =head2 remove
 
+Removes THIS file
+
+Returns the number of files removed
+
 =cut
 
 sub remove
@@ -439,11 +477,20 @@ sub remove
 
     my $dirname = $dir->sys_path;
     debug "Removing dir $dirname";
+    my $cnt = 1;
+
+    foreach my $f ( $dir->all_files->as_array )
+    {
+	$cnt += $f->remove;
+    }
+
     $dir->{'exist'} = 0;
     $dir->{initiated} = 0;
+    # In case not all files where readable
     File::Remove::remove( \1, $dirname )
 	or die "Failed to remove $dirname: $!";
-    return $dir;
+
+    return $cnt;
 }
 
 #######################################################################
