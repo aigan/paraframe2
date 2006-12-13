@@ -1934,6 +1934,14 @@ L<Para::Frame::User>.
 Defaults to C<Para::Frame::User>
 
 
+=head3 site_class
+
+The class to use for representing sites.  Should be a subclass to
+L<Para::Frame::Site>.
+
+Defaults to C<Para::Frame::Site>
+
+
 =head3 languages
 
 A ref to an array of scalar two letter strings of the language codes
@@ -2086,6 +2094,7 @@ sub configure
 	"/paraframe_" . $CFG->{'port'} . ".log";
 
     $CFG->{'user_class'} ||= 'Para::Frame::User';
+    $CFG->{'site_class'} ||= 'Para::Frame::Site';
     $CFG->{'session_class'} ||= 'Para::Frame::Session';
     $CFG->{'l10n_class'} ||= 'Para::Frame::L10N';
 
