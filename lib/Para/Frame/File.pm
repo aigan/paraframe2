@@ -59,7 +59,7 @@ the methods here.)
 
 params:
 
-  hidden
+  hide
   req
   filename
   url
@@ -109,6 +109,16 @@ sub new
 		    last SHORTCUT;
 		}
 	    }
+
+#	    if( $file->exist )
+#	    {
+#		debug "Got from CACHE: $key - exist";
+#	    }
+#	    else
+#	    {
+#		debug "Got from CACHE: $key";
+#	    }
+
 	    return $file;
 	}
     }
@@ -123,12 +133,13 @@ sub new
      'sys_name'       => undef, # without trailing slash
      'site'           => undef,
      'initiated'      => 0,
-     'hidden'         => undef, # TODO: remove this
+     'hide'           => undef, # TODO: remove this
      'exist'          => undef,
      'dirsteps'       => undef,
     }, $class;
 
-    $file->{'hidden'} = $args->{'hidden'} || qr/(^\.|^CVS$|\#$|~$)/;
+    # TODO: This value can't be changed since it's a shared cache
+    $file->{'hide'} = $args->{'hide'} || qr/(^\.|^CVS$|\#$|~$)/;
 
     my $may_not_exist = $args->{'file_may_not_exist'} || 0;
     my $exist;
@@ -1695,6 +1706,8 @@ sub dirsteps
 
 =head2 remove
 
+Returns the number of files removed (1)
+
 =cut
 
 sub remove
@@ -1707,7 +1720,7 @@ sub remove
     $f->{initiated} = 0;
     File::Remove::remove( $filename )
 	or die "Failed to remove $filename: $!";
-    return $f;
+    return 1;
 }
 
 
