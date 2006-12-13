@@ -1423,10 +1423,11 @@ sub handle_request
 	    # TODO: Do not use loadpage for non-html mimetypes
 
 	    # Do not send loadpage if we didn't got a session object
-	    if( $session->count and
-		(not $req->dirconfig->{'USE_LOADPAGE'} eq 'no' ))
+	    my $loadpage = $req->dirconfig->{'loadpage'} ||
+	      $req->site->loadpage;
+	    if( $session->count and ( $loadpage ne 'no' ))
 	    {
-		$req->send_code('USE_LOADPAGE', $req->site->loadpage, 2, $REQNUM);
+		$req->send_code('USE_LOADPAGE', $loadpage, 2, $REQNUM);
 	    }
 	    else
 	    {
