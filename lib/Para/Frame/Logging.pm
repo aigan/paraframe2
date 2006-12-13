@@ -82,7 +82,7 @@ sub debug_data
     my( $log ) = @_;
 
     my $req = $Para::Frame::REQ;
-    my $page = $req->page;
+    my $resp = $req->response_if_existing;
 
     my $out = "";
     my $reqnum = $req->{'reqnum'};
@@ -102,29 +102,38 @@ sub debug_data
 	    $out .= "No orig url found\n";
 	}
 
-	if( my $redirect = $page->{'redirect'} )
-	{
-	    $out .= "Redirect is set to $redirect\n";
-	}
-
 	if( my $browser = $req->env->{'HTTP_USER_AGENT'} )
 	{
 	    $out .= "Browser is $browser\n";
 	}
 
-	if( my $errtmpl = $page->{'error_template'} )
+	if( $resp )
 	{
-	    $out .= "Error template is set to $errtmpl\n";
-	}
+	    my $page = $resp->page;
 
-	if( my $referer = $req->referer )
-	{
-	    $out .= "Referer is $referer\n"
-	}
+	    if( my $referer = $req->referer )
+	    {
+		$out .= "Referer is $referer\n"
+	    }
 
-	if( $page->{'in_body'} )
+	    if( my $redirect = $page->{'redirect'} )
+	    {
+		$out .= "Redirect is set to $redirect\n";
+	    }
+
+	    if( my $errtmpl = $page->{'error_template'} )
+	    {
+		$out .= "Error template is set to $errtmpl\n";
+	    }
+
+	    if( $page->{'in_body'} )
+	    {
+		$out .= "We have already sent the http header\n"
+	    }
+	}
+	else
 	{
-	    $out .= "We have already sent the http header\n"
+	    $out .= "The request has no response set\n";
 	}
 
     }
