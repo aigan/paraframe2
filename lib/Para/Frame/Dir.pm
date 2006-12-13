@@ -129,7 +129,7 @@ sub initiate
 	$f->{'ascii'} = -T _;
 	$f->{'binary'} = -B _;
 
-	die "Stat failed for $name (zero size) ".datadump([$f, $st]) unless $f->{size};
+	die "Stat failed for $name (not readable) ".datadump([$f, $st]) unless $f->{'readable'};
 
 	$files{$name} = $f;
     }
