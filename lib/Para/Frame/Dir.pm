@@ -129,7 +129,25 @@ sub initiate
 	$f->{'ascii'} = -T _;
 	$f->{'binary'} = -B _;
 
-	die "Stat failed for $name (not readable) ".datadump([$f, $st]) unless $f->{'readable'};
+	unless( $f->{'readable'} )
+	{
+	    my $msg = "File '$path' is not readable\n";
+
+	    my $fu = getpwuid( $st->uid )
+	      or die "Could not get owner of $path";
+	    my $fg = getgrgid( $st->gid )
+	      or die "Could not get group of $path";
+	    my $fun = $fu->name;              # file user  name
+	    my $fgn = $fg->name;              # file group name
+	    my $fmode = $st->mode & 07777;    # mask of filetype
+
+	    $msg .= "  The file is owned by $fun\n";
+	    $msg .= "  The file is in group $fgn\n";
+	    $msg .= sprintf("  The file has mode 0%.4o\n", $fmode);
+
+	    $msg .= "\n".datadump([$f, $st]);
+	    die $msg . "\n";
+	}
 
 	$files{$name} = $f;
     }
