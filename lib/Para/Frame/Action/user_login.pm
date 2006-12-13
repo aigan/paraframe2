@@ -70,14 +70,18 @@ sub handler
 
 	    $req->run_hook('user_login', $u);
 
+	    debug "Login sucessful";
 	    return "$username loggar in";
 	}
+
+	debug "Login failed gracefully";
     };
-    if( $@ )
+    if( my $err = $@ )
     {
+	debug "Got exception during login";
 	$u = $user_class->get('guest');
 	$user_class->change_current_user( $u );
-	die $@;
+	die $err; # Since user change may reset $@
     }
 
     $msg ||= "Inloggningen misslyckades";
