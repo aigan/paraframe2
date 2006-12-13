@@ -160,7 +160,7 @@ sub new
 	{
 	    if( $url_name =~ /\.\w{2,4}\/?$/ )
 	    {
-		confess "File $url_name doesn't look like a dir";
+		debug "File $url_name doesn't look like a dir";
 	    }
 	    $url_norm = $url_name . '/';
 	}
@@ -292,7 +292,7 @@ sub new
 	{
 	    if( $sys_name =~ /\.\w{2,4}\/?$/ )
 	    {
-		confess "File $sys_name doesn't look like a dir";
+		debug "File $sys_name doesn't look like a dir";
 	    }
 
 	    $sys_norm = $sys_name . '/';
