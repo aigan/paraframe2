@@ -195,6 +195,44 @@ sub get_by_ext
 
 #######################################################################
 
+=head2 add_ext
+
+  $burner->add_ext( $ext )
+
+Adds an extension handler to a burner.
+
+Returns the number of extensions added.
+
+=cut
+
+sub add_ext
+{
+    my( $burner, $ext ) = @_;
+
+    $ext or confess "ext missing";
+
+    if( my $burner_old = $EXT{$ext} )
+    {
+	if( $burner eq $burner_old )
+	{
+	    return 0;
+	}
+	else
+	{
+	    confess "Ext $ext already assigned to burner ".
+	      $burner_old->type;
+	}
+    }
+    else
+    {
+	$EXT{$ext} = $burner;
+	debug "Regestring ext $ext to burner ".$burner->type;
+	return 1;
+    }
+}
+
+#######################################################################
+
 =head2 get_by_type
 
   Para::Frame::Burner->get_by_type( $type )
@@ -414,6 +452,17 @@ sub error
 sub subdir_suffix
 {
      return $_[0]->{'subdir_suffix'} || '';
+}
+
+#######################################################################
+
+=head2 type
+
+=cut
+
+sub type
+{
+     return $_[0]->{'type'};
 }
 
 #######################################################################
