@@ -200,7 +200,7 @@ sub document
 	    my $tmpltext = $tmpl->content;
 	    my $parser = $burner->parser;
 
-#	    debug("Parsing");
+#	    debug("Parsing with ".$burner->type);
 	    $req->note("Compiling ".$tmpl->sys_path);
 	    my $metadata =
 	    {
