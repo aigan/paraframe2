@@ -42,11 +42,10 @@ use Para::Frame::Widget qw( forward );
 
 use overload
   '@{}' => 'as_arrayref_by_overload',
-  'bool' => sub{carp "* Bool"; $_[0]->size},
+#  'bool' => sub{carp "* Bool"; $_[0]->size},
+  'bool' => sub{$_[0]->size},
   '""' => 'stringify_by_overload',
   '.' => 'concatenate_by_overload',
-#  '.' => sub{$_[0]}, # No change!
-#  '.=' => sub{$_[0]}, # No change!
   'fallback' => 0;
 
 use base qw( Template::Iterator );
@@ -364,7 +363,7 @@ sub as_arrayref_by_overload
     {
 	return $_[0]->materialize_all;
     }
-    carp "* OVERLOAD arrayref for list obj used";
+#    carp "* OVERLOAD arrayref for list obj used";
     return $_[0]->{'_OBJ'};
 }
 
@@ -691,7 +690,7 @@ sub slice
 
     $args ||= $l->clone_props;
 
-    carp "Slicing $l at $start with ".datadump($args);
+#    carp "Slicing $l at $start with ".datadump($args);
     unless( $args->{'materializer'} )
     {
 #	debug "Coming from ".datadump( $l ); ### DEBUG
