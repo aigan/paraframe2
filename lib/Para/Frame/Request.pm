@@ -1464,7 +1464,7 @@ sub referer
 {
     my( $req ) = @_;
 
-    my $site = $req->page->site;
+    my $site = $req->site;
 
 #    debug "LOOKING FOR A REFERER";
 
