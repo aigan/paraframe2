@@ -28,7 +28,9 @@ use IO::Dir;
 use File::stat; # exports stat
 use File::Remove;
 use Scalar::Util qw(weaken);
-#use Dir::List; ### Not used...
+use User::grent;
+use User::pwent;
+
 
 BEGIN
 {
@@ -133,9 +135,9 @@ sub initiate
 	{
 	    my $msg = "File '$path' is not readable\n";
 
-	    my $fu = getpwuid( $st->uid )
+	    my $fu = User::pwent::getpwuid( $st->uid )
 	      or die "Could not get owner of $path";
-	    my $fg = getgrgid( $st->gid )
+	    my $fg = User::grent::getgrgid( $st->gid )
 	      or die "Could not get group of $path";
 	    my $fun = $fu->name;              # file user  name
 	    my $fgn = $fg->name;              # file group name
