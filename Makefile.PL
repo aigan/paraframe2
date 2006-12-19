@@ -58,6 +58,7 @@ WriteMakefile(
 		  'Test::More'                 => 0.61,
 		  'Test::Warn'                 => 0.08,
 	          'Array::Window'              => 0.40,
+	          'File::MimeInfo'             => 0.13,
 	      },
 	      'dist'          =>
 	      {
