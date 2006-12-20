@@ -53,6 +53,37 @@ use base qw( Template::Iterator );
 # LOOK! REDEFINES shift, push, pop, unshift, splice, join
 
 
+=head2 SYNOPSIS
+
+# The right way:
+
+  my $list = Para::Frame::List->new( \@biglist );
+  my( $value, $error ) = $list->get_first;
+  while(! $error )
+  {
+    # ... my code
+    ( $value, $error ) = $list->get_next;
+  }
+
+
+# The risky way, for lists that doesn't contain false values:
+
+  my $list = Para::Frame::List->new( \@biglist );
+  while( my $value = $list->get_next_nos )
+  {
+    # ... my code
+  }
+
+
+# The lazy way:
+
+  my $list = Para::Frame::List->new( \@biglist );
+  foreach my $value ( $list->as_array )
+  {
+    # ... my code
+  }
+
+
 =head2 DESCRIPTION
 
 The object is overloaded to be used as a ref to the list it
@@ -88,7 +119,6 @@ This module is subclassable.
 We should implement all methods in a way that allow subclasses to only
 initiate and hold the specified used parts in memory, maby by using
 tie.
-
 
 TODO: Implement the rest of the array modification methods()
 
