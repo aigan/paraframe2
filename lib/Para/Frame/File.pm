@@ -964,8 +964,6 @@ sub url
     my( $page ) = @_;
 
     my $site = $page->site or confess "No site given";
-    my $scheme = $site->scheme;
-    my $host = $site->host;
     my $url_string = sprintf("%s://%s%s",
 			     $site->scheme,
 			     $site->host,
@@ -1443,6 +1441,8 @@ sub normalize
 #######################################################################
 
 =head2 content
+
+Returns a ref to a scalar with the content of the file
 
 =cut
 
