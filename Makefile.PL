@@ -13,6 +13,7 @@ WriteMakefile(
 	      'AUTHOR'         => 'Jonas Liljegren <jonas@paranormal.se>',
  	      'PREREQ_PM'      =>
 	      {
+	          'Apache'                     => 1.27,
 		  'Socket'                     => 1.77,
 		  'Text::Autoformat'           => 1.12,
 		  'Time::HiRes'                => 1.66,
@@ -21,6 +22,7 @@ WriteMakefile(
 		  'Template'                   => 2.15,
 		  'FreezeThaw'                 => 0.43,
 		  'File::Slurp'                => 9999.09,
+                  'File::Remove'               => 0.31,
 		  'CGI'                        => 3.10,
 		  'CGI::Cookie'                => 1.25,
 		  'DBI'                        => 1.48,
@@ -59,6 +61,9 @@ WriteMakefile(
 		  'Test::Warn'                 => 0.08,
 	          'Array::Window'              => 0.40,
 	          'File::MimeInfo'             => 0.13,
+                  'Number::Bytes::Human'       => 0.04,
+	          'Image::Magick'              => 6.002004,
+                  'Net::SCP'                   => 0.07,
 	      },
 	      'dist'          =>
 	      {
