@@ -1853,7 +1853,7 @@ sub mimetype
 {
     my( $f ) = @_;
 
-    return $f->{'mimetype'} ||= File::MimeInfo::mimetype($f->sys_path_slash);
+    return $f->{'mimetype'} ||= File::MimeInfo::mimetype($f->sys_path_slash) || 'unknown/unknown';
 }
 
 
@@ -1866,7 +1866,8 @@ sub mimetype
 sub mimetype_base
 {
     my( $f ) = @_;
-    $f->mimetype =~ m/(.*?)\// or die "No mimetype base found";
+    $f->mimetype =~ m/(.*?)\// or
+	die "No mimetype base found for ".$f->sysdesig;
     return $1;
 }
 
