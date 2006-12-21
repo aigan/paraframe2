@@ -1853,6 +1853,7 @@ sub mimetype
 {
     my( $f ) = @_;
 
+#    debug "Looking up mimetype for ".$f->desig;
     return $f->{'mimetype'} ||= File::MimeInfo::mimetype($f->sys_path_slash) || 'unknown/unknown';
 }
 
