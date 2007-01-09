@@ -25,12 +25,19 @@ BEGIN
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
     print "Starting ritguides $VERSION\n";
 
+    unless( @ARGV )
+    {
+	print "Give the URL of the demo dir as an arg\n";
+	print "Example: demoserv.pl //demo.com/~myplace\n";
+	exit;
+    }
+
     use FindBin;
     use Cwd 'abs_path';
 
     $PFROOT = abs_path("$FindBin::Bin/../");
     $APPROOT = $FindBin::Bin;
-    $WEBHOME = $ARGV[0] or die "Give the URL of the demo dir as an arg";
+    $WEBHOME = $ARGV[0];
     if( $WEBHOME =~ s/:([^\/]+)// )
     {
 	$PORT = $1;
@@ -69,9 +76,9 @@ use Para::Frame::Site;
     my $cfg =
     {
      'paraframe' => $PFROOT,
-     'logfile'      => "/tmp/pf_demoserver-$PORT.log",
-     'pidfile'      => "/tmp/pf_demoserver-$PORT.pid",
-     'ttcdir'       => "/tmp",
+     'logfile'      => "/tmp/pf_demo/server-$PORT.log",
+     'pidfile'      => "/tmp/pf_demo/server-$PORT.pid",
+     'ttcdir'       => "/tmp/pf_demo",
      'approot'      => $APPROOT,
      'port'         => $PORT,
      'debug'        => $ARGV[1] || 0,
