@@ -8,7 +8,6 @@ dev/inc_pre/header_prepare.tt
 html/def/admin-index.tt
 html/def/alternatives.tt
 html/def/confirm.tt
-html/def/debug.tt
 html/def/denied.tt
 html/def/env.tt
 html/def/error.tt
@@ -16,7 +15,6 @@ html/def/index.tt
 html/def/login.tt
 html/def/page_not_found.tt
 html/def/page_part_not_found.tt
-html/dirtest.tt
 html/inc/alternatives_box.tt
 html/inc/border_bottom.tt
 html/inc/border_top.tt
@@ -72,7 +70,6 @@ html/pf/styleswitch.js
 INSTALL
 lib/Para/Frame.pm
 lib/Para/Frame/Action/debug_change.pm
-lib/Para/Frame/Action/find_cycle.pm
 lib/Para/Frame/Action/language_set.pm
 lib/Para/Frame/Action/mark.pm
 lib/Para/Frame/Action/next_step.pm
@@ -84,7 +81,6 @@ lib/Para/Frame/Action/skip_step.pm
 lib/Para/Frame/Action/symdump.pm
 lib/Para/Frame/Action/take_five.pm
 lib/Para/Frame/Action/test_ipc.pm
-lib/Para/Frame/Action/test_meta.pm
 lib/Para/Frame/Action/user_login.pm
 lib/Para/Frame/Action/user_logout.pm
 lib/Para/Frame/Action/wait_for_req.pm
@@ -109,10 +105,7 @@ lib/Para/Frame/L10N/en.pm
 lib/Para/Frame/L10N/sv.pm
 lib/Para/Frame/List.pm
 lib/Para/Frame/Logging.pm
-lib/Para/Frame/Nonsite/Dir.pm
-lib/Para/Frame/Nonsite/Page.pm
 lib/Para/Frame/Overview.pod
-lib/Para/Frame/Page.pm
 lib/Para/Frame/Reload.pm
 lib/Para/Frame/Request.pm
 lib/Para/Frame/Request/Ctype.pm
@@ -121,9 +114,6 @@ lib/Para/Frame/Result/Part.pm
 lib/Para/Frame/Route.pm
 lib/Para/Frame/Session.pm
 lib/Para/Frame/Site.pm
-lib/Para/Frame/Site/Dir.pm
-lib/Para/Frame/Site/File.pm
-lib/Para/Frame/Site/Page.pm
 lib/Para/Frame/Template/Components.pod
 lib/Para/Frame/Template/CSS.pod
 lib/Para/Frame/Template/Index.pod
