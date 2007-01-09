@@ -274,16 +274,28 @@ sub new
 	# determine if dir by class or input
 	if( $class eq 'Para::Frame::File' )
 	{
-	    if( $url_norm and $url_norm =~ /\/$/ )
+	    if( $url_norm and $url_norm =~ /([^\/]*)\/$/ )
 	    {
+		my $preslash = $1;
+
 		if( $url_norm =~ /\.\w{2,4}\/?$/ )
 		{
 		    confess "File $url_norm doesn't look like a dir";
 		}
 
-		debug "Blessing as a dir";
-		bless $file, 'Para::Frame::Dir';
-		$sys_norm = $sys_name . '/';
+		# There may have been a mapping from dir to file
+		debug "sys_name: $sys_name";
+		debug "preslash: $preslash";
+		if( $preslash and $sys_name =~ /\b$preslash$/ )
+		{
+		    debug "Blessing as a dir";
+		    bless $file, 'Para::Frame::Dir';
+		    $sys_norm = $sys_name . '/';
+		}
+		else
+		{
+		    $sys_norm = $sys_name;
+		}
 	    }
 	    else
 	    {

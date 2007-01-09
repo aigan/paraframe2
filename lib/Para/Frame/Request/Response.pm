@@ -676,7 +676,7 @@ sub set_sender_and_repair_content
 	}
 	else
 	{
-	    if( ${ $resp->{'content'} } =~ /Ã/ )
+	    if( ${ $resp->{'content'} } =~ /Ã/ )
 	    {
 		### REPAIR
 		$_ = ${ $resp->{'content'} };
@@ -843,7 +843,7 @@ sub output_redirection
     my $out = "Go to $url_out\n";
     my $length = length( $out );
 
-    $req->send_code( 'AR-PUT', 'send_http_header', 'text/plain' );
+    $req->send_code( 'AR-PUT', 'content_type', 'text/plain' );
 
     if( $req->header_only )
     {

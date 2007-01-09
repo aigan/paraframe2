@@ -28,7 +28,6 @@ use CGI;
 use IO::Socket;
 use IO::Select;
 use FreezeThaw qw( freeze );
-use Apache::Constants qw( :common );
 use Time::HiRes;
 
 BEGIN
@@ -41,7 +40,9 @@ BEGIN
 use Para::Frame::Reload;
 
 use constant BUFSIZ => 8192; # Posix buffersize
-use constant TRIES => 20; # 20 connection tries
+use constant TRIES    => 20; # 20 connection tries
+use constant DECLINED => -1; # From httpd.h
+use constant DONE     => -2; # From httpd.h
 
 our $DEBUG = 0;
 
@@ -139,6 +140,17 @@ sub handler
     $|=1;
     my $ctype = $r->content_type;
 
+
+    my $uri = $r->uri;
+    my $filename = $r->filename;
+
+    if( $r->isa('Apache2::RequestRec') )
+    {
+	warn "Requiering Apache2::SubRequest\n";
+	require Apache2::SubRequest;
+	Apache2::SubRequest->import();
+    }
+
     my $port = $dirconfig->{'port'};
     if( $BACKUP_PORT ) # Is resetted later
     {
@@ -151,7 +163,7 @@ sub handler
 	unless( $port )
 	{
 	    print_error_page("No port configured for communication with the Paraframe server");
-	    return 1;
+	    return DONE;
 	}
 
 	my $reqline = $r->the_request;
@@ -164,14 +176,16 @@ sub handler
 	warn "$$: Orig ctype $ctype\n" if $ctype and $DEBUG;
 	if( not $ctype )
 	{
-	    if( $r->filename =~ /\.tt$/ )
+	    if( $filename =~ /\.tt$/ )
 	    {
-		$ctype = $r->content_type('text/html');
+		$ctype = 'text/html';
+		$r->content_type($ctype);
 	    }
 	}
 	elsif( $ctype eq "httpd/unix-directory" )
 	{
-	    $ctype = $r->content_type('text/html');
+	    $ctype = 'text/html';
+	    $r->content_type($ctype);
 	}
 
 	### We let the daemon decide what to do with non-tt pages
@@ -194,7 +208,7 @@ sub handler
 		my $keyfile = $key;
 		$keyfile =~ s/[^\w_\-]//g; # Make it a normal filename
 		my $dest = "/tmp/paraframe/$$-$keyfile";
-		copy_to_file( $dest, $q->upload($key) ) or return 1;
+		copy_to_file( $dest, $q->upload($key) ) or return DONE;
 
 		my $uploaded =
 		{
@@ -211,9 +225,9 @@ sub handler
 	}
     }
 
+#    warn sprintf "URI %s FILE %s CTYPE %s\n", $uri, $filename, $ctype;
 
-
-    my $value = freeze [ \%PARAMS,  \%ENV, $r->uri, $r->filename, $ctype, $dirconfig, $r->header_only, \%FILES ];
+    my $value = freeze [ \%PARAMS,  \%ENV, $uri, $filename, $ctype, $dirconfig, $r->header_only, \%FILES ];
 
     my $try = 0;
     while()
@@ -265,7 +279,7 @@ sub handler
 
     warn "$$: Done\n\n" if $DEBUG;
 
-    return 1;
+    return DONE;
 }
 
 
@@ -345,6 +359,12 @@ sub print_error_page
     $explain ||= "";
     chomp $explain;
 
+    my $apache2 = 0;
+    if( $r->isa('Apache2::RequestRec') )
+    {
+	$apache2 = 1;
+    }
+
     warn "$$: Returning error: $error\n" if $DEBUG;
 
     my $dirconfig = $r->dir_config;
@@ -361,6 +381,8 @@ sub print_error_page
 	}
     }
 
+    $r->content_type("text/html");
+
     if( my $host = $dirconfig->{'backup_redirect'} )
     {
 	warn "$$: Refering to backup site\n";
@@ -371,7 +393,7 @@ sub print_error_page
 	}
 	$r->status( 302 );
 	$r->header_out('Location', $uri_out );
-	$r->send_http_header("text/html");
+	$r->send_http_header() unless $apache2;
 	$r->print("<p>Try to get <a href=\"$uri_out\">$uri_out</a> instead</p>\n");
 	return;
     }
@@ -380,7 +402,7 @@ sub print_error_page
     warn "$$: Printing error page\n";
     $r->status_line( $errcode." ".$error );
     $r->no_cache(1);
-    $r->send_http_header("text/html");
+    $r->send_http_header() unless $apache2;
     $r->print("<html><head><title>$error</title></head><body><h1>$error</h1>\n");
     foreach my $row ( split /\n/, $explain )
     {
@@ -477,9 +499,18 @@ sub get_response
 
     my $select = IO::Select->new($SOCK);
     my $c = $r->connection;
-    my $client_fn = $c->fileno(1); # Direction right?!
-    my $client_select = IO::Select->new($client_fn);
 
+    my( $apache2, $client_fn, $client_select );
+
+    if( $c->isa('Apache2::Connection') )
+    {
+	$apache2 = 1;
+    }
+    else
+    {
+	$client_fn = $c->fileno(1); # Direction right?!
+	$client_select = IO::Select->new($client_fn);
+    }
 
     my $chunks = 0;
     my $data='';
@@ -489,9 +520,20 @@ sub get_response
     {
 
 	### Test connection
-	if( not $client_select->can_write(0)
-	    or  $client_select->can_read(0)
-	  )
+	if( $apache2 )
+	{
+	    use Apache2::Connection;
+	    if( $c->aborted )
+	    {
+		warn "$$: Lost connection to client $client_fn\n";
+		warn "$$:   Sending CANCEL to server\n";
+		send_to_server("CANCEL");
+		return 1;
+	    }
+	}
+	elsif( not $client_select->can_write(0)
+	       or  $client_select->can_read(0)
+	     )
 	{
 	    warn "$$: Lost connection to client $client_fn\n";
 	    warn "$$:   Sending CANCEL to server\n";
@@ -786,7 +828,12 @@ sub send_headers
 	print_error_page("Body without content type");
 	return 0;
     }
-    $r->send_http_header($content_type);
+
+    $r->content_type($content_type);
+
+    return 1 if $r->isa("Apache2::RequestRec");
+
+    $r->send_http_header();
     $r->rflush;
     return 1;
 }
@@ -872,7 +919,16 @@ sub send_message_waiting
 sub uri2file
 {
     my $sr = $r->lookup_uri($_[0]);
-    return( $sr->filename.($sr->path_info||'') );
+
+    # HACK for reverting dir to file translation if
+    # it's index.tt
+    my $filename = $sr->filename;
+    if( $filename =~ /\bindex.tt$/ and $_[0] !~ /\bindex.tt$/ )
+    {
+	$filename =~ s/\bindex.tt$//;
+    }
+
+    return( $filename.($sr->path_info||'') );
 }
 
 
