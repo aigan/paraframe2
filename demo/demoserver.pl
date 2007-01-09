@@ -38,6 +38,7 @@ BEGIN
     $PFROOT = abs_path("$FindBin::Bin/../");
     $APPROOT = $FindBin::Bin;
     $WEBHOME = $ARGV[0];
+    $PORT = 7788;
     if( $WEBHOME =~ s/:([^\/]+)// )
     {
 	$PORT = $1;
