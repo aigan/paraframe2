@@ -13,7 +13,6 @@ WriteMakefile(
 	      'AUTHOR'         => 'Jonas Liljegren <jonas@paranormal.se>',
  	      'PREREQ_PM'      =>
 	      {
-	          'Apache'                     => 1.27,
 		  'Socket'                     => 1.77,
 		  'Text::Autoformat'           => 1.12,
 		  'Time::HiRes'                => 1.66,
