@@ -149,6 +149,8 @@ sub handler
 	warn "Requiering Apache2::SubRequest\n";
 	require Apache2::SubRequest;
 	Apache2::SubRequest->import();
+	require Apache2::Connection;
+	Apache2::Connection->import();
     }
 
     my $port = $dirconfig->{'port'};
@@ -522,7 +524,6 @@ sub get_response
 	### Test connection
 	if( $apache2 )
 	{
-	    use Apache2::Connection;
 	    if( $c->aborted )
 	    {
 		warn "$$: Lost connection to client $client_fn\n";

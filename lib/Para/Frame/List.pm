@@ -1865,12 +1865,14 @@ Returns:
 
 The element (materialized) at the current index.
 
+Or undef
+
 =cut
 
 sub get_by_index
 {
     $_[0]->set_index( $_[1] - 1 );
-    return $_[0]->get_next();
+    return $_[0]->get_next_nos();
 }
 
 #######################################################################
