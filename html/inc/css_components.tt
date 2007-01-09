@@ -1,13 +1,18 @@
 [% MACRO roundbox_css(class, imgdir, color, background, s_width, s_height) BLOCK %]
-  [% DEFAULT format = "png";
-     DEFAULT s_width = 8;
-     DEFAULT s_height = s_width;
+  [% DEFAULT format    = "png";
+     DEFAULT s_width   = 8;
+     DEFAULT s_height  = s_width;
+     DEFAULT visited   = link;
+     DEFAULT hover     = link;
+     DEFAULT margins   = "0 0.5em";
+     DEFAULT h_margins = "0 0.5em";
   %]
   table.$class {
     margin-bottom:  10px;
     width:	    100%;
     border:	    none;
     z-index:	    10;
+    color:	    [% color %];
   }
   table.$class td.h_bg {
     background:	    url("[% imgdir %]h_bg.$format") repeat-x right top;
@@ -17,6 +22,7 @@
   }
   table.$class td.h_bg h3, table.$class td.m_bg h3 {
     margin-top:     0.3em;
+    border:         none;
   }
   table.$class td.h_left {
     background:	    url("[% imgdir %]h_left.$format") no-repeat right top;
@@ -55,9 +61,47 @@
     color:	    [% color %];
     padding-top:    0.5em;
   }
-  table.$class td.content h4 {
-    font-size:      1.2em;
-    padding:        0;
-    margin:         0;
+  table.$class div.content_div {
+    margin:         [% margins %];
+  }
+  table.$class div.header_div {
+    margin:         [% h_margins %];
+  }
+  [% IF link %]
+    table.$class a:link {
+      color: [% link %];
+    }
+  [% END %]
+  [% IF visited %]
+    table.$class a:visited {
+      color: [% visited %];
+    }
+  [% END %]
+  [% IF hover %]
+    table.dark_box a:hover {
+      color: [% hover %];
+    }
+  [% END %]
+[% END %]
+
+
+[% MACRO roundjump_css(class, imgdir, color, background, radius) BLOCK %]
+  [% DEFAULT radius = 5 %]
+  [% roundbox_css(class, imgdir, color, background, radius) %]
+  table.[% class %] td.h_bg {
+    line-height: 1em;
+  }
+  table.[% class %] td.h_bg h3, table.[% class %] td.m_bg h3 {
+    margin-top:  0em;
+  }
+  table.[% class %] td.content {
+    padding-top: 0em;
+    text-align: center;
+  }
+  table.[% class %] td.content a, table.[% class %] td.content a:link {
+    color:  [% color %];
+    padding-top: 0em;
+    text-align: center;
   }
 [% END %]
+
