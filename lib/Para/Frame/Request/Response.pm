@@ -676,7 +676,7 @@ sub set_sender_and_repair_content
 	}
 	else
 	{
-	    if( ${ $resp->{'content'} } =~ /Ã/ )
+	    if( ${ $resp->{'content'} } =~ /Ã/ )
 	    {
 		### REPAIR
 		$_ = ${ $resp->{'content'} };
@@ -830,15 +830,15 @@ sub output_redirection
     {
 	debug "MOVED PERMANENTLY";
 	$req->send_code( 'AR-PUT', 'status', 301 );
-	$req->send_code( 'AR-PUT', 'header_out', 'Cache-Control', 'public' );
+	$req->send_code( 'AT-PUT', 'set', 'Cache-Control', 'public' );
     }
     else # moved temporarily
     {
 	$req->send_code( 'AR-PUT', 'status', 302 );
-	$req->send_code( 'AR-PUT', 'header_out', 'Pragma', 'no-cache' );
-	$req->send_code( 'AR-PUT', 'header_out', 'Cache-Control', 'no-cache' );
+	$req->send_code( 'AT-PUT', 'set', 'Pragma', 'no-cache' );
+	$req->send_code( 'AT-PUT', 'set', 'Cache-Control', 'no-cache' );
     }
-    $req->send_code( 'AR-PUT', 'header_out', 'Location', $url_out );
+    $req->send_code( 'AT-PUT', 'set', 'Location', $url_out );
 
     my $out = "Go to $url_out\n";
     my $length = length( $out );
@@ -851,7 +851,7 @@ sub output_redirection
     }
     else
     {
-	$req->send_code( 'AR-PUT', 'header_out', 'Content-Length', $length );
+	$req->send_code( 'AT-PUT', 'set', 'Content-Length', $length );
 	$req->send_code( 'BODY' );
 	$req->client->send( $out );
     }
@@ -905,7 +905,7 @@ sub send_headers
 	else
 	{
 	    debug(3,"Send header_out @$header");
-	    $req->send_code( 'AR-PUT', 'header_out', @$header);
+	    $req->send_code( 'AT-PUT', 'set', @$header);
 	}
     }
 }

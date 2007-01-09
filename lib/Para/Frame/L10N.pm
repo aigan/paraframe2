@@ -543,8 +543,8 @@ sub set_headers
 	unless( $req->response->ctype->is("text/css") )
 	{
 	    # TODO: Use Page->set_header
-	    $req->send_code( 'AR-PUT', 'header_out', 'Vary', 'negotiate,accept-language' );
-	    $req->send_code( 'AR-PUT', 'header_out', 'Content-Language', $lh->alternatives->[0] );
+	    $req->send_code( 'AT-PUT', 'set', 'Vary', 'negotiate,accept-language' );
+	    $req->send_code( 'AT-PUT', 'set', 'Content-Language', $lh->alternatives->[0] );
 	}
     }
 }
