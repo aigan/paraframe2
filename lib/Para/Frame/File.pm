@@ -160,9 +160,9 @@ sub new
 	}
 	elsif( UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
 	{
-	    if( $url_name =~ /\.\w{2,4}\/?$/ )
+	    if( $url_name =~ /\.(tt|html?|css)\/?$/ )
 	    {
-		debug "File $url_name doesn't look like a dir";
+		confess "File $url_name doesn't look like a dir";
 	    }
 	    $url_norm = $url_name . '/';
 	}
@@ -278,7 +278,7 @@ sub new
 	    {
 		my $preslash = $1;
 
-		if( $url_norm =~ /\.\w{2,4}\/?$/ )
+		if( $url_norm =~ /\.(tt|html?|css)\/?$/ )
 		{
 		    confess "File $url_norm doesn't look like a dir";
 		}
@@ -304,9 +304,9 @@ sub new
 	}
 	elsif( UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
 	{
-	    if( $sys_name =~ /\.\w{2,4}\/?$/ )
+	    if( $sys_name =~ /\.(tt|html?|css)\/?$/ )
 	    {
-		debug "File $sys_name doesn't look like a dir";
+		confess "File $sys_name doesn't look like a dir";
 	    }
 
 	    $sys_norm = $sys_name . '/';
