@@ -210,9 +210,9 @@ $content
   [% DEFAULT height=8 %]
   <table class="$class" cellspacing="0" cellpadding="0">
     <tr class="top">
-      <td class="h_left"><img width="$width" height="$height" alt="/" src="[% imgdir %]h_left_wh.$format"/></td>
+      <td class="h_left"><img width="$width" height="$height" alt="" src="[% imgdir %]h_left_wh.$format"/></td>
       <td class="h_bg"><div class="header_div"><h3>[% title %]</h3></div></td>
-      <td class="h_right"><img width="$width" height="$height" alt="\" src="[% imgdir %]h_right_w.$format"/></td>
+      <td class="h_right"><img width="$width" height="$height" alt="" src="[% imgdir %]h_right_w.$format"/></td>
     </tr>
     <tr>
       <td class="s_left">&nbsp;</td>
@@ -220,10 +220,9 @@ $content
       <td class="s_right">&nbsp;</td>
     </tr>
     <tr>
-      <td class="b_left"><img width="$width" height="$height" alt="\" src="[% imgdir %]b_height.$format"/></td>
+      <td class="b_left"><img width="$width" height="$height" alt="" src="[% imgdir %]b_height.$format"/></td>
       <td class="b_bg"></td>
-      <td class="b_right"><img width="$width" height="$height" alt="/" src="[% imgdir %]b_height.$format"/></td>
-      <!-- redundant second pic, but looks good in w3m -->
+      <td class="b_right"></td>
     </tr>
   </table>
 [% END %]
