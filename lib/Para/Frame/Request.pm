@@ -330,6 +330,7 @@ sub new_minimal
 	env            => {},             ## No env mor minimals!
 	's'            => undef,          ## Session object
 	result         => undef,
+        dirconfig      => {},             ## Apache $r->dir_config
 	childs         => 0,              ## counter in parent
 	in_yield       => 0,              ## inside a yield
 	child_result   => undef,          ## the child res if in child
