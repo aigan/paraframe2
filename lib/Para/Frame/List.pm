@@ -44,6 +44,7 @@ use overload
   '@{}' => 'as_arrayref_by_overload',
 #  'bool' => sub{carp "* Bool"; $_[0]->size},
   'bool' => sub{$_[0]->size},
+  '!'    => sub{! $_[0]->size },
   '""' => 'stringify_by_overload',
   '.' => 'concatenate_by_overload',
   'fallback' => 0;
