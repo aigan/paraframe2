@@ -307,12 +307,14 @@ sub get_by_url
 	$url = lc( $url_in );
 	$url =~ s/^https?://;
 	$url =~ s/\/\///g; # Both host identifier and double in path
-	$url =~ s/\/$//;
     }
+
+    $url =~ s/\/$//;
 
     my $url_given = $url;
     while( length $url )
     {
+#	debug "Looking up $url";
 	if( my $site = $DATA{ $url } )
 	{
 	    return $site;
