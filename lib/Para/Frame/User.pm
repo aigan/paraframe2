@@ -32,7 +32,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw passwd_crypt debug );
+use Para::Frame::Utils qw( throw passwd_crypt debug datadump );
 
 =head1 SYNOPSIS
 
@@ -145,7 +145,7 @@ sub authenticate_user
     my( $this, $password_encrypted ) = @_;
     my $class = ref($this) || $this;
 
-    my $u   = $Para::Frame::U;
+    my $u   = $Para::Frame::U or confess "No user to authenticate";
     my $req = $Para::Frame::REQ;
     my $q   = $req->q;
 
