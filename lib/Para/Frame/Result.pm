@@ -51,6 +51,29 @@ data in an apropriate subhash.  Example:
 
 The info hash is accessed in the template as C<result.info>.
 
+=head1 The process
+
+1. throw()
+   takes a PF_part or TT_exception or custom
+   gives TT_exception
+
+1. die()
+   takes any obj or text
+   gives the same
+
+1. Template exceptions
+   gives a TT_exception
+
+2. catch()
+   takes any obj or text
+   gives a TT_exception or PF_part or undef
+
+3. $result->exception() (runs on_error code)
+   takes the same as throw()
+   gives a PF_part
+     uses $result->error()
+       uses Para::Frame::Result::Part->new()
+
 
 =cut
 
