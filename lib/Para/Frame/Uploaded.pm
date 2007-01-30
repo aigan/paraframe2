@@ -35,6 +35,7 @@ BEGIN
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( debug throw );
+use Para::Frame::File;
 
 
 #######################################################################
@@ -238,12 +239,31 @@ sub content_type
 
   $uploaded->tempfile
 
-Retuns the full path of the temporary file, that will be removed after
-this request.
+Retuns a L<Para::Frame::File> of the temporary file, that will be
+removed after this request.
 
 =cut
 
 sub tempfile
+{
+    my( $uploaded ) = @_;
+
+    return Para::Frame::File->new({ filename => $uploaded->{'tempfile'} });
+}
+
+
+#######################################################################
+
+=head2 tempfilename
+
+  $uploaded->tempfilename
+
+Retuns the filename of the temporary file, that will be removed after
+this request.
+
+=cut
+
+sub tempfilename
 {
     my( $uploaded ) = @_;
 
