@@ -471,7 +471,9 @@ sub preserve_data
     my $text = "";
     my $q = $Para::Frame::REQ->q;
 
-    push @except, 'previous', 'run', 'route', 'selector', 'destination';
+    push @except, 'previous', 'run', 'route', 'selector',
+      'destination', 'session_vars_update', 'admin_mode';
+
   KEY:
     foreach my $key ( $q->param())
     {
