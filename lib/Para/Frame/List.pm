@@ -182,10 +182,7 @@ sub new
 	$data_in = [$data_in->as_array];
     }
 
-#    carp "New search list WITH ".datadump($data_in);
-
     my $data;
-    $args ||= {};
     my $l = bless
     {
      'INDEX'         => -1,    # Before first element
@@ -194,12 +191,15 @@ sub new
      '_DATA'         => undef,
      'populated'     => 0,     # 1 for partly and 2 for fully populated
      '_OBJ'          => undef, # the corresponding list of materalized elements
-#     'limit'         => ($args->{'limit'} || 0 ),
-#     'page_size'     => ($args->{'page_size'} || 20 ),
-#     'display_pages' => ($args->{'display_pages'} || 10),
-#     'stored_id'     => undef,
-#     'stored_time'   => undef,
     }, $class;
+
+    if( $args )
+    {
+	$l->{'limit'} = $args->{'limit'};
+	$l->{'page_size'} = $args->{'page_size'};
+	$l->{'display_pages'} = $args->{'display_pages'};
+    }
+
 
     if( $data_in )
     {
@@ -242,6 +242,7 @@ sub new
 	$l->{'_DATA'} = $data;
     }
 
+    $args ||= {};
     $l->init( $args );
 
     if( my $mat_in =  $args->{'materializer'} )
@@ -919,6 +920,8 @@ sub page_size
 Returns a widget for navigating between the pages. If no C<$pagenum>
 is given, takes the value from query param table_page or 1.
 
+If only one page, returns an empty string.
+
 Example:
 
   [% USE Sorted_table('created','desc') %]
@@ -1035,8 +1038,7 @@ Sets and returns the given C<$page_size>
 
 sub set_page_size
 {
-    $_[0]->{'page_size'} = int($_[1]);
-    return "";
+    return $_[0]->{'page_size'} = int($_[1]);
 }
 
 
