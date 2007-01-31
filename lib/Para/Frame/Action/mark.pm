@@ -9,7 +9,7 @@ package Para::Frame::Action::mark;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2007 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -19,6 +19,10 @@ package Para::Frame::Action::mark;
 use strict;
 
 use Para::Frame::Utils qw( uri store_params);
+
+#
+# See Para::Frame::Route
+#
 
 sub handler
 {
@@ -30,7 +34,6 @@ sub handler
     my @run = $q->param('run');
     $q->delete('run');
 
-#    $route->bookmark( uri $req->referer, store_params );
     $route->bookmark( $req->referer_with_query );
 
     $q->param('run', grep {$_ ne 'mark'} @run );
