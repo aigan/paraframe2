@@ -9,7 +9,7 @@ package Para::Frame::Request::Response;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2007 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -742,7 +742,7 @@ sub forward
     elsif( $url_norm =~ /\.html$/ )
     {
 	debug "Forward to html page: $url_norm";
-	my $referer = $req->referer;
+	my $referer = $req->referer_path;
 	debug "  Referer is $referer";
 	debug "  Cancelling forwarding";
 	$resp = $req->set_response($req->original_url_string);

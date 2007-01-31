@@ -179,7 +179,7 @@ sub authenticate_user
 	my $destination = $q->param('destination') || '';
 	unless( $destination eq 'dynamic' )
 	{
-	    $q->param('next_template', $req->referer);
+	    $q->param('next_template', $req->referer_path);
 	    warn sprintf("  Setting next_tempalte to %s\n",
 			 $q->param('next_template'));
 	}

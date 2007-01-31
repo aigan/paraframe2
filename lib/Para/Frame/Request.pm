@@ -1435,7 +1435,7 @@ sub error_backtrack
     if( $req->result->backtrack and not $req->error_page_selected )
     {
 	debug(2,"Backtracking to previuos page because of errors");
-	my $previous = $req->referer;
+	my $previous = $req->referer_path;
 	if( $previous )
 	{
 	    $req->set_response( $previous );
@@ -1448,9 +1448,9 @@ sub error_backtrack
 
 #######################################################################
 
-=head2 referer
+=head2 referer_path
 
-  $req->referer
+  $req->referer_path
 
 Returns the LOCAL referer. Just the path part. If the referer
 was from another website, fall back to default.
@@ -1461,7 +1461,7 @@ Returns the URL path part as a string.
 
 =cut
 
-sub referer
+sub referer_path
 {
     my( $req ) = @_;
 
@@ -1550,8 +1550,12 @@ sub referer_query
 
 	    if( defined( my $query = $url->query) )
 	    {
-		debug 2, "Referer query from current http req ($query)";
-		return $query;
+		if( $query ne 'backtrack' )
+		{
+		    debug 2, "Referer query from current http req ($query)";
+		    debug "Returning query $query";
+		    return $query;
+		}
 	    }
 	}
 
@@ -1563,8 +1567,12 @@ sub referer_query
 
 	    if( defined(my $query = $url->query) )
 	    {
-		debug 2, "Referer query from original http req";
-		return $query;
+		if( $query ne 'backtrack' )
+		{
+		    debug 2, "Referer query from original http req";
+		    debug "Returning query $query";
+		    return $query;
+		}
 	    }
 	}
 
@@ -1598,11 +1606,11 @@ sub referer_with_query
 
     if( my $query = $req->referer_query )
     {
-	return $req->referer . '?' . $query;
+	return $req->referer_path . '?' . $query;
     }
     else
     {
-	return $req->referer;
+	return $req->referer_path;
     }
 }
 
@@ -2805,7 +2813,7 @@ sub handle_error
 	else
 	{
 	    $error_tt = "/denied.tt";
-	    $req->session->route->plan_next($req->referer);
+	    $req->session->route->plan_next($req->referer_path);
 	}
     }
     elsif( $error->type eq 'notfound' )

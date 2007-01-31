@@ -50,8 +50,7 @@ the 'there' page has a defined next_template META, that will be done
 first. But if no such template is given, or there just are an
 default_template META, the next submit will follow the route.
 
-Backtracking can also be done by running the action 'backtrack' or
-'next_step'.
+Backtracking can also be done by running the action 'next_step'.
 
 The plan will only be added to the route if the link is selected.  In
 a form, the plan_next field can be modified by javascript. Use a
@@ -63,7 +62,7 @@ Several steps can be added by just adding up several plan_next hidden
 fields.
 
 The steps can be set up during the generation of the page, from TT, by
-calling the function plan_next(). 
+calling the function plan_next().
 
 Select the action L<Para::Frame::Action::mark> for bookmarking the
 current page, calling it with all the properties, except the call for
@@ -82,7 +81,7 @@ the form and run the action skip_step().
 The [% backstep(label) %] macro will create a button that will submit
 the form and run the action next_step().
 
-The backtrack action can be called to request a backtrack, rather than
+The skip_step action can be called to request a backtrack, rather than
 any of the other methods given above.
 
 'plan_after' can be used in place of plan_next to put a step in the
@@ -147,6 +146,11 @@ sub plan_backtrack
 Insert a new step in the route.  The url should include all the params
 that will be set then we backtrack to this step. The step will be
 placed on the top of the stack.
+
+If a C<run> query param exist, it will cause the action to run again
+with the same parameters then we backtrack to that step.
+
+Use C<$route->skip_step> to go back without taking the action.
 
 =cut
 
@@ -420,15 +424,13 @@ sub check_backtrack
 
   $route->bookmark( $url_str )
 
-Put a bookmark on the page C<$url_str>, defaulting to the current
-page.
+  $route->bookmark()
+
+Same as L</plan_next> but defaults to the current page and the current
+query params.
 
 This will add a step to the route with the page and all the query
-params we have at the moment, except file uploads.  If a C<run> query
-param exist, it will cause the action to run again with the same
-parameters then we backtrack to that step.
-
-Use C<$route->skip_step> to go back without taking the action.
+params we have at the moment, except file uploads.
 
 =cut
 
@@ -560,7 +562,7 @@ sub get_next
     {
 	$q->delete_all;
 	debug(1,"!!  No more steps in route");
-	if( $page->url_path ne $req->referer )
+	if( $page->url_path ne $req->referer_path )
 	{
 	    debug 1, "!!    Using selected template";
 	}
