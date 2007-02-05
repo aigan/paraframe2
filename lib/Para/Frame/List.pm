@@ -951,7 +951,7 @@ sub pagelist
 
     my $req = $Para::Frame::REQ;
 
-    $pagenum ||= $req->q->param('table_page') || 1;
+    $pagenum ||= $l->pagenum;
 
 #    debug "Creating pagelist for $l";
 
@@ -1023,6 +1023,22 @@ sub pagelist
     }
 
     return $out . "</span>";
+}
+
+
+######################################################################
+
+=head2 pagenum
+
+  $l->pagenum
+
+Returns the current page number, as given by the query param C<table_page>.
+
+=cut
+
+sub pagenum
+{
+    return $Para::Frame::REQ->q->param('table_page') || 1;
 }
 
 
