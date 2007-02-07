@@ -2234,6 +2234,7 @@ sub set_global_tt_params
         'timediff'        => \&Para::Frame::Utils::timediff,
         'mt'              => \&Para::Frame::L10N::mt,
         'loc'             => \&Para::Frame::L10N::loc,
+        'file'            => sub{Para::Frame::File->new(@_)},
     };
 
     $class->add_global_tt_params( $params );
