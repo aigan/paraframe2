@@ -1180,6 +1180,9 @@ sub filesize
 {
    my( $file ) = @_;
 
+   my $sys_path = $file->sys_path;
+   debug "Statting $sys_path";
+
    return format_bytes(stat($file->sys_path)->size);
 }
 
@@ -1466,7 +1469,44 @@ sub content
     {
 	confess "File ".$f->sysdesig." doesn't exist";
     }
-    return slurp( $f->sys_path_slash, scalar_ref => 1 ) ;
+    return scalar slurp( $f->sys_path_slash, scalar_ref => 1 ) ;
+}
+
+
+#######################################################################
+
+=head2 content_as_html
+
+Returns a string with the contnet of the file, formatted as html, with
+style and links
+
+=cut
+
+sub content_as_html
+{
+    my( $f, $target ) = @_;
+
+    unless( $f->exist )
+    {
+	confess "File ".$f->sysdesig." doesn't exist";
+    }
+
+    my $content = slurp( $f->sys_path_slash, scalar_ref => 0 );
+    $target ||= $f;
+    my $site = $target->site;
+    my $home = $site->home->url_path;
+
+    $content =~ s/&/&amp;/g;
+    $content =~ s/</&lt;/g;
+    $content =~ s/>/&gt;/g;
+    $content =~ s/&lt;/<span class="html_tag">&lt;/g;
+    $content =~ s/&gt;/&gt;<\/span>/g;
+#    $content =~ s/\r?\n/<br>\n/g;
+    $content =~ s/\[\%/<span class="tt_tag">[%/g;
+    $content =~ s/\%\]/%]<\/span>/g;
+    $content =~ s/<span class="tt_tag">\[%\s*(PROCESS|INCLUDE) (.*?\.tt) %\]<\/span>/<a href="$home\/pf\/cms\/source.tt?run=find_include&page=page_path">[% $1 $2 %]<\/a>/g;
+    $content =~ s/"\$home(.*?)"/"<a href="$home$1">\$home$1<\/a>"/g;
+    return $content;
 }
 
 
@@ -1603,6 +1643,8 @@ sub mtime_as_epoch
 #######################################################################
 
 =head2 utime
+
+See perl C<utime>
 
 =cut
 
