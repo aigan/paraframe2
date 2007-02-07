@@ -464,6 +464,11 @@ sub desig
     return $_[0]->{'name'} || $_[0]->webhost;
 }
 
+sub sysdesig
+{
+    $_[0]->desig;
+}
+
 #######################################################
 
 =head2 code
