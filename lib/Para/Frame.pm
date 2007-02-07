@@ -2188,6 +2188,10 @@ log. For example: [% debug(dump(myvar)) %]
 
 True if paraframe recovered from an abnormal error.
 
+=item file
+
+Calls L<Para::Frame::File/new> with the given params
+
 =item rand
 
 Produce a random integer number, at least 0 and at most one less than
