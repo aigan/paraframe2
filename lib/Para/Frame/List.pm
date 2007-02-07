@@ -1882,7 +1882,7 @@ Implemented with L</set_index> and L</get_next>.
 
 Returns:
 
-The element (materialized) at the current index.
+The element (materialized) at C<$index>.  (First element has index 0).
 
 Or undef
 
