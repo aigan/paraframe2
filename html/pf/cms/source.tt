@@ -1,5 +1,24 @@
 [% META otitle="Show Source" %]
 
-[% ref = req.referer %]
+[% page_path = q.param('page') %]
+[% DEFAULT page_path = req.referer_path %]
+[% hidden('page',page_path) %]
+[% CALL q.param('page',page_path) %]
 
-<h1>Source of [% ref %]</h1>
+[% tpage = file(url=page_path,site=page.site) %]
+
+<h1>Source of [% jump(tpage.path_slash, tpage.url_path_slash) %]</h1>
+[% tpaget = tpage.template %]
+
+<p>[% tpaget.name %]
+[% IF tpaget.vcs_version; ' v'; tpaget.vcs_version; END %]
+- [% tpaget.filesize %] bytes - updated [% tpaget.mtime %]</p>
+
+<style>
+.html_tag { color: green }
+.tt_tag { color: red }
+</style>
+
+<div style="background:white; border: thin solid black; margin: 1em 0; padding: 0.5em"><pre>
+[% tpaget.content_as_html(tpage) %]
+</pre></div>
