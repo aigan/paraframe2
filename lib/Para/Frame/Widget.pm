@@ -414,7 +414,7 @@ sub forward_url
 
     my $q = $Para::Frame::REQ->q;
 
-    my $except = ['run']; # FIXME
+    my $except = ['run','destination']; # FIXME
 
   KEY:
     foreach my $key ( $q->param() )
