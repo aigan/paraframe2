@@ -1,4 +1,6 @@
-[% META otitle = 'Template error' %]
+[% META otitle = 'Template error'
+   	level = 00
+%]
 
 [% preserve_data %]
 

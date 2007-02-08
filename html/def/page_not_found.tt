@@ -1,5 +1,5 @@
 [% META title='-"404 - " _ loc("File not found")'
-	level = 0
+	level = 00
 %]
 
 <p>

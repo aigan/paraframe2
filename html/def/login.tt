@@ -3,6 +3,7 @@
 	next_action = 'user_login'
 	focus = 'username'
 	default_template = '-site.login_page'
+	level = 00
 %]
 
 [% PROCESS login_box.tt %]

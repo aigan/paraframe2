@@ -1,5 +1,6 @@
 [% META
 	otitle = 'Otillräcklig behörighet'
+	level = 00
 %]
 
 <p>Det val du gjort kräver en högre behörighet än den du har nu.

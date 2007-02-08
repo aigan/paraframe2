@@ -1,5 +1,6 @@
 [% META
 	otitle = 'Confirm'
+	level = 00
 %]
 [%
 	c = req.result.info.confirm;
