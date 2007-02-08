@@ -843,7 +843,7 @@ sub uri2file
 	return $file;
     }
 
-    confess "url missing" unless $url;
+    confess "url missing" unless defined $url;
 
 #    warn "    From client\n";
     $file = $req->get_cmd_val( 'URI2FILE', $url );
@@ -923,8 +923,11 @@ sub normalized_url
 {
     my( $req, $url, $params ) = @_;
 
-    $url or confess "deprecated";
-    #  ||= $req->page->orig_url_path;
+    unless( defined $url )
+    {
+	confess "deprecated";
+    }
+
     $params ||= {};
 
 #    debug "Normalizing $url";
