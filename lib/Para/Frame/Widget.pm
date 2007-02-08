@@ -723,12 +723,12 @@ sub input
     my @previous;
     if( my $q = $Para::Frame::REQ->q )
     {
-        @previous = $q->param($key);
+	@previous = $q->param($key);
     }
 
     if( $#previous == 0 ) # Just one value
     {
-        $value = $previous[0];
+	$value = $previous[0];
     }
     $key   ||= 'query';
     $value ||= '';
@@ -755,7 +755,7 @@ sub input
 			   $prefix_extra,
 			   CGI->escapeHTML($label),
 			   );
-	$params->{id} = $key;
+	$params->{id} = $id;
     }
 
     foreach my $key ( keys %$params )
@@ -771,12 +771,12 @@ sub input
 
     return sprintf('%s<input type="text" name="%s" value="%s" size="%s" maxlength="%s"%s />',
 		   $prefix,
-                   CGI->escapeHTML( $key ),
-                   CGI->escapeHTML( $value ),
-                   CGI->escapeHTML( $size ),
-                   CGI->escapeHTML( $maxlength ),
+		   CGI->escapeHTML( $key ),
+		   CGI->escapeHTML( $value ),
+		   CGI->escapeHTML( $size ),
+		   CGI->escapeHTML( $maxlength ),
 		   $extra,
-                   );
+		  );
 }
 
 
