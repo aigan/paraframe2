@@ -22,3 +22,5 @@
 <div style="background:white; border: thin solid black; margin: 1em 0; padding: 0.5em"><pre>
 [% tpaget.content_as_html(tpage) %]
 </pre></div>
+
+<p>[% nostep %][% go('Edit as TEXT', 'edit_src.tt') %][% go('Edit as HTML', 'edit_src.tt') %]
