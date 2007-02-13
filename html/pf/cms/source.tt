@@ -23,4 +23,4 @@
 [% tpaget.content_as_html(tpage) %]
 </pre></div>
 
-<p>[% nostep %][% go('Edit as TEXT', 'edit_src.tt') %][% go('Edit as HTML', 'edit_src.tt') %]
+<p>[% nostep %][% go('Edit as TEXT', 'edit_src.tt') %][% go('Edit as HTML', 'edit_html.tt') %]
