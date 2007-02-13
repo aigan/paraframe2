@@ -10,10 +10,13 @@
 [% tpage = file(url=page_path,site=page.site) %]
 
 <h1>File HTML edit of [% jump(tpage.path_slash, tpage.url_path_slash) %]</h1>
+[% tpaget = tpage.template %]
 
 <input type="hidden" style="display:none" id="content" name="content" value="" />
-<script>document.getElementById('content').value="[% tpage.content_as_text | replace('"', '\"') | replace("\r?\n", '\r\n') %]"</script>
+<script>document.getElementById('content').value="[% tpaget.content_as_text | replace('"', '\"') | replace("\r?\n", '\r\n') %]"</script>
 
 <iframe id="content___Frame" src="/~jonas/project/paraframe/html/pf/cms/fckeditor/editor/fckeditor.html?InstanceName=content&amp;Toolbar=ParaFrame" width="100%" height="500" frameborder="0" scrolling="no"></iframe>
 
 <p>[% nostep %][% go('Switch to RAW mode (discarding changes)', 'edit_src.tt') %][% go('Show source', 'source.tt') %]
+
+<p>This is <code>[% tpaget.url_path %]</code></p>
