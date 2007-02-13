@@ -1,0 +1,17 @@
+[% META otitle="File HTML edit"
+   next_action="store_content"
+%]
+
+[% page_path = q.param('page') %]
+[% DEFAULT page_path = req.referer_path %]
+[% hidden('page',page_path) %]
+[% CALL q.param('page',page_path) %]
+
+[% tpage = file(url=page_path,site=page.site) %]
+
+<h1>File HTML edit of [% jump(tpage.path_slash, tpage.url_path_slash) %]</h1>
+
+<input type="hidden" style="display:none" id="content" name="content" value="" />
+<script>document.getElementById('content').value="[% tpage.content_as_text | replace('"', '\"') | replace("\r?\n", '\r\n') %]"</script>
+
+<iframe id="content___Frame" src="/~jonas/project/paraframe/html/pf/cms/fckeditor/editor/fckeditor.html?InstanceName=content&amp;Toolbar=ParaFrame" width="100%" height="200" frameborder="0" scrolling="no"></iframe>

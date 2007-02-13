@@ -1,0 +1,29 @@
+Workable editors:
+
+http://www.htmlarea.com/directory/Detailed/185.html
+***** IE5.5 - Free - PHP
+
+http://www.htmlarea.com/directory/Detailed/65.html
+***** IE5.5 - Free - Perl
+
+http://www.htmlarea.com/directory/Detailed/79.html
+***** IE - LGPL
+
+http://www.htmlarea.com/directory/Detailed/419.html
+**** IE5.5 - Free
+
+http://www.htmlarea.com/directory/Detailed/123.html
+**** IE5.5 - Free
+
+http://www.htmlarea.com/directory/Detailed/100.html
+*** IE - Free
+
+http://www.htmlarea.com/directory/Detailed/455.html
+*** IE5.5
+
+http://www.htmlarea.com/directory/Detailed/66.html
+** IE5
+
+http://www.htmlarea.com/directory/Detailed/417.html
+*
+

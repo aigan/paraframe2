@@ -1,0 +1,14 @@
+[% META otitle="File text edit"
+   next_action="store_content"
+%]
+
+[% page_path = q.param('page') %]
+[% DEFAULT page_path = req.referer_path %]
+[% hidden('page',page_path) %]
+[% CALL q.param('page',page_path) %]
+
+[% tpage = file(url=page_path,site=page.site) %]
+
+<h1>File text edit of [% jump(tpage.path_slash, tpage.url_path_slash) %]</h1>
+<textarea id="content" name="content" style="width:100%; height: 40em">[% tpage.content_as_text | html %]</textarea>
+<p>[% step %]
