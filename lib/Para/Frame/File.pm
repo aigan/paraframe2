@@ -1475,6 +1475,24 @@ sub content
 
 #######################################################################
 
+=head2 content_as_text
+
+=cut
+
+sub content_as_text
+{
+    my( $f ) = @_;
+
+    unless( $f->exist )
+    {
+	confess "File ".$f->sysdesig." doesn't exist";
+    }
+    return scalar slurp( $f->sys_path_slash, scalar_ref => 0 ) ;
+}
+
+
+#######################################################################
+
 =head2 content_as_html
 
 Returns a string with the contnet of the file, formatted as html, with
@@ -1504,7 +1522,7 @@ sub content_as_html
 #    $content =~ s/\r?\n/<br>\n/g;
     $content =~ s/\[\%/<span class="tt_tag">[%/g;
     $content =~ s/\%\]/%]<\/span>/g;
-    $content =~ s/<span class="tt_tag">\[%\s*(PROCESS|INCLUDE) (.*?\.tt) %\]<\/span>/<a href="$home\/pf\/cms\/source.tt?run=find_include&page=page_path">[% $1 $2 %]<\/a>/g;
+#    $content =~ s/<span class="tt_tag">\[%\s*(PROCESS|INCLUDE) (.*?\.tt) %\]<\/span>/<a href="$home\/pf\/cms\/source.tt?run=find_include&page=page_path">[% $1 $2 %]<\/a>/g;
     $content =~ s/"\$home(.*?)"/"<a href="$home$1">\$home$1<\/a>"/g;
     return $content;
 }
@@ -1513,6 +1531,8 @@ sub content_as_html
 #######################################################################
 
 =head2 copy
+
+  $file1->copy( $file2 )
 
 =cut
 
@@ -1924,6 +1944,46 @@ sub mimetype_base
     $f->mimetype =~ m/(.*?)\// or
 	die "No mimetype base found for ".$f->sysdesig;
     return $1;
+}
+
+
+#######################################################################
+
+=head2 set_content
+
+  $f->set_content( \$data )
+
+Updates the file content and saves it in the file.
+
+C<\$data> shoule be a reference to a scalar containing the new content
+of the file.
+
+Returns: true on success
+
+=cut
+
+sub set_content
+{
+    my( $f, $dataref ) = @_;
+
+    if( $f->is_dir )
+    {
+	my $fname = $f->desig;
+	throw('validation', "$fname is a dir");
+    }
+
+    unless( ref($dataref) and (ref $dataref eq 'SCALAR') )
+    {
+	throw('validation', "content not a scalar ref");
+    }
+
+
+    my $syspath = $f->sys_path;
+
+    debug "Storing content in file $syspath";
+    File::Slurp::overwrite_file($syspath, $$dataref);
+
+    return 1;
 }
 
 
