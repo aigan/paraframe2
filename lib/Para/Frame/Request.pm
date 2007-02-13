@@ -2452,7 +2452,7 @@ sub note
 {
     my( $req, $note ) = @_;
 
-    debug($note);
+    debug(0, $note);
     $note =~ s/\n/\\n/g;
     my $creq = $req->original || $req; # client req
     return $creq->send_code('NOTE', $note );
