@@ -450,6 +450,40 @@ sub has_root_access
 
 #######################################################################
 
+=head2 has_page_update_access
+
+  $u->has_page_update_access()
+
+  $u->has_page_update_access( $file )
+
+Reimplement this to give update access for a specific page or the
+default access for the given user.
+
+C<$file> must be a L<Para::Frame::File> object.
+
+Returns: true or false
+
+The default is false (0).
+
+=cut
+
+sub has_page_update_access
+{
+    my( $u, $file ) = @_;
+
+    if( $file )
+    {
+	unless( UNIVERSAL::isa( $file, 'Para::Frame::File' ) )
+	{
+	    throw('action', "File param not a Para::Frame::File object");
+	}
+    }
+
+    return 0;
+}
+
+#######################################################################
+
 1;
 
 =head1 SEE ALSO
