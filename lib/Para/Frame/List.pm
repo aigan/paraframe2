@@ -158,6 +158,9 @@ Availible params are:
   type           (default is undef)
   allow_undef    (default is undef)
 
+The first argument may be a L<Para::Frame::List> object, in which case
+it's content is copied to this new list.
+
 Compatible with L<Template::Iterator/new>.
 
 Returns:
@@ -264,6 +267,20 @@ sub new
 
 =head2 new_any
 
+  $l = $class->new( $any )
+
+  $l = $class->new( $any, \%params )
+
+The same as L</new> but accepts more forms of lists.
+
+If C<$any> is a L<Para::Frame::List> object, or an array ref, it will
+be sent to the L</new> constructor.
+
+For all other defined values of L<$any>, it will be taken as a list of
+that single element and sent to L</new> as C<[$any]>.
+
+If C<$any> is undef, the constructor L</new_empty> will be used.
+
 =cut
 
 sub new_any
@@ -295,6 +312,11 @@ sub new_any
 #######################################################################
 
 =head2 new_empty
+
+  $l = $class->new_empty()
+
+This is an optimized form of L</new> that is faster and more memory
+efficient than L</new> but should behave in the same way.
 
 =cut
 
@@ -342,6 +364,24 @@ sub init
 #######################################################################
 
 =head2 set_materializer
+
+  $l->set_materializer( $materializer )
+
+The materializer can be used to format an element before it's returned
+from the list.  This can be used for turning a record id to an object.
+With a materializer, the objectification or formatting of the data can
+be done on demand which will save a lot of computation in the case of
+large lists like search results.
+
+C<$materializer> should be a subref that takes the params C<$l, $i>
+where C<$i> is the index of the element to materialize.  The
+materializer sub should return the materialized form of the element.
+
+See L</materialize_all> and L</new>.
+
+Returns:
+
+The given C<$materializer> subref.
 
 =cut
 
@@ -1764,6 +1804,8 @@ sub last
 Returns the previous item in the data set, or undef if the iterator is
 on the first item.
 
+This does B<not> change the iterator index.
+
 Compatible with L<Template::Iterator/prev>.
 
 Similar to L<Array::Iterator::BiDirectional/lookBack>.
@@ -1785,6 +1827,8 @@ sub prev
 
 Returns the next item in the data set or undef if the iterator is on
 the last item.
+
+This does B<not> change the iterator index.
 
 Compatible with L<Template::Iterator/next>.
 
