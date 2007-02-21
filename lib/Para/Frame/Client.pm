@@ -774,11 +774,37 @@ sub send_loadpage
     # Must be existing page...
     my $sr = $r->lookup_uri($LOADPAGE_URI);
     my $filename = $sr->filename;
+
     if( open IN, $filename )
     {
 	$LOADPAGE = 1;
 	send_headers();
-	$r->send_fd(*IN);
+	if( $r->isa('Apache2::RequestRec') )
+	{
+	    my $buffer;
+
+	    while( 1 )
+	    {
+		# do the read and see how much we got
+                my $read_cnt = sysread( IN, $buffer, BUFSIZ ) ;
+                if( defined $read_cnt )
+		{
+		    # good read. see if we hit EOF (nothing left to read)
+		    last if $read_cnt == 0 ;
+
+		    $r->print($buffer);
+                }
+		else
+		{
+		    warn "$$: Failed to read from '$filename': $!\n";
+		    last;
+		}
+	    }
+	}
+	else
+	{
+	    $r->send_fd(*IN);
+	}
 	close IN;
 	$r->rflush;
 	send_to_server( 'LOADPAGE' );
