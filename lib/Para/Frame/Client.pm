@@ -339,7 +339,7 @@ sub connect_to_server
 
 	if( $try >= TRIES )
 	{
-	    warn "$$:   Giving up!\n";
+	    warn "$$: Tried connecting to port $port $try times - Giving up!\n";
 	    return undef;
 	}
 
