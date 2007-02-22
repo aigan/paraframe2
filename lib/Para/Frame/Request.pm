@@ -1987,7 +1987,11 @@ sub http_if_modified_since
 {
     if( my $val = $ENV{HTTP_IF_MODIFIED_SINCE} )
     {
-	return Para::Frame::Time->get($val);
+	$val =~ s/;\s*length=\d+$//; # May be part of string
+	return eval # Ignoring exceptions (returns undef)
+	{
+	    return Para::Frame::Time->get($val);
+	}
     }
     return undef;
 }
