@@ -418,7 +418,13 @@ sub check_connection
 	$try ++;
 	debug 4, "  Check $try";
 
-	my $sock = send_to_server('PING') or next;
+	my $sock = send_to_server('PING');
+	unless( $sock )
+	{
+	    debug "Faild to send PING to server";
+	    return watchdog_crash();
+	}
+
 	my $select = IO::Select->new($sock);
 
 	# Waiting for the response in TIMEOUT_CONNECTION_CHECK seconds
