@@ -183,8 +183,8 @@ $content
 [%
    DEFAULT global.paraframe_formcount=0;
    global.paraframe_formcount = global.paraframe_formcount + 1;
-   paraframe_display='none';
-   paraframe_label_display='block';
+   DEFAULT paraframe_display='none';
+   DEFAULT paraframe_label_display='block';
    DEFAULT label_expand_img = "$home/pf/images/button.expand.down.gif";
    DEFAULT label_hide_img = label_expand_img;
    DEFAULT id_label = "paraframe_fid_${global.paraframe_formcount}_label";
@@ -245,15 +245,35 @@ $content
 [% MACRO calendar(field, value) BLOCK %]
   [%# DEFAULT value=loc('Click for calendar') %]
   [% DEFAULT id=field %]
-  [% input( field, value, size=size, maxlength=maxlength, tdlabel=tdlabel, label=label, label_class=label_class, separator=separator, id=id, class=class, style=style) %]
-  <script type="text/javascript">
-    Calendar.setup(
-    {
-      inputField  : "[% id %]",         // ID of the input field
-      ifFormat    : "%Y-%m-%d",    // the date format
-      button      : "[% id %]"       // ID of the button
-    }
-    );
-  </script>
-
+  [% IF tdlabel %]
+    [% label = tdlabel %]
+    [% separator = "</td><td>" %]
+  [% END %]
+  [% IF label %]
+    <label class="[% label_class %]" for="[% field %]">[% label %]</label>
+    [% separator %]
+  [% END %]
+  <table cellspacing="0" cellpadding="0" class="[% class %]">
+    <tr>
+      <td>
+	[% style = "$style; width: 100%" %]
+	[% input( field, value, size=size, maxlength=maxlength, id=id, class=class, style=style) %]
+      </td>
+      <td valign="bottom" style="vertical-align: bottom">
+	<button style="border: none; background: transparent; margin: 0; padding: 0;" id="[% id %]-button"><img alt="..." src="[% home %]/pf/images/calendar.gif"/></button>
+      </td>
+    </tr>
+    <script type="text/javascript">
+      Calendar.setup(
+      {
+        inputField  : "[% id %]",         // ID of the input field
+        ifFormat    : "%Y-%m-%d",    // the date format
+        button      : "[% id %]-button"       // ID of the button
+        [% IF onUpdate +%]
+         , onClose  : [% onUpdate %]
+        [% END +%]
+      }
+      );
+    </script>
+  </table>
 [% END %]
