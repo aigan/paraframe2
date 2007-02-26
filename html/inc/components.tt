@@ -253,7 +253,7 @@ $content
     <label class="[% label_class %]" for="[% field %]">[% label %]</label>
     [% separator %]
   [% END %]
-  <table cellspacing="0" cellpadding="0" class="[% class %]">
+  <table cellspacing="0" cellpadding="0" style="width: 100%; [% style %]" class="[% class %]">
     <tr>
       <td>
 	[% style = "$style; width: 100%" %]
