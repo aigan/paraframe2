@@ -23,7 +23,7 @@ Para::Frame::Utils - Utility functions for ParaFrame and applications
 =cut
 
 use strict;
-use Carp qw(carp croak cluck confess shortmess);
+use Carp qw(carp croak cluck confess shortmess longmess );
 use locale;
 use Date::Manip;
 use File::stat;  # stat
@@ -206,6 +206,7 @@ Supported args are:
   info
   output
   error_template
+  data
 
 =cut
 
@@ -226,6 +227,16 @@ sub throw
     }
     elsif (defined $info)
     {
+	if( ref $info )
+	{
+	    my $arg = $info;
+	    $info = $arg->{'info'};
+	    if( $arg->{'output'} )
+	    {
+		$output = $arg->{'output'};
+	    }
+	}
+
 #	confess; ### DEBUG
 #	warn "Creating an $error exception";
 	die Template::Exception->new($error, $info, $output);
@@ -682,6 +693,7 @@ sub chmod_file
 		my $dir = $file;
 		$dir =~ s/\/[^\/]*$/\//;
 		$msg .= "  chown -R $run $dir\n";
+		$msg .= longmess;
 	    }
 
 
