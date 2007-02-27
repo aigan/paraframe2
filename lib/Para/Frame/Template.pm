@@ -438,11 +438,15 @@ source C<$page>. Also takes:
   arg type defaults to html_pre
   arg umask defaults to 02
   arg params
+  arg template_root
 
 The C<$dest> is normalized with L<Para::Frame::File/normalize>. It's
 this normalized page that is rendered. That will be the object
 availible in the template during rendering as the C<page> variable
 (both during the precompile and during later renderings).
+
+The args C<template> and C<template_root> is given to
+L<Para::Frame::Renderer::TT/new> via L<Para::Frame::File/renderer>.
 
 Returns: C<$dest>
 
@@ -471,9 +475,23 @@ sub precompile
     my $fh = new IO::File;
     $fh->open( $srcfile ) or die "Failed to open '$srcfile': $!\n";
 
+
+
+
     #Normalize page URL
     my $page = $dest->normalize;
-    my $rend = $page->renderer(undef, {template => $tmpl} );
+
+    my $renderargs =
+    {
+     template => $tmpl,
+    };
+
+    if( my $htmlsrc = $args->{'template_root'} )
+    {
+	$renderargs->{'template_root'} = $htmlsrc;
+    }
+
+    my $rend = $page->renderer(undef, $renderargs );
 
     $rend->set_burner_by_type($args->{'type'} || 'html_pre');
 

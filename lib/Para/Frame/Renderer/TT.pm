@@ -47,9 +47,18 @@ use Scalar::Util qw(weaken);
 
 =head2 new
 
-params:
+  Para::Frame::Renderer::TT->new( \%args )
+
+args:
 
   umask
+  page
+  template
+  template_root
+
+C<template_root> is the root of the template used, if not the site
+root.  Include files will be search for between the root and the
+template dir.
 
 =cut
 
@@ -67,6 +76,7 @@ sub new
      'incpath'        => undef,
      'params'         => undef,
      'burner'         => undef,          ## burner used for page
+     'template_root'  => undef,
     };
 
 
@@ -76,6 +86,8 @@ sub new
 #    debug "=======> Created renderer for page ".$page->url_path;
 
     $rend->{'params'} = {%$Para::Frame::PARAMS};
+
+    $rend->{'template_root'} = $args->{'template_root'};
 
 
     # Cache template -- May throw an exception -- may return undef
@@ -561,7 +573,14 @@ sub paths
 	    die;
 	}
 	my $paraframedir = $Para::Frame::CFG->{'paraframe'};
-	my $htmlsrc = $site->htmlsrc;
+
+	my @htmlsrc = $site->htmlsrc;
+
+	my $template_root = $rend->{'template_root'};
+	if( ref $template_root )
+	{
+	    $template_root = $template_root->sys_path;
+	}
 
 	my $subdir = 'inc' . $burner->subdir_suffix;
 
@@ -596,9 +615,25 @@ sub paths
 
 	my @searchpath;
 
+	if( $template_root )
+	{
+	    my $tmpl_path = $rend->template->dir->sys_path_slash;
+	    my $path = $tmpl_path;
+	    unless( $path =~ s/^$template_root// )
+	    {
+		warn "template root $template_root not part of $path";
+		die;
+	    }
+
+	    foreach my $step ( Para::Frame::Utils::dirsteps($path), '/' )
+	    {
+		push @searchpath, $template_root.$step.$subdir.'/';
+	    }
+	}
+
 	foreach my $step ( Para::Frame::Utils::dirsteps($dir), '/' )
 	{
-	    push @searchpath, $htmlsrc.$step.$subdir.'/';
+	    push @searchpath, map $_.$step.$subdir.'/', @htmlsrc;
 
 	    foreach my $appback (@{$site->appback})
 	    {
@@ -652,6 +687,19 @@ sub content_type_string
     }
 
     return undef;
+}
+
+#######################################################################
+
+=head2 sysdesig
+
+=cut
+
+sub sysdesig
+{
+    my( $rend ) = @_;
+
+    return datadump($rend,2);
 }
 
 #######################################################################
