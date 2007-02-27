@@ -416,6 +416,9 @@ sub create_dir
 {
     my( $dir, $params ) = @_;
 
+    confess "Dir was a ref" if ref $dir;
+
+    $params ||= {};
 #    warn "Gor dir: '$dir'\n";
     if( -e $dir )
     {
@@ -468,6 +471,9 @@ sub create_file
 {
     my( $file, $content, $params ) = @_;
 
+    confess "File was a ref" if ref $file;
+
+    $params ||= {};
     my $parent = dirname $file;
     create_dir($parent, $params);
 
@@ -495,6 +501,9 @@ sub chmod_tree
 {
     my( $dir, $params, $skip_re, $skip_h ) = @_;
 
+    confess "Dir was a ref" if ref $dir;
+
+    $params ||= {};
 #    warn "Chmod tree $dir\n"; ### DEBUG
     $dir = abs_path($dir);
     $skip_h ||= {};
@@ -751,6 +760,9 @@ sub chmod_dir
 {
     my( $dir, $mode, $params ) = @_;
 
+    confess "Dir was a ref" if ref $dir;
+
+    $params ||= {};
     $params ||= {};
     if( ref $mode )
     {
