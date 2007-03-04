@@ -120,6 +120,14 @@ If all above fail, we will create a fallback page with a link
 suggesting to go to this site. The link is constructad in the same way
 as for L</backup_redirect>.
 
+=head2 File uploads
+
+Files will be uploaded in a non-readable directory. The file will be
+removed at the end of the request. The file will be readable by the
+user and group of the server.  Make sure that the paraframe server is
+a member of the main group of the webserver. (That may be
+C<www-data>.)
+
 =cut
 
 
