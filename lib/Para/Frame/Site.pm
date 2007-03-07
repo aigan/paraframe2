@@ -1066,7 +1066,7 @@ sub email_domains
 	return [];
     }
 
-    if( ref ed_in )
+    if( ref $ed_in )
     {
 	return $ed_in;
     }
