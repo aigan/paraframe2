@@ -1,0 +1,9 @@
+Sent with template /email/default.tt
+
+--------------------
+
+[%+ body | lf +%]
+
+--------------------
+
+[%+ props %]
