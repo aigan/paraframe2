@@ -1,5 +1,7 @@
 Sent with template /email/default.tt
 
+[% name %] <[% email %]> wrote:
+
 --------------------
 
 [%+ body | lf +%]
