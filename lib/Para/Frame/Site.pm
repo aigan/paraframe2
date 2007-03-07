@@ -89,6 +89,7 @@ sub _new
     return $site;
 }
 
+
 #######################################################
 
 =head2 add
@@ -143,6 +144,10 @@ C<is_compiled  > = See L</is_compiled>
 
 C<send_email   > = See L</send_email>
 
+C<email        > = See L</email>
+
+C<email_domains> = See L</email_domains>
+
 =back
 
 The site is registred under the L</host>, L</code> and all given
@@ -184,6 +189,7 @@ sub add
 
     return $site;
 }
+
 
 #######################################################
 
@@ -227,6 +233,7 @@ sub clone
     return $site->add($params);
 }
 
+
 #######################################################
 
 =head2 get
@@ -259,6 +266,7 @@ sub get
     return $DATA{$name} || $ALIAS{$name} ||
 	croak "Site $name is not registred";
 }
+
 
 #######################################################
 
@@ -326,6 +334,7 @@ sub get_by_url
     croak "Site $url_given is not registred";
 }
 
+
 #######################################################
 
 =head2 get_by_req
@@ -392,6 +401,7 @@ sub get_by_req
     return $this->get('default')->clone($hostname);
 }
 
+
 #######################################################################
 
 =head2 get_page
@@ -447,6 +457,7 @@ sub name
     return $_[0]->{'name'} || $_[0]->webhost;
 }
 
+
 #######################################################################
 
 =head2 desig
@@ -468,6 +479,7 @@ sub sysdesig
 {
     $_[0]->desig;
 }
+
 
 #######################################################
 
@@ -563,6 +575,7 @@ sub home
     }
 }
 
+
 #######################################################
 
 =head2 home_url_path
@@ -611,6 +624,7 @@ sub last_step
     return $_[0]->{'last_step'};
 }
 
+
 #######################################################
 
 =head2 loadpage
@@ -632,6 +646,7 @@ sub loadpage
     return $_[0]->home_url_path .
       ( $_[0]->{'loadpage'} || "/pf/loading.html" );
 }
+
 
 #######################################################
 
@@ -657,6 +672,7 @@ sub login_page
 	$_[0]->home_url_path.'/';
 }
 
+
 #######################################################
 
 =head2 logout_page
@@ -676,6 +692,7 @@ sub logout_page
     return $_[0]->{'logout_page'} ||
 	$_[0]->home_url_path.'/';
 }
+
 
 #######################################################
 
@@ -706,6 +723,7 @@ sub host
     return $_[0]->webhost;
 }
 
+
 #######################################################
 
 =head2 webhost
@@ -720,6 +738,7 @@ sub webhost
 {
     return $_[0]->{'webhost'} || fqdn();
 }
+
 
 #######################################################
 
@@ -746,6 +765,7 @@ sub scheme
     }
 }
 
+
 #######################################################
 
 =head2 loopback
@@ -767,6 +787,7 @@ sub loopback
     return $_[0]->{'loopback'} || $_[0]->home_url_path.'/';
 }
 
+
 #######################################################
 
 =head2 backup_host
@@ -783,6 +804,7 @@ sub backup_host
 {
     return $_[0]->{'backup_host'};
 }
+
 
 #######################################################
 
@@ -801,6 +823,7 @@ sub host_without_port
     $webhost =~ s/:\d+$//;
     return $webhost;
 }
+
 
 #######################################################
 
@@ -827,6 +850,7 @@ sub host_with_port
     }
 }
 
+
 #######################################################
 
 =head2 port
@@ -843,6 +867,7 @@ sub port
     $webhost =~ m/:(\d+)$/;
     return $1 || 80;
 }
+
 
 #######################################################
 
@@ -866,6 +891,7 @@ sub appbase
 
     return $site->{'appbase'} || $Para::Frame::CFG->{'appbase'};
 }
+
 
 #######################################################
 
@@ -900,6 +926,7 @@ sub appfmly
     return $family;
 }
 
+
 #######################################################
 
 =head2 approot
@@ -919,6 +946,7 @@ sub approot
 
     return $site->{'approot'} || $Para::Frame::CFG->{'approot'};
 }
+
 
 #######################################################
 
@@ -948,8 +976,8 @@ sub appback
     return $site->{'appback'} || $Para::Frame::CFG->{'appback'};
 }
 
-#######################################################
 
+#######################################################
 
 =head2 send_email
 
@@ -976,6 +1004,79 @@ sub send_email
     return 1;
 }
 
+
+#######################################################
+
+=head2 email
+
+  $site->email
+
+Returns C<email> of the site. May be undef.  This is the default mail
+for sending or recieving.
+
+=cut
+
+sub email
+{
+    if( defined $_[0]->{'email'} )
+    {
+	return $_[0]->{'email'};
+    }
+    else
+    {
+	if( defined $Para::Frame::CFG->{'email'} )
+	{
+	    return $Para::Frame::CFG->{'email'};
+	}
+    }
+
+    return undef;
+}
+
+
+#######################################################
+
+=head2 email_domains
+
+  $site->email_domains
+
+Returns a list of domains used by the C<send_mail> action for
+determing which domains we can send emails to from web forms. This is
+for providing using the form from sending spam.
+
+Defaults to a ref to an empty list. The send_mail action will accept
+reciepientson the same domain as the server.
+
+=cut
+
+sub email_domains
+{
+    my $ed_in;
+
+    if( defined $_[0]->{'email_domains'} )
+    {
+	$ed_in = $_[0]->{'email_domains'};
+    }
+    elsif( defined $Para::Frame::CFG->{'email_domains'} )
+    {
+	$ed_in = $Para::Frame::CFG->{'email_domains'};
+    }
+    else
+    {
+	return [];
+    }
+
+    if( ref ed_in )
+    {
+	return $ed_in;
+    }
+    else
+    {
+	return [$ed_in];
+    }
+}
+
+
 #######################################################
 
 =head2 backup_redirect
@@ -990,6 +1091,7 @@ sub backup_redirect
 {
     return $_[0]->{'backup_redirect'};
 }
+
 
 #######################################################
 
@@ -1046,6 +1148,7 @@ sub languages
     return $_[0]->{'languages'} || $Para::Frame::CFG->{'languages'} || [];
 }
 
+
 #######################################################
 
 =head2 supports_language
@@ -1067,6 +1170,7 @@ sub supports_language
     return 0;
 }
 
+
 #######################################################
 
 
@@ -1079,6 +1183,7 @@ sub htmlsrc # src dir for precompile or for getting inc files
 	  $site->home->sys_path;
 }
 
+
 #######################################################
 
 sub is_compiled
@@ -1086,12 +1191,14 @@ sub is_compiled
     return $_[0]->{'is_compiled'} || 0;
 }
 
+
 #######################################################
 
 sub set_is_compiled
 {
     return $_[0]->{'is_compiled'} = $_[1];
 }
+
 
 #######################################################
 
@@ -1108,6 +1215,7 @@ sub equals
     # Uses perl obj stringification
     return( $_[0] eq $_[1] );
 }
+
 
 #######################################################
 
@@ -1133,6 +1241,7 @@ sub find_class
     return $_[0]->{'find_class'} ||
       $Para::Frame::CFG->{'find_class'};
 }
+
 
 #######################################################
 
