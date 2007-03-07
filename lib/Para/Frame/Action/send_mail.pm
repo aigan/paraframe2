@@ -184,3 +184,9 @@ sub format_props
 }
 
 1;
+
+=head1 SEE ALSO
+
+L<Para::Frame::Email>
+
+=cut
