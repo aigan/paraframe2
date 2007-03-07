@@ -94,6 +94,12 @@ our %Lexicon =
    'Click for calendar' =>
    'Klicka för kalender',
 
+   'Name' =>
+   'Användarnamn',
+
+   'Password' =>
+   'Lösenord',
+
   );
 
 1;
