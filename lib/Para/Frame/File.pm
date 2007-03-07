@@ -78,6 +78,8 @@ sub new
 
     $args ||= {};
 
+#    debug "New file with ".datadump($args,1);
+
     my $sys_in = $args->{'filename'};
     my $url_in = $args->{'url'};
     my $site_in = $args->{'site'};
