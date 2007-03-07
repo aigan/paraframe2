@@ -50,6 +50,12 @@ Special recognized query params is
 
 The mail is sent by proxy.
 
+All query params beginning with C<prop_> are described with their
+values in the variable C<props>.
+
+The default email template C<$home/pf/email/default.tt> presents the
+variables C<body> and C<props>.
+
 =cut
 
 use strict;
