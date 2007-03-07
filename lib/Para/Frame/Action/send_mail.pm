@@ -21,8 +21,6 @@ use strict;
 use Para::Frame::Email;
 use Para::Frame::Utils qw( throw debug );
 
-use Rit::Base::Resource;
-
 sub handler
 {
     my ($req) = @_;
