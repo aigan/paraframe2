@@ -63,7 +63,9 @@ Using the default C<send_mail> paraframe action:
     <p> Message [% textarea('body') %]
     <p> [% submit('Send the mail') %]
 
-Set the email variable in the site configuration.
+Set the C<Para::Frame::Site/email> variable in the site configuration.
+
+See L<Para::Frame::Email::send_mail>
 
 =cut
 
