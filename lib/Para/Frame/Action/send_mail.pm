@@ -16,6 +16,42 @@ package Para::Frame::Action::send_mail;
 #
 #=====================================================================
 
+=head1 NAME
+
+Para::Frame::Action::send_mail - Formmail
+
+=head1 DESCRIPTION
+
+See also L<Para::Frame::Email>.
+
+=head1 SYNOPSIS
+
+    [% META next_action='send_mail' %]
+    <p> Name [% input('name') %]
+    <p> Email [% input('email') %]
+    <p> Message [% textarea('body') %]
+    <p> [% submit('Send the mail') %]
+
+=head1 DESCRIPTION
+
+All query params is turned into params with the same name and sent to
+the email template.
+
+Special recognized query params is
+
+  recipient or to : The addres to send the email to
+  name            : The name of the sender
+  email           : Email of the sender
+  subject         : The subject of the email
+  subject_prefix  : String to prefix the subject
+  template        : The email template to be used
+  reply_to        :  Sets an reply_to address
+  return_message  : Sends this text as a success message
+
+The mail is sent by proxy.
+
+=cut
+
 use strict;
 
 use Para::Frame::Email;
@@ -36,14 +72,12 @@ sub handler
 
     my $site = $req->site;
     my $site_name = $site->name;
-    my $sitemailaddr = $q->param('sitemailaddr') || $site->email;
+    my $sitemailaddr = $site->email;
     my $sitemail;
     if( $sitemailaddr )
     {
 	$sitemail = sprintf('"%s" <%s>', $site_name, $sitemailaddr);
     }
-
-    debug "Site email is ".$site->email;
 
     my $recipient = $q->param('recipient') || $q->param('to');
     if( $recipient )
