@@ -102,7 +102,7 @@ sub handler
 	$mail_params->{'reply_to'} = $reply_to;
     }
 
-    $mail->send_by_proxy( $mai_params );
+    $mail->send_by_proxy( $mail_params );
 
     my $return_message = $q->param('return_message') || "";
     return $return_message;
