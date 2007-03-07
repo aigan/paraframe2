@@ -40,8 +40,10 @@ sub handler
     my $sitemail;
     if( $sitemailaddr )
     {
-	my $sitemail = sprintf('"%s" <%s>', $site_name, $sitemailaddr);
+	$sitemail = sprintf('"%s" <%s>', $site_name, $sitemailaddr);
     }
+
+    debug "Site email is ".$site->email;
 
     my $recipient = $q->param('recipient') || $q->param('to');
     if( $recipient )
