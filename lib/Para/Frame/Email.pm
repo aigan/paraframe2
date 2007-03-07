@@ -53,6 +53,18 @@ use Para::Frame::Email::Address;
 
 Put the email templates under C<$home/email/>.
 
+=head2 SYNOPSIS
+
+Using the default C<send_mail> paraframe action:
+
+    [% META next_action='send_mail' %]
+    <p> Name [% input('name') %]
+    <p> Email [% input('email') %]
+    <p> Message [% textarea('body') %]
+    <p> [% submit('Send the mail') %]
+
+Set the email variable in the site configuration.
+
 =cut
 
 
