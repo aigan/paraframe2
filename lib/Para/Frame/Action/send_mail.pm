@@ -68,7 +68,12 @@ sub handler
     my $subject_prefix = $q->param('subject_prefix') || "";
     my $subject = $subject_prefix . $subject_request;
 
-    my $template = $q->param('template') || "default.tt";
+    my $home = $site->home_url_path;
+    my $template = $q->param('template');
+    unless( $template )
+    {
+	$template = "$home/pf/email/default.tt";
+    }
 
     my $from_via;
     if( $sitemailaddr )

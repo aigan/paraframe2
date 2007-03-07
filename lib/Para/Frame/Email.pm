@@ -374,8 +374,9 @@ Optional params:
   by_proxy  = Sens email using sendmail
 
 
-The template are searched for in the C<$home/email/> dir under the site
-home.
+The template are searched for in the C<$home/email/> dir under the
+site home. If the template starts with C</>, it will not be prefixed
+by C<$home/email/>.
 
 C<to> can be a ref to a list of email addresses to try. We try them in
 the given order. Quits after the furst sucessful address.
@@ -450,7 +451,17 @@ sub send
     # List of addresses to try. Quit after first success
     my @try = ref $p->{'to'} eq 'ARRAY' ? @{$p->{'to'}} : $p->{'to'};
 
-    my $url = "$home/email/".$p->{'template'};
+
+    my $url;
+    if( $p->{'template'} =~ /^\// )
+    {
+	$url = $p->{'template'};
+    }
+    else
+    {
+	$url = "$home/email/".$p->{'template'};
+    }
+
     my $page = Para::Frame::File->new({
 				       url => $url,
 				       site => $site,
