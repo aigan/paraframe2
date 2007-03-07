@@ -43,7 +43,7 @@ sub handler
 	my $sitemail = sprintf('"%s" <%s>', $site_name, $sitemailaddr);
     }
 
-    my $recipient = $q->param('recipient'} || $q->param('to');
+    my $recipient = $q->param('recipient') || $q->param('to');
     if( $recipient )
     {
       CHECK:
