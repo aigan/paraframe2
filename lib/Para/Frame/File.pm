@@ -44,7 +44,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw debug datadump catch chmod_file create_dir );
+use Para::Frame::Utils qw( throw debug datadump catch chmod_file create_dir deunicode );
 use Para::Frame::List;
 use Para::Frame::Dir;
 use Para::Frame::Template;
@@ -1440,6 +1440,12 @@ sub normalize
     {
 	$url =~ s/\.\w\w\.tt$/.tt/;
 	$url =~ s/\/index.tt$/\//;
+
+	if( $url =~ /Ã/ )
+	{
+	    $url = deunicode( $url );
+	    debug "Translating file to $url";
+	}
 
 	if( $url ne $f->{'url_norm'} )
 	{
