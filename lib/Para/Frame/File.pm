@@ -1568,11 +1568,42 @@ sub copy
 
 =head2 exist
 
+  $file->exist()
+
+Stats the file and returns true or false
+
 =cut
 
 sub exist
 {
-    return $_[0]->{'exist'};
+    my( $f ) = @_;
+
+    my $st = stat($f->sys_path);
+    if( $f->{'exist'} )
+    {
+	unless( $st )
+	{
+	    my $name = $f->sys_path;
+	    debug "File $name removed from the outside!";
+	    $f->{initiated} = 0;
+	    $f->{'exist'} = 0;
+	    return 0;
+	}
+
+	return 1;
+    }
+    else
+    {
+	if( $st )
+	{
+	    my $name = $f->sys_path;
+	    debug "File $name created from the outside!";
+	    $f->{initiated} = 0;
+	    $f->{'exist'} = 1;
+	    return 1;
+	}
+	return 0;
+    }
 }
 
 
