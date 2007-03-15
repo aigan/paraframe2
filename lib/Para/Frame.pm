@@ -1421,6 +1421,7 @@ sub handle_request
 	    }
 
 	    # TODO: Do not use loadpage for non-html mimetypes
+	    #       ... Client side will only use it for text/html
 
 	    # Do not send loadpage if we didn't got a session object
 	    my $loadpage = $req->dirconfig->{'loadpage'} ||
