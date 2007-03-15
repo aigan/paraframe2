@@ -72,7 +72,7 @@ sub initiate
 
     unless( $dir_st )
     {
-	debug "Couldn't find dir $sys_path!";
+#	debug "Couldn't find dir $sys_path!";
 	$dir->{'initiated'} = 0;
 	$dir->{'exist'} = 0;
 	return 0;
@@ -546,7 +546,7 @@ sub create
 
     $dir->parent->create($args);
 
-    debug "Creating dir ".$dir->desig;
+#    debug "Creating dir ".$dir->desig;
     mkdir $dir->sys_path, 0700 or die $!;
     $dir->{'exist'} = 1;
     $dir->{initiated} = 0;
