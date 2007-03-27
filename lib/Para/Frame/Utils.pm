@@ -893,7 +893,14 @@ sub uri
 	}
     }
     my $query = join '&', @parts;
-    $query and $query = '?'.$query;
+    if( $query and $template =~ /\?/ )
+    {
+	$query = '&'.$query;
+    }
+    else
+    {
+	$query and $query = '?'.$query;
+    }
 
     debug(4, "Returning URI $template$query");
     return $template.$query;
@@ -1415,7 +1422,7 @@ sub debug
 	if( $level =~ /^(\d|-\d)$/ )
 	{
 	    $Para::Frame::INDENT += $level;
-	    if($DEBUG){ carp "Ident $Para::Frame::INDENT" if $level > 0 };
+	    if($DEBUG){ carp "Indent $Para::Frame::INDENT" if $level > 0 };
 	    return "";
 	}
 
