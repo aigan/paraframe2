@@ -106,6 +106,8 @@ sub initiate
 	{
 	    $f->{symbolic_link} = readlink($path);
 	    $st = stat($path);
+	    # Ignore file if symlink is broken
+	    next unless $st;
 	}
 
 	if( $name =~ $dir->{'hide'} )
