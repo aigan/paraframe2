@@ -898,6 +898,36 @@ sub handle_code
 	debug(2,"RESP $val ($req->{reqnum})");
 	push @{$RESPONSE{ $client }}, $val;
     }
+    elsif( $code eq 'RUN_ACTION' )
+    {
+	my $req =
+	  Para::Frame::Request->
+	      new_bgrequest(' Handling RUN_ACTION (in background)');
+
+	my $val = $INBUFFER{$client};
+
+	debug "Got val: $val";
+
+	( $val =~ s/(.*?)\?// );
+	my $action = $1;
+
+	debug "Got val2: $val";
+	my @params = split( '&', $val );
+	my %params;
+
+	foreach my $param ( @params )
+	{
+	    ( $param =~ m/^(.*?)=(.*?)$/ );
+	    $params{$1} = $2;
+	    debug "params($1) = $2";
+	}
+	debug "Running action: $action with params: ". datadump( \%params );
+	$req->run_action( $action, \%params );
+
+	$client->send("9\x00RESP\x00Done");
+	$req->done;
+	#close_callback($client); # That's all
+    }
     elsif( $code eq 'URI2FILE' ) # CHILD msg
     {
 	# redirect request from child to client (via this parent)
@@ -951,7 +981,7 @@ sub handle_code
     elsif( $code eq 'PING' )
     {
 	debug(4,"PING recieved");
-	$client->send("PONG\n");
+	$client->send("5\x00PONG\x00");
 	close_callback($client); # That's all
 	debug(4,"Sent PONG as response");
     }
@@ -973,7 +1003,7 @@ sub handle_code
     }
     else
     {
-	debug(0,"Strange CODE: $code");
+	debug(0,"(Para::Frame) Strange CODE: $code");
 	close_callback($client, "Faulty code");
 	return 0;
     }
@@ -1513,8 +1543,8 @@ Runs often, between requests.
 
 =head3 add_background_jobs
 
-For adding jobs that should be done in the background, then there is
-nothing else to do or then it hasen't run in a while.
+For adding jobs that should be done in the background, when there is
+nothing else to do or when it hasen't run in a while.
 
 =cut
 
@@ -1554,6 +1584,11 @@ sub add_hook
 
 =head2 run_hook
 
+Para::Frame->run_hook( $req, $label );
+
+Runs hooks with label $label.
+Removes hooks that return "remove_hook".
+
 =cut
 
 sub run_hook
@@ -1583,6 +1618,7 @@ sub run_hook
 
     my $hooks = $HOOK{$label};
     $hooks = [$hooks] unless ref $hooks eq 'ARRAY';
+    my $c = 0;
     foreach my $hook (@$hooks)
     {
 	if( $Para::Frame::hooks_running{"$hook"} )
@@ -1596,7 +1632,13 @@ sub run_hook
 #	    warn "about to run coderef $hook with params @_"; ## DEBUG
 	    eval
 	    {
-		&{$hook}(@_);
+		my $val = &{$hook}(@_);
+		if( $val eq "remove_hook" )
+		{
+		    debug(2, "Hook $hook asked to be removed");
+		    splice @$hooks, $c, 1;
+		    $c--;
+		}
 	    };
 	    $Para::Frame::hooks_running{"$hook"} --;
 	    if( $@ )
@@ -1605,6 +1647,7 @@ sub run_hook
 		die $@;
 	    }
 	}
+	$c++;
     }
     return 1;
 }

@@ -266,9 +266,9 @@ $content
     <script type="text/javascript">
       Calendar.setup(
       {
-        inputField  : "[% id %]",         // ID of the input field
-        ifFormat    : "%Y-%m-%d",    // the date format
-        button      : "[% id %]-button"       // ID of the button
+        inputField  : "[% id %]",        // ID of the input field
+        ifFormat    : "%Y-%m-%d",        // the date format
+        button      : "[% id %]-button" // ID of the button
         [% IF onUpdate +%]
          , onClose  : [% onUpdate %]
         [% END +%]

@@ -33,7 +33,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( debug datadump );
+use Para::Frame::Utils qw( debug datadump throw );
 
 
 #######################################################################
@@ -75,6 +75,7 @@ sub new
 
     $conn->reset_buffer;
 
+    # Check the connection...
     $conn->ping;
 
     return $conn;
@@ -234,7 +235,7 @@ sub get_value
     $$inbuffref .= $data;
     unless( $conn->{datalength} )
     {
-	debug "Length of record?";
+	debug(4,"Length of record?");
 	# Read the length of the data string
 	#
 	if( $$inbuffref =~ s/^(\d+)\x00// )
@@ -295,9 +296,15 @@ sub get_value
 	$conn->reset_buffer;
 	return $inbuffref;
     }
+    elsif( $code eq 'PONG' )
+    {
+	debug "PONG recieved!";
+	my $str = "PONG";
+	return \$str;
+    }
     else
     {
-	debug "Strange CODE: $code";
+	debug "(Para::Frame::Connection) Strange CODE: $code";
 	$conn->reset_buffer;
 	return undef;
     }

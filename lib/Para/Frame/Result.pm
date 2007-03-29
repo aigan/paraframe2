@@ -38,7 +38,8 @@ use Para::Frame::Result::Part;
 
 =head1 DESCRIPTION
 
-The result object holds the results of the actions taken and exceptions thrown (L<Para::Frame::Utils/throw>).
+The result object holds the results of the actions taken and
+exceptions thrown (L<Para::Frame::Utils/throw>).
 
 =head1 Properties
 

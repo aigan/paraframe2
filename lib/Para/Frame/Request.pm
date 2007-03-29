@@ -323,20 +323,20 @@ sub new_minimal
 
     my $req =  bless
     {
-	indent         => 1,              ## debug indentation
-	client         => $client,        ## Just the unique name
-	jobs           => [],             ## queue of actions to perform
-        actions        => [],             ## queue of actions to perform
-	env            => {},             ## No env mor minimals!
-	's'            => undef,          ## Session object
-	result         => undef,
-        dirconfig      => {},             ## Apache $r->dir_config
-	childs         => 0,              ## counter in parent
-	in_yield       => 0,              ## inside a yield
-	child_result   => undef,          ## the child res if in child
-	reqnum         => $reqnum,        ## The request serial number
-	wait           => 0,              ## Asked to wait?
-        site           => undef,          ## Default site for req
+     indent         => 1,	## debug indentation
+     client         => $client,	## Just the unique name
+     jobs           => [],	## queue of actions to perform
+     actions        => [],	## queue of actions to perform
+     env            => {},	## No env mor minimals!
+     's'            => undef,	## Session object
+     result         => undef,
+     dirconfig      => {},	## Apache $r->dir_config
+     childs         => 0,	## counter in parent
+     in_yield       => 0,	## inside a yield
+     child_result   => undef,	## the child res if in child
+     reqnum         => $reqnum,	## The request serial number
+     wait           => 0,	## Asked to wait?
+     site           => undef,	## Default site for req
     }, $class;
 
     $req->{'params'} = {%$Para::Frame::PARAMS};

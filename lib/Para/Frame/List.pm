@@ -1270,7 +1270,8 @@ sub limit
 
 The first record is returned, if defined, along with the STATUS_OK
 value.  If there is no target data, or the data is an empty set, then
-undef is returned with the STATUS_DONE value as the second element in the return list.
+undef is returned with the STATUS_DONE value as the second element in
+the return list.
 
 Compatible with L<Template::Iterator>. Similar to
 L<List::Object/first> and L<Class::DBI::Iterator/first>.  Not the same

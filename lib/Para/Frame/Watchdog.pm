@@ -421,7 +421,7 @@ sub check_connection
 	my $sock = send_to_server('PING');
 	unless( $sock )
 	{
-	    debug "Faild to send PING to server";
+	    debug "Failed to send PING to server";
 	    return watchdog_crash();
 	}
 
@@ -434,7 +434,16 @@ sub check_connection
 	    if( $select->can_read( INTERVAL_MAIN_LOOP ) )
 	    {
 		my $resp = $sock->getline;
-		if( $resp eq "PONG\n" )
+		my $length;
+
+		if( $resp =~ s/^(\d+)\x00// )
+		{
+		    debug(4,"Setting length to $1");
+		    $length = $1;
+		    debug(4, "Leaving '$resp'");
+		}
+
+		if( $resp eq "PONG\0" )
 		{
 		    debug 4, "    Working!\n";
 		    last CONNECTION_TRY;
