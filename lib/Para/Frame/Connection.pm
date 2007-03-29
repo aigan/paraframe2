@@ -76,7 +76,7 @@ sub new
     $conn->reset_buffer;
 
     # Check the connection...
-    $conn->ping;
+    #$conn->ping;
 
     return $conn;
 }
