@@ -157,7 +157,7 @@ The B<first> site registred under a given L</host> is the default
 site used for requests under that domain.
 
 The first site registred will be the C<default> site, used for
-background jobs then no other site are specified.
+background jobs when no other site are specified.
 
 =cut
 
