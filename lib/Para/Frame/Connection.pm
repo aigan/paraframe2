@@ -158,7 +158,7 @@ sub get_cmd_val
 
 sub send_code
 {
-    warn datadump(\@_);
+    debug 2, datadump(\@_);
     my( $conn, $code, $valref, $extra ) = @_;
 
     die "Too many args in send_code (@_)" if $extra;

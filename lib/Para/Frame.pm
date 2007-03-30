@@ -906,12 +906,11 @@ sub handle_code
 
 	my $val = $INBUFFER{$client};
 
-	debug "Got val: $val";
+	debug 2, "Got val: $val";
 
 	( $val =~ s/(.*?)\?// );
 	my $action = $1;
 
-	debug "Got val2: $val";
 	my @params = split( '&', $val );
 	my %params;
 
@@ -1633,7 +1632,7 @@ sub run_hook
 	    eval
 	    {
 		my $val = &{$hook}(@_);
-		if( $val eq "remove_hook" )
+		if( $val and $val eq "remove_hook" )
 		{
 		    debug(2, "Hook $hook asked to be removed");
 		    splice @$hooks, $c, 1;
