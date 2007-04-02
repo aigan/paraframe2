@@ -2008,7 +2008,7 @@ sub randomized
 	$data = $l->{'_OBJ'};
     }
 
-    debug "Returning randomized list";
+#    debug "Returning randomized list";
     return $l->new([List::Util::shuffle(@$data)], $args);
 }
 
