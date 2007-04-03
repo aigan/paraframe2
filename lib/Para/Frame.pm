@@ -68,7 +68,7 @@ use constant BGJOB_CPU     =>   0.8;
 our $SERVER     ;
 our $DEBUG      ;
 our $INDENT     ;
-our @JOBS       ;
+our @JOBS       ;  ##not used...
 our %REQUEST    ;
 our %RESPONSE   ;  # Holds client response for req and subreq
 our $REQ        ;
@@ -2199,6 +2199,94 @@ Returns the L</paraframe> dir.
 sub dir
 {
     return $CFG->{'paraframe'};
+}
+
+
+#######################################################################
+
+=head2 report
+
+Returns a report in plain text of server status
+
+=cut
+
+sub report
+{
+    my $out = "SERVER REPORT\n\n";
+    $out .= "SERVER obj: $SERVER\n";
+    $out .= "Global DEBUG level: $DEBUG\n";
+    $out .= "DEBUG indent: $INDENT\n";
+    $out .= "Current requst is $REQ->{'reqnum'}\n";
+#    $out .= "Last running request was $REQ_LAST->{'reqnum'}\n";
+    $out .= sprintf "Current user is %s\n", $U->desig;
+    $out .= "\nRequests:\n";
+
+    foreach my $reqkey (keys %REQUEST)
+    {
+	my $req = $REQUEST{$reqkey};
+	my $reqnum = $req->{'reqnum'};
+	$out .= "Req $reqnum\n";
+
+	if( $req->{'in_yield'} )
+	{
+	    $out .= "  In_yield\n";
+	}
+
+	if( $req->{'cancel'} )
+	{
+	    $out .=  "  cancelled by request\n";
+	}
+
+	if( $req->{'wait'} )
+	{
+	    $out .= "  stays open, was asked to wait for $req->{'wait'} things\n";
+	}
+
+	if( my $numjobs = @{$req->{'jobs'}} )
+	{
+	    $out .= "  $numjobs jobs:\n";
+	    foreach my $job (@{$req->{'jobs'}})
+	    {
+		my( $cmd, @args ) = @$job;
+		$out .= "    job $cmd with args @args\n";
+	    }
+	}
+
+	if( $req->{'childs'} )
+	{
+	    $out .= "  stays open, waiting for $req->{'childs'} childs\n";
+	}
+    }
+
+    $out .= "\nChilds:\n";
+    foreach my $child ( values %CHILD )
+    {
+	my $creq = $child->req;
+	my $creqnum = $creq->{'reqnum'};
+	my $cclient = $creq->client;
+	my $cpid = $child->pid;
+	$out .= "  Req $creqnum $cclient has a child with pid $cpid\n";
+    }
+
+    if( $BGJOBDATE )
+    {
+	$out .= "Last background job was done $BGJOBDATE\n";
+    }
+    $out .= "Last background job was $BGJOBNR\n";
+
+    $out .= "\nBackground jobs:\n";
+
+    foreach my $job ( @BGJOBS_PENDING )
+    {
+	my( $oreq, $coderef, @args ) = @$job;
+	$out .= "Original req $oreq->{reqnum}\n";
+	$out .= "  Code $coderef with args @args\n"
+    }
+
+    $out .= "Shortest interval between BG jobs: @{[BGJOB_MAX]}\n";
+    $out .= "Longest  interval between BG jobs: @{[BGJOB_MIN]}\n";
+
+    return $out;
 }
 
 
