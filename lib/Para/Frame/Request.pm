@@ -1680,6 +1680,9 @@ sub send_code
 	    debug "  So we prepares for starting an UA";
 	    debug "  Now it waits for 1 active request";
 
+
+#	    debug longmess();
+
 	    my $origreq = $req->{'original_request'};
 
 	    my $site = $req->site;
@@ -2459,7 +2462,14 @@ sub note
     debug(0, $note);
     $note =~ s/\n/\\n/g;
     my $creq = $req->original || $req; # client req
-    return $creq->send_code('NOTE', $note );
+    if( $creq->is_from_client )
+    {
+	return $creq->send_code('NOTE', $note );
+    }
+    else
+    {
+	return $note;
+    }
 }
 
 
