@@ -8,3 +8,7 @@
 [%+ go("Restart server", "$home/", "server_restart") +%]
 [%+ go("Terminate server", "$home/", "server_terminate") %]
 </p>
+
+<pre>
+[% req.server_report %]
+</pre>
