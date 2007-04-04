@@ -1256,7 +1256,7 @@ sub restart
 sub add_background_jobs_conditional
 {
 
-    # Add background jobs to do unless the load is too high, uless we
+    # Add background jobs to do unless the load is too high, unless we
     # waited too long anyway
     return if $TERMINATE;
 
