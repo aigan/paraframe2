@@ -50,7 +50,7 @@ our %Lexicon =
    'Sidan som du angav kunde inte hittas',
 
    'During the processing of [_1]' =>
-   'Under körningen av [_1]',
+   'Under kÃ¶rningen av [_1]',
 
    'Permission Denied' =>
    'Access nekad',
@@ -71,10 +71,10 @@ our %Lexicon =
    'Flera alternativ',
 
    'Confirm' =>
-   'Bekräfta uppgift',
+   'BekrÃ¤fta uppgift',
 
    'Action failed' =>
-   'Försök misslyckades',
+   'FÃ¶rsÃ¶k misslyckades',
 
    'Compilation error' =>
    'Kompileringsfel',
@@ -89,16 +89,16 @@ our %Lexicon =
    'Mallfil saknas',
 
    'Include path is' =>
-   'Sökvägen är',
+   'SÃ¶kvÃ¤gen Ã¤r',
 
    'Click for calendar' =>
-   'Klicka för kalender',
+   'Klicka fÃ¶r kalender',
 
    'Name' =>
-   'Användarnamn',
+   'AnvÃ¤ndarnamn',
 
    'Password' =>
-   'Lösenord',
+   'LÃ¶senord',
 
   );
 

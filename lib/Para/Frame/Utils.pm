@@ -1041,7 +1041,7 @@ Checks the text. If it's in UTF8, converts it to ISO-8859-1.
 
 sub deunicode
 {
-    if( $_[0] =~ /Ã/ ) # Could be unicode
+    if( $_[0] =~ /Ãƒ/ ) # Could be unicode
     {
 	$_[0] = Unicode::MapUTF8::from_utf8({-string=>$_[0],
 					     -charset=>'ISO-8859-1'});
@@ -1174,7 +1174,7 @@ sub elapsed_time
 	}
 	else
 	{
-	    $str .= "mindre än 1 minut";
+	    $str .= "mindre Ã¤n 1 minut";
 	}
     }
 

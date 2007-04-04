@@ -26,7 +26,7 @@ sub handler
 
     $route->skip_step;
 
-    return "Ångrar ett steg";
+    return "Ã…ngrar ett steg";
 }
 
 1;

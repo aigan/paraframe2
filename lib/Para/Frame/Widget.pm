@@ -283,7 +283,7 @@ sub jump_extra
 
 Draw a form submit button with text $label and value $setval.
 
-Default label = 'Fortsätt'
+Default label = 'FortsÃ¤tt'
 
 Default setval is to not have a value
 
@@ -539,16 +539,16 @@ sub alfanum_bar
     }
 
     # locale should have been set previously!
-    my $text = join(' | ', map "<a href=\"$template?$name=$part$_\"$extra>\U$_</a>", 'a'..'z','å','ä','ö');
+    my $text = join(' | ', map "<a href=\"$template?$name=$part$_\"$extra>\U$_</a>", 'a'..'z','Ã¥','Ã¤','Ã¶');
     $text = "| <a href=\"$template?$name=\">0-9</a> | ".$text." |";
-    $text =~ s/å/&aring;/g;
-    $text =~ s/ä/&auml;/g;
-    $text =~ s/ö/&ouml;/g;
-    $text =~ s/Å/&Aring;/g;
-    $text =~ s/Ä/&Auml;/g;
-    $text =~ s/Ö/&Ouml;/g;
+    $text =~ s/Ã¥/&aring;/g;
+    $text =~ s/Ã¤/&auml;/g;
+    $text =~ s/Ã¶/&ouml;/g;
+    $text =~ s/Ã…/&Aring;/g;
+    $text =~ s/Ã„/&Auml;/g;
+    $text =~ s/Ã–/&Ouml;/g;
 
-#    return "\Uåke ärlansson\n";
+#    return "\UÃ¥ke Ã¤rlansson\n";
     return $text;
 }
 
@@ -1276,7 +1276,7 @@ C<confirm.tt> template.
 
 Default:
 
-  $headline    = 'Är du säker?'
+  $headline    = 'Ã„r du sÃ¤ker?'
   $text        = ''
   $button_name = 'Ja'
 
@@ -1294,7 +1294,7 @@ sub confirm_simple
 {
     my( $headline, $text, $button_name ) = @_;
 
-    $headline ||= 'Är du säker?';
+    $headline ||= 'Ã„r du sÃ¤ker?';
     $text ||= '';
     $button_name ||= 'Ja';
 
@@ -1356,7 +1356,7 @@ returns "0 things"
 
 =cut
 
-sub inflect # inflection = böjning
+sub inflect # inflection = bÃ¶jning
 {
     my( $number, $none, $one, $many ) = @_;
 

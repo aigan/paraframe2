@@ -26,12 +26,12 @@
 [% END %]
 
 [% MACRO searchstep(label) BLOCK;
-      DEFAULT label='Sök';
+      DEFAULT label='SÃ¶k';
       submit(label);
       IF route.caller_is_next_step;
          regret;
       ELSE;
-         backstep('Fortsätt med nästa sak', 1);
+         backstep('FortsÃ¤tt med nÃ¤sta sak', 1);
          IF route.size;
             regret;
          END;
@@ -44,7 +44,7 @@
          IF uri_path(form_action) == me;
             label = "Spara";
          ELSE;
-            label = "Spara och fortsätt";
+            label = "Spara och fortsÃ¤tt";
          END;
       END;
       submit(label);
@@ -60,12 +60,12 @@
 %]
 
 [% MACRO nostep(label) BLOCK;
-      DEFAULT label='Fortsätt med nästa sak';
+      DEFAULT label='FortsÃ¤tt med nÃ¤sta sak';
       IF route.caller_is_next_step;
          backstep(label);
       ELSIF route.size;
          backstep(label);
-         regret('Hoppa över nästa sak');
+         regret('Hoppa Ã¶ver nÃ¤sta sak');
       ELSE;
          backstep(label);
       END;
@@ -93,7 +93,7 @@
 
 [% MACRO backstep(label, break_path) BLOCK %]
 [% DEFAULT
-       	label = 'Hoppa över'
+       	label = 'Hoppa Ã¶ver'
 %]
    [% go(label, undef, 'next_step', href_class=href_class) %]
    [% IF break_path %]
@@ -171,7 +171,7 @@
    [% paraframe_label_display='block' %]
    [% DEFAULT label = "Instruktion" %]
    [% DEFAULT label_show = "Visa ${label}..." %]
-   [% DEFAULT label_hide = "Dölj ${label}..." %]
+   [% DEFAULT label_hide = "DÃ¶lj ${label}..." %]
 <div class="paraframe_expand"><a href="javascript:showhide('paraframe_fid_[% global.paraframe_formcount %]');showhide('paraframe_fid_[% global.paraframe_formcount %]_label');" id="paraframe_fid_[% global.paraframe_formcount %]_label" style="display:[% paraframe_label_display %]">[% label_show %]</a></div>
 <div class="paraframe_expanded" id="paraframe_fid_$global.paraframe_formcount" style="display:$paraframe_display">
 <a href="javascript:showhide('paraframe_fid_[% global.paraframe_formcount %]');showhide('paraframe_fid_[% global.paraframe_formcount %]_label');">[% label_hide %]</a>

@@ -1,8 +1,8 @@
 [% META
-	otitle = 'Otillräcklig behörighet'
+	otitle = 'OtillrÃ¤cklig behÃ¶righet'
 	level = 00
 %]
 
-<p>Det val du gjort kräver en högre behörighet än den du har nu.
+<p>Det val du gjort krÃ¤ver en hÃ¶gre behÃ¶righet Ã¤n den du har nu.
 
 <p>[% regret %]

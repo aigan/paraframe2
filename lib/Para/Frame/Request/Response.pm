@@ -676,7 +676,7 @@ sub set_sender_and_repair_content
 	}
 	else
 	{
-	    if( ${ $resp->{'content'} } =~ /Ã/ )
+	    if( ${ $resp->{'content'} } =~ /Ãƒ/ )
 	    {
 		### REPAIR
 		$_ = ${ $resp->{'content'} };

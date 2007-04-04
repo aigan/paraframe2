@@ -49,7 +49,7 @@ sub new
 
     # Remove double / in path
 
-    $uri =~ sง([^:])//+ง$1/งg;
+    $uri =~ sยง([^:])//+ยง$1/ยงg;
 
     return URI->new($uri, $scheme);
 }

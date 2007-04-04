@@ -76,7 +76,7 @@ use Para::Frame::Utils qw( throw passwd_crypt debug datadump );
       {
         $rec =
         {
-          name => 'Gäst',
+          name => 'GÃ¤st',
           username => 'guest',
           uid      => 0,
           level    => 0,
@@ -124,7 +124,7 @@ sub identify_user
 	    die "Couldn't find user guest";
 	}
 
-	$req->result->message("Användaren $username existerar inte");
+	$req->result->message("AnvÃ¤ndaren $username existerar inte");
 	$class->clear_cookies;
 	$u = $class->identify_user( 'guest' );
     }
@@ -162,7 +162,7 @@ sub authenticate_user
 
     unless( $u->verify_password( $password_encrypted ) )
     {
-	$req->result->exception('validation', "Fel lösenord för $username");
+	$req->result->exception('validation', "Fel lÃ¶senord fÃ¶r $username");
 
 	$class->logout;
 
@@ -229,7 +229,7 @@ sub get # Reimplement this method
 
     my $u = bless {}, $class;
 
-    $u->{'name'} = 'Gäst';
+    $u->{'name'} = 'GÃ¤st';
     $u->{'username'} = 'guest';
     $u->{'uid'} = 0;
     $u->{'level'} = 0;
@@ -378,7 +378,7 @@ sub revert_from_temporary_user
 
 =head2 name
 
-The real name of the user.  Default is 'Gäst'.
+The real name of the user.  Default is 'GÃ¤st'.
 
 =cut
 

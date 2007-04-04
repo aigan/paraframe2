@@ -1441,7 +1441,7 @@ sub normalize
 	$url =~ s/\.\w\w\.tt$/.tt/;
 	$url =~ s/\/index.tt$/\//;
 
-	if( $url =~ /Ã/ )
+	if( $url =~ /Ãƒ/ )
 	{
 	    $url = deunicode( $url );
 	    debug "Translating file to $url";

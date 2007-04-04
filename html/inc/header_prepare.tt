@@ -10,7 +10,7 @@
 %]
 
 [% IF level and u.level < level;
-      THROW denied "Du måste vara minst nivå $level";
+      THROW denied "Du mÃ¥ste vara minst nivÃ¥ $level";
    END
 %]
 [% IF focus;

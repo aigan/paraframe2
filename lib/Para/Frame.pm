@@ -1536,7 +1536,7 @@ Runs before committing each DB, from L<Para::Frame::DBIx/commit>
 
 =head3 after_db_rollback
 
-Runs after a rollback för each DB, from L<Para::Frame::DBIx/rollback>
+Runs after a rollback fÃ¶r each DB, from L<Para::Frame::DBIx/rollback>
 
 =head3 before_switch_req
 

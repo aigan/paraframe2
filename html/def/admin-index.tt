@@ -1,4 +1,4 @@
-[% META otitle='Index över filer' %]
+[% META otitle='Index Ã¶ver filer' %]
 
 [%
 	dir = page.dir;

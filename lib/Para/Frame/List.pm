@@ -1018,12 +1018,12 @@ sub pagelist
 
     if( $pagenum == 1 )
     {
-#	$out .= "Först";
+#	$out .= "FÃ¶rst";
     }
     else
     {
 	$out .= forward("<", $me, {use_cached=>$id, table_page => ($pagenum-1), href_class=>"paraframe_previous"});
-#	$out .= forward("Först", $me, {use_cached=>$id, page => 1});
+#	$out .= forward("FÃ¶rst", $me, {use_cached=>$id, page => 1});
 	$out .= " ";
     }
     if( $startpage != 1 )
