@@ -537,6 +537,11 @@ sub send_output
     }
     else
     {
+	if( my $query_str = $req->referer_query )
+	{
+	    $url_out .= '?' . $query_str;
+	}
+
 	if( $req->header_only )
 	{
 	    my $result;
@@ -549,10 +554,11 @@ sub send_output
 		$resp->send_headers;
 		$result = $req->get_cmd_val( 'HEADER' );
 	    }
+
 	    if( $result eq 'LOADPAGE' )
 	    {
 		$req->session->register_result_page($resp);
-		$req->send_code('PAGE_READY', $page->url->as_string);
+		$req->send_code('PAGE_READY', $url_out);
 	    }
 	}
 	else
@@ -572,17 +578,18 @@ sub send_output
 		    $resp->send_headers;
 		    $result = $req->get_cmd_val( 'BODY' );
 		}
+
 		if( $result eq 'LOADPAGE' )
 		{
 		    $req->session->register_result_page($resp);
-		    $req->send_code('PAGE_READY', $page->url->as_string);
+		    $req->send_code('PAGE_READY', $url_out);
 		}
 		elsif( $result eq 'SEND' )
 		{
-		    binmode( $req->client, ':utf8');
-		    debug(4,"Transmitting in utf8 mode");
+#		    binmode( $req->client, ':utf8');
+#		    debug(1,"Transmitting in utf8 mode");
 		    $resp->send_in_chunks( $resp->{'content'} );
-		    binmode( $req->client, ':bytes');
+#		    binmode( $req->client, ':bytes');
 		}
 		else
 		{
@@ -601,11 +608,13 @@ sub send_output
 		    $resp->send_headers;
 		    $result = $req->get_cmd_val( 'BODY' );
 		}
+
 		if( $result eq 'LOADPAGE' )
 		{
 		    debug "Got Loadpage during send_output...";
 		    $req->session->register_result_page($resp);
-		    $req->send_code('PAGE_READY', $page->url->as_string);
+#		    debug "Telling client to load $url_out";
+		    $req->send_code('PAGE_READY', $url_out);
 		}
 		elsif( $result eq 'SEND' )
 		{
