@@ -924,8 +924,8 @@ sub handle_code
 	$req->run_action( $action, \%params );
 
 	$client->send("9\x00RESP\x00Done");
-	$req->done;
 	#close_callback($client); # That's all
+	$req->done;
     }
     elsif( $code eq 'URI2FILE' ) # CHILD msg
     {
@@ -1255,7 +1255,7 @@ sub restart
 
 sub add_background_jobs_conditional
 {
-
+    debug(3,"add_background_jobs_conditional");
     # Add background jobs to do unless the load is too high, unless we
     # waited too long anyway
     return if $TERMINATE;
@@ -1264,6 +1264,8 @@ sub add_background_jobs_conditional
     my $last_time = $BGJOBDATE ||= time;
     my $delta = time - $last_time;
 
+    debug(3,"Too few seconds for MAX: $delta < ". BGJOB_MAX)
+      if $delta < BGJOB_MAX;
     return if $delta < BGJOB_MAX;
 
     # Cache cleanup could safely be done here
@@ -1271,6 +1273,8 @@ sub add_background_jobs_conditional
     Para::Frame->run_hook(undef, 'busy_background_job', $delta);
 
 
+    debug(3,"Not configged to do bgjobs")
+      unless $CFG->{'do_bgjob'};
     return unless $CFG->{'do_bgjob'};
 
 
@@ -1279,6 +1283,8 @@ sub add_background_jobs_conditional
     if( $delta < BGJOB_MIN ) # unless a long time has passed
     {
 	$sysload = (Sys::CpuLoad::load)[1];
+	debug(3,"Sysload too high. $sysload > ". BGJOB_CPU)
+	  if $sysload > BGJOB_CPU;
 	return if $sysload > BGJOB_CPU;
     }
 
@@ -1286,6 +1292,8 @@ sub add_background_jobs_conditional
     $BGJOBNR ||= -1;
     if( $BGJOBNR == $REQNUM )
     {
+	debug(3,"Not enough seconds passed. $delta < ". BGJOB_MED)
+	  if $delta < BGJOB_MED;
 	return if $delta < BGJOB_MED;
     }
 
@@ -1300,10 +1308,13 @@ sub add_background_jobs_conditional
 
 =head2 add_background_jobs
 
+RUNS bgjobs!
+
 =cut
 
 sub add_background_jobs
 {
+    debug(3,"add_background_jobs");
     my( $delta, $sysload ) = @_;
 
     my $req = Para::Frame::Request->new_bgrequest();
@@ -1318,6 +1329,7 @@ sub add_background_jobs
     #
     if( @BGJOBS_PENDING )
     {
+	debug(3,"There are BGJOBS_PENDING");
 	my $job = shift @BGJOBS_PENDING;
 	my $original_request = shift @$job;
 	my $reqnum = $original_request->{'reqnum'};
@@ -1586,7 +1598,6 @@ sub add_hook
 Para::Frame->run_hook( $req, $label );
 
 Runs hooks with label $label.
-Removes hooks that return "remove_hook".
 
 =cut
 
@@ -1617,7 +1628,6 @@ sub run_hook
 
     my $hooks = $HOOK{$label};
     $hooks = [$hooks] unless ref $hooks eq 'ARRAY';
-    my $c = 0;
     foreach my $hook (@$hooks)
     {
 	if( $Para::Frame::hooks_running{"$hook"} )
@@ -1632,12 +1642,6 @@ sub run_hook
 	    eval
 	    {
 		my $val = &{$hook}(@_);
-		if( $val and $val eq "remove_hook" )
-		{
-		    debug(2, "Hook $hook asked to be removed");
-		    splice @$hooks, $c, 1;
-		    $c--;
-		}
 	    };
 	    $Para::Frame::hooks_running{"$hook"} --;
 	    if( $@ )
@@ -1646,7 +1650,6 @@ sub run_hook
 		die $@;
 	    }
 	}
-	$c++;
     }
     return 1;
 }
