@@ -564,66 +564,34 @@ sub send_output
 	else
 	{
 	    my $sender = $resp->set_sender_and_repair_content;
-
-	    if( $sender eq 'utf8' )
+	    my $result;
+	    if( $req->in_loadpage )
 	    {
-		my $result;
-		if( $req->in_loadpage )
-		{
-		    $result = "LOADPAGE";
-		}
-		else
+		$result = "LOADPAGE";
+	    }
+	    else
+	    {
+		if( $sender eq 'utf8' )
 		{
 		    $resp->ctype->set_charset("utf-8");
-		    $resp->send_headers;
-		    $result = $req->get_cmd_val( 'BODY' );
 		}
-
-		if( $result eq 'LOADPAGE' )
-		{
-		    $req->session->register_result_page($resp);
-		    $req->send_code('PAGE_READY', $url_out);
-		}
-		elsif( $result eq 'SEND' )
-		{
-#		    binmode( $req->client, ':utf8');
-		    debug(1,"Transmitting in utf8 mode");
-		    $resp->send_in_chunks( $resp->{'content'} );
-#		    binmode( $req->client, ':bytes');
-		}
-		else
-		{
-		    die "Strange response '$result'";
-		}
+		$resp->send_headers;
+		$result = $req->get_cmd_val( 'BODY' );
 	    }
-	    else # Default
-	    {
-		my $result;
-		if( $req->in_loadpage )
-		{
-		    $result = "LOADPAGE";
-		}
-		else
-		{
-		    $resp->send_headers;
-		    $result = $req->get_cmd_val( 'BODY' );
-		}
 
-		if( $result eq 'LOADPAGE' )
-		{
-		    debug "Got Loadpage during send_output...";
-		    $req->session->register_result_page($resp);
-#		    debug "Telling client to load $url_out";
-		    $req->send_code('PAGE_READY', $url_out);
-		}
-		elsif( $result eq 'SEND' )
-		{
-		    $resp->send_in_chunks( $resp->{'content'} );
-		}
-		else
-		{
-		    die "Strange response '$result'";
-		}
+	    if( $result eq 'LOADPAGE' )
+	    {
+		$req->session->register_result_page($resp);
+		$req->send_code('PAGE_READY', $url_out);
+	    }
+	    elsif( $result eq 'SEND' )
+	    {
+		debug(1,"Transmitting in utf8 mode");
+		$resp->send_in_chunks( $resp->{'content'} );
+	    }
+	    else
+	    {
+		die "Strange response '$result'";
 	    }
 	}
     }
@@ -1060,35 +1028,18 @@ sub send_stored_result
     {
 	if( $resp->sender eq 'utf8' )
 	{
-	    debug 4, "  in UTF8";
 	    $resp->ctype->set_charset("utf-8");
-	    $resp->send_headers;
-	    my $res = $req->get_cmd_val( 'BODY' );
-	    if( $res eq 'LOADPAGE' )
-	    {
-		die "Was to slow to send the pregenerated page";
-	    }
-	    else
-	    {
-#		binmode( $req->client, ':utf8');
-		debug(1,"Transmitting in utf8 mode");
-		$resp->send_in_chunks( $content );
-#		binmode( $req->client, ':bytes');
-	    }
+	}
+
+	$resp->send_headers;
+	my $res = $req->get_cmd_val( 'BODY' );
+	if( $res eq 'LOADPAGE' )
+	{
+	    die "Was to slow to send the pregenerated page";
 	}
 	else
 	{
-	    debug 4, "  in Latin-1";
-	    $resp->send_headers;
-	    my $res = $req->get_cmd_val( 'BODY' );
-	    if( $res eq 'LOADPAGE' )
-	    {
-		die "Was to slow to send the pregenerated page";
-	    }
-	    else
-	    {
-		$resp->send_in_chunks( $content );
-	    }
+	    $resp->send_in_chunks( $content );
 	}
     }
     else
