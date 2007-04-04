@@ -587,7 +587,7 @@ sub send_output
 		elsif( $result eq 'SEND' )
 		{
 #		    binmode( $req->client, ':utf8');
-#		    debug(1,"Transmitting in utf8 mode");
+		    debug(1,"Transmitting in utf8 mode");
 		    $resp->send_in_chunks( $resp->{'content'} );
 #		    binmode( $req->client, ':bytes');
 		}
@@ -1070,10 +1070,10 @@ sub send_stored_result
 	    }
 	    else
 	    {
-		binmode( $req->client, ':utf8');
-		debug(4,"Transmitting in utf8 mode");
+#		binmode( $req->client, ':utf8');
+		debug(1,"Transmitting in utf8 mode");
 		$resp->send_in_chunks( $content );
-		binmode( $req->client, ':bytes');
+#		binmode( $req->client, ':bytes');
 	    }
 	}
 	else
