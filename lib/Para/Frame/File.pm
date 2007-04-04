@@ -35,12 +35,32 @@ use File::Slurp qw(slurp); # May export read_file, write_file, append_file, over
 use Cwd 'abs_path';
 use File::Copy qw(); # NOT exports copy
 use File::Remove;
-use File::MimeInfo qw(); # NOT exports mimetype()
+#use File::MimeInfo qw(); # NOT exports mimetype()
 
 BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
     print "Loading ".__PACKAGE__." $VERSION\n";
+
+    #### A hack for using this code in bytes mode
+    package File::MimeInfo;
+    use bytes;
+    my $filename = "File/MimeInfo.pm";
+  ITER:
+    {
+	foreach my $prefix (@INC)
+	{
+	    my $realfilename = "$prefix/$filename";
+	    if( -f $realfilename )
+	    {
+		$INC{$filename} = $realfilename;
+		my $file = File::Slurp::read_file( $realfilename );
+		eval $file;
+		last ITER;
+	    }
+	}
+	die "Can't find $filename in \@INC";
+    }
 }
 
 use Para::Frame::Reload;
