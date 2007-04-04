@@ -1461,11 +1461,11 @@ sub normalize
 	$url =~ s/\.\w\w\.tt$/.tt/;
 	$url =~ s/\/index.tt$/\//;
 
-	if( $url =~ /Ã/ )
-	{
-	    $url = deunicode( $url );
-	    debug "Translating file to $url";
-	}
+#	if( $url =~ /Ã/ )
+#	{
+#	    $url = deunicode( $url );
+#	    debug "Translating file to $url";
+#	}
 
 	if( $url ne $f->{'url_norm'} )
 	{

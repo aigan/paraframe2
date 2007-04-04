@@ -562,7 +562,7 @@ sub paths
 	my $site = $page->site;
 
 
- 	my $path_full = $page->dirsteps->[0];
+	my $path_full = $page->dirsteps->[0];
 	my $destroot = $site->home->sys_path;
 	my $dir = $path_full;
 	unless( $dir =~ s/^$destroot// )
