@@ -49,6 +49,8 @@ sub handler
     my $u = $user_class->get( $username );
     $u or throw('validation', "Användaren $username existerar inte");
 
+    debug "User is $u";
+
     $user_class->change_current_user( $u );
 
     my $password_encrypted = passwd_crypt( $password );
@@ -79,6 +81,7 @@ sub handler
     if( my $err = $@ )
     {
 	debug "Got exception during login";
+	debug "Error: $err";
 	$u = $user_class->get('guest');
 	$user_class->change_current_user( $u );
 	die $err; # Since user change may reset $@

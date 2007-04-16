@@ -77,7 +77,17 @@ This is an exportable function.
 
 sub loc (@)
 {
-    return $Para::Frame::REQ->{'lang'}->maketext(@_);
+#    debug "Translating @_";
+    my $res = $Para::Frame::REQ->{'lang'}->maketext(@_);
+#    if( utf8::is_utf8($res) )
+#    {
+#	debug "  UTF8   to $res";
+#    }
+#    else
+#    {
+#	debug "         to $res";
+#    }
+    return $res;
 }
 
 
@@ -377,8 +387,17 @@ sub compute
 	}
     }
 
-    return $$value if ref($value) eq 'SCALAR';
-    return $value unless ref($value) eq 'CODE';
+    if( ref($value) eq 'SCALAR' )
+    {
+	utf8::upgrade($$value );
+	return $$value;
+    }
+
+    unless( ref($value) eq 'CODE' )
+    {
+	utf8::upgrade( $value );
+	return $value;
+    }
 
     {
 	local $SIG{'__DIE__'};
@@ -391,6 +410,8 @@ sub compute
 	  <\n in bracket code [compiled line $1],>s;
 	Carp::croak "Error in maketexting \"$phrase\":\n$err as used";
     }
+
+    utf8::upgrade( $value );
     return $value;
 }
 

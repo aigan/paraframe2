@@ -574,7 +574,9 @@ sub send_output
 		if( $sender eq 'utf8' )
 		{
 		    $resp->ctype->set_charset("utf-8");
-		}
+#		    debug(1,"In utf8 mode");
+		    binmode( $req->client, ':utf8');
+ 		}
 		$resp->send_headers;
 		$result = $req->get_cmd_val( 'BODY' );
 	    }
@@ -586,13 +588,15 @@ sub send_output
 	    }
 	    elsif( $result eq 'SEND' )
 	    {
-		debug(1,"Transmitting in utf8 mode");
 		$resp->send_in_chunks( $resp->{'content'} );
 	    }
 	    else
 	    {
+		binmode( $req->client, ':bytes');
 		die "Strange response '$result'";
 	    }
+
+	    binmode( $req->client, ':bytes');
 	}
     }
 #    debug "send_output: done";
@@ -649,12 +653,24 @@ sub set_sender_and_repair_content
     {
 	if( is_utf8 ${ $resp->{'content'} } )
 	{
+#	    debug "Content is UTF8";
 	    $resp->{'sender'} = 'utf8';
+
+	    if( ${ $resp->{'content'} } =~ /(V.+?lkommen)/ )
+	    {
+		my $str = $1;
+		my $len1 = length($str);
+		my $len2 = bytes::length($str);
+		debug "  >>$str ($len2/$len1)";
+#		confess "FIXME";
+	    }
 	}
 	else
 	{
 	    if( ${ $resp->{'content'} } =~ /Ã/ )
 	    {
+		debug "Content not UTF8 but looks like it!!!";
+
 		### REPAIR
 		$_ = ${ $resp->{'content'} };
 		my $out = "";
@@ -668,6 +684,7 @@ sub set_sender_and_repair_content
 	    }
 	    else
 	    {
+#		debug "Content not UTF8";
 		$resp->{'sender'} = 'bytes';
 	    }
 	}
@@ -916,6 +933,32 @@ sub send_in_chunks
     my $length = length($$dataref);
     debug(4,"Sending ".length($$dataref)." bytes of data to client");
 #    debug(1, "Sending ".length($$dataref)." bytes of data to client");
+
+#    if( utf8::is_utf8($$dataref) )
+#    {
+#	if( utf8::valid($$dataref) )
+#	{
+#	    debug "Marked as valid utf8";
+#
+#	    if( $$dataref =~ /(V.+?lkommen)/ )
+#	    {
+#		my $str = $1;
+#		my $len1 = length($str);
+#		my $len2 = bytes::length($str);
+#		debug "  >>$str ($len2/$len1)";
+#	    }
+#	}
+#	else
+#	{
+#	    debug "Marked as INVALID utf8";
+#	}
+#    }
+#    else
+#    {
+#	debug "NOT Marked as utf8";
+#    }
+
+
     my $sent = 0;
     my $errcnt = 0;
 
@@ -1000,7 +1043,7 @@ sub send_in_chunks
 	    return 0;
 	}
 
-	debug "Faild to transmit to client";
+	debug "Failed to transmit to client";
 	debug $err->as_string;
 	return 0;
     }
@@ -1028,8 +1071,28 @@ sub send_stored_result
     {
 	if( $resp->sender eq 'utf8' )
 	{
+	    debug "  As UTF8";
 	    $resp->ctype->set_charset("utf-8");
+	    binmode( $req->client, ':utf8');
 	}
+
+
+	if( utf8::is_utf8($$content) )
+	{
+	    if( utf8::valid($$content) )
+	    {
+		debug "  as valid utf8";
+	    }
+	    else
+	    {
+		debug "  as INVALID utf8";
+	    }
+	}
+	else
+	{
+	    debug "  NOT Marked as utf8";
+	}
+
 
 	$resp->send_headers;
 	my $res = $req->get_cmd_val( 'BODY' );
@@ -1041,6 +1104,8 @@ sub send_stored_result
 	{
 	    $resp->send_in_chunks( $content );
 	}
+
+	binmode( $req->client, ':bytes');
     }
     else
     {
@@ -1102,7 +1167,27 @@ sub equals
 
 sub set_content
 {
-    return $_[0]->{'content'} = $_[1];
+#    return $_[0]->{'content'} = $_[1];
+
+    $_[0]->{'content'} = $_[1];
+
+    if( utf8::is_utf8(${$_[0]->{'content'}}) )
+    {
+	if( utf8::valid(${$_[0]->{'content'}}) )
+	{
+	    debug "3Render result Marked as valid utf8";
+	}
+	else
+	{
+	    debug "3Render result Marked as INVALID utf8";
+	}
+    }
+    else
+    {
+	debug "3Render result NOT Marked as utf8";
+    }
+
+    return 1;
 }
 
 #######################################################################
@@ -1175,6 +1260,26 @@ sub render_output
 	# May throw exceptions -- May return false
 	if( $renderer->render_output(\$content) )
 	{
+
+
+
+
+    if( utf8::is_utf8($content) )
+    {
+	if( utf8::valid($content) )
+	{
+	    debug "2Render result Marked as valid utf8";
+	}
+	else
+	{
+	    debug "2Render result Marked as INVALID utf8";
+	}
+    }
+    else
+    {
+	debug "2Render result NOT Marked as utf8";
+    }
+
 #	    debug "Storing content";
 	    $resp->set_content( \$content );
 #	    debug "Returning true";

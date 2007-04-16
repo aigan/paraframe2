@@ -189,9 +189,35 @@ sub render_output
     else
     {
 	$rend->set_tt_params;
-#	debug "BURNING";
+#	debug "BURNING $in";
 	$rend->burn($in, $outref) or return 0;
     }
+
+
+    if( utf8::is_utf8($$outref) )
+    {
+	if( utf8::valid($$outref) )
+	{
+	    debug "Render result Marked as valid utf8";
+
+#	    if( $$outref =~ /(V.+?lkommen)/ )
+#	    {
+#		my $str = $1;
+#		my $len1 = length($str);
+#		my $len2 = bytes::length($str);
+#		debug "  >>$str ($len2/$len1)";
+#	    }
+	}
+	else
+	{
+	    debug "Render result Marked as INVALID utf8";
+	}
+    }
+    else
+    {
+	debug "Render result NOT Marked as utf8";
+    }
+
 
 #    debug "BURNING DONE";
     return 1;

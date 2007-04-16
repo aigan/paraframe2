@@ -197,10 +197,15 @@ sub document
 	{
 #	    debug("Reading file");
 	    $mod_time = time; # The new time of reading file
-	    my $tmpltext = $tmpl->content;
+	    my $tmpltext = $tmpl->contentref_as_text;
 	    my $parser = $burner->parser;
+	    unless( $parser )
+	    {
+		debug "No parser: ".datadump($burner);
+		confess( Template::Config->error );
+	    }
 
-#	    debug("Parsing with ".$burner->type);
+	    debug("Parsing with ($parser): ".$burner->type);
 	    $req->note("Compiling ".$tmpl->sys_path);
 	    my $metadata =
 	    {
@@ -211,7 +216,9 @@ sub document
 		or throw('template', "parse error:\nFile: $tmplname\n".
 			 $parser->error);
 
-#	    debug("Writing compiled file");
+#	    debug("Writing compiled file ".datadump($parsedoc));
+#	    to_utf8_recursive( $parsedoc );
+
 	    $compfile->dir->create;
 
 	    Template::Document->write_perl_file($compfile->sys_path, $parsedoc);
@@ -231,6 +238,42 @@ sub document
 
     return $Para::Frame::REQ->{'document'}{$tmpl};
 }
+
+#######################################################################
+
+=head2 to_utf8_recursive
+
+=cut
+
+sub to_utf8_recursive
+{
+    if( ref $_[0] )
+    {
+	if( ref $_[0] eq 'ARRAY' )
+	{
+	    foreach(@{$_[0]})
+	    {
+		to_utf8_recursive($_);
+	    }
+	}
+	elsif( ref $_[0] eq 'HASH' )
+	{
+	    foreach(keys %{$_[0]})
+	    {
+		to_utf8_recursive($_[0]{$_});
+	    }
+	}
+	else
+	{
+	    die "Conversion of $_[0] not implemented";
+	}
+    }
+    else
+    {
+	utf8::upgrade($_[0]);
+    }
+}
+
 
 #######################################################################
 
@@ -405,7 +448,7 @@ sub find
 	{
 	    $site->set_is_compiled(0);
 	    debug "*** The site is not yet compiled";
-	    die datadump($sample_tmpl); ####### DEBUG
+#	    die datadump($sample_tmpl); ####### DEBUG
 	    return $class->find($page);
 	}
     }

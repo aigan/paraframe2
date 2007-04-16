@@ -348,6 +348,34 @@ sub go
     $run ||= 'nop';
     $attr ||= {};
 
+    if( utf8::is_utf8($label) )
+    {
+	if( utf8::valid($label) )
+	{
+	    debug "Label '$label' is valid UTF8";
+	}
+	else
+	{
+	    confess "Label '$label' is INVALID UTF8";
+	}
+    }
+    else
+    {
+	utf8::decode($label);
+#	debug "Label '$label' decoded to UTF8";
+#	if( utf8::is_utf8($label) )
+#	{
+#	    if( utf8::valid($label) )
+#	    {
+#		debug "Label '$label' is valid UTF8";
+#	    }
+#	    else
+#	    {
+#		debug "Label '$label' is INVALID UTF8";
+#	    }
+#	}
+    }
+
     my $extra = "";
     if( my $val = delete $attr->{'href_target'} )
     {

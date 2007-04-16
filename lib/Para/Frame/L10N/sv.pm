@@ -27,6 +27,7 @@ Using Locale::Maketext
 =cut
 
 use strict;
+use utf8;
 
 BEGIN
 {

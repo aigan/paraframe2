@@ -706,6 +706,24 @@ sub prefix_message
 	trim(\$message);
 	$part->{'prefix_message'} = $message;
     }
+
+#    debug "Returning prefix message";
+#    if( utf8::is_utf8($part->{'prefix_message'}) )
+#    {
+#	if( utf8::valid($part->{'prefix_message'}) )
+#	{
+#	    debug "  in valid UTF8";
+#	}
+#	else
+#	{
+#	    debug "  in INVALID UTF8";
+#	}
+#    }
+#    else
+#    {
+#	debug "  NOT in UTF8";
+#    }
+
     return $part->{'prefix_message'};
 }
 
