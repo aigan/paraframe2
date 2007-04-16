@@ -27,6 +27,7 @@ See also L<Para::Frame::Dir> and L<Para::Frame::Template>.
 =cut
 
 use strict;
+use Encode;
 use Carp qw( croak confess cluck );
 use File::stat; # exports stat
 use Scalar::Util qw(weaken);
@@ -1483,13 +1484,13 @@ sub normalize
 
 #######################################################################
 
-=head2 content
+=head2 contentref
 
 Returns a ref to a scalar with the content of the file
 
 =cut
 
-sub content
+sub contentref
 {
     my( $f ) = @_;
 
@@ -1503,11 +1504,13 @@ sub content
 
 #######################################################################
 
-=head2 content_as_text
+=head2 content
+
+Returns the content of the file
 
 =cut
 
-sub content_as_text
+sub content
 {
     my( $f ) = @_;
 
@@ -1521,7 +1524,91 @@ sub content_as_text
 
 #######################################################################
 
+=head2 content_as_text
+
+Detects the charset and decodes to UTF8
+
+Returns a ref to a scalar with the content of the file
+
+=cut
+
+sub contentref_as_text
+{
+    my( $f ) = @_;
+
+    unless( $f->exist )
+    {
+	confess "File ".$f->sysdesig." doesn't exist";
+    }
+
+    require Encode::Detect::Detector;
+    my $data_in = scalar(slurp( $f->sys_path_slash, scalar_ref => 0 ));
+    my $charset = Encode::Detect::Detector::detect($data_in);
+    my $data = decode($charset, $data_in);
+
+#    require Encode::Detect;
+#    my $data = decode("Detect", scalar(slurp( $f->sys_path_slash, scalar_ref => 0 )));
+
+
+    debug "Decoding $charset file ".$f->sysdesig;
+
+#
+#    if( utf8::is_utf8($data) )
+#    {
+#	if( utf8::valid($data) )
+#	{
+#	    debug "Marked as valid utf8";
+#
+#	    if( $data =~ /(V.+?lkommen|k.+?rningen)/ )
+#	    {
+#		my $str = $1;
+#		my $len1 = length($str);
+#		my $len2 = bytes::length($str);
+#		debug "  >>$str ($len2/$len1)";
+#	    }
+#	}
+#	else
+#	{
+#	    debug "Marked as INVALID utf8";
+#	}
+#    }
+#    else
+#    {
+#	debug "NOT Marked as utf8";
+#    }
+
+    return \ $data;
+}
+
+
+#######################################################################
+
+=head2 content_as_text
+
+Detects the charset and decodes to UTF8
+
+Returns a ref to a scalar with the content of the file
+
+=cut
+
+sub content_as_text
+{
+    my( $f ) = @_;
+
+    unless( $f->exist )
+    {
+	confess "File ".$f->sysdesig." doesn't exist";
+    }
+    require Encode::Detect;
+    return decode("Detect", scalar(slurp( $f->sys_path_slash, scalar_ref => 0 )));
+}
+
+
+#######################################################################
+
 =head2 content_as_html
+
+Detects the charset and decodes to UTF8
 
 Returns a string with the contnet of the file, formatted as html, with
 style and links
@@ -1537,7 +1624,8 @@ sub content_as_html
 	confess "File ".$f->sysdesig." doesn't exist";
     }
 
-    my $content = slurp( $f->sys_path_slash, scalar_ref => 0 );
+    require Encode::Detect;
+    my $content = decode("Detect", scalar(slurp( $f->sys_path_slash, scalar_ref => 0 )));
     $target ||= $f;
     my $site = $target->site;
     my $home = $site->home->url_path;
