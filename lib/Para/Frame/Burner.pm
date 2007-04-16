@@ -403,11 +403,10 @@ Example:
 
 sub burn
 {
-    my $th = shift->th();
-    my $renderer = shift;
+    my( $burner, $renderer, $in, $params, $out ) = @_;
+    my $th = $burner->th();
     $th->{'pf_include_path'}[0] = $renderer;
-#    debug "Burning with $th @_";
-    my $res = $th->process(@_);
+    my $res = $th->process($in, $params, $out, {binmode=>':utf8'});
     if( $res )
     {
 #	debug "Burning successful";
