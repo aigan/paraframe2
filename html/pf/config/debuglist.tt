@@ -1,4 +1,4 @@
-[% META title="Watchlist"
+﻿[% META title="Watchlist"
 	next_action="debug_change"
 %]
 

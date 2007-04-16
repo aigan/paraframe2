@@ -1,4 +1,4 @@
-<h1 align="center">[% loc("Login") %]</h1>
+﻿<h1 align="center">[% loc("Login") %]</h1>
 
 <p align="center"><strong>[% message | html %]</strong></p>
 

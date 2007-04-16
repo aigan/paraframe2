@@ -1,4 +1,4 @@
-[% MACRO roundbox_css(class, imgdir, color, background, s_width, s_height) BLOCK %]
+﻿[% MACRO roundbox_css(class, imgdir, color, background, s_width, s_height) BLOCK %]
   [% DEFAULT format    = "png";
      DEFAULT s_width   = 8;
      DEFAULT s_height  = s_width;

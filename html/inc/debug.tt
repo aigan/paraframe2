@@ -1,4 +1,4 @@
-<div class="debug">
+﻿<div class="debug">
   [% IF emergency_mode %]
   <h1 class="important">Crashed $emergency_mode times</h1>
   [% END %]

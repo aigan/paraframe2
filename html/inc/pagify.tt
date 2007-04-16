@@ -1,4 +1,4 @@
-[%
+﻿[%
    subpart = {};
    pagesize = q.param('pagesize') || pagesize_default || 15;
    offset = q.param('offset') || 1;

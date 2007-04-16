@@ -1,4 +1,4 @@
-[% MACRO box(part) BLOCK %]
+﻿[% MACRO box(part) BLOCK %]
 <table class="paraframe_box" style="background: $part.border"><tr><td>
 <table style="border-width: ${part.width}px"><tr><td style="background: $part.bg">
    [% IF part.title %]<h1>$part.title</h1>[% END %]

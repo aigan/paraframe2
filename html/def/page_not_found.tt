@@ -1,4 +1,4 @@
-[% META title='-"404 - " _ loc("File not found")'
+﻿[% META title='-"404 - " _ loc("File not found")'
 	level = 00
 %]
 

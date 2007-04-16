@@ -1,4 +1,4 @@
-[%
+﻿[%
    # This will backtrack if next_template is set to $home
    # call default_template instead of plan_bactrack directly
 

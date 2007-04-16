@@ -1,4 +1,4 @@
-[% USE Meta.Interpolate %]
+﻿[% USE Meta.Interpolate %]
 [%
    PROCESS components.tt;
    TRY; PROCESS "app_components.tt";

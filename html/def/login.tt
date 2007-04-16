@@ -1,4 +1,4 @@
-[% META
+﻿[% META
 	otitle = 'Logga in'
 	next_action = 'user_login'
 	focus = 'username'

@@ -1,4 +1,4 @@
-Sent with template /email/default.tt
+﻿Sent with template /email/default.tt
 
 [% name %] <[% email %]> wrote:
 

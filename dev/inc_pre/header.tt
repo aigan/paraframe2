@@ -1,4 +1,4 @@
-<html>
+﻿<html>
   <head>
     [% DEFAULT otitle = title %]
     <title>[* PROCESS title.tt *]</title>

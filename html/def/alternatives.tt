@@ -1,5 +1,6 @@
-[% META
+﻿[% META
 	otitle = 'Alternatives'
 	level = 00
 %]
+[%# test åäö #%]
 [% PROCESS alternatives_box.tt %]

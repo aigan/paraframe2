@@ -1,4 +1,4 @@
-[% META title="Server admin"
+﻿[% META title="Server admin"
 %]
 
 [% PROCESS menu.tt %]

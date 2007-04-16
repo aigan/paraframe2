@@ -1,4 +1,4 @@
-[% META otitle="File HTML edit"
+﻿[% META otitle="File HTML edit"
    next_action="store_content"
 %]
 

@@ -1,4 +1,4 @@
-[% DEFAULT style="pf/js/calendar/calendar-tas.css" %]
+﻿[% DEFAULT style="pf/js/calendar/calendar-tas.css" %]
 <style type="text/css">@import url($home/$style);</style>
 <script type="text/javascript" src="$home/pf/js/calendar/calendar.js"></script>
 <script type="text/javascript" src="$home/pf/js/calendar/lang/calendar-[% lang %].js"></script>

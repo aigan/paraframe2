@@ -1,4 +1,4 @@
-<script type="text/javascript">
+﻿<script type="text/javascript">
 function go(template, run) {
     document.f.run.value=run || document.f.run.value;
     document.f.action = template || document.f.action;
