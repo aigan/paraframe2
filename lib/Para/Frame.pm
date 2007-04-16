@@ -36,6 +36,8 @@ use Sys::CpuLoad;
 use DateTime::TimeZone;
 use DateTime::Format::Strptime;
 use Cwd qw( abs_path );
+#use Template::Stash::ForceUTF8;
+use Para::Frame::Template::Stash::CheckUTF8;
 
 our $VERSION;
 our $CVSVERSION;
@@ -116,7 +118,7 @@ Overview and Introduction
 The default ParaFrame TT components
 
 
-=item L<Para::Frame::Template::Meta>
+=item L<Para::Frame::Templae::Meta>
 
 The page META information
 
@@ -195,6 +197,9 @@ sub startup
 
     # No REQ exists yet!
     Para::Frame->run_hook(undef, 'on_startup');
+
+
+    $Template::BINMODE = ':utf8';
 
     warn "Setup complete, accepting connections\n";
 }
@@ -2083,6 +2088,7 @@ sub configure
 	(
 	 PRE_PROCESS => 'header_prepare.tt',
 	 POST_PROCESS => 'footer_prepare.tt',
+	 STASH => Para::Frame::Template::Stash::CheckUTF8->new,
 	 TRIM => 1,
 	 PRE_CHOMP => 1,
 	 POST_CHOMP => 1,
