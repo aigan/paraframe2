@@ -1543,7 +1543,7 @@ sub contentref_as_text
 
     require Encode::Detect::Detector;
     my $data_in = scalar(slurp( $f->sys_path_slash, scalar_ref => 0 ));
-    my $charset = Encode::Detect::Detector::detect($data_in);
+    my $charset = Encode::Detect::Detector::detect($data_in) || 'UTF-8';
     my $data = decode($charset, $data_in);
 
 #    require Encode::Detect;
