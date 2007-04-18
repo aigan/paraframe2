@@ -63,6 +63,7 @@ WriteMakefile(
                   'Number::Bytes::Human'       => 0.04,
 	          'Image::Magick'              => 6.002004,
                   'Net::SCP'                   => 0.07,
+	          'Encode::Detect::Detector'   => 1.00,
 	      },
 	      'dist'          =>
 	      {
