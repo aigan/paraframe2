@@ -2279,11 +2279,14 @@ sub create_fork
 
     do
     {
-	$pid = open($fh, "-|");
+	eval # May throw a fatal "Can't fork"
+	{
+	    $pid = open($fh, "-|");
+	};
 	unless( defined $pid )
 	{
 	    debug(0,"cannot fork: $!");
-	    die "bailing out" if $sleep_count++ > 6;
+	    die "Realy can't fork! bailing out" if $sleep_count++ > 6;
 	    sleep 1;
 	}
     } until defined $pid;
