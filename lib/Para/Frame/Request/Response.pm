@@ -62,6 +62,8 @@ redirection to a new page.
 =cut
 
 use strict;
+use utf8;
+
 use Carp qw( croak confess cluck );
 use IO::File;
 use Encode qw( is_utf8 decode );
@@ -667,7 +669,7 @@ sub set_sender_and_repair_content
 	}
 	else
 	{
-	    if( ${ $resp->{'content'} } =~ /Ã/ )
+	    if( 0 ) #${ $resp->{'content'} } =~ /Ã/ )
 	    {
 		debug "Content not UTF8 but looks like it!!!";
 
@@ -1340,4 +1342,4 @@ sub last_modified
 
 L<Para::Frame>
 
-=cut
+=cu
