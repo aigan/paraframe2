@@ -42,7 +42,7 @@ sub get {
     }
     else
     {
-	if( $result =~ /Ã.(.{30})/ )
+	if( $result =~ /Ã.(.{0,30})/ )
 	{
 #	    debug datadump $self;
 	    warn "Should have been marked as UTF8: $1\n";
