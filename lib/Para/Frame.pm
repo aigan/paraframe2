@@ -37,7 +37,7 @@ use DateTime::TimeZone;
 use DateTime::Format::Strptime;
 use Cwd qw( abs_path );
 #use Template::Stash::ForceUTF8;
-#use Para::Frame::Template::Stash::CheckUTF8;
+use Para::Frame::Template::Stash::CheckUTF8;
 
 our $VERSION;
 our $CVSVERSION;
@@ -2088,7 +2088,7 @@ sub configure
 	(
 	 PRE_PROCESS => 'header_prepare.tt',
 	 POST_PROCESS => 'footer_prepare.tt',
-#	 STASH => Para::Frame::Template::Stash::CheckUTF8->new,
+	 STASH => Para::Frame::Template::Stash::CheckUTF8->new,
 	 TRIM => 1,
 	 PRE_CHOMP => 1,
 	 POST_CHOMP => 1,
