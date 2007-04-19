@@ -352,7 +352,7 @@ sub go
     {
 	if( utf8::valid($label) )
 	{
-	    debug "Label '$label' is valid UTF8";
+#	    debug "Label '$label' is valid UTF8";
 	}
 	else
 	{
