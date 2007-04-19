@@ -205,7 +205,7 @@ sub document
 		confess( Template::Config->error );
 	    }
 
-	    debug("Parsing with ($parser): ".$burner->type);
+#	    debug("Parsing with ($parser): ".$burner->type);
 	    $req->note("Compiling ".$tmpl->sys_path);
 	    my $metadata =
 	    {

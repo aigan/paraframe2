@@ -975,7 +975,7 @@ sub compile
     my( $filename ) = @_;
 
     my $mtime = 0;
-    debug(0,"Compiling $filename");
+#    debug(0,"Compiling $filename");
 
     unless( defined $Para::Frame::Reload::COMPILED{$filename} )
     {
