@@ -1175,7 +1175,7 @@ sub set_content
     {
 	if( utf8::valid(${$_[0]->{'content'}}) )
 	{
-	    debug "3Render result Marked as valid utf8";
+#	    debug "3Render result Marked as valid utf8";
 	}
 	else
 	{
@@ -1268,7 +1268,7 @@ sub render_output
     {
 	if( utf8::valid($content) )
 	{
-	    debug "2Render result Marked as valid utf8";
+#	    debug "2Render result Marked as valid utf8";
 	}
 	else
 	{

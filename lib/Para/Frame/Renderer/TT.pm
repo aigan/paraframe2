@@ -198,7 +198,7 @@ sub render_output
     {
 	if( utf8::valid($$outref) )
 	{
-	    debug "Render result Marked as valid utf8";
+#	    debug "Render result Marked as valid utf8";
 
 #	    if( $$outref =~ /(V.+?lkommen)/ )
 #	    {
