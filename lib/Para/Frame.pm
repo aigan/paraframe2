@@ -2016,6 +2016,7 @@ sub configure
     $INDENT     = 0;
 
     $CFG = $cfg_in; # Assign to global var
+#    debug( datadump( $Para::Frame::CFG ) ); ### DEBUG
 
     $ENV{PATH} = "/usr/bin:/bin";
 
@@ -2040,6 +2041,9 @@ sub configure
 
     $CFG->{'approot'} || $CFG->{'appback'}
       or die "appback or approot missing in config\n";
+
+    $CFG->{'appbase'}
+      or die "appbase missing in config\n";
 
     # $Para::Frame::Time::TZ is set at startup from:
     #
