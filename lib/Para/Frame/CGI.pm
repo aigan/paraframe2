@@ -58,27 +58,27 @@ sub new
 	}
     }
 
-    if( my $val = $q->param('id') )
-    {
-	my $len1 = length($val);
-	my $len2 = bytes::length($val);
-	debug "  >>$val ($len2/$len1)";
-	if( utf8::is_utf8($val) )
-	{
-	    if( utf8::valid($val) )
-	    {
-		debug "Marked as valid utf8";
-	    }
-	    else
-	    {
-		debug "Marked as INVALID utf8";
-	    }
-	}
-	else
-	{
-	    debug "NOT Marked as utf8";
-	}
-    }
+#    if( my $val = $q->param('id') )
+#    {
+#	my $len1 = length($val);
+#	my $len2 = bytes::length($val);
+#	debug "  >>$val ($len2/$len1)";
+#	if( utf8::is_utf8($val) )
+#	{
+#	    if( utf8::valid($val) )
+#	    {
+#		debug "Marked as valid utf8";
+#	    }
+#	    else
+#	    {
+#		debug "Marked as INVALID utf8";
+#	    }
+#	}
+#	else
+#	{
+#	    debug "NOT Marked as utf8";
+#	}
+#    }
 
     return $q;
 }
