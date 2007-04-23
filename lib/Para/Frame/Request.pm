@@ -50,6 +50,7 @@ use Para::Frame::Child::Result;
 use Para::Frame::Site;
 use Para::Frame::Change;
 use Para::Frame::URI;
+use Para::Frame::CGI;
 use Para::Frame::L10N qw( loc );
 use Para::Frame::Logging;
 use Para::Frame::Connection;
@@ -98,7 +99,7 @@ sub new
     #
     $env = \%ENV;
 
-    my $q = new CGI($params);
+    my $q = Para::Frame::CGI->new($params);
     $q->cookie('password'); # Should cache all cookies
 
     my $req =  bless
@@ -1112,6 +1113,7 @@ sub run_action
 #    debug "==> RUN ACTION $run";
 
     my $site = $req->site;
+    debug "Site appbase is ".$site->appbase;
 
     my $actionroots = [$site->appbase."::Action"];
 
