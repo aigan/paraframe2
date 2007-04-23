@@ -23,7 +23,7 @@ Para::Frame::Request::Ctype - The request response content type
 =cut
 
 use strict;
-use Carp qw( cluck confess );
+use Carp qw( cluck confess longmess );
 use Scalar::Util qw(weaken);
 
 BEGIN
@@ -151,12 +151,19 @@ sub set_charset
 {
     my( $ctype, $charset ) = @_;
 
-    confess "CHECKME";
-
-    if( $ctype->{'charset'}||'' ne $charset )
+    if( defined $ctype->{'charset'} )
     {
+	if( $ctype->{'charset'} ne $charset )
+	{
+	    debug longmess "CHECKME";
+	    $ctype->{'charset'} = $charset;
+	    $ctype->{'changed'} ++;
+	}
+    }
+    else
+    {
+	# First change is regarded as the default, already synced
 	$ctype->{'charset'} = $charset;
-	$ctype->{'changed'} ++;
     }
 }
 
