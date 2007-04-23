@@ -47,11 +47,7 @@ sub handler
     # Give a short quick response
     #
     my $page = "Done";
-    $req->{'renderer'} = sub
-    {
-	$req->{'page_content'} = \$page;
-	$req->{'page_sender'} = 'bytes';
-    };
+    $req->response->set_content( \$page );
 
     debug "Now waiting for release";
 
