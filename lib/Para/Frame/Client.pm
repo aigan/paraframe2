@@ -189,14 +189,20 @@ sub handler
 	    if( $filename =~ /\.tt$/ )
 	    {
 		$ctype = 'text/html';
-		$r->content_type($ctype);
 	    }
 	}
 	elsif( $ctype eq "httpd/unix-directory" )
 	{
 	    $ctype = 'text/html';
-	    $r->content_type($ctype);
 	}
+
+	unless( $ctype =~ /\bcharset\b/ )
+	{
+	    $ctype .= "; charset=UTF-8";
+	}
+
+	$r->content_type($ctype);
+
 
 	### We let the daemon decide what to do with non-tt pages
 
