@@ -151,6 +151,8 @@ sub set_charset
 {
     my( $ctype, $charset ) = @_;
 
+    confess "CHECKME";
+
     if( $ctype->{'charset'}||'' ne $charset )
     {
 	$ctype->{'charset'} = $charset;
@@ -233,7 +235,7 @@ sub commit
     #
     unless( $ctype->{'charset'} )
     {
-	$ctype->{'charset'} = "iso-8859-1";
+	$ctype->{'charset'} = "UTF-8";
 	$ctype->{'changed'} ++;
     }
 
