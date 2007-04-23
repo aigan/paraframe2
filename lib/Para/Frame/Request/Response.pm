@@ -135,7 +135,6 @@ sub new
      'content'        => undef,          ## Ref to the generated page
      'dir'            => undef,          ## Cached Para::Frame::Dir obj
      'renderer'       => undef,
-     'sender'         => undef,          ## The mode of sending the page
      'is_error_response' => 0,
      'moved_temporarily' => undef,
     };
@@ -565,7 +564,6 @@ sub send_output
 	}
 	else
 	{
-	    my $sender = $resp->set_sender_and_repair_content;
 	    my $result;
 	    if( $req->in_loadpage )
 	    {
@@ -573,12 +571,7 @@ sub send_output
 	    }
 	    else
 	    {
-		if( $sender eq 'utf8' )
-		{
-		    $resp->ctype->set_charset("utf-8");
-#		    debug(1,"In utf8 mode");
-		    binmode( $req->client, ':utf8');
- 		}
+		binmode( $req->client, ':utf8');
 		$resp->send_headers;
 		$result = $req->get_cmd_val( 'BODY' );
 	    }
@@ -608,6 +601,8 @@ sub send_output
 
 =head2 sender
 
+  DEPRECATED
+
   $resp->sender
 
   $resp->sender( $code )
@@ -616,6 +611,8 @@ sub send_output
 
 sub sender
 {
+    confess "DEPRECATED";
+
     my( $resp, $code ) = @_;
 
     if( $code )
@@ -645,30 +642,33 @@ sub sender
 
 =head2 set_sender_and_repair_content
 
+DEPRECATED
+
 =cut
 
 sub set_sender_and_repair_content
 {
+    confess "DEPRECATED";
     my( $resp ) = @_;
 
     unless( $resp->{'sender'} )
     {
 	if( is_utf8 ${ $resp->{'content'} } )
 	{
-#	    debug "Content is UTF8";
+	    debug "Content is UTF8";
 	    $resp->{'sender'} = 'utf8';
 
-	    if( ${ $resp->{'content'} } =~ /(V.+?lkommen)/ )
-	    {
-		my $str = $1;
-		my $len1 = length($str);
-		my $len2 = bytes::length($str);
-		debug "  >>$str ($len2/$len1)";
-#		confess "FIXME";
-	    }
+#	    if( ${ $resp->{'content'} } =~ /(V.+?lkommen)/ )
+#	    {
+#		my $str = $1;
+#		my $len1 = length($str);
+#		my $len2 = bytes::length($str);
+#		debug "  >>$str ($len2/$len1)";
+#	    }
 	}
 	else
 	{
+	    debug "Content is Latin-1";
 	    if( 0 ) #${ $resp->{'content'} } =~ /Ã/ )
 	    {
 		debug "Content not UTF8 but looks like it!!!";
@@ -1071,13 +1071,7 @@ sub send_stored_result
 
     if( my $content = $resp->{'content'} ) # May be header only
     {
-	if( $resp->sender eq 'utf8' )
-	{
-	    debug "  As UTF8";
-	    $resp->ctype->set_charset("utf-8");
-	    binmode( $req->client, ':utf8');
-	}
-
+	binmode( $req->client, ':utf8');
 
 	if( utf8::is_utf8($$content) )
 	{
