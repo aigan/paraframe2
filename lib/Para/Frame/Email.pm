@@ -541,7 +541,7 @@ sub send
 	      Data     => $data,
               Encoding => '8bit',
 	     );
-	    $msg->attr('content-type.charset' => 'ISO-8859-1');
+	    $msg->attr('content-type.charset' => 'UTF8');
 	}
 	else
 	{
@@ -553,7 +553,7 @@ sub send
 	      Data     => $data,
               Encoding => 'quoted-printable',
 	     );
-#	    $msg->attr('content-type.charset' => 'ISO-8859-1');
+	    $msg->attr('content-type.charset' => 'UTF8');
 	}
 
 
