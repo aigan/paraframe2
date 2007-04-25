@@ -700,8 +700,7 @@ sub get_response
 		    }
 		}
 		# Retrieving name of loadpage
-		elsif( $code eq 'LOADPAGE' or    # deprecated
-		       $code eq 'USE_LOADPAGE' )
+		elsif( $code eq 'USE_LOADPAGE' )
 		{
 		    ( $LOADPAGE_URI, $LOADPAGE_TIME, $REQNUM ) =
 		      split(/\0/, $row);
@@ -745,7 +744,7 @@ sub get_response
 	if( not $LOADPAGE and
 	    (time > $STARTED + $LOADPAGE_TIME - 1 ) and
 	    $LOADPAGE_URI and
-	    ($r->content_type eq "text/html" ) and
+	    ($r->content_type =~ "^text/html" ) and
 	    (not $r->header_only ) and
 	    not $WAIT
 	    )
