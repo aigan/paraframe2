@@ -1167,21 +1167,21 @@ sub set_content
 
     $_[0]->{'content'} = $_[1];
 
-    if( utf8::is_utf8(${$_[0]->{'content'}}) )
-    {
-	if( utf8::valid(${$_[0]->{'content'}}) )
-	{
-#	    debug "3Render result Marked as valid utf8";
-	}
-	else
-	{
-	    debug "3Render result Marked as INVALID utf8";
-	}
-    }
-    else
-    {
-	debug "3Render result NOT Marked as utf8";
-    }
+#    if( utf8::is_utf8(${$_[0]->{'content'}}) )
+#    {
+#	if( utf8::valid(${$_[0]->{'content'}}) )
+#	{
+##	    debug "3Render result Marked as valid utf8";
+#	}
+#	else
+#	{
+#	    debug "3Render result Marked as INVALID utf8";
+#	}
+#    }
+#    else
+#    {
+#	debug "3Render result NOT Marked as utf8";
+#    }
 
     return 1;
 }
@@ -1256,26 +1256,6 @@ sub render_output
 	# May throw exceptions -- May return false
 	if( $renderer->render_output(\$content) )
 	{
-
-
-
-
-    if( utf8::is_utf8($content) )
-    {
-	if( utf8::valid($content) )
-	{
-#	    debug "2Render result Marked as valid utf8";
-	}
-	else
-	{
-	    debug "2Render result Marked as INVALID utf8";
-	}
-    }
-    else
-    {
-	debug "2Render result NOT Marked as utf8";
-    }
-
 #	    debug "Storing content";
 	    $resp->set_content( \$content );
 #	    debug "Returning true";
