@@ -1474,7 +1474,7 @@ sub handle_request
 	      $req->site->loadpage;
 	    if( $session->count and ( $loadpage ne 'no' ))
 	    {
-		$req->send_code('USE_LOADPAGE', $loadpage, 2, $REQNUM);
+		$req->send_code('USE_LOADPAGE', $loadpage, 3, $REQNUM);
 	    }
 	    else
 	    {
