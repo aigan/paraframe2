@@ -2,9 +2,11 @@
 use strict;
 use warnings FATAL => 'all';
 use Cwd;
+use bytes;
 
 our $root = getcwd();
 our $bom = "\x{EF}\x{BB}\x{BF}";
+our $bombom = "\x{C3}\x{AF}\x{C2}\x{BB}\x{C2}\x{BF}";
 
 process_dir($root);
 
@@ -37,8 +39,12 @@ sub process_file
     close FH;
 
     my $b = $a;
-    $a =~ s/$bom//g;
+    $a =~ s/^$bombom//g;
+    $a =~ s/^$bom//g;
+    print "\na1 is ".bytes::length($a)."\n";
     $a = $bom . $a;
+    print "a2 is ".bytes::length($a)."\n";
+    print "b2 is ".bytes::length($b)."\n";
     if( $a ne $b )
     {
 	open( FH, '>:bytes', $file )
@@ -51,6 +57,7 @@ sub process_file
     }
     else
     {
+	print '['.(substr $a, 0, 10).']';
 	print "\n";
     }
 }
