@@ -41,10 +41,10 @@ sub process_file
     my $b = $a;
     $a =~ s/^$bombom//g;
     $a =~ s/^$bom//g;
-    print "\na1 is ".bytes::length($a)."\n";
+#    print "\na1 is ".bytes::length($a)."\n";
     $a = $bom . $a;
-    print "a2 is ".bytes::length($a)."\n";
-    print "b2 is ".bytes::length($b)."\n";
+#    print "a2 is ".bytes::length($a)."\n";
+#    print "b2 is ".bytes::length($b)."\n";
     if( $a ne $b )
     {
 	open( FH, '>:bytes', $file )
@@ -57,7 +57,7 @@ sub process_file
     }
     else
     {
-	print '['.(substr $a, 0, 10).']';
+#	print '['.(substr $a, 0, 10).']';
 	print "\n";
     }
 }
