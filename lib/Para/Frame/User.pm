@@ -152,6 +152,7 @@ sub authenticate_user
     $password_encrypted ||= $q->cookie('password') || "";
 
     my $username = $u->username;
+    confess "No username fot $u->{id} ($u)" unless $username;
     debug(3,"authenticating $username");
     debug(3,"  with password $password_encrypted");
 
@@ -378,7 +379,7 @@ sub revert_from_temporary_user
 
 =head2 name
 
-The real name of the user.  Default is 'Gäst'.
+The real name of the user.  Default is 'Guest'.
 
 =cut
 
