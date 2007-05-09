@@ -42,7 +42,7 @@ sub handler
 	throw('validation', "User $uname has no right to update $pagename");
     }
 
-    $tpage->set_content( \$content );
+    $tpage->set_content_as_text( \$content );
 
     return "Stored $pagename";
 }
