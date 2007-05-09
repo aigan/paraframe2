@@ -2096,6 +2096,49 @@ sub mimetype_base
 
 #######################################################################
 
+=head2 set_content_as_text
+
+  $f->set_content_as_text( \$data )
+
+Updates the file content and saves it in the file, in UTF8.
+
+C<\$data> shoule be a reference to a scalar containing the new content
+of the file.
+
+Returns: true on success
+
+=cut
+
+sub set_content_as_text
+{
+    my( $f, $dataref ) = @_;
+
+    if( $f->is_dir )
+    {
+	my $fname = $f->desig;
+	throw('validation', "$fname is a dir");
+    }
+
+    unless( ref($dataref) and (ref $dataref eq 'SCALAR') )
+    {
+	throw('validation', "content not a scalar ref");
+    }
+
+
+    my $syspath = $f->sys_path;
+
+    debug "Storing content in file $syspath";
+    open FH, ">:utf8", $syspath
+      or die "Could not open $syspath for writing: $!";
+    print FH $$dataref;
+    close FH;
+
+    return 1;
+}
+
+
+#######################################################################
+
 =head2 set_content
 
   $f->set_content( \$data )
