@@ -933,35 +933,13 @@ sub send_in_chunks
 
     my $client = $req->client;
     my $length = length($$dataref);
-    debug(4,"Sending ".length($$dataref)." bytes of data to client");
-#    debug(1, "Sending ".length($$dataref)." bytes of data to client");
+    if( debug > 1 )
+    {
+	my $length2 = bytes::length($$dataref);
+	debug(1,"Sending $length chars/$length2 bytes of data to client");
+    }
 
-#    if( utf8::is_utf8($$dataref) )
-#    {
-#	if( utf8::valid($$dataref) )
-#	{
-#	    debug "Marked as valid utf8";
-#
-#	    if( $$dataref =~ /(V.+?lkommen)/ )
-#	    {
-#		my $str = $1;
-#		my $len1 = length($str);
-#		my $len2 = bytes::length($str);
-#		debug "  >>$str ($len2/$len1)";
-#	    }
-#	}
-#	else
-#	{
-#	    debug "Marked as INVALID utf8";
-#	}
-#    }
-#    else
-#    {
-#	debug "NOT Marked as utf8";
-#    }
-
-
-    my $sent = 0;
+    my $total = 0;
     my $errcnt = 0;
 
     unless( $length )
@@ -975,13 +953,15 @@ sub send_in_chunks
 	if( $length > 64000 )
 	{
 	    my $chunk = 16384; # POSIX::BUFSIZ * 2
-	    for( my $i=0; $i<$length; $i+= $chunk )
+	    my $sent = 0;
+	    for( my $i=0; $i<$length; $i+= $sent )
 	    {
-		debug(4,"  Transmitting chunk from $i\n");
-		my $res = $client->send( substr $$dataref, $i, $chunk );
-		if( $res )
+		debug(3,"  Transmitting chunk from $i\n");
+		$sent = $client->send( substr $$dataref, $i, $chunk );
+		if( $sent )
 		{
-		    $sent += $res;
+		    debug(3, "  Sent $sent chars");
+		    $total += $sent;
 		    $errcnt = 0;
 		}
 		else
@@ -991,7 +971,7 @@ sub send_in_chunks
 		    if( $req->cancelled )
 		    {
 			debug("Request was cancelled. Giving up");
-			return $sent;
+			return $total;
 		    }
 
 		    debug(1,"  Tries to recover...",1);
@@ -1013,8 +993,8 @@ sub send_in_chunks
 	{
 	    while(1)
 	    {
-		$sent = $client->send( $$dataref );
-		if( $sent )
+		$total = $client->send( $$dataref );
+		if( $total )
 		{
 		    last;
 		}
@@ -1035,7 +1015,7 @@ sub send_in_chunks
 		}
 	    }
 	}
-	debug(4, "Transmitted $sent chars to client");
+	debug(2, "Transmitted $total chars to client");
     };
     if( $@ )
     {
@@ -1050,7 +1030,7 @@ sub send_in_chunks
 	return 0;
     }
 
-    return $sent;
+    return $total;
 }
 
 
