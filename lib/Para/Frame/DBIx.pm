@@ -166,6 +166,7 @@ sub new
 	    ShowErrorStatement => 1,
 	    PrintError => 0,
 	    AutoCommit => 0,
+	    pg_enable_utf8 => 1,
 	};
 
 	$dbix->{'connect'} = $connect;
