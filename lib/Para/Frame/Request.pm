@@ -2466,6 +2466,8 @@ sub note
 
     debug(0, $note);
     $note =~ s/\n/\\n/g;
+    utf8::encode($note);
+
     my $creq = $req->original || $req; # client req
     if( $creq->is_from_client )
     {
