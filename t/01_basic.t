@@ -1,18 +1,28 @@
 #!perl
+#  $Id$  -*-cperl-*-
+
 use strict;
 use warnings;
-use Data::Dumper;
 use Test::Warn;
 use Test::More tests => 20;
 
 
-BEGIN { use_ok('Para::Frame'); }
+BEGIN
+{
+    open my $oldout, ">&STDOUT"     or die "Can't dup STDOUT: $!";
+    open STDOUT, ">/dev/null"       or die "Can't dup STDOUT: $!";
+
+    use_ok('Para::Frame');
+
+    open STDOUT, ">&", $oldout      or die "Can't dup \$oldout: $!";
+}
 
 warning_like {Para::Frame::Site->add({})} qr/^Registring site [\w\.]+$/, "Adding site";
 
 my $cfg_in =
 {
     approot => '/tmp/approot',
+    appbase => 'Para::MyTest',
 };
 warnings_like {Para::Frame->configure($cfg_in)}
 [ qr/^Timezone set to /,
