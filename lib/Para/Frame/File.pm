@@ -2100,7 +2100,8 @@ sub mimetype_base
 
   $f->set_content_as_text( \$data )
 
-Updates the file content and saves it in the file, in UTF8.
+Updates the file content and saves it in the file, in UTF8, starting
+with a UTF8 BOM.
 
 C<\$data> shoule be a reference to a scalar containing the new content
 of the file.
@@ -2127,9 +2128,15 @@ sub set_content_as_text
 
     my $syspath = $f->sys_path;
 
+    my $bom = "\x{EF}\x{BB}\x{BF}";
+
     debug "Storing content in file $syspath";
-    open FH, ">:utf8", $syspath
+    open FH, ">:bytes", $syspath
       or die "Could not open $syspath for writing: $!";
+
+    print FH $bom;
+    binmode( FH, ':utf8' );
+
     print FH $$dataref;
     close FH;
 
