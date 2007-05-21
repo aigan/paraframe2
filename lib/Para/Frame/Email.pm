@@ -489,6 +489,7 @@ sub send
     my $data = "";
     $burner->burn( $rend, $tmpl->sys_path, \%params, \$data )
       or throw($burner->error);
+    $data = pack("C*", unpack('U*', $data)); # Convert to ISO-8859-1
 
     if( $p->{'pgpsign'} )
     {
@@ -539,9 +540,11 @@ sub send
 	      Subject  => $p->{'subject'},
 	      Type     => 'TEXT',
 	      Data     => $data,
-              Encoding => '8bit',
+#	      Encoding => '8bit',
+	      Encoding => 'quoted-printable',
 	     );
-	    $msg->attr('content-type.charset' => 'UTF8');
+#	    $msg->attr('content-type.charset' => 'UTF8');
+	    $msg->attr('content-type.charset' => 'ISO-8859-1');
 	}
 	else
 	{
@@ -551,9 +554,10 @@ sub send
 	      Subject  => encode_mimewords($p->{'subject'}),
 	      Type     => 'TEXT',
 	      Data     => $data,
-              Encoding => 'quoted-printable',
+	      Encoding => 'quoted-printable',
 	     );
-	    $msg->attr('content-type.charset' => 'UTF8');
+#	    $msg->attr('content-type.charset' => 'UTF8');
+	    $msg->attr('content-type.charset' => 'ISO-8859-1');
 	}
 
 
