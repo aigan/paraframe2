@@ -489,7 +489,7 @@ sub send
     my $data = "";
     $burner->burn( $rend, $tmpl->sys_path, \%params, \$data )
       or throw($burner->error);
-    $data = pack("C*", unpack('U*', $data)); # Convert to ISO-8859-1
+    utf8::downgrade($data); # Convert to ISO-8859-1
 
     if( $p->{'pgpsign'} )
     {
