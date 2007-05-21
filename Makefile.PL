@@ -64,6 +64,7 @@ WriteMakefile(
 	          'Image::Magick'              => 6.002004,
                   'Net::SCP'                   => 0.07,
 	          'Encode::Detect::Detector'   => 1.00,
+	          'Data::Dump'                 => 1.08,
 	      },
 	      'dist'          =>
 	      {
