@@ -962,13 +962,21 @@ sub uri2file
 
     # HACK for reverting dir to file translation if
     # it's index.tt
-    my $filename = $sr->filename;
-    if( $filename =~ /\bindex.tt$/ and $_[0] !~ /\bindex.tt$/ )
+#    warn "Looking up $_[0]\n";
+    my $filename = $sr->filename . ($sr->path_info||'');
+#    warn "       Got $filename\n";
+    if( $filename =~ /\bindex.tt(.*?)$/ )
     {
-	$filename =~ s/\bindex.tt$//;
+	my $tail = $1;
+#	warn "  Matched index.tt with tail $tail\n";
+	if( $_[0] !~ /\bindex.tt$tail$/ )
+	{
+	    $filename =~ s/\bindex.tt$tail$/$tail/;
+#	    warn "Trimming filename to $filename\n";
+	}
     }
 
-    return( $filename.($sr->path_info||'') );
+    return( $filename );
 }
 
 
