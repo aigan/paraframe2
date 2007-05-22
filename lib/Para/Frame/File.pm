@@ -199,6 +199,7 @@ sub new
 	my $site = $file->set_site( $site_in || $req->site );
 
 	# $sys_name is without trailing slash
+#	debug "Getting sys_name for url $url_in";
 	$sys_name = $site->uri2file($url_in, undef, $may_not_exist );
 
 	# $sys_norm is undef
@@ -293,6 +294,8 @@ sub new
 	{
 	    confess "The file $sys_name is not readable";
 	}
+
+#	debug "File $sys_name doesn't exist";
 
 	# determine if dir by class or input
 	if( $class eq 'Para::Frame::File' )
@@ -742,9 +745,11 @@ sub dir
 
     unless( $f->{'dir'} )
     {
+#	debug "Finding dir for file ".$f->sysdesig;
 	unless( $f->exist )
 	{
 	    $args->{'file_may_not_exist'} = 1;
+#	    debug "  may not exist";
 	}
 
 	if( $f->site )
@@ -759,6 +764,7 @@ sub dir
 	    }
 	    else
 	    {
+#		debug "  Dir part of path is $1";
 		$f->{'dir'} = Para::Frame::Dir->new({site => $f->site,
 						     url  => $1,
 						     %$args,
