@@ -260,7 +260,7 @@ $content
 	[% input( field, value, size=size, maxlength=maxlength, id=id, class=class, style=style) %]
       </td>
       <td valign="bottom" style="width: 22px; text-align: right;vertical-align: bottom">
-	<button style="border: none; background: transparent; margin: 0; padding: 0;" id="[% id %]-button"><img alt="kalender" src="[% home %]/pf/images/calendar.gif"/></button>
+	<img class="nopad" alt="kalender" id="[% id %]-button" src="[% home %]/pf/images/calendar.gif"/>
       </td>
     </tr>
     <script type="text/javascript">
