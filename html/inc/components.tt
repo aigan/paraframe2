@@ -131,7 +131,7 @@
 
 
 [% MACRO tr2 BLOCK %]
-   [% IF loop.count MOD 2 %]
+   [% IF (loop.count||0) MOD 2 %]
    <tr class="odd">
    [% ELSE %]
    <tr class="even">
