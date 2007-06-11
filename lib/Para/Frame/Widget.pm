@@ -47,7 +47,7 @@ BEGIN
 
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( trim throw debug uri store_params );
+use Para::Frame::Utils qw( trim throw debug uri store_params datadump );
 use Para::Frame::L10N qw( loc );
 
 =head1 DESCRIPTION
@@ -1034,6 +1034,11 @@ sub checkbox
     {
 	$extra .= sprintf " $key=\"%s\"",
 	  CGI->escapeHTML( $params->{$key} );
+    }
+
+    if( ref $checked )
+    {
+	confess datadump($checked,2);
     }
 
     if( $checked and $checked ne 'f')
