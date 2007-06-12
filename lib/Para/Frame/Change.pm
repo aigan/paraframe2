@@ -1,4 +1,4 @@
-#  $Id$  -*-perl-*-
+#  $Id$  -*-cperl-*-
 package Para::Frame::Change;
 #=====================================================================
 #
@@ -9,7 +9,7 @@ package Para::Frame::Change;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2005 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2007 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
