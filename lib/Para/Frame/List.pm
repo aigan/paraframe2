@@ -2065,19 +2065,118 @@ sub clone_props
 }
 
 #######################################################################
+# LOOK! REDEFINES shift, push, pop, unshift, splice, join
 
-#=head2 shift
-#
-#=cut
-#
-#sub shift
-#{
-#    my($l) = @_;
-#
-#
-#}
-#
-#
+=head2 shift
+
+=cut
+
+sub shift
+{
+    my($l) = @_;
+
+    my $element = $l->get_first;
+
+    CORE::shift( @{$l->{'_OBJ'}} );
+    if( $l->{'_OBJ'} ne $l->{'_DATA'} )
+    {
+	CORE::shift( @{$l->{'_DATA'}} );
+    }
+
+    return $element;
+}
+
+
+#######################################################################
+
+=head2 pop
+
+=cut
+
+sub pop
+{
+    my($l) = @_;
+
+    my $element = $l->get_last;
+
+    CORE::pop( @{$l->{'_OBJ'}} );
+    if( $l->{'_OBJ'} ne $l->{'_DATA'} )
+    {
+	CORE::pop( @{$l->{'_DATA'}} );
+    }
+
+    return $element;
+}
+
+
+#######################################################################
+
+=head2 unshift
+
+=cut
+
+sub unshift
+{
+    my $l = CORE::shift(@_);
+
+    $l->reset;
+    CORE::unshift( @{$l->{'_DATA'}}, @_ );
+    if( $l->{'_OBJ'} ne $l->{'_DATA'} )
+    {
+	if( my $mat = $l->{'materializer'} )
+	{
+	    if( $l->{'materialized'} > 0 )
+	    {
+		# Insert undef values
+		CORE::unshift( @{$l->{'_OBJ'}}, map{undef} @_ );
+
+		my $objs = $l->{'_OBJ'};
+		for( my $i=0; $i<=$#_; $i++ )
+		{
+		    $objs->[$i] = &{$mat}( $l, $i );
+		}
+	    }
+	}
+    }
+
+    return scalar(@_);
+}
+
+
+#######################################################################
+
+=head2 push
+
+=cut
+
+sub push
+{
+    my $l = CORE::shift(@_);
+
+    $l->populate_all;
+    my $pos = $l->max + 1;
+
+    CORE::push( @{$l->{'_DATA'}}, @_ );
+    if( $l->{'_OBJ'} ne $l->{'_DATA'} )
+    {
+	if( my $mat = $l->{'materializer'} )
+	{
+	    if( $l->{'materialized'} > 0 )
+	    {
+		my $objs = $l->{'_OBJ'};
+		my $max = $l->max;
+		for( my $i=$pos; $i<=$max; $i++ )
+		{
+		    $objs->[$i] = &{$mat}( $l, $i );
+		}
+	    }
+	}
+    }
+
+    return scalar(@_);
+}
+
+
 #######################################################################
 
 
