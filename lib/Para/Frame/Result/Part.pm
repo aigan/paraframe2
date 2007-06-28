@@ -45,6 +45,10 @@ use Para::Frame::L10N qw( loc );
 
 =head1 Exceptions
 
+=head2 denied
+
+Permission denied
+
 =head2 dbi
 
 Database or SQL error
