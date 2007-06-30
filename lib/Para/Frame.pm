@@ -45,7 +45,7 @@ our $CVSVERSION;
 BEGIN
 {
     $CVSVERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    $VERSION = "1.03"; # Paraframe version
+    $VERSION = "1.04"; # Paraframe version
     print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
