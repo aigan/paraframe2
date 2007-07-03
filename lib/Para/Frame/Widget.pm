@@ -50,6 +50,8 @@ use Para::Frame::Reload;
 use Para::Frame::Utils qw( trim throw debug uri store_params datadump );
 use Para::Frame::L10N qw( loc );
 
+our $IDCOUNTER = 0;
+
 =head1 DESCRIPTION
 
 C<Para::Frame::Widget> is an optional module.  It will not be used unless
@@ -995,7 +997,7 @@ sub checkbox
     my $suffix = "";
     my $separator = delete $params->{'separator'} || '';
     my $label_class = delete $params->{'label_class'};
-    my $id = $params->{id} || $field;
+    my $id = $params->{id} || ( $field.'-'.$IDCOUNTER++);
 
     my $suffix_label = $params->{'label'};
     if( $suffix_label ||= delete $params->{'suffix_label'} )
