@@ -63,6 +63,9 @@ use base qw( Template::Iterator );
   while(! $error )
   {
     # ... my code
+  }
+  continue
+  {
     ( $value, $error ) = $list->get_next;
   }
 
