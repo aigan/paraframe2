@@ -141,7 +141,9 @@ In httpd.conf :
 
 In .htaccess :
 
-   AddHandler perl-script tt
+   <FilesMatch ".tt$|^$">
+     SetHandler perl-script
+   </FilesMatch>
    PerlHandler Para::Frame::Client
    ErrorDocument 404 /page_not_found.tt
    PerlSetVar port 7788
