@@ -141,6 +141,8 @@ sub new
     # Handle Apache internal redirection
     if( my $redirect_uri = $ENV{REDIRECT_URL} || $ENV{'REDIRECT_SCRIPT_URI'} )
     {
+	# Apache may set the file part to 'undefined'
+	$redirect_uri =~ s(/undefined$)(/);
 	warn "# Redirected from $redirect_uri\n";
 	$req->{'orig_url_string'} = $redirect_uri;
     }
