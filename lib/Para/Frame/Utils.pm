@@ -27,7 +27,7 @@ use Carp qw(carp croak cluck confess shortmess longmess );
 use locale;
 use Date::Manip;
 use File::stat;  # stat
-use File::Basename;
+use File::Basename; # dirname
 use Cwd 'abs_path';
 use File::Spec;
 use User::grent; # getgrgid getgrnam
