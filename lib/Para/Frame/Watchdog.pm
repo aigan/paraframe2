@@ -30,6 +30,7 @@ use Proc::ProcessTable;
 use Time::HiRes;
 use Carp;
 use Sys::CpuLoad;
+use File::Basename; # dirname
 
 BEGIN
 {
@@ -37,7 +38,7 @@ BEGIN
     print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
-use Para::Frame::Utils qw( chmod_file );
+use Para::Frame::Utils qw( chmod_file create_dir );
 use Para::Frame::Time qw( now );
 use Para::Frame::Client;
 
@@ -777,6 +778,7 @@ sub send_to_server
 sub open_logfile
 {
     my $log = $Para::Frame::CFG->{'logfile'};
+    create_dir( dirname $log);
 
     open STDERR, '>>', $log   or die "Can't append to $log: $!";
     warn "\nStarted process $$ on ".now()."\n\n";
