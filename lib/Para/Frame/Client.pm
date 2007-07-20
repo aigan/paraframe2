@@ -961,17 +961,18 @@ sub uri2file
     my $sr = $r->lookup_uri($_[0]);
 
     # HACK for reverting dir to file translation if
-    # it's index.tt
+    # it's index.*
 #    warn "Looking up $_[0]\n";
     my $filename = $sr->filename . ($sr->path_info||'');
 #    warn "       Got $filename\n";
-    if( $filename =~ /\bindex.tt(.*?)$/ )
+    if( $filename =~ /\bindex.(\w+)(.*?)$/ )
     {
-	my $tail = $1;
+	my $ext = $1;
+	my $tail = $2;
 #	warn "  Matched index.tt with tail $tail\n";
-	if( $_[0] !~ /\bindex.tt$tail$/ )
+	if( $_[0] !~ /\bindex.$ext$tail$/ )
 	{
-	    $filename =~ s/\bindex.tt$tail$/$tail/;
+	    $filename =~ s/\bindex.$ext$tail$/$tail/;
 #	    warn "Trimming filename to $filename\n";
 	}
     }
