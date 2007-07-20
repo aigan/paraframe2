@@ -2302,6 +2302,10 @@ sub create_fork
 #    my $af = $fh->autoflush;
 #    warn "--> Autoflush is $af\n";
 
+
+    # Please no signals in the middle of the forking
+    $SIG{CHLD} = 'DEFAULT';
+
     do
     {
 	eval # May throw a fatal "Can't fork"
@@ -2325,7 +2329,11 @@ sub create_fork
 	#
 	$fh->blocking(0);
 
-	return $req->register_child( $pid, $fh );
+	my $child = $req->register_child( $pid, $fh );
+
+	# Now we can turn the signal handling back on
+	$SIG{CHLD} = \&Para::Frame::REAPER;
+	return $child;
     }
     else
     {
