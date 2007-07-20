@@ -969,7 +969,7 @@ sub uri2file
     {
 	my $ext = $1;
 	my $tail = $2;
-#	warn "  Matched index.tt with tail $tail\n";
+#	warn "  Matched index.* with tail $tail\n";
 	if( $_[0] !~ /\bindex.$ext$tail$/ )
 	{
 	    $filename =~ s/\bindex.$ext$tail$/$tail/;
