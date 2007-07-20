@@ -9,7 +9,7 @@ package Para::Frame::Dir;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2007 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -438,6 +438,21 @@ sub get_virtual
 
 #######################################################################
 
+=head2 get_virtual_dir
+
+  $dir->get_virtual_dir( $filename )
+
+Adds the arg C<file_may_not_exist> and calls L</get> and calls L</as_dir>.
+
+=cut
+
+sub get_virtual_dir
+{
+    return $_[0]->get($_[1],{'file_may_not_exist'=>1})->as_dir;
+}
+
+#######################################################################
+
 =head2 get
 
   $dir->get( $filename, \%args )
@@ -539,11 +554,13 @@ sub create
     if( $dir->exist )
     {
 #	debug sprintf "Dir %s exist. Chmodding", $dir->desig;
-	$dir->chmod($args);
+	$dir->chmod(undef,$args);
 	return $dir;
     }
 
     $args ||= {};
+    confess "Faulty args given" unless ref $args;
+
 #    my $dirname = $dir->sys_path;
 
     $dir->parent->create($args);
@@ -552,7 +569,7 @@ sub create
     mkdir $dir->sys_path, 0700 or die $!;
     $dir->{'exist'} = 1;
     $dir->{initiated} = 0;
-    $dir->chmod($args);
+    $dir->chmod(undef,$args);
 
     return $dir;
 }
@@ -560,6 +577,12 @@ sub create
 #######################################################################
 
 =head2 as_dir
+
+  $f->as_dir
+
+See also L<Para::Frame::File/as_dir>
+
+Returns: the object
 
 =cut
 
