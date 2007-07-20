@@ -199,8 +199,18 @@ sub new
 	my $site = $file->set_site( $site_in || $req->site );
 
 	# $sys_name is without trailing slash
-#	debug "Getting sys_name for url $url_in";
 	$sys_name = $site->uri2file($url_in, undef, $may_not_exist );
+
+	# This may give a dir to file translation. Only keep dir part
+	if( $url_in =~ /\/$/ )
+	{
+	    unless( $sys_name =~ /\/$/ )
+	    {
+		debug "URL $url_in (DIR) was mapped to file $sys_name";
+		debug "Removing file part. Keeping the dir";
+		$sys_name =~ s/\/[^\/]+$/\//;
+	    }
+	}
 
 	# $sys_norm is undef
     }
@@ -272,7 +282,7 @@ sub new
 	    # Compare with $url_norm
 	    if( $url_norm and $url_norm =~ /\/$/ )
 	    {
-		cluck "The URL $url_norm is not a dir";
+		cluck "The URL $url_norm ($sys_norm) is not a dir";
 		$url_norm =~ s/\/$//;
 	    }
 	}
@@ -1147,6 +1157,16 @@ sub langcode
 
 #######################################################################
 
+=head2 chmod
+
+  $f->chmod()
+
+  $f->chmod( $mode, \%args )
+
+Calls L<Para::Frame::Utils/chmod_file>
+
+=cut
+
 sub chmod
 {
     my( $file ) = shift;
@@ -1977,9 +1997,11 @@ sub remove
 
 =head2 as_dir
 
+  $f->as_dir
+
 This should be a dir. Make it so if it isn't.
 
-Returns the file as a dir object
+Returns: the object
 
 =cut
 
@@ -2018,7 +2040,7 @@ sub as_dir
     my $parent = $f->dir;
     my $name = $f->name . '/'; # A dir
     $f->remove;
-    $f = $parent->create($name);
+    $f = $parent->get_virtual($name)->create();
     unless( $f->is_dir )
     {
 	confess "Failed to make a dir out of $desig";
