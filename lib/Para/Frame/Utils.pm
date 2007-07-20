@@ -568,6 +568,7 @@ sub chmod_file
     confess "File was a ref" if ref $file;
 
     $params ||= {};
+    confess "Faulty params $params" unless ref $params;
 
     my $orig_umask = umask;
 
@@ -580,7 +581,11 @@ sub chmod_file
     my $new_umask = $params->{'umask'};
     my $umask = defined $new_umask ? $new_umask : $orig_umask;
 
-    unless( $mode )
+    if( $mode )
+    {
+	confess "Wrong mode param" unless $mode =~ /^(\d+)$/;
+    }
+    else
     {
 	if( -d $file )
 	{
