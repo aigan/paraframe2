@@ -207,10 +207,12 @@ sub new
 	    unless( $sys_name =~ /\/$/ )
 	    {
 		debug "URL $url_in (DIR) was mapped to file $sys_name";
-		debug "Removing file part. Keeping the dir";
 		$sys_name =~ s/\/[^\/]+$/\//;
+		debug "  Remapping to $sys_name";
 	    }
 	}
+
+	$sys_name =~ s/\/$//;
 
 	# $sys_norm is undef
     }
@@ -407,6 +409,7 @@ sub new
 		my $url_norm = $site_maby->home->url_path_slash.$1;
 #		debug "Translating $url_norm";
 		my $sys_name = $site_maby->uri2file($url_norm, undef, $may_not_exist);
+		$sys_name =~ s/\/$//;
 
 		unless( $sys_name eq $file->{'sys_name'} )
 		{

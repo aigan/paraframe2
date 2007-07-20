@@ -837,7 +837,7 @@ instead of throwing an exception.
 
 Returns:
 
-The file without '/' for dirs
+The file WITH '/' for dirs (NB! CHANGED)
 
 Exceptions:
 
@@ -873,10 +873,10 @@ sub uri2file
     $file = $req->get_cmd_val( 'URI2FILE', $url );
 
 
-    # To be backward compatible, remove the last slash from client
-    # response
-    #
-    $file =~ s/\/$//;
+#    # To be backward compatible, remove the last slash from client
+#    # response
+#    #
+#    $file =~ s/\/$//;
 
     debug(3, "Storing URI2FILE in key $key: $file");
     $URI2FILE{ $key } = $file;
@@ -934,7 +934,6 @@ C<$url> must be the path part as a string.
 
 params:
 
-  create_missing_dirs
   no_check
 
 Returns:
@@ -971,16 +970,7 @@ sub normalized_url
 
     unless( $params->{no_check} )
     {
-	my $url_file;
-	if( $params->{create_missing_dirs} )
-	{
-#	    debug "  Create missing dirs";
-	    $url_file = $req->uri2file_create( $url );
-	}
-	else
-	{
-	    $url_file = $req->uri2file( $url );
-	}
+	my $url_file = $req->uri2file( $url );
 
 	if( -d $url_file and $url !~ /\/(\?.*)?$/ )
 	{
