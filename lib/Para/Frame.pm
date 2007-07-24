@@ -158,6 +158,32 @@ In some/public/file.tt :
 
 #######################################################################
 
+BEGIN
+{
+    # Initializing hooks. For determining that they exists
+    foreach my $hook (qw( on_startup
+			  on_memory
+			  on_error_detect
+			  on_fork
+			  done
+			  user_login
+			  before_user_logout
+			  after_user_logout
+			  after_db_connect
+			  before_db_commit
+			  after_db_rollback
+			  before_switch_req
+			  before_render_output
+			  busy_background_job
+			  add_background_jobs
+                        ))
+    {
+	$HOOK{$hook} = [];
+    }
+}
+
+#######################################################################
+
 =head2 startup
 
 =cut
@@ -1573,27 +1599,11 @@ sub add_hook
     debug(4,"add_hook $label from ".(caller));
 
     # Validate hook label
-    unless( $label =~ /^( on_startup          |
-			  on_memory           |
-			  on_error_detect     |
-			  on_fork             |
-			  done                |
-			  user_login          |
-			  before_user_logout  |
-			  after_user_logout   | # not used
-			  after_db_connect    |
-			  before_db_commit    |
-			  after_db_rollback   |
-			  before_switch_req   |
-			  before_render_output|
-			  busy_background_job |
-			  add_background_jobs
-			  )$/x )
+    unless( ref $HOOK{$label} )
     {
 	die "No such hook: $label\n";
     }
 
-    $HOOK{$label} ||= [];
     push @{$HOOK{$label}}, $code;
 }
 
