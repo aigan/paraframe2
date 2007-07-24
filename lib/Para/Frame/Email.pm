@@ -304,7 +304,7 @@ sub send_in_background
 
     $e = $e->new($p_in) unless ref $e;
 
-    $req->add_background_job(sub{
+    $req->add_background_job('send_email_in_background', sub{
 	$e->send_in_fork() or throw('email', $e->error_msg);
     });
     return 1;
