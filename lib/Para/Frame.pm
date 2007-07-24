@@ -1291,7 +1291,6 @@ sub add_background_jobs_conditional
     debug(3,"add_background_jobs_conditional");
     # Add background jobs to do unless the load is too high, unless we
     # waited too long anyway
-    return if $TERMINATE;
 
     # Return it hasn't passed BGJOB_MAX secs since last time
     my $last_time = $BGJOBDATE ||= time;
@@ -1306,10 +1305,17 @@ sub add_background_jobs_conditional
     Para::Frame->run_hook(undef, 'busy_background_job', $delta);
 
 
-    debug(3,"Not configged to do bgjobs")
-      unless $CFG->{'do_bgjob'};
-    return unless $CFG->{'do_bgjob'};
-
+    if( not $CFG->{'do_bgjob'} )
+    {
+	debug(3,"Not configged to do bgjobs");
+	while( my $job = shift @BGJOBS_PENDING )
+	{
+	    my( $oreq, $label, $coderef, @args ) = @$job;
+	    debug "Clearing out job $label from req $oreq->{reqnum}".
+	      (@args?" with args @args":'');
+	}
+	return;
+    }
 
     # Return if CPU load is over BGJOB_CPU
     my $sysload;
@@ -2303,9 +2309,9 @@ sub report
 
     foreach my $job ( @BGJOBS_PENDING )
     {
-	my( $oreq, $coderef, @args ) = @$job;
+	my( $oreq, $label, $coderef, @args ) = @$job;
 	$out .= "Original req $oreq->{reqnum}\n";
-	$out .= "  Code $coderef with args @args\n"
+	$out .= "  Code $label with args @args\n"
     }
 
     $out .= "Shortest interval between BG jobs: @{[BGJOB_MAX]}\n";
