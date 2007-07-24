@@ -1064,9 +1064,11 @@ sub add_job
 
 =head2 add_background_job
 
-  $req->add_background_job( \&code, @params )
+  $req->add_background_job( $label, \&code, @params )
 
 Runs the C<&code> in the background with the given C<@params>.
+
+C<$label> is used for keeping metadata about what jobs are in queue.
 
 Background jobs are done B<in between> regular requests.
 
@@ -1079,7 +1081,7 @@ Example:
       my( $req, $thing ) = @_;
       debug "I'm idling now like a $thing...";
   };
-  $req->add_background_job( $idle_job, 'Kangaroo' );
+  $req->add_background_job( 'ideling', $idle_job, 'Kangaroo' );
 
 =cut
 
@@ -1092,9 +1094,15 @@ sub add_background_job
 
 #######################################################################
 
+=head2 run_code
+
+  $req->runc_code( $label, $codered, @args )
+
+=cut
+
 sub run_code
 {
-    my( $req, $coderef ) = (shift, shift );
+    my( $req, $label, $coderef ) = (shift, shift, shift );
     # Add this job to run given code
 
     my $res;
