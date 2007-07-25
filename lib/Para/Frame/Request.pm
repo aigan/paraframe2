@@ -2330,8 +2330,8 @@ sub create_fork
 	my $child = $req->register_child( $pid, $fh );
 
 	# Now we can turn the signal handling back on
-	&Para::Frame::REAPER;
 	$SIG{CHLD} = \&Para::Frame::REAPER;
+	&Para::Frame::REAPER;
 	return $child;
     }
     else
