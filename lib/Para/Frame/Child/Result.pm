@@ -139,17 +139,18 @@ sub return
     $result->message( $message ) if $message;
     my $data = safeFreeze $result;
     my $length = length($data);
-    debug(2,"Returning $length bytes of data");
+    debug(1,"Returning $length bytes of data");
     my $res = print $length . "\0" . $data . "\n";
     if( $res )
     {
-	debug 5, "sent '$data'";
+#	debug 5, "sent '$data'";
+	debug "sent data";
     }
     else
     {
 	debug "Faild to send data";
     }
-    exit;  # don't forget this
+    exit 0;  # don't forget this
 }
 
 
