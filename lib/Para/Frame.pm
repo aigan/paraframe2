@@ -29,7 +29,7 @@ use IO::Select;
 use Socket;
 use POSIX qw( locale_h );
 use Text::Autoformat; #exports autoformat()
-use Time::HiRes qw( time );
+use Time::HiRes qw( time usleep );
 use Data::Dumper;
 use Carp qw( cluck confess carp croak );
 use Sys::CpuLoad;
@@ -449,11 +449,14 @@ sub main_loop
 			    # Whole string recieved!
 			    unless( $child->{'done'} ++ )
 			    {
-				debug "Deleting child $cpid";
 				# Avoid double deregister
 				$child->deregister(undef,$1);
-				delete $CHILD{$cpid};
+				usleep( 100 ); # Give child time to exit
+				debug "Removing child $cpid";
 				kill 9, $cpid;
+
+				# REAPER should handle the deregestring
+				#delete $CHILD{$cpid};
 			    }
 			}
 		    }
