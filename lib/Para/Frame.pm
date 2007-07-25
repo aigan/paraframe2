@@ -449,6 +449,7 @@ sub main_loop
 			    # Whole string recieved!
 			    unless( $child->{'done'} ++ )
 			    {
+				debug "Deleting child $cpid";
 				# Avoid double deregister
 				$child->deregister(undef,$1);
 				delete $CHILD{$cpid};
@@ -1162,7 +1163,8 @@ sub REAPER
     # we will leave the unreaped child as a zombie. And the next time
     # two children die we get another zombie. And so on.
 
-    warn "| In reaper\n" if $DEBUG > 1;
+#    warn "| In reaper\n" if $DEBUG > 1;
+    warn "| In reaper\n" if $DEBUG;
 
     while (($child_pid = waitpid(-1, POSIX::WNOHANG)) > 0)
     {
