@@ -272,7 +272,7 @@ sub main_loop
 
     $LAST = time; # To give info about if it's time to yield
 
-    debug(1,"Entering main_loop at level $LEVEL",1) if $LEVEL;
+    debug(4,"Entering main_loop at level $LEVEL",1) if $LEVEL;
     print "MAINLOOP $LEVEL\n" unless $Para::Frame::FORK;
 
     $timeout ||= $LEVEL ? TIMEOUT_SHORT : TIMEOUT_LONG;
@@ -339,7 +339,7 @@ sub main_loop
 		elsif( $req->{'childs'} )
 		{
 		    # Stay open while waiting for child
-		    if( debug >= 1 )
+		    if( debug >= 4 )
 		    {
 			debug "$req->{reqnum} stays open, waiting for $req->{'childs'} childs";
 			foreach my $child ( values %CHILD )
@@ -528,7 +528,7 @@ sub main_loop
 	    last;
 	}
     }
-    debug(1,"Exiting  main_loop at level $LEVEL",-1);
+    debug(4,"Exiting  main_loop at level $LEVEL",-1);
     $LEVEL --;
 }
 
@@ -1173,8 +1173,7 @@ sub REAPER
     # we will leave the unreaped child as a zombie. And the next time
     # two children die we get another zombie. And so on.
 
-#    warn "| In reaper\n" if $DEBUG > 1;
-    warn "| In reaper\n" if $DEBUG;
+    warn "| In reaper\n" if $DEBUG > 1;
 
     while (($child_pid = waitpid(-1, POSIX::WNOHANG)) > 0)
     {
