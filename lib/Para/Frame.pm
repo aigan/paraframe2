@@ -450,13 +450,16 @@ sub main_loop
 			    unless( $child->{'done'} ++ )
 			    {
 				# Avoid double deregister
+				$SIG{CHLD} = 'DEFAULT';
 				$child->deregister(undef,$1);
-				usleep( 100 ); # Give child time to exit
 				debug "Removing child $cpid";
 				kill 9, $cpid;
 
-				# REAPER should handle the deregestring
-				#delete $CHILD{$cpid};
+				# Now we can turn the signal handling back on
+				$SIG{CHLD} = \&Para::Frame::REAPER;
+
+				# See if we got any more signals
+				&Para::Frame::REAPER;
 			    }
 			}
 		    }
@@ -1171,15 +1174,17 @@ sub REAPER
 
     while (($child_pid = waitpid(-1, POSIX::WNOHANG)) > 0)
     {
-	warn "| Child $child_pid exited with status $?\n";
-
 	if( my $child = delete $CHILD{$child_pid} )
 	{
-	    $child->deregister( $? )
-		unless $child->{'done'};
+	    unless( $child->{'done'} )
+	    {
+		warn "| Child $child_pid exited with status $?\n";
+		$child->deregister( $? );
+	    }
 	}
 	else
 	{
+	    warn "| Child $child_pid exited with status $?\n";
 	    warn "|   No object registerd with PID $child_pid\n";
 	}
     }
