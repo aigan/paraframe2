@@ -1669,7 +1669,7 @@ sub send_code
 
     if( $Para::Frame::FORK )
     {
-	debug(2, "redirecting to parent");
+	debug(1, "redirecting to parent");
 	my $code = shift;
 	my $port = $Para::Frame::CFG->{'port'};
 	my $client = $req->client;
@@ -1697,7 +1697,7 @@ sub send_code
 
 	# Use existing
 	$req->{'wait_for_active_reqest'} ||= 0;
-	debug 2, "  It waits for $req->{'wait_for_active_reqest'} active requests";
+	debug 1, "  It waits for $req->{'wait_for_active_reqest'} active requests";
 	unless( $req->{'wait_for_active_reqest'} ++ )
 	{
 	    debug "  So we prepares for starting an UA";
@@ -1740,13 +1740,13 @@ sub send_code
 	# Wait for the $ua to connect and give us it's $req
 	while( not $req->{'active_reqest'} )
 	{
-	    debug 3, "Got an active_reqest yet?";
+	    debug 1, "Got an active_reqest yet?";
 	    $req->yield(1); # Give it some time to connect
 	}
 
 	# Got it! Now send the message
 	#
-	debug 2, "We got the active request $req->{'active_reqest'}{reqnum} now";
+	debug 1, "We got the active request $req->{'active_reqest'}{reqnum} now";
 	my $aclient = $req->{'active_reqest'}->client;
 
 	$aclient->send( join( "\0", @_ ) . "\n" );
@@ -1767,21 +1767,21 @@ sub release_active_request
 {
     my( $req ) = @_;
 
-    debug 2, "$req->{reqnum} is now waiting for one active req less";
+    debug 1, "$req->{reqnum} is now waiting for one active req less";
 
     $req->{'wait_for_active_reqest'} --;
 
     if( $req->{'wait_for_active_reqest'} )
     {
-	debug 2, "More jobs for active request ($req->{'wait_for_active_reqest'})";
+	debug 1, "More jobs for active request ($req->{'wait_for_active_reqest'})";
     }
     else
     {
-        debug 2, "Releasing active_request $req->{'active_reqest'}{'reqnum'}";
+        debug 1, "Releasing active_request $req->{'active_reqest'}{'reqnum'}";
 	$req->{'active_reqest'}{'wait'} --;
-	debug 2, "That request is now waiting for $req->{'active_reqest'}{'wait'} things";
+	debug 1, "That request is now waiting for $req->{'active_reqest'}{'wait'} things";
 
-	debug 2, "Removing the referens to that request";
+	debug 1, "Removing the referens to that request";
 	delete $req->{'active_reqest'};
     }
 }
@@ -2331,6 +2331,8 @@ sub create_fork
 
 	# Now we can turn the signal handling back on
 	$SIG{CHLD} = \&Para::Frame::REAPER;
+
+	# See if we got any more signals
 	&Para::Frame::REAPER;
 	return $child;
     }
