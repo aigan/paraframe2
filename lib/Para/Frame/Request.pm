@@ -1698,6 +1698,21 @@ sub send_code
 	# Use existing
 	$req->{'wait_for_active_reqest'} ||= 0;
 	debug 1, "  It waits for $req->{'wait_for_active_reqest'} active requests";
+
+	# Validate that the active request is alive
+	if( my $areq = $req->{'active_reqest'} )
+	{
+	    unless( $areq->client->connected )
+	    {
+		debug "Active request NOT CONNECTED anymore";
+		debug "Releasing active_request $req->{'active_reqest'}{'reqnum'}";
+		debug "Removing the referens to that request";
+
+		$req->{'wait_for_active_reqest'} = 0;
+		delete $req->{'active_reqest'};
+	    }
+	}
+
 	unless( $req->{'wait_for_active_reqest'} ++ )
 	{
 	    debug "  So we prepares for starting an UA";
@@ -1732,6 +1747,8 @@ sub send_code
 	    {
 		debug "About to GET $url";
 		my $res = $ua->request($lwpreq);
+		# Might get result because of a timeout
+
 		if( debug > 1 )
 		{
 		    debug "  GOT result:";
@@ -1771,9 +1788,11 @@ sub release_active_request
 {
     my( $req ) = @_;
 
-    debug 1, "$req->{reqnum} is now waiting for one active req less";
-
-    $req->{'wait_for_active_reqest'} --;
+    if( $req->{'wait_for_active_reqest'} > 0 )
+    {
+	$req->{'wait_for_active_reqest'} --;
+	debug 1, "$req->{reqnum} is now waiting for one active req less";
+    }
 
     if( $req->{'wait_for_active_reqest'} )
     {
