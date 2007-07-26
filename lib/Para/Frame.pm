@@ -272,7 +272,7 @@ sub main_loop
 
     $LAST = time; # To give info about if it's time to yield
 
-    debug(4,"Entering main_loop at level $LEVEL",1) if $LEVEL;
+    debug(1,"Entering main_loop at level $LEVEL",1) if $LEVEL;
     print "MAINLOOP $LEVEL\n" unless $Para::Frame::FORK;
 
     $timeout ||= $LEVEL ? TIMEOUT_SHORT : TIMEOUT_LONG;
@@ -339,7 +339,7 @@ sub main_loop
 		elsif( $req->{'childs'} )
 		{
 		    # Stay open while waiting for child
-		    if( debug >= 4 )
+		    if( debug >= 1 )
 		    {
 			debug "$req->{reqnum} stays open, waiting for $req->{'childs'} childs";
 			foreach my $child ( values %CHILD )
@@ -376,6 +376,17 @@ sub main_loop
 	    #
 	    if( $child )
 	    {
+		if( ref $child )
+		{
+		    my $creq = $child->{'req'};
+		    debug "Req $creq->{reqnum} waits ".
+		      "on $creq->{childs} childs";
+		}
+		else
+		{
+		    debug "Exits yield";
+		}
+
 		# This could be a simple yield and not a child, then just
 		# exit now
 		return "last" unless ref $child;
@@ -524,7 +535,7 @@ sub main_loop
 	    last;
 	}
     }
-    debug(4,"Exiting  main_loop at level $LEVEL",-1);
+    debug(1,"Exiting  main_loop at level $LEVEL",-1);
     $LEVEL --;
 }
 
