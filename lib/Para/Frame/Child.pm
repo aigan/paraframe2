@@ -131,6 +131,13 @@ sub deregister
 	    $child->get_results($length);
 	} or do
 	{
+	    unless( $child->{'result'} )
+	    {
+		# The thawing of the result failed
+		$child->{'result'} = Para::Frame::Child::Result->new();
+		$req->result->message("Failed to thaw result from child");
+	    }
+
 	    $req->result->exception;
 	};
 	Para::Frame::switch_req( $old_req ) if $old_req;
