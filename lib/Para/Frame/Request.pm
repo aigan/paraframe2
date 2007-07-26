@@ -1732,7 +1732,11 @@ sub send_code
 	    {
 		debug "About to GET $url";
 		my $res = $ua->request($lwpreq);
-		debug "  GOT result: $res";
+		if( debug > 1 )
+		{
+		    debug "  GOT result:";
+		    debug $res->as_string;
+		}
 		$fork->return( $res );
 	    }
 	}
