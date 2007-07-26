@@ -376,23 +376,16 @@ sub main_loop
 	    #
 	    if( $child )
 	    {
-		if( ref $child )
-		{
-		    my $creq = $child->{'req'};
-		    debug "Req $creq->{reqnum} waits ".
-		      "on $creq->{childs} childs";
-		}
-		else
-		{
-		    debug "Exits yield";
-		}
+		# We will iterate fast in order to catch data from
+		# child before the buffer gets full
 
 		# This could be a simple yield and not a child, then just
 		# exit now
 		return "last" unless ref $child;
 
-		# exit loop if child done
-		return "last" unless $child->{'req'}{'childs'};
+		# exit loop if INVOKING child is done
+		return "last" if $child->{'done'};
+#		return "last" unless $child->{'req'}{'childs'};
 	    }
 	    else
 	    {
