@@ -222,8 +222,15 @@ sub get_results
     my( $child, $length ) = @_;
 
     # If not all read
-    unless( $length )
+    if( $length )
     {
+	debug 2, "Part of data already retrieved";
+	debug 2, "Data length is $length";
+    }
+    else
+    {
+	debug 2, "Whole of data not yet read.";
+
 	my $fh = $child->{'fh'};
 
 	# Some data may already be here, since IO may get stuck otherwise
