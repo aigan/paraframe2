@@ -450,21 +450,22 @@ sub main_loop
 			my $elength = length($1)+$1+2;
 			if( $tlength == $elength )
 			{
+			    # Avoid double deregister
+			    $SIG{CHLD} = 'DEFAULT';
+
 			    # Whole string recieved!
 			    unless( $child->{'done'} ++ )
 			    {
-				# Avoid double deregister
-				$SIG{CHLD} = 'DEFAULT';
 				$child->deregister(undef,$1);
 				debug "Removing child $cpid";
 				kill 9, $cpid;
-
-				# Now we can turn the signal handling back on
-				$SIG{CHLD} = \&Para::Frame::REAPER;
-
-				# See if we got any more signals
-				&Para::Frame::REAPER;
 			    }
+
+			    # Now we can turn the signal handling back on
+			    $SIG{CHLD} = \&Para::Frame::REAPER;
+
+			    # See if we got any more signals
+			    &Para::Frame::REAPER;
 			}
 		    }
 		    else
