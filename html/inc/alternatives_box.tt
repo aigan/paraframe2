@@ -6,6 +6,12 @@
 
 <p>[% req.result.find('alternatives').message | html | html_para %]</p>
 
+[% IF a.query_desig %]
+<pre>
+[% a.query_desig %]
+</pre>
+[% END %]
+
 <table>
 [% FOREACH part IN a.alts %]
    [% tr2 %]<td>[% a.rowformat(part) %]</tr>
@@ -17,3 +23,9 @@
 [% DEFAULT href_class='msg' %]
 <p>[% go('Backa', home, 'skip_step', href_class=href_class) +%]
 [%# go('Hoppa över', undef, 'skip_step&skip_step', href_class=href_class) %]
+
+[% IF a.trace %]
+<pre>
+[% a.trace %]
+</pre>
+[% END %]
