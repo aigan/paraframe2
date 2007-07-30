@@ -1040,7 +1040,7 @@ sub checkbox
 
     if( ref $checked )
     {
-	confess datadump($checked,2);
+	confess "Checkbox called with a non-boolean value: $checked";
     }
 
     if( $checked and $checked ne 'f')
