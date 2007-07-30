@@ -243,7 +243,7 @@ $content
 [% END %]
 
 [% MACRO calendar(field, value) BLOCK %]
-  [%# DEFAULT value=loc('Click for calendar') %]
+  [% DEFAULT value=q.param(field) %]
   [% DEFAULT id=field %]
   [% IF tdlabel %]
     [% label = tdlabel %]
