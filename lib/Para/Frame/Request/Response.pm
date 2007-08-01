@@ -599,103 +599,6 @@ sub send_output
 
 #######################################################################
 
-=head2 sender
-
-  DEPRECATED
-
-  $resp->sender
-
-  $resp->sender( $code )
-
-=cut
-
-sub sender
-{
-    confess "DEPRECATED";
-
-    my( $resp, $code ) = @_;
-
-    if( $code )
-    {
-	unless( $code =~ /^(utf8|bytes)$/ )
-	{
-	    confess "Page sender $code not recogized";
-	}
-	$resp->{'sender'} = $code;
-    }
-    elsif( not $resp->{'sender'} )
-    {
-	if( is_utf8  ${ $resp->{'content'} } )
-	{
-	    $resp->{'sender'} = 'utf8';
-	}
-	else
-	{
-	    $resp->{'sender'} = 'bytes';
-	}
-    }
-    return $resp->{'sender'};
-}
-
-
-#######################################################################
-
-=head2 set_sender_and_repair_content
-
-DEPRECATED
-
-=cut
-
-sub set_sender_and_repair_content
-{
-    confess "DEPRECATED";
-    my( $resp ) = @_;
-
-    unless( $resp->{'sender'} )
-    {
-	if( is_utf8 ${ $resp->{'content'} } )
-	{
-	    debug "Content is UTF8";
-	    $resp->{'sender'} = 'utf8';
-
-#	    if( ${ $resp->{'content'} } =~ /(V.+?lkommen)/ )
-#	    {
-#		my $str = $1;
-#		my $len1 = length($str);
-#		my $len2 = bytes::length($str);
-#		debug "  >>$str ($len2/$len1)";
-#	    }
-	}
-	else
-	{
-	    debug "Content is Latin-1";
-	    if( 0 ) #${ $resp->{'content'} } =~ /Ã/ )
-	    {
-		debug "Content not UTF8 but looks like it!!!";
-
-		### REPAIR
-		$_ = ${ $resp->{'content'} };
-		my $out = "";
-		while( length )
-		{
-		    $out .= decode('UTF-8', $_, Encode::FB_QUIET);
-		    $out .= decode('ISO-8859-1', substr($_,0,1), Encode::FB_QUIET);
-		}
-		$resp->{'content'} = \$out;
-		$resp->{'sender'} = 'utf8';
-	    }
-	    else
-	    {
-#		debug "Content not UTF8";
-		$resp->{'sender'} = 'bytes';
-	    }
-	}
-    }
-    return $resp->{'sender'};
-}
-
-#######################################################################
-
 =head2 forward
 
   $resp->forward( $url )
@@ -950,71 +853,43 @@ sub send_in_chunks
 
     eval
     {
-	if( $length > 64000 )
+	my $chunk = 16384; # POSIX::BUFSIZ * 2
+	my $sent = 0;
+	for( my $i=0; $i<$length; $i+= $sent )
 	{
-	    my $chunk = 16384; # POSIX::BUFSIZ * 2
-	    my $sent = 0;
-	    for( my $i=0; $i<$length; $i+= $sent )
+	    debug(3,"  Transmitting chunk from $i\n");
+	    $sent = $client->send( substr $$dataref, $i, $chunk );
+	    if( $sent )
 	    {
-		debug(3,"  Transmitting chunk from $i\n");
-		$sent = $client->send( substr $$dataref, $i, $chunk );
-		if( $sent )
-		{
-		    debug(3, "  Sent $sent chars");
-		    $total += $sent;
-		    $errcnt = 0;
-		}
-		else
-		{
-		    debug(1,"  Failed to send chunk $i");
-
-		    if( $req->cancelled )
-		    {
-			debug("Request was cancelled. Giving up");
-			return $total;
-		    }
-
-		    debug(1,"  Tries to recover...",1);
-
-		    $errcnt++;
-		    $req->yield( 0.9 );
-
-		    if( $errcnt >= 100 )
-		    {
-			debug(0,"Got over 100 failures to send chunk $i");
-			last;
-		    }
-		    debug(-1);
-		    redo;
-		}
+		debug(3, "  Sent $sent chars");
+		$total += $sent;
+		$errcnt = 0;
 	    }
-	}
-	else
-	{
-	    while(1)
+	    else
 	    {
-		$total = $client->send( $$dataref );
-		if( $total )
+		debug(1,"  Failed to send chunk $i");
+
+		if( $req->cancelled )
 		{
+		    debug("Request was cancelled. Giving up");
+		    return $total;
+		}
+
+		debug(1,"  Tries to recover...",1);
+
+		$errcnt++;
+		$req->yield( 0.9 );
+
+		if( $errcnt >= 100 )
+		{
+		    debug(0,"Got over 100 failures to send chunk $i");
 		    last;
 		}
-		else
-		{
-		    debug("  Failed to send data to client\n  Tries to recover...",1);
-
-		    $errcnt++;
-		    $req->yield( 1.2 );
-
-		    if( $errcnt >= 10 )
-		    {
-			debug(0,"Got over 10 failures to send $length chars of data");
-			last;
-		    }
-		    debug(-1);
-		    redo;
-		}
+		debug(-1);
+		redo;
 	    }
 	}
+
 	debug(2, "Transmitted $total chars to client");
     };
     if( $@ )
