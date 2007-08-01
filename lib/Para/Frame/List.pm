@@ -761,8 +761,8 @@ sub slice
 {
     my( $l, $start, $end, $args ) = @_;
 
+    my $class = ref $l;
     $start ||= 0;
-
     $args ||= $l->clone_props;
 
 #    carp "Slicing $l at $start with ".datadump($args);
@@ -778,11 +778,11 @@ sub slice
 	{
 	    undef $args->{'materializer'}; # Already done
 	    my $data = [@{$l->{'_OBJ'}}[$start..$end]];
-	    return  Para::Frame::List->new($data, $args);
+	    return  $class->new($data, $args);
 	}
 
 	my $data = [@{$l->{'_DATA'}}[$start..$end]];
-	my $slize =  Para::Frame::List->new($data, $args);
+	my $slize =  $class->new($data, $args);
 
 	if( $l->{'materialized'} == 1 ) # partly
 	{
@@ -814,7 +814,7 @@ sub slice
 	    }
 	}
 
-	return Para::Frame::List->new(\@data, $args);
+	return $class->new(\@data, $args);
     }
 }
 
@@ -1490,7 +1490,7 @@ sub get_next_raw
 	$l->populate_all;
     }
 
-    return $l->{'_DATA'}[$i];
+    return $l->{'_DATA'}[$i]; # Error val undef = no error
 }
 
 
@@ -2177,6 +2177,53 @@ sub push
     }
 
     return scalar(@_);
+}
+
+
+#######################################################################
+
+=head2 uniq
+
+  $l->uniq()
+
+Returns a list with multiple list items filtered out. Operates on the
+unmaterialized items. If nothing filtered, returns the same object.
+
+=cut
+
+sub uniq
+{
+    my $l = CORE::shift(@_);
+
+    my %seen;
+    my @new;
+
+    if( $l->{'INDEX'} > -1 )
+    {
+	$l->reset;
+    }
+
+    my( $value, $error ) = $l->get_next_raw;
+    while(! $error )
+    {
+	next if $seen{$value};
+	$seen{$value} ++;
+	push @new, $value;
+    }
+    continue
+    {
+	( $value, $error ) = $l->get_next_raw;
+    };
+
+    if( $#new < $l->max )
+    {
+	my $args = $l->clone_props;
+	return $l->new(\@new, $args);
+    }
+    else
+    {
+	return $l;
+    }
 }
 
 
