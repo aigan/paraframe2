@@ -1439,10 +1439,11 @@ Added as a filter to html burner.
 sub pricify
 {
     my( $price ) = @_;
+    my $req = $Para::Frame::REQ;
 
     my $old_numeric = setlocale(LC_NUMERIC);
     my $old_monetary = setlocale(LC_MONETARY);
-    if( preferred_language() eq "sv" )
+    if( $req->language->preferred eq "sv" )
     {
 	setlocale(LC_MONETARY, "sv_SE");
     }
