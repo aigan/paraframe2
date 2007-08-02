@@ -1876,7 +1876,7 @@ sub may_yield
 {
     my( $req, $wait ) = @_;
 
-    if( time - $Para::Frame::LAST > 2 )
+    if( time - ($Para::Frame::LAST||0) > 2 )
     {
 	$Para::Frame::REQ->yield( $wait );
     }
