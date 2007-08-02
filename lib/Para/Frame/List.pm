@@ -2208,7 +2208,7 @@ sub uniq
     {
 	next if $seen{$value};
 	$seen{$value} ++;
-	push @new, $value;
+	CORE::push @new, $value;
     }
     continue
     {
