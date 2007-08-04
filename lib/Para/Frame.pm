@@ -427,6 +427,9 @@ sub main_loop
 
 	    ### Are there any data to be read from childs?
 	    #
+	    # Avoid double deregister
+	    $SIG{CHLD} = 'DEFAULT';
+	    #
 	    foreach my $child ( values %CHILD )
 	    {
 		my $child_data = ''; # We must init for each child!
@@ -450,9 +453,6 @@ sub main_loop
 			my $elength = length($1)+$1+2;
 			if( $tlength == $elength )
 			{
-			    # Avoid double deregister
-			    $SIG{CHLD} = 'DEFAULT';
-
 			    # Whole string recieved!
 			    unless( $child->{'done'} ++ )
 			    {
@@ -460,12 +460,6 @@ sub main_loop
 				debug "Removing child $cpid";
 				kill 9, $cpid;
 			    }
-
-			    # Now we can turn the signal handling back on
-			    $SIG{CHLD} = \&Para::Frame::REAPER;
-
-			    # See if we got any more signals
-			    &Para::Frame::REAPER;
 			}
 		    }
 		    else
@@ -473,6 +467,13 @@ sub main_loop
 			debug "Got '$child->{data}'";
 		    }
 		}
+
+		# Now we can turn the signal handling back on
+		$SIG{CHLD} = \&Para::Frame::REAPER;
+
+		# See if we got any more signals
+		&Para::Frame::REAPER;
+
 	    }
         } || 'next'; #default
 	if( $@ )
