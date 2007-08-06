@@ -948,30 +948,28 @@ sub handle_code
     {
 	my $req =
 	  Para::Frame::Request->
-	      new_bgrequest(' Handling RUN_ACTION (in background)');
+	      new_bgrequest("Handling RUN_ACTION (in background)");
 
 	my $val = $INBUFFER{$client};
 
 	debug 2, "Got val: $val";
 
-	( $val =~ s/(.*?)\?// );
+	$val =~ s/^(.+?)\?//;
 	my $action = $1;
+	debug "Action $action";
 
-	my @params = split( '&', $val );
 	my %params;
-
-	foreach my $param ( @params )
+	foreach my $param ( split '&', $val )
 	{
-	    ( $param =~ m/^(.*?)=(.*?)$/ );
+	    $param =~ m/^(.*?)=(.*?)$/;
 	    $params{$1} = $2;
-	    debug "params($1) = $2";
+	    debug "  $1 = $2";
 	}
-	debug "Running action: $action with params: ". datadump( \%params );
-	$req->run_action( $action, \%params );
+#	debug "Running action: $action with params: ". datadump( \%params );
+	$req->add_job('run_action', $action, \%params);
 
 	$client->send("9\x00RESP\x00Done");
-	#close_callback($client); # That's all
-	$req->done;
+	close_callback($client); # That's all
     }
     elsif( $code eq 'URI2FILE' ) # CHILD msg
     {
