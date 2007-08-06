@@ -867,15 +867,13 @@ sub send_in_chunks
 	    }
 	    else
 	    {
-		debug(1,"  Failed to send chunk $i");
-
 		if( $req->cancelled )
 		{
 		    debug("Request was cancelled. Giving up");
 		    return $total;
 		}
 
-		debug(1,"  Tries to recover...",1);
+		debug(1,"  Resending chunk $i");
 
 		$errcnt++;
 		$req->yield( 0.9 );
@@ -932,7 +930,7 @@ sub send_stored_result
 	{
 	    if( utf8::valid($$content) )
 	    {
-		debug "  as valid utf8";
+#		debug "  as valid utf8";
 	    }
 	    else
 	    {
