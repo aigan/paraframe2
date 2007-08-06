@@ -305,8 +305,8 @@ sub new_bgrequest
     $Para::Frame::REQUEST{$client} = $req;
     $Para::Frame::RESPONSE{$client} = [];
     Para::Frame::switch_req( $req, 1 );
-    $req->minimal_init;
     warn "\n\n$Para::Frame::REQNUM $msg\n";
+    $req->minimal_init;
     return $req;
 }
 
@@ -388,7 +388,7 @@ sub minimal_init
 	else
 	{
 	    $site_in = 'default';
-	    debug "Site not set! Using default";
+#	    cluck "Site not set! Using default";
 	}
     }
     $req->set_site( $site_in );
@@ -1134,7 +1134,7 @@ sub run_action
 #    debug "==> RUN ACTION $run";
 
     my $site = $req->site;
-    debug "Site appbase is ".$site->appbase;
+    debug 2, "Site appbase is ".$site->appbase;
 
     my $actionroots = [$site->appbase."::Action"];
 
@@ -1174,7 +1174,7 @@ sub run_action
 
 	    if( $@ =~ /^Can\'t locate $file/ )
 	    {
-		push @{$errors{'notfound'}}, "$c_run hittades inte under $tryroot";
+		push @{$errors{'notfound'}}, "$c_run wasn't found in  $tryroot";
 		debug(-1);
 		next; # Try next
 	    }
@@ -1192,8 +1192,8 @@ sub run_action
 		    $source_file =~ /((?:\/[^\/]+){1,4})$/ or die;
 		    my $part_path = $1;
 		    $part_path =~ s/^\///;
-		    $info .= "Problem i $part_path, rad $source_line:\n";
-		    $info .= "Hittar inte $notfound\n\n";
+		    $info .= "Problem in $part_path, row $source_line:\n";
+		    $info .= "Can't find $notfound\n\n";
 		}
 		else
 		{
@@ -1232,7 +1232,15 @@ sub run_action
 	    {
 		$info .= $result. "\n";
 	    }
-	    $req->result->exception([$type, $info]);
+
+	    if( $req->is_from_client )
+	    {
+		$req->result->exception([$type, $info]);
+	    }
+	    else
+	    {
+		warn $info;
+	    }
 	}
 	return 0; # Don't perform more actions
     };
@@ -2125,7 +2133,7 @@ sub set_site
 		debug "Host mismatch";
 		debug "Req site : $req_site_name";
 		debug "New name : $site_host -> $site_name";
-		carp "set_site called";
+#		carp "set_site called";
 		return undef;
 	    }
 	}
