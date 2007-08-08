@@ -1096,7 +1096,7 @@ sub add_background_job
 
 =head2 run_code
 
-  $req->runc_code( $label, $codered, @args )
+  $req->run_code( $label, $codered, @args )
 
 =cut
 
