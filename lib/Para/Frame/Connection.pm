@@ -64,7 +64,7 @@ sub new
       );
 
     my $sock = IO::Socket::INET->new(@cfg)
-      or die "Failed to connect to $host:$port";
+	or die "Can't bind $host:$port : $@\n";
 
     my $conn = bless
     {
@@ -169,7 +169,7 @@ sub send_code
     my $length = length($$valref) + length($code) + 1;
     my $socket = $conn->{'socket'};
 
-    debug "Sending $length - $code - value";
+    debug 2, "Sending $length - $code - value";
     unless( print $socket "$length\x00$code\x00" . $$valref )
     {
 	die "LOST CONNECTION while sending $code\n";
@@ -192,7 +192,7 @@ sub get_value
 
     # This code is adapted from Para::Frame::get_value()
 
-    debug "Get value from $conn";
+#    debug "Get value from $conn";
 
 
     my $time      = time;
@@ -221,7 +221,7 @@ sub get_value
     my $data='';
     my $rv = $socket->recv($data,POSIX::BUFSIZ, 0);
 
-    debug "Read data...";
+#    debug "Read data...";
 
     unless (defined $rv && length $data)
     {
@@ -240,7 +240,7 @@ sub get_value
 	#
 	if( $$inbuffref =~ s/^(\d+)\x00// )
 	{
-	    debug "Setting length to $1";
+#	    debug "Setting length to $1";
 	    $conn->{datalength} = $1;
 	}
 	else
@@ -278,7 +278,7 @@ sub get_value
     }
 
 
-    debug "The whole length read";
+#    debug "The whole length read";
 
     unless( $$inbuffref =~ s/^(\w+)\x00// )
     {
