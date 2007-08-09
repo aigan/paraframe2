@@ -64,7 +64,7 @@ use constant TIMEOUT_SHORT =>   0.000;
 use constant BGJOB_MAX     =>   8;      # At most
 use constant BGJOB_MED     =>  60 *  5; # Even if no visitors
 use constant BGJOB_MIN     =>  60 * 15; # At least this often
-use constant BGJOB_CPU     =>   0.8;
+use constant BGJOB_CPU     =>   2.0;
 
 # Do not init variables here, since this will be redone each time code is updated
 our $SERVER     ;
