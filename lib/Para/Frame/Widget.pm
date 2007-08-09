@@ -265,10 +265,27 @@ sub jump_extra
     {
 	if( $Para::Frame::REQ->is_from_client and $template )
 	{
+	    my $template_path = $template;
+	    $template_path =~ s/\?.*//;
+
 	    # Mark as same_place if link goes to current page
-	    if( $Para::Frame::REQ->page->url_path eq $template and not $attr->{'run'} )
+	    if( $Para::Frame::REQ->page->url_path eq $template_path
+		and not $attr->{'run'} )
 	    {
-		$extra .= " class=\"same_place\"";
+		# Special handling of attribute id
+		my $oid = $Para::Frame::REQ->q->param('id') || 0;
+		my $nid = $attr->{'id'} || 0;
+		unless( $nid )
+		{
+		    if( $template =~ /(\?|&)id=(.+?)(&|$)/ )
+		    {
+			$nid = CGI->unescape($2) || 0;
+		    }
+		}
+		if( $nid eq $oid )
+		{
+		    $extra .= " class=\"same_place\"";
+		}
 	    }
 	}
     }
