@@ -162,3 +162,22 @@ p#pi img
 {
 	border: 0;
 }
+
+table.admin
+{
+  border-collapse: collapse;
+  border:          medium solid green;
+  width:           100%;
+}
+
+table.admin td
+{
+  border-collapse: collapse;
+  border: thin solid gray;
+  padding: 0.3em;
+}
+
+table.admin td td
+{
+  border: 0px;
+}
