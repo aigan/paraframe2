@@ -183,7 +183,7 @@ sub get_by_ext
     if( my $burner = $EXT{$ext} )
     {
 	my $type = $burner->{'type'};
-	debug 2, "Looked up burner for $ext: $type";
+	debug 5, "Looked up burner for $ext: $type";
 	return $burner;
     }
     else

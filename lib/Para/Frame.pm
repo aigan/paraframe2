@@ -333,7 +333,7 @@ sub main_loop
 		{
 		    my( $cmd, @args ) = @$job;
 		    switch_req( $req );
-		    debug(2,"Found a job ($cmd) in $req->{reqnum}");
+		    debug(5,"Found a job ($cmd) in $req->{reqnum}");
 		    $req->$cmd( @args );
 		}
 		elsif( $req->{'childs'} )
@@ -656,12 +656,12 @@ sub get_value
 		    {
 			$aclient = $client->client;
 
-			debug(1,"RESP $val ($client->{reqnum}/ $aclient)");
+			debug(5,"RESP $val ($client->{reqnum}/ $aclient)");
 		    }
 		    else
 		    {
 			my $req = $REQUEST{ $client };
-			debug(1,"RESP $val ($req->{reqnum}/$client)");
+			debug(5,"RESP $val ($req->{reqnum}/$client)");
 		    }
 
 		    push @{$RESPONSE{ $aclient }}, $val;
@@ -886,7 +886,7 @@ sub handle_code
 
 
     my( $code ) = $1;
-    debug 3, "GOT code $code: $INBUFFER{$client}";
+    debug 5, "GOT code $code: $INBUFFER{$client}";
 
     if( $code eq 'REQ' )
     {
@@ -941,7 +941,7 @@ sub handle_code
     {
 	my $val = $INBUFFER{$client};
 	my $req = $REQUEST{ $client };
-	debug(2,"RESP $val ($req->{reqnum})");
+	debug(5,"RESP $val ($req->{reqnum})");
 	push @{$RESPONSE{ $client }}, $val;
     }
     elsif( $code eq 'RUN_ACTION' )
@@ -1687,6 +1687,8 @@ sub run_hook
 	    }
 	}
     }
+
+    debug(3,"run_hook $label - done");
     return 1;
 }
 

@@ -857,7 +857,7 @@ sub uri2file
     if( $file )
     {
 #	confess "DEPRECATED";
-	debug "Storing URI2FILE in key $key: $file";
+	debug 5, "Storing URI2FILE in key $key: $file";
 	return $URI2FILE{ $key } = $file;
     }
 
@@ -878,7 +878,7 @@ sub uri2file
 #    #
 #    $file =~ s/\/$//;
 
-    debug(3, "Storing URI2FILE in key $key: $file");
+    debug(5, "Storing URI2FILE in key $key: $file");
     $URI2FILE{ $key } = $file;
     return $file;
 }
@@ -1055,7 +1055,7 @@ sub prepend_action
 
 sub add_job
 {
-    debug(2,"Added the job $_[1] for $_[0]->{reqnum}");
+    debug(5,"Added the job $_[1] for $_[0]->{reqnum}");
     push @{ shift->{'jobs'} }, [@_];
 }
 
@@ -1087,7 +1087,7 @@ Example:
 
 sub add_background_job
 {
-    debug(2,"Added the background job $_[1] for $_[0]->{reqnum}");
+    debug(5,"Added the background job $_[1] for $_[0]->{reqnum}");
     push @Para::Frame::BGJOBS_PENDING, [@_];
 }
 
@@ -1672,7 +1672,7 @@ sub send_code
     # To get a response, use get_cmd_val()
 
     $_[1] ||= 1; # Must be at least one param
-    debug( 3, "Sending code: ".join("-", @_)." ($req->{reqnum}) ".$req->client);
+    debug( 5, "Sending code: ".join("-", @_)." ($req->{reqnum}) ".$req->client);
 #    debug sprintf "  at %.2f\n", Time::HiRes::time;
 
     if( $Para::Frame::FORK )

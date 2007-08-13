@@ -327,7 +327,7 @@ sub find
     my( $this, $page ) = @_;
     my $class = ref($this) || $this;
 
-#   debug "Finding template for page ".$page->sysdesig;
+   debug 3, "Finding template for page ".$page->sysdesig;
 
     my $req = $Para::Frame::REQ;
 
@@ -411,7 +411,7 @@ sub find
 	}
 
 	# We look for both tt and html regardless of it the file was called as .html
-#	debug(0,"Check $path",1);
+	debug(3,"  Check $path");
 	die "dir_redirect failed" unless $base_name;
 
 	# Handle dirs
@@ -424,14 +424,14 @@ sub find
 	# Find language specific template
 	foreach my $langcode ( map(".$_",@languages),'' )
 	{
-#	    debug("Check $langcode");
+	    debug(3, "    Check $langcode");
 	    my $tmplname = $path.$base_name.$langcode.$ext_full;
-#	    debug "Looking at $tmplname";
+	    debug(3, "      Looking at $tmplname");
 	    my $tmpl = $class->new_possible_sysfile($tmplname);
 
 	    if( $tmpl->exist )
 	    {
-#		debug("Using $tmplname");
+		debug(3, "      Using $tmplname");
 		return $tmpl;
 	    }
 	}
@@ -454,7 +454,7 @@ sub find
     }
 
     # If we can't find the filname
-    debug("Not found: ".$page->sys_path);
+    debug(2, "Not found: ".$page->sys_path);
     return( undef );
 }
 
