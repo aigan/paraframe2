@@ -164,6 +164,8 @@ Availible params are:
 The first argument may be a L<Para::Frame::List> object, in which case
 it's content is copied to this new list.
 
+See also: L</set_materializer>
+
 Compatible with L<Template::Iterator/new>.
 
 Returns:
@@ -187,6 +189,8 @@ sub new
 	# Creating new arrayref
 	$data_in = [$data_in->as_array];
     }
+
+#    debug "New list created with args ".datadump($args);
 
     my $data;
     my $l = bless
@@ -1427,6 +1431,7 @@ sub get_next
     }
 
     my $i = $l->{'INDEX'};
+
     if( my $mat = $l->{'materializer'} )
     {
 	$l->{'materialized'} ||= 1;
