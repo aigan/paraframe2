@@ -98,8 +98,9 @@ sub new
     my $req = $Para::Frame::REQ;
 
     $args ||= {};
+    my $DEBUG = 0;
 
-#    debug "New file with ".datadump($args,1);
+    debug "New file with ".datadump($args,1) if $DEBUG;
 
     my $sys_in = $args->{'filename'};
     my $url_in = $args->{'url'};
@@ -116,6 +117,11 @@ sub new
 	if( ref $url_in )
 	{
 	    $url_in = $url_in->url_path_slash;
+	}
+	else
+	{
+	    # Clear out query part, if existing
+	    $url_in =~ s/(\?|#).*//;
 	}
 	$key = $site_in->code . $url_in;
     }
@@ -135,20 +141,23 @@ sub new
 		}
 	    }
 
-#	    if( $file->exist )
-#	    {
-#		debug "Got from CACHE: $key - exist";
-#	    }
-#	    else
-#	    {
-#		debug "Got from CACHE: $key";
-#	    }
+	    if( $DEBUG )
+	    {
+		if( $file->exist )
+		{
+		    debug "Got from CACHE: $key - exist";
+		}
+		else
+		{
+		    debug "Got from CACHE: $key";
+		}
+	    }
 
 	    return $file;
 	}
     }
 
-#    debug "--------> CREATING file $key";
+    debug "--------> CREATING file $key" if $DEBUG;
 
     my $file = bless
     {
@@ -231,7 +240,7 @@ sub new
     # $sys_name is defined
     # $sys_norm is undef
 
-#    debug "Constructing $sys_name";
+    debug "Constructing $sys_name" if $DEBUG;
 
     if( -r $sys_name )
     {
@@ -242,7 +251,7 @@ sub new
 #	# Resolve relative parts in the path
 #	$sys_name = abs_path( $sys_name );
 
-#	debug "File $sys_name exist";
+	debug "File $sys_name exist" if $DEBUG;
 
 	if( -d $sys_name or
 	    UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
@@ -307,7 +316,7 @@ sub new
 	    confess "The file $sys_name is not readable";
 	}
 
-#	debug "File $sys_name doesn't exist";
+	debug "File $sys_name doesn't exist" if $DEBUG;
 
 	# determine if dir by class or input
 	if( $class eq 'Para::Frame::File' )
@@ -377,7 +386,7 @@ sub new
     else
     {
 	# Place in site based on sys_path
-#	debug "Try to place in site";
+	debug "Try to place in site" if $DEBUG;
 
 	# If we are going to check all the registred sites, we must be
 	# sure that those sites realy are handled by this paraframe
@@ -402,12 +411,12 @@ sub new
 	foreach my $site_maby ( @check_sites )
 	{
 	    my $sys_home = $site_maby->home->sys_path_slash;
-#	    debug "Checking $sys_home";
+	    debug "Checking $sys_home" if $DEBUG;
 	    if( $file->{'sys_norm'} =~ /^$sys_home(.*)/ )
 	    {
 		# May not be a correct translation
 		my $url_norm = $site_maby->home->url_path_slash.$1;
-#		debug "Translating $url_norm";
+		debug "Translating $url_norm" if $DEBUG;
 		my $sys_name = $site_maby->uri2file($url_norm, undef, $may_not_exist);
 		$sys_name =~ s/\/$//;
 
@@ -489,7 +498,7 @@ sub new
 
     $file->initialize( $args );
 
-#    debug "CREATED ".$file->sysdesig;
+    debug "CREATED ".$file->sysdesig if $DEBUG;
 
     return $file;
 }
