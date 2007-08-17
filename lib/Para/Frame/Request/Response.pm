@@ -137,7 +137,7 @@ sub new
      'renderer'       => undef,
      'is_error_response' => 0,
      'moved_temporarily' => undef,
-    };
+    }, $class;
 
     if( my $req = $args->{req} )
     {
