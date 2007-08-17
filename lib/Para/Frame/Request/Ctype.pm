@@ -155,7 +155,7 @@ sub set_charset
     {
 	if( $ctype->{'charset'} ne $charset )
 	{
-	    debug longmess "CHECKME";
+#	    debug longmess "CHECKME";
 	    $ctype->{'charset'} = $charset;
 	    $ctype->{'changed'} ++;
 	}
