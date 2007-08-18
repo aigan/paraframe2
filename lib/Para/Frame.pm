@@ -1519,9 +1519,12 @@ sub handle_request
 	    # Do not send loadpage if we didn't got a session object
 	    my $loadpage = $req->dirconfig->{'loadpage'} ||
 	      $req->site->loadpage;
-	    if( $session->count and ( $loadpage ne 'no' ))
+	    if( $session->count )
 	    {
-		$req->send_code('USE_LOADPAGE', $loadpage, 3, $REQNUM);
+		if( $loadpage ne 'no' )
+		{
+		    $req->send_code('USE_LOADPAGE', $loadpage, 3, $REQNUM);
+		}
 	    }
 	    else
 	    {
