@@ -27,6 +27,7 @@ use Carp qw( carp croak shortmess confess cluck );
 use List::Util;
 use Template::Constants;
 use Scalar::Util;
+use vars qw($AUTOLOAD);
 
 BEGIN
 {
@@ -514,8 +515,6 @@ sub as_raw_arrayref
 Compatible with L<Template::Iterator>.
 
 See also L</get_all> and L</elements>.
-
-Returns:
 
 Returns:
 
@@ -2155,6 +2154,10 @@ sub unshift
 
 =head2 push
 
+  $l->push( @elements )
+
+Returns: The number of elements added
+
 =cut
 
 sub push
@@ -2182,6 +2185,134 @@ sub push
     }
 
     return scalar(@_);
+}
+
+
+#######################################################################
+
+=head2 push_uniq
+
+  $l->push_uniq( @elements )
+
+Only add elements not already in the list
+
+Returns: The number of elements added
+
+=cut
+
+sub push_uniq
+{
+    my $l = CORE::shift(@_);
+
+    $l->materialize_all;
+    my @new;
+
+    while( my $target = CORE::shift )
+    {
+	my $found=0;
+	my( $value, $error ) = $l->get_first;
+	while(! $error )
+	{
+	    if( $value eq $target )
+	    {
+		$found++;
+		last;
+	    }
+	}
+	continue
+	{
+	    ( $value, $error ) = $l->get_next;
+	};
+
+	unless( $found )
+	{
+	    CORE::push @new, $target;
+	}
+    }
+
+    if( @new )
+    {
+	$l->push( @new );
+    }
+
+    return scalar( @new );
+}
+
+
+#######################################################################
+
+=head2 unshift_uniq
+
+  $l->unshift_uniq( @elements )
+
+Only add elements not already in the list
+
+Returns: The number of elements added
+
+=cut
+
+sub unshift_uniq
+{
+    my $l = CORE::shift(@_);
+
+    $l->materialize_all;
+    my @new;
+
+    while( my $target = CORE::shift )
+    {
+	my $found=0;
+	my( $value, $error ) = $l->get_first;
+	while(! $error )
+	{
+	    if( $value eq $target )
+	    {
+		$found++;
+		last;
+	    }
+	}
+	continue
+	{
+	    ( $value, $error ) = $l->get_next;
+	};
+
+	unless( $found )
+	{
+	    CORE::push @new, $target;
+	}
+    }
+
+    if( @new )
+    {
+	$l->unshift( @new );
+    }
+
+    return scalar( @new );
+}
+
+
+#######################################################################
+
+=head2 join
+
+  $l->join()
+
+  $l->join($separator)
+
+C<$separator> defaults to the empty string.
+
+Returns: A scalar string of all elements concatenated
+
+=cut
+
+sub join
+{
+    my( $l, $sep ) = CORE::shift(@_);
+
+    $l->materialize_all;
+
+    $sep ||= "";
+
+    return CORE::join($sep, @{$l->{'_OBJ'}});
 }
 
 
@@ -2234,8 +2365,42 @@ sub uniq
 
 #######################################################################
 
+=head1 AUTOLOAD
+
+  $l->$method( @args )
 
 
+=cut
+
+AUTOLOAD
+{
+    $AUTOLOAD =~ s/.*:://;
+    return if $AUTOLOAD =~ /DESTROY$/;
+    my $method = $AUTOLOAD;
+    my $l = CORE::shift;
+
+    $l->materialize_all;
+
+    my @templist = ();
+    foreach my $elem ( @{$l->{'_OBJ'}} )
+    {
+	next unless $elem;
+	my $res = $elem->$method(@_);
+	if( UNIVERSAL::isa( $res, 'Para::Frame::List' ) )
+	{
+	    CORE::push @templist, $res->as_array;
+	}
+	else
+	{
+	    CORE::push @templist, $res;
+	}
+    }
+
+    return $l->new(\@templist);
+}
+
+
+#######################################################################
 
 1;
 
