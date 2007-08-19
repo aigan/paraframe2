@@ -103,7 +103,7 @@ If C<$status> is defined, sets it as the return status of the CHILD
 process.
 
 If C<$length> must only be given if the whole of the message has been
-recieved and inte should be the length of the message in bytes.  If
+recieved and it should be the length of the message in bytes.  If
 not given, we will try to read the remaining part of the message.
 
 returns: -
