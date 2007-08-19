@@ -467,14 +467,14 @@ sub main_loop
 			debug "Got '$child->{data}'";
 		    }
 		}
-
-		# Now we can turn the signal handling back on
-		$SIG{CHLD} = \&Para::Frame::REAPER;
-
-		# See if we got any more signals
-		&Para::Frame::REAPER;
-
 	    }
+
+	    # Now we can turn the signal handling back on
+	    $SIG{CHLD} = \&Para::Frame::REAPER;
+
+	    # See if we got any more signals
+	    &Para::Frame::REAPER;
+
         } || 'next'; #default
 	if( $@ )
 	{
