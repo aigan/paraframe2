@@ -532,6 +532,7 @@ sub get_response
     my $data='';
     my $buffer = '';
     my $partial = 0;
+    my $buffer_empty_time;
     while( 1 )
     {
 
@@ -564,6 +565,28 @@ sub get_response
 		my $rv = $SOCK->recv($buffer,BUFSIZ, 0);
 		unless( defined $rv and length $buffer)
 		{
+		    if( defined $rv )
+		    {
+			warn "$$: Buffer empty\n";
+			if( $buffer_empty_time )
+			{
+			    if( $buffer_empty_time > (time+5) )
+			    {
+				warn "$$: For 5 secs\n";
+			    }
+			    else
+			    {
+				next;
+			    }
+			}
+			else
+			{
+			    $buffer_empty_time = time;
+			    next;
+			}
+		    }
+
+
 		    # EOF from client
 		    warn "$$: Nothing in socket $SOCK\n";
 		    warn "$$: rv: $rv\n";
@@ -580,6 +603,7 @@ sub get_response
 		}
 
 		$data .= $buffer;
+		$buffer_empty_time = undef;
 	    }
 	}
 
