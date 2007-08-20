@@ -700,7 +700,7 @@ sub logout_page
 
   $site->host
 
-Returns the C<webhost>.
+Returns: the C<webhost> as a plain string
 
 This shold be the canonical name of the host of the site. This is the
 main hostname of the apache virtual host. If the port is anything else
