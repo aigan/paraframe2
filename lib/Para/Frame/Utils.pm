@@ -897,14 +897,18 @@ sub uri
 	    push @parts, sprintf("%s=%s", $key, CGI->escape($value));
 	}
     }
+
     my $query = join '&', @parts;
-    if( $query and $template =~ /\?/ )
+    if( $query )
     {
-	$query = '&'.$query;
-    }
-    else
-    {
-	$query and $query = '?'.$query;
+	if( $template =~ /\?/ )
+	{
+	    $query = '&'.$query;
+	}
+	else
+	{
+	    $query = '?'.$query;
+	}
     }
 
     debug(4, "Returning URI $template$query");
