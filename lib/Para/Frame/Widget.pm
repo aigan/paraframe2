@@ -170,6 +170,10 @@ sub slider
 
   jump( $label, $template, %attrs )
 
+  jump( $label, $template_with_query, %attrs )
+
+  jump( $label, $uri, %attrs )
+
 Draw a link to C<$template> with text C<$label> and query params
 C<%attrs>.
 
@@ -239,6 +243,14 @@ sub jump
 sub jump_extra
 {
     my( $template, $attr ) = @_;
+
+    if( UNIVERSAL::isa $template, 'URI' )
+    {
+	if( $template->host eq $Para::Frame::REQ->site->host )
+	{
+	    $template = $template->path_query;
+	}
+    }
 
     $attr ||= {};
 
@@ -457,6 +469,7 @@ sub forward_url
 
     die "Too many args for jump()" if $attr and not ref $attr;
 
+
     $template ||= '';
 
     my $q = $Para::Frame::REQ->q;
@@ -491,8 +504,19 @@ sub forward_url
 	    push @parts, sprintf("%s=%s", $key, $q->escape($value));
 	}
     }
+
     my $query = join '&amp;', @parts;
-    $query and $query = '?'.$query;
+    if( $query )
+    {
+	if( $template =~ /\?/ )
+	{
+	    $query = '&'.$query;
+	}
+	else
+	{
+	    $query = '?'.$query;
+	}
+    }
     return $template.$query;
 }
 
