@@ -2123,6 +2123,15 @@ sub configure
     $tt_plugins = [$tt_plugins] unless ref $tt_plugins;
     push @$tt_plugins, 'Para::Frame::Template::Plugin';
 
+    my $tt_plugin_loaders = $CFG->{'tt_plugin_loaders'} || [];
+    unless( UNIVERSAL::isa $tt_plugin_loaders, 'ARRAY' )
+    {
+	$tt_plugin_loaders = [$tt_plugin_loaders];
+    }
+    use Template::Plugins;
+    push @$tt_plugin_loaders,
+      Template::Plugins->new({PLUGIN_BASE => $tt_plugins});
+
 
     my %th_default =
 	(
@@ -2133,7 +2142,8 @@ sub configure
 	 PRE_CHOMP => 1,
 	 POST_CHOMP => 1,
 	 RECURSION => 1,
-	 PLUGIN_BASE => $tt_plugins,
+	 LOAD_PLUGINS => $tt_plugin_loaders,
+#	 PLUGIN_BASE => $tt_plugins,
 	 ABSOLUTE => 1,
 #         DEBUG_ALL => 1,  # DEBUG
 #	 FILTERS =>
