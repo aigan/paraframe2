@@ -1998,6 +1998,10 @@ L<Para::Frame::Template::Plugin>.
 
 Defaults to the empty list.
 
+=head3 tt_plugin_loaders
+
+Adds a list of TT plugin loaders. Always adds L<Template::Plugins> and
+gives it C<tt_plugins>
 
 =head3 ttcdir
 
