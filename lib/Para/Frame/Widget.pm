@@ -41,7 +41,7 @@ BEGIN
 {
     @Para::Frame::Widget::EXPORT_OK
 
-      = qw( slider jump submit go go_js forward forward_url preserve_data alfanum_bar rowlist list2block selectorder param_includes hidden input textarea filefield css_header confirm_simple inflect  );
+      = qw( slider jump submit go go_js forward forward_url preserve_data alfanum_bar rowlist list2block selectorder param_includes hidden input textarea filefield css_header confirm_simple inflect radio );
 
 }
 
@@ -831,8 +831,11 @@ sub input
 
     foreach my $key ( keys %$params )
     {
-	$extra .= sprintf " $key=\"%s\"",
-	  CGI->escapeHTML( $params->{$key} );
+	if( my $keyval = $params->{$key} )
+	{
+	    $extra .= sprintf " $key=\"%s\"",
+	      CGI->escapeHTML( $keyval );
+	}
     }
 
     if( $prefix )
