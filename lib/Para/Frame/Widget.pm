@@ -41,7 +41,7 @@ BEGIN
 {
     @Para::Frame::Widget::EXPORT_OK
 
-      = qw( slider jump submit go go_js forward forward_url preserve_data alfanum_bar rowlist list2block selectorder param_includes hidden input textarea filefield css_header confirm_simple inflect radio );
+      = qw( slider jump submit go go_js forward forward_url preserve_data alfanum_bar rowlist list2block selectorder param_includes hidden input textarea filefield css_header confirm_simple inflect radio calendar input_image );
 
 }
 
@@ -1272,7 +1272,6 @@ sub filefield
 }
 
 
-
 #######################################################################
 
 =head2 css_header
@@ -1285,6 +1284,7 @@ sub css_header
 {
     return "";
 }
+
 
 #######################################################################
 
@@ -1477,6 +1477,8 @@ sub inflect # inflection = böjning
 }
 
 
+#######################################################################
+
 =head2 pricify
 
 Added as a filter to html burner.
@@ -1534,6 +1536,155 @@ sub pricify
 }
 
 
+#######################################################################
+
+=head2 calendar
+
+=cut
+
+sub calendar
+{
+    my( $field, $value, $args ) = @_;
+
+    my $q = $Para::Frame::REQ->q;
+    my $out = "";
+
+    $args ||= {};
+    $value ||= $q->param($field);
+
+    my $id = $args->{'id'} || $field;
+
+    my $tdlabel = $args->{'tdlabel'};
+    my $label = $args->{'label'} || '';
+    my $label_class = $args->{'label_class'} || '';
+    my $separator = $args->{'separator'};
+    my $style = $args->{'style'} || '';
+    my $class = $args->{'class'} || '';
+    my $maxlength = $args->{'maxlength'};
+    my $size = $args->{'size'};
+    my $onUpdate = $args->{'onUpdate'};
+
+    if( $tdlabel )
+    {
+	$label = $tdlabel;
+	$separator ||= "</td><td>";
+    }
+
+    if( $label )
+    {
+	my $label_out = CGI->escapeHTML( $label );
+
+	$out .= "<label class=\"$label_class\" for=\"$field\">$label_out</label>";
+	$out .= $separator;
+    }
+
+    $out .= "<table cellspacing=\"0\" cellpadding=\"0\" style=\"$style\" class=\"$class\">";
+    $out .= "<tr><td>";
+
+    my $input_style = "width: 100%";
+
+    $out .= input( $field, $value,
+		   {
+		    size => $size,
+		    maxlength => $maxlength,
+		    id => $id,
+		    class => $class,
+		    style => $input_style,
+		   });
+
+    my $home = $Para::Frame::REQ->site->home_url_path;
+
+    $out .=
+      (
+       "</td>".
+       "<td valign=\"bottom\" style=\"width: 22px; text-align: right;vertical-align: bottom\">".
+       "<img class=\"nopad\" alt=\"calendar\" id=\"${id}-button\" src=\"$home/pf/images/calendar.gif\"/>".
+       "</td></tr>"
+      );
+
+
+    # inputField  : "$id",              // ID of the input field
+    # ifFormat    : "%Y-%m-%d",        // the date format
+    # button      : "[% id %]-button" // ID of the button
+
+    my $on_update_out = "";
+    if( $onUpdate )
+    {
+	$on_update_out = ", onClose  : $onUpdate";
+    }
+
+    $out .= qq[
+    <script type="text/javascript">
+      Calendar.setup(
+      {
+	inputField  : "$id",
+        ifFormat    : "%Y-%m-%d",
+        button      : "${id}-button"
+        $on_update_out
+      }
+      );
+    </script>
+];
+
+    $out .= "</table>";
+
+    return $out;
+}
+
+
+#######################################################################
+
+=head2 input_image
+
+
+$args->{'image_url'} ||
+      $Para::Frame::CFG->{'images_uploaded_url'} ||
+	'/images';
+
+=cut
+
+sub input_image
+{
+    my( $key, $value, $args ) = @_;
+
+    my $q = $Para::Frame::REQ->q;
+    my $out = "";
+
+    $args ||= {};
+
+    my $value = $args->{'value'};
+    my $maxw = $args->{'maxw'} ||= 400;
+    my $maxh = $args->{'maxh'} ||= 300;
+    my $version = $args->{'version'};
+    my $arc_id = $args->{'arc'} || '';
+    my $image_url = $args->{'image_url'} ||
+      $Para::Frame::CFG->{'images_uploaded_url'} ||
+	'/images';
+
+    if( $value )
+    {
+	# TODO: rewrite code
+
+	unless( $value eq $version->value )
+	{
+	    # Hack to recognise radio-context
+	    # arc SHOULD be set...
+	    $out .= hidden("check_arc_${arc_id}", 1);
+	    $out .= checkbox($key, $value, 1);
+	}
+
+	$out .= "<img alt=\"\" src=\"$image_url/$value\"/>";
+    }
+    else
+    {
+	$out .= filefield("${key}__file_image__maxw_${maxw}__maxh_${maxh}");
+    }
+
+    return $out;
+}
+
+
+#######################################################################
 #### Methods
 
 sub on_configure
@@ -1564,6 +1715,7 @@ sub on_configure
 	'css_header'      => \&css_header,
 	'favicon_header'  => \&favicon_header,
 	'inflect'         => \&inflect,
+	'calendar'        => \&calendar,
     };
 
     Para::Frame->add_global_tt_params( $params );
@@ -1578,6 +1730,9 @@ sub on_configure
 
 
 }
+
+
+#######################################################################
 
 sub on_reload
 {
