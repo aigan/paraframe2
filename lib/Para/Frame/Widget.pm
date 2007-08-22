@@ -936,8 +936,11 @@ sub textarea
 
     foreach my $key ( keys %$params )
     {
-	$extra .= sprintf " $key=\"%s\"",
-	  CGI->escapeHTML( $params->{$key} );
+	if( my $keyval = $params->{$key} )
+	{
+	    $extra .= sprintf " $key=\"%s\"",
+	      CGI->escapeHTML( $params->{$key} );
+	}
     }
 
     if( $prefix )
