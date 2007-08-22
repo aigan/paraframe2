@@ -263,6 +263,7 @@ sub caller_url
     my $referer = $Para::Frame::REQ->referer_with_query;
     my $caller_url = Para::Frame::URI->new( $referer );
     $caller_url->query_param_delete('run');
+    $caller_url->query_param_delete('reqnum');
     return $caller_url;
 }
 
@@ -707,6 +708,7 @@ sub clear_special_params
     $q->delete('section');
     $q->delete('renderer');
     $q->delete('destination');
+    $q->delete('reqnum');
 
     if( ($ENV{QUERY_STRING}||'') eq 'backtrack' )
     {

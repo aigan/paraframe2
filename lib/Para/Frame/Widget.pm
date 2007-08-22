@@ -470,27 +470,62 @@ sub forward_url
     die "Too many args for jump()" if $attr and not ref $attr;
 
 
+#    debug "In forward_url for $template with attr\n".datadump($attr);
+
     $template ||= '';
+    my $except = ['run','destination','reqnum']; # FIXME
+
+    if( $template =~ /(.*?)\?/ )
+    {
+#	debug "Processing query part of template";
+	my $uri = URI($template);
+	$template = $1;
+	my @keyval = $uri->query_form;
+      KEY1:
+	while( my($key, $val) = (shift(@keyval), shift(@keyval)) )
+	{
+	    # Not supporting multiple values
+	    next if defined $attr->{$key};
+
+	    foreach my $exception ( @$except )
+	    {
+		if( $key eq $exception )
+		{
+		    next KEY1;
+		}
+	    }
+
+#	    debug "  Adding $key";
+	    $attr->{$key} = [$val];
+	}
+    }
 
     my $q = $Para::Frame::REQ->q;
 
-    my $except = ['run','destination']; # FIXME
-
-  KEY:
+#    debug "Processing query params";
+  KEY2:
     foreach my $key ( $q->param() )
     {
-	foreach my $exception ( @$except )
-	{
-	    next KEY if $key eq $exception;
-	}
-
 	next if defined $attr->{$key};
 	next unless $q->param($key);
+
+	foreach my $exception ( @$except )
+	{
+	    if( $key eq $exception )
+	    {
+		next KEY2;
+	    }
+	}
+
+#	debug "  Adding $key";
 	$attr->{$key} = [$q->param($key)];
     }
+
     my @parts = ();
+#    debug "Processign given attrs";
     foreach my $key ( keys %$attr )
     {
+#	debug "  Encoding $key";
 	my $value = $attr->{$key};
 	if( UNIVERSAL::isa($value, 'ARRAY') )
 	{
@@ -531,8 +566,8 @@ Preserves most query params EXCEPT those mentioned in @fields.  This
 is done by creating extra hidden fields.  This method will thus only
 work with a form submit.
 
-The special query params 'previous', 'run' and 'route' are also
-excepted.
+The special query params 'previous', 'run', 'route' and 'reqnum' are also
+excepted. And some more...
 
 =cut
 
@@ -543,7 +578,7 @@ sub preserve_data
     my $q = $Para::Frame::REQ->q;
 
     push @except, 'previous', 'run', 'route', 'selector',
-      'destination', 'session_vars_update', 'admin_mode';
+      'destination', 'session_vars_update', 'admin_mode', 'reqnum';
 
   KEY:
     foreach my $key ( $q->param())
