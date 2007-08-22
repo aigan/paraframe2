@@ -570,12 +570,13 @@ sub get_response
 			warn "$$: Buffer empty\n";
 			if( $buffer_empty_time )
 			{
-			    if( $buffer_empty_time > (time+5) )
+			    if( ($buffer_empty_time+5) < time )
 			    {
 				warn "$$: For 5 secs\n";
 			    }
 			    else
 			    {
+				sleep 1;
 				next;
 			    }
 			}
