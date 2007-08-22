@@ -1652,7 +1652,6 @@ sub input_image
 
     $args ||= {};
 
-    my $value = $args->{'value'};
     my $maxw = $args->{'maxw'} ||= 400;
     my $maxh = $args->{'maxh'} ||= 300;
     my $version = $args->{'version'};
