@@ -26,6 +26,7 @@ use strict;
 use Carp qw( cluck confess croak );
 use IO::File;
 use CGI;
+use URI;
 
 use locale;
 use POSIX qw(locale_h);
@@ -472,17 +473,18 @@ sub forward_url
 
 #    debug "In forward_url for $template with attr\n".datadump($attr);
 
-    $template ||= '';
+    $template ||= $Para::Frame::REQ->env->{'REQUEST_URI'};
     my $except = ['run','destination','reqnum']; # FIXME
 
     if( $template =~ /(.*?)\?/ )
     {
 #	debug "Processing query part of template";
-	my $uri = URI($template);
+	my $uri = URI->new($template);
 	$template = $1;
-	my @keyval = $uri->query_form;
+	my( %urlq ) = $uri->query_form;
+
       KEY1:
-	while( my($key, $val) = (shift(@keyval), shift(@keyval)) )
+	foreach my $key ( keys %urlq )
 	{
 	    # Not supporting multiple values
 	    next if defined $attr->{$key};
@@ -496,7 +498,7 @@ sub forward_url
 	    }
 
 #	    debug "  Adding $key";
-	    $attr->{$key} = [$val];
+	    $attr->{$key} = [$urlq{$key}];
 	}
     }
 
