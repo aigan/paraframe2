@@ -205,6 +205,54 @@ sub page
 
 #######################################################################
 
+sub page_url_with_query
+{
+    my( $resp ) = @_;
+
+    my $path = $resp->page->url_path_slash;
+
+    my $req = $Para::Frame::REQ;
+    if( $path eq $req->original_url_string )
+    {
+	if( my $query = $req->env->{'QUERY_STRING'} )
+	{
+	    $path .= "?".$query;
+	}
+    }
+
+    return $path;
+}
+
+
+#######################################################################
+
+sub page_url_with_query_and_reqnum
+{
+    my( $resp ) = @_;
+
+    my $path = $resp->page->url_path_slash;
+
+    my $req = $Para::Frame::REQ;
+    if( $path eq $req->original_url_string )
+    {
+	if( my $query = $req->env->{'QUERY_STRING'} )
+	{
+	    return $path . "?".$query.'&reqnum='.$req->id;
+	}
+	else
+	{
+	    return $path . '?reqnum='.$req->id;
+	}
+    }
+    else
+    {
+	return $path . '?reqnum='.$req->id;
+    }
+}
+
+
+#######################################################################
+
 =head2 req
 
 =cut
@@ -529,6 +577,10 @@ sub send_output
     my $url_out = $page->url_path_slash;
 #    my $url_norm = $req->normalized_url( $url );
 
+
+#    debug "URL In  $url_in";
+#    debug "URL Out $url_out";
+
 #    debug "Original url: $url";
 
     if( $url_in ne $url_out )
@@ -538,11 +590,6 @@ sub send_output
     }
     else
     {
-	if( my $query_str = $req->referer_query )
-	{
-	    $url_out .= '?' . $query_str;
-	}
-
 	if( $req->header_only )
 	{
 	    my $result;
@@ -558,7 +605,10 @@ sub send_output
 
 	    if( $result eq 'LOADPAGE' )
 	    {
-		$req->session->register_result_page($resp);
+		# Keep query string
+		$url_out = $resp->page_url_with_query_and_reqnum;
+
+		$req->session->register_result_page($resp, $url_out);
 		$req->send_code('PAGE_READY', $url_out);
 	    }
 	}
@@ -578,7 +628,10 @@ sub send_output
 
 	    if( $result eq 'LOADPAGE' )
 	    {
-		$req->session->register_result_page($resp);
+		# Keep query string
+		$url_out = $resp->page_url_with_query_and_reqnum;
+
+		$req->session->register_result_page($resp, $url_out);
 		$req->send_code('PAGE_READY', $url_out);
 	    }
 	    elsif( $result eq 'SEND' )
