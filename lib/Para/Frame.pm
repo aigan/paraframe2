@@ -30,7 +30,6 @@ use Socket;
 use POSIX qw( locale_h );
 use Text::Autoformat; #exports autoformat()
 use Time::HiRes qw( time usleep );
-use Data::Dumper;
 use Carp qw( cluck confess carp croak );
 use Sys::CpuLoad;
 use DateTime::TimeZone;
@@ -1470,10 +1469,12 @@ sub handle_request
  RESPONSE:
     {
 	### Redirected from another page?
-	my $key = $req->original_url_string;
+#	my $key = $req->original_url_string;
+	my $key = $req->{'env'}{'REQUEST_URI'}
+	  || $req->original_url_string;
 	if( $session->{'page_result'}{ $key } )
 	{
-	    $req->send_stored_result;
+	    $req->send_stored_result( $key );
 	}
 	else
 	{
