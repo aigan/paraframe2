@@ -2968,10 +2968,10 @@ sub handle_error
 
 sub send_stored_result
 {
-    my( $req ) = @_;
+    my( $req, $key ) = @_;
 
-    # TODO: Use a better key for handling nested requests
-    my $key = $req->original_url_string;
+    $key ||= $req->{'env'}{'REQUEST_URI'}
+      || $req->original_url_string;
 
     my $resp = $req->session->{'page_result'}{ $key };
     $req->{'resp'} = $resp;

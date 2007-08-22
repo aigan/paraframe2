@@ -206,9 +206,9 @@ sub after_request
 
 sub register_result_page
 {
-    my( $s, $resp ) = @_;
+    my( $s, $resp, $url ) = @_;
 
-    my $url = $resp->page->url_path_slash;
+    $url ||= $resp->page_url_with_query_and_reqnum;
 
     debug "Registred the page result for $url";
 
