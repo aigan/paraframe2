@@ -214,7 +214,7 @@ sub page_url_with_query
     my $req = $Para::Frame::REQ;
     if( $path eq $req->original_url_string )
     {
-	if( my $query = $req->env->{'QUERY_STRING'} )
+	if( my $query = $req->original_url_params )
 	{
 	    $path .= "?".$query;
 	}
@@ -231,11 +231,14 @@ sub page_url_with_query_and_reqnum
     my( $resp ) = @_;
 
     my $path = $resp->page->url_path_slash;
-
     my $req = $Para::Frame::REQ;
+
+#    debug "CALLER query string is ".$req->original_url_params;
+#    debug datadump \%ENV;
+
     if( $path eq $req->original_url_string )
     {
-	if( my $query = $req->env->{'QUERY_STRING'} )
+	if( my $query = $req->original_url_params )
 	{
 	    return $path . "?".$query.'&reqnum='.$req->id;
 	}
