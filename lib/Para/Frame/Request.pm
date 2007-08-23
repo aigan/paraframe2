@@ -104,35 +104,36 @@ sub new
 
     my $req =  bless
     {
-        resp           => undef,
-        orig_resp      => undef,
-	indent         => 1,              ## debug indentation
-	client         => $client,
-	jobs           => [],             ## queue of jobs to perform
-        actions        => [],             ## queue of actions to perform
-	'q'            => $q,
-        'files'        => $files,         ## Uploaded files
-	env            => $env,
-	's'            => undef,          ## Session object
-	lang           => undef,          ## Chosen language
-	browser        => undef,          ## browser detection object
-	result         => undef,
+        resp            => undef,
+	indent          => 1,              ## debug indentation
+	client          => $client,
+	jobs            => [],             ## queue of jobs to perform
+        actions         => [],             ## queue of actions to perform
+	'q'             => $q,
+        'files'         => $files,         ## Uploaded files
+	env             => $env,
+	's'             => undef,          ## Session object
+	lang            => undef,          ## Chosen language
+	browser         => undef,          ## browser detection object
+	result          => undef,
 	orig_url_string => $orig_url_string,
-	orig_ctype     => $content_type,
-	referer        => $q->referer,    ## The referer of this page
-	dirconfig      => $dirconfig,     ## Apache $r->dir_config
-        page           => undef,          ## The page requested
-        orig_page      => undef,          ## Original page requested
-	childs         => 0,              ## counter in parent
-	in_yield       => 0,              ## inside a yield
-	child_result   => undef,          ## the child res if in child
-	reqnum         => $reqnum,        ## The request serial number
-	wait           => 0,              ## Asked to wait?
-	cancel         => 0,              ## True if we should abort
-	change         => undef,
-        header_only    => $header_only,   ## true if only sending header
-        site           => undef,          ## Default site for req
-        in_loadpage    => 0,              ## client uses loadpage
+        orig_url_params => $ENV{'QUERY_STRING'},
+	orig_ctype      => $content_type,
+        orig_resp       => undef,
+        orig_page       => undef,          ## Original page requested
+	referer         => $q->referer,    ## The referer of this page
+	dirconfig       => $dirconfig,     ## Apache $r->dir_config
+        page            => undef,          ## The page requested
+	childs          => 0,              ## counter in parent
+	in_yield        => 0,              ## inside a yield
+	child_result    => undef,          ## the child res if in child
+	reqnum          => $reqnum,        ## The request serial number
+	wait            => 0,              ## Asked to wait?
+	cancel          => 0,              ## True if we should abort
+	change          => undef,
+        header_only     => $header_only,   ## true if only sending header
+        site            => undef,          ## Default site for req
+        in_loadpage     => 0,              ## client uses loadpage
     }, $class;
 
     # Log some info
@@ -145,6 +146,12 @@ sub new
 	$redirect_uri =~ s(/undefined$)(/);
 	warn "# Redirected from $redirect_uri\n";
 	$req->{'orig_url_string'} = $redirect_uri;
+	$req->{'orig_url_params'} = $ENV{'REDIRECT_QUERY_STRING'};
+
+	unless( $q->param )
+	{
+	    $req->{'q'} = Para::Frame::CGI->new($req->{'orig_url_params'});
+	}
     }
 
 
@@ -2795,6 +2802,26 @@ sub original_response
 sub original_url_string
 {
     return $_[0]->{'orig_url_string'};
+}
+
+#######################################################################
+
+=head2 original_url_params
+
+  $req->original_url_params
+
+The query string passed as part of the URL
+
+Not including any POST data.
+
+Returns: the unparsed string, after the '?', as given by
+$ENV{'QUERY_STRING'}. Saved on Req startup.
+
+=cut
+
+sub original_url_params
+{
+    return $_[0]->{'orig_url_params'};
 }
 
 #######################################################################
