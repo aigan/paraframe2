@@ -2010,7 +2010,7 @@ sub randomized
 
     if( $l->{'materialized'} > 1 )
     {
-	debug "    using materialized list";
+#	debug "    using materialized list";
 	undef $args->{'materializer'}; # Already done
 	$data = $l->{'_OBJ'};
     }

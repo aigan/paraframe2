@@ -533,10 +533,10 @@ sub uri2file
     {
 	my $args = {};
 	$args->{'site'} = $site;
-	debug "Getting uri2file from SUBREQUEST";
-	debug "URI site is: ".$site->code;
-	debug "Req site is: ".$req_site->code;
-	debug "For $_[0]";
+#	debug "Getting uri2file from SUBREQUEST";
+#	debug "URI site is: ".$site->code;
+#	debug "Req site is: ".$req_site->code;
+#	debug "For $_[0]";
 
 	return $req->new_subrequest($args,
 				    \&Para::Frame::Request::uri2file,
