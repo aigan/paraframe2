@@ -79,7 +79,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw debug create_dir chmod_file idn_encode idn_decode datadump catch );
+use Para::Frame::Utils qw( throw debug create_dir chmod_file idn_encode idn_decode datadump catch client_send );
 use Para::Frame::Request::Ctype;
 use Para::Frame::URI;
 use Para::Frame::L10N qw( loc );
@@ -560,6 +560,7 @@ sub send_output
 
     my $req = $resp->req;
     my $page = $resp->page;
+    my $client = $req->client;
 
     # Forward if URL differs from url_path
 
@@ -592,8 +593,6 @@ sub send_output
 
 	# Keep query string
 	$url_out = $resp->page_url_with_query_and_reqnum;
-
-	$req->session->register_result_page($resp, $url_out);
 	$resp->forward($url_out);
     }
     else
@@ -629,7 +628,7 @@ sub send_output
 	    }
 	    else
 	    {
-		binmode( $req->client, ':utf8');
+		binmode( $client, ':utf8');
 		$resp->send_headers;
 		$result = $req->get_cmd_val( 'BODY' );
 	    }
@@ -644,15 +643,15 @@ sub send_output
 	    }
 	    elsif( $result eq 'SEND' )
 	    {
-		$resp->send_in_chunks( $resp->{'content'} );
+		client_send($client, $resp->{'content'}, {req=>$req});
 	    }
 	    else
 	    {
-		binmode( $req->client, ':bytes');
+		binmode( $client, ':bytes');
 		die "Strange response '$result'";
 	    }
 
-	    binmode( $req->client, ':bytes');
+	    binmode( $client, ':bytes');
 	}
     }
 #    debug "send_output: done";
@@ -714,7 +713,7 @@ sub forward
 
     $resp->output_redirection($url_norm );
 
-    $req->session->register_result_page($resp);
+    $req->session->register_result_page($resp, $url_norm);
 }
 
 
@@ -813,7 +812,7 @@ sub output_redirection
     {
 	$req->send_code( 'AT-PUT', 'set', 'Content-Length', $length );
 	$req->send_code( 'BODY' );
-	$req->client->send( $out );
+	client_send($req->client, $out);
     }
 }
 
@@ -873,104 +872,6 @@ sub send_headers
 
 #######################################################################
 
-=head2 send_in_chunks
-
-  $resp->send_in_chunks( $dataref )
-
-Used internally by L</send_output> for sending the page in C<$dataref>
-to the client.
-
-It will try many times sending part by part. If a part failed to be
-sent, it will check if the connection has been canceled. It will also
-wait about a second for the client to recover, by doing a
-L<Para::Frame::Request/yield>.
-
-Returns: The number of characters sent. (That may be UTF8 characters.)
-
-=cut
-
-sub send_in_chunks
-{
-    my( $resp, $dataref ) = @_;
-
-    my $req = $resp->req;
-
-    my $client = $req->client;
-    my $length = length($$dataref);
-    if( debug > 1 )
-    {
-	my $length2 = bytes::length($$dataref);
-	debug(1,"Sending $length chars/$length2 bytes of data to client");
-    }
-
-    my $total = 0;
-    my $errcnt = 0;
-
-    unless( $length )
-    {
-	debug "We got nothing to send (for req $req)";
-	return 1;
-    }
-
-    eval
-    {
-	my $chunk = 16384; # POSIX::BUFSIZ * 2
-	my $sent = 0;
-	for( my $i=0; $i<$length; $i+= $sent )
-	{
-	    debug(3,"  Transmitting chunk from $i\n");
-	    $sent = $client->send( substr $$dataref, $i, $chunk );
-	    if( $sent )
-	    {
-		debug(3, "  Sent $sent chars");
-		$total += $sent;
-		$errcnt = 0;
-	    }
-	    else
-	    {
-		if( $req->cancelled )
-		{
-		    debug("Request was cancelled. Giving up");
-		    return $total;
-		}
-
-		debug(1,"  Resending chunk $i");
-
-		$errcnt++;
-		$req->yield( 0.9 );
-
-		if( $errcnt >= 100 )
-		{
-		    debug(0,"Got over 100 failures to send chunk $i");
-		    last;
-		}
-		debug(-1);
-		redo;
-	    }
-	}
-
-	debug(2, "Transmitted $total chars to client");
-    };
-    if( $@ )
-    {
-	my $err = catch($@);
-	unless( $Para::Frame::REQUEST{$client} )
-	{
-	    return 0;
-	}
-
-	debug "Failed to transmit to client";
-	debug $err->as_string;
-	return 0;
-    }
-
-    return $total;
-}
-
-
-
-#######################################################################
-
 =head2 send_stored_result
 
 =cut
@@ -1012,7 +913,7 @@ sub send_stored_result
 	}
 	else
 	{
-	    $resp->send_in_chunks( $content );
+	    client_send($req->client, $content, {req=>$req});
 	}
 
 	binmode( $req->client, ':bytes');
