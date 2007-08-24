@@ -119,6 +119,8 @@ parameters are set to the state of the step.
 plan_backtrack() is called in the template header to set next_handler
 if non is specified.
 
+TODO: Should make sure that the step only gets called one time.
+
 =cut
 
 sub plan_backtrack
@@ -130,7 +132,7 @@ sub plan_backtrack
 	$step = Para::Frame::URI->new($step) unless UNIVERSAL::isa($step, 'URI');
 #	my $url = URI->new($step);
 	debug(1,"!!Plan backtrack to ".$step->path);
-	return $step->path . '?backtrack';
+	return $step->path . '?backtrack=1';
     }
 
     return undef;
@@ -387,9 +389,9 @@ sub check_backtrack
 
     # The CGI module doesn't handle query data in URL after a form POST
 #    debug "-- check for backtrack";
-    if( ($req->q->url_param('keywords')||'') eq 'backtrack' )
+    if( $req->q->url_param('backtrack') )
     {
-	debug(1,"!!Backtracking (because of url keyword)");
+	debug(1,"!!Backtracking (because of url param backtrack)");
 	$route->get_next;
     }
     else
@@ -709,11 +711,7 @@ sub clear_special_params
     $q->delete('renderer');
     $q->delete('destination');
     $q->delete('reqnum');
-
-    if( ($ENV{QUERY_STRING}||'') eq 'backtrack' )
-    {
-	delete $ENV{QUERY_STRING};
-    }
+    $q->delete('backtrack');
 }
 
 
