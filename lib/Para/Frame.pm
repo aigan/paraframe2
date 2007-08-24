@@ -50,7 +50,7 @@ BEGIN
 
 use Para::Frame::Reload;
 use Para::Frame::Watchdog;
-use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump );
+use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send );
 use Para::Frame::Request;
 use Para::Frame::Widget;
 use Para::Frame::Burner;
@@ -967,7 +967,7 @@ sub handle_code
 #	debug "Running action: $action with params: ". datadump( \%params );
 	$req->add_job('run_action', $action, \%params);
 
-	$client->send("9\x00RESP\x00Done");
+	client_send($client, "9\x00RESP\x00Done");
 	close_callback($client); # That's all
     }
     elsif( $code eq 'URI2FILE' ) # CHILD msg
@@ -989,7 +989,7 @@ sub handle_code
 	# Send response in calling $REQ
 	debug(2,"Returning answer $file");
 
-	$client->send( join( "\0", 'RESP', $file ) . "\n" );
+	client_send($client, join( "\0", 'RESP', $file ) . "\n" );
     }
     elsif( $code eq 'NOTE' ) # CHILD msg
     {
@@ -1023,7 +1023,7 @@ sub handle_code
     elsif( $code eq 'PING' )
     {
 	debug(4,"PING recieved");
-	$client->send("5\x00PONG\x00");
+	client_send($client, "5\x00PONG\x00");
 	close_callback($client); # That's all
 	debug(4,"Sent PONG as response");
     }

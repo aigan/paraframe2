@@ -59,7 +59,7 @@ use Para::Frame::Request::Response;
 use Para::Frame::Renderer::HTML_Fallback;
 
 use Para::Frame::Utils qw( compile throw debug catch idn_decode
-                           datadump create_dir );
+                           datadump create_dir client_send );
 
 our %URI2FILE;
 
@@ -1788,14 +1788,14 @@ sub send_code
 	debug 2, "We got the active request $req->{'active_reqest'}{reqnum} now";
 	my $aclient = $req->{'active_reqest'}->client;
 
-	$aclient->send( join( "\0", @_ ) . "\n" );
+	client_send( $aclient, join( "\0", @_ ) . "\n" );
 
 	# Set up release code
 	$req->add_job('release_active_request');
     }
     else
     {
-	$client->send( join( "\0", @_ ) . "\n" );
+	client_send( $client, join( "\0", @_ ) . "\n" );
     }
 }
 
