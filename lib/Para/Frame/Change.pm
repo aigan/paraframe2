@@ -92,8 +92,27 @@ sub reset
     $change->{'errmsg'} = "";
     $change->{'changes'} = 0;
     $change->{'message'} = "";
+    $change->{'form_params'} = [];
 
     return $change;
+}
+
+
+#######################################################################
+
+=head2 rollback
+
+  $changes->rollback()
+
+=cut
+
+sub rollback
+{
+    my( $change ) = @_;
+
+
+
+    return $change->reset;
 }
 
 
@@ -227,6 +246,50 @@ Returns teh error messages. Each message separated by a newline.
 sub errmsg
 {
     return $_[0]->{'errmsg'};
+}
+
+
+#######################################################################
+
+=head2 queue_clear_params
+
+  $changes->queue_clear_params( @list )
+
+Will call <Para::Frame::Utils/clear_params> before rendering the
+resulting page, unless we got a rollback.
+
+=cut
+
+sub queue_clear_params
+{
+    my( $change, @params ) = @_;
+
+    my $req = $Para::Frame::REQ;
+    return unless $req->is_from_client;
+    my $target_response = $req->response_if_existing;
+    return unless $target_response;
+
+    push @{$change->{'form_params'}}, @params;
+}
+
+
+#######################################################################
+
+=head2 before_render_output
+
+Called just before $req->response->render_output
+
+=cut
+
+sub before_render_output
+{
+    my( $change ) = @_;
+
+    if( my @params = @{$change->{'form_params'}} )
+    {
+	debug "Clearing form params";
+	Para::Frame::Utils::clear_params(@params);
+    }
 }
 
 
