@@ -567,7 +567,7 @@ sub get_response
 		{
 		    if( defined $rv )
 		    {
-			warn "$$: Buffer empty\n";
+			warn "$$: Buffer empty ($buffer)\n";
 			if( $buffer_empty_time )
 			{
 			    if( ($buffer_empty_time+5) < time )
@@ -791,13 +791,7 @@ sub get_response
 sub send_loadpage
 {
 
-    # TODO: In order for not getting mixups then one session has
-    # several loadpages for the same URL, we must differentiate them
-    # with the request number.  The best way to do this is to redirect
-    # the browser to the loadpage with the reqnumber in the URL. Then
-    # the original page is reloadad the reqnumber will be found in the
-    # referer and can be used to return the right generated page.
-
+    # TODO:
     # We must handle the case then paraframe fails. That should prompt
     # the client to resend the request again, to the reborn demon or
     # to a backup demon. -- In order to resend the request, we must
