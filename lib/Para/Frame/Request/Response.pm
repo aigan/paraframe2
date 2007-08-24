@@ -589,6 +589,11 @@ sub send_output
     if( $url_in ne $url_out )
     {
 	debug "!!! $url_in ne $url_out";
+
+	# Keep query string
+	$url_out = $resp->page_url_with_query_and_reqnum;
+
+	$req->session->register_result_page($resp, $url_out);
 	$resp->forward($url_out);
     }
     else
