@@ -1375,6 +1375,7 @@ sub after_jobs
 
 
 	Para::Frame->run_hook( $req, 'before_render_output');
+	$req->change->before_render_output;
 
 #	#
 #	debug "----> Resp $resp";
@@ -1589,13 +1590,14 @@ sub referer_query
 	    $url = Para::Frame::URI->new($url);
 	    last if $url->host_port ne $req->host_with_port;
 
-	    if( defined( my $query = $url->query) )
+	    if( my(%query) = $url->query_form )
 	    {
-		if( $query ne 'backtrack' )
+		unless( $query{'backtrack'} )
 		{
-		    debug 2, "Referer query from current http req ($query)";
-		    debug "Returning query $query";
-		    return $query;
+		    debug 2, "Referer query from current http req";
+		    my $query_string = $url->query;
+		    debug "Returning query $query_string";
+		    return $query_string;
 		}
 	    }
 	}
@@ -1606,13 +1608,14 @@ sub referer_query
 	    $url = Para::Frame::URI->new($url);
 	    last if $url->host_port ne $req->host_with_port;
 
-	    if( defined(my $query = $url->query) )
+	    if( my(%query) = $url->query_form )
 	    {
-		if( $query ne 'backtrack' )
+		unless( $query{'backtrack'} )
 		{
 		    debug 2, "Referer query from original http req";
-		    debug "Returning query $query";
-		    return $query;
+		    my $query_string = $url->query;
+		    debug "Returning query $query_string";
+		    return $query_string;
 		}
 	    }
 	}
