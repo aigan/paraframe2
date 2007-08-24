@@ -67,7 +67,7 @@ BEGIN
             store_params clear_params add_params restore_params
             idn_encode idn_decode debug reset_hashref timediff
             extract_query_params fqdn retrieve_from_url get_from_fork
-            datadump );
+            datadump client_send );
 
 }
 
@@ -1696,6 +1696,118 @@ sub datadump
     {
 	return Dumper($ref);
     }
+}
+
+#######################################################################
+
+=head2 client_send
+
+  client_send($client, \$data, \%args )
+
+  client_send($client, $data, \%args )
+
+Supported args are:
+
+  req
+
+It will try many times sending part by part.
+
+If req is given; for each chunk of data that couldn't be sent, we will
+see if the req has been cancelled and then yield, by doing a
+L<Para::Frame::Request/yield>.  After that, we will try to send the
+chunk again.
+
+Tries 100 times per chunk.
+
+Returns: The number of characters sent. (That may be UTF8 characters.)
+
+=cut
+
+sub client_send
+{
+    my( $client, $data_in, $args ) = @_;
+
+    my $dataref;
+    if( ref $data_in )
+    {
+	if( UNIVERSAL::isa $data_in, 'SCALAR' )
+	{
+	    $dataref = $data_in
+	}
+	else
+	{
+	    confess "data in wrong format: $data_in";
+	}
+    }
+    else
+    {
+	$dataref = \ $data_in;
+    }
+
+    unless( $client->isa('IO::Socket') )
+    {
+	confess "client not a socket: $client";
+    }
+
+    $args ||= {};
+
+    # KEEP req undef if we don't want to yield!
+    my $req = $args->{'req'};
+
+    my $length = length($$dataref);
+
+    my $total = 0;
+    my $errcnt = 0;
+
+    unless( $length )
+    {
+	debug "We got nothing to send (to $client)";
+	return 0;
+    }
+
+    my $chunk = 16384; # POSIX::BUFSIZ * 2
+    my $sent = 0;
+    for( my $i=0; $i<$length; $i+= $sent )
+    {
+	$sent = $client->send( substr $$dataref, $i, $chunk );
+	if( $sent )
+	{
+#	    debug(3, "  Sent $sent chars");
+	    $total += $sent;
+	    $errcnt = 0;
+	}
+	else
+	{
+	    if( $req )
+	    {
+		if( $req->cancelled )
+		{
+		    debug("Request was cancelled. Giving up");
+		    return $total;
+		}
+
+		$req->yield( 0.9 );
+		debug(1,"  Resending chunk $i");
+	    }
+	    else
+	    {
+		debug("  Resending chunk $i of messge: $$dataref");
+		Time::HiRes::sleep(0.05);
+	    }
+
+	    $errcnt++;
+
+	    if( $errcnt >= 100 )
+	    {
+		debug(0,"Got over 100 failures to send chunk $i");
+		last;
+	    }
+
+	    redo;
+	}
+    }
+
+    return $total;
 }
 
 #######################################################################
