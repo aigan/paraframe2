@@ -64,10 +64,10 @@ BEGIN
             create_file create_dir chmod_tree chmod_file chmod_dir
             package_to_module module_to_package dirsteps compile
             passwd_crypt deunicode paraframe_dbm_open elapsed_time uri
-            store_params clear_params queue_clear_params add_params
-            restore_params idn_encode idn_decode debug reset_hashref
-            timediff extract_query_params fqdn retrieve_from_url
-            get_from_fork datadump );
+            store_params clear_params add_params restore_params
+            idn_encode idn_decode debug reset_hashref timediff
+            extract_query_params fqdn retrieve_from_url get_from_fork
+            datadump );
 
 }
 
@@ -1319,6 +1319,7 @@ sub clear_params
     {
 	foreach( @_ )
 	{
+#	    debug " - $_";
 	    $q->delete( $_ );
 	}
     }
@@ -1326,47 +1327,13 @@ sub clear_params
     {
 	$q->delete_all();
     }
-}
 
+#    debug "Remaining params:";
+#    foreach my $key ( $q->param() )
+#    {
+#	debug " + $key: ".join(', ',$q->param($key));
+#    }
 
-#######################################################################
-
-=head2 queue_clear_params
-
-  queue_cleare_params( @list )
-
-  queue_clear_params
-
-
-Adds a job for doing L</clear_params> before rendering the resulting
-page, unless we return page changes.
-
-=cut
-
-sub queue_clear_params
-{
-    my( @params ) = @_;
-
-    my $req = $Para::Frame::REQ;
-    return unless $req->is_from_client;
-    my $target_response = $req->response_if_existing;
-    return unless $target_response;
-
-    my $coderef = sub
-    {
-	my( $req ) = @_;
-
-	unless( $req->response_if_existing eq $target_response )
-	{
-	    return; # Response changed. Not clearing params
-	}
-
-	Para::Frame::Utils::clear_params(@params);
-	return;
-    };
-
-    $req->add_job('run_code', 'clear_params', $coderef);
-    $req->add_job('after_jobs');
 }
 
 
