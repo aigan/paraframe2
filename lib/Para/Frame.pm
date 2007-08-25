@@ -320,6 +320,15 @@ sub main_loop
 		{
 		    switch_req( $req );
 		    debug "cancelled by request";
+
+		    # If this was an active request for a master
+		    # request, it's disconnected state will be
+		    # detected and another active request will be
+		    # created.
+
+		    # TODO: May be polite to tell the master that this
+		    # request no longer is of service.
+
 		    $req->run_hook('done');
 		    close_callback($req->{'client'});
 		}
@@ -682,6 +691,7 @@ sub get_value
     }
 
 
+    # Probably caled from $req->get_cmd_val()
     if( ref $client eq 'Para::Frame::Request' )
     {
 	my $req = $client;
@@ -930,11 +940,11 @@ sub handle_code
 	    next;
 	}
 
-	$INBUFFER{$client} = $rest; # maby avoid invalid inbuffer
-	$DATALENGTH{$client} = 0;
-
 	$req->cancel;
-	return 0;
+
+	# Continue until it's safe to drop the connectio
+
+	# There may be a message sent to client
     }
     elsif( $code eq 'RESP' )
     {
