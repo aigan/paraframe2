@@ -435,53 +435,57 @@ sub main_loop
 
 	    ### Are there any data to be read from childs?
 	    #
-	    # Avoid double deregister
-	    $SIG{CHLD} = 'DEFAULT';
-	    #
-	    foreach my $child ( values %CHILD )
+	    if( keys %CHILD )
 	    {
-		my $child_data = ''; # We must init for each child!
-
-		# Do a nonblocking read to get data. We try to read often
-		# so that the buffer will not get full.
-
-		$child->{'fh'}->read($child_data, POSIX::BUFSIZ);
-		$child->{'data'} .= $child_data;
-
-		if( $child_data )
+		# Avoid double deregister
+		$SIG{CHLD} = 'DEFAULT';
+		# TODO: Let the REAPER mark up childs for later processing
+		#
+		foreach my $child ( values %CHILD )
 		{
-		    my $cpid = $child->pid;
-		    my $length = length( $child_data );
+		    my $child_data = ''; # We must init for each child!
 
-		    my $tlength = length( $child->{'data'} );
+		    # Do a nonblocking read to get data. We try to read often
+		    # so that the buffer will not get full.
 
-		    if( $child->{'data'} =~ /^(\d{1,8})\0/ )
+		    $child->{'fh'}->read($child_data, POSIX::BUFSIZ);
+		    $child->{'data'} .= $child_data;
+
+		    if( $child_data )
 		    {
-			# Expected length
-			my $elength = length($1)+$1+2;
-			if( $tlength == $elength )
+			my $cpid = $child->pid;
+			my $length = length( $child_data );
+
+			my $tlength = length( $child->{'data'} );
+
+			if( $child->{'data'} =~ /^(\d{1,8})\0/ )
 			{
-			    # Whole string recieved!
-			    unless( $child->{'done'} ++ )
+			    # Expected length
+			    my $elength = length($1)+$1+2;
+			    if( $tlength == $elength )
 			    {
-				$child->deregister(undef,$1);
-				debug "Removing child $cpid";
-				kill 9, $cpid;
+				# Whole string recieved!
+				unless( $child->{'done'} ++ )
+				{
+				    $child->deregister(undef,$1);
+				    debug "Removing child $cpid";
+				    kill 9, $cpid;
+				}
 			    }
 			}
-		    }
-		    else
-		    {
-			debug "Got '$child->{data}'";
+			else
+			{
+			    debug "Got '$child->{data}'";
+			}
 		    }
 		}
+
+		# Now we can turn the signal handling back on
+		$SIG{CHLD} = \&Para::Frame::REAPER;
+
+		# See if we got any more signals
+		&Para::Frame::REAPER;
 	    }
-
-	    # Now we can turn the signal handling back on
-	    $SIG{CHLD} = \&Para::Frame::REAPER;
-
-	    # See if we got any more signals
-	    &Para::Frame::REAPER;
 
         } || 'next'; #default
 	if( $@ )
@@ -691,9 +695,9 @@ sub get_value
     }
 
 
-    # Probably caled from $req->get_cmd_val()
     if( ref $client eq 'Para::Frame::Request' )
     {
+	# Probably caled from $req->get_cmd_val()
 	my $req = $client;
 	return undef if $req->{'cancel'}; ## Let caller handle it
 
@@ -895,7 +899,8 @@ sub handle_code
 
 
     my( $code ) = $1;
-    debug 5, "GOT code $code: $INBUFFER{$client}";
+    debug 1, "GOT code $code: $INBUFFER{$client}";
+#    debug 5, "GOT code $code: $INBUFFER{$client}";
 
     if( $code eq 'REQ' )
     {
@@ -999,6 +1004,7 @@ sub handle_code
 	# Send response in calling $REQ
 	debug(2,"Returning answer $file");
 
+	debug "Sending  RESP $file";
 	client_send($client, join( "\0", 'RESP', $file ) . "\n" );
     }
     elsif( $code eq 'NOTE' ) # CHILD msg
@@ -1033,9 +1039,9 @@ sub handle_code
     elsif( $code eq 'PING' )
     {
 	debug(4,"PING recieved");
+	debug "Sending  PONG";
 	client_send($client, "5\x00PONG\x00");
 	close_callback($client); # That's all
-	debug(4,"Sent PONG as response");
     }
     elsif( $code eq 'MEMORY' )
     {

@@ -308,10 +308,11 @@ sub send_to_server
     $valref ||= \ "1";
     my $length = length($$valref) + length($code) + 1;
 
-    if( $DEBUG > 3 )
+#    if( $DEBUG > 3 )
+    if( $DEBUG )
     {
 	warn "$$: Sending $length - $code - $$valref\n";
-	warn sprintf "$$:   at %.2f\n", Time::HiRes::time;
+#	warn sprintf "$$:   at %.2f\n", Time::HiRes::time;
     }
 
     unless( print $SOCK "$length\x00$code\x00" . $$valref )
@@ -651,7 +652,8 @@ sub get_response
 	    {
 		my $code = $1;
 
-		if( $DEBUG > 3 )
+#		if( $DEBUG > 3 )
+		if( $DEBUG )
 		{
 		    warn( sprintf "$$: Got %s: %s\n", $code,
 			  join '-', split /\0/, $row );

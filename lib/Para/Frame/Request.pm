@@ -1682,7 +1682,7 @@ sub send_code
     # To get a response, use get_cmd_val()
 
     $_[1] ||= 1; # Must be at least one param
-    debug( 5, "Sending code: ".join("-", @_)." ($req->{reqnum}) ".$req->client);
+    debug( 5, "Sending  ".join("-", @_)." ($req->{reqnum}) ".$req->client);
 #    debug sprintf "  at %.2f\n", Time::HiRes::time;
 
     if( $Para::Frame::FORK )
@@ -1788,6 +1788,7 @@ sub send_code
 	debug 2, "We got the active request $req->{'active_reqest'}{reqnum} now";
 	my $aclient = $req->{'active_reqest'}->client;
 
+	debug "Sending  @_";
 	client_send( $aclient, join( "\0", @_ ) . "\n" );
 
 	# Set up release code
@@ -1795,6 +1796,7 @@ sub send_code
     }
     else
     {
+	debug "Sending  @_";
 	client_send( $client, join( "\0", @_ ) . "\n" );
     }
 }
