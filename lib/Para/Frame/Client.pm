@@ -44,7 +44,7 @@ use constant TRIES    => 20; # 20 connection tries
 use constant DECLINED => -1; # From httpd.h
 use constant DONE     => -2; # From httpd.h
 
-our $DEBUG = 0;
+our $DEBUG = 1;
 
 our $SOCK;
 our $r;
@@ -533,28 +533,41 @@ sub get_response
     my $buffer = '';
     my $partial = 0;
     my $buffer_empty_time;
+    my $cancel_time;
     while( 1 )
     {
 
-	### Test connection
-	if( $apache2 )
+	if( $cancel_time )
 	{
-	    if( $c->aborted )
+	    if( ($cancel_time+15) < time )
+	    {
+		warn "$$: Waited 15 secs\n";
+		warn "$$: Closing down\n";
+		return 1;
+	    }
+	}
+	else
+	{
+	    ### Test connection to browser
+	    if( $apache2 )
+	    {
+		if( $c->aborted )
+		{
+		    warn "$$: Lost connection to client $client_fn\n";
+		    warn "$$:   Sending CANCEL to server\n";
+		    send_to_server("CANCEL");
+		    $cancel_time = time;
+		}
+	    }
+	    elsif( not $client_select->can_write(0)
+		   or  $client_select->can_read(0)
+		 )
 	    {
 		warn "$$: Lost connection to client $client_fn\n";
 		warn "$$:   Sending CANCEL to server\n";
 		send_to_server("CANCEL");
-		return 1;
+		$cancel_time = time;
 	    }
-	}
-	elsif( not $client_select->can_write(0)
-	       or  $client_select->can_read(0)
-	     )
-	{
-	    warn "$$: Lost connection to client $client_fn\n";
-	    warn "$$:   Sending CANCEL to server\n";
-	    send_to_server("CANCEL");
-	    return 1;
 	}
 
 
@@ -588,7 +601,7 @@ sub get_response
 		    }
 
 
-		    # EOF from client
+		    # EOF from server
 		    warn "$$: Nothing in socket $SOCK\n";
 		    warn "$$: rv: $rv\n";
 		    warn "$$: buffer: $buffer\n";
