@@ -2506,21 +2506,48 @@ sub cancel
 	$orig_req->cancel;
     }
 
-    if( $req->{'wait'} )
+    if( $req->{'wait'} > 0 )
     {
+	$req->{'wait'} = 0;
 	foreach my $oreq ( values %Para::Frame::REQUEST )
 	{
 	    if( $oreq->original and ( $oreq->original->id == $req->id ) )
 	    {
+		debug "A servant ($req->{'reqnum'}) of req $oreq->{'reqnum'} got cancelled";
+		debug "Both uses the same client. Cancel this also";
 		$oreq->cancel;
 	    }
+
+	    if( $oreq->active and ( $oreq->active->id == $req->id ) )
+	    {
+
+		# The common case: The active req created this request
+		# in order to communicate with the client. If this rec
+		# was cancelled it can't answer questions from the
+		# active request.
+
+		debug "A servant ($req->{'reqnum'}) of req $oreq->{'reqnum'} got cancelled";
+
+		if( $oreq->cancelled )
+		{
+		    debug "Master req also cancelled";
+		}
+		else
+		{
+		    debug "Master may be in the middle of getting information  from this servant";
+		    debug "Keep it alive a litle longer";
+		    $req->{'wait'} = 1;
+		}
+	    }
 	}
-	$req->{'wait'} = 0;
     }
 
-    if( $req->{'active_reqest'} )
+    if( my $areq = $req->{'active_reqest'} )
     {
-	$req->{'active_reqest'}->cancel;
+	debug "Master ($req->{'reqnum'} of active req $areq->{'reqnum'} got cancelled";
+
+	debug "Cancelling servant";
+	$areq->cancel;
 	delete $req->{'active_reqest'};
     }
 
