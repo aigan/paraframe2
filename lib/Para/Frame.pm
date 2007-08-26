@@ -846,7 +846,17 @@ sub fill_buffer
 		    }
 
 		    cluck "trace for $client";
-		    throw('action', "Data timeout while talking to client\n");
+
+		    # The caller will have to do the giving up
+
+		    # I have seen that the actual response CAN take
+		    # longer than 5 secs. I don't know why but we
+		    # should let go know and come back in another
+		    # round, if necessary
+
+		    return 0;
+
+#		    throw('action', "Data timeout while talking to client\n");
 		}
 	    }
 
