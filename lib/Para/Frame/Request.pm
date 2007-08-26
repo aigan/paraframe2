@@ -2380,6 +2380,7 @@ sub create_fork
 	    die "Realy can't fork! bailing out" if $sleep_count++ > 6;
 	    sleep 1;
 	}
+	$@ = undef;
     } until defined $pid;
 
     if( $pid )
