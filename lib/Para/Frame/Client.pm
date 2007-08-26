@@ -48,6 +48,7 @@ our $DEBUG = 1;
 
 our $SOCK;
 our $r;
+our $Q;
 
 our $BACKUP_PORT;
 our $STARTED; # Got loadpage info at this time
@@ -59,8 +60,6 @@ our $WAIT;
 our $CANCEL;
 our @NOTES;
 our $REQNUM;
-our %PARAMS;
-our %FILES;
 
 =head1 DESCRIPTION
 
@@ -145,13 +144,17 @@ sub handler
 	return DECLINED;
     }
 
-    my $q = new CGI;
+    $Q = new CGI;
     $|=1;
     my $ctype = $r->content_type;
 
 
     my $uri = $r->uri;
     my $filename = $r->filename;
+
+    my %params = ();
+    my %files = ();
+
 
     if( $r->isa('Apache2::RequestRec') )
     {
@@ -208,24 +211,21 @@ sub handler
 	### We let the daemon decide what to do with non-tt pages
 
 
-	%PARAMS = ();
-	%FILES = ();
-
-	foreach my $key ( $q->param )
+	foreach my $key ( $Q->param )
 	{
-	    if( $q->upload($key) )
+	    if( $Q->upload($key) )
 	    {
 		warn "$$: param $key is a filehandle\n";
 
-		my $val = $q->param($key);
-		my $info = $q->uploadInfo($val);
+		my $val = $Q->param($key);
+		my $info = $Q->uploadInfo($val);
 
-	    $PARAMS{$key} = "$val"; # Remove GLOB from value
+		$params{$key} = "$val"; # Remove GLOB from value
 
 		my $keyfile = $key;
 		$keyfile =~ s/[^\w_\-]//g; # Make it a normal filename
 		my $dest = "/tmp/paraframe/$$-$keyfile";
-		copy_to_file( $dest, $q->upload($key) ) or return DONE;
+		copy_to_file( $dest, $Q->upload($key) ) or return DONE;
 
 		my $uploaded =
 		{
@@ -233,18 +233,18 @@ sub handler
 		 info     => $info,
 		};
 
-		$FILES{$key} = $uploaded;
+		$files{$key} = $uploaded;
 	    }
 	    else
 	    {
-		$PARAMS{$key} = $q->param_fetch($key);
+		$params{$key} = $Q->param_fetch($key);
 	    }
 	}
     }
 
 #    warn sprintf "URI %s FILE %s CTYPE %s\n", $uri, $filename, $ctype;
 
-    my $value = freeze [ \%PARAMS,  \%ENV, $uri, $filename, $ctype, $dirconfig, $r->header_only, \%FILES ];
+    my $value = freeze [ \%params,  \%ENV, $uri, $filename, $ctype, $dirconfig, $r->header_only, \%files ];
 
     my $try = 0;
     while()
@@ -292,7 +292,7 @@ sub handler
 	}
     }
 
-    foreach my $filefield (values %FILES)
+    foreach my $filefield (values %files)
     {
 	my $tempfile = $filefield->{tempfile};
 	warn "$$: Removing tempfile $tempfile\n";
@@ -642,7 +642,7 @@ sub get_response
 		    {
 			send_message("\nServer vanished!");
 			sleep 3;
-			send_reload($r->uri, "Retrying...");
+			send_reload($Q->self_url, "Retrying..." );
 		    }
 		    last;
 		}
@@ -912,6 +912,7 @@ sub send_reload
     send_message($message);
 
     warn "$$: Telling browser to reload page\n";
+
 
     # More compatible..?
     # self.location.replace('$url');
