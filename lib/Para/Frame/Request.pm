@@ -1765,7 +1765,7 @@ sub send_code
 	    my $query = "run=wait_for_req&req=$client";
 	    my $url = "$scheme://$webhost$webpath?$query";
 
-	    my $ua = LWP::UserAgent->new;
+	    my $ua = LWP::UserAgent->new( timeout => 60*60 );
 	    my $lwpreq = HTTP::Request->new(GET => $url);
 
 	    # Do the request in a fork. Let that req message us in the
