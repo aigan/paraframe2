@@ -274,6 +274,7 @@ sub handler
 	elsif( $CANCEL )
 	{
 	    warn "$$: Closing down CANCELLED request\n";
+	    last;
 	}
 	else
 	{
