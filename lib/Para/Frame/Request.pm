@@ -1341,7 +1341,7 @@ sub after_jobs
 	if( $req->{'wait'} )
 	{
 	    # Waiting for something else to finish...
-	    debug 1, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
+	    debug 5, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
 	    $req->add_job('after_jobs');
 	}
 	elsif( $req->{'childs'} )
