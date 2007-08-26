@@ -335,7 +335,7 @@ sub main_loop
 		elsif( $req->{'wait'} )
 		{
 		    # Waiting for something else to finish...
-		    debug 1, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
+		    debug 5, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
 		}
 		elsif( my $job = shift @{$req->{'jobs'}} )
 		{
