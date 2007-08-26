@@ -1669,9 +1669,13 @@ sub report_error
 		die $@;
 	    };
 
-	    my $res = $dbix->$subroutine(@_);
-	    $STATE_RECONNECTING = 0;
-	    return $res;
+	    if( @_ )
+	    {
+		debug "REPEATING COMMAND \$dbix->$subroutine(@_)";
+		my $res = $dbix->$subroutine(@_);
+		$STATE_RECONNECTING = 0;
+		return $res;
+	    }
 	}
 
 	my $msg = "$state_desc\n$info\n";
