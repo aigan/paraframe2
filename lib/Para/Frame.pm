@@ -921,8 +921,8 @@ sub handle_code
 
 
     my( $code ) = $1;
-    debug 1, "GOT code $code: $INBUFFER{$client}";
-#    debug 5, "GOT code $code: $INBUFFER{$client}";
+#    debug 1, "GOT code $code: $INBUFFER{$client}";
+    debug 5, "GOT code $code: $INBUFFER{$client}";
 
     if( $code eq 'REQ' )
     {
@@ -1026,7 +1026,7 @@ sub handle_code
 	# Send response in calling $REQ
 	debug(2,"Returning answer $file");
 
-	debug "Sending  RESP $file";
+#	debug "Sending  RESP $file";
 	client_send($client, join( "\0", 'RESP', $file ) . "\n" );
     }
     elsif( $code eq 'NOTE' ) # CHILD msg
@@ -1061,7 +1061,7 @@ sub handle_code
     elsif( $code eq 'PING' )
     {
 	debug(4,"PING recieved");
-	debug "Sending  PONG";
+#	debug "Sending  PONG";
 	client_send($client, "5\x00PONG\x00");
 	close_callback($client); # That's all
     }

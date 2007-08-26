@@ -44,7 +44,7 @@ use constant TRIES    => 20; # 20 connection tries
 use constant DECLINED => -1; # From httpd.h
 use constant DONE     => -2; # From httpd.h
 
-our $DEBUG = 1;
+our $DEBUG = 0;
 
 our $SOCK;
 our $r;
@@ -314,8 +314,7 @@ sub send_to_server
     $valref ||= \ "1";
     my $length_code = length($$valref) + length($code) + 1;
 
-#    if( $DEBUG > 3 )
-    if( $DEBUG )
+    if( $DEBUG > 3 )
     {
 	warn "$$: Sending $code : $$valref\n";
 #	warn sprintf "$$:   at %.2f\n", Time::HiRes::time;
