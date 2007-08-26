@@ -1873,14 +1873,24 @@ sub get_cmd_val
 #	debug "Looking for response in req ".$req->client;
     }
 
+
+    my $cnt = 1;
     while( not @$queue )
     {
+	if( $cnt >= 20 )
+	{
+	    debug "We can't seem to get that answer to our code";
+	    debug "code: @_";
+	    $req->cancel;
+	}
+
 	if( $req->{'cancel'} )
 	{
 	    throw('cancel', "request cancelled");
 	}
 #	debug "No response registred. Getting next value:";
 	Para::Frame::get_value( $req );
+	$cnt ++;
     }
 
     return shift @$queue;
