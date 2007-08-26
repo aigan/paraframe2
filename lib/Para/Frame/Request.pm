@@ -258,7 +258,7 @@ sub new_subrequest
 
     $req->{'original_request'} = $original_req;
     $original_req->{'wait'} ++; # Wait for subreq
-    debug 2, "$original_req->{reqnum} now waits on $original_req->{'wait'} things";
+    debug 1, "$original_req->{reqnum} now waits on $original_req->{'wait'} things";
     Para::Frame::switch_req( $req, 1 );
     warn "\n$Para::Frame::REQNUM Starting subrequest\n";
 
@@ -277,7 +277,7 @@ sub new_subrequest
     my $err = catch($@);
 
     $original_req->{'wait'} --;
-    debug 2, "$original_req->{reqnum} now waits on $original_req->{'wait'} things";
+    debug 1, "$original_req->{reqnum} now waits on $original_req->{'wait'} things";
     Para::Frame::switch_req( $original_req );
 
 
@@ -1341,7 +1341,7 @@ sub after_jobs
 	if( $req->{'wait'} )
 	{
 	    # Waiting for something else to finish...
-	    debug 2, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
+	    debug 1, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
 	    $req->add_job('after_jobs');
 	}
 	elsif( $req->{'childs'} )
@@ -1715,17 +1715,28 @@ sub send_code
 
 	# Use existing
 	$req->{'wait_for_active_reqest'} ||= 0;
-	debug 2, "  It waits for $req->{'wait_for_active_reqest'} active requests";
+	debug 1, "  It waits for $req->{'wait_for_active_reqest'} active requests";
 
 	# Validate that the active request is alive
 	if( my $areq = $req->{'active_reqest'} )
 	{
-	    unless( $areq->client->connected )
+	    if( $areq->cancelled )
 	    {
-		debug "Active request NOT CONNECTED anymore";
-		debug "Releasing active_request $req->{'active_reqest'}{'reqnum'}";
+		debug "Active request CANCELLED";
+		debug "Releasing active_request $req->{'reqnum'}";
 		debug "Removing the referens to that request";
 
+		$areq->{'wait'} = 0;
+		$req->{'wait_for_active_reqest'} = 0;
+		delete $req->{'active_reqest'};
+	    }
+	    elsif( not $areq->client->connected )
+	    {
+		debug "Active request NOT CONNECTED anymore";
+		debug "Releasing active_request $req->{'reqnum'}";
+		debug "Removing the referens to that request";
+
+		$areq->{'wait'} = 0;
 		$req->{'wait_for_active_reqest'} = 0;
 		delete $req->{'active_reqest'};
 	    }
@@ -1820,9 +1831,9 @@ sub release_active_request
     }
     else
     {
-        debug 2, "Releasing active_request $req->{'active_reqest'}{'reqnum'}";
+        debug 1, "Releasing active_request $req->{'active_reqest'}{'reqnum'}";
 	$req->{'active_reqest'}{'wait'} --;
-	debug 2, "That request is now waiting for $req->{'active_reqest'}{'wait'} things";
+	debug 1, "That request is now waiting for $req->{'active_reqest'}{'wait'} things";
 
 	debug 2, "Removing the referens to that request";
 	delete $req->{'active_reqest'};
