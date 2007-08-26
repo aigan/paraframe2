@@ -56,6 +56,7 @@ our $LOADPAGE_URI;
 our $LOADPAGE_TIME;
 our $LAST_MESSAGE;
 our $WAIT;
+our $CANCEL;
 our @NOTES;
 our $REQNUM;
 our %PARAMS;
@@ -270,6 +271,10 @@ sub handler
 	    warn "$$: Returned $chunks chunks\n" if $DEBUG;
 	    last;
 	}
+	elsif( $CANCEL )
+	{
+	    warn "$$: Closing down CANCELLED request\n";
+	}
 	else
 	{
 	    warn "$$: Got no result on try $try\n" if $DEBUG;
@@ -306,20 +311,44 @@ sub send_to_server
     my( $code, $valref ) = @_;
 
     $valref ||= \ "1";
-    my $length = length($$valref) + length($code) + 1;
+    my $length_code = length($$valref) + length($code) + 1;
 
 #    if( $DEBUG > 3 )
     if( $DEBUG )
     {
-	warn "$$: Sending $length - $code - $$valref\n";
+	warn "$$: Sending $code : $$valref\n";
 #	warn sprintf "$$:   at %.2f\n", Time::HiRes::time;
     }
 
-    unless( print $SOCK "$length\x00$code\x00" . $$valref )
+    my $data = "$length_code\x00$code\x00" . $$valref;
+    my $length = length($data);
+    my $errcnt = 0;
+    my $chunk = 16384; # POSIX::BUFSIZ * 2
+    my $sent = 0;
+    for( my $i=0; $i<$length; $i+= $sent )
     {
-	warn "$$: LOST CONNECTION while sending $code\n";
-	return 0;
+	$sent = $SOCK->send( substr $data, $i, $chunk );
+	if( $sent )
+	{
+	    $errcnt = 0;
+	}
+	else
+	{
+	    $errcnt++;
+
+	    if( $errcnt >= 10 )
+	    {
+		warn "$$: Got over 10 failures to send chunk $i\n";
+		warn "$$: LOST CONNECTION\n";
+		return 0;
+	    }
+
+	    warn "$$:  Resending chunk $i of messge: $data\n";
+	    Time::HiRes::sleep(0.05);
+	    redo;
+	}
     }
+
     return 1;
 }
 
@@ -510,6 +539,7 @@ sub get_response
     $LAST_MESSAGE = "";
     @NOTES = ();
     $REQNUM = undef;
+    $CANCEL = undef;
 
     my $timeout = 1.5;
 
@@ -534,13 +564,12 @@ sub get_response
     my $buffer = '';
     my $partial = 0;
     my $buffer_empty_time;
-    my $cancel_time;
     while( 1 )
     {
 
-	if( $cancel_time )
+	if( $CANCEL )
 	{
-	    if( ($cancel_time+15) < time )
+	    if( ($CANCEL+15) < time )
 	    {
 		warn "$$: Waited 15 secs\n";
 		warn "$$: Closing down\n";
@@ -557,7 +586,7 @@ sub get_response
 		    warn "$$: Lost connection to client $client_fn\n";
 		    warn "$$:   Sending CANCEL to server\n";
 		    send_to_server("CANCEL");
-		    $cancel_time = time;
+		    $CANCEL = time;
 		}
 	    }
 	    elsif( not $client_select->can_write(0)
@@ -567,7 +596,7 @@ sub get_response
 		warn "$$: Lost connection to client $client_fn\n";
 		warn "$$:   Sending CANCEL to server\n";
 		send_to_server("CANCEL");
-		$cancel_time = time;
+		$CANCEL = time;
 	    }
 	}
 

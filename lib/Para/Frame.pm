@@ -335,7 +335,7 @@ sub main_loop
 		elsif( $req->{'wait'} )
 		{
 		    # Waiting for something else to finish...
-		    debug 4, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
+		    debug 1, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
 		}
 		elsif( my $job = shift @{$req->{'jobs'}} )
 		{
@@ -639,16 +639,28 @@ sub add_client
 
 =head2 get_value
 
+Either we know we have something to read
+or we are expecting an answer shortly
+
+Only call this if you KNOW where is a value to get. The answer may not
+be the one you were waiting for, so you may have to call this method
+several times.
+
+This will also handle incoming data coming AFTER your answer, if there
+is any such data to be handled.
+
+In usmmary: It reads all there is and returns
+
+Exceptions: If nothing was gotten before the timeout (5 secs), an
+exception will be thrown.
+
+TODO: Cleanup return code...
+
 =cut
 
 sub get_value
 {
     my( $client ) = @_;
-
-    # Either we know we have something to read
-    # or we are expecting an answer shortly
-
-    # Returns answer string or undef
 
     if( $Para::Frame::FORK )
     {
@@ -1165,6 +1177,7 @@ sub close_callback
 	delete $REQUEST{$client};
 	delete $RESPONSE{$client};
 	delete $INBUFFER{$client};
+	delete $DATALENGTH{$client};
 	switch_req(undef);
 	$SELECT->remove($client);
 	close($client);
