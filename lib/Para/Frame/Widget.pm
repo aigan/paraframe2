@@ -1701,7 +1701,7 @@ sub input_image
     {
 	# TODO: rewrite code
 
-	unless( $value eq $version->value )
+	unless( $version )
 	{
 	    # Hack to recognise radio-context
 	    # arc SHOULD be set...
