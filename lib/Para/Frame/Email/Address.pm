@@ -69,9 +69,9 @@ Returns the object.
 
 Exceptions:
 
-email - '$email_str_in' är inte en korrekt e-postadress
+email - '$email_str_in' is not a correct email address
 
-email - Ange hela adressen, inklusive \@\n'$email_str_in' är inte korrekt
+email - Give the whole email address, includning the \@\n'$email_str_in' is not correct
 
 =cut
 
@@ -102,11 +102,11 @@ sub parse
 	( $addr ) = Mail::Address->parse( $email_str_in );
     }
 
-    $addr or throw('email', "'$email_str_in' är inte en korrekt e-postadress\n");
+    $addr or throw('email', "'$email_str_in' is not a correct email address");
 
     unless( $addr->host )
     {
-	throw('email', "Ange hela adressen, inklusive \@\n'$email_str_in' är inte korrekt");
+	throw('email', "Give the whole email address, includning the \@\n'$email_str_in' is not correct");
     }
 
     my $a = bless { addr => $addr }, $class;
