@@ -258,7 +258,7 @@ sub new_subrequest
 
     $req->{'original_request'} = $original_req;
     $original_req->{'wait'} ++; # Wait for subreq
-    debug 1, "$original_req->{reqnum} now waits on $original_req->{'wait'} things";
+    debug 2, "$original_req->{reqnum} now waits on $original_req->{'wait'} things";
     Para::Frame::switch_req( $req, 1 );
     warn "\n$Para::Frame::REQNUM Starting subrequest\n";
 
@@ -277,7 +277,7 @@ sub new_subrequest
     my $err = catch($@);
 
     $original_req->{'wait'} --;
-    debug 1, "$original_req->{reqnum} now waits on $original_req->{'wait'} things";
+    debug 2, "$original_req->{reqnum} now waits on $original_req->{'wait'} things";
     Para::Frame::switch_req( $original_req );
 
 
