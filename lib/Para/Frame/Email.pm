@@ -241,7 +241,7 @@ sub error_msg
 
 Sends the email in a fork. Throws an exception if failure occured.
 
-Returns the fork. 
+Returns the fork.
 
 The return message in the fork is taken from $params{return_message}
 or the default "Email delivered".
@@ -340,6 +340,8 @@ sub send_by_proxy
     # Let another program do the sending. We will not know if it realy
     # succeeded.
 
+    debug "Sending by proxy";
+
     $e = $e->new unless ref $e;
     $p_in ||= {};
     $p_in->{'by_proxy'} = 1;
@@ -424,7 +426,7 @@ Example:
 =cut
 
 sub send
-  {
+{
     my($e, $p_in ) = @_;
 
     my $req = $Para::Frame::REQ;
@@ -438,76 +440,37 @@ sub send
 	return 0;
     }
 
+    debug "Creating PF message obj";
+
     $e = $e->new unless ref $e;
 
     my $err_msg = "";
     my $res = $e->{'result'} = {}; # Reset results
     my $p = $e->set( $p_in );
 
-
-    $p->{'template'} or die "No template selected\n";
     $p->{'from'}     or die "No from selected\n";
-    $p->{'subject'}  or die "No subject selected\n";
     $p->{'to'}       or die "No reciever for this email?\n";
 
     # List of addresses to try. Quit after first success
     my @try = ref $p->{'to'} eq 'ARRAY' ? @{$p->{'to'}} : $p->{'to'};
 
-
-    my $url;
-    if( $p->{'template'} =~ /^\// )
-    {
-	$url = $p->{'template'};
-    }
-    else
-    {
-	$url = "$home/email/".$p->{'template'};
-    }
-
-    my $page = Para::Frame::File->new({
-				       url => $url,
-				       site => $site,
-				       file_may_not_exist => 1,
-				      });
-
-    my( $tmpl ) = $page->template;
-    if( not $tmpl )
-    {
-	throw('notfound', "Hittar inte e-postmallen ".$p->{'template'});
-    }
-
-    my $rend = $tmpl->renderer;
-
-    my $burner = $rend->set_burner_by_type('plain');
-
-
-    # Clone params for protection from change
-    my %params = %$p;
-
-    $params{'page'} = $page;
-
-    my $data = "";
-    $burner->burn( $rend, $tmpl->sys_path, \%params, \$data )
-      or throw($burner->error);
-    utf8::downgrade($data); # Convert to ISO-8859-1
-
-    if( $p->{'pgpsign'} )
-    {
-	pgpsign(\$data, $p->{'pgpsign'} );
-    }
-
     my $from_addr = Para::Frame::Email::Address->parse( $p->{'from'} );
     $from_addr or
 	throw('mail', "Failed to parse address $p->{'from'}\n");
+
+    $p->{'from_addr'} = $from_addr;
 
     my $envelope_from_addr = $from_addr;
     if( $p->{'envelope_from'} )
     {
 	$envelope_from_addr = Para::Frame::Email::Address->parse( $p->{'envelope_from'} );
     }
+    $p->{'envelope_from_addr'} = $envelope_from_addr;
 
     my $envelope_from_addr_str = $envelope_from_addr->address;
     my $from_addr_str = $from_addr->address;
+
+    debug "Email from $from_addr_str";
 
 
     my @tried = ();
@@ -515,6 +478,9 @@ sub send
     foreach my $try ( @try )
     {
 	$try or debug(0,"Empty reciever email address") and next;
+
+	debug "Trying $try";
+
 	my( $to_addr ) = Para::Frame::Email::Address->parse( $try );
 	unless( $to_addr )
 	{
@@ -526,62 +492,10 @@ sub send
 	    debug(0,"Failed parsing $try");
 	    next;
 	}
-#	my $to_addr_str = $to_addr->address;
 	push @tried, $to_addr->address;
 
-	my $msg;
-
-	# I don't know.  Trying to mimic others
-	if( $p->{'pgpsign'} )
-	{
-	    $msg = MIME::Lite->new(
-	      From     => $from_addr->format,
-	      To       => $to_addr->format,
-	      Subject  => $p->{'subject'},
-	      Type     => 'TEXT',
-	      Data     => $data,
-#	      Encoding => '8bit',
-	      Encoding => 'quoted-printable',
-	     );
-#	    $msg->attr('content-type.charset' => 'UTF8');
-	    $msg->attr('content-type.charset' => 'ISO-8859-1');
-	}
-	else
-	{
-	    $msg = MIME::Lite->new(
-	      From     => encode_mimewords($from_addr->format),
-	      To       => encode_mimewords($to_addr->format),
-	      Subject  => encode_mimewords($p->{'subject'}),
-	      Type     => 'TEXT',
-	      Data     => $data,
-	      Encoding => 'quoted-printable',
-	     );
-#	    $msg->attr('content-type.charset' => 'UTF8');
-	    $msg->attr('content-type.charset' => 'ISO-8859-1');
-	}
-
-
-	if( $p->{'reply_to'} )
-	{
-	    $msg->add('Reply-To' =>  $p->{'reply_to'} );
-	}
-
-	my $sender_addr;
-	if( $p->{'sender'} )
-	{
-	    $sender_addr = Para::Frame::Email::Address->parse( $p->{'sender'} );
-	}
-
-	if( $sender_addr )
-	{
-	    $msg->add('Sender' => $sender_addr->format );
-	    debug "Sender set to ".$sender_addr->format;
-	}
-	elsif( not $envelope_from_addr->equals( $from_addr ) )
-	{
-	    $msg->add('Sender' => $envelope_from_addr->format );
-	    debug "Sender set to ".$envelope_from_addr->format." from envelope from";
-	}
+	debug "Rendering message";
+	my $dataref = $e->render_message($to_addr);
 
 
 	# Should we send this by proxy?
@@ -589,7 +503,39 @@ sub send
 	if( $p->{'by_proxy'} )
 	{
 	    my $to_addr_str = $to_addr->address;
-	    if( $msg->send_by_sendmail( FromSender => $from_addr->address ) )
+
+	    my $Sendmail = "/usr/lib/sendmail";
+	    my $FromSender = $from_addr->address;
+
+	    ### Start with the command and basic args:
+	    my @cmd = ($Sendmail, '-t', '-oi', '-oem');
+	    push @cmd, "-f$FromSender";
+
+	    eval
+	    {
+		### Open the command in a taint-safe fashion:
+		my $pid = open SENDMAIL, "|-";
+		defined($pid) or die "open of pipe failed: $!\n";
+		if(!$pid)    ### child
+		{
+		    exec(@cmd) or die "can't exec $Sendmail: $!\n";
+		    ### NOTREACHED
+		}
+		else         ### parent
+		{
+		    print SENDMAIL $$dataref;
+		    close SENDMAIL || die "error closing $Sendmail: $! (exit $?)\n";
+		}
+	    };
+
+	    if( $@ )
+	    {
+		$res->{'bad'}{$to_addr_str} ||= [];
+		push @{$res->{'bad'}{$to_addr_str}}, "failed";
+		$err_msg .= debug(0,"Faild to send mail to $to_addr_str");
+		next TRY;
+	    }
+	    else
 	    {
 		# Success!
 		debug(2,"Success");
@@ -597,16 +543,10 @@ sub send
 		push @{$res->{'good'}{$to_addr_str}}, "succeeded";
 		last TRY;
 	    }
-	    else
-	    {
-		$res->{'bad'}{$to_addr_str} ||= [];
-		push @{$res->{'bad'}{$to_addr_str}}, "failed";
-		$err_msg .= debug(0,"Faild to send mail to $to_addr_str");
-		next TRY;
-	    }
 	}
 
 
+	debug "Getting host";
 	my( $host ) = $to_addr->host();
 	unless( $host )
 	{
@@ -617,6 +557,7 @@ sub send
 	    next;
 	}
 
+	debug "Getting MX";
 	my @mx_list = mx($host);
 	my @mailhost_list;
 	foreach my $mx ( @mx_list )
@@ -663,7 +604,7 @@ sub send
 		    $smtp->mail($envelope_from_addr_str) or last SEND;
 		    $smtp->to($to_addr_str) or last SEND;
 		    $smtp->data() or last SEND;
-		    $smtp->datasend($msg->as_string) or last SEND;
+		    $smtp->datasend($$dataref) or last SEND;
 		    $smtp->dataend() or last SEND;
 		    $smtp->quit() or last SEND;
 
@@ -699,7 +640,7 @@ sub send
 	$err_msg .= "No working e-mail found\n";
     }
 
-    debug(1,"Returning status. Error set to: $err_msg");
+#    debug(1,"Returning status. Error set to: $err_msg");
 
     $e->{error_msg} = $err_msg;
 
@@ -714,6 +655,184 @@ sub send
 	return 0;
 	# throw('mail', $err_msg);
     }
+}
+
+
+#######################################################################
+
+=head2 render_body
+
+=cut
+
+sub render_body
+{
+    my($e ) = @_;
+
+    my $p = $e->params;
+
+    return if $p->{'body'};
+
+    my $site = $Para::Frame::REQ->site;
+    my $home = $site->home_url_path;
+
+
+    $p->{'template'} or die "No template selected\n";
+    $p->{'from'}     or die "No from selected\n";
+    $p->{'subject'}  or die "No subject selected\n";
+    $p->{'to'}       or die "No reciever for this email?\n";
+
+    my $url;
+    if( $p->{'template'} =~ /^\// )
+    {
+	$url = $p->{'template'};
+    }
+    else
+    {
+	$url = "$home/email/".$p->{'template'};
+    }
+
+    my $page = Para::Frame::File->new({
+				       url => $url,
+				       site => $site,
+				       file_may_not_exist => 1,
+				      });
+
+    my( $tmpl ) = $page->template;
+    if( not $tmpl )
+    {
+	throw('notfound', "Hittar inte e-postmallen ".$p->{'template'});
+    }
+
+    my $rend = $tmpl->renderer;
+
+    my $burner = $rend->set_burner_by_type('plain');
+
+
+    # Clone params for protection from change
+    my %params = %$p;
+
+    $params{'page'} = $page;
+
+    my $data = "";
+    $burner->burn( $rend, $tmpl->sys_path, \%params, \$data )
+      or throw($burner->error);
+    utf8::downgrade($data); # Convert to ISO-8859-1
+
+    if( $p->{'pgpsign'} )
+    {
+	pgpsign(\$data, $p->{'pgpsign'} );
+    }
+
+    $p->{'body'} = $data;
+
+    return 1;
+}
+
+
+#######################################################################
+
+=head2 render_header
+
+=cut
+
+sub render_header
+{
+    my( $e, $to_addr ) = @_;
+
+    my $p = $e->params;
+
+    return if $p->{'message_string'};
+
+
+    my $from_addr = $p->{'from_addr'} or die "No from selected\n";
+    my $subject = $p->{'subject'}  or die "No subject selected\n";
+    my $envelope_from_addr = $p->{'envelope_from_addr'} || $from_addr;
+
+    my $msg;
+
+    if( $p->{'pgpsign'} )
+    {
+	# I don't know.  Trying to mimic others
+	$msg = MIME::Lite->new(
+			       From     => $from_addr->format,
+			       To       => $to_addr->format,
+			       Subject  => $p->{'subject'},
+			       Type     => 'TEXT',
+			       Data     => $p->{'body'},
+			       Encoding => 'quoted-printable',
+			      );
+
+	$msg->attr('content-type.charset' => 'ISO-8859-1');
+    }
+    else
+    {
+	$msg = MIME::Lite->new(
+			       From     => encode_mimewords($from_addr->format),
+			       To       => encode_mimewords($to_addr->format),
+			       Subject  => encode_mimewords($p->{'subject'}),
+			       Type     => 'TEXT',
+			       Data     => $p->{'body'},
+			       Encoding => 'quoted-printable',
+			      );
+	$msg->attr('content-type.charset' => 'ISO-8859-1');
+    }
+
+
+    if( $p->{'reply_to'} )
+    {
+	$msg->add('Reply-To' =>  $p->{'reply_to'} );
+    }
+
+    my $sender_addr;
+    if( $p->{'sender'} )
+    {
+	$sender_addr = Para::Frame::Email::Address->parse( $p->{'sender'} );
+    }
+
+    if( $sender_addr )
+    {
+	$msg->add('Sender' => $sender_addr->format );
+	debug "Sender set to ".$sender_addr->format;
+    }
+    elsif( not $envelope_from_addr->equals( $from_addr ) )
+    {
+	$msg->add('Sender' => $envelope_from_addr->format );
+	debug "Sender set to ".$envelope_from_addr->format." from envelope from";
+    }
+
+    $p->{'header'} = $msg->header_as_string;
+
+    return 1;
+}
+
+
+#######################################################################
+
+=head2 render_message
+
+=cut
+
+sub render_message
+{
+    my( $e, $to_addr ) = @_;
+    my $p = $e->params;
+
+    if( $p->{'dataref'} )
+    {
+	return $p->{'dataref'};
+    }
+
+    $e->render_body;
+    $e->render_header( $to_addr );
+
+    my $data =
+      (
+       $p->{'header'}.
+       "\n".
+       $p->{'body'}
+      );
+
+    return \$data;
 }
 
 
