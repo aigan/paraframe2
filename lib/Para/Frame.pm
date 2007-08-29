@@ -35,6 +35,7 @@ use Sys::CpuLoad;
 use DateTime::TimeZone;
 use DateTime::Format::Strptime;
 use Cwd qw( abs_path );
+use File::Basename; # dirname
 #use Template::Stash::ForceUTF8;
 use Para::Frame::Template::Stash::CheckUTF8;
 
@@ -50,7 +51,7 @@ BEGIN
 
 use Para::Frame::Reload;
 use Para::Frame::Watchdog;
-use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send );
+use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir );
 use Para::Frame::Request;
 use Para::Frame::Widget;
 use Para::Frame::Burner;
@@ -1831,6 +1832,8 @@ END
 sub open_logfile
 {
     my $log = $CFG->{'logfile'};
+    my $logdir = dirname $log;
+    create_dir($logdir, 0770);
 
     open STDOUT, '>>', $log   or die "Can't append to $log: $!";
     open STDERR, '>&STDOUT'   or die "Can't dup stdout: $!";
