@@ -694,11 +694,11 @@ sub materialize_all
   $l->from_page( $pagenum )
   $l->from_page
 
-TODO: Use Array::Window
-
 Returns a ref to a list of elements corresponding to the given
 C<$page> based on the L</page_size>. If no C<$pagenum>
 is given, takes the value from query param table_page or 1.
+
+... I have looked at Array::Window but will not use it.
 
 =cut
 
