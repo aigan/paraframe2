@@ -56,6 +56,21 @@ PREREQUISITIES
 
     Template 2.15 has some important bugfixes for 2.14
 
+    Installation of Crypt::OpenPGP can be done in this order:
+     1. Math::Pari
+     2. Crypt::DSA
+     3. Class::Loader
+     4. Convert::ASCII::Armour
+     5. Crypt::Random
+     6. Crypt::Primes
+     7. Tie::EncryptedHash
+     8. Crypt::RSA
+     9. Crypt::IDEA
+    10. Crypt::CAST5_PP
+    11. Crypt::RIPEMD160
+    12. Crypt::Twofish
+    13. Crypt::OpenPGP
+
 
 INSTALL
 
