@@ -1315,6 +1315,45 @@ sub filefield
 
 Name "selector" is because "select" is a protected term.
 
+  selector( $field, $current, @data, $valkey, $tagkey, $header )
+  selector( $field, $current, %data )
+
+Draws a dropdown menu from a list of records (from a DB).
+
+First version:
+
+The select field has the name $field.  @data is the list of records
+returned from select_list().  $valkey is the field name holding the
+values and $tagkey is the field holding the lables used in the
+dropdown.  $current is the current value used for determining which
+item to select.
+
+If $header is defiend, it's a label first in the list without a value.
+
+Example:
+
+  <p>[% select( "sender", "",
+             select_list("from users"),
+             "user_id", "username",
+             "Välj" 
+  ) %]
+
+Second version:
+
+%data is a hashref. The select will consist of all the keys and
+values, sorted on the keys. $current value will be selected.  $field
+is the name of fhe field.
+
+Example:
+
+  <p>[% select("frequency", "",
+  {
+  	'1' = "every month",
+  	'2' = "every week",
+  	'3' = "every day",
+  }) %]
+
+
 
   valkey is the key in the hash for the value
 
