@@ -42,7 +42,7 @@ BEGIN
 {
     @Para::Frame::Widget::EXPORT_OK
 
-      = qw( slider jump submit go go_js forward forward_url preserve_data alfanum_bar rowlist list2block selectorder param_includes hidden input textarea filefield css_header confirm_simple inflect radio calendar input_image );
+      = qw( slider jump submit go go_js forward forward_url preserve_data alfanum_bar rowlist list2block selectorder param_includes hidden input textarea filefield css_header confirm_simple inflect radio calendar input_image selector );
 
 }
 
@@ -1306,6 +1306,120 @@ sub filefield
 		   CGI->escapeHTML( $value ),
 		   CGI->escapeHTML( $cols ),
 		   );
+}
+
+
+#######################################################################
+
+=head2 selector
+
+Name "selector" is because "select" is a protected term.
+
+
+  valkey is the key in the hash for the value
+
+  tagkey is the key in the hash for the label
+
+  relkey is the key in the hash for the rel; see usableforms...
+
+  tdlabel: Sets C<label> and separates it with a C<td> tag.
+
+  label: draws a label before the field with the given text
+
+  label_class: Adds a class to the C<label> tag
+
+  separator: adds the unescaped string between label and input tag
+
+  id: used for label. Defaults to C<$field>
+
+
+
+=cut
+
+sub selector
+{
+    my( $name, $current, $data, $params ) = @_;
+
+    my $valkey = delete $params->{'valkey'};
+    my $tagkey = delete $params->{'tagkey'} || $valkey;
+    my $relkey = delete $params->{'relkey'};
+    my $header = delete $params->{'header'};
+    my $out = '';
+
+    #### Label etc
+    my $extra = "";
+    my $prefix = "";
+    my $separator = delete($params->{'separator'}) || '';
+    if( my $tdlabel = delete $params->{'tdlabel'} )
+    {
+	$separator = "</td><td>";
+	$params->{'label'} = $tdlabel;
+    }
+    if( my $label = delete $params->{'label'} )
+    {
+	my $id = $params->{id} || $name;
+	my $prefix_extra = "";
+	if( my $class = delete $params->{'label_class'} )
+	{
+	    $prefix_extra .= sprintf " class=\"%s\"",
+	    CGI->escapeHTML( $class );
+	}
+	$prefix .= sprintf('<label for="%s"%s>%s</label>',
+			   CGI->escapeHTML( $id ),
+			   $prefix_extra,
+			   CGI->escapeHTML($label),
+			   );
+	$params->{id} = $id;
+    }
+
+    foreach my $key ( keys %$params )
+    {
+	if( my $keyval = $params->{$key} )
+	{
+	    $extra .= sprintf " $key=\"%s\"",
+	      CGI->escapeHTML( $keyval );
+	}
+    }
+
+    if( $prefix )
+    {
+	$prefix .= $separator;
+    }
+    ###########
+
+    $out .= $prefix . '<select name="'. CGI->escapeHTML( $name ) .'">';
+
+    if( $valkey )
+    {
+	my $rel = ( $relkey ? ' rel="nop"' : '' );
+	$out .= '<option value=""'. $rel .'>'. CGI->escapeHTML( $header ) .'</option>'
+	  if( $header );
+
+	foreach my $row ( @$data )
+	{
+	    my $selected = ( $row->{$valkey} eq $current ?
+			     ' selected="selected"' : '' );
+	    $rel = ( $relkey ? ' rel="'. $row->{$relkey} .'"' : '' );
+
+	    $out .= '<option value="'. $row->{$valkey} .'"'. $selected . $rel
+	      .'>'. $row->{$tagkey} .'</option>';
+	}
+    }
+    else
+    {
+	foreach my $key ( %$data )
+	{
+	    my $selected = ( $key eq $current ?
+			     ' selected="selected"' : '' );
+
+	    $out .= '<option value="'. $key . $selected .'">'.
+	      $data->{$key} .'</option>';
+	}
+    }
+
+    $out .= '</select>';
+
+    return $out;
 }
 
 
