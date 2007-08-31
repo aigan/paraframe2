@@ -32,6 +32,7 @@ use Carp qw(cluck croak carp confess longmess );
 use LWP::UserAgent;
 use HTTP::Request;
 use Template::Document;
+use Time::HiRes;
 
 BEGIN
 {
@@ -134,6 +135,7 @@ sub new
         header_only     => $header_only,   ## true if only sending header
         site            => undef,          ## Default site for req
         in_loadpage     => 0,              ## client uses loadpage
+        started         => Time::HiRes::time,
     }, $class;
 
     # Log some info
@@ -347,6 +349,7 @@ sub new_minimal
      reqnum         => $reqnum,	## The request serial number
      wait           => 0,	## Asked to wait?
      site           => undef,	## Default site for req
+     started        => Time::HiRes::time,
     }, $class;
 
     $req->{'params'} = {%$Para::Frame::PARAMS};
