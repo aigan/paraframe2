@@ -1718,7 +1718,7 @@ sub send_code
 
 	# Use existing
 	$req->{'wait_for_active_reqest'} ||= 0;
-	debug 1, "  It waits for $req->{'wait_for_active_reqest'} active requests";
+	debug 2, "  It waits for $req->{'wait_for_active_reqest'} active requests";
 
 	# Validate that the active request is alive
 	if( my $areq = $req->{'active_reqest'} )
