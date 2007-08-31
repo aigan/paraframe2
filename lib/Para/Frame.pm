@@ -1152,7 +1152,9 @@ sub close_callback
 	}
 	elsif( $REQUEST{$client} )
 	{
-	    warn "$REQUEST{$client}{reqnum} Done\n";
+	    warn sprintf "%d Done in %6.2f secs\n",
+	      $REQUEST{$client}{reqnum},
+		(time - $REQUEST{$client}{started});
 	}
     }
 
