@@ -1527,7 +1527,7 @@ sub timediff
 {
     my $ts = $Para::Frame::timediff_timestamp;
     $Para::Frame::timediff_timestamp = Time::HiRes::time();
-    return sprintf "%20s: %2.2f\n", $_[0], Time::HiRes::time() - $ts;
+    return sprintf "%30s: %6.2f\n", $_[0], Time::HiRes::time() - $ts;
 }
 
 
