@@ -439,7 +439,7 @@ sub main_loop
 	    if( keys %CHILD )
 	    {
 		# Avoid double deregister
-		$SIG{CHLD} = 'DEFAULT';
+		$SIG{CHLD} = 'IGNORE';
 		# TODO: Let the REAPER mark up childs for later processing
 		#
 		foreach my $child ( values %CHILD )
@@ -1286,7 +1286,7 @@ sub daemonize
     }
 
     # Reset signal handlers for the child
-    $SIG{CHLD} = 'DEFAULT';
+    $SIG{CHLD} = 'IGNORE';
     $SIG{USR1} = 'DEFAULT';
 
     if( $run_watchdog )
