@@ -263,6 +263,8 @@ sub send_in_fork
     $e = $e->new unless ref $e;
     $p_in ||= {};
 
+    confess "repair me";
+
     my $msg = delete( $p_in->{'return_message'} ) || "Email delivered";
 
     my $fork = $Para::Frame::REQ->create_fork;
@@ -514,22 +516,27 @@ sub send
 	    eval
 	    {
 		### Open the command in a taint-safe fashion:
+		debug "Opening a pipe to sendmail";
 		my $pid = open SENDMAIL, "|-";
 		defined($pid) or die "open of pipe failed: $!\n";
 		if(!$pid)    ### child
 		{
+		    debug "Executing command @cmd";
 		    exec(@cmd) or die "can't exec $Sendmail: $!\n";
 		    ### NOTREACHED
 		}
 		else         ### parent
 		{
+		    debug "Sending email to pipe";
 		    print SENDMAIL $$dataref;
 		    close SENDMAIL || die "error closing $Sendmail: $! (exit $?)\n";
+		    debug "Pipe closed";
 		}
 	    };
 
 	    if( $@ )
 	    {
+		debug "We got problems: $@";
 		$res->{'bad'}{$to_addr_str} ||= [];
 		push @{$res->{'bad'}{$to_addr_str}}, "failed";
 		$err_msg .= debug(0,"Faild to send mail to $to_addr_str");
@@ -538,7 +545,7 @@ sub send
 	    else
 	    {
 		# Success!
-		debug(2,"Success");
+		debug(1,"Success");
 		$res->{'good'}{$to_addr_str} ||= [];
 		push @{$res->{'good'}{$to_addr_str}}, "succeeded";
 		last TRY;
@@ -741,7 +748,7 @@ sub render_header
 
     my $p = $e->params;
 
-    return if $p->{'message_string'};
+    return if $p->{'header'};
 
 
     my $from_addr = $p->{'from_addr'} or die "No from selected\n";
