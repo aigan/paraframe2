@@ -40,12 +40,6 @@ use Para::Frame::DBIx::Table;
 use Para::Frame::DBIx::State;
 
 
-use base qw( Exporter );
-BEGIN
-{
-    our @EXPORT_OK = qw( pgbool );
-}
-
 our $STATE_RECONNECTING; # Special temporary dbix state
 
 
@@ -802,6 +796,36 @@ sub equals
 
 #######################################################################
 
+=head2 parse_datetime
+
+  $dbix->parse_datetime( $time, $class )
+
+This uses the C<datetime_formatter> property of $dbix (as set on
+construction).
+
+L<$class> defaults to L<Para::Frame::Time>. Can be used to set the
+class to a suitable subclass to L<Para::Frame::Time>.
+
+Should be a litle more efficiant than using L<Para::Frame::Time/get>
+directly.
+
+Returns: a L<Para::Frame::Time> object
+
+=cut
+
+sub parse_datetime
+{
+    my( $dbix, $time, $class ) = @_;
+    return undef unless $time;
+
+    $class ||= 'Para::Frame::Time';
+    my $dt = $dbix->{'datetime_formatter'}->parse_datetime($time);
+    return bless $dt, $class;
+}
+
+
+#######################################################################
+
 =head2 format_datetime
 
   $dbix->format_datetime( $time )
@@ -1364,7 +1388,7 @@ sub format_value
 	}
 	elsif( $type eq 'boolean' )
 	{
-	    return pgbool( $val );
+	    return $dbix->bool( $val );
 	}
 	elsif( $type eq 'date' )
 	{
@@ -1515,11 +1539,11 @@ sub save_record
 	}
 	elsif( $type eq 'boolean' )
 	{
-	    if( pgbool($new) ne pgbool($old) )
+	    if( $dbix->bool($new) ne $dbix->bool($old) )
 	    {
 		$fields_added{ $field } ++;
 		push @fields, $field;
-		push @values, pgbool( $new );
+		push @values, $dbix->bool( $new );
 		$new = '<undef>' unless defined $new;
 		$old = '<undef>' unless defined $old;
 		debug(1,"  field $field differ: '$new' != '$old'");
@@ -1790,49 +1814,6 @@ Returns: a L<Para::Frame::DBIx::State> object representing the current state.
 sub state
 {
     return Para::Frame::DBIx::State->new($_[0]);
-}
-
-
-
-########################################################################
-#
-#=head2 create_table
-#
-#  $dbix->create_table($value)
-#
-#Returns: a boolean true/false value fore use in SQL statements for the
-#DB.
-#
-#=cut
-#
-#sub bool
-#{
-#    die "bool not implemented";
-#}
-#
-#
-#######################################################################
-############ functions
-
-=head2 pgbool
-
-DEPRECATED!
-
-Use L</bool> instead.
-
-  pgbool($value)
-
-Returns 't' or 'f' for true/false value.
-
-=cut
-
-# TODO: Replace pgbool with dbbool, dependant on the db used
-
-sub pgbool
-{
-    return 'f' unless $_[0];
-    return 'f' if $_[0] eq 'f';
-    return 't';
 }
 
 
