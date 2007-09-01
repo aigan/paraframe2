@@ -56,10 +56,14 @@ comparsions.
 
   Para::Frame::Email::Address->parse( $email_in )
 
+  Para::Frame::Email::Address->parse( $address_obj )
+
 This is the object constructor.
 
 If C<$email_in> already is an Para::Frame::Email::Address object;
-retuns it.
+retuns it. Will rebless it if it's not of the given class.
+
+Also takes L<Mail::Address> objects as input.
 
 Parses the address using L<Mail::Address/parse>.
 
@@ -79,30 +83,32 @@ sub parse
 {
     my( $class, $email_str_in ) = @_;
 
-    # OBS: Should not be called as a constructor by subclasses
-    if( $class eq "Para::Member::Email::Address" )
-    {
-	confess "check this";
-    }
 
-    # May change the object class belonging
-    return $email_str_in
-	if UNIVERSAL::isa($email_str_in, $class);
-
-    my $addr;
     if( UNIVERSAL::isa $email_str_in, "Para::Frame::Email::Address" )
     {
-	# We are upgrading to a superclass
-	confess "check this";
-	$addr = $email_str_in->{'addr'};
+	if( UNIVERSAL::isa $email_str_in, $class )
+	{
+	    return $email_str_in;
+	}
+	else
+	{
+	    # Rebless in right class. (May be subclass)
+	    return bless $email_str_in, $class;
+	}
+    }
+
+    my $addr;
+
+    if( UNIVERSAL::isa $email_str_in, "Mail::Address" )
+    {
+	$addr = $email_str_in;
     }
     else
     {
 	# Retrieve first in list
 	( $addr ) = Mail::Address->parse( $email_str_in );
+	$addr or throw('email', "'$email_str_in' is not a correct email address");
     }
-
-    $addr or throw('email', "'$email_str_in' is not a correct email address");
 
     unless( $addr->host )
     {
@@ -194,6 +200,8 @@ existing.
 sub format_human
 {
     my( $a ) = @_;
+
+    debug "Formatting address $a";
     if( $a->name )
     {
 	return sprintf "%s <%s>", $a->name, $a->address;
