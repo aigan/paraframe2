@@ -9,7 +9,7 @@ package Para::Frame::Email::Address;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2007 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -36,6 +36,7 @@ BEGIN
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw reset_hashref fqdn debug );
+use Para::Frame::Email::Address::Fallback;
 
 use overload '""' => \&as_string;
 use overload 'eq' => \&equals;
@@ -115,9 +116,125 @@ sub parse
 	throw('email', "Give the whole email address, includning the \@\n'$email_str_in' is not correct");
     }
 
-    my $a = bless { addr => $addr }, $class;
+    unless( $addr->user )
+    {
+	throw('email', "Give the whole email address, includning the \@\n'$email_str_in' is not correct");
+    }
+
+    my $a = bless
+    {
+     addr => $addr,
+     original => $email_str_in,
+     broken => 0,
+    }, $class;
 
     return $a;
+}
+
+
+#######################################################################
+
+=head2 parse_tolerant
+
+  Para::Frame::Email::Address->parse( $email_in )
+
+  Para::Frame::Email::Address->parse( $address_obj )
+
+Same as L</parse>, excepts that it returns an object even if the
+parsing failed. For representing existing, faulty email addresses.
+
+=cut
+
+sub parse_tolerant
+{
+    my( $class, $email_str_in ) = @_;
+
+
+    if( UNIVERSAL::isa $email_str_in, "Para::Frame::Email::Address" )
+    {
+	if( UNIVERSAL::isa $email_str_in, $class )
+	{
+	    return $email_str_in;
+	}
+	else
+	{
+	    # Rebless in right class. (May be subclass)
+	    return bless $email_str_in, $class;
+	}
+    }
+
+    my $addr;
+    my $broken = 0;
+
+    if( UNIVERSAL::isa $email_str_in, "Mail::Address" )
+    {
+	$addr = $email_str_in;
+    }
+    else
+    {
+	# Retrieve first in list
+	( $addr ) = Mail::Address->parse( $email_str_in );
+	if( not $addr )
+	{
+	    $addr = Para::Frame::Email::Address::Fallback->
+	      parse($email_str_in);
+	    $broken = 1;
+	}
+	elsif( not $addr->user )
+	{
+	    $broken = 1;
+	}
+	elsif( not $addr->host )
+	{
+	    $broken = 1;
+	}
+    }
+
+    my $a = bless
+    {
+     addr => $addr,
+     original => $email_str_in,
+     broken => $broken,
+    }, $class;
+
+    return $a;
+}
+
+
+#######################################################################
+
+=head2 new
+
+  $class->new( $string )
+
+Simple constructor that only takes string and returns object
+
+=cut
+
+sub new
+{
+    my( $addr ) = Mail::Address->parse( $_[1] );
+    return bless
+    {
+     addr => $addr,
+     original => $_[1],
+    }, $_[0];
+}
+
+
+#######################################################################
+
+=head2 broken
+
+  $a->broken
+
+Returns true if the parsing failed
+
+=cut
+
+sub broken
+{
+    $_[0]->{'broken'};
 }
 
 
