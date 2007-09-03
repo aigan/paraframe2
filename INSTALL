@@ -1,0 +1,95 @@
+Installation notes
+
+Some of the modules can be installed in debian:
+
+apt-get install libdate-manip-perl libdatetime-perl libdatetime-format-pg-perl libfile-mimeinfo-perl libfile-remove-perl libfile-slurp-perl libfreezethaw-perl libhttp-browserdetect-perl perlmagick libmime-lite-perl libnet-scp-perl libsys-cpuload-perl libtemplate-perl libtest-warn-perl libtext-autoformat-perl libtime-piece-perl libunicode-maputf8-perl libdata-buffer-perl libdigest-md2-perl libsort-versions-perl libclass-errorhandler-perl libconvert-asn1-perl libmodule-build-perl libio-stringy-perl lsof libextutils-cbuilder-perl libdata-dump-perl libberkeleydb-perl libcrypt-des-ede3-perl libcrypt-rijndael-perl libcrypt-blowfish-perl libcrypt-cbc-perl libdbi-perl libproc-processtable-perl g++
+
+Template 2.15 has some important bugfixes for 2.14
+
+
+
+Check for needed modules by running
+
+  perl Makefile.PL
+  make
+  make test
+
+Install the needed modules with cpan.
+
+Installation of Crypt::OpenPGP can be done in this order:
+  1. Math::Pari
+  2. Crypt::DSA
+  3. Class::Loader
+  4. Convert::ASCII::Armour
+  5. Crypt::Random
+  6. Crypt::Primes
+  7. Tie::EncryptedHash
+  8. Crypt::RSA
+  9. Crypt::IDEA
+ 10. Crypt::CAST5_PP
+ 11. Crypt::RIPEMD160
+ 12. Crypt::Twofish
+ 13. Crypt::OpenPGP
+
+
+If you are using apache2, you will need libapache2-mod-perl2 (debian
+package).
+
+Create a file  /etc/apache2/conf.d/paraframe with the content:
+
+  <Perl>
+     unshift @INC, '/usr/local/paraframe/lib';
+  </Perl>
+
+Or where you have put it.
+
+Make sure to enable the userdir module if you are using
+/home/myself/public_hyml/ for development. Also enable the perl
+module.
+
+I will assume you are using .htaccess, since a lot of functionality
+depends on it. Be sure to allow using .htaccess in your webroot by
+using "AllowOverride All". For example:
+
+    <Directory /var/www/>
+      Options Indexes FollowSymLinks
+      AllowOverride All
+    </Directory>
+
+You can turn off apache functionality that is replaced by paraframe,
+like MultiViews. Here is an example .htaccess file placed in
+/var/www/pf-test :
+
+    Options -MultiViews
+    ErrorDocument 404 /pf-test/page_not_found.tt
+    ErrorDocument 406 /pf-test/page_not_found.tt
+    <FilesMatch ".tt$|^$">
+      SetHandler perl-script
+    </FilesMatch>
+    PerlHandler Para::Frame::Client
+    PerlSetVar port 7788
+
+create a symlink in your site to the html/pf dir. If you are setting
+up the site in the pf-test dir under the /var/www webroot, you will
+create /var/www/pf-test/pf as a symlink to
+/usr/local/paraframe/html/pf. Standing in /var/www/pf-test, you can
+give the command:
+
+  ln -s /usr/local/paraframe/html/pf
+
+
+You have to start a paraframe daemon that listens to the port you
+choosen. In the example above, it's 7788.
+
+There is a demo/demoserv.pl you can try. You are meant to copy the
+file and create your own application. Try it with
+
+  ./demo/demoserver.pl //host.domain.com:7788/pf-test
+
+
+Then start your favourite browser and visit
+
+  http://host.domain.com/pf-test/
+
+
+Good luck!
