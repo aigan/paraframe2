@@ -2431,6 +2431,14 @@ True if paraframe recovered from an abnormal error.
 
 Calls L<Para::Frame::File/new> with the given params
 
+=item loc
+
+Calls L<Para::Frame::L10N/loc> with the given params
+
+=item locescape
+
+Calls L<Para::Frame::L10N/locescape> with the given params
+
 =item rand
 
 Produce a random integer number, at least 0 and at most one less than
@@ -2466,18 +2474,19 @@ sub set_global_tt_params
     my $params =
     {
 	'cfg'             => $Para::Frame::CFG,
+	'debug'           => sub{ debug(@_);"" },
 	'dump'            => \&Para::Frame::Utils::datadump,
-	'warn'            => sub{ warn($_[0],"\n");"" },
-	'debug'           => sub{ debug(@_) },
-        'note'            => sub{ $Para::Frame::REQ->note(@_); "" },
 	'emergency_mode'  => sub{ $Para::Frame::Watchdog::EMERGENCY_MODE },
+        'file'            => sub{Para::Frame::File->new(@_)},
+        'loc'             => \&Para::Frame::L10N::loc,
+        'locescape'       => \&Para::Frame::L10N::locescape,
+        'mt'              => \&Para::Frame::L10N::mt,
+        'note'            => sub{ $Para::Frame::REQ->note(@_); "" },
 	'rand'            => sub{ int rand($_[0]) },
+        'timediff'        => \&Para::Frame::Utils::timediff,
 	'uri'             => \&Para::Frame::Utils::uri,
 	'uri_path'        => \&Para::Frame::Utils::uri_path,
-        'timediff'        => \&Para::Frame::Utils::timediff,
-        'mt'              => \&Para::Frame::L10N::mt,
-        'loc'             => \&Para::Frame::L10N::loc,
-        'file'            => sub{Para::Frame::File->new(@_)},
+	'warn'            => sub{ warn($_[0],"\n");"" },
     };
 
     $class->add_global_tt_params( $params );
