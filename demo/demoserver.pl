@@ -70,13 +70,13 @@ use Para::Frame::Site;
 			    'code'        => 'demo',
 			    'webhome'     => $WEBHOME,
 			    'webhost'     => $WEBHOST,
-			    'appbase'     => 'Para::Frame::Demo',
 			   });
 
 
     my $cfg =
     {
      'paraframe' => $PFROOT,
+     'appbase'      => 'Para::Frame::Demo',
      'logfile'      => "/tmp/pf_demo/server-$PORT.log",
      'pidfile'      => "/tmp/pf_demo/server-$PORT.pid",
      'ttcdir'       => "/tmp/pf_demo",
