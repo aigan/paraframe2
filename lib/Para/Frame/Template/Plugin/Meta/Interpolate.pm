@@ -80,7 +80,7 @@ sub new
 {
     my( $self, $context, @params ) = @_;
 
-#    warn "$$: new Meta::Interpolate\n";
+#    warn "new Meta::Interpolate\n";
     my $cfg = $context->config;
     my $st = $cfg->{START_TAG} || '[%';
     $st =~ s/\\//g;
@@ -94,17 +94,19 @@ sub new
     {
 	next if $key =~ /^_/;
 	my $val = $template->{$key};
-	if( $val =~ /^-(.*)/ )
+	if( $val =~ /^-(.*)/s )
 	{
 	    my $src = $st.' '.$1.' '.$et;
 #	    warn "Parsing $template->{$key} => $src\n";
 	    $val = $context->process( \$src, {} );
+#	    warn "Got value $val\n";
 	    unless( $stash->get($key) )
 	    {
+#		warn "Assigning val to $key\n";
 		$stash->set($key, $val);
 	    }
 	}
-	elsif( $val =~ /^~(.*)/ )
+	elsif( $val =~ /^~(.*)/s )
 	{
 	    my $src = $st.' "'.$1.'" '.$et;
 #	    warn "Parsing $template->{$key} => $src\n";
