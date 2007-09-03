@@ -29,6 +29,8 @@ create it's own object.
 A request can change its language preference by methods on this
 object, or by creating another object with diffrent preferences.
 
+Exportable functions are L</loc> and L</locescape>.
+
 =cut
 
 use strict;
@@ -55,7 +57,7 @@ use base qw(Locale::Maketext);
 use base qw( Exporter );
 BEGIN
 {
-    @Para::Frame::L10N::EXPORT_OK = qw( loc );
+    @Para::Frame::L10N::EXPORT_OK = qw( loc locescape );
 
 }
 
@@ -90,6 +92,28 @@ sub loc (@)
     return $res;
 }
 
+
+#######################################################################
+
+=head2 locescape
+
+  locescape( $phrase )
+
+Escapes special symbols in the string that is going to be parsed by
+MakeText L</loc>. This escapes C<[>, C<]>, and C<~>.
+
+Returns: A scalar string
+
+=cut
+
+sub locescape
+{
+    $_ = shift;
+    s/~/~~/g;
+    s/\[/~[/g;
+    s/\]/~]/g;
+    return $_;
+}
 
 #######################################################################
 
@@ -371,14 +395,27 @@ sub compute
     {
 	if($lh->{'fail'})
 	{
-	    my $fail;
-	    if(ref($fail = $lh->{'fail'}) eq 'CODE')
+	    my $res;
+	    eval
 	    {
-		return &{$fail}($lh, $$phrase, @_);
+		my $fail;
+		if(ref($fail = $lh->{'fail'}) eq 'CODE')
+		{
+		    $res = &{$fail}($lh, $$phrase, @_);
+		}
+		else
+		{
+		    $res = $lh->$fail($$phrase, @_);
+		}
+	    };
+	    if( $@ )
+	    {
+		my $class = ref $lh;
+		Carp::croak "Error in $class maketexting:\n$@";
 	    }
 	    else
 	    {
-		return $lh->$fail($$phrase, @_);
+		return $res;
 	    }
 	}
 	else
@@ -406,9 +443,10 @@ sub compute
     if($@)
     {
 	my $err = $@;
+	my $class = ref $lh;
 	$err =~ s<\s+at\s+\(eval\s+\d+\)\s+line\s+(\d+)\.?\n?>
 	  <\n in bracket code [compiled line $1],>s;
-	Carp::croak "Error in maketexting \"$phrase\":\n$err as used";
+	Carp::croak "Error in $class maketexting \"$phrase\":\n$err as used";
     }
 
     utf8::upgrade( $value );
