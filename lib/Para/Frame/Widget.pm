@@ -824,7 +824,6 @@ sub input
 {
     my( $key, $value, $params ) = @_;
 
-
     my $size = delete $params->{'size'} || 30;
     my $maxlength = delete $params->{'maxlength'} || $size*3;
 
@@ -841,44 +840,9 @@ sub input
     $key   ||= 'query';
     $value ||= '';
 
-    my $extra = "";
-    my $prefix = "";
-    my $separator = delete($params->{'separator'}) || '';
-    if( my $tdlabel = delete $params->{'tdlabel'} )
-    {
-	$separator = "</td><td>";
-	$params->{'label'} = $tdlabel;
-    }
-    if( my $label = delete $params->{'label'} )
-    {
-	my $id = $params->{id} || $key;
-	my $prefix_extra = "";
-	if( my $class = delete $params->{'label_class'} )
-	{
-	    $prefix_extra .= sprintf " class=\"%s\"",
-	    CGI->escapeHTML( $class );
-	}
-	$prefix .= sprintf('<label for="%s"%s>%s</label>',
-			   CGI->escapeHTML( $id ),
-			   $prefix_extra,
-			   CGI->escapeHTML($label),
-			   );
-	$params->{id} = $id;
-    }
-
-    foreach my $key ( keys %$params )
-    {
-	if( my $keyval = $params->{$key} )
-	{
-	    $extra .= sprintf " $key=\"%s\"",
-	      CGI->escapeHTML( $keyval );
-	}
-    }
-
-    if( $prefix )
-    {
-	$prefix .= $separator;
-    }
+    $params->{id} ||= $key;
+    my $prefix = label_from_params($params);
+    my $extra = tag_extra_from_params($params);
 
     return sprintf('%s<input type="text" name="%s" value="%s" size="%s" maxlength="%s"%s />',
 		   $prefix,
@@ -944,46 +908,10 @@ sub textarea
     }
     $value ||= '';
 
-    my $extra = "";
-    my $prefix = "";
-    my $separator = delete $params->{'separator'} || '';
-    if( my $tdlabel = delete $params->{'tdlabel'} )
-    {
-	$separator = "</td><td>";
-	$params->{'label'} = $tdlabel;
-    }
-    if( my $label = delete $params->{'label'} )
-    {
-	my $id = $params->{id} || $key;
-	my $prefix_extra = "";
-	if( my $class = delete $params->{'label_class'} )
-	{
-	    $prefix_extra .= sprintf " class=\"%s\"",
-	    CGI->escapeHTML( $class );
-	}
-	$prefix .= sprintf('<label for="%s"%s>%s</label>',
-			   CGI->escapeHTML( $id ),
-			   $prefix_extra,
-			   CGI->escapeHTML($label),
-			   );
-	$params->{id} = $id;
-    }
-
+    $params->{id} ||= $key;
+    my $prefix = label_from_params($params);
     $params->{'wrap'} ||= "virtual";
-
-    foreach my $key ( keys %$params )
-    {
-	if( my $keyval = $params->{$key} )
-	{
-	    $extra .= sprintf " $key=\"%s\"",
-	      CGI->escapeHTML( $params->{$key} );
-	}
-    }
-
-    if( $prefix )
-    {
-	$prefix .= $separator;
-    }
+    my $extra = tag_extra_from_params($params);
 
     return sprintf('%s<textarea name="%s" cols="%s" rows="%s"%s>%s</textarea>',
 		   $prefix,
@@ -1315,7 +1243,12 @@ sub filefield
 
 Name "selector" is because "select" is a protected term.
 
-  selector( $field, $current, @data, $valkey, $tagkey, $header )
+  selector( $field, $current, @data,
+           {
+            valkey => $valkey,
+            tagkey => $tagkey,
+            header => $header,
+           } )
   selector( $field, $current, %data )
 
 Draws a dropdown menu from a list of records (from a DB).
@@ -1334,8 +1267,8 @@ Example:
 
   <p>[% select( "sender", "",
              select_list("from users"),
-             "user_id", "username",
-             "Välj" 
+             valkey = "user_id", tagkey = "username",
+             header = "Välj"
   ) %]
 
 Second version:
@@ -1457,6 +1390,80 @@ sub selector
     }
 
     $out .= '</select>';
+
+    return $out;
+}
+
+
+#######################################################################
+
+=head2 label_from_params
+
+Usage: $params->{id} ||= $key;
+       $out .= label_from_params($params);
+
+=cut
+
+sub label_from_params
+{
+    my( $params ) = @_;
+
+    my $out = '';
+
+    my $separator = delete($params->{'separator'}) || '';
+    if( my $tdlabel = delete $params->{'tdlabel'} )
+    {
+	$separator = "</td><td>";
+	$params->{'label'} = $tdlabel;
+    }
+    if( my $label = delete $params->{'label'} )
+    {
+	my $prefix_extra = "";
+	my $id = $params->{id};
+	if( my $class = delete $params->{'label_class'} )
+	{
+	    $prefix_extra .= sprintf " class=\"%s\"",
+	    CGI->escapeHTML( $class );
+	}
+	$out .= sprintf('<label for="%s"%s>%s</label>',
+			   CGI->escapeHTML( $id ),
+			   $prefix_extra,
+			   CGI->escapeHTML($label),
+			   );
+    }
+
+    $out .= $separator
+      if $out;
+
+
+    return $out;
+}
+
+#######################################################################
+
+=head2 tag_extra_from_params
+
+Converts the rest of the params to tag-keys.
+
+Example: $extra = tag_extra_from_params({ class => 'nopad', style => 'float: left' });
+
+         --> $extra = ' class="nopad" style="float: left"'
+
+=cut
+
+sub tag_extra_from_params
+{
+    my( $params ) = @_;
+    my $out = '';
+
+    foreach my $key ( keys %$params )
+    {
+	if( my $keyval = $params->{$key} )
+	{
+	    $out .= sprintf " $key=\"%s\"",
+	      CGI->escapeHTML( $keyval );
+	}
+    }
 
     return $out;
 }
