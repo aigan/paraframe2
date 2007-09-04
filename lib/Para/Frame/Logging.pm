@@ -24,6 +24,8 @@ Para::Frame::Logging - Logging class
 
 use strict;
 
+use List::Util qw( max );
+
 BEGIN
 {
     our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
@@ -187,6 +189,59 @@ sub debug_data
     }
 
 }
+
+#######################################################################
+
+=head2 at_level
+
+  $this->at_level( $level )
+
+Returns the logging level for the caller function, or, if missing, the
+global debuggling level subtracted with the given level, but at least
+0.
+
+=cut
+
+sub at_level
+{
+    my( $this, $level ) = @_;
+
+    my $debug = $Para::Frame::Logging::WATCH{(caller(1))[3]};
+
+    unless( $debug )
+    {
+	$debug = $Para::Frame::DEBUG  || 0;
+	$debug -= $level;
+    }
+
+    return max($debug,0);
+}
+
+
+#######################################################################
+
+=head2 this_level
+
+  this_level()
+
+  this_level( $level )
+
+=cut
+
+sub this_level
+{
+    my( $this, $level ) = @_;
+
+    if( $level )
+    {
+	return $Para::Frame::Logging::WATCH{(caller(1))[3]} = $level;
+    }
+    else
+    {
+	return $Para::Frame::Logging::WATCH{(caller(1))[3]};
+    }
+}
+
 
 #######################################################################
 
