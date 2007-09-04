@@ -42,7 +42,7 @@ BEGIN
 {
     @Para::Frame::Widget::EXPORT_OK
 
-      = qw( slider jump submit go go_js forward forward_url preserve_data alfanum_bar rowlist list2block selectorder param_includes hidden input textarea filefield css_header confirm_simple inflect radio calendar input_image selector );
+      = qw( slider jump submit go go_js forward forward_url preserve_data alfanum_bar rowlist list2block selectorder param_includes hidden input textarea filefield css_header confirm_simple inflect radio calendar input_image selector label_from_params );
 
 }
 
