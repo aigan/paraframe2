@@ -26,7 +26,7 @@ use strict;
 use Carp qw( cluck confess croak );
 use IO::File;
 use CGI;
-use URI;
+use Para::Frame::URI;
 
 use locale;
 use POSIX qw(locale_h);
@@ -479,7 +479,7 @@ sub forward_url
     if( $template =~ /(.*?)\?/ )
     {
 #	debug "Processing query part of template";
-	my $uri = URI->new($template);
+	my $uri = Para::Frame::URI->new($template);
 	$template = $1;
 	my( %urlq ) = $uri->query_form;
 
