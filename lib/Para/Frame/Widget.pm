@@ -1416,20 +1416,26 @@ sub label_from_params
 	$separator = "</td><td>";
 	$params->{'label'} = $tdlabel;
     }
+
     if( my $label = delete $params->{'label'} )
     {
 	my $prefix_extra = "";
-	my $id = $params->{id};
 	if( my $class = delete $params->{'label_class'} )
 	{
 	    $prefix_extra .= sprintf " class=\"%s\"",
-	    CGI->escapeHTML( $class );
+	      CGI->escapeHTML( $class );
 	}
-	$out .= sprintf('<label for="%s"%s>%s</label>',
-			   CGI->escapeHTML( $id ),
-			   $prefix_extra,
-			   CGI->escapeHTML($label),
+
+	if( my $id = $params->{id} )
+	{
+	    $prefix_extra .= sprintf " for=\"%s\"",
+	      CGI->escapeHTML( $id );
+
+	    $out .= sprintf('<label%s>%s</label>',
+			    $prefix_extra,
+			    CGI->escapeHTML($label),
 			   );
+	}
     }
 
     $out .= $separator
