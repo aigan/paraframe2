@@ -260,7 +260,7 @@ See L<URI/canonical>
 
 sub canonical
 {
-    my $uri = $_[0]->canonical;
+    my $uri = $_[0];#->canonical;
 
     if( $_[0]->eq( $uri ) )
     {
