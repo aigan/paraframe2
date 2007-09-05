@@ -196,15 +196,15 @@ sub getset
 
 #######################################################################
 
-=head3 schema
+=head3 scheme
 
-See L<URI/schema>
+See L<URI/scheme>
 
 =cut
 
-sub schema
+sub scheme
 {
-    return shift->getset('schema',@_);
+    return shift->getset('scheme',@_);
 }
 
 
