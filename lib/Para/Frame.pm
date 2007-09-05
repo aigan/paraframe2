@@ -2475,6 +2475,7 @@ sub set_global_tt_params
     {
 	'cfg'             => $Para::Frame::CFG,
 	'debug'           => sub{ debug(@_);"" },
+        'debug_level'     => sub{ $Para::Frame::DEBUG },
 	'dump'            => \&Para::Frame::Utils::datadump,
 	'emergency_mode'  => sub{ $Para::Frame::Watchdog::EMERGENCY_MODE },
         'file'            => sub{Para::Frame::File->new(@_)},
