@@ -35,6 +35,13 @@ BEGIN
 
 use Para::Frame::Reload;
 
+use overload ('""'     => sub { $_[0]->{'value'}->as_string },
+              '=='     => sub { overload::StrVal($_[0]) eq
+		                overload::StrVal($_[1])
+                              },
+              fallback => 1,
+             );
+
 =head1 DESCRIPTION
 
 Represents an URI. This is a wrapper for L<URI> and L<URI::QueryParam>
@@ -98,7 +105,7 @@ sub as_html
 
 =head2 sysdesig
 
-  $a->sysdesig()
+  $uri->sysdesig()
 
 The designation of an object, to be used for node administration or
 debugging.
@@ -120,9 +127,53 @@ sub sysdesig
 
 #######################################################################
 
+=head2 as_string
+
+  $uri->as_string()
+
+See L<URI/as_string>
+
+=cut
+
+sub as_string
+{
+    return $_[0]->{'value'}->as_string;
+}
+
+
+#######################################################################
+
+=head2 eq
+
+  $uri->eq($uri2)
+
+See L<URI/as_string>
+
+=cut
+
+sub eq
+{
+    my($self, $other) = @_;
+    my( $class ) = ref $self;
+    unless( UNIVERSAL::isa $class, "Para::Frame::URI" )
+    {
+	$class = ref $other;
+    }
+
+    # taken from URI::eq
+
+    $self  = $class->new($self, $other) unless ref $self;
+    $other = $class->new($other, $self) unless ref $other;
+    return ref($self) eq ref($other) and             # same class
+      $self->canonical->as_string eq $other->canonical->as_string;
+}
+
+
+#######################################################################
+
 =head2 desig
 
-  $a->desig()
+  $uri->desig()
 
 The designation of an object, to be used for node administration or
 debugging.
@@ -166,7 +217,7 @@ See L<URI/clone>
 
 sub clone
 {
-    my $uri = $_[0]->clone;
+    my $uri = $_[0]->{'value'}->clone;
     my $class = ref $_[0];
 
     return bless
@@ -287,7 +338,7 @@ See L<URI/abs>
 
 sub abs
 {
-    my $uri = $_[0]->abs($_[1]);
+    my $uri = $_[0]->{'value'}->abs($_[1]);
 
     if( $_[0]->eq( $uri ) )
     {
@@ -312,7 +363,7 @@ See L<URI/rel>
 
 sub rel
 {
-    my $uri = $_[0]->rel($_[1]);
+    my $uri = $_[0]->{'value'}->rel($_[1]);
 
     if( $_[0]->eq( $uri ) )
     {
