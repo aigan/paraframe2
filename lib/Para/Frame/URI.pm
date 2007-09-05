@@ -48,11 +48,6 @@ Represents an URI. This is a wrapper for L<URI> and L<URI::QueryParam>
 that redirects calls to those classes. This class is extendable by
 subclasses and it's integrated with L<Para::Frame::File>.
 
-Methods not encapsulated are:
-
-  as_string : use plain()
-  eq        : use equals()
-
 =cut
 
 
