@@ -25,6 +25,7 @@ Para::Frame::URI - Represent an URI
 use strict;
 
 use URI;
+use Carp qw( confess );
 
 BEGIN
 {
@@ -32,6 +33,7 @@ BEGIN
     print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
+use Para::Frame::Reload;
 
 =head1 DESCRIPTION
 
@@ -260,7 +262,7 @@ See L<URI/canonical>
 
 sub canonical
 {
-    my $uri = $_[0];#->canonical;
+    my $uri = $_[0]->{'value'}->canonical;
 
     if( $_[0]->eq( $uri ) )
     {
