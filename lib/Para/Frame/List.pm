@@ -2365,6 +2365,236 @@ sub uniq
 
 #######################################################################
 
+=head2 sorted
+
+  $list->sorted()
+
+  $list->sorted( $attr )
+
+  $list->sorted( $attr, $dir, $type )
+
+  $list->sorted( [$attr1, $attr2, ...] )
+
+  $list->sorted( [$attr1, $attr2, ...], $dir, $type )
+
+  $list->sorted( { on => $attr, dir => $dir, type => $type } )
+
+  $list->sorted( [{ on => $attr1, dir => $dir1, type => $type1 },
+                  { on => $attr2, dir => $dir2, type => $type2 },
+                  ...
+                 ] )
+
+Returns a list of object, sorted by the selected proprty of the
+object.
+
+This method assumes that the list only contains objects and that all
+of them has a similar interface.
+
+The default sorting attribute is the stringification of the object (or
+the string itself if it's not an object).
+
+C<$dir> is the direction of the sort.  It can be C<asc> or C<desc>.
+
+C<$attr> can be of the form C<a1.a2.a3> which translates to an attribute
+lookup in several steps.  For example; C<$list->sorted('email.host')>
+
+The sorting will be done as strings with <cmp>. You can get a string
+sort by using C<$type numeric>.
+
+Examples:
+
+Loop over the name arcs of a node, sorted by firstly on the is_of_language
+code and secondly on the weight in reverse order:
+
+  [% FOREACH arc IN n.arc_list('name').sorted(['obj.is_of_language.code',{on='obj.weight' dir='desc'}]) %]
+
+Returns:
+
+A List object with 0 or more elements.
+
+Exceptions:
+
+Dies if given faulty parameters.
+
+=cut
+
+#sub sorted
+#{
+#    my( $list, $sortargs, $dir ) = @_;
+#
+#    my $DEBUG = 0;
+#
+#    my $args = {};
+#
+#    $sortargs ||= 'desig';
+#
+#    unless( ref $sortargs and ( ref $sortargs eq 'ARRAY' or
+#			    ref $sortargs eq 'Rit::Base::List' )
+#	  )
+#    {
+#	$sortargs = [ $sortargs ];
+#    }
+#
+#    if( $dir )
+#    {
+#	unless( $dir =~ /^(asc|desc)$/ )
+#	{
+#	    die "direction '$dir' out of bound";
+#	}
+#
+#	for( my $i = 0; $i < @$sortargs; $i++ )
+#	{
+#	    unless( ref $sortargs->[$i] eq 'HASH' )
+#	    {
+#		$sortargs->[$i] =
+#		{
+#		 on => $sortargs->[$i],
+#		 dir => $dir,
+#		};
+#	    }
+#	}
+#    }
+#
+#    $list->materialize_all; # for sorting on props
+#
+#    my @sort;
+#    for( my $i = 0; $i < @$sortargs; $i++ )
+#    {
+##	debug "i: $i";
+##	debug sprintf("sortargs: %d\n", scalar @$sortargs);
+#	unless( ref $sortargs->[$i] eq 'HASH' )
+#	{
+#	    $sortargs->[$i] =
+#	    {
+#		on => $sortargs->[$i],
+#	    };
+#	}
+#
+#	$sortargs->[$i]->{'dir'} ||= 'asc';
+#
+#	# Find out if we should do a numeric or literal sort
+#	#
+#	my $on =  $sortargs->[$i]->{'on'};
+#	if( ref $on )
+#	{
+#	    die "not implemented ($on)";
+#	}
+#	$on =~ /([^\.]+)$/; #match last part
+#	my $pred_str = $1;
+#	my $cmp = 'cmp';
+#
+#	# Silently ignore dynamic props (that isn't preds)
+#	if( my $pred = Rit::Base::Pred->find_by_anything( $pred_str,
+#						       {
+#							%$args,
+#							return_single_value=>1,
+#						       }))
+#	{
+#	    my $coltype = $pred->coltype;
+#	    $sortargs->[$i]->{'coltype'} = $coltype;
+#
+#	    if( ($coltype eq 'valfloat') or ($coltype eq 'valdate') )
+#	    {
+#		$cmp = '<=>';
+#	    }
+#	}
+#
+#	$sortargs->[$i]->{'cmp'} = $cmp;
+#
+#	if( $sortargs->[$i]->{'dir'} eq 'desc')
+#	{
+##	    push @sort, "\$b->[$i] cmp \$a->[$i]";
+#	    push @sort, "\$props[$i][\$b] $cmp \$props[$i][\$a]";
+#	}
+#	else
+#	{
+##	    push @sort, "\$a->[$i] cmp \$b->[$i]";
+#	    push @sort, "\$props[$i][\$a] $cmp \$props[$i][\$b]";
+#	}
+#    }
+#    my $sort_str = join ' || ', @sort;
+#
+##    debug "--- SORTING: $sort_str";
+#
+#    my @props;
+#    foreach my $item ( $list->as_array )
+#    {
+##	debug 2, sprintf("  add item %s", $item->sysdesig);
+#	for( my $i=0; $i<@$sortargs; $i++ )
+#	{
+#	    my $method = $sortargs->[$i]{'on'};
+##	    debug sprintf("    arg $i: %s", $sortargs->[$i]{'on'});
+#	    my $val = $item;
+#	    foreach my $part ( split /\./, $method )
+#	    {
+#		$val = $val->$part;
+##		debug sprintf("      -> %s", $val);
+#	    }
+#
+#	    my $coltype = $sortargs->[$i]->{'coltype'} || '';
+#	    if( $coltype eq 'valfloat' )
+#	    {
+#		if( UNIVERSAL::isa $val, 'Rit::Base::List' )
+#		{
+#		    $val = List::Util::min( $val->as_array );
+#		}
+#
+#		# Make it an integer
+#		$val ||= 0;
+#	    }
+#	    elsif( $coltype eq 'valdate' )
+#	    {
+#		if( UNIVERSAL::isa $val, 'Rit::Base::List' )
+#		{
+#		    $val = List::Util::min( $val->as_array );
+#		}
+#
+#		# Infinite future date
+#		use DateTime::Infinite;
+#		$val ||= DateTime::Infinite::Future->new;
+#		#debug "Date value is $val";
+#	    }
+#	    elsif( $coltype eq 'valtext' )
+#	    {
+#		if( UNIVERSAL::isa $val, 'Rit::Base::List' )
+#		{
+#		    $val = $val->loc;
+#		}
+#
+#		$val ||= '';
+#	    }
+#
+##	    debug sprintf("      => %s", $val);
+#
+#	    push @{$props[$i]}, $val;
+##	    push @{$props[$i]}, $item->$method;
+#	}
+#    }
+#
+#    if( debug>2 )
+#    {
+#	debug "And the props is: \n";
+#	for( my $i=0; $i<=$#$list; $i++ )
+#	{
+#	    my $out = "  ".$list->[$i]->desig.": ";
+#	    for( my $x=0; $x<=$#props; $x++ )
+#	    {
+#		$out .= $props[$x][$i] .' - ';
+#	    }
+#	    debug $out;
+#	}
+#    }
+#
+#    # The Schwartzian transform:
+#    # This method should be fast and efficient. Read up on it
+#    my @new = @{$list}[ eval qq{ sort { $sort_str } 0..$#$list } ];
+#    die "Sort error for '$sort_str': $@" if $@; ### DEBUG
+#
+#    return $list->new( \@new );
+#}
+#
+#######################################################################
+
 =head1 AUTOLOAD
 
   $l->$method( @args )
