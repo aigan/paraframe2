@@ -1410,6 +1410,7 @@ sub label_from_params
 
     my $out = '';
 
+
     my $separator = delete($params->{'separator'}) || '';
     if( my $tdlabel = delete $params->{'tdlabel'} )
     {
@@ -1419,6 +1420,8 @@ sub label_from_params
 
     if( my $label = delete $params->{'label'} )
     {
+	debug "Drawing a label: ". $label;
+
 	my $prefix_extra = "";
 	if( my $class = delete $params->{'label_class'} )
 	{
@@ -1430,12 +1433,12 @@ sub label_from_params
 	{
 	    $prefix_extra .= sprintf " for=\"%s\"",
 	      CGI->escapeHTML( $id );
-
-	    $out .= sprintf('<label%s>%s</label>',
-			    $prefix_extra,
-			    CGI->escapeHTML($label),
-			   );
 	}
+
+	$out .= sprintf('<label%s>%s</label>',
+			$prefix_extra,
+			CGI->escapeHTML($label),
+		       );
     }
 
     $out .= $separator
