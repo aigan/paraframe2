@@ -34,6 +34,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
+use Para::Frame::Utils qw( debug datadump );
 
 use overload ('""'     => sub { $_[0]->{'value'}->as_string },
               '=='     => sub { overload::StrVal($_[0]) eq
@@ -109,7 +110,7 @@ debugging.
 
 sub sysdesig
 {
-    if( my $str = "$_[0]->{value}" )
+    if( my $str = $_[0]->{'value'}->as_string )
     {
 	return "URL $str";
     }
@@ -177,7 +178,7 @@ debugging.
 
 sub desig
 {
-    return "$_[0]->{value}";
+    return $_[0]->{value}->as_string;
 }
 
 
