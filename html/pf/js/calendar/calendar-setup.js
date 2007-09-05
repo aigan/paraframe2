@@ -1,4 +1,4 @@
-/*  Copyright Mihai Bazon, 2002, 2003  |  http://dynarch.com/mishoo/
+﻿/*  Copyright Mihai Bazon, 2002, 2003  |  http://dynarch.com/mishoo/
  * ---------------------------------------------------------------------------
  *
  * The DHTML Calendar
@@ -74,7 +74,7 @@ Calendar.setup = function (params) {
 	param_default("dateText",       null);
 	param_default("firstDay",       null);
 	param_default("align",          "bR");
-	param_default("range",          [2006, 2007]);
+	param_default("range",          [1990, 2100]);
 	param_default("weekNumbers",    true);
 	param_default("flat",           null);
 	param_default("flatCallback",   null);
