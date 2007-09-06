@@ -233,6 +233,11 @@ sub wait_for_server_setup
     }
     if( $type ne 'MAINLOOP' )
     {
+	if( $type eq 'Loading' )
+	{
+	    return wait_for_server_setup();
+	}
+
 	debug "Expected MAINLOOP message (got '$type')";
 	return watchdog_crash();
     }
