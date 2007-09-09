@@ -287,7 +287,7 @@ sub before_render_output
 
     if( my @params = @{$change->{'form_params'}} )
     {
-	debug "Clearing form params";
+	debug 2, "Clearing form params";
 	Para::Frame::Utils::clear_params(@params);
     }
 }
