@@ -748,7 +748,26 @@ sub render_header
 
     my $p = $e->params;
 
-    return if $p->{'header'};
+    debug "Rendering header from mail to $to_addr";
+
+    if( $to_addr and $p->{'header_rendered_to'} )
+    {
+	debug "  Has a previous header for $p->{header_rendered_to}";
+	if( $to_addr eq $p->{'header_rendered_to'} )
+	{
+	    debug "    reusing same header";
+	    return if $p->{'header'};
+	}
+    }
+    else
+    {
+	if( $p->{'header'} )
+	{
+	    debug "reusing previous header";
+	}
+    }
+
+    $p->{'header_rendered_to'} = $to_addr;
 
 
     my $from_addr = $p->{'from_addr'} or die "No from selected\n";
