@@ -26,7 +26,7 @@ use strict;
 use Net::DNS;
 use Net::SMTP;
 use Mail::Address;
-use Carp qw( carp confess );
+use Carp qw( carp confess cluck );
 
 BEGIN
 {
@@ -35,7 +35,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw reset_hashref fqdn debug );
+use Para::Frame::Utils qw( throw reset_hashref fqdn debug datadump );
 use Para::Frame::Email::Address::Fallback;
 
 use overload '""' => \&as_string;
@@ -214,11 +214,27 @@ Simple constructor that only takes string and returns object
 sub new
 {
     my( $addr ) = Mail::Address->parse( $_[1] );
-    return bless
+
+    if( $addr )
     {
-     addr => $addr,
-     original => $_[1],
-    }, $_[0];
+	return bless
+	{
+	 addr => $addr,
+	 original => $_[1],
+	 broken => 0,
+	}, $_[0];
+    }
+    else
+    {
+	$addr = Para::Frame::Email::Address::Fallback->
+	  parse($_[1]);
+	return bless
+	{
+	 addr => $addr,
+	 original => $_[1],
+	 broken => 1,
+	}, $_[0];
+    }
 }
 
 
@@ -300,7 +316,10 @@ Returns a string using L<Mail::Address/format>
 
 =cut
 
-sub format { $_[0]->{addr}->format }
+sub format
+{
+    return $_[0]->{addr}->format;
+}
 
 
 #######################################################################
