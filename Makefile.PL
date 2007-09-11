@@ -26,6 +26,7 @@ WriteMakefile(
 	          'DateTime::Format::Strptime' => 0.00,
 		  'DateTime::Set'              => 0.22,
 		  'DateTime::TimeZone'         => 0.37,
+	          'DateTime::Incomplete'       => 0.02,
 		  'DBI'                        => 1.48,
 		  'Digest::MD5'                => 2.33,
 		  'Encode'                     => 2.10,
