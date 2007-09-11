@@ -2386,8 +2386,6 @@ sub flatten
 {
     my( $list_in, $seen ) = @_;
 
-    $list_in  ||= [];
-
     my @list_out;
 
     foreach my $elem ( @$list_in )
