@@ -909,6 +909,8 @@ sub store
 Returns the C<id> given to this object from L</store> in the
 L<Para::Frame::Session>.
 
+TODO: Rename this method!
+
 =cut
 
 sub id
@@ -2360,6 +2362,58 @@ sub uniq
     {
 	return $l;
     }
+}
+
+
+#######################################################################
+
+=head2 flatten
+
+  $l->flatten()
+
+Creates a new list with any list elements flatten to it's
+elements. Recursively. Flattens L<Para::Frame::List> objs and
+unblessed arrayrefs.
+
+Always returns a new list object of the same class and with the same
+properties.
+
+TODO: Make this a materializer function, to handle large lists
+
+=cut
+
+sub flatten
+{
+    my( $list_in, $seen ) = @_;
+
+    $list_in  ||= [];
+
+    my @list_out;
+
+    foreach my $elem ( @$list_in )
+    {
+	if( ref $elem )
+	{
+	    if( UNIVERSAL::isa $elem, 'Para::Frame::List' )
+	    {
+		CORE::push @list_out, $elem->flatten()->as_array;
+	    }
+	    elsif( ref $elem eq 'ARRAY' )
+	    {
+		CORE::push @list_out, @$elem;
+	    }
+	    else
+	    {
+		CORE::push @list_out, $elem;
+	    }
+	}
+	else
+	{
+	    CORE::push @list_out, $elem;
+	}
+    }
+
+    return $list_in->new( \@list_out, $list_in->clone_props );
 }
 
 
