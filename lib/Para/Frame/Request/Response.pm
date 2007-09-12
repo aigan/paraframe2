@@ -79,7 +79,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw debug create_dir chmod_file idn_encode idn_decode datadump catch client_send );
+use Para::Frame::Utils qw( throw debug create_dir chmod_file idn_encode idn_decode datadump catch client_send package_to_module compile );
 use Para::Frame::Request::Ctype;
 use Para::Frame::URI;
 use Para::Frame::L10N qw( loc );
@@ -146,11 +146,6 @@ sub new
 
 	$args->{'site'} ||= $req->site;
 	$args->{'language'} ||= $req->language;
-
-	if( my $q = $req->q )
-	{
-	    $args->{'renderer'} ||= $q->param('renderer');
-	}
     }
 
     $args->{'resp'} = $resp;
@@ -450,30 +445,26 @@ sub add_header
 
   $resp->ctype
 
-  $resp->ctype( $content_type )
+Returns the PRELIMINARY content type to use in the http response, in
+the form of a L<Para::Frame::Request::Ctype> object.
 
-Returns the content type to use in the http response, in the form
-of a L<Para::Frame::Request::Ctype> object.
+It will be initialized from the client request and may be changed
+before the response is sent back.
 
-If C<$content_type> is defiend, sets the content type using
-L<Para::Frame::Request::Ctype/set>.
+Especieally, it may be changed by the renderer before sending the http
+headers.
 
 =cut
 
 sub ctype
 {
-    my( $resp, $content_type ) = @_;
+    my( $resp ) = @_;
 
     # Needs $REQ
 
     unless( $resp->{'ctype'} )
     {
 	$resp->{'ctype'} = Para::Frame::Request::Ctype->new($resp->req);
-    }
-
-    if( $content_type )
-    {
-	$resp->{'ctype'}->set( $content_type );
     }
 
     return $resp->{'ctype'};
@@ -540,6 +531,8 @@ sub set_http_status
 
   $resp->send_output
 
+SENDER!
+
 Sends the previously generated page to the client.
 
 If the URL should change, sends a redirection header and stores the
@@ -561,6 +554,13 @@ sub send_output
     my $req = $resp->req;
     my $page = $resp->page;
     my $client = $req->client;
+
+
+
+    my $content = $resp->{'content'};
+    my $content_length = length( $content||'' );
+#    debug "Resp content has length $content_length";
+
 
     # Forward if URL differs from url_path
 
@@ -594,66 +594,93 @@ sub send_output
 	# Keep query string
 	$url_out = $resp->page_url_with_query_and_reqnum;
 	$resp->forward($url_out);
+	return;
     }
-    else
+
+    if( $req->header_only )
     {
-	if( $req->header_only )
+	my $result;
+	if( $req->in_loadpage )
 	{
-	    my $result;
-	    if( $req->in_loadpage )
-	    {
-		$result = "LOADPAGE";
-	    }
-	    else
-	    {
-		$resp->send_headers;
-		$result = $req->get_cmd_val( 'HEADER' );
-	    }
-
-	    if( $result eq 'LOADPAGE' )
-	    {
-		# Keep query string
-		$url_out = $resp->page_url_with_query_and_reqnum;
-
-		$req->session->register_result_page($resp, $url_out);
-		$req->send_code('PAGE_READY', $url_out);
-	    }
+	    $result = "LOADPAGE";
 	}
 	else
 	{
-	    my $result;
-	    if( $req->in_loadpage )
+	    $req->cookies->add_to_header;
+	    $resp->send_headers;
+	    $result = $req->get_cmd_val( 'HEADER' );
+	}
+
+	if( $result eq 'LOADPAGE' )
+	{
+	    # Keep query string
+	    $url_out = $resp->page_url_with_query_and_reqnum;
+
+	    # We should not have come here for a head request!
+	    # TODO: fixme
+
+	    $req->session->register_result_page($resp, $url_out);
+	    $req->send_code('PAGE_READY', $url_out);
+	}
+	return;
+    }
+    else
+    {
+	my $result;
+	if( $req->in_loadpage )
+	{
+	    $result = "LOADPAGE";
+	}
+	else
+	{
+	    $req->cookies->add_to_header;
+	    $resp->send_headers;
+	    $result = $req->get_cmd_val( 'BODY' );
+	}
+
+	if( $result eq 'LOADPAGE' )
+	{
+	    # Keep query string
+	    $url_out = $resp->page_url_with_query_and_reqnum;
+
+	    $req->session->register_result_page($resp, $url_out);
+	    $req->send_code('PAGE_READY', $url_out);
+	}
+	elsif( $result eq 'SEND' )
+	{
+	    my $ctype = $resp->ctype;
+	    my $binmode = ':bytes';
+	    if( $ctype->type =~ /^text\// )
 	    {
-		$result = "LOADPAGE";
-	    }
-	    else
-	    {
-		binmode( $client, ':utf8');
-		$resp->send_headers;
-		$result = $req->get_cmd_val( 'BODY' );
+#		debug "Sending text ($ctype)";
+		if( my $charset = $ctype->charset )
+		{
+#		    debug "Charset is $charset";
+
+		    if( $charset eq 'UTF-8' )
+		    {
+			$binmode = ':utf8';
+		    }
+		    else
+		    {
+			confess "Charset $charset not supported";
+		    }
+		}
 	    }
 
-	    if( $result eq 'LOADPAGE' )
-	    {
-		# Keep query string
-		$url_out = $resp->page_url_with_query_and_reqnum;
-
-		$req->session->register_result_page($resp, $url_out);
-		$req->send_code('PAGE_READY', $url_out);
-	    }
-	    elsif( $result eq 'SEND' )
-	    {
-		client_send($client, $resp->{'content'}, {req=>$req});
-	    }
-	    else
-	    {
-		binmode( $client, ':bytes');
-		die "Strange response '$result'";
-	    }
-
+	    binmode( $client, $binmode);
+#	    debug "1 sending with binmode $binmode";
+	    client_send($client, $resp->{'content'}, {req=>$req});
 	    binmode( $client, ':bytes');
 	}
+	else
+	{
+	    die "Strange response '$result'";
+	}
+
+	return;
     }
+
 #    debug "send_output: done";
 }
 
@@ -690,7 +717,7 @@ sub forward
 
     debug "Forwarding to $url_norm";
 
-    if( not( $resp->{'content'} or $req->header_only ) )
+    if( not( $resp->{'content'} or $resp->{'sender'} or $req->header_only ) )
     {
 	cluck "forward() called without a generated page";
 	unless( $url_norm =~ /\.html$/ )
@@ -711,24 +738,31 @@ sub forward
 	return;
     }
 
-    $resp->output_redirection($url_norm );
+    # Storing result page BEFORE sending redirection, in case the
+    # sending stalls and results in the client requests the result
+    # page before send function returns.
 
     $req->session->register_result_page($resp, $url_norm);
+
+    $resp->sender->send_redirection($url_norm );
+
 }
 
 
 #######################################################################
 
-=head2 output_redirection
+=head2 send_redirection
 
-  $resp->output_redirection( $url )
+  $resp->send_redirection( $url )
+
+SENDER!
 
 Internally used by L</forward> for sending redirection headers to the
 client.
 
 =cut
 
-sub output_redirection
+sub send_redirection
 {
     my( $resp, $url_in ) = @_;
 
@@ -736,6 +770,11 @@ sub output_redirection
     my $page = $resp->page;
 
     $url_in or die "URL missing";
+
+
+    $req->cookies->add_to_header;
+
+
 
     # Default to temporary move.
 
@@ -826,6 +865,8 @@ sub output_redirection
 Used internally by L</send_output> for sending the HTTP headers to the
 client.
 
+The headers themself are not sent in utf8...
+
 =cut
 
 sub send_headers
@@ -835,14 +876,9 @@ sub send_headers
     my $req = $resp->req;
 
     my $client = $req->client;
-
     my $ctype = $resp->ctype;
-    unless( $ctype->is_defined )
-    {
-	my $ctype_str = $resp->renderer->content_type_string
-	  || $req->original_content_type_string || 'text/plain';
-	$ctype->set($ctype_str);
-    }
+
+    $resp->renderer->set_ctype($ctype);
 
     $req->lang->set_headers;               # lang
 
@@ -886,7 +922,6 @@ sub send_stored_result
 
     if( my $content = $resp->{'content'} ) # May be header only
     {
-	binmode( $req->client, ':utf8');
 
 	if( utf8::is_utf8($$content) )
 	{
@@ -901,7 +936,14 @@ sub send_stored_result
 	}
 	else
 	{
-	    debug "  NOT Marked as utf8";
+	    if( $$content =~ /Ã/ )
+	    {
+		debug "  UNMARKED utf8";
+	    }
+	    else
+	    {
+		debug "  NOT Marked as utf8";
+	    }
 	}
 
 
@@ -913,10 +955,33 @@ sub send_stored_result
 	}
 	else
 	{
-	    client_send($req->client, $content, {req=>$req});
+	    my $ctype = $resp->ctype;
+	    my $binmode = ':bytes';
+	    if( $ctype->type =~ /^text\// )
+	    {
+#		debug "Sending text ($ctype)";
+		if( my $charset = $ctype->charset )
+		{
+#		    debug "Charset is $charset";
+
+		    if( $charset eq 'UTF-8' )
+		    {
+			$binmode = ':utf8';
+		    }
+		    else
+		    {
+			confess "Charset $charset not supported";
+		    }
+		}
+	    }
+
+	    my $client = $req->client;
+	    binmode( $client, $binmode);
+#	    debug "2 sending with binmode $binmode";
+	    client_send($client, $content, {req=>$req});
+	    binmode( $client, ':bytes');
 	}
 
-	binmode( $req->client, ':bytes');
     }
     else
     {
@@ -1003,40 +1068,124 @@ sub set_content
 
 #######################################################################
 
+=head2 set_sender
+
+=cut
+
+sub set_sender
+{
+    delete $_[0]->{'content'};
+    return $_[0]->{'sender'} = $_[1];
+}
+
+#######################################################################
+
+=head2 sender
+
+=cut
+
+sub sender
+{
+    if( $_[0]->{'sender'} )
+    {
+	return $_[0]->{'sender'};
+    }
+    else
+    {
+	return $_[0]; # Send with this response obj
+    }
+}
+
+#######################################################################
+
 =head2 renderer
 
-  $tmpl->renderer
+  $resp->renderer
 
-Returns: the renderer to be used, if not the standard renderer
+Sets the renderer if not yet defined, by calling L</set_renderer>.
+
+Returns: the renderer to be used
 
 =cut
 
 sub renderer
 {
-
-# Args are sent to new()
     unless( $_[0]->{'renderer'} )
     {
-	my( $resp ) = @_;
-	my $args = $resp->{'renderer_args'} || {};
-	$args->{'page'} = $resp->page;
-
-	return $resp->{'renderer'}
-	    = $resp->{'page'}->renderer($args->{'renderer'}, $args);
+	$_[0]->{'renderer'} = $_[0]->set_renderer();
     }
+
+#    debug "Returning renderer ".ref($_[0]->{'renderer'});
 
     return $_[0]->{'renderer'};
 }
 
 #######################################################################
 
-=head2 set_rendere
+=head2 set_renderer
+
+  $resp->set_renderer( $renderer, \%args )
+
+Sets the renderer to be uses.
 
 =cut
 
 sub set_renderer
 {
-    return $_[0]->{'renderer'} = $_[1];
+    my( $resp, $renderer_in, $args_in ) = @_;
+
+    my $req = $resp->req;
+    my $args = $args_in || $resp->{'renderer_args'} || {};
+    my $renderer =
+      ( $renderer_in
+	|| $args->{'renderer'}
+	|| $req->q->param('renderer')
+	|| $req->dirconfig->{'renderer'}
+      );
+
+    if( not $renderer and $resp->{'page'} )
+    {
+	$renderer = $resp->{'page'}->renderer( $args );
+    }
+
+    if( ref $renderer )
+    {
+	return $resp->{'renderer'} = $renderer;
+    }
+
+    if( $renderer !~ /::/ )
+    {
+	my $site = $req->site;
+	my @errors;
+	foreach my $base ( $site->appbases )
+	{
+	    my $pkg = $base.'::Renderer::'.$renderer;
+	    my $mod = package_to_module($pkg);
+	    if( eval{compile($mod)} )
+	    {
+		return $resp->{'renderer'} = $pkg->new($args);
+	    }
+
+	    if( $@ )
+	    {
+		push @errors, $@;
+	    }
+	}
+
+	foreach my $err ( @errors )
+	{
+	    $req->result->exception($err);
+	}
+    }
+
+    unless( $renderer =~ /::Renderer::/i )
+    {
+	confess "Renderer $renderer is invalid";
+    }
+
+    my $mod = package_to_module($renderer);
+    compile($mod);
+    return $resp->{'renderer'} = $renderer->new($args);
 }
 
 #######################################################################
@@ -1054,6 +1203,14 @@ sub renderer_if_existing
 
 =head2 render_output
 
+  $resp->render_output()
+
+Returns:
+
+   true if a response was sucessfully generated
+
+   false if response not successfulle generated
+
 =cut
 
 sub render_output
@@ -1066,13 +1223,20 @@ sub render_output
 	# May throw exceptions
 	my $renderer = $resp->renderer;
 #	debug "Using renderer $renderer";
-	my $content = "";
 
 	# May throw exceptions -- May return false
-	if( $renderer->render_output(\$content) )
+	if( my $result = $renderer->render_output() )
 	{
-#	    debug "Storing content";
-	    $resp->set_content( \$content );
+	    return 0 unless ref $result;
+
+	    if( ref $result eq 'SCALAR' )
+	    {
+		$resp->set_content( $result );
+	    }
+	    else
+	    {
+		$resp->set_sender( $result );
+	    }
 #	    debug "Returning true";
 	    return 1;
 	}
@@ -1131,4 +1295,5 @@ sub last_modified
 
 L<Para::Frame>
 
-=cu
+=cut
+
