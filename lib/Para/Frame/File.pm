@@ -9,7 +9,7 @@ package Para::Frame::File;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2007 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -1897,16 +1897,18 @@ sub load_compiled
 
 =head2 renderer
 
-  $f->renderer( $renderer. \%args )
+  $f->renderer( \%args )
 
 For gettign the renderer used for a request response, see
 L<Para::Frame::Request::Response/renderer>.
 
 The default renderer is L<Para::Frame::Renderer::TT>.
 
-C<$renderer> should be C<undef> for using the default, or the name of
+OLD: C<$renderer> should be C<undef> for using the default, or the name of
 a renderer class that must have C<::Renderer::> in it's name, or a ref
 in which case it's taken to be a renderer object.
+
+
 
 Any C<%args> are given to the renderer constructor -- usually
 L<Para::Frame::Renderer::TT/new>.
@@ -1919,38 +1921,15 @@ Returns a new renderer object each time it is called.
 
 sub renderer
 {
-    my( $f, $renderer_in, $args ) = @_;
+    my( $f, $args ) = @_;
 
     my $renderer;
 
     $args ||= {};
 
     $args->{'page'} = $f;
-#    debug "======> ".$args->{'page'}->url_path;
 
-    $renderer_in ||= $args->{'renderer'};
-
-    if(not( $renderer_in and length $renderer_in ))
-    {
-	$renderer = Para::Frame::Renderer::TT->new( $args );
-    }
-    elsif( ref $renderer_in )
-    {
-	$renderer = $renderer_in;
-    }
-    else
-    {
-	unless( $renderer_in =~ /::Renderer::/ )
-	{
-	    confess "Invalid renderer: $renderer_in";
-	}
-	my $file = package_to_module( $renderer_in );
-	require $file;
-
-	$renderer = $renderer_in->new($args);
-    }
-
-    return $renderer;
+    return Para::Frame::Renderer::TT->new( $args );
 }
 
 #######################################################################
