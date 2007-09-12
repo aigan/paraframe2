@@ -45,6 +45,9 @@ You get this object by using L<Para::Frame::Request::Response/ctype>.
 
 =head2 new
 
+L<Para::Frame::Client> will mostly default to C<text/html> and
+C<UTF-8>.
+
 =cut
 
 sub new
@@ -54,8 +57,6 @@ sub new
 
     my $ctype =  bless
     {
-     ctype   => undef,
-     charset => undef,
      changed => 0,
     }, $class;
     weaken( $ctype->{'req'} );
@@ -84,6 +85,8 @@ L</set_charset>.
 The actual header isn't written until after the response page has been
 generated.
 
+Previous parameters will be removed.
+
 Example:
 
   $ctype->set("text/plain; charset=UTF-8")
@@ -93,6 +96,11 @@ Example:
 sub set
 {
     my( $ctype, $string ) = @_;
+
+#    debug "Ctype set with $string";
+
+    my %param;
+
 
     $string =~ s/;\s+(.*?)\s*$//;
     if( my $params = $1 )
@@ -104,36 +112,64 @@ sub set
 		my $key = lc $1;
 		my $val = $2;
 
-		if( $key eq 'charset' )
-		{
-		    $ctype->set_charset( $val );
-		}
-		else
-		{
-		    warn "  Ctype param $key not implemented";
-		}
+		$param{ $key } = $val;
 	    }
 	}
     }
 
-    debug(3,"Setting ctype to $string");
+
+    # Go through ALL supported keys (that's just one)
+
+    $ctype->set_charset(  delete $param{'charset'} );
+
+
+    foreach my $key ( keys %param )
+    {
+	debug "  Ctype param $key not implemented";
+    }
+
+
+
+    $ctype->set_type( $string );
+
+#    debug "Ctype $ctype set to ".$ctype->as_string;
+    return $ctype;
+}
+
+
+#######################################################################
+
+=head2 set_type
+
+  $ctype->set_type( $type )
+
+=cut
+
+sub set_type
+{
+    my( $ctype, $type ) = @_;
+
+    unless( $type =~ /^[a-z]+\/[a-z\-\.0-9]+$/ )
+    {
+	confess "Malformed content-type $type";
+    }
 
     if( defined $ctype->{'ctype'} )
     {
-	if( $ctype->{'ctype'} ne $string )
+	if( $ctype->{'ctype'} ne $type )
 	{
-	    $ctype->{'ctype'} = $string;
+	    $ctype->{'ctype'} = $type;
 	    $ctype->{'changed'} ++;
 	}
     }
     else
     {
 	# First change is regarded as the default, already synced
-	$ctype->{'ctype'} = $string;
+	$ctype->{'ctype'} = $type;
     }
 
-    return $ctype;
 }
+
 
 #######################################################################
 
@@ -153,7 +189,7 @@ sub set_charset
 
     if( defined $ctype->{'charset'} )
     {
-	if( $ctype->{'charset'} ne $charset )
+	if( ($ctype->{'charset'}||'') ne ($charset||'') )
 	{
 #	    debug longmess "CHECKME";
 	    $ctype->{'charset'} = $charset;
@@ -165,7 +201,53 @@ sub set_charset
 	# First change is regarded as the default, already synced
 	$ctype->{'charset'} = $charset;
     }
+
+#    debug "Charset set to ".($charset||'<undef>');
 }
+
+
+#######################################################################
+
+=head2 charset
+
+  $ctype->charset()
+
+The internal working will always be in UTF8. This controls how text
+are sent to the client.
+
+Returns: the current charset
+
+=cut
+
+sub charset
+{
+    my( $ctype ) = @_;
+
+#    my $charset = $ctype->{'charset'};
+#    debug "Returning charset ($ctype) ".($charset || "''");
+    return $ctype->{'charset'} || '';
+}
+
+
+#######################################################################
+
+=head2 type
+
+  $ctype->type()
+
+Returns: the current Content-Type
+
+=cut
+
+sub type
+{
+    my( $ctype ) = @_;
+
+    return $ctype->{'ctype'};
+}
+
+
+#######################################################################
 
 =head2 as_string
 
@@ -175,8 +257,6 @@ Returns a string representation of this object, suitible to be used in
 the HTTP header.
 
 =cut
-
-#######################################################################
 
 sub as_string
 {
@@ -238,14 +318,6 @@ sub commit
 {
     my( $ctype ) = @_;
 
-    # Set default
-    #
-    unless( $ctype->{'charset'} )
-    {
-	$ctype->{'charset'} = "UTF-8";
-	$ctype->{'changed'} ++;
-    }
-
     if( $ctype->is('httpd/unix-directory') )
     {
 	$ctype->set('text/html');
@@ -258,6 +330,8 @@ sub commit
 	$Para::Frame::REQ->send_code( 'AR-PUT', 'content_type', $string);
 	$ctype->{'changed'} = 0;
     }
+
+#    debug "Ctype comitted";
     return 1;
 }
 
