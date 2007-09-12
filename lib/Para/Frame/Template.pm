@@ -534,7 +534,7 @@ sub precompile
 	$renderargs->{'template_root'} = $htmlsrc;
     }
 
-    my $rend = $page->renderer(undef, $renderargs );
+    my $rend = $page->renderer($renderargs );
 
     $rend->set_burner_by_type($args->{'type'} || 'html_pre');
 
