@@ -212,22 +212,6 @@ sub register_result_page
 
     debug "Registred the page result for $url";
 
-#    if( utf8::is_utf8(${$resp->{'content'}}) )
-#    {
-#	if( utf8::valid(${$resp->{'content'}}) )
-#	{
-#	    debug "  as valid utf8";
-#	}
-#	else
-#	{
-#	    debug "  as INVALID utf8";
-#	}
-#    }
-#    else
-#    {
-#	debug "  NOT Marked as utf8";
-#    }
-
     $s->{'page_result'}{$url} = $resp;
 }
 
