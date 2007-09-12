@@ -131,7 +131,7 @@ sub new
 
 =head2 render_output
 
-  $p->render_output( $outref )
+  $p->render_output()
 
 Burns the page and stores the result.
 
@@ -140,19 +140,26 @@ can be used for another call to this method.
 
 This method is called by L<Para::Frame::Request/after_jobs>.
 
-Returns: True on success and 0 on failure
+Returns:
+
+  True on success (the content as a scalar-ref or sender object)
+
+  False on failure
 
 =cut
 
 sub render_output
 {
-    my( $rend, $outref ) = @_;
+    my( $rend ) = @_;
 
 #    # Maby we have a page generated already
 #    return 1 if $resp->{'content'};
 
 #    # Don't burn if this is a HEAD request
 #    return 1 if $req->header_only;
+
+    my $out = "";
+    my $outref = \$out;
 
     ### Output page
     my $page = $rend->page;
@@ -220,7 +227,7 @@ sub render_output
 
 
 #    debug "BURNING DONE";
-    return 1;
+    return $outref;
 }
 
 
@@ -386,7 +393,7 @@ sub set_tt_params
     my $site = $page->site or confess "no site: ".$page->sysdesig;
     my $me = $page->url_path_slash;
 
-    if( $req->{'q'} )
+    if( $req->is_from_client )
     {
 	if( $req->error_page_selected )
 	{
@@ -698,21 +705,20 @@ sub paths
 
 #######################################################################
 
-=head2 content_type_string
+=head2 set_ctype
 
 =cut
 
-sub content_type_string
+sub set_ctype
 {
-    my( $rend ) = @_;
+    my( $rend, $ctype ) = @_;
 
+    # TODO: fixme
     my $tmpl = $rend->template;
     if( $tmpl and $tmpl->suffix eq 'tt' )
     {
-	return "text/html";
+	$ctype->set_type("text/html");
     }
-
-    return undef;
 }
 
 #######################################################################

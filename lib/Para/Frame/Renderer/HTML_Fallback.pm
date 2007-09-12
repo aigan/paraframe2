@@ -74,12 +74,9 @@ sub new
 
 Burns the page and stores the result.
 
-If the rendering failes, may change the template and URL. The new URL
-can be used for another call to this method.
-
 This method is called by L<Para::Frame::Request/after_jobs>.
 
-Returns: True on success and 0 on failure
+Returns: a scalar ref to the content
 
 Should not ever fail
 
@@ -87,7 +84,7 @@ Should not ever fail
 
 sub render_output
 {
-    my( $rend, $outref ) = @_;
+    my( $rend ) = @_;
 
     my $req = $rend->{'req'};
     my $resp = $rend->{'resp'};
@@ -102,20 +99,21 @@ sub render_output
 	$out .= "<p>Try to get the page from  <a href=\"http://$backup$path\">$backup</a> instead</p>\n"
 	}
 
-    $$outref = $out;
 
-    return 1;
+    return \ $out;
 }
 
 #######################################################################
 
-=head2 content_type_string
+=head2 set_ctype
 
 =cut
 
-sub content_type_string
+sub set_ctype
 {
-    return "text/html";
+    my( $rend, $ctype ) = @_;
+
+    $ctype->set("text/plain; charset=UTF-8")
 }
 
 #######################################################################

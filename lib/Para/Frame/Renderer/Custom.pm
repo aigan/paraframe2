@@ -37,6 +37,10 @@ use Para::Frame::Utils qw( throw debug datadump );
 
 #######################################################################
 
+
+# TODO: differ RENDERING from SENDING
+
+
 =head2 new
 
 =cut
@@ -51,9 +55,9 @@ sub new
     my $rend = bless
     {
      'content'        => undef,
-    };
+    }, $class;
 
-    my $content = $args->{'content'};
+    my $content = $args->{'content'} ||= \ "";
     unless( UNIVERSAL::isa($content, 'SCALAR') )
     {
 	confess "Content param must be a scalar ref";
@@ -69,7 +73,7 @@ sub new
 
 =head2 render_output
 
-  $p->render_output( $outref )
+  $resp->render_output()
 
 Burns the page and stores the result.
 
@@ -78,28 +82,30 @@ can be used for another call to this method.
 
 This method is called by L<Para::Frame::Request/after_jobs>.
 
-Returns: True on success and 0 on failure
+Returns: the self, as a sender object
 
 =cut
 
 sub render_output
 {
-    my( $rend, $outref ) = @_;
+    my( $rend ) = @_;
 
-    $$outref = ${$rend->{'content'}};
-
-    return 1;
+    return $rend;
 }
 
 #######################################################################
 
-=head2 content_type_string
+=head2 set_ctype
+
+  $rend->set_ctype( $ctype )
+
+Defaults to C<text/html> and charset C<UTF-8>
 
 =cut
 
-sub content_type_string
+sub set_ctype
 {
-    return "text/html";
+    $_[1]->set("text/plain; charset=UTF-8");
 }
 
 #######################################################################
