@@ -929,6 +929,25 @@ sub appfmly
 
 #######################################################
 
+=head2 appbases
+
+  $site->appbases
+
+Returns a list consisting of L</appbase>, L</appfmly> and
+C<Para::Frame>. (Not a listref)
+
+=cut
+
+sub appbases
+{
+    my( $site ) = @_;
+
+    return( $site->appbase, @{ $site->appfmly }, 'Para::Frame' );
+}
+
+
+#######################################################
+
 =head2 approot
 
   $site->approot
