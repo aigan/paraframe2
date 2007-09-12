@@ -202,7 +202,10 @@ sub handler
 
 	unless( $ctype =~ /\bcharset\b/ )
 	{
-	    $ctype .= "; charset=UTF-8";
+	    if( $ctype =~ /^text\// )
+	    {
+		$ctype .= "; charset=UTF-8";
+	    }
 	}
 
 	$r->content_type($ctype);
@@ -541,7 +544,7 @@ sub get_response
     $REQNUM = undef;
     $CANCEL = undef;
 
-    my $timeout = 1.5;
+    my $timeout = 2.0;
 
 
     my $select = IO::Select->new($SOCK);
@@ -1005,7 +1008,7 @@ sub send_message
 
 sub send_message_waiting
 {
-    my $msg = "Processing...";
+    my $msg = "Processing \n";
     if( $msg eq $LAST_MESSAGE )
     {
 	$r->print("<script type=\"text/javascript\">e=document.f.messages;e.value = e.value.substring(0,e.value.length-2)+\"..\\n\";bottom();</script>\n");
