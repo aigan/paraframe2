@@ -9,7 +9,7 @@ package Para::Frame::Request;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2007 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -339,7 +339,7 @@ sub new_minimal
      client         => $client,	## Just the unique name
      jobs           => [],	## queue of actions to perform
      actions        => [],	## queue of actions to perform
-     env            => {},	## No env mor minimals!
+     env            => {},	## No env for minimals!
      's'            => undef,	## Session object
      result         => undef,
      dirconfig      => {},	## Apache $r->dir_config
@@ -356,6 +356,8 @@ sub new_minimal
 
     $req->{'result'}  = Para::Frame::Result->new($req);  # Before Session
     $req->{'s'}       = Para::Frame->Session->new_minimal();
+    $req->{'q'}       = CGI->new({});
+
 
     return $req;
 }
@@ -710,7 +712,7 @@ server job or something else.
 
 sub is_from_client
 {
-    return $_[0]->{'q'} ? 1 : 0;
+    return $_[0]->{'env'}{'REQUEST_METHOD'} ? 1 : 0;
 }
 
 
@@ -1371,8 +1373,7 @@ sub after_jobs
 	my $resp = $req->response; # May have changed
 	if( $resp->is_no_error and $resp->redirection )
 	{
-	    $req->cookies->add_to_header;
- 	    $resp->output_redirection( $resp->redirection );
+ 	    $resp->sender->send_redirection( $resp->redirection );
 	    return $req->done;
 	}
 
@@ -1394,8 +1395,7 @@ sub after_jobs
 	my $new_resp = $req->response; # May have changed
 	if( $new_resp->redirection )
 	{
-	    $req->cookies->add_to_header;
- 	    $new_resp->output_redirection( $resp->redirection );
+	    $new_resp->sender->send_redirection( $new_resp->redirection );
 	    return $req->done;
 	}
 	elsif( $resp ne $new_resp )
@@ -1404,8 +1404,7 @@ sub after_jobs
 	}
 	elsif( $render_result )
 	{
-	    $req->cookies->add_to_header;
- 	    $new_resp->send_output;
+ 	    $new_resp->sender->send_output;
 	    return $req->done;
 	}
 	else
@@ -2668,6 +2667,8 @@ sub set_response_path
 #######################################################################
 
 =head2 set_response
+
+  $req->set_response( $url, \%args )
 
 =cut
 
