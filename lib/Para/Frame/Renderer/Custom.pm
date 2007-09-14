@@ -52,18 +52,7 @@ sub new
 
     $args ||= {};
 
-    my $rend = bless
-    {
-     'content'        => undef,
-    }, $class;
-
-    my $content = $args->{'content'} ||= \ "";
-    unless( UNIVERSAL::isa($content, 'SCALAR') )
-    {
-	confess "Content param must be a scalar ref";
-    }
-
-    $rend->{'content'} = $content;
+    my $rend = bless $args, $class;
 
     return $rend;
 }
@@ -106,6 +95,61 @@ Defaults to C<text/html> and charset C<UTF-8>
 sub set_ctype
 {
     $_[1]->set("text/plain; charset=UTF-8");
+}
+
+#######################################################################
+
+=head2 response
+
+=cut
+
+sub response
+{
+    return $_[0]->{'resp'};
+}
+
+#######################################################################
+
+=head2 req
+
+=cut
+
+sub req
+{
+    return $_[0]->{'req'};
+}
+
+#######################################################################
+
+=head2 site
+
+=cut
+
+sub site
+{
+    return $_[0]->{'site'};
+}
+
+#######################################################################
+
+=head2 language
+
+=cut
+
+sub language
+{
+    return $_[0]->{'language'};
+}
+
+#######################################################################
+
+=head2 url_path
+
+=cut
+
+sub url_path
+{
+    return $_[0]->{'url'};
 }
 
 #######################################################################
