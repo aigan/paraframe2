@@ -64,9 +64,9 @@ redirection to a new page.
 use strict;
 use utf8;
 
+use Encode;
 use Carp qw( croak confess cluck );
 use IO::File;
-use Encode qw( is_utf8 decode );
 use File::Basename; # exports fileparse, basename, dirname
 use File::stat; # exports stat
 use File::Slurp; # Exports read_file, write_file, append_file, overwrite_file, read_dir
@@ -79,13 +79,17 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw debug create_dir chmod_file idn_encode idn_decode datadump catch client_send package_to_module compile );
 use Para::Frame::Request::Ctype;
 use Para::Frame::URI;
 use Para::Frame::L10N qw( loc );
 use Para::Frame::Dir;
 use Para::Frame::File;
 use Para::Frame::Renderer::TT;
+
+use Para::Frame::Utils qw( throw debug create_dir chmod_file
+                           idn_encode idn_decode datadump catch
+                           client_send package_to_module compile
+                           validate_utf8 );
 
 
 #######################################################################
@@ -648,30 +652,21 @@ sub send_output
 	}
 	elsif( $result eq 'SEND' )
 	{
-	    my $ctype = $resp->ctype;
-	    my $binmode = ':bytes';
-	    if( $ctype->type =~ /^text\// )
+	    my $encoding = $resp->{'encoding'};
+	    unless( $encoding )
 	    {
-#		debug "Sending text ($ctype)";
-		if( my $charset = $ctype->charset )
+		my $ctype = $resp->ctype;
+		if( $ctype->type =~ /^text\// )
 		{
-#		    debug "Charset is $charset";
-
-		    if( $charset eq 'UTF-8' )
-		    {
-			$binmode = ':utf8';
-		    }
-		    else
-		    {
-			confess "Charset $charset not supported";
-		    }
+		    $encoding = $ctype->charset;
 		}
 	    }
 
-	    binmode( $client, $binmode);
-#	    debug "1 sending with binmode $binmode";
-	    client_send($client, $resp->{'content'}, {req=>$req});
-	    binmode( $client, ':bytes');
+	    my $res = client_send($client, $content,
+				  {
+				   req => $req,
+				   encoding => $encoding,
+				  });
 	}
 	else
 	{
@@ -922,30 +917,7 @@ sub send_stored_result
 
     if( my $content = $resp->{'content'} ) # May be header only
     {
-
-	if( utf8::is_utf8($$content) )
-	{
-	    if( utf8::valid($$content) )
-	    {
-#		debug "  as valid utf8";
-	    }
-	    else
-	    {
-		debug "  as INVALID utf8";
-	    }
-	}
-	else
-	{
-	    if( $$content =~ /Ã/ )
-	    {
-		debug "  UNMARKED utf8";
-	    }
-	    else
-	    {
-		debug "  NOT Marked as utf8";
-	    }
-	}
-
+	debug "  ".validate_utf8(\$content);
 
 	$resp->send_headers;
 	my $res = $req->get_cmd_val( 'BODY' );
@@ -955,33 +927,23 @@ sub send_stored_result
 	}
 	else
 	{
-	    my $ctype = $resp->ctype;
-	    my $binmode = ':bytes';
-	    if( $ctype->type =~ /^text\// )
+	    my $client = $req->client;
+	    my $encoding = $resp->{'encoding'};
+	    unless( $encoding )
 	    {
-#		debug "Sending text ($ctype)";
-		if( my $charset = $ctype->charset )
+		my $ctype = $resp->ctype;
+		if( $ctype->type =~ /^text\// )
 		{
-#		    debug "Charset is $charset";
-
-		    if( $charset eq 'UTF-8' )
-		    {
-			$binmode = ':utf8';
-		    }
-		    else
-		    {
-			confess "Charset $charset not supported";
-		    }
+		    $encoding = $ctype->charset;
 		}
 	    }
 
-	    my $client = $req->client;
-	    binmode( $client, $binmode);
-#	    debug "2 sending with binmode $binmode";
-	    client_send($client, $content, {req=>$req});
-	    binmode( $client, ':bytes');
+	    client_send($client, $content,
+			{
+			 req => $req,
+			 encoding => $encoding,
+			});
 	}
-
     }
     else
     {
@@ -1043,26 +1005,8 @@ sub equals
 
 sub set_content
 {
-#    return $_[0]->{'content'} = $_[1];
 
     $_[0]->{'content'} = $_[1];
-
-#    if( utf8::is_utf8(${$_[0]->{'content'}}) )
-#    {
-#	if( utf8::valid(${$_[0]->{'content'}}) )
-#	{
-##	    debug "3Render result Marked as valid utf8";
-#	}
-#	else
-#	{
-#	    debug "3Render result Marked as INVALID utf8";
-#	}
-#    }
-#    else
-#    {
-#	debug "3Render result NOT Marked as utf8";
-#    }
-
     return 1;
 }
 
@@ -1143,7 +1087,8 @@ sub set_renderer
 	|| $req->dirconfig->{'renderer'}
       );
 
-    if( not $renderer and $resp->{'page'} )
+    if( $resp->is_error_response or
+	( not $renderer and $resp->{'page'} ) )
     {
 	$renderer = $resp->{'page'}->renderer( $args );
     }
