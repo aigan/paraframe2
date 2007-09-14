@@ -24,11 +24,19 @@ Para::Frame::Client - The client for the Request
 =cut
 
 use strict;
+use bytes;
+
 use CGI;
 use IO::Socket;
 use IO::Select;
 use FreezeThaw qw( freeze );
 use Time::HiRes;
+
+# See also
+# Apache2::RequestRec
+# Apache2::RequestIO
+# Apache2::SubRequest
+# Apache2::Connection
 
 BEGIN
 {
@@ -392,6 +400,8 @@ sub connect_to_server
 
 	sleep 1;
     }
+
+    binmode( $SOCK, ':raw' );
 
     warn "$$: Established connection on port $port\n" if $DEBUG > 3;
     return $SOCK;
