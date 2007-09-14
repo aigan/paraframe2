@@ -1009,7 +1009,7 @@ sub sys_base
 
     my $path = $page->sys_path;
     $path =~ m/ ^ (.*?)(\.\w\w)?\.\w{2,3} $ /x
-      or die "Couldn't get base from $path";
+      or confess "Couldn't get base from $path";
     return $1;
 }
 
