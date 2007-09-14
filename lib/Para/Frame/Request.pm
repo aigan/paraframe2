@@ -1409,7 +1409,7 @@ sub after_jobs
 	}
 	else
 	{
-	    $req->handle_error({ response => $resp });
+	    $req->handle_error({ response => $new_resp });
 	}
 
 	$req->add_job('after_jobs');
@@ -2918,6 +2918,12 @@ sub handle_error
 	confess "Missing args ".datadump($args_in,2);
     }
 
+    unless( $@ )
+    {
+	$@ = "No renderer result";
+    }
+
+
     ##################
     debug $@;
     ##################
@@ -3002,16 +3008,21 @@ sub handle_error
 	$error_tt = '/error.tt';
     }
 
+    debug "Setting error template to $error_tt";
+
     my $error_tt_template = $site->home->get_virtual($error_tt)->template;
 
-    # Avoid recursive failure
-    if( $resp and $resp->renderer_if_existing )
+    # Avoid recursive failure (only checks for TT renderer)
+    if( $resp and $resp->renderer_if_existing and
+	$resp->renderer->can('template')
+      )
     {
 	if( my $tmpl = $resp->renderer->template )
 	{
 	    my $tmpl_sys_base = $tmpl->sys_base;
 	    my $error_sys_base = $error_tt_template->sys_base;
-#	    debug sprintf "Comparing %s with %s", $tmpl_base, $error_base;
+	    debug sprintf "Comparing %s with %s",
+	      $tmpl_sys_base, $error_sys_base;
 	    # Same error page again?
 	    if($tmpl_sys_base eq $error_sys_base )
 	    {
@@ -3045,6 +3056,8 @@ sub handle_error
     {
 	$new_resp->set_http_status(404);
     }
+
+    debug "New response set with url $url";
 
     return 0;
 }
