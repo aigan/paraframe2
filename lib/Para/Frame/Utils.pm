@@ -23,8 +23,10 @@ Para::Frame::Utils - Utility functions for ParaFrame and applications
 =cut
 
 use strict;
-use Carp qw(carp croak cluck confess shortmess longmess );
 use locale;
+
+use Encode;
+use Carp qw(carp croak cluck confess shortmess longmess );
 use Date::Manip;
 use File::stat;  # stat
 use File::Basename; # dirname
@@ -67,7 +69,7 @@ BEGIN
             store_params clear_params add_params restore_params
             idn_encode idn_decode debug reset_hashref timediff
             extract_query_params fqdn retrieve_from_url get_from_fork
-            datadump client_send );
+            datadump client_send validate_utf8 );
 
 }
 
@@ -1728,6 +1730,8 @@ sub client_send
 {
     my( $client, $data_in, $args ) = @_;
 
+#    Para::Frame::Logging->this_level(3);
+
     my $dataref;
     if( ref $data_in )
     {
@@ -1752,63 +1756,280 @@ sub client_send
 
     $args ||= {};
 
+    # localized values. Visible in &client_send_on_retry
     # KEEP req undef if we don't want to yield!
     my $req = $args->{'req'};
-
-    my $length = length($$dataref);
-
-    my $total = 0;
     my $errcnt = 0;
+    my $srclength = bytes::length( $$dataref ); # In octets
 
-    unless( $length )
+    unless( $srclength )
     {
-	debug "We got nothing to send (to $client)";
+	debug "We got nothing to send";
 	return 0;
     }
 
-    my $chunk = 16384; # POSIX::BUFSIZ * 2
-    my $sent = 0;
-    for( my $i=0; $i<$length; $i+= $sent )
+    my $enc = $args->{'encoding'} || 'raw';
+    if( $enc !~ /^(raw|utf8|iso-8859-1)$/)
     {
-	$sent = $client->send( substr $$dataref, $i, $chunk );
-	if( $sent )
+	unless( UNIVERSAL::isa $enc, 'Encode::Encoding' )
 	{
-#	    debug(3, "  Sent $sent chars");
-	    $total += $sent;
-	    $errcnt = 0;
-	}
-	else
-	{
-	    if( $req )
+#	    debug "Parsing encoding $enc";
+
+	    # Normalize encoding name
+	    $enc = find_encoding($enc);
+
+	    if( $enc->name eq 'utf-8-strict' )
 	    {
-		if( $req->cancelled )
-		{
-		    debug("Request was cancelled. Giving up");
-		    return $total;
-		}
-
-		$req->yield( 0.9 );
-		debug(1,"  Resending chunk $i");
+		$enc = 'utf8';
 	    }
-	    else
+	    elsif( $enc->name eq 'utf8' )
 	    {
-		debug("  Resending chunk $i of messge: $$dataref");
-		Time::HiRes::sleep(0.05);
+		$enc = 'utf8';
 	    }
-
-	    $errcnt++;
-
-	    if( $errcnt >= 100 )
+	    elsif( $enc->name eq 'iso-8859-1')
 	    {
-		debug(0,"Got over 100 failures to send chunk $i");
-		last;
+		$enc = 'iso-8859-1';
 	    }
-
-	    redo;
 	}
     }
 
-    return $total;
+
+    if( ($enc eq 'utf8') or ($enc eq 'iso-8859-1') )
+    {
+	if( $enc eq 'utf8' )
+	{
+#	    debug "Sending with utf8 method: ".validate_utf8($dataref);
+	    binmode( $client, ':utf8' );
+	}
+	else
+	{
+#	    debug "Sending with Latin1 method: ".validate_utf8($dataref);
+	    binmode( $client, ':raw' );
+	}
+
+	my $chrlength = length($$dataref); # In chars
+	my $chrpos = 0;
+	my $chunk = 8192; # POSIX::BUFSIZ * 1
+	my $chrsent = 0;
+	while( $chrpos < $chrlength )
+	{
+	    $chrsent = $client->send( substr $$dataref, $chrpos, $chunk );
+	    if( $chrsent )
+	    {
+		debug(3, "  Sent $chrsent chars");
+		$chrpos += $chrsent;
+		$errcnt = 0;
+	    }
+	    else
+	    {
+		if( $req )
+		{
+		    if( $req->cancelled )
+		    {
+			debug("Request was cancelled. Giving up");
+			return $chrpos;
+		    }
+
+		    $req->yield( 0.9 );
+		    debug(1,"  Resending chunk $chrpos");
+		}
+		else
+		{
+		    debug("  Resending chunk $chrpos of messge: $$dataref");
+		    Time::HiRes::sleep(0.05);
+		}
+
+		$errcnt++;
+
+		if( $errcnt >= 100 )
+		{
+		    debug(0,"Got over 100 failures to send chunk $chrpos");
+		    last;
+		}
+
+		redo;
+	    }
+	}
+	return $chrpos;
+    }
+    elsif( $enc eq 'raw' )
+    {
+#	debug "Sending with raw method";
+
+	use bytes;
+
+	my $chunk = 8192; # POSIX::BUFSIZ * 1
+	binmode( $client, ':raw' );
+	utf8::encode( $$dataref ) if utf8::is_utf8( $$dataref );
+#	debug "Sending $srclength bytes";
+	my $srcpos;
+	my $srcsent;
+
+	for( $srcpos=0; $srcpos<$srclength; $srcpos+= $srcsent )
+	{
+	    $srcsent = $client->send( substr $$dataref, $srcpos, $chunk );
+	    if( $srcsent )
+	    {
+		debug(3, "  Sent $srcsent bytes");
+		$errcnt = 0;
+	    }
+	    else
+	    {
+		if( $req )
+		{
+		    if( $req->cancelled )
+		    {
+			debug("Request was cancelled. Giving up");
+			return $srcpos;
+		    }
+
+		    $req->yield( 0.9 );
+		    debug(1,"  Resending chunk $srcpos");
+		}
+		else
+		{
+		    debug("  Resending chunk $srcpos of messge");
+		    Time::HiRes::sleep(0.05);
+		}
+
+		$errcnt++;
+
+		if( $errcnt >= 100 )
+		{
+		    debug(0,"Got $errcnt failures to send chunk $srcpos");
+		    last;
+		}
+		redo;
+	    }
+	}
+	return $srcpos;
+    }
+    else
+    {
+	debug "Sending with encoding ".$enc->name;
+
+	my $chunk = 1024; # Same as Encode::PerlIO
+
+	binmode( $client, ':raw' );
+
+	my $chrlength = length($$dataref);          # In chars
+#	debug "Sending $chrlength/$srclength: ".validate_utf8($dataref);
+
+	my $chrpos = 0;
+	my $encpos = 0;
+	my $encsent= 0;
+
+	my $chrbuffer = substr($$dataref, $chrpos, $chunk);
+	my $encbuffer = encode($enc, $chrbuffer, 0);
+	my $enclength = length($encbuffer); # grow after each read
+	while( $encpos < $enclength )
+	{
+	    # put a substitution character in place of a malformed
+	    # character
+	    $encsent = $client->send($encbuffer);
+	    if( $encsent )
+	    {
+		debug(3, "  Sent $encsent bytes");
+		$encpos += $encsent;
+		$errcnt = 0;
+	    }
+	    else
+	    {
+		if( $req )
+		{
+		    if( $req->cancelled )
+		    {
+			debug("Request was cancelled. Giving up");
+			return $encpos;
+		    }
+
+		    $req->yield( 0.9 );
+		    debug(1,"  Resending chunk $chrpos");
+		}
+		else
+		{
+		    debug("  Resending chunk $chrpos of messge");
+		    Time::HiRes::sleep(0.05);
+		}
+
+		$errcnt++;
+
+		if( $errcnt >= 100 )
+		{
+		    debug(0,"Got $errcnt failures to send chunk $chrpos");
+		    last;
+		}
+		redo;
+	    }
+	}
+	continue
+	{
+	    $chrpos += length($chrbuffer); # Charlength!
+
+	    if( $encsent < length($encbuffer) )
+	    {
+		$encbuffer = substr $encbuffer, $encsent;
+		my $diff = length($encbuffer);
+
+		$chrbuffer = substr($$dataref, $chrpos, 512);
+		$encbuffer .= encode($enc, $chrbuffer, 0);
+
+		$enclength += length($encbuffer) - $diff;
+	    }
+	    else
+	    {
+		$chrbuffer = substr($$dataref, $chrpos, $chunk);
+		$encbuffer = encode($enc, $chrbuffer, 0);
+		$enclength += length($encbuffer);
+	    }
+	};
+
+
+	return $chrpos;
+    }
+}
+
+#######################################################################
+
+=head2 validate_utf8
+
+  validate_utf8(\$data)
+
+Returns: a string with info about the utf8-status of the string
+
+=cut
+
+sub validate_utf8
+{
+    if( utf8::is_utf8(${$_[0]}) )
+    {
+	if( utf8::valid(${$_[0]}) )
+	{
+	    if( ${$_[0]} =~ /Ã/ )
+	    {
+		return "DOUBLE-ENCODED utf8";
+	    }
+	    else
+	    {
+		return "valid utf8";
+	    }
+	}
+	else
+	{
+	    return "as INVALID utf8";
+	}
+    }
+    else
+    {
+	if( ${$_[0]} =~ /Ã/ )
+	{
+	    return "UNMARKED utf8";
+	}
+	else
+	{
+	    return "NOT Marked as utf8";
+	}
+    }
 }
 
 #######################################################################
