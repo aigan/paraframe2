@@ -471,6 +471,7 @@ sub main_loop
 				    $child->deregister(undef,$1);
 				    debug "Removing child $cpid";
 				    kill 9, $cpid;
+				    delete $CHILD{$cpid};
 				}
 			    }
 			}
