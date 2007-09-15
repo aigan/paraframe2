@@ -2321,13 +2321,14 @@ Returns a report in plain text of server status
 sub report
 {
     my $out = "SERVER REPORT\n\n";
-    $out .= "SERVER obj: $SERVER\n";
+    $out .= sprintf "The time is %s\n", now->strftime("%F %H.%M.%S");
+#    $out .= "SERVER obj: $SERVER\n";
     $out .= "Global DEBUG level: $DEBUG\n";
     $out .= "DEBUG indent: $INDENT\n";
     $out .= "Current requst is $REQ->{'reqnum'}\n";
 #    $out .= "Last running request was $REQ_LAST->{'reqnum'}\n";
     $out .= sprintf "Current user is %s\n", $U->desig;
-    $out .= "\nRequests:\n";
+    $out .= "\nActive requests:\n";
 
     foreach my $reqkey (keys %REQUEST)
     {
@@ -2375,24 +2376,36 @@ sub report
 	my $cpid = $child->pid;
 	$out .= "  Req $creqnum $cclient has a child with pid $cpid\n";
     }
+    unless( keys %CHILD )
+    {
+	$out .= "none\n";
+    }
+
+    $out .= "\n";
 
     if( $BGJOBDATE )
     {
-	$out .= "Last background job was done $BGJOBDATE\n";
+	$out .= sprintf "Last background job (#%d) was done %s\n",
+	  $BGJOBNR, Para::Frame::Time->get($BGJOBDATE)->
+	    strftime("%F %H.%M.%S");
     }
-    $out .= "Last background job was $BGJOBNR\n";
 
-    $out .= "\nBackground jobs:\n";
-
+    $out .= "\nActive background jobs:\n";
     foreach my $job ( @BGJOBS_PENDING )
     {
 	my( $oreq, $label, $coderef, @args ) = @$job;
 	$out .= "Original req $oreq->{reqnum}\n";
 	$out .= "  Code $label with args @args\n"
     }
+    unless( @BGJOBS_PENDING )
+    {
+	$out .= "none\n";
+    }
 
-    $out .= "Shortest interval between BG jobs: @{[BGJOB_MAX]}\n";
-    $out .= "Longest  interval between BG jobs: @{[BGJOB_MIN]}\n";
+    $out .= "\n";
+
+    $out .= "Shortest interval between BG jobs: @{[BGJOB_MAX]} secs\n";
+    $out .= "Longest  interval between BG jobs: @{[BGJOB_MIN]} secs\n";
 
     return $out;
 }
