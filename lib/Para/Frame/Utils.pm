@@ -24,6 +24,7 @@ Para::Frame::Utils - Utility functions for ParaFrame and applications
 
 use strict;
 use locale;
+use utf8;
 
 use Encode;
 use Carp qw(carp croak cluck confess shortmess longmess );
