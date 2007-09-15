@@ -138,9 +138,10 @@ sub get
     #debug "Parsing date '$time'";
 
     my $date;
-    if( $time =~ /^\d{7,}$/ )
+    if( $time =~ /^(\d{7,})([,\.]\d+)?$/ )
     {
-	$date = DateTime->from_epoch( epoch => $time );
+	# Epoch time. Maby with subsecond precision
+	$date = DateTime->from_epoch( epoch => $1 );
     }
     else
     {
