@@ -1087,9 +1087,17 @@ sub set_renderer
 	|| $req->dirconfig->{'renderer'}
       );
 
-    if( $resp->is_error_response or
-	( not $renderer and $resp->{'page'} ) )
+    if( not $renderer and $resp->{'page'} )
     {
+	$renderer = $resp->{'page'}->renderer( $args );
+    }
+    elsif( $resp->is_error_response and not $renderer_in )
+    {
+	# If this is an error response, we should not use a renderer
+	# from dirconfig. But always use the renderer given in
+	# $renderer_in, since that may be the HTML_Fallback renderer
+	# used as a last resort
+
 	$renderer = $resp->{'page'}->renderer( $args );
     }
 
@@ -1164,10 +1172,10 @@ sub render_output
 
     return eval
     {
-#	debug "Rendering output";
+	debug 3, "Rendering output";
 	# May throw exceptions
 	my $renderer = $resp->renderer;
-#	debug "Using renderer $renderer";
+	debug 3, "Using renderer $renderer";
 
 	# May throw exceptions -- May return false
 	if( my $result = $renderer->render_output() )
@@ -1182,13 +1190,13 @@ sub render_output
 	    {
 		$resp->set_sender( $result );
 	    }
-#	    debug "Returning true";
+	    debug 3, "Returning true";
 	    return 1;
 	}
-#	debug "Returning false";
+	debug 3, "Returning false";
 	return 0;
     };
-#    debug "Got an error";
+    debug 3, "Got an error";
     return 0;
 }
 
