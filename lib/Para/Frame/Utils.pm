@@ -1460,6 +1460,7 @@ sub debug
     {
 	my $prefix =  $Para::Frame::FORK ? "| $$: " : "";
 
+	utf8::upgrade( $message );
 	chomp $message;
 	foreach(split /\n/, $message)
 	{
