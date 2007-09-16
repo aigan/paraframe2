@@ -427,7 +427,19 @@ sub print_error_page
     warn "$$: Returning error: $error\n" if $DEBUG;
 
     my $dirconfig = $r->dir_config;
-    my $path = $r->uri;
+    my $path;
+    if( $apache2 )
+    {
+	$path = $r->unparsed_uri;
+    }
+    else
+    {
+	$path = $r->uri;
+	if( my $args = $r->args )
+	{
+	    $path .= '?' . $args;
+	}
+    }
 
     unless( $BACKUP_PORT )
     {
