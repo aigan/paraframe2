@@ -52,7 +52,7 @@ sub new
      'resp'           => undef,
      'req'            => undef,
      'params'         => undef,
-    };
+    }, $class;
 
     $rend->{'resp'} = $args->{'resp'}
       or confess "resp param missing";
@@ -113,8 +113,9 @@ sub set_ctype
 {
     my( $rend, $ctype ) = @_;
 
-    $ctype->set("text/plain; charset=UTF-8")
+    $ctype->set("text/html; charset=UTF-8")
 }
+
 
 #######################################################################
 
