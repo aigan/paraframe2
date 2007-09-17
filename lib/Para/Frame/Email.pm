@@ -44,7 +44,7 @@ BEGIN
 use Para::Frame::Reload;
 
 use Para::Frame::Request;
-use Para::Frame::Utils qw( throw debug fqdn datadump );
+use Para::Frame::Utils qw( throw debug fqdn datadump validate_utf8 );
 use Para::Frame::Widget;
 use Para::Frame::Time qw( date );
 use Para::Frame::Email::Address;
@@ -721,9 +721,12 @@ sub render_body
     $params{'page'} = $page;
 
     my $data = "";
-    $burner->burn( $rend, $tmpl->sys_path, \%params, \$data )
+    $burner->burn( $rend, $tmpl->document, \%params, \$data )
       or throw($burner->error);
+
+    debug "email before downgrade: ".validate_utf8(\$data);
     utf8::downgrade($data); # Convert to ISO-8859-1
+    debug "email after downgrade: ".validate_utf8(\$data);
 
     if( $p->{'pgpsign'} )
     {
