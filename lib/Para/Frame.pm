@@ -2223,6 +2223,7 @@ sub configure
 			     });
 
     Para::Frame::Burner->add({
+			      STASH => Para::Frame::Template::Stash::CheckUTF8->new,
 			      INTERPOLATE => 1,
 			      COMPILE_DIR => $CFG->{'ttcdir'}.'/plain',
 			      FILTERS =>
