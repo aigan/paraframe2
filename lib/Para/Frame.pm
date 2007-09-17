@@ -9,7 +9,7 @@ package Para::Frame;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2007 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -71,7 +71,7 @@ our $SERVER     ;
 our $DEBUG      ;
 our $INDENT     ;
 our @JOBS       ;  ##not used...
-our %REQUEST    ;
+our %REQUEST    ;  # key is $client, 'background-...' or 'subrequest-...'
 our %RESPONSE   ;  # Holds client response for req and subreq
 our $REQ        ;
 our $REQ_LAST   ;  # Remeber last $REQ beyond a undef $REQ
@@ -317,6 +317,11 @@ sub main_loop
 		    # Do not do jobs for a request that waits for a child
 		    debug 5, "In_yield: $req->{reqnum}";
 		}
+		elsif( $req->{'wait'} )
+		{
+		    # Waiting for something else to finish...
+		    debug 5, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
+		}
 		elsif( $req->{'cancel'} )
 		{
 		    switch_req( $req );
@@ -332,11 +337,6 @@ sub main_loop
 
 		    $req->run_hook('done');
 		    close_callback($req->{'client'});
-		}
-		elsif( $req->{'wait'} )
-		{
-		    # Waiting for something else to finish...
-		    debug 5, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
 		}
 		elsif( my $job = shift @{$req->{'jobs'}} )
 		{
@@ -1166,10 +1166,10 @@ sub close_callback
 	# Releasing active request
 	delete $REQUEST{$client}{'active_reqest'};
 	delete $REQUEST{$client};
-	delete $RESPONSE{$client};
+#	delete $RESPONSE{$client};
 	switch_req(undef);
     }
-    elsif( $REQUEST{$client}{'original_request'} )
+    elsif( $client =~ /^subrequest/ )
     {
 	# This is a subrequest
 
@@ -1180,9 +1180,14 @@ sub close_callback
 	# But it may be that the parent already is done. (See
 	# Para::Frame::Request->new_subrequest) )
 
-	$::SRCNT++;
-	debug "This was subrequest ending $::SRCNT";
-	exit if $::SRCNT >= 10;
+	# Fact is that we under normal conditions never get a
+	# close_callback with a subrequest key. And maby not by a
+	# subrequest with a background key either.
+
+	debug "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
+	debug "This was subrequest of ".
+	  $REQUEST{$client}->{'original_request'}->id;
+	debug "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
 
 	return;
     }
