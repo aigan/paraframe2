@@ -244,6 +244,15 @@ sub new_subrequest
 
     $Para::Frame::REQNUM ++;
 
+    # Subrequests has the same client as the parent request. But if
+    # the subrequest is handeling a site with another url, it will
+    # have to have a background client.
+
+    # In either case, the key in the REQUEST hash must be unique. If
+    # not a background req, it will be named 'subrequest-xxx'.
+
+    my $key = "subrequest-$Para::Frame::REQNUM";
+
     if( my $site_in = $args->{'site'} )
     {
 	my $site = $Para::Frame::CFG->{'site_class'}->get( $site_in );
@@ -251,7 +260,7 @@ sub new_subrequest
 	{
 #	    debug "Host mismatch ".$site->host;
 #	    debug "Changing the client of the subrequest";
-	    $client = "background-$Para::Frame::REQNUM";
+	    $key = $client = "background-$Para::Frame::REQNUM";
 	}
     }
 
@@ -265,8 +274,8 @@ sub new_subrequest
     warn "\n$Para::Frame::REQNUM Starting subrequest\n";
 
     ### Register the client, if it was created now
-    $Para::Frame::REQUEST{$client} ||= $req;
-    $Para::Frame::RESPONSE{$client} ||= [];
+#    debug "  $key is a subreq to ".$original_req->id;
+    $Para::Frame::REQUEST{$key} = $req;
 
     $req->minimal_init( $args ); ### <<--- INIT
 
@@ -282,6 +291,8 @@ sub new_subrequest
     debug 2, "$original_req->{reqnum} now waits on $original_req->{'wait'} things";
     Para::Frame::switch_req( $original_req );
 
+    # Deregistring request again
+    delete $Para::Frame::REQUEST{$key};
 
     # Merge the subrequest result with our result
     $original_req->result->incorporate($req->result);
@@ -312,7 +323,6 @@ sub new_bgrequest
     my $client = "background-$Para::Frame::REQNUM";
     my $req = Para::Frame::Request->new_minimal($Para::Frame::REQNUM, $client);
     $Para::Frame::REQUEST{$client} = $req;
-    $Para::Frame::RESPONSE{$client} = [];
     Para::Frame::switch_req( $req, 1 );
     warn "\n\n$Para::Frame::REQNUM $msg\n";
     $req->minimal_init;
@@ -1359,6 +1369,10 @@ sub after_jobs
 	}
 
 	### Do pre backtrack stuff
+	if( $req->cancelled )
+	{
+	    throw('cancel', "Request cancelled. Stopping jobs");
+	}
 	### Do backtrack stuff
 	$req->error_backtrack or
 	    $req->session->route->check_backtrack;
@@ -2534,19 +2548,20 @@ sub cancel
 
     if( $req->{'wait'} > 0 )
     {
-	$req->{'wait'} = 0;
+	foreach my $child ( values %Para::Frame::REQUEST )
+	{
+	    if( $child->original and ( $child->original->id == $req->id ) )
+	    {
+		debug "A servant ($child->{'reqnum'}) of req $req->{'reqnum'} got cancelled";
+		debug "Both uses the same client. Cancel servant also";
+		$child->cancel;
+	    }
+	}
+
 	foreach my $oreq ( values %Para::Frame::REQUEST )
 	{
-	    if( $oreq->original and ( $oreq->original->id == $req->id ) )
-	    {
-		debug "A servant ($req->{'reqnum'}) of req $oreq->{'reqnum'} got cancelled";
-		debug "Both uses the same client. Cancel this also";
-		$oreq->cancel;
-	    }
-
 	    if( $oreq->active and ( $oreq->active->id == $req->id ) )
 	    {
-
 		# The common case: The active req created this request
 		# in order to communicate with the client. If this rec
 		# was cancelled it can't answer questions from the
@@ -2576,11 +2591,6 @@ sub cancel
 	$areq->cancel;
 	delete $req->{'active_reqest'};
     }
-
-#    if( $req->{'in_yield'} )
-#    {
-#	debug "This req is in yield";
-#    }
 }
 
 
