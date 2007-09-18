@@ -1795,17 +1795,25 @@ sub client_send
 	}
     }
 
+    # TODO: Stop if request cancelled or socket closed
+    unless( $client->opened )
+    {
+	confess "Client closed";
+    }
+
 
     if( ($enc eq 'utf8') or ($enc eq 'iso-8859-1') )
     {
 	if( $enc eq 'utf8' )
 	{
 #	    debug "Sending with utf8 method: ".validate_utf8($dataref);
+	    debug "Sending with utf8 method";
 	    binmode( $client, ':utf8' );
 	}
 	else
 	{
 #	    debug "Sending with Latin1 method: ".validate_utf8($dataref);
+	    debug "Sending with Latin1 method";
 	    binmode( $client, ':raw' );
 	}
 
@@ -1852,6 +1860,7 @@ sub client_send
 		redo;
 	    }
 	}
+#	debug "Sent $chrpos chars";
 	return $chrpos;
     }
     elsif( $enc eq 'raw' )
