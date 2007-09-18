@@ -155,7 +155,7 @@ sub save_as
     else
     {
 	copy( $fromfile, $destfile ) or
-	  die "Failed to copy $uploaded to $destfile: $!";
+	  die "Failed to copy $fromfile to $destfile: $!";
     }
 
     return $uploaded;
