@@ -291,11 +291,12 @@ sub new_subrequest
     debug 2, "$original_req->{reqnum} now waits on $original_req->{'wait'} things";
     Para::Frame::switch_req( $original_req );
 
-    # Deregistring request again
-    delete $Para::Frame::REQUEST{$key};
-
     # Merge the subrequest result with our result
     $original_req->result->incorporate($req->result);
+
+    # The subreq may still have som jobs to do. Usually a job was
+    # added to release active requests. I.e. release_active_request()
+
 
     if( $err )
     {
