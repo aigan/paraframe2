@@ -244,23 +244,15 @@ sub new_subrequest
 
     $Para::Frame::REQNUM ++;
 
-    # Subrequests has the same client as the parent request. But if
-    # the subrequest is handeling a site with another url, it will
-    # have to have a background client.
-
-    # In either case, the key in the REQUEST hash must be unique. If
-    # not a background req, it will be named 'subrequest-xxx'.
-
-    my $key = "subrequest-$Para::Frame::REQNUM";
-
     if( my $site_in = $args->{'site'} )
     {
 	my $site = $Para::Frame::CFG->{'site_class'}->get( $site_in );
+	debug "new_subrequest in site ".$site->desig;
 	if( $original_req->site->host ne $site->host )
 	{
 #	    debug "Host mismatch ".$site->host;
 #	    debug "Changing the client of the subrequest";
-	    $key = $client = "background-$Para::Frame::REQNUM";
+	    $client = "background-$Para::Frame::REQNUM";
 	}
     }
 
@@ -274,8 +266,12 @@ sub new_subrequest
     warn "\n$Para::Frame::REQNUM Starting subrequest\n";
 
     ### Register the client, if it was created now
-#    debug "  $key is a subreq to ".$original_req->id;
-    $Para::Frame::REQUEST{$key} = $req;
+    #
+    # This only registrer background requests. Other subrequests are
+    # not registred
+    #
+    $Para::Frame::REQUEST{$client} ||= $req;
+    $Para::Frame::RESPONSE{$client} ||= [];
 
     $req->minimal_init( $args ); ### <<--- INIT
 
@@ -324,6 +320,7 @@ sub new_bgrequest
     my $client = "background-$Para::Frame::REQNUM";
     my $req = Para::Frame::Request->new_minimal($Para::Frame::REQNUM, $client);
     $Para::Frame::REQUEST{$client} = $req;
+    $Para::Frame::RESPONSE{$client} = [];
     Para::Frame::switch_req( $req, 1 );
     warn "\n\n$Para::Frame::REQNUM $msg\n";
     $req->minimal_init;

@@ -71,7 +71,7 @@ our $SERVER     ;
 our $DEBUG      ;
 our $INDENT     ;
 our @JOBS       ;  ##not used...
-our %REQUEST    ;  # key is $client, 'background-...' or 'subrequest-...'
+our %REQUEST    ;  # key is $client or 'background-...'
 our %RESPONSE   ;  # Holds client response for req and subreq
 our $REQ        ;
 our $REQ_LAST   ;  # Remeber last $REQ beyond a undef $REQ
@@ -275,7 +275,7 @@ sub main_loop
     debug(4,"Entering main_loop at level $LEVEL",1) if $LEVEL;
     print "MAINLOOP $LEVEL\n" unless $Para::Frame::FORK;
 
-    $timeout ||= $LEVEL ? TIMEOUT_SHORT : TIMEOUT_LONG;
+    $timeout ||= TIMEOUT_SHORT;
 
     while (1)
     {
@@ -1169,7 +1169,7 @@ sub close_callback
 #	delete $RESPONSE{$client};
 	switch_req(undef);
     }
-    elsif( $client =~ /^subrequest/ )
+    elsif( $REQUEST{$client}{'original_request'} )
     {
 	# This is a subrequest
 
@@ -1189,7 +1189,8 @@ sub close_callback
 	  $REQUEST{$client}->{'original_request'}->id;
 	debug "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
 
-	return;
+	delete $REQUEST{$client};
+	switch_req(undef);
     }
     else
     {
@@ -1734,7 +1735,7 @@ sub run_hook
 	    $Para::Frame::hooks_running{"$hook"} --;
 	    if( $@ )
 	    {
-		debug(2, "hook $label throw an exception".datadump($@));
+		debug(0, "hook $label throw an exception".datadump($@));
 		die $@;
 	    }
 	}
