@@ -1675,6 +1675,22 @@ sub report_error
 	debug "Error number: $DBI::err";
 	debug "Status: $DBI::state";
 
+	# Should be redundant, but may not be
+	if( $DBI::state eq '26000' )
+	{
+	    debug(0,"ROLLBACK DB");
+	    eval
+	    {
+		$dbix->rollback();
+	    } or do
+	    {
+		debug(0,"FAILED ROLLBACK!");
+		debug $@;
+		debug $dbix->dbh->errstr;
+	    };
+	}
+
+
 	unless( $STATE_RECONNECTING or $dbix->dbh->ping )
 	{
 	    $STATE_RECONNECTING = 1;
