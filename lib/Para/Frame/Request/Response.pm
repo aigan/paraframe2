@@ -917,7 +917,7 @@ sub send_stored_result
 
     if( my $content = $resp->{'content'} ) # May be header only
     {
-	debug "  ".validate_utf8(\$content);
+	debug "  ".validate_utf8($content);
 
 	$resp->send_headers;
 	my $res = $req->get_cmd_val( 'BODY' );
@@ -937,6 +937,9 @@ sub send_stored_result
 		    $encoding = $ctype->charset;
 		}
 	    }
+
+#	    my $content_length = length( $$content||'' );
+#	    debug "Resp content has length $content_length";
 
 	    client_send($client, $content,
 			{
