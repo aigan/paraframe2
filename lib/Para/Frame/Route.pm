@@ -9,7 +9,7 @@ package Para::Frame::Route;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2007 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -36,7 +36,7 @@ use Para::Frame;
 use Para::Frame::Reload;
 use Para::Frame::Request;
 use Para::Frame::URI;
-use Para::Frame::Utils qw( throw uri debug store_params );
+use Para::Frame::Utils qw( throw uri debug store_params datadump );
 use Para::Frame::List;
 
 =head1 DESCRIPTION
@@ -168,6 +168,8 @@ sub plan_next
     {
 	my $url_norm = $Para::Frame::REQ->normalized_url( $url_in );
 	my $url = Para::Frame::URI->new($url_norm);
+	$url->query_param_delete('reqnum');
+
 
 	# Used in skip_step...
 	my $url_clean = $url->clone;
@@ -219,6 +221,8 @@ sub plan_after
     {
 	my $url_norm = $Para::Frame::REQ->normalized_url( $url_in );
 	my $url = Para::Frame::URI->new($url_norm);
+	$url->query_param_delete('reqnum');
+
 
 	# Used in skip_step...
 	my $url_clean = $url->clone;
@@ -231,7 +235,7 @@ sub plan_after
 	    $url->query_param_append('caller_page' => $caller_url );
 	}
 
-	debug(1,"!!New step in route: $url");
+	debug(1,"!!New step last in route: $url");
 
 	if( my $prev_url_clean = $route->{'route_clean'}[-1] )
 	{
@@ -396,7 +400,7 @@ sub check_backtrack
     }
     else
     {
-#	warn "-- no backtracking!\n" if $DEBUG;
+#	debug "-- no backtracking!";
 
 	### TODO: Not needed anymore?!?
 
@@ -492,6 +496,8 @@ sub get_next
 {
     my( $route, $break_path ) = @_;
 
+#    Para::Frame::Logging->this_level(4);
+
     my $req = $Para::Frame::REQ;
     my $page = $req->page;
     my $q = $req->q;
@@ -540,8 +546,8 @@ sub get_next
 	{
 	    if( @{ $args_add{$key} } )
 	    {
-		debug 1, "adding to param $key with ".$q->param($key);
-		my @vals = $q->param( $key );
+		my( @vals ) = $q->param( $key );
+		debug 1, "adding to param $key with @vals";
 		$q->param( $key, @{ $args_add{$key} }, @vals );
 	    }
 	}
