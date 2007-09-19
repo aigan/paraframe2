@@ -37,7 +37,7 @@ use Para::Frame::Reload;
 use Para::Frame::Utils qw( debug datadump );
 
 use overload ('""'     => sub { $_[0]->{'value'}->as_string },
-              '=='     => sub { overload::StrVal($_[0]) eq
+              '=='     => sub { overload::StrVal($_[0]) CORE::eq
 		                overload::StrVal($_[1])
                               },
               fallback => 1,
@@ -160,8 +160,10 @@ sub eq
 
     $self  = $class->new($self, $other) unless ref $self;
     $other = $class->new($other, $self) unless ref $other;
-    return ref($self) eq ref($other) and             # same class
-      $self->canonical->as_string eq $other->canonical->as_string;
+
+    return( (ref($self) CORE::eq ref($other)) and
+	    ( $self->canonical->as_string CORE::eq
+	      $other->canonical->as_string ) );
 }
 
 
@@ -309,9 +311,10 @@ See L<URI/canonical>
 
 sub canonical
 {
-    my $uri = $_[0]->{'value'}->canonical;
+    my $val = $_[0]->{'value'};
+    my $uri = $val->canonical;
 
-    if( $_[0]->eq( $uri ) )
+    if( $uri->as_string CORE::eq $val->as_string )
     {
 	return $_[0];
     }
