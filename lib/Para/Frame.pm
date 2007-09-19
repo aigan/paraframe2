@@ -178,7 +178,7 @@ BEGIN
 			  add_background_jobs
                         ))
     {
-	$HOOK{$hook} = [];
+	$HOOK{$hook} ||= [];
     }
 }
 
