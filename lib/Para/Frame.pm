@@ -1130,78 +1130,78 @@ sub close_callback
 
     # Someone disconnected or we want to close the i/o channel.
 
-    if( $reason )
+    if( my $req = $REQUEST{$client} )
     {
-	if( debug > 3 )
+	if( $reason )
 	{
-	    # Will be cleand up soon
-	    $REQUEST{$client}{reqnum} ||= '-';
-	    warn "$REQUEST{$client}{reqnum} Done ($reason)\n";
+	    warn sprintf "%d Done in %6.2f secs (%s)\n",
+	      $req->{reqnum},
+		(time - $req->{started}),
+		  $reason;
 	}
-	elsif( $REQUEST{$client} )
-	{
-	    warn "$REQUEST{$client}{reqnum} Done ($reason)\n";
-	}
-    }
-    else
-    {
-	if( debug > 3 )
-	{
-	    # Will be cleand up soon
-	    $REQUEST{$client}{reqnum} ||= '-';
-	    warn "$REQUEST{$client}{reqnum} Done\n";
-	}
-	elsif( $REQUEST{$client} )
+	else
 	{
 	    warn sprintf "%d Done in %6.2f secs\n",
-	      $REQUEST{$client}{reqnum},
-		(time - $REQUEST{$client}{started});
+	      $req->{reqnum},
+		(time - $req->{started});
+	}
+
+	if( my $oreq = delete $req->{'original_request'} )
+	{
+	    $oreq->release_subreq($req);
+	}
+
+	if( my $sreqs = $req->{'subrequest'} )
+	{
+	    # Trying to breake reference loops for garbage collecting
+	    delete $req->{'subrequest'};
+	    foreach my $sreq ( @{$sreqs} )
+	    {
+		delete $sreq->{'original_request'};
+	    }
+	}
+
+	if( $client =~ /^background/ )
+	{
+	    #(May be a subrequst, but decoupled)
+
+	    # Releasing active request
+	    delete $req->{'active_reqest'};
+	    delete $REQUEST{$client};
+	    delete $RESPONSE{$client};
+	    switch_req(undef);
+	    return;
+	}
+	else
+	{
+	    # Trying to breake reference loops for garbage collecting
+	    delete $req->{'subrequest'};
+	    delete $REQUEST{$client};
+	    delete $RESPONSE{$client};
+	    delete $INBUFFER{$client};
+	    delete $DATALENGTH{$client};
+
+	}
+    }
+    elsif( debug > 3 )
+    {
+	if( $reason )
+	{
+	    # Will be cleand up soon
+	    $req->{reqnum} ||= '-';
+	    warn "$req->{reqnum} Done ($reason)\n";
+	}
+	else
+	{
+	    # Will be cleand up soon
+	    $req->{reqnum} ||= '-';
+	    warn "$req->{reqnum} Done\n";
 	}
     }
 
-    if( $client =~ /^background/ )
-    {
-	#(May be a subrequst, but decoupled)
-
-	# Releasing active request
-	delete $REQUEST{$client}{'active_reqest'};
-	delete $REQUEST{$client};
-#	delete $RESPONSE{$client};
-	switch_req(undef);
-    }
-    elsif( $REQUEST{$client}{'original_request'} )
-    {
-	# This is a subrequest
-
-	# It's done now. But we must wait on the root request to
-	# finish also. They both uses the same client. Thus, don't
-	# touch the client.
-
-	# But it may be that the parent already is done. (See
-	# Para::Frame::Request->new_subrequest) )
-
-	# Fact is that we under normal conditions never get a
-	# close_callback with a subrequest key. And maby not by a
-	# subrequest with a background key either.
-
-	debug "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
-	debug "This was subrequest of ".
-	  $REQUEST{$client}->{'original_request'}->id;
-	debug "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
-
-	delete $REQUEST{$client};
-	switch_req(undef);
-    }
-    else
-    {
-	delete $REQUEST{$client};
-	delete $RESPONSE{$client};
-	delete $INBUFFER{$client};
-	delete $DATALENGTH{$client};
-	switch_req(undef);
-	$SELECT->remove($client);
-	close($client);
-    }
+    switch_req(undef);
+    $SELECT->remove($client);
+    close($client);
 }
 
 
