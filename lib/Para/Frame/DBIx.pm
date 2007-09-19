@@ -664,6 +664,7 @@ sub commit
 
     Para::Frame->run_hook( $Para::Frame::REQ, 'before_db_commit', $dbix);
     $dbix->dbh->commit;
+    warn "DB comitted\n";
 }
 
 
