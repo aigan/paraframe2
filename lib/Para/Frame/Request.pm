@@ -261,6 +261,9 @@ sub new_subrequest
 
     $req->{'original_request'} = $original_req;
     $original_req->{'wait'} ++; # Wait for subreq
+    $original_req->{'subrequest'} ||= [];
+    push @{$original_req->{'subrequest'}}, $req;
+
     debug 2, "$original_req->{reqnum} now waits on $original_req->{'wait'} things";
     Para::Frame::switch_req( $req, 1 );
     warn "\n$Para::Frame::REQNUM Starting subrequest\n";
@@ -301,6 +304,29 @@ sub new_subrequest
 
     return $res;
 }
+
+#######################################################################
+
+=head2 release_subreq
+
+=cut
+
+sub release_subreq
+{
+    my( $original_req, $req ) = @_;
+
+    my @subreq;
+    foreach my $sreq ( @{$original_req->{'subrequest'} ||=[]} )
+    {
+	if( $sreq->id != $req->id )
+	{
+	    push @subreq, $req;
+	}
+    }
+
+    $original_req->{'subrequest'} = \@subreq;
+}
+
 
 #######################################################################
 
@@ -2546,14 +2572,11 @@ sub cancel
 
     if( $req->{'wait'} > 0 )
     {
-	foreach my $child ( values %Para::Frame::REQUEST )
+	foreach my $subreq ( @{$req->{'subrequest'}} )
 	{
-	    if( $child->original and ( $child->original->id == $req->id ) )
-	    {
-		debug "A servant ($child->{'reqnum'}) of req $req->{'reqnum'} got cancelled";
-		debug "Both uses the same client. Cancel servant also";
-		$child->cancel;
-	    }
+	    debug "A servant ($subreq->{reqnum}) of req $req->{reqnum} got cancelled";
+	    debug "Both uses the same client. Cancel servant also";
+	    $subreq->cancel;
 	}
 
 	foreach my $oreq ( values %Para::Frame::REQUEST )
