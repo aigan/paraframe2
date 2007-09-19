@@ -269,7 +269,8 @@ sub reload
 	my $error_out = "";
 	foreach my $row ( split /\n/, $errors )
 	{
-	    next if $row =~ /^Subroutine .{1,50} redefined at/;
+	    # Filters also Constant subroutine...
+	    next if $row =~ /^subroutine .{1,50} redefined at/i;
 	    $error_out .= "* $row\n";
 	}
 
@@ -294,6 +295,15 @@ sub reload
 
 	$COMPILED{$module} = $mtime; # Do not try again
 	return 0;
+    }
+    elsif( length $errors )
+    {
+	foreach my $row ( split /\n/, $errors )
+	{
+	    # Filters also Constant subroutine...
+	    next if $row =~ /subroutine .{1,50} redefined at/i;
+	    warn "$row\n";
+	}
     }
 
     if( $pkgname->can('on_reload') )
