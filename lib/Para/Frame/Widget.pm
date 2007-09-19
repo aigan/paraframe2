@@ -23,12 +23,13 @@ Para::Frame::Widget - Common template widgets
 =cut
 
 use strict;
+use utf8;
+use locale;
+
 use Carp qw( cluck confess croak );
 use IO::File;
 use CGI;
 use Para::Frame::URI;
-
-use locale;
 use POSIX qw(locale_h);
 
 BEGIN
@@ -1564,9 +1565,9 @@ C<confirm.tt> template.
 
 Default:
 
-  $headline    = 'Är du säker?'
+  $headline    = 'Are you sure?'
   $text        = ''
-  $button_name = 'Ja'
+  $button_name = 'Yes'
 
 Example:
 
@@ -1582,9 +1583,9 @@ sub confirm_simple
 {
     my( $headline, $text, $button_name ) = @_;
 
-    $headline ||= 'Är du säker?';
+    $headline ||= 'Are you sure?';
     $text ||= '';
-    $button_name ||= 'Ja';
+    $button_name ||= 'Yes';
 
     my $req = $Para::Frame::REQ;
     my $q = $req->q;
