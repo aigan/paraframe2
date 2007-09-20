@@ -497,6 +497,7 @@ sub main_loop
 	    if( $err->type eq 'cancel' )
 	    {
 		debug "REQUEST CANCELLED\n";
+		debug $err->info;
 		if( $REQ )
 		{
 		    close_callback($REQ->client);
@@ -532,7 +533,9 @@ sub main_loop
 		}
 		else
 		{
-		    die $err;
+		    debug "Make watchdog restart us";
+		    debug "Executing HUP now";
+		    exit 1;
 		}
 
 		$timeout = TIMEOUT_SHORT;
