@@ -1798,7 +1798,7 @@ sub client_send
     # TODO: Stop if request cancelled or socket closed
     unless( $client->opened )
     {
-	confess "Client closed";
+	throw('cancel', longmess("Client closed"));
     }
 
 
