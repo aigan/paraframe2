@@ -1428,6 +1428,10 @@ sub after_jobs
 
 	# May be a custom renderer
 	my $render_result = $resp->render_output();
+	if( $req->cancelled )
+	{
+	    throw('cancel', "Request cancelled. Not sending page result");
+	}
 
 	# The renderer may have set a redirection page
 	my $new_resp = $req->response; # May have changed
