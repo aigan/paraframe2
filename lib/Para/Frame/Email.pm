@@ -46,8 +46,11 @@ use Para::Frame::Reload;
 use Para::Frame::Request;
 use Para::Frame::Utils qw( throw debug fqdn datadump validate_utf8 );
 use Para::Frame::Widget;
-use Para::Frame::Time qw( date );
+use Para::Frame::Time qw( date now );
 use Para::Frame::Email::Address;
+
+our $COUNTER = 1; # For generating message-id
+
 
 =head2 DESCRIPTION
 
@@ -120,6 +123,30 @@ sub new
   $e->set( \%params )
 
 Adds and/or replaces the params to use for sending this email.
+
+Params with special meaning are:
+
+  body
+  body_encoded
+  by_proxy
+  dataref
+  envelope_from
+  envelope_from_addr
+  from
+  from_addr
+  header
+  header_rendered_to
+  in_reply_to
+  message_id
+  mime_lite
+  pgpsign
+  references
+  reply_to
+  sender
+  subject
+  template
+  to
+
 
 =cut
 
@@ -667,26 +694,21 @@ sub send
 
 #######################################################################
 
-=head2 render_body
+=head2 render_body_from_template
 
 =cut
 
-sub render_body
+sub render_body_from_template
 {
     my($e ) = @_;
 
     my $p = $e->params;
-
-    return if $p->{'body'};
 
     my $site = $Para::Frame::REQ->site;
     my $home = $site->home_url_path;
 
 
     $p->{'template'} or die "No template selected\n";
-    $p->{'from'}     or die "No from selected\n";
-    $p->{'subject'}  or die "No subject selected\n";
-    $p->{'to'}       or die "No reciever for this email?\n";
 
     my $url;
     if( $p->{'template'} =~ /^\// )
@@ -762,22 +784,54 @@ sub render_header
 	    return if $p->{'header'};
 	}
     }
-    else
+    elsif( $p->{'header'} )
     {
-	if( $p->{'header'} )
+	debug "reusing previous header";
+	return 1;
+    }
+
+    unless( $to_addr )
+    {
+	my @to = ref $p->{'to'} eq 'ARRAY' ? @{$p->{'to'}} : $p->{'to'};
+	if( scalar(@to) > 1 )
 	{
-	    debug "reusing previous header";
+	    confess "More than one to not supported";
+	}
+	elsif(  scalar(@to) == 0 )
+	{
+	    confess "No to addr given";
+	}
+	else
+	{
+	    $to_addr = $to[0];
 	}
     }
 
     $p->{'header_rendered_to'} = $to_addr;
-
 
     my $from_addr = $p->{'from_addr'} or die "No from selected\n";
     my $subject = $p->{'subject'}  or die "No subject selected\n";
     my $envelope_from_addr = $p->{'envelope_from_addr'} || $from_addr;
 
     my $msg;
+
+    if( $p->{'body_encoded'} )
+    {
+	debug "Warning: Reusing previous encoded body";
+    }
+
+    unless( $p->{'body'} )
+    {
+	$e->render_body_from_template;
+    }
+
+    if( utf8::is_utf8( $p->{'body'} ) )
+    {
+	debug "Body before downgrade: ". validate_utf8( \ $p->{'body'} );
+	utf8::downgrade($p->{'body'}); # Convert to ISO-8859-1
+    }
+
+    debug "Body after downgrade: ". validate_utf8( \ $p->{'body'} );
 
     if( $p->{'pgpsign'} )
     {
@@ -812,6 +866,29 @@ sub render_header
 	$msg->add('Reply-To' =>  $p->{'reply_to'} );
     }
 
+    if( $p->{'message_id'} )
+    {
+	unless( $p->{'message_id'} =~ /<.*>/ )
+	{
+	    $p->{'message_id'} = '<'.$p->{'message_id'}.'>';
+	}
+	$msg->add('Message-ID' => $p->{'message_id'} );
+    }
+
+    if( $p->{'in_reply_to'} )
+    {
+	unless( $p->{'in_reply_to'} =~ /<.*>/ )
+	{
+	    $p->{'in_reply_to'} = '<'.$p->{'in_reply_to'}.'>';
+	}
+	$msg->add('In-Reply-To' => $p->{'in_reply_to'} );
+    }
+
+    if( $p->{'references'} )
+    {
+	$msg->add('References' => $p->{'references'} );
+    }
+
     my $sender_addr;
     if( $p->{'sender'} )
     {
@@ -829,7 +906,11 @@ sub render_header
 	debug "Sender set to ".$envelope_from_addr->format." from envelope from";
     }
 
+    $p->{'mime_lite'} = $msg;
+
     $p->{'header'} = $msg->header_as_string;
+
+    $p->{'body_encoded'} ||= $msg->body_as_string;
 
     return 1;
 }
@@ -838,6 +919,19 @@ sub render_header
 #######################################################################
 
 =head2 render_message
+
+  $e->render_message( $to_addr )
+
+If C<dataref> is defined, returns it as the finished message.
+
+Otherwise, concatenates the C<header> with the C<body_encoded>
+
+The body encoding is dependant on the headers and the headers are
+dependant on the body.
+
+Unless both C<header> and C<body_encoded> are defined, we will call
+L</render_header> with C<$to_addr> that in turn will set the C<header>
+and C<body_encoded> properties.
 
 =cut
 
@@ -851,14 +945,16 @@ sub render_message
 	return $p->{'dataref'};
     }
 
-    $e->render_body;
-    $e->render_header( $to_addr );
+    unless( $p->{'header'} and $p->{'body_encoded'} )
+    {
+	$e->render_header( $to_addr );
+    }
 
     my $data =
       (
        $p->{'header'}.
        "\n".
-       $p->{'body'}
+       $p->{'body_encoded'}
       );
 
     return \$data;
@@ -967,6 +1063,46 @@ Enter the index of the signing key you wish to use: ";
     my $cert = $kb->signing_key;
     $cert->uid($kb->primary_uid);
     $cert;
+}
+
+#######################################################################
+
+=head2 generate_message_id
+
+Generates a unique message id, without surrounding <>.
+
+Given in the form $cnt.$epoch.$port.pf\@$fqdn
+
+The C<pf> is for giving som kind of namespace that hopefully will
+differ it from other mail services on this domain.
+
+Supported args are:
+
+  time
+
+Returns: The message id, without surrounding <>
+
+=cut
+
+sub generate_message_id
+{
+    my( $this, $args ) = @_;
+
+    $args ||= {};
+
+    my $now = $args->{'time'} || now();
+
+    my $right = fqdn();
+
+    # Combination of time port and counter should be unique
+
+    my $port = $Para::Frame::CFG->{'port'};
+    my $epoch = $now->epoch;
+    my $count = ++ $COUNTER;
+
+    my $left = $count .".". $epoch .".". $port .".". "pf";
+
+    return $left .'@'. $right;
 }
 
 #######################################################################
