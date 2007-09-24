@@ -346,6 +346,15 @@ errors and switch back before any exception.
 
 Switch back to the real user with L</revert_from_temporary_user>.
 
+Example:
+  $Para::Frame::U->become_temporary_user($root);
+  eval
+  {
+    # do your stuff...
+  };
+  $Para::Frame::U->revert_from_temporary_user;
+  die $@ if $@;
+
 =cut
 
 sub become_temporary_user
