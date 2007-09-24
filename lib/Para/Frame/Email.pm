@@ -775,36 +775,9 @@ sub render_header
 
     debug "Rendering header from mail to $to_addr";
 
-    if( $to_addr and $p->{'header_rendered_to'} )
-    {
-	debug "  Has a previous header for $p->{header_rendered_to}";
-	if( $to_addr eq $p->{'header_rendered_to'} )
-	{
-	    debug "    reusing same header";
-	    return if $p->{'header'};
-	}
-    }
-    elsif( $p->{'header'} )
-    {
-	debug "reusing previous header";
-	return 1;
-    }
-
     unless( $to_addr )
     {
-	my @to = ref $p->{'to'} eq 'ARRAY' ? @{$p->{'to'}} : $p->{'to'};
-	if( scalar(@to) > 1 )
-	{
-	    confess "More than one to not supported";
-	}
-	elsif(  scalar(@to) == 0 )
-	{
-	    confess "No to addr given";
-	}
-	else
-	{
-	    $to_addr = $to[0];
-	}
+	die "no to selected";
     }
 
     $p->{'header_rendered_to'} = $to_addr;
@@ -945,7 +918,41 @@ sub render_message
 	return $p->{'dataref'};
     }
 
-    unless( $p->{'header'} and $p->{'body_encoded'} )
+    my $use_existing = 0;
+
+    unless( $to_addr )
+    {
+	my @to = ref $p->{'to'} eq 'ARRAY' ? @{$p->{'to'}} : $p->{'to'};
+	if( scalar(@to) > 1 )
+	{
+	    confess "More than one to not supported";
+	}
+	elsif(  scalar(@to) == 0 )
+	{
+	    confess "No to addr given";
+	}
+	else
+	{
+	    $to_addr= Para::Frame::Email::Address->parse( $to[0] );
+	}
+    }
+
+    if( $to_addr )
+    {
+	if( $p->{'header_rendered_to'} )
+	{
+	    debug "  Has a previous header for $p->{header_rendered_to}";
+	    if( $to_addr eq $p->{'header_rendered_to'} )
+	    {
+		$use_existing = 1;
+	    }
+	}
+    }
+
+    unless( $use_existing and
+	    $p->{'header'} and
+	    $p->{'body_encoded'}
+	  )
     {
 	$e->render_header( $to_addr );
     }
