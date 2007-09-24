@@ -202,7 +202,7 @@ $output shows where things get wrong, if its related to a place in a
 block of text.
 
 Use your own or one of the standard exceptions from
-L<Para::Frame::Result/Exceptions>
+L<Para::Frame::Result::Part/Exceptions>
 
 Supported args are:
 
