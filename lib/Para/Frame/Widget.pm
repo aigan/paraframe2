@@ -283,7 +283,7 @@ sub jump_extra
 	    $template_path =~ s/\?.*//;
 
 	    # Mark as same_place if link goes to current page
-	    if( $Para::Frame::REQ->page->url_path eq $template_path
+	    if( $Para::Frame::REQ->page->url_path_slash eq $template_path
 		and not $attr->{'run'} )
 	    {
 		# Special handling of attribute id
