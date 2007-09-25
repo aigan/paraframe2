@@ -1450,6 +1450,11 @@ sub debug
 	$level = 0;
     }
 
+    unless( $level =~ /^(\d|-\d)$/ )
+    {
+	cluck "Faulty debug input: ".datadump(\@_);
+    }
+
     if( $level < 0 )
     {
 	$Para::Frame::INDENT += $level;
