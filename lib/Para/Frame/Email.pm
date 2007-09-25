@@ -9,7 +9,7 @@ package Para::Frame::Email;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2007 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -861,6 +861,9 @@ sub render_header
     {
 	$msg->add('References' => $p->{'references'} );
     }
+
+    # Not working...
+#    $msg->add('X-Mailer' => "Paraframe $Para::Frame::VERSION (ML $Mime::LITE::VERSION)" );
 
     my $sender_addr;
     if( $p->{'sender'} )
