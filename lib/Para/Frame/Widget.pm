@@ -1765,7 +1765,7 @@ sub calendar
     my $label = $args->{'label'} || '';
     my $label_class = $args->{'label_class'} || '';
     my $separator = $args->{'separator'};
-    my $style = $args->{'style'} || '';
+    my $style = $args->{'style'} || 'display: inline';
     my $class = $args->{'class'} || '';
     my $maxlength = $args->{'maxlength'};
     my $size = $args->{'size'};
