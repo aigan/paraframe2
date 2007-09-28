@@ -398,11 +398,11 @@ sub name     { $_[0]->{'name'} }
 
 =head2 desig
 
-The real name of the user.  Default is 'Guest'.
+Conflicts with RB Resource desig...
 
 =cut
 
-sub desig     { $_[0]->{'name'} }
+#sub desig     { $_[0]->{'name'} }
 
 #######################################################################
 
