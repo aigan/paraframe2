@@ -396,6 +396,16 @@ sub name     { $_[0]->{'name'} }
 
 #######################################################################
 
+=head2 desig
+
+The real name of the user.  Default is 'Guest'.
+
+=cut
+
+sub desig     { $_[0]->{'name'} }
+
+#######################################################################
+
 =head2 username
 
 A unique handle for the user, following the rules of a unix username.
