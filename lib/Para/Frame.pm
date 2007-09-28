@@ -2338,7 +2338,7 @@ sub report
     $out .= "DEBUG indent: $INDENT\n";
     $out .= "Current requst is $REQ->{'reqnum'}\n";
 #    $out .= "Last running request was $REQ_LAST->{'reqnum'}\n";
-    $out .= sprintf "Current user is %s\n", $U->desig;
+    $out .= sprintf "Current user is %s\n", $U->name;
     $out .= "\nActive requests:\n";
 
     foreach my $reqkey (keys %REQUEST)
