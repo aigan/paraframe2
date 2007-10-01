@@ -118,7 +118,7 @@ Overview and Introduction
 The default ParaFrame TT components
 
 
-=item L<Para::Frame::Templae::Meta>
+=item L<Para::Frame::Template::Meta>
 
 The page META information
 
