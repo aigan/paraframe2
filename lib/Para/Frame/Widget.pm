@@ -9,7 +9,7 @@ package Para::Frame::Widget;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2007 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -1421,7 +1421,7 @@ sub label_from_params
 
     if( my $label = delete $params->{'label'} )
     {
-	debug "Drawing a label: ". $label;
+	debug 2, "Drawing a label: ". $label;
 
 	my $prefix_extra = "";
 	if( my $class = delete $params->{'label_class'} )
