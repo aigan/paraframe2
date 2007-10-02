@@ -1352,7 +1352,7 @@ sub restart
 
 sub add_background_jobs_conditional
 {
-    debug(3,"add_background_jobs_conditional");
+    debug(4,"add_background_jobs_conditional");
     # Add background jobs to do unless the load is too high, unless we
     # waited too long anyway
 
@@ -1360,7 +1360,7 @@ sub add_background_jobs_conditional
     my $last_time = $BGJOBDATE ||= time;
     my $delta = time - $last_time;
 
-    debug(3,"Too few seconds for MAX: $delta < ". BGJOB_MAX)
+    debug(4,"Too few seconds for MAX: $delta < ". BGJOB_MAX)
       if $delta < BGJOB_MAX;
     return if $delta < BGJOB_MAX;
 
@@ -1744,7 +1744,7 @@ sub run_hook
 	}
     }
 
-    debug(3,"run_hook $label - done");
+    debug(4,"run_hook $label - done");
     return 1;
 }
 
