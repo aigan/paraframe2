@@ -1395,7 +1395,7 @@ sub add_background_jobs_conditional
     $BGJOBNR ||= -1;
     if( $BGJOBNR == $REQNUM )
     {
-	debug(3,"Not enough seconds passed. $delta < ". BGJOB_MED)
+	debug(4,"Not enough seconds passed. $delta < ". BGJOB_MED)
 	  if $delta < BGJOB_MED;
 	return if $delta < BGJOB_MED;
     }
