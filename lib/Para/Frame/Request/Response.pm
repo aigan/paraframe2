@@ -670,7 +670,9 @@ sub send_output
 	}
 	else
 	{
-	    die "Strange response '$result'";
+	    debug "Strange response '$result'";
+	    debug $req->logging->debug_data;
+	    confess "Not good";
 	}
 
 	return;
