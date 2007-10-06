@@ -1049,14 +1049,21 @@ sub passwd_crypt
 
 Checks the text. If it's in UTF8, converts it to ISO-8859-1.
 
+Handles UTF8 mixed in with ISO-8859-1
+
 =cut
 
 sub deunicode
 {
     if( $_[0] =~ /Ã/ ) # Could be unicode
     {
-	$_[0] = Unicode::MapUTF8::from_utf8({-string=>$_[0],
-					     -charset=>'ISO-8859-1'});
+	my $decoded;
+	while (length $_[0])
+	{
+	    $decoded .= decode("UTF-8", $_[0], Encode::FB_QUIET);
+	    $decoded .= substr($_[0], 0, 1, "") if length $_[0];
+	}
+	return $decoded;
     }
     return $_[0];
 }
