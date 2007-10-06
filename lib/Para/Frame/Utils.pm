@@ -43,7 +43,6 @@ use Time::Seconds qw( ONE_MONTH ONE_DAY ONE_HOUR ONE_MINUTE );
 use BerkeleyDB;
 use IDNA::Punycode;
 use Time::HiRes;
-use Unicode::MapUTF8;
 use LWP::UserAgent;
 use HTTP::Request;
 use Template::Exception;
