@@ -453,6 +453,8 @@ sub equals
 {
     my( $val1, $val2 ) = @_;
 
+    return 0 unless UNIVERSAL::isa $val2, 'DateTime';
+
 #    warn "Checking equality of two dates\n";
 #    warn "  Date 1: $val1\n";
 #    warn "  Date 2: $val2\n";
