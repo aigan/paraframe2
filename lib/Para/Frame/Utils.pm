@@ -9,7 +9,7 @@ package Para::Frame::Utils;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2007 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -26,7 +26,7 @@ use strict;
 use locale;
 use utf8;
 
-use Encode;
+use Encode; # encode decode
 use Carp qw(carp croak cluck confess shortmess longmess );
 use Date::Manip;
 use File::stat;  # stat
@@ -1050,20 +1050,36 @@ Checks the text. If it's in UTF8, converts it to ISO-8859-1.
 
 Handles UTF8 mixed in with ISO-8859-1
 
+returns: a string in Latin-1
+
 =cut
 
 sub deunicode
 {
+    my $decoded;
+    if( utf8::is_utf8( $_[0] ) )
+    {
+	if( ord(substr($_[0],0,1)) == 65279 ) # BOM
+	{
+	    debug "Removing BOM";
+	    $_[0] = substr($_[0],1);
+	}
+
+	utf8::encode($_[0]);
+    }
+
     if( $_[0] =~ /Ã/ ) # Could be unicode
     {
-	my $decoded;
-	while (length $_[0])
+	while( length $_[0] )
 	{
 	    $decoded .= decode("UTF-8", $_[0], Encode::FB_QUIET);
 	    $decoded .= substr($_[0], 0, 1, "") if length $_[0];
 	}
+
+	utf8::downgrade( $decoded );
 	return $decoded;
     }
+
     return $_[0];
 }
 
