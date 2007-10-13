@@ -250,6 +250,8 @@ sub error
 
     my $part = Para::Frame::Result::Part->new($error);
 
+    $type = $part->type;
+
     if( $result->{'hide_part'}{'hide_all'} or
 	$result->{'hide_part'}{$type} )
     {
