@@ -1061,7 +1061,8 @@ sub deunicode
     {
 	if( ord(substr($_[0],0,1)) == 65279 ) # BOM
 	{
-	    debug "Removing BOM";
+
+	    debug("Removing BOM");
 	    $_[0] = substr($_[0],1);
 	}
 
