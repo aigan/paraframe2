@@ -44,7 +44,7 @@ BEGIN
 use Para::Frame::Reload;
 
 use Para::Frame::Request;
-use Para::Frame::Utils qw( throw debug fqdn datadump validate_utf8 );
+use Para::Frame::Utils qw( throw debug fqdn datadump validate_utf8 deunicode );
 use Para::Frame::Widget;
 use Para::Frame::Time qw( date now ); #);
 use Para::Frame::Email::Address;
@@ -289,8 +289,6 @@ sub send_in_fork
 
     $e = $e->new unless ref $e;
     $p_in ||= {};
-
-    confess "repair me";
 
     my $msg = delete( $p_in->{'return_message'} ) || "Email delivered";
 
@@ -614,8 +612,12 @@ sub send
 	    $req->note("Connecting to $mailhost");
 
 	    # TODO: Specify hello string...
+
+	    # Needs to have a high timeout. Some SMTP servers likes to
+	    # keep us waiting as a way to sort out spammers.
+
 	    my $smtp = Net::SMTP->new( Host    => $mailhost,
-				       Timeout => 60,
+				       Timeout => 120,
 				       Debug   => 0,
 				       Hello   => $fqdn,
 				       );
@@ -632,12 +634,23 @@ sub send
 	    {
 		if( $smtp )
 		{
+		    $smtp->debug(1) if debug > 1;
 		    $req->note(sprintf("Connected to %s", $smtp->domain));
 		    debug(0,"Sending mail from $envelope_from_addr_str");
 		    debug(0,"Sending mail to $to_addr_str");
 		    $smtp->mail($envelope_from_addr_str) or last SEND;
 		    $smtp->to($to_addr_str) or last SEND;
-		    $smtp->data() or last SEND;
+		    my $datawait = 0;
+		    while( not $smtp->data() )
+		    {
+			if( $datawait ++ > 10 )
+			{
+			    debug "timeout waiting for data ready";
+			    last SEND;
+			}
+			debug "waiting for data ready";
+			sleep 0.2 * $datawait;
+		    }
 		    $smtp->datasend($$dataref) or last SEND;
 		    $smtp->dataend() or last SEND;
 		    $smtp->quit() or last SEND;
@@ -655,7 +668,7 @@ sub send
 
 	    $res->{'bad'}{$to_addr_str} ||= [];
 	    push @{$res->{'bad'}{$to_addr_str}}, $smtp->message();
-	    my $mailhost_err_msg = "Error response from $mailhost: ".$smtp->message();
+	    my $mailhost_err_msg = sprintf "Error response from %s: %s: %s", $mailhost, $smtp->code, $smtp->message;
 	    $err_msg .= $mailhost_err_msg;
 	    $req->note($mailhost_err_msg);
 	    debug(-1);
@@ -747,15 +760,18 @@ sub render_body_from_template
       or throw($burner->error);
 
     debug "email before downgrade: ".validate_utf8(\$data);
-    utf8::downgrade($data); # Convert to ISO-8859-1
-    debug "email after downgrade: ".validate_utf8(\$data);
+
+    my $data_out = deunicode($data); # Convert to ISO-8859-1
+#    utf8::downgrade($data); # Convert to ISO-8859-1
+    debug "email after downgrade: ".validate_utf8(\$data_out);
+
 
     if( $p->{'pgpsign'} )
     {
-	pgpsign(\$data, $p->{'pgpsign'} );
+	pgpsign(\$data_out, $p->{'pgpsign'} );
     }
 
-    $p->{'body'} = $data;
+    $p->{'body'} = $data_out;
 
     return 1;
 }
