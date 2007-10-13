@@ -1024,6 +1024,15 @@ Returns an encrypted version of the given string, uses the current
 clients C-network IP as salt. The encrypted password will be diffrent
 if the client comes from a diffrent net or subnet.
 
+If the page is sent through a proxy, the oroginal address may be the
+first in a comma-separated list given in HTTP_X_FORWARDED_FOR. But
+that part of the header may be faked. If we are going to use it for
+authentication, we have to establish a trust of the proxy given by
+REMOTE_ADDR, as well as all other proxies listed in
+HTTP_X_FORWARDED_FOR.
+
+HTTP_CLIENT_IP should be used rather than REMOTE_ADDR, if availible.
+
 =cut
 
 sub passwd_crypt
