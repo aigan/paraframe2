@@ -26,7 +26,8 @@ use strict;
 use Net::DNS;
 use Net::SMTP;
 use Mail::Address;
-use Carp qw( carp confess cluck );
+use Data::Validate::Domain qw(is_domain); #);
+use Carp qw( carp confess cluck ); #);
 
 BEGIN
 {
@@ -35,7 +36,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw reset_hashref fqdn debug datadump );
+use Para::Frame::Utils qw( throw reset_hashref fqdn debug datadump ); #);
 use Para::Frame::Email::Address::Fallback;
 
 use overload '""' => \&as_string;
@@ -98,27 +99,36 @@ sub parse
 	}
     }
 
-    my $addr;
+    my( $addr, $email_str );
 
     if( UNIVERSAL::isa $email_str_in, "Mail::Address" )
     {
-	$addr = $email_str_in;
+	$addr = $email_str = $email_str_in;
     }
     else
     {
+	# Remove invisible characters from string
+	$email_str = $email_str_in;
+	$email_str =~ s/\p{Other}//g;
+
 	# Retrieve first in list
-	( $addr ) = Mail::Address->parse( $email_str_in );
-	$addr or throw('email', "'$email_str_in' is not a correct email address");
+	( $addr ) = Mail::Address->parse( $email_str );
+	$addr or throw('email', "'$email_str' is not a correct email address");
     }
 
     unless( $addr->host )
     {
-	throw('email', "Give the whole email address, includning the \@\n'$email_str_in' is not correct");
+	throw('email', "Give the whole email address, includning the \@\n'$email_str' is not correct");
     }
 
     unless( $addr->user )
     {
-	throw('email', "Give the whole email address, includning the \@\n'$email_str_in' is not correct");
+	throw('email', "Give the whole email address, includning the \@\n'$email_str' is not correct");
+    }
+
+    unless( defined is_domain( $addr->host ) )
+    {
+	throw('email', "The email $email_str_in has an invalid domain");
     }
 
     my $a = bless
@@ -169,6 +179,12 @@ sub parse_tolerant
     if( UNIVERSAL::isa $email_str_in, "Mail::Address" )
     {
 	$addr = $email_str_in;
+
+	if( not defined is_domain( $addr->host ) )
+	{
+	    debug "Email domain invalid";
+	    $broken = 1;
+	}
     }
     else
     {
@@ -186,6 +202,11 @@ sub parse_tolerant
 	}
 	elsif( not $addr->host )
 	{
+	    $broken = 1;
+	}
+	elsif( not defined is_domain( $addr->host ) )
+	{
+	    debug "Email domain invalid";
 	    $broken = 1;
 	}
     }
