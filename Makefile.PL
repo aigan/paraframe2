@@ -19,6 +19,7 @@ WriteMakefile(
 		  'CGI::Cookie'                => 1.25,
 		  'Crypt::OpenPGP'             => 1.03,
 	          'Data::Dump'                 => 1.08,
+	          'Data::Validate::Domain'     => 0.08,
 		  'Date::Manip'                => 5.44,
 		  'DateTime'                   => 0.2901,
 	          'DateTime::Format::HTTP'     => 0.00,
