@@ -1725,6 +1725,7 @@ sub send_code
 
     # To get a response, use get_cmd_val()
 
+#    Para::Frame::Logging->this_level(5);
     $_[1] ||= 1; # Must be at least one param
     debug( 5, "Sending  ".join("-", @_)." ($req->{reqnum}) ".$req->client);
 #    debug sprintf "  at %.2f\n", Time::HiRes::time;
@@ -3106,11 +3107,18 @@ sub send_stored_result
     $key ||= $req->{'env'}{'REQUEST_URI'}
       || $req->original_url_string;
 
+    debug 0, "Sending stored page result for $key";
+
+    $req->{'wait'} ++;
+
     my $resp = $req->session->{'page_result'}{ $key };
     $req->{'resp'} = $resp;
     $resp->{'req'} = $req;
     $resp->send_stored_result;
     delete $req->session->{'page_result'}{ $key };
+
+    $req->{'wait'} --;
+
     return 1;
 }
 
