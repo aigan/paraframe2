@@ -74,6 +74,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
+use Para::Frame::Unicode;
 
 our %TEST; ### DEBUG
 our $FQDN; # See fqdn()
@@ -1065,7 +1066,6 @@ returns: a string in Latin-1
 
 sub deunicode
 {
-    my $decoded;
     if( utf8::is_utf8( $_[0] ) )
     {
 	if( ord(substr($_[0],0,1)) == 65279 ) # BOM
@@ -1075,19 +1075,33 @@ sub deunicode
 	    $_[0] = substr($_[0],1);
 	}
 
+	if( $_[0] =~ /Ã/ ) # Could be double-encoded unicode
+	{
+	    my $decoded;
+	    while( length $_[0] )
+	    {
+		$decoded .= decode("UTF-8", $_[0], Encode::FB_QUIET);
+		$decoded .= substr($_[0], 0, 1, "") if length $_[0];
+	    }
+	    $_[0] = $decoded;
+	}
+
 	utf8::encode($_[0]);
     }
 
     if( $_[0] =~ /Ã/ ) # Could be unicode
     {
+	my $decoded;
+
 	while( length $_[0] )
 	{
 	    $decoded .= decode("UTF-8", $_[0], Encode::FB_QUIET);
 	    $decoded .= substr($_[0], 0, 1, "") if length $_[0];
 	}
 
-	utf8::downgrade( $decoded );
-	return $decoded;
+	my $final = encode("Latin-1", $decoded, \&Para::Frame::Unicode::map_to_latin1);
+
+	return $final;
     }
 
     return $_[0];
