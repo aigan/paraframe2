@@ -32,6 +32,7 @@ WriteMakefile(
 		  'Digest::MD5'                => 2.33,
 		  'Encode'                     => 2.10,
 	          'Encode::Detect::Detector'   => 1.00,
+	          'Encode::InCharset'          => 0.03,
 		  'File::Basename'             => 2.73,
 	          'File::MimeInfo'             => 0.13,
                   'File::Remove'               => 0.31,
