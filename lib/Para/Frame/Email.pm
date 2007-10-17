@@ -762,7 +762,6 @@ sub render_body_from_template
     debug "email before downgrade: ".validate_utf8(\$data);
 
     my $data_out = deunicode($data); # Convert to ISO-8859-1
-#    utf8::downgrade($data); # Convert to ISO-8859-1
     debug "email after downgrade: ".validate_utf8(\$data_out);
 
 
@@ -817,10 +816,9 @@ sub render_header
     if( utf8::is_utf8( $p->{'body'} ) )
     {
 	debug "Body before downgrade: ". validate_utf8( \ $p->{'body'} );
-	utf8::downgrade($p->{'body'}); # Convert to ISO-8859-1
+	$p->{'body'} = deunicode($p->{'body'}); # Convert to ISO-8859-1
+	debug "Body after downgrade: ". validate_utf8( \ $p->{'body'} );
     }
-
-    debug "Body after downgrade: ". validate_utf8( \ $p->{'body'} );
 
     if( $p->{'pgpsign'} )
     {
