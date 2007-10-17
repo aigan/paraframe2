@@ -129,7 +129,7 @@ sub new
 	in_yield        => 0,              ## inside a yield
 	child_result    => undef,          ## the child res if in child
 	reqnum          => $reqnum,        ## The request serial number
-	wait            => 0,              ## Asked to wait?
+	wait            => 0,              ## Waiting for something else to finish
 	cancel          => 0,              ## True if we should abort
 	change          => undef,
         header_only     => $header_only,   ## true if only sending header
@@ -846,7 +846,8 @@ sub uploaded { Para::Frame::Uploaded->new($_[1]) }
 
   $req->in_yield
 
-Returns true if some other request has yielded for this request.
+Returns true if this request has yielded for another request, or for
+reading from the socket
 
 =cut
 
@@ -1892,52 +1893,58 @@ sub get_cmd_val
 {
     my $req = shift;
 
-    $req->send_code( @_ );
-    Para::Frame::get_value( $req );
-
-    # Something besides the answer may be waiting before the answer
-
     my $queue;
-    if( my $areq = $req->{'active_reqest'} )
-    {
-	# We expects response in the active_request
-	$queue = $Para::Frame::RESPONSE{ $areq->client };
-	unless( $queue )
-	{
-	    throw('cancel', "request $areq->{reqnum} decomposed");
-	}
-#	debug "Looking for response in areq ".$areq->client;
-    }
-    else
-    {
-	$queue = $Para::Frame::RESPONSE{ $req->client };
-	unless( $queue )
-	{
-	    throw('cancel', "request $req->{reqnum} decomposed");
-	}
-#	debug "Looking for response in req ".$req->client;
-    }
+    $req->{'in_yield'} ++;
 
-
-    my $cnt = 1;
-    while( not @$queue )
+    eval
     {
-	if( $cnt >= 20 )
-	{
-	    debug "We can't seem to get that answer to our code";
-	    debug "code: @_";
-	    $req->cancel;
-	}
-
-	if( $req->{'cancel'} )
-	{
-	    throw('cancel', "request cancelled");
-	}
-#	debug "No response registred. Getting next value:";
+	$req->send_code( @_ );
 	Para::Frame::get_value( $req );
-	$cnt ++;
-    }
 
+	# Something besides the answer may be waiting before the answer
+
+	if( my $areq = $req->{'active_reqest'} )
+	{
+	    # We expects response in the active_request
+	    $queue = $Para::Frame::RESPONSE{ $areq->client };
+	    unless( $queue )
+	    {
+		throw('cancel', "request $areq->{reqnum} decomposed");
+	    }
+	}
+	else
+	{
+	    $queue = $Para::Frame::RESPONSE{ $req->client };
+	    unless( $queue )
+	    {
+		throw('cancel', "request $req->{reqnum} decomposed");
+	    }
+	}
+
+
+	my $cnt = 1;
+	while( not @$queue )
+	{
+	    if( $cnt >= 20 )
+	    {
+		debug "We can't seem to get that answer to our code";
+		debug "code: @_";
+		$req->cancel;
+	    }
+
+	    if( $req->{'cancel'} )
+	    {
+		throw('cancel', "request cancelled");
+	    }
+
+	    Para::Frame::get_value( $req );
+	    $cnt ++;
+	}
+    };
+
+    $req->{'in_yield'} --;
+
+    die $@ if $@;
     return shift @$queue;
 }
 
@@ -3109,15 +3116,11 @@ sub send_stored_result
 
     debug 0, "Sending stored page result for $key";
 
-    $req->{'wait'} ++;
-
     my $resp = $req->session->{'page_result'}{ $key };
     $req->{'resp'} = $resp;
     $resp->{'req'} = $req;
     $resp->send_stored_result;
     delete $req->session->{'page_result'}{ $key };
-
-    $req->{'wait'} --;
 
     return 1;
 }
