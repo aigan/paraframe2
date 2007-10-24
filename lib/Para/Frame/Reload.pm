@@ -180,6 +180,10 @@ sub register_module
 
                     warn "      Subcode defined:\n$subcode\n" if $Para::Frame::Reload::DEBUG > 1;
                     my $res = eval $subcode;
+                    if( $@ )
+                    {
+                       die $@;
+                    }
 
 		    warn "      Returned $res from coderef\n" if $Para::Frame::Reload::DEBUG;
 		    return $res;
@@ -198,7 +202,7 @@ sub register_module
     }
 
     $COMPILED{$module} = (stat $file)[9];
-
+    warn "register done\n" if $DEBUG;
 }
 
 
