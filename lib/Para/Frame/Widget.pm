@@ -844,7 +844,8 @@ sub input
 	$value = $previous[0];
     }
     $key   ||= 'query';
-    $value ||= '';
+    $value = ''
+      unless defined( $value );
 
     $params->{id} ||= $key;
     my $prefix = label_from_params($params);
