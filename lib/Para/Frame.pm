@@ -2062,7 +2062,8 @@ gives it C<tt_plugins>
 
 The directory that holds the compiled templates.
 
-Defaults to L</appback> or L</approot> followed by C</var/ttc>.
+Defaults to L</dir_var/ttc> or L</appback/var/ttc> or
+L</approot/var/ttc> followed by C</var/ttc>.
 
 
 =head3 umask
@@ -2175,8 +2176,9 @@ sub configure
 	}
     }
 
-    my $ttcbase = $CFG->{'appback'}[0] || $CFG->{'approot'};
-    $CFG->{'ttcdir'} ||= $ttcbase . "/var/ttc";
+    my $ttcbase = $CFG->{'dir_var'} || $CFG->{'appback'}[0] .'/var' ||
+      $CFG->{'approot'} .'/var';
+    $CFG->{'ttcdir'} ||= $ttcbase . "/ttc";
 
     my $tt_plugins = $CFG->{'tt_plugins'} || [];
     $tt_plugins = [$tt_plugins] unless ref $tt_plugins;
