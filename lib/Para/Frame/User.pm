@@ -163,7 +163,7 @@ sub authenticate_user
 
     unless( $u->verify_password( $password_encrypted ) )
     {
-	$req->result->exception('validation', "Fel lösenord för $username");
+	$req->result->exception('validation', "Wrong password for $username");
 
 	$class->logout;
 
