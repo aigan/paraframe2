@@ -65,6 +65,10 @@ sub new
     {
 	$ctype->set( $ctype_string );
     }
+    else
+    {
+	$ctype->{'changed'} ++;
+    }
 
     return $ctype;
 }
