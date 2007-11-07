@@ -21,7 +21,7 @@
 	otitle = '[* otitle *]'
 	pf_source_file = '[* pf_source_file *]'
 	pf_compiled_by_id = '[* u.id *]'
-	pf_compiled_by_name = '[* u.username *]'
+	pf_compiled_by_name = '[* u.username | esc_apostrophe *]'
         pf_compiled_date = '[* pf_compiled_date *]'
         pf_source_version = '[* pf_source_version *]'
 %]
