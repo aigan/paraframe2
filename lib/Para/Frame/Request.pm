@@ -1284,10 +1284,8 @@ sub run_action
 	    {
 		$req->result->exception([$type, $info]);
 	    }
-	    else
-	    {
-		warn $info;
-	    }
+
+	    warn $info;
 	}
 	return 0; # Don't perform more actions
     };
