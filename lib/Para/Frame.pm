@@ -2207,10 +2207,11 @@ sub configure
 #	 PLUGIN_BASE => $tt_plugins,
 	 ABSOLUTE => 1,
 #         DEBUG_ALL => 1,  # DEBUG
-#	 FILTERS =>
-#	 {
+	 FILTERS =>
+	 {
 #	     loc => \&Para::Frame::L10N::loc,
-#	 },
+	  'esc_apostrophe' => sub { $_[0] =~ s/'/\\'/g; $_[0] },
+	 },
 	);
 
 
@@ -2242,6 +2243,7 @@ sub configure
 			       'uri' => sub { CGI::escape($_[0]) },
 			       'lf'  => sub { $_[0] =~ s/\r\n/\n/g; $_[0] },
 			       'autoformat' => sub { autoformat($_[0]) },
+			       'esc_apostrophe' => sub { $_[0] =~ s/'/\\'/g; $_[0] },
 			      },
 			      type => 'plain',
 			      subdir_suffix => '_plain',
