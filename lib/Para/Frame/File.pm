@@ -1978,8 +1978,11 @@ sub remove
     debug "Removing file $filename";
     $f->{'exist'} = 0;
     $f->{initiated} = 0;
-    File::Remove::remove( $filename )
-	or die "Failed to remove $filename: $!";
+    if( $f->exist )
+    {
+	File::Remove::remove( $filename )
+	    or die "Failed to remove $filename: $!";
+    }
     return 1;
 }
 

@@ -523,9 +523,13 @@ sub remove
 
     $dir->{'exist'} = 0;
     $dir->{initiated} = 0;
-    # In case not all files where readable
-    File::Remove::remove( \1, $dirname )
-	or die "Failed to remove $dirname: $!";
+
+    if( $dir->exist )
+    {
+	# In case not all files where readable
+	File::Remove::remove( \1, $dirname )
+	    or die "Failed to remove $dirname: $!";
+    }
 
     return $cnt;
 }
