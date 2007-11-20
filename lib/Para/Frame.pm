@@ -400,12 +400,28 @@ sub main_loop
 	    {
 		if( $TERMINATE )
 		{
-		    # Exit asked to and nothing is in flux
-		    if( not keys %REQUEST and
-			not keys %CHILD   and
-			not @BGJOBS_PENDING
-		      )
+		  TERMINATE_CHECK:
 		    {
+			# Exit asked to and nothing is in flux
+			last if keys %REQUEST;
+			last if keys %CHILD;
+			last if @BGJOBS_PENDING;
+
+			foreach my $s (values %SESSION)
+			{
+			    if( keys %{$s->{'page_result'}} )
+			    {
+				if( time - $s->latest->epoch > 120 )
+				{
+				    debug "Ignoring stale page result";
+				    next;
+				}
+
+				debug "PAGE RESULT WAITING";
+				last TERMINATE_CHECK;
+			    }
+			}
+
 			if( $TERMINATE eq 'HUP' )
 			{
 			    # Make watchdog restart us
@@ -1574,7 +1590,7 @@ sub handle_request
 	      $req->site->loadpage;
 	    if( $session->count )
 	    {
-		if( $loadpage ne 'no' )
+		if( ($loadpage ne 'no') and not $TERMINATE )
 		{
 		    $req->send_code('USE_LOADPAGE', $loadpage, 3, $REQNUM);
 		}
