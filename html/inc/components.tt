@@ -241,3 +241,14 @@ $content
     <td class="s_left">&nbsp;</td>
     <td class="content"><div class="content_div">
 [% END %]
+
+
+[% BLOCK ajax_div %]
+   [% DEFAULT divid = ajax.new_form_id %]
+   [% DEFAULT update_url = "" %]
+   [% DEFAULT args = "" %]
+   <div id="$divid">
+     $content
+   </div>
+  [% ajax.register_page_part(divid, update_url, args) %]
+[% END %]
