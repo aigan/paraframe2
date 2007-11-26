@@ -230,6 +230,7 @@ sub startup
     $Template::BINMODE = ':utf8';
 
     warn "Setup complete, accepting connections\n";
+    print "STARTED\n";
 }
 
 #######################################################################

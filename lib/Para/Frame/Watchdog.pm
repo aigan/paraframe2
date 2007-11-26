@@ -225,21 +225,28 @@ sub check_process
 
 sub wait_for_server_setup
 {
-    my( $type, $level ) = get_server_message(TIMEOUT_SERVER_STARTUP);
+    my( $type, @args ) = get_server_message(TIMEOUT_SERVER_STARTUP);
     unless( $type )
     {
 	debug "Server failed to reach main loop (TIMEOUT)";
 	return watchdog_crash();
     }
-    if( $type ne 'MAINLOOP' )
+    if( $type ne 'STARTED' )
     {
 	if( $type eq 'Loading' )
 	{
+	    print "Loading @args\n";
 	    return wait_for_server_setup();
 	}
-
-	debug "Expected MAINLOOP message (got '$type')";
-	return watchdog_crash();
+	elsif( $type eq 'MAINLOOP' )
+	{
+	    return wait_for_server_setup();
+	}
+	else
+	{
+	    debug "Expected MAINLOOP message (got '$type')";
+	    return watchdog_crash();
+	}
     }
     return 1;
 }
@@ -1015,6 +1022,7 @@ sub configure
     {
         MAINLOOP => qr/^(\d+)$/,
 	TERMINATE => 0,
+        STARTED => 0,
 	'Loading' => qr/(.*)/,
     };
 }
