@@ -170,11 +170,11 @@ sub slider
 
 =head2 jump
 
-  jump( $label, $template, %attrs )
+  jump( $label, $template, \%attrs )
 
-  jump( $label, $template_with_query, %attrs )
+  jump( $label, $template_with_query, \%attrs )
 
-  jump( $label, $uri, %attrs )
+  jump( $label, $uri, \%attrs )
 
 Draw a link to C<$template> with text C<$label> and query params
 C<%attrs>.
