@@ -1,6 +1,5 @@
 Changes
 demo/demoserver.pl
-demo/html/.htaccess
 dev/inc_pre/border_top.tt
 dev/inc_pre/footer.tt
 dev/inc_pre/header.tt
@@ -130,6 +129,5 @@ lib/Para/Frame/Watchdog.pm
 lib/Para/Frame/Widget.pm
 Makefile.PL
 MANIFEST			This list of files
-META.yml
 README
 t/01_basic.t
