@@ -27,6 +27,7 @@ use Net::DNS;
 use Net::SMTP;
 use Mail::Address;
 use Data::Validate::Domain qw(is_domain); #);
+use Net::Domain::TLD 1.67;
 use Carp qw( carp confess cluck ); #);
 
 BEGIN
@@ -50,7 +51,6 @@ stringifies to L</as_string> and uses L</equals> for C<eq>/C<ne>
 comparsions.
 
 =cut
-
 
 #######################################################################
 
