@@ -63,9 +63,10 @@ like MultiViews. Here is an example .htaccess file placed in
     ErrorDocument 404 /pf-test/page_not_found.tt
     ErrorDocument 406 /pf-test/page_not_found.tt
     <FilesMatch ".tt$|^$">
-      SetHandler perl-script
+      SetHandler           perl-script
+      PerlFixupHandler     Para::Frame::Client::Fixup
+      PerlHandler          Para::Frame::Client
     </FilesMatch>
-    PerlHandler Para::Frame::Client
     PerlSetVar port 7788
 
 create a symlink in your site to the html/pf dir. If you are setting
