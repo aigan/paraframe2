@@ -136,7 +136,7 @@ sub set
 
     $ctype->set_type( $string );
 
-#    debug "Ctype $ctype set to ".$ctype->as_string;
+    debug "Ctype $ctype set to ".$ctype->as_string;
     return $ctype;
 }
 
@@ -153,7 +153,7 @@ sub set_type
 {
     my( $ctype, $type ) = @_;
 
-    unless( $type =~ /^[a-z]+\/[a-z\-\.0-9]+$/ )
+    unless( $type =~ /^[a-z]+\/[a-z\-\+\.0-9]+$/ )
     {
 	confess "Malformed content-type $type";
     }
