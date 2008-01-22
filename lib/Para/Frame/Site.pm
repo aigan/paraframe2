@@ -373,7 +373,21 @@ sub get_by_req
 
     unless( $auto )
     {
-	die sprintf "No site for %s registred", $hostname;
+	my $alts = "";
+	foreach my $key ( keys %DATA )
+	{
+	    my $val = $DATA{$key}->name;
+	    $alts .= " + $key -> $val\n";
+	}
+
+	foreach my $key ( keys %ALIAS )
+	{
+	    my $val = $ALIAS{$key}->name;
+	    $alts .= " * $key -> $val\n";
+	}
+
+	die sprintf "No site for %s registred. Alternatives are:\n%s",
+	  $hostname, $alts;
     }
 
     if( my $site_alt = $ALIAS{ $hostname } )
