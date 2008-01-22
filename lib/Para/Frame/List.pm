@@ -1675,7 +1675,7 @@ Similar to L<List::Object/count>, L<Array::Iterator/getLength>,
 L<Class::DBI::Iterator/count>,
 L<Class::MakeMethods::Template::Generic/count> and java C<getSize()>.
 
-Compatible with L<Template::Iterator/size>.
+Compatible with L<Template::Iterator/size> and L<Template::Manual::VMethods/List Virtual Methods>
 
 Returns:
 
@@ -1714,7 +1714,8 @@ sub original_size
 Returns the maximum index number (i.e. the index of the last element)
 which is equivalent to size() - 1.
 
-Compatible with L<Template::Iterator/max>
+Compatible with L<Template::Iterator/max> and
+L<Template::Manual::VMethods/List Virtual Methods>
 
 =cut
 
@@ -1783,7 +1784,10 @@ sub count
 Returns a boolean value to indicate if the iterator is currently on
 the first iteration of the set. Ie, index C<0>.
 
-Compatible with L<Template::Iterator/first>.
+Compatible with L<Template::Iterator/first> and
+L<Template::Manual::VMethods/List Virtual Methods>
+
+.
 
 Similar to L<Array::Iterator::Circular/isStart> and
 L<Tie::Array::Iterable/at_start>.
@@ -1806,7 +1810,8 @@ sub first
 Returns a boolean value to indicate if the iterator is currently on
 the last iteration of the set.
 
-Compatible with L<Template::Iterator/last>.
+Compatible with L<Template::Iterator/last> and L<Template::Manual::VMethods/List Virtual Methods>
+
 
 Similar to L<Array::Iterator::Circular/isEnd>,
 L<Iterator/is_exhausted>, L<Tie::Array::Iterable/at_end> and
@@ -2320,6 +2325,8 @@ C<$separator> defaults to the empty string.
 
 Returns: A scalar string of all elements concatenated
 
+Compatible with L<Template::Manual::VMethods/List Virtual Methods>
+
 =cut
 
 sub join
@@ -2377,6 +2384,115 @@ sub uniq
     else
     {
 	return $l;
+    }
+}
+
+
+#######################################################################
+
+=head2 merge
+
+  $l->merge( $list2, $list3, ... )
+
+
+Returns a list composed of zero or more other lists. The original
+lists are not modified. Filters out parametrs that are not
+lists. Always returns a new list, even if it has the same content as
+the calling list.
+
+Uses the cloend args of the calling list.
+
+Compatible with L<Template::Manual::VMethods/List Virtual Methods>
+
+=cut
+
+sub merge
+{
+    my $l = CORE::shift(@_);
+    my $args = $l->clone_props;
+
+    my @new;
+
+    foreach my $l2 ( $l, @_ )
+    {
+	if( UNIVERSAL::isa($l2, 'Para::Frame::List' ) )
+	{
+	    if( $l2->{'INDEX'} > -1 )
+	    {
+		$l2->reset;
+	    }
+
+	    my( $value, $error ) = $l2->get_next_raw;
+	    while(! $error )
+	    {
+		CORE::push @new, $value;
+	    }
+	    continue
+	    {
+		( $value, $error ) = $l2->get_next_raw;
+	    };
+	}
+	elsif( UNIVERSAL::isa($l2, 'ARRAY' ) )
+	{
+	    CORE::push @new, @$l2;
+	}
+	# else ignore...
+    }
+
+    return $l->new(\@new, $args);
+}
+
+
+#######################################################################
+
+=head2 reverse
+
+  $l->reverse()
+
+
+Returns a list composed of the items in reverse order.
+
+Uses the cloend args of the calling list.
+
+Compatible with L<Template::Manual::VMethods/List Virtual Methods>
+
+=cut
+
+sub reverse
+{
+    my $l = CORE::shift(@_);
+    my $args = $l->clone_props;
+
+    my @new;
+    my @newobj;
+
+    $l->populate_all;
+
+    if( $l->{'_OBJ'} eq $l->{'_DATA'} )
+    {
+	return $l->new([CORE::reverse @{$l->{'_OBJ'}}], $args);
+    }
+    elsif( $l->{'materialized'} )
+    {
+	my $oidx = $#{$l->{'_OBJ'}};
+	my $didx = $#{$l->{'_DATA'}};
+
+	if( $oidx != $didx )
+	{
+	    for( my $i=$oidx+1; $i <= $didx; $i++ )
+	    {
+		$l->{'_OBJ'}[$i] = undef;
+	    }
+	}
+
+	my $new = $l->new([CORE::reverse @{$l->{'_DATA'}}], $args);
+	$new->{'_OBJ'} = [ CORE::reverse @{$l->{'_OBJ'}} ];
+	$new->{'materialized'} = $l->{'materialized'};
+	return $new;
+    }
+    else
+    {
+	return $l->new([CORE::reverse @{$l->{'_DATA'}}], $args);
     }
 }
 
