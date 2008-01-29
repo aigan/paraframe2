@@ -586,6 +586,36 @@ sub select_key
 
 #######################################################################
 
+=head2 delete
+
+  Perl: $dbix->delete($statement, @vals)
+
+Executes the $statement, substituting all '?' within with the values.
+
+Exceptions:
+
+dbi : DBI returned error
+
+=cut
+
+sub delete
+{
+    my( $dbix, $st, @vals ) = @_;
+    #
+    # Return list or records
+
+    throw('incomplete','no parameter to statement') unless $st;
+    $st = "delete ".$st if $st !~/^\s*delete\s/i;
+
+    eval
+    {
+	$dbix->dbh->do($st,{},@vals);
+    } or return $dbix->report_error(\@vals, $st, @vals);
+    return 1;
+}
+
+#######################################################################
+
 =head2 connect
 
   $dbix->connect()
