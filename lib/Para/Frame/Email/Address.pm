@@ -85,7 +85,6 @@ sub parse
 {
     my( $class, $email_str_in ) = @_;
 
-
     if( UNIVERSAL::isa $email_str_in, "Para::Frame::Email::Address" )
     {
 	if( UNIVERSAL::isa $email_str_in, $class )
@@ -116,27 +115,17 @@ sub parse
 	$addr or throw('email', "'$email_str' is not a correct email address");
     }
 
-    unless( $addr->host )
-    {
-	throw('email', "Give the whole email address, includning the \@\n'$email_str' is not correct");
-    }
-
-    unless( $addr->user )
-    {
-	throw('email', "Give the whole email address, includning the \@\n'$email_str' is not correct");
-    }
-
-    unless( defined is_domain( $addr->host ) )
-    {
-	throw('email', "The email $email_str_in has an invalid domain");
-    }
-
     my $a = bless
     {
      addr => $addr,
      original => $email_str_in,
-     broken => 0,
+     broken => undef,
     }, $class;
+
+    if( $a->broken )
+    {
+	throw('email', $a->{'error_message'} );
+    }
 
     return $a;
 }
@@ -159,7 +148,6 @@ sub parse_tolerant
 {
     my( $class, $email_str_in ) = @_;
 
-
     if( UNIVERSAL::isa $email_str_in, "Para::Frame::Email::Address" )
     {
 	if( UNIVERSAL::isa $email_str_in, $class )
@@ -174,7 +162,8 @@ sub parse_tolerant
     }
 
     my $addr;
-    my $broken = 0;
+    my $broken = undef;
+    my $err;
 
     if( UNIVERSAL::isa $email_str_in, "Mail::Address" )
     {
@@ -182,7 +171,7 @@ sub parse_tolerant
 
 	if( not defined is_domain( $addr->host ) )
 	{
-	    debug "Email domain invalid";
+	    $err = "Email domain invalid";
 	    $broken = 1;
 	}
     }
@@ -194,19 +183,7 @@ sub parse_tolerant
 	{
 	    $addr = Para::Frame::Email::Address::Fallback->
 	      parse($email_str_in);
-	    $broken = 1;
-	}
-	elsif( not $addr->user )
-	{
-	    $broken = 1;
-	}
-	elsif( not $addr->host )
-	{
-	    $broken = 1;
-	}
-	elsif( not defined is_domain( $addr->host ) )
-	{
-	    debug "Email domain invalid";
+	    $err = "Not parsable";
 	    $broken = 1;
 	}
     }
@@ -216,7 +193,10 @@ sub parse_tolerant
      addr => $addr,
      original => $email_str_in,
      broken => $broken,
+     error_message => $err,
     }, $class;
+
+    $a->broken; # Check address
 
     return $a;
 }
@@ -242,7 +222,7 @@ sub new
 	{
 	 addr => $addr,
 	 original => $_[1],
-	 broken => 0,
+	 broken => undef,
 	}, $_[0];
     }
     else
@@ -271,7 +251,58 @@ Returns true if the parsing failed
 
 sub broken
 {
-    $_[0]->{'broken'};
+    unless( defined $_[0]->{'broken'} )
+    {
+	my $err;
+	my $addr = $_[0]->{'addr'};
+	my $email_str = $_[0]->{'original'};
+
+	if( not $addr->host )
+	{
+	    $err = "Give the whole email address, includning the \@\n'$email_str' is not correct";
+	}
+	elsif( not $addr->user )
+	{
+	    $err = "Give the whole email address, includning the \@\n'$email_str' is not correct";
+	}
+	elsif( not defined is_domain( $addr->host ) )
+	{
+	    $err = "The email $email_str has an invalid domain";
+	}
+
+	if( $err )
+	{
+	    $_[0]->{'broken'} = 1;
+	    $_[0]->{'error_message'} = $err;
+	}
+	else
+	{
+	    $_[0]->{'broken'} = 0;
+	}
+    }
+
+    return $_[0]->{'broken'};
+}
+
+
+#######################################################################
+
+=head2 error_message
+
+  $a->error_message
+
+Returns: the error message, if the email is broken
+
+=cut
+
+sub error_message
+{
+    if( $_[0]->{'broken'} )
+    {
+	return $_[0]->{'error_message'} || 'undefined error';
+    }
+
+    return "";
 }
 
 
@@ -286,6 +317,19 @@ Returns a string using L<Mail::Address/address>
 =cut
 
 sub as_string { $_[0]->{addr}->address }
+
+
+#######################################################################
+
+=head2 original
+
+  $a->original
+
+Returns the original value given at creation
+
+=cut
+
+sub original { $_[0]->{'original'} }
 
 
 #######################################################################
