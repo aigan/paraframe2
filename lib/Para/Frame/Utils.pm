@@ -1060,6 +1060,8 @@ Checks the text. If it's in UTF8, converts it to ISO-8859-1.
 
 Handles UTF8 mixed in with ISO-8859-1
 
+Note: Do not send in objects.
+
 returns: a string in Latin-1
 
 =cut
