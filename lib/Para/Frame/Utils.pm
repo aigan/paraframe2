@@ -999,7 +999,7 @@ sub compile
 	my $stat;
 	unless( $stat = stat($realfilename) )
 	{
-	    die "Can't locate $filename";
+	    confess "Can't locate $filename";
 	}
 	$mtime = $stat->mtime or die;
     }
@@ -1011,7 +1011,17 @@ sub compile
 	$Para::Frame::Reload::COMPILED{$filename} = $mtime;
     }
 
-    return require $filename;
+    my $res;
+    eval
+    {
+	$res = require $filename;
+    };
+    if( $@ )
+    {
+	confess "Can't locate $filename: $@";
+    }
+
+    return $res;
 }
 
 
