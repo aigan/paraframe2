@@ -9,7 +9,7 @@ package Para::Frame::List;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -102,6 +102,13 @@ The iteration methods is compatible with (and inherits from)
 L<Template::Iterator>. (The iterator status codes are taken from
 L<Template::Constants>.)
 
+CGI query parameters reserved for use with some methods are:
+
+  order
+  direction
+  table_page
+
+
 =head2 BACKGROUND
 
 Since L<Para::Frame> is built for use with L<Template>, it implements
@@ -165,6 +172,8 @@ Availible params are:
 The first argument may be a L<Para::Frame::List> object, in which case
 it's content is copied to this new list.
 
+If the first argument is undef, the list is marked as unpopulated
+
 See also: L</set_materializer>
 
 Compatible with L<Template::Iterator/new>.
@@ -209,6 +218,8 @@ sub new
 	$l->{'limit'} = $args->{'limit'};
 	$l->{'page_size'} = $args->{'page_size'};
 	$l->{'display_pages'} = $args->{'display_pages'};
+	$l->{'sorted_on'} = $args->{'sorted_on'};
+	$l->{'sorted_on_key'} = $args->{'sorted_on_key'};
     }
 
 
@@ -679,7 +690,7 @@ sub materialize_all
 		my @objs;
 		for( my $i=0; $i<=$max; $i++ )
 		{
-		    push @objs, &{$mat}( $l, $i );
+		    CORE::push @objs, &{$mat}( $l, $i );
 		}
 		$l->{'_OBJ'} = \@objs;
 	    }
@@ -821,7 +832,7 @@ sub slice
 	{
 	    while( my $raw = $l->get_next_raw() )
 	    {
-		push @data, $raw;
+		CORE::push @data, $raw;
 		last if $l->index >= $end;
 	    }
 	}
@@ -829,7 +840,7 @@ sub slice
 	{
 	    while( my $raw = $l->get_next_raw() )
 	    {
-		push @data, $raw;
+		CORE::push @data, $raw;
 	    }
 	}
 
@@ -2544,6 +2555,72 @@ sub flatten
     }
 
     return $list_in->new( \@list_out, $list_in->clone_props );
+}
+
+
+#######################################################################
+
+=head2 resort
+
+  $list->resort( ... )
+
+Same as L</sorted>, but modifies the existing object, rather than
+creating a new object.
+
+If no params given, the cgi params C<order> and C<direction> will be
+used.
+
+Will not resort if the object sortkey property is the same
+
+Returns:
+
+The same list object
+
+=cut
+
+sub resort
+{
+    my( $list, $sortargs, $dir ) = @_;
+
+    if( my $q = $Para::Frame::REQ->q )
+    {
+	$sortargs ||= $q->param('order');
+	unless( ref $sortargs )
+	{
+	    $dir ||= $q->param('direction');
+	}
+    }
+
+    my( $sort_str, $sort_key );
+    ( $sortargs, $sort_str, $sort_key ) =
+      $list->parse_sortargs( $sortargs, $dir );
+
+#    debug "sort_key: $sort_key";
+#    debug "prev key: ".($list->{'sorted_on_key'}||'');
+
+    if( $sort_key eq ($list->{'sorted_on_key'}||'') )
+    {
+#	debug "  SAME SORT";
+	return $list;
+    }
+
+    my $new = $list->sorted($sortargs,
+			    {
+			     sort_str => $sort_str,
+			     sort_key => $sort_key,
+			     dir => $dir,
+			    });
+
+    $list->{'index'} = -1;
+    $list->{'materialized'} = $new->{'materialized'};
+    $list->{'materializer'} = $new->{'materializer'};
+    $list->{'populated'}    = $new->{'populated'};
+    $list->{'_DATA'}        = $new->{'_DATA'};
+    $list->{'_OBJ'}         = $new->{'_OBJ'};
+    $list->{'sorted_on'}    = $new->{'sorted_on'};
+    $list->{'sorted_on_key'}= $new->{'sorted_on_key'};
+
+    return $list;
 }
 
 
