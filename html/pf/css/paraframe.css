@@ -181,3 +181,8 @@ table.admin td td
 {
   border: 0px;
 }
+
+table.admin .selected img
+{
+  border: 0px;
+}
