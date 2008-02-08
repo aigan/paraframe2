@@ -349,7 +349,6 @@ sub check_add
 
     my $req = $Para::Frame::REQ;
     my $q = $req->q;
-    my $url = $req->page->url_path;
 
     if( my @plan_url = $q->param('plan_next') )
     {
@@ -410,7 +409,7 @@ sub check_backtrack
 	    my $last_step = $route->{'route'}[-1] or return;
 	    $last_step = Para::Frame::URI->new($last_step) unless UNIVERSAL::isa($last_step, 'URI');
 
-	    if( $last_step->path eq $page->url_path )
+	    if( $last_step->path eq $page->url_path_slash )
 	    {
 		if( $last_step->query eq $req->q->query_string )
 		{
@@ -447,7 +446,7 @@ sub bookmark
 
     my $req = $Para::Frame::REQ;
 
-    $url_str ||= uri($req->page->url_path, store_params);
+    $url_str ||= uri($req->page->url_path_slash, store_params);
 #    my $norm_url = $req->normalized_url( $url_str || $req->referer_with_query );
 
     # This should default to the PREVIUS page in most cases
@@ -571,9 +570,11 @@ sub get_next
     {
 	$q->delete_all;
 	debug(1,"!!  No more steps in route");
-	if( $page->url_path ne $req->referer_path )
+	if( $page->url_path_slash ne $req->referer_path )
 	{
 	    debug 1, "!!    Using selected template";
+	    debug 2, "!!    referer: ".$req->referer_path;
+	    debug 2, "!!       this: ".$page->url_path_slash;
 	}
 	else
 	{
