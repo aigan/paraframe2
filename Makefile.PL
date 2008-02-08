@@ -67,6 +67,7 @@ WriteMakefile(
 		  'Unicode::MapUTF8'           => 1.09,
 		  'URI'                        => 1.35,
 		  'URI::QueryParam'            => 0.00,
+                  'Test::Pod::Coverage'        => 1.08,
 	      },
 	      'dist'          =>
 	      {
