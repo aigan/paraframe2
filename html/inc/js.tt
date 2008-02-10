@@ -1,4 +1,5 @@
-﻿<script type="text/javascript">
+
+<script type="text/javascript">
 function go(template, run) {
     document.f.run.value=run || document.f.run.value;
     document.f.action = template || document.f.action;
@@ -17,7 +18,7 @@ function showhide(whichLayer) {
         }
     }
 }
-[% PROCESS js_extra.tt %]
+[% PROCESS js_extra.tt # use for loading external scripts! %]
 </script>
 [% IF cfg.ie7 %]
    [%# compliance patch for microsoft browsers #%]
