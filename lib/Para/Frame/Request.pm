@@ -916,6 +916,11 @@ sub uri2file
 
     confess "url missing" unless defined $url;
 
+    if( $url =~ m/^\/var\/ttc\// )
+    {
+	debug "The ttc dir shoule not reside inside a site docroot";
+    }
+
 #    warn "    From client\n";
     $file = $req->get_cmd_val( 'URI2FILE', $url );
 
