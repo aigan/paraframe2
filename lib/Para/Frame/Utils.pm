@@ -1886,7 +1886,17 @@ sub client_send
 	my $chrsent = 0;
 	while( $chrpos < $chrlength )
 	{
-	    $chrsent = $client->send( substr $$dataref, $chrpos, $chunk );
+	    eval
+	    {
+		$chrsent = 0;
+		$chrsent = $client->send( substr $$dataref, $chrpos, $chunk );
+	    };
+	    if( $@ )
+	    {
+		debug "GOT ERROR IN SOCKET SEND\n";
+		$Para::Frame::DEBUG = 3;
+	    }
+
 	    if( $chrsent )
 	    {
 		debug(3, "  Sent $chrsent chars");
