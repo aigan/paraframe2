@@ -136,7 +136,7 @@ sub set
 
     $ctype->set_type( $string );
 
-    debug "Ctype $ctype set to ".$ctype->as_string;
+#    debug "Ctype $ctype set to ".$ctype->as_string;
     return $ctype;
 }
 
