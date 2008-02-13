@@ -2,14 +2,11 @@
 package Para::Frame::Request;
 #=====================================================================
 #
-# DESCRIPTION
-#   Paranormal.se framework Request class
-#
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2007 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -1224,16 +1221,16 @@ sub run_action
 	    # What went wrong?
 	    debug(3,$@);
 
-	    if( $@ =~ /^Can\'t locate $file/ )
+	    if( $@ =~ /.*Can\'t locate (.*?) in \@INC/ )
 	    {
-		push @{$errors{'notfound'}}, "$c_run wasn't found in  $tryroot";
-		debug(-1);
-		next; # Try next
-	    }
-	    elsif( $@ =~ /^Can\'t locate (.*?) in \@INC/ )
-	    {
-		my $info = "";
+		if( $1 eq $file )
+		{
+		    push @{$errors{'notfound'}}, "$c_run wasn't found in  $tryroot";
+		    debug(-1);
+		    next; # Try next
+		}
 
+		my $info = "";
 		my $notfound = $1;
 		if( $@ =~ /^BEGIN failed--compilation aborted at (.*?) line (\d+)/m )
 		{
@@ -1253,6 +1250,12 @@ sub run_action
 		    $info = $@;
 		}
 		push @{$errors{'compilation'}}, $info;
+	    }
+	    elsif( $@ =~ /^Can\'t locate $file/ )
+	    {
+		push @{$errors{'notfound'}}, "$c_run wasn't found in  $tryroot";
+		debug(-1);
+		next; # Try next
 	    }
 	    else
 	    {
