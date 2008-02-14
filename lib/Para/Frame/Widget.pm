@@ -187,6 +187,10 @@ A 'href_class' attribute will set the class for the link.
 
 A 'href_id' attribute will set the id for the link.
 
+A 'href_style' attribute will set the style for the link.
+
+TODO: Do html escape of value
+
 If no class is set, the class will be C<same_place> if the link goes to
 the current page.  To be used with CSS for marking the current page in
 menues.
@@ -269,6 +273,10 @@ sub jump_extra
     {
 	$extra .= " onClick=\"$val\"";
     }
+    if( my $val = delete ${$attr}{'href_style'} )
+    {
+	$extra .= " style=\"$val\"";
+    }
 
     my $class_val = delete ${$attr}{'href_class'};
     if( $class_val )
@@ -320,6 +328,18 @@ Default label = 'Fortsätt'
 
 Default setval is to not have a value
 
+A 'href_target' attribute will set the target frame for the link.
+
+A 'href_onclick' attribute will set the corresponding tag attribute.
+
+A 'href_class' attribute will set the class for the link.
+
+A 'href_id' attribute will set the id for the link.
+
+A 'href_style' attribute will set the style for the link.
+
+TODO: Do html escape of value
+
 =cut
 
 sub submit
@@ -335,9 +355,25 @@ sub submit
 
     my $label_out = loc($label);
 
-    if( my $class = $attr->{'href_class'} )
+    if( my $class = delete ${$attr}{'href_class'} )
     {
 	$extra .= " class=\"$class\"";
+    }
+    if( my $val = delete ${$attr}{'href_target'} )
+    {
+	$extra .= " target=\"$val\"";
+    }
+    if( my $val = delete ${$attr}{'href_id'} )
+    {
+	$extra .= " id=\"$val\"";
+    }
+    if( my $val = delete ${$attr}{'href_onclick'} )
+    {
+	$extra .= " onClick=\"$val\"";
+    }
+    if( my $val = delete ${$attr}{'href_style'} )
+    {
+	$extra .= " style=\"$val\"";
     }
 
     my $name = '';
@@ -365,8 +401,18 @@ Default $run = 'nop'
 All fields set by %attrs must exist in the form. (Maybe as hidden
 elements)
 
-A 'target' attribute will set the target frame for the form
-submit. (not implemented)
+
+A 'href_target' attribute will set the target frame for the link.
+
+A 'href_onclick' attribute will set the corresponding tag attribute.
+
+A 'href_class' attribute will set the class for the link.
+
+A 'href_id' attribute will set the id for the link.
+
+A 'href_style' attribute will set the style for the link.
+
+TODO: Do html escape of value
 
 =cut
 
@@ -415,13 +461,21 @@ sub go
     {
 	$extra .= "target=\"$val\" ";
     }
+    if( my $val = delete $attr->{'href_id'} )
+    {
+	$extra .= "id=\"$val\" ";
+    }
+    if( my $val = delete $attr->{'href_onclick'} )
+    {
+	$extra .= "onClick=\"$val\" ";
+    }
+    if( my $val = delete $attr->{'href_style'} )
+    {
+	$extra .= "style=\"$val\" ";
+    }
     if( my $val = delete $attr->{'href_class'} )
     {
 	$extra .= "class=\"$val\" ";
-    }
-    if( my $val = delete $attr->{'onclick'} )
-    {
-	$onclick_extra .= $val .';';
     }
 
     my $query = join '', map sprintf("document.f.$_.value='%s';", $attr->{$_}), keys %$attr;
