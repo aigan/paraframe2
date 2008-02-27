@@ -1078,6 +1078,12 @@ returns: a string in Latin-1
 
 sub deunicode
 {
+    unless( $_[0] )
+    {
+	cluck "undef?";
+	return $_[0]; # Not needing deunicoding
+    }
+
     if( utf8::is_utf8( $_[0] ) )
     {
 	if( ord(substr($_[0],0,1)) == 65279 ) # BOM
