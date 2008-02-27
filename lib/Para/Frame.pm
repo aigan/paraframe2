@@ -410,11 +410,14 @@ sub main_loop
 
 			foreach my $s (values %SESSION)
 			{
-			    if( keys %{$s->{'page_result'}} )
+			    foreach my $key ( keys %{$s->{'page_result'}} )
 			    {
-				if( time - $s->latest->epoch > 120 )
+				my $result_time =
+				  $s->{'page_result'}{$key}{'time'};
+				if( time - $result_time > 120 )
 				{
-				    debug "Ignoring stale page result";
+				    debug "Ignoring stale page result ".
+				      "from $result_time";
 				    next;
 				}
 
