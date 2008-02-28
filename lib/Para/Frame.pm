@@ -2,14 +2,11 @@
 package Para::Frame;
 #=====================================================================
 #
-# DESCRIPTION
-#   Paranormal.se framework server
-#
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2007 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -78,7 +75,6 @@ our $REQ_LAST   ;  # Remeber last $REQ beyond a undef $REQ
 our $U          ;
 our $REQNUM     ;
 our %SESSION    ;
-our %USER       ;
 our $SELECT     ;
 our %INBUFFER   ;
 our %DATALENGTH ;
