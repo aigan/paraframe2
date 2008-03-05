@@ -1951,7 +1951,7 @@ Default is C<$dir_var/run>
 
 =head3 dir_var
 
-The base for L</dir_log> and L</dir_run>.
+The base for L</dir_log> and L</dir_run> and L</ttcdir>.
 
 Default is C</var>
 
