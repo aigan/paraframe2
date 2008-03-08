@@ -1215,6 +1215,7 @@ sub run_action
 	eval
 	{
 	    compile($file);
+	    # exceptions will be rewritten: "Can't locate $filename: $@"
 	};
 	if( $@ )
 	{
