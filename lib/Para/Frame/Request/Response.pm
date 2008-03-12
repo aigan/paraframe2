@@ -648,6 +648,8 @@ sub send_output
 	    # Keep query string
 	    $url_out = $resp->page_url_with_query_and_reqnum;
 
+	    $req->cookies->add_to_header;
+
 	    $req->session->register_result_page($resp, $url_out);
 	    $req->send_code('PAGE_READY', $url_out);
 	}
@@ -926,7 +928,7 @@ sub send_stored_result
 	my $res = $req->get_cmd_val( 'BODY' );
 	if( $res eq 'LOADPAGE' )
 	{
-	    die "Was to slow to send the pregenerated page";
+	    die "Was too slow to send the pregenerated page";
 	}
 	else
 	{
