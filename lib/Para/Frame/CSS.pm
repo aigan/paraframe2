@@ -99,7 +99,7 @@ sub params
 =head2 updated
 
 Returns the time of the latest modification of the CSS parameters. It
-initiatyes to the time of the start of the server.
+initiates to the time of the start of the server.
 
 =cut
 
