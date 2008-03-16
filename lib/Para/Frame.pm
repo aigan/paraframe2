@@ -1754,7 +1754,7 @@ sub run_hook
 	    $Para::Frame::hooks_running{"$hook"} --;
 	    if( $@ )
 	    {
-		debug(0, "hook $label throw an exception".datadump($@));
+		debug(3, "hook $label throw an exception".datadump($@));
 		die $@;
 	    }
 	}
