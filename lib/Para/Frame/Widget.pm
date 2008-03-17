@@ -20,7 +20,7 @@ Para::Frame::Widget - Common template widgets
 =cut
 
 use strict;
-use utf8;
+use utf8; # Using Latin1 (åäö) in alfanum_bar()
 use locale;
 
 use Carp qw( cluck confess croak );
@@ -321,7 +321,7 @@ sub jump_extra
 
 Draw a form submit button with text $label and value $setval.
 
-Default label = 'Fortsätt'
+Default label = 'Continue'
 
 Default setval is to not have a value
 
@@ -697,7 +697,7 @@ sub alfanum_bar
     {
 	next if $key eq 'offset';
 	next if $key eq 'part';
-	
+
 	$attr->{$key} = $q->param($key)
 	    unless defined $attr->{$key} and length $attr->{$key};
 	delete $attr->{$key} unless $attr->{$key}; # Only if TRUE

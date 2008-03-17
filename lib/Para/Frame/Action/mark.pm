@@ -2,14 +2,11 @@
 package Para::Frame::Action::mark;
 #=====================================================================
 #
-# DESCRIPTION
-#   Paranormal.se put current place in route
-#
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2007 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -20,7 +17,14 @@ use strict;
 
 use Para::Frame::Utils qw( uri store_params);
 
-#
+
+
+=head1 NAME
+
+Para::Frame::Action::mark - bookmarks a page for the route
+
+=cut
+
 # See Para::Frame::Route
 #
 
@@ -42,10 +46,3 @@ sub handler
 }
 
 1;
-
-
-=head1 NAME
-
-Para::Frame::Action::mark - bookmarks a page for the route
-
-=cut

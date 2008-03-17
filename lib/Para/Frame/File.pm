@@ -2,14 +2,11 @@
 package Para::Frame::File;
 #=====================================================================
 #
-# DESCRIPTION
-#   Paranormal.se framework File class
-#
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2007 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2008 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -27,6 +24,8 @@ See also L<Para::Frame::Dir> and L<Para::Frame::Template>.
 =cut
 
 use strict;
+use utf8; # Ã used in file
+
 use Encode;
 use Carp qw( croak confess cluck );
 use File::stat; # exports stat

@@ -2,14 +2,11 @@
 package Para::Frame::Code::Class;
 #=====================================================================
 #
-# DESCRIPTION
-#   Paranormal.se framework Code Class abstraction class
-#
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2008 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.

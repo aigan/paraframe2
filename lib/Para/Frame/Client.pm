@@ -3,14 +3,11 @@
 package Para::Frame::Client;
 #=====================================================================
 #
-# DESCRIPTION
-#   Paranormal.se framework client
-#
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2007 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.

@@ -2,14 +2,11 @@
 package Para::Frame::Action::language_set;
 #=====================================================================
 #
-# DESCRIPTION
-#   Paraframe language set action
-#
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2008 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -19,6 +16,16 @@ package Para::Frame::Action::language_set;
 use strict;
 
 use Para::Frame::Utils qw( throw passwd_crypt debug );
+
+=head1 NAME
+
+Para::Frame::Action::user_login - For logging in
+
+=head1 DESCRIPTION
+
+Paraframe language set action
+
+=cut
 
 sub handler
 {
@@ -53,9 +60,3 @@ sub handler
 
 1;
 
-
-=head1 NAME
-
-Para::Frame::Action::user_login - For logging in
-
-=cut

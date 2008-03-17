@@ -2,14 +2,11 @@
 package Para::Frame::Action::session_vars_update;
 #=====================================================================
 #
-# DESCRIPTION
-#   Paraframe session variables update action
-#
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -17,6 +14,13 @@ package Para::Frame::Action::session_vars_update;
 #=====================================================================
 
 use strict;
+
+
+=head1 NAME
+
+Para::Frame::Action::user_logou - For logging out
+
+=cut
 
 sub handler
 {
@@ -60,10 +64,3 @@ sub handler
 }
 
 1;
-
-
-=head1 NAME
-
-Para::Frame::Action::user_logou - For logging out
-
-=cut

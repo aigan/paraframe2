@@ -2,14 +2,11 @@
 package Para::Frame::User;
 #=====================================================================
 #
-# DESCRIPTION
-#   Paranormal.se framework User class
-#
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -33,6 +30,7 @@ BEGIN
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw passwd_crypt debug datadump );
+use Para::Frame::L10N qw( loc );
 
 =head1 SYNOPSIS
 
@@ -76,7 +74,7 @@ use Para::Frame::Utils qw( throw passwd_crypt debug datadump );
       {
         $rec =
         {
-          name => 'Gäst',
+          name => 'The guest',
           username => 'guest',
           uid      => 0,
           level    => 0,
@@ -124,7 +122,7 @@ sub identify_user
 	    die "Couldn't find user guest";
 	}
 
-	$req->result->message("Användaren $username existerar inte");
+	$req->result->message(loc 'The user [_1] doesn\'t exist');
 	$class->clear_cookies;
 	$u = $class->identify_user( 'guest' );
     }
@@ -230,7 +228,7 @@ sub get # Reimplement this method
 
     my $u = bless {}, $class;
 
-    $u->{'name'} = 'Gäst';
+    $u->{'name'} = 'Guest';
     $u->{'username'} = 'guest';
     $u->{'uid'} = 0;
     $u->{'level'} = 0;

@@ -2,14 +2,11 @@
 package Para::Frame::L10N::sv;
 #=====================================================================
 #
-# DESCRIPTION
-#   Paranormal.se framework Localization: sv
-#
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -27,7 +24,7 @@ Using Locale::Maketext
 =cut
 
 use strict;
-use utf8;
+use utf8; # Using Latin-1 (åäö)
 
 BEGIN
 {
@@ -100,6 +97,9 @@ our %Lexicon =
 
    'Password' =>
    'Lösenord',
+
+   'The user [_1] doesn\'t exist' =>
+   'Användaren [_1] existerar inte',
 
   );
 

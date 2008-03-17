@@ -2,16 +2,11 @@
 package Para::Frame::Spreadsheet::Excel;
 #=====================================================================
 #
-# DESCRIPTION
-#   Paranormal.se framework Excel spreadsheet class
-#
-# We are in the PARENT, looking at the child result
-#
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.

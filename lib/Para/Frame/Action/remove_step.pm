@@ -2,14 +2,11 @@
 package Para::Frame::Action::remove_step;
 #=====================================================================
 #
-# DESCRIPTION
-#   Paranormal.se remove top step in route
-#
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -17,6 +14,12 @@ package Para::Frame::Action::remove_step;
 #=====================================================================
 
 use strict;
+
+=head1 NAME
+
+Para::Frame::Action::remove_step - removes a step from the route
+
+=cut
 
 sub handler
 {
@@ -30,10 +33,3 @@ sub handler
 }
 
 1;
-
-
-=head1 NAME
-
-Para::Frame::Action::remove_step - removes a step from the route
-
-=cut

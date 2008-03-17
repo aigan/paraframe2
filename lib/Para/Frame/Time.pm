@@ -2,12 +2,6 @@
 package Para::Frame::Time;
 #=====================================================================
 #
-# DESCRIPTION
-#   Paranormal.se framework Time class
-#
-# Parses with Date::Manip and returns a modified Time::Piece object
-# Also supports returning DateTime objects
-#
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
@@ -79,6 +73,9 @@ sub import
 
 
 =head1 DESCRIPTION
+
+Parses with Date::Manip and returns a modified Time::Piece object
+Also supports returning DateTime objects
 
 This is a subclass to L<DateTime>, it automaticly strinigifies using
 L</format_datetime> (?).

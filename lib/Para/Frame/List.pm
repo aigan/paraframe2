@@ -2,9 +2,6 @@
 package Para::Frame::List;
 #=====================================================================
 #
-# DESCRIPTION
-#   Paranormal.se framework List class
-#
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
@@ -1053,12 +1050,12 @@ sub pagelist
 
     if( $pagenum == 1 )
     {
-#	$out .= "Först";
+#	$out .= "First";
     }
     else
     {
 	$out .= forward("<", $me, {use_cached=>$id, table_page => ($pagenum-1), href_class=>"paraframe_previous"});
-#	$out .= forward("Först", $me, {use_cached=>$id, page => 1});
+#	$out .= forward("First", $me, {use_cached=>$id, page => 1});
 	$out .= " ";
     }
     if( $startpage != 1 )

@@ -2,14 +2,11 @@
 package Para::Frame::Action::debug_change;
 #=====================================================================
 #
-# DESCRIPTION
-#   Paranormal.se change debug level
-#
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -20,6 +17,16 @@ use strict;
 
 use Para::Frame::Logging;
 use Para::Frame::Utils qw( debug );
+
+=head1 NAME
+
+Para::Frame::Action::debug_change - changing the debug level
+
+=head1 DESCRIPTION
+
+Paranormal.se change debug level
+
+=cut
 
 sub handler
 {
@@ -80,10 +87,3 @@ sub handler
 }
 
 1;
-
-
-=head1 NAME
-
-Para::Frame::Action::debug_change - changing the debug level
-
-=cut

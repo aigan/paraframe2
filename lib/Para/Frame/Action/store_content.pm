@@ -2,14 +2,11 @@
 package Para::Frame::Action::store_content;
 #=====================================================================
 #
-# DESCRIPTION
-#   Paranormal.se Stores content in given file
-#
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2007 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2007-2008 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -20,6 +17,12 @@ use strict;
 
 use Para::Frame::File;
 use Para::Frame::Utils qw( debug throw );
+
+=head1 DESCRIPTION
+
+Paranormal.se Stores content in given file
+
+=cut
 
 sub handler
 {

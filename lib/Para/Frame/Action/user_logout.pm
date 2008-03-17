@@ -2,14 +2,11 @@
 package Para::Frame::Action::user_logout;
 #=====================================================================
 #
-# DESCRIPTION
-#   Paraframe user logout action
-#
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -19,6 +16,13 @@ package Para::Frame::Action::user_logout;
 use strict;
 
 use Para::Frame::Route;
+
+
+=head1 NAME
+
+Para::Frame::Action::user_logou - For logging out
+
+=cut
 
 sub handler
 {
@@ -33,10 +37,3 @@ sub handler
 }
 
 1;
-
-
-=head1 NAME
-
-Para::Frame::Action::user_logou - For logging out
-
-=cut

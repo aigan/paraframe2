@@ -2,14 +2,11 @@
 package Para::Frame::Template::Plugin::Sorted_table;
 #=====================================================================
 #
-# DESCRIPTION
-#   Paranormal.se framework tablesort TT plugin
-#
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
