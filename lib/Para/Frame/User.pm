@@ -122,7 +122,7 @@ sub identify_user
 	    die "Couldn't find user guest";
 	}
 
-	$req->result->message(loc 'The user [_1] doesn\'t exist');
+	$req->result->message(loc 'The user [_1] doesn\'t exist', $username);
 	$class->clear_cookies;
 	$u = $class->identify_user( 'guest' );
     }

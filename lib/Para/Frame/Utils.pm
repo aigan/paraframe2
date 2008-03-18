@@ -1596,7 +1596,7 @@ param, as a text string.
 sub timediff
 {
     my $ts = $Para::Frame::timediff_timestamp
-      || $Para::Frame::REQ->{'started'};
+      || $Para::Frame::REQ->{'started'} || Time::HiRes::time();
     $Para::Frame::timediff_timestamp = Time::HiRes::time();
     return sprintf "%30s: %7.3f\n", $_[0], Time::HiRes::time() - $ts;
 }
