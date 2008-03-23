@@ -31,7 +31,7 @@
    END
 %]
 [% IF focus;
-      onload = " onLoad=\"document.f.${focus}.focus()\"";
+      onload = " onLoad=\"document.forms['f'].${focus}.focus()\"";
    END;
 %]
 [* PROCESS header.tt *]

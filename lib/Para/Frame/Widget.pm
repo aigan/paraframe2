@@ -475,7 +475,7 @@ sub go
 	$extra .= "class=\"$val\" ";
     }
 
-    my $query = join '', map sprintf("document.f.$_.value='%s';", $attr->{$_}), keys %$attr;
+    my $query = join '', map sprintf("document.forms['f'].$_.value='%s';", $attr->{$_}), keys %$attr;
     return "<input type=\"button\" value=\"$label\" onclick=\"${onclick_extra}${query}go('$template', '$run')\" $extra />";
 }
 
@@ -488,7 +488,7 @@ sub go_js
     $template ||= '';
     $run ||= 'nop';
 
-    my $query = join '', map sprintf("document.f.$_.value='%s';", $attr->{$_}), keys %$attr;
+    my $query = join '', map sprintf("document.forms['f'].$_.value='%s';", $attr->{$_}), keys %$attr;
     return "${query}go('$template', '$run')";
 }
 

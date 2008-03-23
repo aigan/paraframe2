@@ -7,7 +7,7 @@
 <script type="text/javascript">
 function bottom()
 {
-  elem = document.f.messages;
+  elem = document.forms['f'].messages;
   elem.scrollTop = elem.scrollHeight - elem.clientHeight;
 }
 </script>
@@ -26,5 +26,5 @@ function bottom()
 </form>
 
 <script type="text/javascript">
-document.f.messages.value = "Request sent\n";
+document.forms['f'].messages.value = "Request sent\n";
 </script>

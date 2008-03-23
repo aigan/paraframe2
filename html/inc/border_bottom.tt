@@ -4,7 +4,7 @@
 [% PROCESS menu_bottom.tt %]
 </div>
 
-</form>
+</div></form>
 
 [% PROCESS menu_admin_pf.tt %]
 [% IF debug_level %]

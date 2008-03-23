@@ -1018,7 +1018,7 @@ sub send_message
     $msg =~ s/\n/\\n/g;
 
     warn "$$: Sending message to browser: $msg\n" if $DEBUG > 1;
-    $r->print("<script type=\"text/javascript\">document.f.messages.value += \"$msg\\n\";bottom();</script>\n");
+    $r->print("<script type=\"text/javascript\">document.forms['f'].messages.value += \"$msg\\n\";bottom();</script>\n");
     $r->rflush;
 }
 
@@ -1030,7 +1030,7 @@ sub send_message_waiting
     my $msg = "Processing \n";
     if( $msg eq $LAST_MESSAGE )
     {
-	$r->print("<script type=\"text/javascript\">e=document.f.messages;e.value = e.value.substring(0,e.value.length-2)+\"..\\n\";bottom();</script>\n");
+	$r->print("<script type=\"text/javascript\">e=document.forms['f'].messages;e.value = e.value.substring(0,e.value.length-2)+\"..\\n\";bottom();</script>\n");
     $r->rflush;
     }
     else
