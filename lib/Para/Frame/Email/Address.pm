@@ -104,12 +104,16 @@ sub parse
     else
     {
 	# Remove invisible characters from string
-	$email_str = $email_str_in;
+	$email_str = $email_str_in || '';
 	$email_str =~ s/\p{Other}//g;
 
 	# Retrieve first in list
 	( $addr ) = Mail::Address->parse( $email_str );
-	$addr or throw('email', "'$email_str' is not a correct email address");
+	unless( $addr )
+	{
+#	    cluck "Parsed a faulty email address: '$email_str_in'";
+	    throw('email', "'$email_str' is not a correct email address");
+	}
     }
 
     my $a = bless

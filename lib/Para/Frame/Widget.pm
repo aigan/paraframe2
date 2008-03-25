@@ -28,6 +28,7 @@ use IO::File;
 use CGI;
 use Para::Frame::URI;
 use POSIX qw(locale_h);
+use Scalar::Util;
 
 BEGIN
 {
@@ -895,19 +896,24 @@ sub input
 	$value = $previous[0];
     }
     $key   ||= 'query';
-    $value = ''
-      unless defined( $value );
+
+    # Objects is defined but may stringify to undef
+    unless( $value or Scalar::Util::looks_like_number($value) )
+    {
+	$value = '';
+    }
 
     $params->{id} ||= $key;
     my $prefix = label_from_params($params);
     my $extra = tag_extra_from_params($params);
 
+    # Stringify all params, in case they was objects
     return sprintf('%s<input type="text" name="%s" value="%s" size="%s" maxlength="%s"%s />',
 		   $prefix,
-		   CGI->escapeHTML( $key ),
-		   CGI->escapeHTML( $value ),
-		   CGI->escapeHTML( $size ),
-		   CGI->escapeHTML( $maxlength ),
+		   CGI->escapeHTML( "$key" ),
+		   CGI->escapeHTML( "$value" ),
+		   CGI->escapeHTML( "$size" ),
+		   CGI->escapeHTML( "$maxlength" ),
 		   $extra,
 		  );
 }
