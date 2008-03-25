@@ -1,0 +1,61 @@
+#!/usr/bin/perl
+# -*-cperl-*-
+use strict;
+use warnings FATAL => 'all';
+use bytes;
+use English '-no_match_vars';
+
+use Cwd;
+our $root = getcwd();
+
+# Finds the first row and char that's not Latin-1 in each file
+
+# Not verified...
+my $utf8r = qr/ ( [\xC2-\xDF][\x80-\xBF]             # non-overlong 2-byte
+		|  \xE0[\xA0-\xBF][\x80-\xBF]        # excluding overlongs
+		| [\xE1-\xEC\xEE\xEF][\x80-\xBF]{2}  # straight 3-byte
+		|  \xED[\x80-\x9F][\x80-\xBF]        # excluding surrogates
+		|  \xF0[\x90-\xBF][\x80-\xBF]{2}     # planes 1-3
+		| [\xF1-\xF3][\x80-\xBF]{3}          # planes 4-15
+		|  \xF4[\x80-\x8F][\x80-\xBF]{2}     # plane 16
+		)/x;
+
+process_dir($root);
+
+
+sub process_dir
+{
+    my $dir = shift;
+    my @files = glob( $dir . "/*" );
+    foreach my $file (@files)
+    {
+	if( -f $file && $file =~ /\.pm$/ )
+	{
+	    process_file($file);
+	}
+	elsif( -d $file && $file !~ m/\/(\.|CVS)/ )
+	{
+	    process_dir($file);
+	}
+    }
+}
+
+sub process_file
+{
+    my $name = my $file = shift;
+    $name =~ s/^$root//;
+    local ( *FH );
+    open( FH, '<:bytes', $file )
+      or die "can't open $file: $!";
+    while(my $line = <FH>)
+    {
+	if($line =~ /$utf8r/g)
+	{
+	    my $pos = pos($line) or die;
+	    substr($line,$pos,0,'<---');
+	    print sprintf( "%-50s [%4d] %s", $name, $INPUT_LINE_NUMBER, $line );
+	    last;
+	}
+    }
+    close FH;
+}
