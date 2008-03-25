@@ -581,7 +581,7 @@ sub initiate
 
     unless( $st )
     {
-	debug "Couldn't find $name!";
+	debug 2, "Couldn't find $name!";
 	$f->{initiated} = 0;
 	$f->{'exist'} = 0;
 	return 0;
