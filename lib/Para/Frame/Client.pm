@@ -975,6 +975,12 @@ sub send_body
     my $chunk = 1;
     my $timeout = 30; # May have to wait for yield
 
+    if( $DEBUG )
+    {
+	my $status = $r->status();
+	warn "$$: Page status is $status\n";
+    }
+
     unless( length $data )
     {
 	unless( $select->can_read($timeout) )
