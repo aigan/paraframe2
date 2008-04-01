@@ -460,7 +460,7 @@ sub print_error_page
 	    $uri_out = "https://$host$path";
 	}
 	$r->status( 302 );
-	$r->header_out('Location', $uri_out );
+	$r->headers_out->set('Location', $uri_out );
 	$r->send_http_header() unless $apache2;
 	$r->print("<p>Try to get <a href=\"$uri_out\">$uri_out</a> instead</p>\n");
 	return;
