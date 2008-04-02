@@ -915,11 +915,11 @@ sub send_stored_result
 
     my $req = $resp->req;
 
-    debug 0, "Sending stored page result";
+    debug 2, "Sending stored page result";
 
     if( my $content = $resp->{'content'} ) # May be header only
     {
-	debug "  ".validate_utf8($content);
+#	debug "  ".validate_utf8($content);
 
 	$resp->send_headers;
 	my $res = $req->get_cmd_val( 'BODY' );
