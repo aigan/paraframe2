@@ -16,7 +16,7 @@
   }
   table.$class td.h_bg {
     background:	    url("[% imgdir %]h_bg.$format") repeat-x right top;
-    font-size:	    11px;
+    font-size:	    110%;
     font-weight:    bold;
     line-height:    1.5em;
   }
