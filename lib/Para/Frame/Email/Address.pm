@@ -437,15 +437,13 @@ sub name
 
   $a->desig
 
-Gives a resonable designation of the object. In this case, the name or
-the address.
+Gives a resonable designation of the object. Calls L</format>
 
 =cut
 
 sub desig
 {
-    my( $a ) = @_;
-    return $a->name || $a->address;
+    return $_[0]->format;
 }
 
 # sub update
