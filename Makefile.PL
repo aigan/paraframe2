@@ -54,6 +54,7 @@ WriteMakefile(
 		  'Net::DNS'                   => 0.48,
                   'Net::SCP'                   => 0.07,
 		  'Net::SMTP'                  => 2.29,
+	          'Net::Domain::TLD'           => 1.67,
                   'Number::Bytes::Human'       => 0.04,
 		  'Proc::ProcessTable'         => 0.39,
 		  'Socket'                     => 1.77,
