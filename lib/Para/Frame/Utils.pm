@@ -979,6 +979,10 @@ sub dirsteps
 
 #######################################################################
 
+=head2 compile
+
+=cut
+
 sub compile
 {
     my( $filename ) = @_;
@@ -1008,6 +1012,9 @@ sub compile
 	$Para::Frame::Reload::COMPILED{$filename} = $mtime;
     }
 
+
+    # Is caled by Para::Frame::Request/run_action. Let caller handle errors
+
     my $res;
     eval
     {
@@ -1015,9 +1022,10 @@ sub compile
     };
     if( $@ )
     {
-	confess "Can't locate $filename: $@";
+	delete $INC{$filename};
+	delete $Para::Frame::Reload::COMPILED{$filename};
+	die $@;
     }
-
     return $res;
 }
 
