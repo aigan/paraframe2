@@ -1285,6 +1285,11 @@ sub run_action
 		}
 		push @{$errors{'compilation'}}, $info;
 	    }
+	    elsif( $@ =~ /(syntax error at .*?)$/m )
+	    {
+		debug(2,"Syntax error in require $file");
+		push @{$errors{'compilation'}}, $1;
+	    }
 	    elsif( $@ =~ /^Can\'t locate $file/ )
 	    {
 		push @{$errors{'notfound'}}, "$c_run wasn't found in  $tryroot";
