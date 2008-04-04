@@ -70,8 +70,12 @@ current request object can be reached as C<$Para::Frame::REQ>.
 
 =cut
 
+
 #######################################################################
 
+=head2 new
+
+=cut
 
 sub new
 {
@@ -159,6 +163,9 @@ sub new
 
 #######################################################################
 
+=head2 init
+
+=cut
 
 sub init
 {
@@ -615,6 +622,10 @@ sub response
 
 #######################################################################
 
+=head2 response_if_existing
+
+=cut
+
 sub response_if_existing
 {
     return $_[0]->{'resp'};
@@ -804,12 +815,18 @@ sub browser
 
 #######################################################################
 
+=head2 header_only
+
+=cut
+
 sub header_only { $_[0]->{'header_only'} }
 
 
 #######################################################################
 
+=head2 set_header_only
 
+=cut
 
 sub set_header_only
 {
@@ -1071,6 +1088,10 @@ sub setup_jobs
 
 #######################################################################
 
+=head2 add_action
+
+=cut
+
 sub add_action
 {
     my( $req ) = shift;
@@ -1084,6 +1105,10 @@ sub add_action
 
 
 #######################################################################
+
+=head2 prepend_action
+
+=cut
 
 sub prepend_action
 {
@@ -1101,6 +1126,10 @@ sub prepend_action
 
 
 #######################################################################
+
+=head2 add_job
+
+=cut
 
 sub add_job
 {
@@ -1173,6 +1202,10 @@ sub run_code
 
 
 #######################################################################
+
+=head2 run_action
+
+=cut
 
 sub run_action
 {
@@ -1359,6 +1392,10 @@ sub run_action
 
 #######################################################################
 
+=head2 after_jobs
+
+=cut
+
 sub after_jobs
 {
     my( $req ) = @_;
@@ -1471,6 +1508,10 @@ sub after_jobs
 
 #######################################################################
 
+=head2 done
+
+=cut
+
 sub done
 {
     my( $req ) = @_;
@@ -1506,6 +1547,10 @@ sub done
 
 #######################################################################
 
+=head2 in_last_job
+
+=cut
+
 sub in_last_job
 {
     return not scalar @{$_[0]->{'jobs'}};
@@ -1514,6 +1559,10 @@ sub in_last_job
 
 #######################################################################
 
+=head2 in_loadpage
+
+=cut
+
 sub in_loadpage
 {
     return $_[0]->{'in_loadpage'};
@@ -1521,6 +1570,10 @@ sub in_loadpage
 
 
 #######################################################################
+
+=head2 error_backtrack
+
+=cut
 
 sub error_backtrack
 {
@@ -1714,6 +1767,10 @@ sub referer_with_query
 
 #######################################################################
 
+=head2 send_to_daemon
+
+=cut
+
 sub send_to_daemon
 {
     my( $req, $host_in, $code, $arg ) = @_;
@@ -1726,6 +1783,10 @@ sub send_to_daemon
 
 
 #######################################################################
+
+=head2 send_code
+
+=cut
 
 sub send_code
 {
@@ -1868,6 +1929,10 @@ sub send_code
 
 #######################################################################
 
+=head2 release_active_request
+
+=cut
+
 sub release_active_request
 {
     my( $req ) = @_;
@@ -1895,6 +1960,10 @@ sub release_active_request
 
 
 #######################################################################
+
+=head2 get_cmd_val
+
+=cut
 
 sub get_cmd_val
 {
@@ -2262,7 +2331,12 @@ sub site
     return $_[0]->{site};
 }
 
+
 #######################################################################
+
+=head2 host_from_env
+
+=cut
 
 sub host_from_env
 {
@@ -2475,6 +2549,10 @@ sub create_fork
 
 #######################################################################
 
+=head2 register_child
+
+=cut
+
 sub register_child
 {
     my( $req, $pid, $fh ) = @_;
@@ -2484,6 +2562,10 @@ sub register_child
 
 
 #######################################################################
+
+=head2 get_child_result
+
+=cut
 
 sub get_child_result
 {
@@ -2519,6 +2601,10 @@ sub get_child_result
 
 #######################################################################
 
+=head2 run_hook
+
+=cut
+
 sub run_hook
 {
     Para::Frame->run_hook(@_);
@@ -2526,6 +2612,10 @@ sub run_hook
 
 
 #######################################################################
+
+=head2 logging
+
+=cut
 
 sub logging
 {
@@ -2535,6 +2625,10 @@ sub logging
 
 #######################################################################
 
+=head2 waiting
+
+=cut
+
 sub waiting
 {
     return $_[0]->{'wait'};
@@ -2542,6 +2636,10 @@ sub waiting
 
 
 #######################################################################
+
+=head2 cancelled
+
+=cut
 
 sub cancelled
 {
@@ -2551,6 +2649,10 @@ sub cancelled
 
 #######################################################################
 
+=head2 active
+
+=cut
+
 sub active
 {
     return $_[0]->{'active_reqest'};
@@ -2558,6 +2660,10 @@ sub active
 
 
 #######################################################################
+
+=head2 cancel
+
+=cut
 
 sub cancel
 {
@@ -2636,6 +2742,10 @@ sub cancel
 
 #######################################################################
 
+=head2 note
+
+=cut
+
 sub note
 {
     my( $req, $note ) = @_;
@@ -2657,6 +2767,10 @@ sub note
 
 
 #######################################################################
+
+=head2 set_page
+
+=cut
 
 sub set_page
 {
@@ -2693,6 +2807,10 @@ sub set_page
 
 
 #######################################################################
+
+=head2 set_page_path
+
+=cut
 
 sub set_page_path
 {
@@ -2912,6 +3030,7 @@ sub original_url_string
     return $_[0]->{'orig_url_string'};
 }
 
+
 #######################################################################
 
 =head2 original_url_params
@@ -2932,12 +3051,18 @@ sub original_url_params
     return $_[0]->{'orig_url_params'};
 }
 
+
 #######################################################################
+
+=head2 original_content_type_string
+
+=cut
 
 sub original_content_type_string
 {
     return $_[0]->{'orig_ctype'};
 }
+
 
 #######################################################################
 
@@ -3112,7 +3237,12 @@ sub handle_error
     return 0;
 }
 
+
 #######################################################################
+
+=head2 send_stored_result
+
+=cut
 
 sub send_stored_result
 {
@@ -3132,7 +3262,12 @@ sub send_stored_result
     return 1;
 }
 
+
 #######################################################################
+
+=head2 server_report
+
+=cut
 
 sub server_report
 {
