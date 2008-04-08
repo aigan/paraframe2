@@ -2281,7 +2281,7 @@ sub configure
     $CFG->{'session_class'} ||= 'Para::Frame::Session';
     $CFG->{'l10n_class'} ||= 'Para::Frame::L10N';
 
-    $CFG->{'bg_user_code'} ||= sub{ $CFG->{'user_class'}->get('guest') };
+    $CFG->{'bg_user_code'} ||= sub{ $CFG->{'user_class'}->get('root') };
 
     $class->set_global_tt_params;
 
