@@ -866,6 +866,8 @@ Attributes:
 
   id: used for label. Defaults to C<$field>
 
+  onchange: used for scripts, NOT html-escaped!
+
 All other attributes are directly added to the input tag, with the
 value html escaped.
 
@@ -884,6 +886,7 @@ sub input
 
     my $size = delete $params->{'size'} || 30;
     my $maxlength = delete $params->{'maxlength'} || $size*3;
+    my $extra = '';
 
     my @previous;
     if( my $q = $Para::Frame::REQ->q )
@@ -897,6 +900,11 @@ sub input
     }
     $key   ||= 'query';
 
+    if( my $onchange = delete $params->{'onchange'} )
+    {
+	$extra .= 'onchange="'. $onchange .'" ';
+    }
+
     # Objects is defined but may stringify to undef
     unless( $value or Scalar::Util::looks_like_number($value) )
     {
@@ -905,7 +913,7 @@ sub input
 
     $params->{id} ||= $key;
     my $prefix = label_from_params($params);
-    my $extra = tag_extra_from_params($params);
+    $extra .= tag_extra_from_params($params);
 
     # Stringify all params, in case they was objects
     return sprintf('%s<input type="text" name="%s" value="%s" size="%s" maxlength="%s"%s />',
