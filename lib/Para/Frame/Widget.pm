@@ -1933,7 +1933,6 @@ sub input_image
     my $maxw = $args->{'maxw'} ||= 400;
     my $maxh = $args->{'maxh'} ||= 300;
     my $version = $args->{'version'};
-    my $arc_id = $args->{'arc'} || '';
     my $image_url = $args->{'image_url'} ||
       $Para::Frame::CFG->{'images_uploaded_url'} ||
 	'/images';
@@ -1946,7 +1945,7 @@ sub input_image
 	{
 	    # Hack to recognise radio-context
 	    # arc SHOULD be set...
-	    $out .= hidden("check_arc_${arc_id}", 1);
+	    $out .= hidden("check_$key", 1);
 	    $out .= checkbox($key, $value, 1);
 	}
 
