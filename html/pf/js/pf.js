@@ -1,9 +1,8 @@
 ﻿
 function go(template, run) {
-    f=document.forms['f'];
-    f.run.value=run || f.run.value;
-    f.action = template || f.action;
-    f.submit();
+    document.forms['f'].run.value=run || document.forms['f'].run.value;
+    document.forms['f'].action = template || document.forms['f'].action;
+    document.forms['f'].submit();
     return true;
 }
 function showhide(whichLayer) {

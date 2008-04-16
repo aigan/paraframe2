@@ -20,7 +20,7 @@ IF form_enctype;
 END;
 
 %]
-<form id="f" action="[% form_action %]" method="[% form_method %]" [% form_extra %]><div>
+<form id="f" name="f" action="[% form_action %]" method="[% form_method %]" [% form_extra %]><div>
 <input type="hidden" name="run" value="[% next_action %]" />
 [% UNLESS next_template %]
 <input type="hidden" name="destination" value="dynamic" />
