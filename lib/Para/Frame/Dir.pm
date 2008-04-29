@@ -146,8 +146,16 @@ sub initiate
 	    $msg .= "  The file is in group $fgn\n";
 	    $msg .= sprintf("  The file has mode 0%.4o\n", $fmode);
 
-	    $msg .= "\n".datadump([$f, $st]);
-	    die $msg . "\n";
+	    my $approot = $Para::Frame::CFG->{'approot'};
+	    if( $sys_path =~ /^$approot\// ) # OVER approot
+	    {
+		debug $msg;
+	    }
+	    else
+	    {
+		$msg .= "\n".datadump([$f, $st]);
+		die $msg . "\n";
+	    }
 	}
 
 	$files{$name} = $f;
