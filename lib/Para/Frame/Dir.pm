@@ -147,7 +147,7 @@ sub initiate
 	    $msg .= sprintf("  The file has mode 0%.4o\n", $fmode);
 
 	    my $approot = $Para::Frame::CFG->{'approot'};
-	    if( $sys_path =~ /^$approot\// ) # OVER approot
+	    if( $approot =~ /^$sys_path\// ) # OVER approot
 	    {
 		debug $msg;
 	    }
@@ -571,6 +571,7 @@ sub create
     confess "Faulty args given" unless ref $args;
 
 #    my $dirname = $dir->sys_path;
+#    debug "  creating $dirname";
 
     $dir->parent->create($args);
 

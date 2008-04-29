@@ -2192,8 +2192,8 @@ sub configure
 	}
     }
 
-    my $ttcbase = $CFG->{'dir_var'} || $CFG->{'appback'}[0] .'/var' ||
-      $CFG->{'approot'} .'/var';
+    my $ttcbase = $CFG->{'dir_var'} || ($CFG->{'appback'}[0]?$CFG->{'appback'}[0] .'/var':
+      $CFG->{'approot'} .'/var');
     $CFG->{'ttcdir'} ||= $ttcbase . "/ttc";
     debug "ttcdir set to ".$CFG->{'ttcdir'};
 
