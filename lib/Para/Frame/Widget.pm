@@ -873,7 +873,7 @@ value html escaped.
 
 Example:
 
-  Drawing a input field widget wit a label
+  Drawing a input field widget with a label
   [% input('location_name', '', label=loc('Location')) %]
 
 
@@ -1160,7 +1160,7 @@ sub checkbox
 
   radio( $field, $value, %attrs )
 
-Draws a radio button with fied name $field and value $value.
+Draws a radio button with field name $field and value $value.
 
 C<$checked> will be taken from query param C<$field> or C<$checked>, in
 turn. Set to false if $checked is either false or 'f'.
@@ -1213,7 +1213,7 @@ sub radio
     my $suffix = "";
     my $separator = delete $params->{'separator'} || '';
     my $label_class = delete $params->{'label_class'};
-    my $id = $params->{id};
+    my $id = $params->{id} || $field .'_'. $value;
 
     my $suffix_label = $params->{'label'};
     if( $suffix_label ||= delete $params->{'suffix_label'} )
@@ -1389,6 +1389,16 @@ sub selector
     my $relkey = delete $params->{'relkey'};
     my $header = delete $params->{'header'};
     my $out = '';
+
+    my @previous;
+    if( my $q = $Para::Frame::REQ->q )
+    {
+	@previous = $q->param($name);
+
+	$current = $previous[0]
+	  if( $#previous == 0 ); # Just one value
+    }
+
 
     #### Label etc
     my $extra = "";
@@ -1970,6 +1980,7 @@ sub on_configure
     my $params =
     {
 	'selectorder'     => \&selectorder,
+	'selector'        => \&selector,
 	'slider'          => \&slider,
 	'jump'            => \&jump,
 	'submit'          => \&submit,
