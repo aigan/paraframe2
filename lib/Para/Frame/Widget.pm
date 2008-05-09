@@ -1203,7 +1203,7 @@ sub radio
 
     if( $#previous == 0 ) # Just one value
     {
-	$checked = $previous[0]?1:0;
+	$checked = ($previous[0] eq $value) ? 1 : 0;
     }
 
     defined $value or croak "value param for radio missing";
