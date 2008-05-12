@@ -223,15 +223,17 @@ sub new
     if( $data_in )
     {
 	my $limit = $l->{'limit'};
+	my $size = scalar(@$data_in);
 
 	# Removes other things like overload
 	if( ref $data_in eq 'ARRAY' )
 	{
 
-	    if( $limit )
+	    if( $limit and ($limit < $size) )
 	    {
-		$l->{'original_size'} = scalar(@$data_in);
-		$data = [ @{$data_in}[0..$limit] ];
+		$l->{'original_size'} = $size;
+		# TODO: Is this effective for large lists?
+		$data = [ @{$data_in}[0..($limit-1)] ];
 	    }
 	    else
 	    {
@@ -246,10 +248,10 @@ sub new
 		die "$type is not an array ref";
 	    }
 
-	    if( $limit )
+	    if( $limit and ($limit < $size) )
 	    {
-		$l->{'original_size'} = scalar(@$data_in);
-		$data = [ @{$data_in}[0..$limit] ];
+		$l->{'original_size'} = $size;
+		$data = [ @{$data_in}[0..($limit-1)] ];
 	    }
 	    else
 	    {
@@ -644,9 +646,10 @@ sub on_populate_all
 
     if( my $lim = $l->{'limit'} )
     {
-	if( $lim > scalar(@{$l->{'_DATA'}}) )
+	if( $lim < scalar(@{$l->{'_DATA'}}) )
 	{
-	    splice @{$l->{'_DATA'}}, 0, $lim;
+	    debug "LIMITING DATA SIZE TO $lim";
+	    CORE::splice @{$l->{'_DATA'}}, $lim;
 	}
     }
 
@@ -2030,9 +2033,13 @@ sub randomized
 {
     my( $l ) = @_;
 
+    my $apply_limit;
     unless( $l->{'populated'} > 1 )
     {
+	# Apply limit AFTER randomization
 	debug "    populating";
+	$apply_limit = $l->{'limit'};
+	$l->{'limit'} = 0;
 	$l->populate_all;
     }
 
@@ -2044,6 +2051,11 @@ sub randomized
 #	debug "    using materialized list";
 	undef $args->{'materializer'}; # Already done
 	$data = $l->{'_OBJ'};
+    }
+
+    if( $apply_limit )
+    {
+	$l->set_limit( $apply_limit );
     }
 
 #    debug "Returning randomized list";
