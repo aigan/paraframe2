@@ -2419,10 +2419,47 @@ sub merge
     my $l = CORE::shift(@_);
     my $args = $l->clone_props;
 
+    # There are a couple of different possibilities. The lists could
+    # have different materializers. But only materializers for
+    # non-empty lists matter.
+
     my @new;
+    my $materialize = 0;
 
     foreach my $l2 ( $l, @_ )
     {
+	# First iteration compares args with itself
+	unless( $materialize )
+	{
+	    # If there are different materializers, materialize the
+	    # list we got so far and materialize the rest as we go
+	    # along.
+	    # TODO: test with lists with different materializers
+
+	    if( my $mat2 = $l2->{'materializer'} )
+	    {
+		if( my $mat1 = $args->{'materializer'} )
+		{
+		    if( $mat1 ne $mat2 )
+		    {
+			$materialize = 1;
+			my $n = $l->new(\@new, $args);
+			my @objs = ();
+			for( my $i=0; $i<=$#new; $i++ )
+			{
+			    CORE::push @objs, &{$mat1}( $n, $i );
+			}
+			@new = @objs;
+			$args->{'materializer'} = undef;
+		    }
+		}
+		else
+		{
+		    $args->{'materializer'} = $mat2;
+		}
+	    }
+	}
+
 	if( UNIVERSAL::isa($l2, 'Para::Frame::List' ) )
 	{
 	    if( $l2->{'INDEX'} > -1 )
@@ -2430,15 +2467,30 @@ sub merge
 		$l2->reset;
 	    }
 
-	    my( $value, $error ) = $l2->get_next_raw;
-	    while(! $error )
+	    if( $materialize )
 	    {
-		CORE::push @new, $value;
+		my( $value, $error ) = $l2->get_next;
+		while(! $error )
+		{
+		    CORE::push @new, $value;
+		}
+		continue
+		{
+		    ( $value, $error ) = $l2->get_next;
+		};
 	    }
-	    continue
+	    else
 	    {
-		( $value, $error ) = $l2->get_next_raw;
-	    };
+		my( $value, $error ) = $l2->get_next_raw;
+		while(! $error )
+		{
+		    CORE::push @new, $value;
+		}
+		continue
+		{
+		    ( $value, $error ) = $l2->get_next_raw;
+		};
+	    }
 	}
 	elsif( UNIVERSAL::isa($l2, 'ARRAY' ) )
 	{
