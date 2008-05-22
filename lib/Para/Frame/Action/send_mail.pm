@@ -95,11 +95,17 @@ sub handler
     my $recipient = $q->param('recipient') || $q->param('to');
     if( $recipient )
     {
+	debug "Validating domain of recipient $recipient";
       CHECK:
 	{
 	    foreach my $domain (@{$site->email_domains})
 	    {
-		last if $recipient =~ /$domain$/;
+		debug "  checking $domain";
+		if( $recipient =~ m/${domain}$/ )
+		{
+		    debug "  matched";
+		    last CHECK;
+		}
 	    }
 	    throw('validation', "Sending email to $recipient is not allowed");
 	}
