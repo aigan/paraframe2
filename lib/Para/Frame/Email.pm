@@ -730,6 +730,8 @@ sub render_body_from_template
 	$url = "$home/email/".$p->{'template'};
     }
 
+    debug "Rendering body from template $url";
+
     my $page = Para::Frame::File->new({
 				       url => $url,
 				       site => $site,
@@ -805,7 +807,11 @@ sub render_header
 	debug "Warning: Reusing previous encoded body";
     }
 
-    unless( $p->{'body'} )
+    if( $p->{'body'} )
+    {
+	debug "Using given body";
+    }
+    else
     {
 	$e->render_body_from_template;
     }
