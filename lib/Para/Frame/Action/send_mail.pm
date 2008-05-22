@@ -53,6 +53,16 @@ values in the variable C<props>.
 The default email template C<$home/pf/email/default.tt> presents the
 variables C<body> and C<props>.
 
+The site config should specify valid sender email domains. If no
+recipient is specified, it defaults to the site email address. Example:
+
+  Para::Frame::Site->add({
+			  'code'        => 'rit',
+			  'email'       => 'support@rit.se',
+			  'email_domains'	=> ['rit.se'],
+			 });
+
+
 =cut
 
 use strict;
