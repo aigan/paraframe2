@@ -224,16 +224,16 @@ FCKConfig.FlashBrowserWindowHeight = FCKConfig.ScreenHeight * 0.7 ;	//70% ;
 FCKConfig.LinkUpload = true ;
 FCKConfig.LinkUploadURL = FCKConfig.BasePath + 'filemanager/upload/' + _QuickUploadLanguage + '/upload.' + _QuickUploadLanguage ;
 FCKConfig.LinkUploadAllowedExtensions	= "" ;			// empty for all
-FCKConfig.LinkUploadDeniedExtensions	= ".(html|htm|php|php2|php3|php4|php5|phtml|pwml|inc|asp|aspx|ascx|jsp|cfm|cfc|pl|bat|exe|com|dll|vbs|js|reg|cgi|htaccess|asis)\$" ;	// empty for no one
+FCKConfig.LinkUploadDeniedExtensions	= ".(html|htm|php|php2|php3|php4|php5|phtml|pwml|inc|asp|aspx|ascx|jsp|cfm|cfc|pl|bat|exe|com|dll|vbs|js|reg|cgi|htaccess|asis)$" ;	// empty for no one
 
 FCKConfig.ImageUpload = true ;
 FCKConfig.ImageUploadURL = FCKConfig.BasePath + 'filemanager/upload/' + _QuickUploadLanguage + '/upload.' + _QuickUploadLanguage + '?Type=Image' ;
-FCKConfig.ImageUploadAllowedExtensions	= ".(jpg|gif|jpeg|png|bmp)\$" ;		// empty for all
+FCKConfig.ImageUploadAllowedExtensions	= ".(jpg|gif|jpeg|png|bmp)$" ;		// empty for all
 FCKConfig.ImageUploadDeniedExtensions	= "" ;							// empty for no one
 
 FCKConfig.FlashUpload = true ;
 FCKConfig.FlashUploadURL = FCKConfig.BasePath + 'filemanager/upload/' + _QuickUploadLanguage + '/upload.' + _QuickUploadLanguage + '?Type=Flash' ;
-FCKConfig.FlashUploadAllowedExtensions	= ".(swf|fla)\$" ;		// empty for all
+FCKConfig.FlashUploadAllowedExtensions	= ".(swf|fla)$" ;		// empty for all
 FCKConfig.FlashUploadDeniedExtensions	= "" ;					// empty for no one
 
 FCKConfig.SmileyPath	= FCKConfig.BasePath + 'images/smiley/msn/' ;
