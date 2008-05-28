@@ -4,3 +4,6 @@ AddType application/x-javascript .js
 AddType text/css .css
 
 AddType text/xml .xml
+
+# Making sure not to render js files
+PerlSetVar site ignore
