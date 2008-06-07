@@ -38,14 +38,15 @@ sub handler
     my $tpage = Para::Frame::File->new({url => $pagename,
 					site => $req->site,
 				       });
+    my $tpaget = $tpage->template;
 
-    unless( $u->has_page_update_access( $tpage ) )
+    unless( $u->has_page_update_access( $tpaget ) )
     {
-	my $uname = $u->name;
+	my $uname = $u->desig;
 	throw('validation', "User $uname has no right to update $pagename");
     }
 
-    $tpage->set_content_as_text( \$content );
+    $tpaget->set_content_as_text( \$content );
 
     return "Stored $pagename";
 }
