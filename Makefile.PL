@@ -17,7 +17,7 @@ WriteMakefile(
 		  'Carp'                       => 1.04,
 		  'CGI'                        => 3.10,
 		  'CGI::Cookie'                => 1.25,
-		  'Crypt::OpenPGP'             => 1.03,
+#		  'Crypt::OpenPGP'             => 1.03,
 	          'Data::Dump'                 => 1.08,
 	          'Data::Validate::Domain'     => 0.08,
 		  'Date::Manip'                => 5.44,
