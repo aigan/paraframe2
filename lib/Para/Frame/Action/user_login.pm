@@ -16,6 +16,7 @@ package Para::Frame::Action::user_login;
 use strict;
 
 use Para::Frame::Utils qw( throw passwd_crypt debug datadump );
+use Para::Frame::L10N qw( loc );
 
 
 =head1 NAME
@@ -51,7 +52,7 @@ sub handler
 
     my $user_class = $Para::Frame::CFG->{'user_class'};
     my $u = $user_class->get( $username );
-    $u or throw('validation', "Användaren $username existerar inte");
+    $u or throw('validation', loc('The user [_1] doesn\'t exist', $username));
 
     debug "User is $u";
 
