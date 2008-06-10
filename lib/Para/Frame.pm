@@ -2195,7 +2195,7 @@ sub configure
     my $ttcbase = $CFG->{'dir_var'} || ($CFG->{'appback'}[0]?$CFG->{'appback'}[0] .'/var':
       $CFG->{'approot'} .'/var');
     $CFG->{'ttcdir'} ||= $ttcbase . "/ttc";
-    debug "ttcdir set to ".$CFG->{'ttcdir'};
+    debug 2, "ttcdir set to ".$CFG->{'ttcdir'};
 
     my $tt_plugins = $CFG->{'tt_plugins'} || [];
     $tt_plugins = [$tt_plugins] unless ref $tt_plugins;
