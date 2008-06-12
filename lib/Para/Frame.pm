@@ -162,6 +162,7 @@ BEGIN
 			  on_error_detect
 			  on_fork
 			  done
+                          before_user_login
 			  user_login
 			  before_user_logout
 			  after_user_logout
@@ -1641,6 +1642,10 @@ Runs in the child just after the fork.
 =head3 done
 
 Runs just before the request is done.
+
+=head3 before_user_login
+
+Runs before user logged in, in L<Para::Frame::Action::user_login>
 
 =head3 user_login
 
