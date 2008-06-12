@@ -20,7 +20,7 @@ Para::Frame::User - Represents the user behind the request
 =cut
 
 use strict;
-use Carp qw( confess );
+use Carp qw( confess cluck );
 
 BEGIN
 {
@@ -99,22 +99,39 @@ templates.
 
 =cut
 
+
 #######################################################################
 
 =head2 identify_user
+
+  $class->identify_user( $username )
+
+  $class->identify_user( $username, \%args )
+
+C<%args> may include:
+
+  password_encrypted
+  password
+
+For cases when where may be more than one user with the same username
+
 
 =cut
 
 sub identify_user
 {
-    my( $this, $username ) = @_;
+    my( $this, $username, $args ) = @_;
     my $class = ref($this) || $this;
 
     my $req = $Para::Frame::REQ;
     my $q = $req->q;
     $username ||= $q->cookie('username') || 'guest';
+
+    $args ||= {};
+    $args->{'password_encrypted'} ||= $q->cookie('password') || "";
+
     debug(3,"identifying $username");
-    my $u = $class->get( $username );
+    my $u = $class->get( $username, $args );
     unless( $u )
     {
 	if( $username eq 'guest' )
@@ -122,13 +139,29 @@ sub identify_user
 	    die "Couldn't find user guest";
 	}
 
-	$req->result->message(loc 'The user [_1] doesn\'t exist', $username);
+	my $errmsg = $this->user_not_found_msg( $username, $args );
+	$req->result->message($errmsg);
+
+	cluck "USER $username NOT FOUND";
 	$class->clear_cookies;
 	$u = $class->identify_user( 'guest' );
     }
 
     $class->change_current_user( $u );
     return $u;
+}
+
+
+#######################################################################
+
+=head2 user_not_found_msg
+
+=cut
+
+sub user_not_found_msg
+{
+    my( $this, $username, $args ) = @_;
+    return loc('The user [_1] doesn\'t exist', $username);
 }
 
 
@@ -150,7 +183,7 @@ sub authenticate_user
     $password_encrypted ||= $q->cookie('password') || "";
 
     my $username = $u->username;
-    confess "No username fot $u->{id} ($u)" unless $username;
+    confess "No username for $u->{id} ($u)" unless $username;
     debug(3,"authenticating $username");
     debug(3,"  with password $password_encrypted");
 

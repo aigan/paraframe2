@@ -101,6 +101,11 @@ our %Lexicon =
    'The user [_1] doesn\'t exist' =>
    'Användaren [_1] existerar inte',
 
+   'Name is missing' =>
+   'Namn saknas',
+
+   'Password is missing' =>
+   'Ange lösenord också',
   );
 
 1;

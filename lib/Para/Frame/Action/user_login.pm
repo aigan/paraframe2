@@ -30,19 +30,25 @@ sub handler
     my( $req ) = @_;
 
     my $q = $req->q;
+    my $user_class = $Para::Frame::CFG->{'user_class'};
+
+    $req->run_hook('before_user_login', $user_class);
 
     # Validation
     #
     my $username = join('',$q->param('username'))
-	or throw('incomplete', "Namn saknas\n");
+	or throw('incomplete', loc("Name is missing"));
     my $password = join('',$q->param('password')) || "";
     my $remember = $q->param('remember_login') || 0;
 
-    $password or throw('incomplete', "Ange lösenord också");
-
+    $password or throw('incomplete', loc("Password is missing"));
 
     # Do not repeat failed login in backtrack
     $req->{'no_bookmark_on_failed_login'}=1;
+
+    # Remember login info in this req for later handling
+    $req->{'login_username'} = $username;
+    $req->{'login_password'} = $password;
 
     my @extra = ();
     if( $remember )
@@ -50,8 +56,11 @@ sub handler
 	push @extra, -expires => '+10y';
     }
 
-    my $user_class = $Para::Frame::CFG->{'user_class'};
-    my $u = $user_class->get( $username );
+    my $u = $user_class->get( $username,
+			      {
+			       password => $password,
+			      }
+			    );
     $u or throw('validation', loc('The user [_1] doesn\'t exist', $username));
 
     debug "User is $u";
