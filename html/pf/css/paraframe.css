@@ -29,11 +29,11 @@ form
 
 .debug
 {
-  background: $main_background;
+  background: [% main_background %];
   padding: 1em;
   border-style: dotted;
   border-width: 0.0em 0.2em 0.2em 0.2em;
-  border-color: $border;
+  border-color: [% border %];
 }
 
 tr.even
@@ -51,18 +51,17 @@ tr.odd
 
 .paraframe_menu_top
 {
-  background: $body_background;
+  background: [% body_background %];
 }
 
 .paraframe_menu_bottom
 {
-  background: $main_background;
+  background: [% main_background %];
 }
 
 .paraframe_menu_bottom_pf
 {
-  background: $body_background;
-/*  border: 0.2em solid $border; */
+  background: [% body_background %];
 }
 
 .paraframe_menu_top p
@@ -113,8 +112,8 @@ tr.odd
 
 .paraframe_menu_admin input[type="button"]
 {
-    border-color: $border;
-    background: $button;
+    border-color: [% border %];
+    background: [% button %];
     border-width: 0.2em;
     padding: 2px 6px 2px 6px;
 }
