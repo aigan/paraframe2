@@ -508,7 +508,6 @@ sub precompile
 	$tmpl = $dest->template;
     }
 
-    my $destfile = $dest->sys_path;
     my $dir = $dest->dir->create($args); # With umask
 
     my $srcfile = $tmpl->sys_path;
@@ -547,9 +546,13 @@ sub precompile
     }
 
     $rend->set_tt_params;
+#    my $destfile = $dest->sys_path;
 #    debug "BURNING TO $destfile";
-    my $res = $rend->burn( $fh, $destfile );
+    my $out = "";
+#    my $res = $rend->burn( $fh, $destfile );
+    my $res = $rend->burn( $fh, \$out );
     $fh->close;
+    $dest->set_content_as_text(\$out);
 
     my $error = $rend->burner->error unless $res;
 
