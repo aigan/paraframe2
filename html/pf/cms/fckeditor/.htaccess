@@ -7,3 +7,5 @@ AddType text/xml .xml
 
 # Making sure not to render js files
 PerlSetVar site ignore
+
+#EOF
