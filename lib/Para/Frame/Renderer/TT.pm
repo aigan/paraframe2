@@ -34,6 +34,20 @@ use Para::Frame::Utils qw( throw debug create_dir chmod_file idn_encode idn_deco
 use Scalar::Util qw(weaken);
 
 
+# Used in set_ctype. Defaults to given ctype and charset UTF-8
+our %TYPEMAP =
+  (
+   'htaccess' =>
+   {
+    charset => 'Latin1',
+   },
+   'tt' =>
+   {
+    type => 'text/html',
+   },
+  );
+
+
 #######################################################################
 
 =head1 Constructors
@@ -710,12 +724,28 @@ sub set_ctype
 {
     my( $rend, $ctype ) = @_;
 
-    # TODO: fixme
     my $tmpl = $rend->template;
-    if( $tmpl and $tmpl->suffix eq 'tt' )
+    if( my $ext = $tmpl->suffix )
     {
-	$ctype->set_type("text/html");
+	my( $type, $charset );
+	if( my $def = $TYPEMAP{ $ext } )
+	{
+	    $type = $def->{'type'};
+	    $charset = $def->{'charset'};
+	}
+
+	$charset ||= 'UTF-8';
+
+	# Will keep previous value if non given here
+	if( $type )
+	{
+	    $ctype->set_type($type);
+	}
+
+	$ctype->set_charset($charset);
     }
+
+    return $ctype;
 }
 
 #######################################################################
