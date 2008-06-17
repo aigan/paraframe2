@@ -50,17 +50,15 @@ C<UTF-8>.
 sub new
 {
     my( $class, $req ) = @_;
-    ref $req or die "req missing";
 
     my $ctype =  bless
     {
      changed => 0,
     }, $class;
-    weaken( $ctype->{'req'} );
 
-    if( my $ctype_string = $req->original_content_type_string )
+    if( $req and $req->original_content_type_string )
     {
-	$ctype->set( $ctype_string );
+	$ctype->set( $req->original_content_type_string );
     }
     else
     {
@@ -83,7 +81,7 @@ parameters.
 The only supported extra parameter is C<charset>, that is set using
 L</set_charset>.
 
-The actual header isn't written until after the response page has been
+The actual header is not written until after the response page has been
 generated.
 
 Previous parameters will be removed.
