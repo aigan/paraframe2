@@ -240,6 +240,10 @@ sub new
     # $sys_norm is undef
 
     debug "Constructing $sys_name" if $DEBUG;
+    if( $sys_name =~ m(//) )
+    {
+	cluck "Sysname $sys_name has double slashes";
+    }
 
     if( -r $sys_name )
     {
