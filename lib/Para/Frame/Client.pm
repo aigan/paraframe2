@@ -1069,6 +1069,10 @@ sub uri2file
 	}
     }
 
+    # TODO: fixme
+    # Removes extra slashes
+    $filename =~ s(//)(/)g;
+
     return( $filename );
 }
 
