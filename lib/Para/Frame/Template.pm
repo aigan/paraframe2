@@ -546,13 +546,26 @@ sub precompile
     }
 
     $rend->set_tt_params;
+    my $ctype = Para::Frame::Request::Ctype->new();
+    $ctype->set_type('text/plain');
+    $rend->set_ctype($ctype);
+
+
 #    my $destfile = $dest->sys_path;
 #    debug "BURNING TO $destfile";
     my $out = "";
 #    my $res = $rend->burn( $fh, $destfile );
     my $res = $rend->burn( $fh, \$out );
     $fh->close;
-    $dest->set_content_as_text(\$out);
+
+    if( $ctype->charset eq 'UTF-8' )
+    {
+	$dest->set_content_as_text(\$out);
+    }
+    else
+    {
+	$dest->set_content(\$out);
+    }
 
     my $error = $rend->burner->error unless $res;
 
