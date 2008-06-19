@@ -5,10 +5,9 @@ Request [% req.id %] @ port [% cfg.port %]</div>
 <a href="[% forward_url %]"><img alt="Reload" src="$home/pf/images/reload-26.png"/></a>
 
 [%+ go("Index", "$page.dir.url_path/admin-index.tt") %]
-[%+ go("Debug", "$home/pf/config/debuglist.tt", 'mark') %]
-[%+ go("Server", "$home/pf/config/server.tt", 'mark') %]
 [%+ go("Configure", "$home/pf/config/", 'mark') %]
-[%+ go("Show source", "$home/pf/cms/source.tt", 'mark') %]
+[%+ go("Source", "$home/pf/cms/source.tt", 'mark') %]
+[%+ go("Edit", "$home/pf/cms/edit_html.tt", 'mark') %]
 
 [% IF req.session.admin_mode %]
    [%+ go("Turn Admin off", me, 'session_vars_update', session_vars_update='admin_mode', admin_mode=0) %]
