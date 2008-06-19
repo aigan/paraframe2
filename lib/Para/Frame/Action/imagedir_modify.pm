@@ -1,5 +1,5 @@
 #  $Id$  -*-perl-*-
-package Para::Action::imagedir_modify;
+package Para::Frame::Action::imagedir_modify;
 
 use strict;
 
