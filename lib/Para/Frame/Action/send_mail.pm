@@ -115,6 +115,16 @@ sub handler
 	$recipient = $sitemail;
     }
 
+    my $captcha = $site->captcha;
+    if( $captcha->active )
+    {
+	unless( $captcha->is_valid )
+	{
+	    throw 'validation', $captcha->error_as_text;
+	}
+    }
+
+
     my $name = $q->param('name') || 'Anonymous';
     my $email =  $q->param('email');
     my $from = sprintf('"%s" <%s>', $name, $email);

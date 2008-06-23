@@ -48,6 +48,7 @@ use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug fqdn datadump );
 use Para::Frame::Dir;
 use Para::Frame::CSS;
+use Para::Frame::Captcha;
 
 our %DATA; # hostname -> siteobj
 our %ALIAS; # secondary names
@@ -1261,6 +1262,18 @@ sub css
 {
     return $_[0]->{'css_obj'} ||=
       Para::Frame::CSS->new($_[0]->{'css'});
+}
+
+
+#######################################################
+
+=head2 captcha
+
+=cut
+
+sub captcha
+{
+    return Para::Frame::Captcha->new( $_[0] );
 }
 
 

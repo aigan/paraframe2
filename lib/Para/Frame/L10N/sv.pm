@@ -106,6 +106,12 @@ our %Lexicon =
 
    'Password is missing' =>
    'Ange lösenord också',
+
+   'recaptcha-no-response' =>
+   'Fyll i de två orden som visas på bilden',
+
+   'recaptcha-incorrect-captcha-sol' =>
+   'De ord du fyllde i stämmer inte med bilden. Försök igen',
   );
 
 1;
