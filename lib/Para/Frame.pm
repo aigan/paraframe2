@@ -46,15 +46,16 @@ BEGIN
     print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
-use Para::Frame::Reload;
-use Para::Frame::Watchdog;
 use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir );
+use Para::Frame::Unicode;
+use Para::Frame::Watchdog;
 use Para::Frame::Request;
 use Para::Frame::Widget;
 use Para::Frame::Burner;
 use Para::Frame::Time qw( now );
 use Para::Frame::Email::Address;
 use Para::Frame::L10N;
+use Para::Frame::Reload;
 
 use constant TIMEOUT_LONG  =>   5;
 use constant TIMEOUT_SHORT =>   0.000;

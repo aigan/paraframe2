@@ -55,9 +55,7 @@ BEGIN
 }
 
 use base qw( Exporter );
-BEGIN
-{
-    @Para::Frame::Utils::EXPORT_OK
+our @EXPORT_OK
 
       = qw( in trim make_passwd random throw catch run_error_hooks
             create_file create_dir chmod_tree chmod_file chmod_dir
@@ -68,10 +66,8 @@ BEGIN
             extract_query_params fqdn retrieve_from_url get_from_fork
             datadump client_send validate_utf8 );
 
-}
-
 use Para::Frame::Reload;
-use Para::Frame::Unicode;
+#use Para::Frame::Unicode; # Loaded by Para::Frame
 
 our %TEST; ### DEBUG
 our $FQDN; # See fqdn()

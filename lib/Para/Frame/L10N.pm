@@ -39,6 +39,9 @@ BEGIN
     print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
+use base qw( Exporter );
+our @EXPORT_OK = qw( loc locescape );
+
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug datadump );
 
@@ -50,13 +53,6 @@ use base qw(Locale::Maketext);
 #    sv => [blabla => "L10N/sv.pm"],
 #};
 
-
-use base qw( Exporter );
-BEGIN
-{
-    @Para::Frame::L10N::EXPORT_OK = qw( loc locescape );
-
-}
 
 
 #######################################################################
