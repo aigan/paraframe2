@@ -64,7 +64,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw debug datadump catch chmod_file create_dir deunicode );
+use Para::Frame::Utils qw( throw debug datadump catch chmod_file create_dir deunicode validate_utf8 );
 use Para::Frame::List;
 use Para::Frame::Dir;
 use Para::Frame::Template;
@@ -2128,6 +2128,8 @@ sub mimetype_base
 Updates the file content and saves it in the file, in UTF8, starting
 with a UTF8 BOM.
 
+TODO: Convert CRLF to LF?
+
 C<\$data> shoule be a reference to a scalar containing the new content
 of the file.
 
@@ -2159,9 +2161,20 @@ sub set_content_as_text
     open FH, ">:bytes", $syspath
       or die "Could not open $syspath for writing: $!";
 
-    print FH $bom;
-    binmode( FH, ':utf8' );
+#    debug validate_utf8( $dataref );
+#    for( my $i=0; $i<bytes::length($$dataref); $i++ )
+#    {
+#	my $char = bytes::substr $$dataref, $i, 1;
+#	warn sprintf "%2s %3d\n", $char, ord($char);
+#    }
 
+    unless( bytes::substr( $$dataref, 0, 3) eq $bom )
+    {
+	debug "  adding a BOM";
+	print FH $bom;
+    }
+
+    binmode( FH, ':utf8' );
     print FH $$dataref;
     close FH;
 
