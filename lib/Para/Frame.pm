@@ -408,6 +408,7 @@ sub main_loop
 
 			foreach my $s (values %SESSION)
 			{
+			    my $sid = $s->id;
 			    foreach my $key ( keys %{$s->{'page_result'}} )
 			    {
 				my $result_time =
@@ -415,11 +416,11 @@ sub main_loop
 				if( time - $result_time > 120 )
 				{
 				    debug "Ignoring stale page result ".
-				      "from $result_time";
+				      "from $sid";
 				    next;
 				}
 
-				debug "PAGE RESULT WAITING";
+				debug "PAGE RESULT WAITING for $sid";
 				last TERMINATE_CHECK;
 			    }
 			}
