@@ -22,7 +22,7 @@ Para::Frame::Watchdog - Watches over the process
 use strict;
 use IO::File;
 use IO::Select;
-use POSIX (); # no export
+use POSIX qw(WNOHANG);
 use Proc::ProcessTable;
 use Time::HiRes;
 use Carp;
@@ -636,7 +636,7 @@ sub REAPER
     # we will leave the unreaped child as a zombie. And the next time
     # two children die we get another zombie. And so on.
 
-    while (($child_pid = waitpid(-1, POSIX::WNOHANG)) > 0)
+    while (($child_pid = waitpid(-1, WNOHANG)) > 0)
     {
 	debug "Child $child_pid exited with status $?";
 
