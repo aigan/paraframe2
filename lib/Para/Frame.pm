@@ -1386,6 +1386,30 @@ sub add_background_jobs_conditional
     # But nothing that requires a $req
     Para::Frame->run_hook(undef, 'busy_background_job', $delta);
 
+    # Expire old page results and sessions
+    #
+    foreach my $s (values %SESSION)
+    {
+	my $sid = $s->id;
+	if( time - $s->latest->epoch > 2*60*60 )
+	{
+	    debug "Expired old session $sid";
+	    delete $SESSION{$sid};
+	    next;
+	}
+
+	foreach my $key ( keys %{$s->{'page_result'}} )
+	{
+	    my $result_time =
+	      $s->{'page_result'}{$key}{'time'};
+	    if( time - $result_time > 240 )
+	    {
+		debug "Expired page result from $sid";
+		delete $s->{'page_result'}{$key};
+	    }
+	}
+    }
+
 
     if( not $CFG->{'do_bgjob'} )
     {
