@@ -26,7 +26,10 @@ Para::Frame::Reload - Reloads updated modules in the app
 Updated actions are always reloaded if touched.
 
 For all other modules; Insert the use row in the module, and it will
-be checkd for updates at the beginning of each request.
+be checkd for updates at the beginning of each request. The use row
+must be loaded AFTER the definition of any C<import()> method. If
+L<Exporter> is used, place C<use Para::Frame::Reload> after the C<use
+base qw( Exporter) >.
 
 =head2 call_import()
 
@@ -46,7 +49,7 @@ If you can call it without $pkgname, it will be set to the caller
 package.
 
 
-The resone for this import() handling is that the even if the module
+The resone for this import() handling is that even if the module
 is reloaded, the other modules that have imported functions still has
 a reference to the old version. (If you used Exporter)
 
@@ -182,7 +185,7 @@ sub register_module
                        die $@;
                     }
 
-		    warn "      Returned $res from coderef\n" if $Para::Frame::Reload::DEBUG;
+		    warn "      Returned $res from $coderef $class @_\n" if $Para::Frame::Reload::DEBUG;
 		    return $res;
 		}
 ';
