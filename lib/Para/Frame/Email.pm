@@ -30,7 +30,7 @@ use Net::DNS;
 use Net::SMTP;
 use Socket;
 use MIME::Words;
-use Crypt::OpenPGP;
+#use Crypt::OpenPGP;
 
 BEGIN
 {
@@ -1033,6 +1033,9 @@ sub pgpsign
      Compat => 'PGP5',
      ConfigFile => $cfile,
     };
+
+    require Crypt::OpenPGP;
+    Crypt::OpenPGP->import();
 
     my $pgp = Crypt::OpenPGP->new( %$conf );
     my $cert = get_seckey( $pgp ) or die $pgp->errstr;
