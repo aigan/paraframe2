@@ -22,7 +22,7 @@ Para::Frame::Watchdog - Watches over the process
 use strict;
 use IO::File;
 use IO::Select;
-use POSIX;
+use POSIX (); # no export
 use Proc::ProcessTable;
 use Time::HiRes;
 use Carp;
