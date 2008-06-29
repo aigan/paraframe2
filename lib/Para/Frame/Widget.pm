@@ -39,7 +39,7 @@ BEGIN
 use base qw( Exporter );
 our @EXPORT_OK
 
-      = qw( slider jump submit go go_js forward forward_url preserve_data alfanum_bar rowlist list2block selectorder param_includes hidden input textarea filefield css_header confirm_simple inflect radio calendar input_image selector label_from_params checkbox );
+      = qw( slider jump submit go go_js forward forward_url preserve_data alfanum_bar rowlist list2block selectorder param_includes hidden input textarea htmlarea filefield css_header confirm_simple inflect radio calendar input_image selector label_from_params checkbox );
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( trim throw debug uri store_params datadump );
@@ -988,6 +988,79 @@ sub textarea
 		   $extra,
 		   CGI->escapeHTML( $value ),
 		   );
+}
+
+
+#######################################################################
+
+=head2 htmlarea
+
+  htmlarea( $field, $value, %attrs )
+
+Draws a htmlarea with fied name $field and value $value.
+
+C<$value> will be taken from query param C<$field> or C<$value>, in
+turn.
+
+Attributes:
+
+  cols: width (default is 60)
+
+  rows: hight (default is 20)
+
+  label: draws a label before the field with the given text
+
+  tdlabel: Sets C<label> and separates it with a C<td> tag.
+
+  label_class: Adds a class to the C<label> tag
+
+  separator: adds the unescaped string between label and input tag
+
+  id: used for label. Defaults to C<$field>
+
+All other attributes are directly added to the input tag, with the
+value html escaped.
+
+The default wrap attribute is 'virtual'.
+
+=cut
+
+sub htmlarea
+{
+    my( $key, $value, $params ) = @_;
+
+    my $rows = $params->{'rows'} || 20;
+    my $cols = $params->{'cols'} || $params->{'size'} || 75;
+    my @previous;
+
+    if( my $q = $Para::Frame::REQ->q )
+    {
+	@previous = $q->param($key);
+    }
+
+    if( $#previous == 0 ) # Just one value
+    {
+	$value = $previous[0];
+    }
+    $value ||= '';
+
+    $params->{id} ||= $key;
+    my $prefix = label_from_params($params);
+    $params->{'wrap'} ||= "virtual";
+    my $extra = tag_extra_from_params($params);
+
+    $value =~ s/\"/\\\"/;
+
+    my $w = $cols * 10;
+    $w = '100%';
+    my $h = ($rows + 4) * 20;
+
+    my $home = $Para::Frame::REQ->site->home_url_path;
+
+
+    return $prefix .
+      '<input type="hidden" style="display:none" value="'. $value .'" '. $extra .' />'.
+	'<iframe id="'. $params->{'id'} .'___Frame" src="'. $home .'/pf/cms/fckeditor/editor/fckeditor.html?InstanceName='. $params->{'id'} .'&amp;Toolbar=ParaFrame" width="'. $w .'" height="'. $h .'" frameborder="0" scrolling="no"></iframe>';
 }
 
 
