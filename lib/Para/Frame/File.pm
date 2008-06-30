@@ -245,6 +245,14 @@ sub new
 	cluck "Sysname $sys_name has double slashes";
     }
 
+    # May happen if a rewrite is done to full URL without the R flag
+    # RewriteRule ^(.*)$ http://test.avisita.com$1 [L,R]
+    #
+    if( $sys_name =~ /^https?:/ )
+    {
+	confess "sys_name $sys_name is not a system path";
+    }
+
     if( -r $sys_name )
     {
 	$exist = 1;
