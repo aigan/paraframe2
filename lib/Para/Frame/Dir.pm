@@ -477,6 +477,8 @@ sub get
 
     $args ||= {};
 
+#    debug "Getting file $file_in from ".$dir->sysdesig;
+
     # Validate $file
     unless( $file_in =~ /^\// )
     {
@@ -490,6 +492,7 @@ sub get
 
     if( my $site = $dir->site )
     {
+#	debug "  on site ".$site->sysdesig;
 	my $url_str = $dir->url_path.$file_in;
 	$args->{'site'} = $site;
 	$args->{'url'} = $url_str;
