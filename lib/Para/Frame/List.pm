@@ -71,6 +71,7 @@ use base qw( Template::Iterator );
 # The risky way, for lists that doesn't contain false values:
 
   my $list = Para::Frame::List->new( \@biglist );
+  $list->reset; # if used before...
   while( my $value = $list->get_next_nos )
   {
     # ... my code
