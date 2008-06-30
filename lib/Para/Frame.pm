@@ -24,7 +24,7 @@ use strict;
 use IO::Socket 1.18;
 use IO::Select;
 use Socket;
-use POSIX qw( locale_h );
+use POSIX qw( locale_h WNOHANG BUFSIZ );
 use Text::Autoformat; #exports autoformat()
 use Time::HiRes qw( time usleep );
 use Carp qw( cluck confess carp croak );
