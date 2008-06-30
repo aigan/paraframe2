@@ -576,7 +576,8 @@ sub create
     $dir->parent->create($args);
 
 #    debug "Creating dir ".$dir->desig;
-    mkdir $dir->sys_path, 0700 or die $!;
+    mkdir $dir->sys_path, 0700 or
+      die sprintf "Failed to make dir %s: %s", $dir->sys_path, $!;
     $dir->{'exist'} = 1;
     $dir->{initiated} = 0;
     $dir->chmod(undef,$args);
