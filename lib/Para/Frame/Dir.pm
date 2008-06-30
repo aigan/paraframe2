@@ -20,7 +20,7 @@ Para::Frame::Dir - Represents a directory in the site
 =cut
 
 use strict;
-use Carp qw( croak confess cluck );
+use Carp qw( croak confess cluck longmess );
 use IO::Dir;
 use File::stat; # exports stat
 use File::Remove;
@@ -577,7 +577,7 @@ sub create
 
 #    debug "Creating dir ".$dir->desig;
     mkdir $dir->sys_path, 0700 or
-      die sprintf "Failed to make dir %s: %s", $dir->sys_path, $!;
+      die sprintf "Failed to make dir %s: %s\n%s", $dir->sys_path, $!, longmess();
     $dir->{'exist'} = 1;
     $dir->{initiated} = 0;
     $dir->chmod(undef,$args);
