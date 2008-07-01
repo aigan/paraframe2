@@ -40,12 +40,12 @@ BEGIN
 }
 
 use base qw( Exporter );
+use base qw(Locale::Maketext);
+
 our @EXPORT_OK = qw( loc locescape );
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug datadump );
-
-use base qw(Locale::Maketext);
 
 #use Locale::Maketext::Lexicon
 #{
