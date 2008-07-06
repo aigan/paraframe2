@@ -1609,10 +1609,19 @@ sub handle_request
 		}
 	    }
 
+	    if( $TERMINATE )
+	    {
+		debug "TERMINATE is active...";
+	    }
+
+
 	    # TODO: Do not use loadpage for non-html mimetypes
 	    #       ... Client side will only use it for text/html
 
 	    # Do not send loadpage if we didn't got a session object
+
+	    # Do not send loadpage if $TERMINATE active
+
 	    my $loadpage = $req->dirconfig->{'loadpage'} ||
 	      $req->site->loadpage;
 	    if( $session->count )
