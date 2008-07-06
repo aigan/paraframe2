@@ -13,7 +13,7 @@
 [% tpaget = tpage.template %]
 
 <input type="hidden" style="display:none" id="content" name="content" value="" />
-<script>document.getElementById('content').value="[% tpaget.content_as_text | replace('"', '\"') | replace("\r?\n", '\r\n') %]"</script>
+<script>document.getElementById('content').value='[% tpaget.content_as_text | replace('/','\/') | replace("'", "\\'") | replace("\r?\n", '\r\n') %]'</script>
 
 <iframe id="content___Frame" src="[% home %]/pf/cms/fckeditor/editor/fckeditor.html?InstanceName=content&amp;Toolbar=ParaFrame" width="100%" height="500" frameborder="0" scrolling="no"></iframe>
 
