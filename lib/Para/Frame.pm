@@ -1609,11 +1609,6 @@ sub handle_request
 		}
 	    }
 
-	    if( $TERMINATE )
-	    {
-		debug "TERMINATE is active...";
-	    }
-
 
 	    # TODO: Do not use loadpage for non-html mimetypes
 	    #       ... Client side will only use it for text/html
