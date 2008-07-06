@@ -8,11 +8,196 @@
 [% CALL q.param('page',page_path) %]
 
 [% tpage = file(url=page_path,site=page.site) %]
-
-<h1>File text edit of [% jump(tpage.path_slash, tpage.url_path_slash) %]</h1>
 [% tpaget = tpage.template %]
 
-<textarea id="content" name="content" style="width:100%; height: 500px">[% tpaget.content_as_text | html %]</textarea>
-<p>[% step %][% go('Switch to HTML mode (discarding changes)', 'edit_html.tt') %][% go('Show source', 'source.tt') %]
+<h1>Edit of <code>[% jump(tpaget.url_path, tpage.url_path_slash) %]</code></h1>
 
-<p>This is <code>[% tpaget.url_path %]</code></p>
+<div id="editor">
+<div id="toolbar">
+<input value="Full" type="image" onclick="fitwindow(); return false;" src="[% home %]/pf/images/fullscreen.gif">
+[% step %][% go('Switch to HTML mode (discarding changes)', 'edit_html.tt') %][% go('Show source', 'source.tt') %]
+</div>
+<textarea id="content" name="content" style="width:100%; height:100px">[% tpaget.content_as_text | html %]</textarea>
+</div>
+
+<script>
+
+    // Code based on http://www.fckeditor.net/
+
+var PFTools = new Object() ;
+PFTools.SaveStyles = function( element )
+{
+    var data = PFTools.ProtectFormStyles( element ) ;
+
+    var oSavedStyles = new Object() ;
+
+    if ( element.className.length > 0 )
+    {
+	oSavedStyles.Class = element.className ;
+	element.className = '' ;
+    }
+
+    var sInlineStyle = element.getAttribute( 'style' ) ;
+
+    if ( sInlineStyle && sInlineStyle.length > 0 )
+    {
+	oSavedStyles.Inline = sInlineStyle ;
+	element.setAttribute( 'style', '', 0 ) ;	// 0 : Case Insensitive
+    }
+
+    PFTools.RestoreFormStyles( element, data ) ;
+    return oSavedStyles ;
+}
+
+PFTools.ProtectFormStyles = function( formNode )
+{
+    if ( !formNode || formNode.nodeType != 1 || formNode.tagName.toLowerCase() != 'form' )
+	return [] ;
+    var hijackRecord = [] ;
+    var hijackNames = [ 'style', 'className' ] ;
+    for ( var i = 0 ; i < hijackNames.length ; i++ )
+    {
+	var name = hijackNames[i] ;
+	if ( formNode.elements.namedItem( name ) )
+	{
+	    var hijackNode = formNode.elements.namedItem( name ) ;
+	    hijackRecord.push( [ hijackNode, hijackNode.nextSibling ] ) ;
+	    formNode.removeChild( hijackNode ) ;
+	}
+    }
+    return hijackRecord ;
+}
+
+PFTools.RestoreFormStyles = function( formNode, hijackRecord )
+{
+    if ( !formNode || formNode.nodeType != 1 || formNode.tagName.toLowerCase() != 'form' )
+	return ;
+    if ( hijackRecord.length > 0 )
+    {
+	for ( var i = hijackRecord.length - 1 ; i >= 0 ; i-- )
+	{
+	    var node = hijackRecord[i][0] ;
+	    var sibling = hijackRecord[i][1] ;
+	    if ( sibling )
+		formNode.insertBefore( node, sibling ) ;
+	    else
+		formNode.appendChild( node ) ;
+	}
+    }
+}
+
+PFTools.RestoreStyles = function( element, savedStyles )
+{
+    var data = PFTools.ProtectFormStyles( element ) ;
+    element.className = savedStyles.Class || '' ;
+
+    if ( savedStyles.Inline )
+	element.setAttribute( 'style', savedStyles.Inline, 0 ) ;	// 0 : Case Insensitive
+    else
+	element.removeAttribute( 'style', 0 ) ;
+    PFTools.RestoreFormStyles( element, data ) ;
+}
+
+
+function fitwindow()
+{
+  var win = window;
+  var ediv = document.getElementById('editor');
+  var estyle = ediv.style ;
+  var ebody = win.document.body;
+  var ebodystyle = ebody.style ;
+
+  if( !this.IsMaximized )
+  {
+  var px = win.innerWidth;
+  var py = win.innerHeight;
+
+  win.addEventListener( 'resize', fitwindow_resize, true ) ;
+
+
+  // Save and reset the styles for the entire node tree. They could interfere in the result.
+  var eParent = document.getElementById('content');
+  eParent._pfSavedStyles = PFTools.SaveStyles( eParent ) ;
+  // The extra () is to avoid a warning with strict error checking. This is ok.
+  while( (eParent = eParent.parentNode) )
+  {
+      if ( eParent.nodeType == 1 )
+      {
+	  eParent._pfSavedStyles = PFTools.SaveStyles( eParent ) ;
+      }
+  }
+
+
+
+
+  // Hide the scroolbars in Firefox.
+  ebodystyle.overflow = 'hidden' ;
+  ebodystyle.width = '0px';
+  ebodystyle.height = '0px';
+
+
+
+
+  estyle.position      = "absolute";
+  estyle.left          = "0px";
+  estyle.top           = "0px";
+
+
+  fitwindow_resize();
+
+
+//  Large border to hide other content.
+//  But that makes the redraw very slow
+//  estyle.borderRight = estyle.borderBottom = "9999px solid white";
+  estyle.backgroundColor = "white";
+
+  // Scroll to top left.
+  win.scrollTo(0, 0);
+
+  this.IsMaximized = true ;
+  }
+  else  // Resize to original size
+  {
+      win.removeEventListener( "resize", fitwindow_resize, true ) ;
+
+      // Restore the CSS position for the entire node tree.
+      var eParent = document.getElementById('content');
+      PFTools.RestoreStyles( eParent, eParent._pfSavedStyles ) ;
+      // The extra () is to avoid a warning with strict error checking. This is ok.
+      while( (eParent = eParent.parentNode) )
+      {
+	  if ( eParent._pfSavedStyles )
+	  {
+	      PFTools.RestoreStyles( eParent, eParent._pfSavedStyles ) ;
+	      eParent._pfSavedStyles = null ;
+	  }
+      }
+      this.IsMaximized = false ;
+  }
+}
+
+function fitwindow_resize()
+{
+  var win = window;
+  var ediv = document.getElementById('editor');
+  var estyle = ediv.style ;
+
+  var px = win.innerWidth;
+  var py = win.innerHeight;
+
+  estyle.width         = px + 'px' ;
+  estyle.height        = py + 'px' ;
+
+  // Resize content area based on size of toolbar and window
+  // I could not get cstyle.offsetHeight working :-(
+
+  var cstyle = document.getElementById('content').style;
+  var tb = document.getElementById("toolbar");
+  var tbcs = window.getComputedStyle(tb, null);
+  var tbh = tbcs['height'];
+  var tbhs = tbh.substring(0,(tbh.length - 2));
+  cstyle.height = (py - tbhs) + 'px';
+  cstyle.width = '100%';
+}
+
+</script>
