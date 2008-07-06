@@ -97,7 +97,7 @@ sub new
     %ENV = %$env;     # To make CGI happy
 
     # Turn back and make $env a ref to the actual %ENV symbol table
-    # entry. This keeps them synced
+    # entry. This keeps them in sync
     #
     $env = \%ENV;
 
@@ -170,6 +170,13 @@ sub new
 sub init
 {
     my( $req ) = @_;
+
+    # Ingore this req if we are in TERMINATE mode unless its a dependant subrequest or waiting for loadpage
+    if( $Para::Frame::TERMINATE and not $req->q->param('req') and not $req->q->param('reqnum') )
+    {
+	debug "In TERMINATE!";
+	return 0;
+    }
 
     my $env = $req->{'env'};
 
