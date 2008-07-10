@@ -250,6 +250,16 @@ sub handler
 	}
     }
 
+    if( my $prev = $r->prev )
+    {
+	my $pdc = $prev->dir_config;
+	if( $pdc->{'renderer'} or $pdc->{'find'} )
+	{
+	    warn "$$: Consider using SetHandler perl-script in this dir\n";
+	}
+    }
+
+
 #    warn sprintf "URI %s FILE %s CTYPE %s\n", $uri, $filename, $ctype;
 
     my $value = freeze [ \%params,  \%ENV, $uri, $filename, $ctype, $dirconfig, $r->header_only, \%files ];
