@@ -2522,7 +2522,11 @@ sub create_fork
 	unless( defined $pid )
 	{
 	    debug(0,"cannot fork: $!");
-	    die "Realy can't fork! bailing out" if $sleep_count++ > 6;
+	    if( $sleep_count++ > 6 )
+	    {
+		$SIG{CHLD} = \&Para::Frame::REAPER;
+		die "Realy can't fork! bailing out";
+	    }
 	    sleep 1;
 	}
 	$@ = undef;
