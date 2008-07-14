@@ -35,6 +35,7 @@ use Cwd qw( abs_path );
 use File::Basename; # dirname
 #use Template::Stash::ForceUTF8;
 use Para::Frame::Template::Stash::CheckUTF8;
+use FreezeThaw qw( thaw );
 
 our $VERSION;
 our $CVSVERSION;
@@ -91,6 +92,8 @@ our $TERMINATE  ;
 our $IN_STARTUP ;          # True until we reach the watchdog loop
 our $ACTIVE_PIDFILE;       # The PID indicated by existing pidfile
 our $LAST       ;          # The last entering of the main loop
+our %WORKER     ;
+our @WORKER_IDLE;
 
 # STDOUT goes to the watchdog. Use well defined messages!
 # STDERR goes to the log
@@ -453,7 +456,10 @@ sub main_loop
 		}
 	    }
 
-	    ### Are there any data to be read from childs?
+	    ### Are there any data to be read from childs?  This is
+	    # only used for childs that will exit after the result are
+	    # recieved. Worker childs will transmit their result to
+	    # the server port.
 	    #
 	    if( keys %CHILD )
 	    {
@@ -1104,6 +1110,29 @@ sub handle_code
     {
 	debug(0,"TERM recieved");
 	$TERMINATE = 'TERM';
+    }
+    elsif( $code eq 'WORKERRESP' )
+    {
+	 my( $caller_clientaddr, @res ) = thaw($INBUFFER{$client});
+	 my $req = $REQUEST{ $caller_clientaddr } or
+	   die "Client $caller_clientaddr not registred";
+	 unless( ($req->{'wait'}||0) > 0 )
+	 {
+	     my $reqid = $req->id;
+	     die "Req $reqid not waiting for a result";
+	 }
+
+	 $req->{'workerresp'} = \@res;
+	 $req->{'wait'} --;
+	 my $worker = delete $req->{'worker'};
+	 unless( $worker )
+	 {
+	     debug "Lost a worker!";
+	 }
+	 else
+	 {
+	     push @WORKER_IDLE, $worker;
+	 }
     }
     else
     {

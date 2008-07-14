@@ -90,6 +90,35 @@ sub register
 
 #######################################################################
 
+=head2 register_worker
+
+=cut
+
+sub register_worker
+{
+    my( $class, $pid, $fh ) = @_;
+
+    my $child = bless
+    {
+	pid      => $pid,
+        port     => undef,
+	fh       => $fh,
+	status   => undef,
+	data     => "",
+	result   => undef,
+	done     => undef,
+    }, $class;
+
+    $Para::Frame::WORKER{ $pid } = $child;
+
+    debug(0,"Registerd worker $pid");
+
+    return $child;
+}
+
+
+#######################################################################
+
 =head2 deregister
 
   $child->deregister( $status, $length )
