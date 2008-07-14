@@ -2100,6 +2100,10 @@ sub yield
 	    {
 		$done = 1;
 	    }
+	    else
+	    {
+		$wait ||= 1; # Avoids crazy fast iterations
+	    }
 	}
     };
     if( $@ )
