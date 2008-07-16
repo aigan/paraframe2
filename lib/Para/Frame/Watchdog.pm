@@ -64,6 +64,7 @@ use constant LIMIT_CONNECTION_TRIES    =>   5;
 use constant TIMEOUT_CREATE_FORK       =>   5;
 use constant EMERGENCY_DEBUG_LEVEL     =>   2;
 
+
 sub debug; # Use special version of debug
 
 # TODO: Proc::PidUtil
@@ -548,6 +549,9 @@ sub watchdog_crash
 
     return 0; # Make caller go back to main loop
 }
+
+
+#######################################################################
 
 =head2 startup_in_fork
 
