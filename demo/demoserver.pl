@@ -39,12 +39,12 @@ BEGIN
     $APPROOT = $FindBin::Bin;
     $WEBHOME = $ARGV[0];
     $PORT = 7788;
-    if( $WEBHOME =~ s/:([^\/]+)// )
+    if( $WEBHOME =~ s/:([^\/]+)// ) # Parses out port from command line
     {
 	$PORT = $1;
 	print "Port $PORT\n";
     }
-    if( $WEBHOME =~ s/\/\/([^\/]+)// )
+    if( $WEBHOME =~ s/\/\/([^\/]+)// ) # Parses out webhost from command line
     {
 	$WEBHOST = $1;
 	print "Host $WEBHOST\n";
