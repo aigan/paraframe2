@@ -56,14 +56,16 @@ use Para::Frame::Burner;
 use Para::Frame::Time qw( now );
 use Para::Frame::Email::Address;
 use Para::Frame::L10N;
+use Para::Frame::Worker;
 use Para::Frame::Reload;
 
-use constant TIMEOUT_LONG  =>   5;
-use constant TIMEOUT_SHORT =>   0.000;
-use constant BGJOB_MAX     =>   8;      # At most
-use constant BGJOB_MED     =>  60 *  5; # Even if no visitors
-use constant BGJOB_MIN     =>  60 * 15; # At least this often
-use constant BGJOB_CPU     =>   2.0;
+use constant TIMEOUT_LONG   =>   5;
+use constant TIMEOUT_SHORT  =>   0.000;
+use constant BGJOB_MAX      =>   8;      # At most
+use constant BGJOB_MED      =>  60 *  5; # Even if no visitors
+use constant BGJOB_MIN      =>  60 * 15; # At least this often
+use constant BGJOB_CPU      =>   2.0;
+use constant WORKER_STARTUP =>   5;
 
 # Do not init variables here, since this will be redone each time code is updated
 our $SERVER     ;
@@ -227,8 +229,13 @@ sub startup
     # No REQ exists yet!
     Para::Frame->run_hook(undef, 'on_startup');
 
-
     $Template::BINMODE = ':utf8';
+
+    # Start up workers early in order to get a small memory footprint
+    if( WORKER_STARTUP )
+    {
+	Para::Frame::Worker->create_idle_worker( WORKER_STARTUP );
+    }
 
     warn "Setup complete, accepting connections\n";
     print "STARTED\n";
@@ -661,7 +668,7 @@ sub add_client
     $SELECT->add($client);
     nonblock($client);
 
-#    debug("New client connected: $client");
+    debug(4, "New client connected: $client");
 }
 
 
@@ -1133,6 +1140,8 @@ sub handle_code
 	 {
 	     push @WORKER_IDLE, $worker;
 	 }
+
+	 close_callback($client); # That's all
     }
     else
     {
@@ -1251,8 +1260,10 @@ sub close_callback
     }
 
     switch_req(undef);
+
+    $client->shutdown(2); # I have stopped using this socket
     $SELECT->remove($client);
-    close($client);
+    $client->close;
 }
 
 
