@@ -44,6 +44,8 @@ use LWP::UserAgent;
 use HTTP::Request;
 use Template::Exception;
 use DateTime::Duration;
+use URI;
+use URI::http;
 
 BEGIN
 {
@@ -1671,29 +1673,44 @@ sub retrieve_from_url
     my $ua = LWP::UserAgent->new;
     my $lwpreq = HTTP::Request->new(GET => $url);
 
-    my $fork = $req->create_fork;
-    if( $fork->in_child )
-    {
-#	$fork->return("NAME=\"lat\" VALUE=\"11.9443\" NAME=\"long\" VALUE=\"57.7188\"");
-	debug "About to GET $url";
-	my $res = $ua->request($lwpreq);
-	if( $res->is_success )
-	{
-	    $fork->return( $res->content );
-	}
-	else
-	{
-	    my $message = $res->message;
-	    throw('action', "Failed to retrieve '$url' content: $message");
+    my( $res ) = Para::Frame::Worker->method($ua, 'request', $lwpreq);
 
-	    # TODO: Set up a better error response
-#	    my $part = $req->result->exception('action', $message);
-#	    $part->prefix_message("Failed to retrieve '$url' content");
-#	    throw($part);
-	}
+#    debug datadump($res);
+
+
+    if( $res->is_success )
+    {
+	return $res->content;
+    }
+    else
+    {
+	my $message = $res->message;
+	throw('action', "Failed to retrieve '$url' content: $message");
     }
 
-    return $fork->yield->message; # Returns the result from fork
+#    my $fork = $req->create_fork;
+#    if( $fork->in_child )
+#    {
+##	$fork->return("NAME=\"lat\" VALUE=\"11.9443\" NAME=\"long\" VALUE=\"57.7188\"");
+#	debug "About to GET $url";
+#	my $res = $ua->request($lwpreq);
+#	if( $res->is_success )
+#	{
+#	    $fork->return( $res->content );
+#	}
+#	else
+#	{
+#	    my $message = $res->message;
+#	    throw('action', "Failed to retrieve '$url' content: $message");
+#
+#	    # TODO: Set up a better error response
+##	    my $part = $req->result->exception('action', $message);
+##	    $part->prefix_message("Failed to retrieve '$url' content");
+##	    throw($part);
+#	}
+#    }
+#
+#    return $fork->yield->message; # Returns the result from fork
 }
 
 
@@ -1802,7 +1819,7 @@ sub client_send
 {
     my( $client, $data_in, $args ) = @_;
 
-#    Para::Frame::Logging->this_level(3);
+#    Para::Frame::Logging->this_level(4);
 
     my $dataref;
     if( ref $data_in )
@@ -1940,7 +1957,7 @@ sub client_send
 		redo;
 	    }
 	}
-#	debug "Sent $chrpos chars";
+	debug 3, "Sent $chrpos chars";
 	return $chrpos;
     }
     elsif( $enc eq 'raw' )
