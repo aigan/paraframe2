@@ -993,6 +993,7 @@ sub send_body
 
     unless( length $data )
     {
+	warn "$$: Waiting for data\n" if $DEBUG;
 	unless( $select->can_read($timeout) )
 	{
 	    warn "$$: No body ready to be read from $SOCK";
@@ -1009,6 +1010,11 @@ sub send_body
     while( length $data )
     {
 	# Passing scalarrefs is buggy
+	if( $DEBUG )
+	{
+	    my $len = bytes::length($data);
+	    warn "$$: Sending $len bytes to browser\n";
+	}
 	unless( $r->print( $data ) )
 	{
 	    warn "$$: Faild to send chunk $chunk to client\n";
@@ -1016,6 +1022,7 @@ sub send_body
 	    send_to_server("CANCEL");
 	    return 1;
 	}
+	warn "$$: Waiting for more data\n" if $DEBUG;
 	$SOCK->read($data, BUFSIZ) or last;
 	$chunk ++;
     }
