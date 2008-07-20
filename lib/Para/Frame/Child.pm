@@ -36,6 +36,8 @@ use Para::Frame::Utils qw( debug throw );
 use Para::Frame::Request;
 use Para::Frame::Child::Result;
 
+our $SERID = 1;
+
 =head1 DESCRIPTION
 
 Create a fork using L<Para::Frame::Request/create_fork>.
@@ -107,6 +109,7 @@ sub register_worker
 	data     => "",
 	result   => undef,
 	done     => undef,
+        id       => $SERID++,
     }, $class;
 
     $Para::Frame::WORKER{ $pid } = $child;
@@ -349,6 +352,20 @@ Returns the CHILD process id number.
 sub pid
 {
     return $_[0]->{'pid'};
+}
+
+
+#######################################################################
+
+=head2
+
+  $fork->id
+
+=cut
+
+sub id
+{
+    return $_[0]->{'id'};
 }
 
 

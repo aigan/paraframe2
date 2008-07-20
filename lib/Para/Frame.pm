@@ -704,7 +704,7 @@ sub get_value
 	debug(2,"Getting value inside a fork");
 	while( $_ = <$Para::Frame::Client::SOCK> )
 	{
-	    if( s/^([\w\-]{3,10})\0// )
+	    if( s/^([\w\-]{3,20})\0// )
 	    {
 		my $code = $1;
 		debug(1,"Code $code");
@@ -1120,21 +1120,19 @@ sub handle_code
     }
     elsif( $code eq 'WORKERRESP' )
     {
-	 my( $caller_clientaddr, @res ) = thaw($INBUFFER{$client});
-	 my $req = $REQUEST{ $caller_clientaddr } or
-	   die "Client $caller_clientaddr not registred";
+	 my( $caller_id, $result ) = thaw($INBUFFER{$client});
+	 my $req = Para::Frame::Request->get_by_id( $caller_id );
 	 unless( ($req->{'wait'}||0) > 0 )
 	 {
-	     my $reqid = $req->id;
-	     die "Req $reqid not waiting for a result";
+	     die "Req $caller_id not waiting for a result";
 	 }
 
-	 $req->{'workerresp'} = \@res;
+	 $req->{'workerresp'} = $result;
 	 $req->{'wait'} --;
 	 my $worker = delete $req->{'worker'};
 	 unless( $worker )
 	 {
-	     debug "Lost a worker!";
+	     debug sprintf "Req %d lost a worker", $req->id;
 	 }
 	 else
 	 {

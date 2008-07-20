@@ -66,10 +66,12 @@ sub method
 #    debug datadump(\@callargs);
 #    debug "Freezing $obj -> $method ( @args )";
 
-    my $val  = safeFreeze( $req->client.'', $obj, $method, @args );
+    my $val  = safeFreeze( $req->id, $obj, $method, @args );
     Para::Frame::Client::connect_to_server( $port );
     $Para::Frame::Client::SOCK or die "No socket";
     Para::Frame::Client::send_to_server($code, \$val);
+
+    debug sprintf "Req %d waits on worker %d", $req->id, $worker->id;
 
 
     # Yielding until we get a response
@@ -79,8 +81,21 @@ sub method
     debug 3, "Parent yield";
     $req->yield;
 
-    my( $resref ) = delete $req->{'workerresp'};
-    return( @$resref );
+    my $result = delete $req->{'workerresp'};
+
+    if( $@ = $result->exception )
+    {
+	die $@;
+    }
+
+    if( my( $coderef, @args ) = $result->on_return )
+    {
+#	warn "coderef is '$coderef'\n";
+	no strict 'refs';
+	$result->message( &{$coderef}( $result, @args ) );
+    }
+
+    return $result->message;
 }
 
 
@@ -239,6 +254,8 @@ sub init
       WORKLOOP:
 	while( 1 )
 	{
+	    $worker->reset;
+
 	    my $inbuffer = "";
 	    my $datalength;
 	    my $rest;
@@ -296,16 +313,26 @@ sub init
 
 			if( $code eq 'OMETHOD' ) # list context
 			{
-			    my( $client, $obj, $method, @args ) = thaw($inbuffer);
+			    my( $req_id, $obj, $method, @args ) = thaw($inbuffer);
 			    debug 2, "Doing $method";
 #			    debug "obj ".datadump($obj);
 #			    debug "args ".datadump(\@args);
-			    my( @res ) = $obj->$method(@args);
-#			    my( @res ) = {testing=>1}; ### TEST
-#			    debug "Sleeping ".sleep(10);
+
+			    eval
+			    {
+				my( @res ) = $obj->$method(@args);
+#				my( @res ) = {testing=>1}; ### TEST
+#				debug "Sleeping ".sleep(10);
+				$worker->{'message'} = \@res;
+			    };
+			    if( $@ )
+			    {
+				$worker->exception( $@ );
+			    }
 
 
-			    my $data = safeFreeze( $client, @res );
+
+			    my $data = safeFreeze( $req_id, $worker );
 			    my $port = $Para::Frame::CFG->{'port'};
 			    Para::Frame::Client::connect_to_server( $port );
 			    $Para::Frame::Client::SOCK or die "No socket";
