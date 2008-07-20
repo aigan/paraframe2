@@ -261,7 +261,7 @@ sub init
 	    my $rest;
 	    while( my( $wclient ) = $wselect->can_read( $timeout ) )
 	    {
-		debug 3, "can read";
+		debug 3, "worker can read";
 		if( $wclient == $wsock ) # new connection
 		{
 		    debug 3, "  new connection";
@@ -274,6 +274,7 @@ sub init
 		    while( my $block = <$wclient> )
 		    {
 			$inbuffer .= $block;
+			debug 3, "got message block";
 #			debug "got message: $block\n";
 		    }
 
@@ -282,6 +283,7 @@ sub init
 			if( $inbuffer =~ s/^(\d+)\x00// )
 			{
 			    $datalength = $1;
+			    debug 3, "Datalength $datalength";
 			}
 			elsif( not length $inbuffer )
 			{
@@ -327,11 +329,13 @@ sub init
 			    };
 			    if( $@ )
 			    {
+				debug $@;
 				$worker->exception( $@ );
 			    }
 
 
 
+			    debug 3, "Freezing result";
 			    my $data = safeFreeze( $req_id, $worker );
 			    my $port = $Para::Frame::CFG->{'port'};
 			    Para::Frame::Client::connect_to_server( $port );
@@ -340,8 +344,9 @@ sub init
 			    Para::Frame::Client::send_to_server('WORKERRESP', \$data);
 
 
-			    my $length = length($data);
-			    client_send( $wclient, \($length . "\0" . $data) );
+			    # Another method would be to send result to on $wclient socket
+#			    my $length = length($data);
+#			    client_send( $wclient, \($length . "\0" . $data) );
 
 			    debug 3, "Done";
 			    $wclient->shutdown(2); # Finished
