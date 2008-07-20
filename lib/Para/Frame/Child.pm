@@ -108,8 +108,8 @@ sub register_worker
 	status   => undef,
 	data     => "",
 	result   => undef,
-	done     => undef,
         id       => $SERID++,
+        is_worker=> 1,
     }, $class;
 
     $Para::Frame::WORKER{ $pid } = $child;
@@ -140,6 +140,24 @@ returns: -
 sub deregister
 {
     my( $child, $status, $length ) = @_;
+
+    if( $child->{'is_worker'} )
+    {
+	my $wid = $child->id;
+	my @idles;
+	foreach my $idle ( @Para::Frame::WORKER_IDLE )
+	{
+	    if( $wid != $idle->id )
+	    {
+		push @idles, $idle;
+	    }
+	}
+	@Para::Frame::WORKER_IDLE = @idles;
+
+	return;
+    }
+
+
 
     $child->{'done'} = 1; # Taken care of now
     $child->status( $status ) if defined $status;

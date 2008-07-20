@@ -211,7 +211,7 @@ sub get_worker
 
     if( my $worker = pop @Para::Frame::WORKER_IDLE )
     {
-	debug "Reusing worker";
+	debug sprintf "Reusing worker %d", $worker->id;
 	return $worker;
     }
 
