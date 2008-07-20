@@ -1130,8 +1130,9 @@ sub handle_code
 	 $req->{'workerresp'} = $result;
 	 $req->{'wait'} --;
 	 my $worker = delete $req->{'worker'};
-	 unless( $worker )
+	 unless( $worker and $WORKER{ $worker->pid } )
 	 {
+	     # See REAPER. Worker may have died
 	     debug sprintf "Req %d lost a worker", $req->id;
 	 }
 	 else
@@ -1292,6 +1293,11 @@ sub REAPER
 		warn "| Child $child_pid exited with status $?\n";
 		$child->deregister( $? );
 	    }
+	}
+	elsif( my $worker = delete $WORKER{$child_pid} )
+	{
+	    warn "| Worker $child_pid exited with status $?\n";
+	    $worker->deregister( $? );
 	}
 	else
 	{
