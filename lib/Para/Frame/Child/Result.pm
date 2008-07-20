@@ -81,6 +81,29 @@ sub new
 
 #######################################################################
 
+=head2 reset
+
+=cut
+
+sub reset
+{
+    my( $result ) = @_;
+
+    foreach my $key ( keys %$result )
+    {
+	delete $result->{$key};
+    }
+
+    $result->{'message'} = [];
+    $result->{'exception'} = [];
+    $result->{'on_return'} = [];
+
+    return $result;
+}
+
+
+#######################################################################
+
 =head2 message
 
   $fork->message( $message )
