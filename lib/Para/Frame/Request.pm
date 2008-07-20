@@ -161,6 +161,43 @@ sub new
     return $req;
 }
 
+
+#######################################################################
+
+=head2 get_by_id
+
+=cut
+
+sub get_by_id
+{
+    my( $class, $id ) = @_;
+
+    $id or die "id missing";
+
+    foreach my $req ( values %Para::Frame::REQUEST )
+    {
+	if( $req->{'reqnum'} == $id )
+	{
+	    return $req;
+	}
+
+	if( my $subreqs = $req->{'subrequest'} )
+	{
+	    foreach my $subreq ( @$subreqs )
+	    {
+		if( $subreq->{'reqnum'} == $id )
+		{
+		    return $subreq;
+		}
+	    }
+	}
+
+    }
+
+    die "Request $id not found";
+}
+
+
 #######################################################################
 
 =head2 init
