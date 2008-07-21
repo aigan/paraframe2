@@ -65,7 +65,6 @@ use constant BGJOB_MAX      =>   8;      # At most
 use constant BGJOB_MED      =>  60 *  5; # Even if no visitors
 use constant BGJOB_MIN      =>  60 * 15; # At least this often
 use constant BGJOB_CPU      =>   2.0;
-use constant WORKER_STARTUP =>   5;
 
 # Do not init variables here, since this will be redone each time code is updated
 our $SERVER     ;
@@ -232,9 +231,9 @@ sub startup
     $Template::BINMODE = ':utf8';
 
     # Start up workers early in order to get a small memory footprint
-    if( WORKER_STARTUP )
+    if( $CFG->{'worker_startup'} )
     {
-	Para::Frame::Worker->create_idle_worker( WORKER_STARTUP );
+	Para::Frame::Worker->create_idle_worker( $CFG->{'worker_startup'} );
     }
 
     warn "Setup complete, accepting connections\n";
@@ -2075,6 +2074,13 @@ L<Para::Frame::L10N>.
 Defaults to C<Para::Frame::L10N>
 
 
+=head3 languages
+
+A ref to an array of scalar two letter strings of the language codes
+the sites supports. This config will be the default if no list is
+given to the specific site. See L<Para::Frame::Site/languages>.
+
+
 =head3 locale
 
 Specifies what to set LC_ALL to, except LC_NUMERIC that is set to
@@ -2129,6 +2135,14 @@ Defaults to C<Para::Frame::Session>
 If true, accepts hosts in request even if no matching site has been
 created.  See L<Para::Frame::Site/get_by_req>. C<site_auto> can also
 be the name of a site to use for the template site.
+
+
+=head3 site_class
+
+The class to use for representing sites.  Should be a subclass to
+L<Para::Frame::Site>.
+
+Defaults to C<Para::Frame::Site>
 
 
 =head3 th
@@ -2208,19 +2222,13 @@ L<Para::Frame::User>.
 Defaults to C<Para::Frame::User>
 
 
-=head3 site_class
+=head3 worker_startup
 
-The class to use for representing sites.  Should be a subclass to
-L<Para::Frame::Site>.
+The number of workers to spawn during startup. The sooner a worker is
+spawned, the less memory will it use. The workers lives on til the
+next server HUP.  More workes will spawn on demand.
 
-Defaults to C<Para::Frame::Site>
-
-
-=head3 languages
-
-A ref to an array of scalar two letter strings of the language codes
-the sites supports. This config will be the default if no list is
-given to the specific site. See L<Para::Frame::Site/languages>.
+Defaults to C<0>
 
 
 =cut
@@ -2398,6 +2406,8 @@ sub configure
     $CFG->{'l10n_class'} ||= 'Para::Frame::L10N';
 
     $CFG->{'bg_user_code'} ||= sub{ $CFG->{'user_class'}->get('root') };
+
+    $CFG->{'worker_startup'} ||= 0;
 
     $class->set_global_tt_params;
 
