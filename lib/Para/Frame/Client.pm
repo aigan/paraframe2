@@ -184,71 +184,72 @@ sub handler
 	    print_error_page("No port configured for communication with the Paraframe server");
 	    return DONE;
 	}
+    }
 
-	my $reqline = $r->the_request;
-	warn substr(sprintf("[%s] %d: %s", scalar(localtime), $$, $reqline), 0, 79)."\n";
+    my $reqline = $r->the_request;
+    warn substr(sprintf("[%s] %d: %s", scalar(localtime), $$, $reqline), 0, 79)."\n";
 
-	### Optimize for the common case.
-	#
-	# May be modified in req, but this value guides Loadpage
-	#
-	warn "$$: Orig ctype $ctype\n" if $ctype and $DEBUG;
-	if( not $ctype )
-	{
-	    if( $filename =~ /\.tt$/ )
-	    {
-		$ctype = 'text/html';
-	    }
-	}
-	elsif( $ctype eq "httpd/unix-directory" )
+    ### Optimize for the common case.
+    #
+    # May be modified in req, but this value guides Loadpage
+    #
+    warn "$$: Orig ctype $ctype\n" if $ctype and $DEBUG;
+    if( not $ctype )
+    {
+	if( $filename =~ /\.tt$/ )
 	{
 	    $ctype = 'text/html';
 	}
+    }
+    elsif( $ctype eq "httpd/unix-directory" )
+    {
+	$ctype = 'text/html';
+    }
 
-	unless( $ctype =~ /\bcharset\b/ )
+    unless( $ctype =~ /\bcharset\b/ )
+    {
+	if( $ctype =~ /^text\// )
 	{
-	    if( $ctype =~ /^text\// )
-	    {
-		$ctype .= "; charset=UTF-8";
-	    }
-	}
-
-	$r->content_type($ctype);
-
-
-	### We let the daemon decide what to do with non-tt pages
-
-
-	foreach my $key ( $Q->param )
-	{
-	    if( $Q->upload($key) )
-	    {
-		warn "$$: param $key is a filehandle\n";
-
-		my $val = $Q->param($key);
-		my $info = $Q->uploadInfo($val);
-
-		$params{$key} = "$val"; # Remove GLOB from value
-
-		my $keyfile = $key;
-		$keyfile =~ s/[^\w_\-]//g; # Make it a normal filename
-		my $dest = "/tmp/paraframe/$$-$keyfile";
-		copy_to_file( $dest, $Q->upload($key) ) or return DONE;
-
-		my $uploaded =
-		{
-		 tempfile => $dest,
-		 info     => $info,
-		};
-
-		$files{$key} = $uploaded;
-	    }
-	    else
-	    {
-		$params{$key} = $Q->param_fetch($key);
-	    }
+	    $ctype .= "; charset=UTF-8";
 	}
     }
+
+    $r->content_type($ctype);
+
+
+    ### We let the daemon decide what to do with non-tt pages
+
+
+    foreach my $key ( $Q->param )
+    {
+	if( $Q->upload($key) )
+	{
+	    warn "$$: param $key is a filehandle\n";
+
+	    my $val = $Q->param($key);
+	    my $info = $Q->uploadInfo($val);
+
+	    $params{$key} = "$val"; # Remove GLOB from value
+
+	    my $keyfile = $key;
+	    $keyfile =~ s/[^\w_\-]//g; # Make it a normal filename
+	    my $dest = "/tmp/paraframe/$$-$keyfile";
+	    copy_to_file( $dest, $Q->upload($key) ) or return DONE;
+
+	    my $uploaded =
+	    {
+	     tempfile => $dest,
+	     info     => $info,
+	    };
+
+	    $files{$key} = $uploaded;
+	}
+	else
+	{
+	    $params{$key} = $Q->param_fetch($key);
+	}
+    }
+
 
     if( my $prev = $r->prev )
     {
