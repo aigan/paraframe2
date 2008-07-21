@@ -87,7 +87,10 @@ sub new
       croak "No type given for burner";
 
     $burner->{'subdir_suffix'} = $config_in->{'subdir_suffix'} || '';
-
+    $burner->{'pre_dir'} = $config_in->{'pre_dir'}
+      or croak "No pre_dir given for burner";
+    $burner->{'inc_dir'} = $config_in->{'inc_dir'}
+      or croak "No inc_dir given for burner";
 
     $burner->{'config'} = $config;
     $burner->{'free'} = [];
@@ -466,6 +469,30 @@ sub error
 sub subdir_suffix
 {
      return $_[0]->{'subdir_suffix'} || '';
+}
+
+
+#######################################################################
+
+=head2 pre_dir
+
+=cut
+
+sub pre_dir
+{
+     return $_[0]->{'pre_dir'};
+}
+
+
+#######################################################################
+
+=head2 inc_dir
+
+=cut
+
+sub inc_dir
+{
+     return $_[0]->{'inc_dir'};
 }
 
 
