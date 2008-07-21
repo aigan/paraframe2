@@ -187,6 +187,7 @@ sub render_output
     my $tmpl = $rend->template;
     unless( $tmpl )
     {
+	cluck "template not found";
 	throw('notfound', "Couldn't find a template for ".$rend->page->url_path);
     }
 
@@ -626,33 +627,55 @@ sub paths
 	    $template_root = $template_root->sys_path;
 	}
 
-	my $subdir = 'inc' . $burner->subdir_suffix;
+#	my $subdir = 'inc' . $burner->subdir_suffix;
 
 	my @places;
+#	if( $site->is_compiled )
+#	{
+#	    @places =
+#	      (
+#	       {
+#		subdir => $subdir,
+#		backdir => '/dev',
+#	       },
+#	       {
+#		subdir => 'inc',
+#		backdir => '/html',
+#	       },
+#	      );
+#	}
+#	else
+#	{
+#	    @places =
+#	      (
+#	       {
+#		subdir => $subdir,
+#		backdir => '/html',
+#	       },
+#	      );
+#	}
+
+	my $subdir;
 	if( $site->is_compiled )
 	{
-	    @places =
-	      (
-	       {
-		subdir => $subdir,
-		backdir => '/dev',
-	       },
-	       {
-		subdir => 'inc',
-		backdir => '/html',
-	       },
-	      );
+	    push @places,
+	    {
+	     subdir => $burner->pre_dir,
+	     backdir => '/dev',
+	    };
+
+	    $subdir = $burner->pre_dir;
 	}
 	else
 	{
-	    @places =
-	      (
-	       {
-		subdir => $subdir,
-		backdir => '/html',
-	       },
-	      );
+	    $subdir = $burner->inc_dir;
 	}
+
+	push @places,
+	{
+	 subdir => $burner->inc_dir,
+	 backdir => '/html',
+	};
 
 
 	debug 3, "Creating incpath for $dir under $destroot ($type)";
@@ -702,6 +725,7 @@ sub paths
 
 
 	if( debug > 2 )
+#	if( debug )
 	{
 	    my $incpathstring = join "", map "- $_\n", @searchpath;
 	    debug "Include path:";
