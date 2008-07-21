@@ -71,7 +71,7 @@ sub method
     $Para::Frame::Client::SOCK or die "No socket";
     Para::Frame::Client::send_to_server($code, \$val);
 
-    debug sprintf "Req %d waits on worker %d", $req->id, $worker->id;
+    debug 2, sprintf "Req %d waits on worker %d", $req->id, $worker->id;
 
 
     # Yielding until we get a response
@@ -211,7 +211,7 @@ sub get_worker
 
     if( my $worker = pop @Para::Frame::WORKER_IDLE )
     {
-	debug sprintf "Reusing worker %d", $worker->id;
+	debug 2, sprintf "Reusing worker %d", $worker->id;
 	return $worker;
     }
 
