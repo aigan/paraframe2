@@ -774,6 +774,24 @@ sub get_response
 		    send_to_server( 'RESP', \ $resp );
 		    $WAIT = 1;
 		}
+		# Do not send loadpage now
+		elsif( $code eq 'RESTARTING' )
+		{
+		    warn "Server restarting\n";
+		    $SOCK->shutdown(2);
+		    $SOCK->close;
+
+		    if( $BACKUP_PORT = $r->dir_config->{'backup_port'} )
+		    {
+			warn "$$: Using backup port $BACKUP_PORT\n";
+			handler($r);
+			$BACKUP_PORT = 0;
+			return 1;
+		    }
+
+		    sleep 10;
+		    return 0; # Tries again...
+		}
 		# Starting sending body
 		elsif( $code eq 'BODY' or
 		       $code eq 'HEADER' )
