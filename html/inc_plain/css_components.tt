@@ -7,73 +7,73 @@
      DEFAULT margins   = "0 0.5em";
      DEFAULT h_margins = "0 0.5em";
   %]
-  table.$class {
+  table.[% class %] {
     margin-bottom:  10px;
     width:	    100%;
     border:	    none;
     z-index:	    10;
     color:	    [% color %];
   }
-  table.$class td.h_bg {
-    background:	    url("[% imgdir %]h_bg.$format") repeat-x right top;
+  table.[% class %] td.h_bg {
+    background:	    url("[% imgdir %]h_bg.[% format %]") repeat-x right top;
     font-size:	    110%;
     font-weight:    bold;
     line-height:    1.5em;
   }
-  table.$class td.h_bg h3, table.$class td.m_bg h3 {
+  table.[% class %] td.h_bg h3, table.[% class %] td.m_bg h3 {
     margin-top:     0.3em;
     border:         none;
   }
-  table.$class td.h_left {
-    background:	    url("[% imgdir %]h_left.$format") no-repeat right top;
+  table.[% class %] td.h_left {
+    background:	    url("[% imgdir %]h_left.[% format %]") no-repeat right top;
     width:	    [% s_width %]px;
   }
-  table.$class td.h_right {
-    background:	    url("[% imgdir %]h_right.$format") no-repeat right top;
+  table.[% class %] td.h_right {
+    background:	    url("[% imgdir %]h_right.[% format %]") no-repeat right top;
     width:	    [% s_width %]px;
   }
-  table.$class td.s_left {
-    background:	    url("[% imgdir %]s_left.$format") repeat-y right top;
+  table.[% class %] td.s_left {
+    background:	    url("[% imgdir %]s_left.[% format %]") repeat-y right top;
   }
-  table.$class td.s_right {
-    background:	    url("[% imgdir %]s_right.$format") repeat-y right top;
+  table.[% class %] td.s_right {
+    background:	    url("[% imgdir %]s_right.[% format %]") repeat-y right top;
   }
-  table.$class td.m_s_left {
-    background:	    url("[% imgdir %]m_s_left.$format") no-repeat right top;
+  table.[% class %] td.m_s_left {
+    background:	    url("[% imgdir %]m_s_left.[% format %]") no-repeat right top;
   }
-  table.$class td.m_bg {
-    background:	    url("[% imgdir %]m_bg.$format") repeat-x right top;
+  table.[% class %] td.m_bg {
+    background:	    url("[% imgdir %]m_bg.[% format %]") repeat-x right top;
   }
-  table.$class td.m_s_right {
-    background:	    url("[% imgdir %]m_s_right.$format") no-repeat right top;
+  table.[% class %] td.m_s_right {
+    background:	    url("[% imgdir %]m_s_right.[% format %]") no-repeat right top;
   }
-  table.$class td.b_left {
-    background:	    url("[% imgdir %]b_left.$format") no-repeat right top;
+  table.[% class %] td.b_left {
+    background:	    url("[% imgdir %]b_left.[% format %]") no-repeat right top;
   }
-  table.$class td.b_bg {
-    background:	    url("[% imgdir %]b_bg.$format") repeat-x right top;
+  table.[% class %] td.b_bg {
+    background:	    url("[% imgdir %]b_bg.[% format %]") repeat-x right top;
   }
-  table.$class td.b_right {
-    background:	    url("[% imgdir %]b_right.$format") no-repeat right top;
+  table.[% class %] td.b_right {
+    background:	    url("[% imgdir %]b_right.[% format %]") no-repeat right top;
   }
-  table.$class td.content {
+  table.[% class %] td.content {
     background:	    [% background %];
     color:	    [% color %];
     padding-top:    0.5em;
   }
-  table.$class div.content_div {
+  table.[% class %] div.content_div {
     margin:         [% margins %];
   }
-  table.$class div.header_div {
+  table.[% class %] div.header_div {
     margin:         [% h_margins %];
   }
   [% IF link %]
-    table.$class a:link {
+    table.[% class %] a:link {
       color: [% link %];
     }
   [% END %]
   [% IF visited %]
-    table.$class a:visited {
+    table.[% class %] a:visited {
       color: [% visited %];
     }
   [% END %]
