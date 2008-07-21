@@ -444,7 +444,7 @@ sub check_connection
 	{
 	    if( $select->can_read( INTERVAL_MAIN_LOOP ) )
 	    {
-		my $resp = $sock->getline;
+		my $resp = $sock->getline or last; ### During restart?
 		my $length;
 
 		if( $resp =~ s/^(\d+)\x00// )
