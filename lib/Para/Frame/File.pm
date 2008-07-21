@@ -342,11 +342,11 @@ sub new
 		}
 
 		# There may have been a mapping from dir to file
-		debug "sys_name: $sys_name";
-		debug "preslash: $preslash";
+		debug 2, "sys_name: $sys_name";
+		debug 2, "preslash: $preslash";
 		if( $preslash and $sys_name =~ /\b$preslash$/ )
 		{
-		    debug "Blessing as a dir";
+		    debug 2, "Blessing as a dir";
 		    bless $file, 'Para::Frame::Dir';
 		    $sys_norm = $sys_name . '/';
 		}
@@ -914,7 +914,7 @@ sub path_slash
 {
     my( $f ) = @_;
 
-    my $site = $f->site or confess "No site given";
+    my $site = $f->site or confess "No site given for ".$f->sysdesig;
     my $home = $site->home_url_path;
     my $url_path = $f->url_path_slash;
     my( $site_url ) = $url_path =~ /^$home(.+?)$/
@@ -2165,7 +2165,7 @@ sub set_content_as_text
 
     my $bom = "\x{EF}\x{BB}\x{BF}";
 
-    debug "Storing content in file $syspath";
+    debug 2, "Storing content in file $syspath";
     open FH, ">:bytes", $syspath
       or die "Could not open $syspath for writing: $!";
 
@@ -2178,7 +2178,7 @@ sub set_content_as_text
 
     unless( bytes::substr( $$dataref, 0, 3) eq $bom )
     {
-	debug "  adding a BOM";
+	debug 2, "  adding a BOM";
 	print FH $bom;
     }
 
@@ -2223,7 +2223,7 @@ sub set_content
 
     my $syspath = $f->sys_path;
 
-    debug "Storing content in file $syspath";
+    debug 2, "Storing content in file $syspath";
     File::Slurp::overwrite_file($syspath, $$dataref);
 
     return 1;
