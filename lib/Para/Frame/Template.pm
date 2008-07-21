@@ -203,7 +203,7 @@ sub document
 	    }
 
 #	    debug("Parsing with ($parser): ".$burner->type);
-	    $req->note("Compiling ".($tmpl->url_path_slash||$tmpl->path_slash));
+	    $req->note("Compiling ".($tmpl->url_path_slash||$tmpl->sys_path_slash));
 	    my $metadata =
 	    {
 	     name => $tmplname,
