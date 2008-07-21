@@ -212,6 +212,7 @@ sub init
     if( $Para::Frame::TERMINATE and not $req->q->param('req') and not $req->q->param('reqnum') )
     {
 	debug "In TERMINATE!";
+	client_send($req->client, "RESTARTING\x001\n");
 	return 0;
     }
 
@@ -2518,7 +2519,7 @@ Example 1:
   }
   return "";
 
-  sub
+  sub process_my_data
   {
       my( $result ) = @_;
       # Do more stuff
