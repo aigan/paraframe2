@@ -439,18 +439,20 @@ sub main_loop
 			{
 			    # Make watchdog restart us
 			    debug "Executing HUP now";
+			    Para::Frame->kill_children;
 			    exit 1;
 			}
 			elsif( $TERMINATE eq 'TERM' )
 			{
 			    # No restart
 			    debug "Executing TERM now";
+			    Para::Frame->kill_children;
 			    exit 0;
 			}
 			elsif( $TERMINATE eq 'RESTART' )
 			{
-			    # No restart
 			    debug "Executing RESTART now";
+			    Para::Frame->kill_children;
 			    Para::Frame->restart;
 			    die "Should never reach this point";
 			}
@@ -1409,6 +1411,35 @@ sub restart
 
 #######################################################################
 
+=head2 kill_children
+
+  Para::Frame->kill_children()
+
+=cut
+
+sub kill_children
+{
+    my( $class ) = @_;
+
+    foreach my $child ( values %CHILD )
+    {
+	my $cpid = $child->pid;
+	debug "  killing child $cpid";
+	kill 9, $cpid;
+    }
+
+    foreach my $child ( values %WORKER )
+    {
+	my $cpid = $child->pid;
+	debug "  killing worker $cpid";
+	kill 9, $cpid;
+    }
+
+}
+
+
+#######################################################################
+
 =head2 add_background_jobs_conditional
 
 =cut
@@ -1611,6 +1642,7 @@ sub handle_request
 #	my $key = $req->original_url_string;
 	my $key = $req->{'env'}{'REQUEST_URI'}
 	  || $req->original_url_string;
+warn "req key is $key\n";
 	if( $session->{'page_result'}{ $key } )
 	{
 	    $req->send_stored_result( $key );
@@ -2317,6 +2349,8 @@ sub configure
 			      COMPILE_DIR =>  $CFG->{'ttcdir'}.'/html',
 			      type => 'html',
 			      subdir_suffix => '',
+			      pre_dir => 'inc',
+			      inc_dir => 'inc',
 			      handles => ['tt'],
 			     });
 
@@ -2328,6 +2362,8 @@ sub configure
 			      TAG_STYLE => 'star',
 			      type => 'html_pre',
 			      subdir_suffix => '_pre',
+			      pre_dir => 'inc_pre',
+			      inc_dir => 'inc',
 			     });
 
     Para::Frame::Burner->add({
@@ -2342,6 +2378,8 @@ sub configure
 			      },
 			      type => 'plain',
 			      subdir_suffix => '_plain',
+			      pre_dir => 'inc_plain',
+			      inc_dir => 'inc_plain',
 			      handles => ['css'],
 			      ABSOLUTE => 1,
 			      TRIM => 1,
