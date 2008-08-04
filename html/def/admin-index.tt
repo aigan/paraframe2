@@ -28,8 +28,8 @@
    [% ELSE %]
    <td>
       [% doc = item.document %]
-      <a href="[% item.name | uri | html %]"><img src="/icons/text.gif" style="float: left; border: 0"></a>
-      <a href="[% item.name | uri | html %]">[% item.name | html %]</a><br>
+      <a href="$home/pf/cms/source.tt?page=$item.url_path"><img src="/icons/text.gif" style="float: left; border: 0"></a>
+      <a href="$home/pf/cms/source.tt?page=$item.url_path">[% item.name | html %]</a><br>
      [% doc.title || doc.otitle | html %]
    </td>
    <td>[% doc.pf_source_file +%]
