@@ -7,7 +7,7 @@ Request [% req.id %] @ port [% cfg.port %]</div>
 [%+ go("Index", "$page.dir.url_path/admin-index.tt") %]
 [%+ go("Configure", "$home/pf/config/", 'mark') %]
 [%+ go("Source", "$home/pf/cms/source.tt", 'mark') %]
-[%+ go("Edit", "$home/pf/cms/edit_html.tt", 'mark') %]
+[%+ go("Edit", "$home/pf/cms/edit_src.tt", 'mark') %]
 
 [% IF req.session.admin_mode %]
    [%+ go("Turn Admin off", me, 'session_vars_update', session_vars_update='admin_mode', admin_mode=0) %]
