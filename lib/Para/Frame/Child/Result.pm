@@ -167,6 +167,9 @@ sub return
     {
 	debug "Faild to send data";
     }
+
+    sleep 10; # TODO: Should we wait fot parent to recieve the data?
+
     exit 0;  # don't forget this
 }
 
