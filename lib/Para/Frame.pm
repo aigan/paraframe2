@@ -356,7 +356,7 @@ sub main_loop
 		elsif( $req->{'childs'} )
 		{
 		    # Stay open while waiting for child
-		    if( debug >= 4 )
+		    if( debug >= 1 )
 		    {
 			debug "$req->{reqnum} stays open, waiting for $req->{'childs'} childs";
 			foreach my $child ( values %CHILD )

@@ -288,10 +288,7 @@ sub get_results
 
     chomp $child->{'data'}; # Remove last \n
     my $tlength = length $child->{'data'};
-    if( debug )
-    {
-	debug(2,"Got $tlength bytes of data");
-    }
+    debug(2,"Got $tlength bytes of data");
 
     unless( $child->{'data'} )
     {
@@ -315,7 +312,7 @@ sub get_results
     my( $result ) = thaw( substr $child->{'data'}, $plength );
 #    warn "  result: $result\n"; ### DEBUG
     $child->{'result'} = $result;
-    debug 2, "Data result stored";
+    debug 2, "Data result stored for ".$child->req;
 
 
     delete $child->{'data'}; # We are finished with the raw data
