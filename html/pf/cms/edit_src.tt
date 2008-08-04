@@ -10,7 +10,7 @@
 [% tpage = file(url=page_path,site=page.site) %]
 [% tpaget = tpage.template %]
 
-<h1>Edit of <code>[% jump(tpaget.url_path, tpage.url_path_slash) %]</code></h1>
+<h1>Edit of <code>[% jump(tpaget.dir.url_path, "$tpaget.dir.url_path/admin-index.tt") %] / [% jump(tpaget.name, tpaget.url_path_slash) %]</code></h1>
 
 <div id="editor">
 <div id="toolbar">
@@ -22,7 +22,7 @@
 
 <script>
 
-    // Code based on http://www.fckeditor.net/
+    // Code based on http://www.fckeditor.net/ v2.4
 
 var PFTools = new Object() ;
 PFTools.SaveStyles = function( element )
@@ -141,6 +141,7 @@ function fitwindow()
   estyle.position      = "absolute";
   estyle.left          = "0px";
   estyle.top           = "0px";
+  estyle.zIndex	       = 100;
 
 
   fitwindow_resize();
