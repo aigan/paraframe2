@@ -312,7 +312,7 @@ sub get_results
     my( $result ) = thaw( substr $child->{'data'}, $plength );
 #    warn "  result: $result\n"; ### DEBUG
     $child->{'result'} = $result;
-    debug 2, "Data result stored for ".$child->req;
+    debug 2, "Data result stored for ".$child->req->id;
 
 
     delete $child->{'data'}; # We are finished with the raw data
