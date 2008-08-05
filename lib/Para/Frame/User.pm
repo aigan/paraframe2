@@ -183,7 +183,19 @@ sub authenticate_user
     $password_encrypted ||= $q->cookie('password') || "";
 
     my $username = $u->username;
-    confess "No username for $u->{id} ($u)" unless $username;
+
+    unless( $username )
+    {
+	debug "No username for $u->{id} ($u)";
+	my $ucl = ref $u;
+	debug "  class $ucl";
+	no strict "refs";
+	foreach my $isa (@{"${ucl}::ISA"})
+	{
+	    debug " - $isa";
+	}
+	confess "no username";
+    }
     debug(3,"authenticating $username");
     debug(3,"  with password $password_encrypted");
 
