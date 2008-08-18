@@ -34,7 +34,7 @@ BEGIN
 use Para::Frame::Reload; # Not working for active workers
 use Para::Frame::Client;
 
-use Para::Frame::Utils qw( debug throw client_send datadump );
+use Para::Frame::Utils qw( debug throw client_send datadump validate_utf8 );
 
 =head1 DESCRIPTION
 
@@ -280,6 +280,7 @@ sub init
 
 		    unless( $datalength )
 		    {
+#			debug "Length of block is ".bytes::length($inbuffer);
 			if( $inbuffer =~ s/^(\d+)\x00// )
 			{
 			    $datalength = $1;
@@ -315,6 +316,11 @@ sub init
 
 			if( $code eq 'OMETHOD' ) # list context
 			{
+
+#			    debug validate_utf8(\$inbuffer);
+			    utf8::decode($inbuffer);
+#			    debug validate_utf8(\$inbuffer);
+
 			    my( $req_id, $obj, $method, @args ) = thaw($inbuffer);
 			    debug 2, "Doing $method";
 #			    debug "obj ".datadump($obj);

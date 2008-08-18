@@ -333,14 +333,18 @@ sub send_to_server
     $valref ||= \ "1";
     my $length_code = length($$valref) + length($code) + 1;
 
+    my $data = "$length_code\x00$code\x00" . $$valref;
+
+#    warn "lengthcode ($length_code) ".(bytes::length($$valref) + bytes::length($code) + 1)."\n";
+
     if( $DEBUG > 3 )
     {
-	warn "$$: Sending $code : $$valref\n";
+	warn "$$: Sending string $data\n";
 #	warn sprintf "$$:   at %.2f\n", Time::HiRes::time;
     }
 
-    my $data = "$length_code\x00$code\x00" . $$valref;
     my $length = length($data);
+#    warn "$$: Length of block is ($length) ".bytes::length($data)."\n";
     my $errcnt = 0;
     my $chunk = 16384; # POSIX::BUFSIZ * 2
     my $sent = 0;
