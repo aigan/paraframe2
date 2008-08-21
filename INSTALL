@@ -51,12 +51,13 @@ depends on it. Be sure to allow using .htaccess in your webroot by
 using "AllowOverride All". For example:
 
     <Directory /var/www/>
-      Options Indexes FollowSymLinks
+      Options Indexes FollowSymLinks -MultiViews
       AllowOverride All
     </Directory>
 
 You can turn off apache functionality that is replaced by paraframe,
-like MultiViews. Here is an example .htaccess file placed in
+like MultiViews. MultiViews will interfere with the uri2file lookup
+functionality.  Here is an example .htaccess file placed in
 /var/www/pf-test :
 
     Options -MultiViews
