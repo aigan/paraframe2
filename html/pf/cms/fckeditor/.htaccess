@@ -8,4 +8,8 @@ AddType text/xml .xml
 # Making sure not to render js files
 PerlSetVar site ignore
 
+# Multiviews will not work with dirs like fck_link if there is a file
+# in the same place with the name fck_link.html
+Options -MultiViews
+
 #EOF
