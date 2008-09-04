@@ -348,7 +348,7 @@ sub main_loop
 		}
 		elsif( @{$req->{'jobs'}} )
 		{
-		    if( $LEVEL > 3 )
+		    if( ($LEVEL > 3) and ($req->id == $REQNUM ) )
 		    {
 			debug "Not doing queued job for req ".$req->id;
 		    }
