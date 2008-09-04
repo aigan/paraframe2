@@ -27,7 +27,7 @@ use Socket;
 use POSIX qw( locale_h WNOHANG BUFSIZ );
 use Text::Autoformat; #exports autoformat()
 use Time::HiRes qw( time usleep );
-use Carp qw( cluck confess carp croak );
+use Carp qw( cluck confess carp croak longmess );
 use Sys::CpuLoad;
 use DateTime::TimeZone;
 use DateTime::Format::Strptime;
@@ -2516,6 +2516,8 @@ sub report
     $out .= "Global DEBUG level: $DEBUG\n";
     $out .= "DEBUG indent: $INDENT\n";
     $out .= "Current requst is $REQ->{'reqnum'}\n";
+    $out .= "Level is $LEVEL\n";
+    $out .= "Terminate is $TERMINATE\n";
 #    $out .= "Last running request was $REQ_LAST->{'reqnum'}\n";
     $out .= sprintf "Current user is %s\n", $U->name;
     $out .= "\nActive requests:\n";
@@ -2596,6 +2598,11 @@ sub report
 
     $out .= "Shortest interval between BG jobs: @{[BGJOB_MAX]} secs\n";
     $out .= "Longest  interval between BG jobs: @{[BGJOB_MIN]} secs\n";
+
+    $out .= "\n";
+
+    $out .= longmess();
+
 
     return $out;
 }
