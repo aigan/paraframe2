@@ -348,18 +348,18 @@ sub main_loop
 		}
 		elsif( @{$req->{'jobs'}} )
 		{
-		    if( ($LEVEL > 3) and ($req->id == $REQNUM ) )
-		    {
-			debug "Not doing queued job for req ".$req->id;
-		    }
-		    else
-		    {
+#		    if( ($LEVEL > 3) and ($req->id == $REQNUM ) )
+#		    {
+#			debug "Not doing queued job for req ".$req->id;
+#		    }
+#		    else
+#		    {
 			my $job = shift @{$req->{'jobs'}};
 			my( $cmd, @args ) = @$job;
 			switch_req( $req );
 			debug(5,"Found a job ($cmd) in $req->{reqnum}");
 			$req->$cmd( @args );
-		    }
+#		    }
 		}
 		elsif( $req->{'childs'} )
 		{
