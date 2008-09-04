@@ -194,7 +194,7 @@ sub get_by_id
 
     }
 
-    die "Request $id not found";
+    confess "Request $id not found";
 }
 
 
