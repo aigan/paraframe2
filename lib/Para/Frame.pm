@@ -276,6 +276,7 @@ sub main_loop
     if( $LEVEL > 2 )
     {
 	debug "Level $LEVEL reached. Trying to wind down...";
+	sleep 1;
 	return $LEVEL;
     }
 
