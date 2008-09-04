@@ -273,13 +273,6 @@ sub main_loop
     # the yielding party is. Espacially, if it's waiting for something
     # and realy want to give that something some time
 
-    if( $LEVEL > 2 )
-    {
-	debug "Level $LEVEL reached. Trying to wind down...";
-	sleep 1;
-	return $LEVEL;
-    }
-
     if( $child )
     {
 	$LEVEL ++;
@@ -389,7 +382,7 @@ sub main_loop
 
 	    ### Do background jobs if no req jobs waiting
 	    #
-	    unless( values %REQUEST )
+	    unless( $LEVEL or values %REQUEST )
 	    {
 		add_background_jobs_conditional() and
 		  $timeout = TIMEOUT_SHORT;
@@ -589,6 +582,7 @@ sub main_loop
     }
     debug(4,"Exiting  main_loop at level $LEVEL",-1);
     $LEVEL --;
+    return;
 }
 
 
@@ -1722,7 +1716,17 @@ warn "req key is $key\n";
 		debug "This is the first request in this session";
 	    }
 
-	    $req->after_jobs;
+
+
+	    ### queue request if we are nested in yield
+	    if( $LEVEL )
+	    {
+		$req->add_job('after_jobs');
+	    }
+	    else
+	    {
+		$req->after_jobs;
+	    }
 	}
     }
 
