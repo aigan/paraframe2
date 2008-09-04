@@ -320,17 +320,7 @@ sub main_loop
 	    my @requests = values %REQUEST;
 	    foreach my $req ( @requests )
 	    {
-		if( $req->{'in_yield'} )
-		{
-		    # Do not do jobs for a request that waits for a child
-		    debug 0, "In_yield: $req->{reqnum}";
-		}
-		elsif( $req->{'wait'} )
-		{
-		    # Waiting for something else to finish...
-		    debug 0, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
-		}
-		elsif( $req->{'cancel'} )
+		if( $req->{'cancel'} )
 		{
 		    switch_req( $req );
 		    debug "cancelled by request";
@@ -345,6 +335,16 @@ sub main_loop
 
 		    $req->run_hook('done');
 		    close_callback($req->{'client'});
+		}
+		elsif( $req->{'in_yield'} )
+		{
+		    # Do not do jobs for a request that waits for a child
+		    debug 0, "In_yield: $req->{reqnum}";
+		}
+		elsif( $req->{'wait'} )
+		{
+		    # Waiting for something else to finish...
+		    debug 0, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
 		}
 		elsif( @{$req->{'jobs'}} )
 		{
