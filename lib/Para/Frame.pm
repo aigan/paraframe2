@@ -273,6 +273,12 @@ sub main_loop
     # the yielding party is. Espacially, if it's waiting for something
     # and realy want to give that something some time
 
+    if( $LEVEL > 2 )
+    {
+	debug "Level $LEVEL reached. Trying to wind down...";
+	return $LEVEL;
+    }
+
     if( $child )
     {
 	$LEVEL ++;
