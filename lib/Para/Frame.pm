@@ -1735,7 +1735,8 @@ warn "req key is $key\n";
 	    if( $LEVEL )
 	    {
 		debug "Queueing job for ".$req->id;
-		$req->add_job('after_jobs');
+		$req->add_job('nop');
+		$req->add_job('after_job');
 	    }
 	    else
 	    {
