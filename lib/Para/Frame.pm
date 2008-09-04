@@ -323,12 +323,12 @@ sub main_loop
 		if( $req->{'in_yield'} )
 		{
 		    # Do not do jobs for a request that waits for a child
-		    debug 5, "In_yield: $req->{reqnum}";
+		    debug 0, "In_yield: $req->{reqnum}";
 		}
 		elsif( $req->{'wait'} )
 		{
 		    # Waiting for something else to finish...
-		    debug 5, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
+		    debug 0, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
 		}
 		elsif( $req->{'cancel'} )
 		{
@@ -357,7 +357,7 @@ sub main_loop
 			my $job = shift @{$req->{'jobs'}};
 			my( $cmd, @args ) = @$job;
 			switch_req( $req );
-			debug(5,"Found a job ($cmd) in $req->{reqnum}");
+			debug(0,"Found a job ($cmd) in $req->{reqnum}");
 			$req->$cmd( @args );
 #		    }
 		}
