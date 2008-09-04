@@ -64,7 +64,7 @@ sub method
 
 #    my @callargs = ( $req->client.'', $obj, $method, @args );
 #    debug datadump(\@callargs);
-#    debug "Freezing $obj -> $method ( @args )";
+    debug "Freezing $obj -> $method ( @args )";
 
     my $val  = safeFreeze( $req->id, $obj, $method, @args );
     Para::Frame::Client::connect_to_server( $port );

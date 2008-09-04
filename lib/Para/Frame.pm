@@ -280,7 +280,7 @@ sub main_loop
 
     $LAST = time; # To give info about if it's time to yield
 
-    debug(4,"Entering main_loop at level $LEVEL",1) if $LEVEL;
+    debug(0,"Entering main_loop at level $LEVEL",1) if $LEVEL;
     print "MAINLOOP $LEVEL\n" unless $Para::Frame::FORK;
 
     $timeout ||= TIMEOUT_SHORT;
@@ -1721,6 +1721,7 @@ warn "req key is $key\n";
 	    ### queue request if we are nested in yield
 	    if( $LEVEL )
 	    {
+		debug "Queueing job";
 		$req->add_job('after_jobs');
 	    }
 	    else
