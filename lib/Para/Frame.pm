@@ -346,12 +346,20 @@ sub main_loop
 		    $req->run_hook('done');
 		    close_callback($req->{'client'});
 		}
-		elsif( my $job = shift @{$req->{'jobs'}} )
+		elsif( @{$req->{'jobs'}} )
 		{
-		    my( $cmd, @args ) = @$job;
-		    switch_req( $req );
-		    debug(5,"Found a job ($cmd) in $req->{reqnum}");
-		    $req->$cmd( @args );
+		    if( $LEVEL )
+		    {
+			debug "Not doing queued job for req ".$req->id;
+		    }
+		    else
+		    {
+			my $job = shift @{$req->{'jobs'}};
+			my( $cmd, @args ) = @$job;
+			switch_req( $req );
+			debug(5,"Found a job ($cmd) in $req->{reqnum}");
+			$req->$cmd( @args );
+		    }
 		}
 		elsif( $req->{'childs'} )
 		{
@@ -1721,7 +1729,7 @@ warn "req key is $key\n";
 	    ### queue request if we are nested in yield
 	    if( $LEVEL )
 	    {
-		debug "Queueing job";
+		debug "Queueing job for ".$req->id;
 		$req->add_job('after_jobs');
 	    }
 	    else
