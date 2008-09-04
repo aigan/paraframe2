@@ -2140,7 +2140,11 @@ sub yield
 	{
 	    # The reqnum param is just for getting it in backtrace
 	    Para::Frame::main_loop( 1, $wait, $req->{'reqnum'} );
-	    unless( $req->{'wait'} )
+	    if( $req->{'cancel'} )
+	    {
+		$done = 1;
+	    }
+	    elsif( not $req->{'wait'} )
 	    {
 		$done = 1;
 	    }
