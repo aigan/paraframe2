@@ -194,7 +194,7 @@ sub get_by_id
 
     }
 
-    confess "Request $id not found";
+    return undef;
 }
 
 
