@@ -2823,7 +2823,7 @@ sub cancel
 	delete $req->{'active_reqest'};
     }
 
-    debug "This was a cancel at ".longmess;
+#    debug "This was a cancel at ".longmess;
 }
 
 
