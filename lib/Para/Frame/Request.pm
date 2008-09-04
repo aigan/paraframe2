@@ -2810,6 +2810,8 @@ sub cancel
 	$areq->cancel;
 	delete $req->{'active_reqest'};
     }
+
+    debug "This was a cancel at ".longmess;
 }
 
 
