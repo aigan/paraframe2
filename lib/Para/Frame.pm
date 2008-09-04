@@ -588,8 +588,13 @@ sub main_loop
 	    last;
 	}
     }
-    debug(4,"Exiting  main_loop at level $LEVEL",-1);
-    $LEVEL --;
+    debug(0,"Exiting  main_loop at level $LEVEL",-1);
+
+    if( $LEVEL )
+    {
+	$LEVEL --;
+    }
+
     return;
 }
 
