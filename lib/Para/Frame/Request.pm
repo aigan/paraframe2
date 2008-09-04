@@ -2748,6 +2748,21 @@ sub cancel
 	$req->{'childs'} = 0;
     }
 
+    if( my $worker = $req->{'worker'} )
+    {
+	debug "  Killing worker";
+	unless( $Para::Frame::WORKER{ $worker->pid } )
+	{
+	    # See REAPER. Worker may have died
+	    debug sprintf "Req %d lost a worker", $req->id;
+	}
+	else
+	{
+	    kill 9, $worker->pid;
+	}
+	delete $req->{'worker'};
+    }
+
     if( my $orig_req = $req->original )
     {
 	$orig_req->cancel;
