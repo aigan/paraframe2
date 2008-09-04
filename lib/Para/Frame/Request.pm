@@ -215,6 +215,12 @@ sub init
 	client_send($req->client, "RESTARTING\x001\n");
 	return 0;
     }
+    elsif( $Para::Frame::LEVEL > 5 and not $req->q->param('req') and not $req->q->param('reqnum') )
+    {
+	debug "OVERLOADED!";
+	client_send($req->client, "RESTARTING\x001\n");
+	return 0;
+    }
 
     my $env = $req->{'env'};
 
