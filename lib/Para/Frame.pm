@@ -280,7 +280,7 @@ sub main_loop
 
     $LAST = time; # To give info about if it's time to yield
 
-    debug(0,"Entering main_loop at level $LEVEL",1) if $LEVEL;
+    debug(3,"Entering main_loop at level $LEVEL",1) if $LEVEL;
     print "MAINLOOP $LEVEL\n" unless $Para::Frame::FORK;
 
     $timeout ||= TIMEOUT_SHORT;
@@ -339,12 +339,12 @@ sub main_loop
 		elsif( $req->{'in_yield'} )
 		{
 		    # Do not do jobs for a request that waits for a child
-		    debug 0, "In_yield: $req->{reqnum}";
+		    debug 3, "In_yield: $req->{reqnum}";
 		}
 		elsif( $req->{'wait'} )
 		{
 		    # Waiting for something else to finish...
-		    debug 0, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
+		    debug 3, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
 		}
 		elsif( @{$req->{'jobs'}} )
 		{
@@ -357,7 +357,7 @@ sub main_loop
 			my $job = shift @{$req->{'jobs'}};
 			my( $cmd, @args ) = @$job;
 			switch_req( $req );
-			debug(0,"Found a job ($cmd) in $req->{reqnum}");
+			debug(3,"Found a job ($cmd) in $req->{reqnum}");
 			$req->$cmd( @args );
 #		    }
 		}
@@ -588,7 +588,7 @@ sub main_loop
 	    last;
 	}
     }
-    debug(0,"Exiting  main_loop at level $LEVEL",-1);
+    debug(3,"Exiting  main_loop at level $LEVEL",-1);
 
     if( $LEVEL )
     {
