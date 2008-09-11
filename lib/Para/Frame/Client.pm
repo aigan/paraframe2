@@ -168,6 +168,10 @@ sub handler
 	Apache2::SubRequest->import();
 	require Apache2::Connection;
 	Apache2::Connection->import();
+
+	# Unparsed uri keeps multiple // at end of path
+	$uri = $r->unparsed_uri;
+	$uri =~ s/\?.*//g;
     }
 
     my $port = $dirconfig->{'port'};
@@ -187,7 +191,7 @@ sub handler
     }
 
     my $reqline = $r->the_request;
-    warn substr(sprintf("[%s] %d: %s", scalar(localtime), $$, $reqline), 0, 79)."\n";
+#    warn substr(sprintf("[%s] %d: %s", scalar(localtime), $$, $reqline), 0, 79)."\n";
 
     ### Optimize for the common case.
     #
@@ -261,7 +265,7 @@ sub handler
     }
 
 
-#    warn sprintf "URI %s FILE %s CTYPE %s\n", $uri, $filename, $ctype;
+    warn sprintf "URI %s FILE %s CTYPE %s\n", $uri, $filename, $ctype;
 
     my $value = freeze [ \%params,  \%ENV, $uri, $filename, $ctype, $dirconfig, $r->header_only, \%files ];
 
@@ -1111,7 +1115,7 @@ sub uri2file
 
     # TODO: fixme
     # Removes extra slashes
-    $filename =~ s(//)(/)g;
+    $filename =~ s(//+)(/)g;
 
     return( $filename );
 }
