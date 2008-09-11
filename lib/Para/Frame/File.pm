@@ -183,7 +183,7 @@ sub new
     if( $url_in )
     {
 	$url_name = $url_in;
-	$url_name =~ s/\/$//; # No trailing slash
+	$url_name =~ s/\/+$//; # No trailing slash
 
 	if( $sys_in )
 	{
@@ -227,7 +227,7 @@ sub new
     elsif( $sys_in )
     {
 	$sys_name = $sys_in;
-	$sys_name =~ s/\/$//; # No trailing slash
+	$sys_name =~ s/\/+$//; # No trailing slash
 
 	# $sys_norm is undef
     }
@@ -298,14 +298,14 @@ sub new
 
 	unless( -d $sys_name )
 	{
-	    $sys_name =~ s/\/$//;
+	    $sys_name =~ s/\/+$//;
 	    $sys_norm = $sys_name;
 
 	    # Compare with $url_norm
 	    if( $url_norm and $url_norm =~ /\/$/ )
 	    {
 		cluck "The URL $url_norm ($sys_norm) is not a dir";
-		$url_norm =~ s/\/$//;
+		$url_norm =~ s/\/+$//;
 	    }
 	}
 
@@ -1508,8 +1508,13 @@ sub normalize
 
     if( my $url = $f->{'url_norm'} )
     {
+#	debug "normalizing $url";
+
 	$url =~ s/\.\w\w\.tt$/.tt/;
 	$url =~ s/\/index.tt$/\//;
+
+	# Cleanup any remaining double slashes
+	$url =~ s(//+)(/)g;
 
 #	if( $url =~ /Ã/ )
 #	{
@@ -1519,12 +1524,17 @@ sub normalize
 
 	if( $url ne $f->{'url_norm'} )
 	{
+#	    debug "   ... $f->{'url_norm'} != $url";
 	    my $args = {};
 	    $args->{'url'} = $url;
 	    $args->{'site'} = $f->site;
 	    $args->{'file_may_not_exist'} = 1;
 	    return Para::Frame::File->new($args);
 	}
+    }
+    else
+    {
+#	debug "no normalize";
     }
 
     return $f;
