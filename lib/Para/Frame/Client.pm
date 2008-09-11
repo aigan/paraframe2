@@ -265,7 +265,7 @@ sub handler
     }
 
 
-    warn sprintf "URI %s FILE %s CTYPE %s\n", $uri, $filename, $ctype;
+#    warn sprintf "URI %s FILE %s CTYPE %s\n", $uri, $filename, $ctype;
 
     my $value = freeze [ \%params,  \%ENV, $uri, $filename, $ctype, $dirconfig, $r->header_only, \%files ];
 
