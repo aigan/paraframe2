@@ -470,7 +470,12 @@ sub new
 	}
     }
 
-    if(  my $cached = $Para::Frame::File::Cache{$file->{'sys_name'}} )
+
+    # We can't lookup object by sys_file, since the URL given may not
+    # match the url for other objects with the same sys_name
+
+#    if(  my $cached = $Para::Frame::File::Cache{$file->{'sys_name'}} )
+    if( my $cached = 0 )
     {
 	$Para::Frame::File::Cache{ $key } = $cached;
 	debug 2, "---> GOT FROM CACHE";
@@ -503,7 +508,9 @@ sub new
     }
     else
     {
-	$Para::Frame::File::Cache{$file->{'sys_name'}} =
+	# We can't lookup object by sys_file, since the URL given may
+	# not match the url for other objects with the same sys_name
+#	$Para::Frame::File::Cache{$file->{'sys_name'}} =
 	  $Para::Frame::File::Cache{ $key } = $file;
     }
 
