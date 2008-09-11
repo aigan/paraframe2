@@ -581,13 +581,13 @@ sub send_output
 
     my $url_in  = $req->original_url_string;
     my $url_out = $page->url_path_slash;
-#    my $url_norm = $req->normalized_url( $url );
 
-
+#    my $url_norm = $page->normalize->url_path_slash;
+#    my $url_orig = $req->original_url_string;
 #    debug "URL In  $url_in";
 #    debug "URL Out $url_out";
-
-#    debug "Original url: $url";
+#    debug "URL norm $url_norm";
+#    debug "URL orig $url_orig";
 
     if( $url_in ne $url_out )
     {
@@ -1091,6 +1091,10 @@ sub set_renderer
 	|| $req->q->param('renderer')
 	|| $req->dirconfig->{'renderer'}
       );
+
+
+#    debug "renderer set to $renderer";
+
 
     if( not $renderer and $resp->{'page'} )
     {
