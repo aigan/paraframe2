@@ -39,6 +39,9 @@ use base qw(Para::Frame::L10N);
 our %Lexicon =
   (
    '_AUTO' => 1,
+
+   'page_ready' =>
+   'Page Ready!',
   );
 
 1;
