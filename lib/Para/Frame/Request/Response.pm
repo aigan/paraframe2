@@ -622,7 +622,7 @@ sub send_output
 	    # TODO: fixme
 
 	    $req->session->register_result_page($resp, $url_out);
-	    $req->send_code('PAGE_READY', $url_out);
+	    $req->send_code('PAGE_READY', $url_out, loc('page_ready'));
 	}
 	return;
     }
@@ -648,7 +648,7 @@ sub send_output
 	    $req->cookies->add_to_header;
 
 	    $req->session->register_result_page($resp, $url_out);
-	    $req->send_code('PAGE_READY', $url_out);
+	    $req->send_code('PAGE_READY', $url_out, loc('page_ready'));
 	}
 	elsif( $result eq 'SEND' )
 	{
@@ -817,7 +817,7 @@ sub send_redirection
     my $res = $req->get_cmd_val( 'WAIT' );
     if( $res eq 'LOADPAGE' )
     {
-	$req->send_code('PAGE_READY', $url_out );
+	$req->send_code('PAGE_READY', $url_out, loc('page_ready') );
 	return;
     }
 

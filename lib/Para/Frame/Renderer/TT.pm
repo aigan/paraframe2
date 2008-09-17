@@ -31,6 +31,7 @@ BEGIN
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug create_dir chmod_file idn_encode idn_decode datadump catch );
+use Para::Frame::L10N qw( loc );
 use Scalar::Util qw(weaken);
 
 
@@ -182,7 +183,7 @@ sub render_output
     my $site = $page->site;
     my $home = $site->home_url_path;
 
-    $Para::Frame::REQ->note("Rendering page");
+    $Para::Frame::REQ->note(loc("Rendering page"));
 
     my $tmpl = $rend->template;
     unless( $tmpl )

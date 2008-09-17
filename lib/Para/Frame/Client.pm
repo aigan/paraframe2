@@ -65,6 +65,7 @@ our $WAIT;
 our $CANCEL;
 our @NOTES;
 our $REQNUM;
+our $WAITMSG;
 
 =head1 DESCRIPTION
 
@@ -563,7 +564,7 @@ sub create_dir
 
     my $orig_umask = umask;
     umask 0;
-    mkdir $dir, 02711;
+    mkdir $dir, 02711; # 02755?
     umask $orig_umask;
 }
 
@@ -765,7 +766,8 @@ sub get_response
 			$chunks += send_loadpage()
 			  or die "This is not a good place to be";
 		    }
-		    send_reload($row);
+		    my( $href, $msg ) = split(/\0/, $row);
+		    send_reload($href, $msg);
 		    last;
 		}
 		# Do not send loadpage now
@@ -830,9 +832,10 @@ sub get_response
 		# Retrieving name of loadpage
 		elsif( $code eq 'USE_LOADPAGE' )
 		{
-		    ( $LOADPAGE_URI, $LOADPAGE_TIME, $REQNUM ) =
+		    ( $LOADPAGE_URI, $LOADPAGE_TIME, $REQNUM, $WAITMSG ) =
 		      split(/\0/, $row);
 		    $STARTED = time;
+		    $WAITMSG||="";
 		    if( $DEBUG > 1 )
 		    {
 			warn "$$: Loadpage $LOADPAGE_URI in $LOADPAGE_TIME secs\n";
@@ -976,7 +979,7 @@ sub send_reload
     # self.location.replace('$url');
 
     $r->print("<script type=\"text/javascript\">window.location.href='$url';</script>");
-#    $r->print("<script type=\"text/javascript\">self.location.replace('$url');</script>");
+#    $r->print("<a href=\"$url\">go</a>");
     $r->rflush;
 }
 
@@ -1077,7 +1080,9 @@ sub send_message
 
 sub send_message_waiting
 {
-    my $msg = "Processing \n";
+    return unless length($WAITMSG);
+
+    my $msg = "$WAITMSG \n";
     if( $msg eq $LAST_MESSAGE )
     {
 	$r->print("<script type=\"text/javascript\">e=document.forms['f'].messages;e.value = e.value.substring(0,e.value.length-2)+\"..\\n\";bottom();</script>\n");

@@ -34,7 +34,6 @@ use DateTime::Format::Strptime;
 use Cwd qw( abs_path );
 use File::Basename; # dirname
 #use Template::Stash::ForceUTF8;
-use Para::Frame::Template::Stash::CheckUTF8;
 use FreezeThaw qw( thaw );
 
 our $VERSION;
@@ -48,12 +47,14 @@ BEGIN
 }
 
 use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir );
+use Para::Frame::Template::Stash::CheckUTF8;
 use Para::Frame::Unicode;
 use Para::Frame::Watchdog;
 use Para::Frame::Request;
 use Para::Frame::Widget;
 use Para::Frame::Burner;
 use Para::Frame::Time qw( now );
+use Para::Frame::L10N qw( loc );
 use Para::Frame::Email::Address;
 use Para::Frame::L10N;
 use Para::Frame::Worker;
@@ -357,7 +358,7 @@ sub main_loop
 			my $job = shift @{$req->{'jobs'}};
 			my( $cmd, @args ) = @$job;
 			switch_req( $req );
-			debug(3,"Found a job ($cmd) in $req->{reqnum}");
+			debug(3,"Found a job $cmd(@args) in $req->{reqnum}");
 			$req->$cmd( @args );
 #		    }
 		}
@@ -1718,7 +1719,8 @@ warn "req key is $key\n";
 	    {
 		if( ($loadpage ne 'no') and not $TERMINATE )
 		{
-		    $req->send_code('USE_LOADPAGE', $loadpage, 3, $REQNUM);
+		    $req->send_code('USE_LOADPAGE', $loadpage, 3, $REQNUM,
+				    loc("Processing"));
 		}
 	    }
 	    else

@@ -36,6 +36,7 @@ use Para::Frame::File;
 use Para::Frame::Burner;
 use Para::Frame::Template::Compiled;
 use Para::Frame::Time qw( now );
+use Para::Frame::L10N qw( loc );
 
 
 use base qw( Para::Frame::File );
@@ -203,7 +204,7 @@ sub document
 	    }
 
 #	    debug("Parsing with ($parser): ".$burner->type);
-	    $req->note("Compiling ".($tmpl->url_path_slash||$tmpl->sys_path_slash));
+	    $req->note(loc("Compiling [_1]",$tmpl->url_path_slash||$tmpl->sys_path_slash));
 	    my $metadata =
 	    {
 	     name => $tmplname,
