@@ -175,9 +175,11 @@ sub get_by_id
     my( $this, $id ) = @_;
 
     $id or die "id missing";
+    debug "Looking up req $id";
 
     foreach my $req ( values %Para::Frame::REQUEST )
     {
+	debug " + ".$req->{'reqnum'};
 	if( $req->{'reqnum'} == $id )
 	{
 	    return $req;
@@ -213,6 +215,7 @@ sub get_subreq_by_id
     {
 	foreach my $subreq ( @$subreqs )
 	{
+	    debug "   + ".$subreq->{'reqnum'};
 	    if( $subreq->{'reqnum'} == $id )
 	    {
 		return $subreq;
