@@ -41,44 +41,83 @@ our %Lexicon =
   (
    '_AUTO' => 1,
 
-   'File not found' =>
-   'Filen hittades inte',
-
-   'The file you requested cannot be found' =>
-   'Sidan som du angav kunde inte hittas',
-
-   'During the processing of [_1]' =>
-   'Under körningen av [_1]',
-
-   'Permission Denied' =>
-   'Access nekad',
-
-   'Database error' =>
-   'Databasfel',
-
-   'Problem during update' =>
-   'Problem med att spara uppgift',
-
-   'Information missing' =>
-   'Uppgifter saknas',
-
-   'Form check failed' =>
-   'Fel vid kontroll',
-
-   'Multiple alternatives' =>
-   'Flera alternativ',
-
-   'Confirm' =>
-   'Bekräfta uppgift',
-
    'Action failed' =>
    'Försök misslyckades',
+
+   'Click for calendar' =>
+   'Klicka för kalender',
 
    'Compilation error' =>
    'Kompileringsfel',
 
+   'Compiling [_1]' =>
+   'Kompilerar [_1]',
+
+   'Confirm' =>
+   'Bekräfta uppgift',
+
+   'Database error' =>
+   'Databasfel',
+
+   'During the processing of [_1]' =>
+   'Under körningen av [_1]',
+
+   'File not found' =>
+   'Filen hittades inte',
+
+   'Form check failed' =>
+   'Fel vid kontroll',
+
+   'Include path is' =>
+   'Sökvägen är',
+
+   'Information missing' =>
+   'Uppgifter saknas',
+
+   'Multiple alternatives' =>
+   'Flera alternativ',
+
+   'Name' =>
+   'Användarnamn',
+
+   'Name is missing' =>
+   'Namn saknas',
+
    'Not found' =>
    'Hittar inte',
+
+   'page_ready' =>
+   'Sidan är klar!',
+
+   'Password' =>
+   'Lösenord',
+
+   'Password is missing' =>
+   'Ange lösenord också',
+
+   'Permission Denied' =>
+   'Access nekad',
+
+   'Processing' =>
+   'Arbetar',
+
+   'Processing page' =>
+   'Laddar sidan',
+
+   'Problem during update' =>
+   'Problem med att spara uppgift',
+
+   'Request sent' =>
+   'Kontakt etablerad',
+
+   'Rendering page' =>
+   'Genererar sidan',
+
+   'recaptcha-no-response' =>
+   'Fyll i de två orden som visas på bilden',
+
+   'recaptcha-incorrect-captcha-sol' =>
+   'De ord du fyllde i stämmer inte med bilden. Försök igen',
 
    'Template error' =>
    'Mallfel',
@@ -86,32 +125,12 @@ our %Lexicon =
    'Template missing' =>
    'Mallfil saknas',
 
-   'Include path is' =>
-   'Sökvägen är',
-
-   'Click for calendar' =>
-   'Klicka för kalender',
-
-   'Name' =>
-   'Användarnamn',
-
-   'Password' =>
-   'Lösenord',
+   'The file you requested cannot be found' =>
+   'Sidan som du angav kunde inte hittas',
 
    'The user [_1] doesn\'t exist' =>
    'Användaren [_1] existerar inte',
 
-   'Name is missing' =>
-   'Namn saknas',
-
-   'Password is missing' =>
-   'Ange lösenord också',
-
-   'recaptcha-no-response' =>
-   'Fyll i de två orden som visas på bilden',
-
-   'recaptcha-incorrect-captcha-sol' =>
-   'De ord du fyllde i stämmer inte med bilden. Försök igen',
   );
 
 1;
