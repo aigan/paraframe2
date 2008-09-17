@@ -185,10 +185,10 @@ sub get_by_id
 	    return $req;
 	}
 
-	if( my $match = $req->get_subreq_by_id( $id ) )
-	{
-	    return $match;
-	}
+#	if( my $match = $req->get_subreq_by_id( $id ) )
+#	{
+#	    return $match;
+#	}
     }
 
     return undef;
