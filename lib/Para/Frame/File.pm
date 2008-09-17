@@ -475,44 +475,44 @@ sub new
     # match the url for other objects with the same sys_name
 
 #    if(  my $cached = $Para::Frame::File::Cache{$file->{'sys_name'}} )
-    if( my $cached = 0 )
-    {
-	$Para::Frame::File::Cache{ $key } = $cached;
-	debug 2, "---> GOT FROM CACHE";
-
-	# Upgrade with URL info if given
-	if( $file->{'url_name'} and not $cached->{'url_name'} )
-	{
-	    debug "---> EXTENDED WITH URL INFO";
-
-	    $cached->{'url_name'} = $file->{'url_name'};
-	    $cached->{'url_norm'} = $file->{'url_norm'};
-	    $cached->{'site'}     = $file->{'site'};
-	}
-
-	if( ref($file) ne ref($cached) )
-	{
-	    my $class_from = ref($cached);
-	    my $class_to   = ref($file);
-	    debug "Changing class of cached file from $class_from to $class_to";
-
-	    # In case of dir
-	    $cached->{'url_norm'} = $file->{'url_norm'};
-	    $cached->{'sys_norm'} = $file->{'sys_norm'};
-	    bless( $cached, ref($file) );
-	}
-
-	$cached->{'initiated'} = 0;
-
-	$file = $cached;
-    }
-    else
-    {
+#    if( my $cached = 0 )
+#    {
+#	$Para::Frame::File::Cache{ $key } = $cached;
+#	debug 2, "---> GOT FROM CACHE";
+#
+#	# Upgrade with URL info if given
+#	if( $file->{'url_name'} and not $cached->{'url_name'} )
+#	{
+#	    debug "---> EXTENDED WITH URL INFO";
+#
+#	    $cached->{'url_name'} = $file->{'url_name'};
+#	    $cached->{'url_norm'} = $file->{'url_norm'};
+#	    $cached->{'site'}     = $file->{'site'};
+#	}
+#
+#	if( ref($file) ne ref($cached) )
+#	{
+#	    my $class_from = ref($cached);
+#	    my $class_to   = ref($file);
+#	    debug "Changing class of cached file from $class_from to $class_to";
+#
+#	    # In case of dir
+#	    $cached->{'url_norm'} = $file->{'url_norm'};
+#	    $cached->{'sys_norm'} = $file->{'sys_norm'};
+#	    bless( $cached, ref($file) );
+#	}
+#
+#	$cached->{'initiated'} = 0;
+#
+#	$file = $cached;
+#    }
+#    else
+#    {
 	# We can't lookup object by sys_file, since the URL given may
 	# not match the url for other objects with the same sys_name
 #	$Para::Frame::File::Cache{$file->{'sys_name'}} =
 	  $Para::Frame::File::Cache{ $key } = $file;
-    }
+#    }
 
     $file->initialize( $args );
 

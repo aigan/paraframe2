@@ -358,7 +358,7 @@ sub main_loop
 			my $job = shift @{$req->{'jobs'}};
 			my( $cmd, @args ) = @$job;
 			switch_req( $req );
-			debug(3,"Found a job $cmd(@args) in $req->{reqnum}");
+			debug(1, sprintf "Found a job %s(%s) in %d", $cmd, join(', ', map {defined $_ ? $_ : '<undef>'} @args ), $req->{reqnum});
 			$req->$cmd( @args );
 #		    }
 		}
@@ -1138,7 +1138,7 @@ sub handle_code
     {
 	 my( $caller_id, $result ) = thaw($INBUFFER{$client});
 	 my $req;
-	 if( $REQ->{reqnum} == $caller_id )
+	 if( $REQ and ($REQ->{reqnum} == $caller_id) )
 	 {
 	     $req = $REQ;
 	 }
@@ -1292,9 +1292,12 @@ sub close_callback
 
     switch_req(undef);
 
-    $client->shutdown(2); # I have stopped using this socket
-    $SELECT->remove($client);
-    $client->close;
+    if( ref $client ) # if not a background request
+    {
+	$client->shutdown(2); # I have stopped using this socket
+	$SELECT->remove($client);
+	$client->close;
+    }
 }
 
 
@@ -1322,7 +1325,8 @@ sub REAPER
 	{
 	    unless( $child->{'done'} )
 	    {
-		warn "| Child $child_pid exited with status $?\n";
+		warn sprintf "| Child %d exited with status %s\n",
+		  $child_pid, defined $? ? $? : '<undef>';
 		$child->deregister( $? );
 	    }
 	}
@@ -1673,7 +1677,7 @@ sub handle_request
 #	my $key = $req->original_url_string;
 	my $key = $req->{'env'}{'REQUEST_URI'}
 	  || $req->original_url_string;
-warn "req key is $key\n";
+#warn "req key is $key\n";
 	if( $session->{'page_result'}{ $key } )
 	{
 	    $req->send_stored_result( $key );
