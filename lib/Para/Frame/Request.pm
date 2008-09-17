@@ -175,20 +175,20 @@ sub get_by_id
     my( $this, $id ) = @_;
 
     $id or die "id missing";
-    debug "Looking up req $id";
+#    debug "Looking up req $id";
 
     foreach my $req ( values %Para::Frame::REQUEST )
     {
-	debug " + ".$req->{'reqnum'};
+#	debug " + ".$req->{'reqnum'};
 	if( $req->{'reqnum'} == $id )
 	{
 	    return $req;
 	}
 
-#	if( my $match = $req->get_subreq_by_id( $id ) )
-#	{
-#	    return $match;
-#	}
+	if( my $match = $req->get_subreq_by_id( $id ) )
+	{
+	    return $match;
+	}
     }
 
     return undef;
@@ -215,7 +215,9 @@ sub get_subreq_by_id
     {
 	foreach my $subreq ( @$subreqs )
 	{
-	    debug "   + ".$subreq->{'reqnum'};
+	    next if $Para::Frame::REQUEST{$subreq->{'reqnum'}};
+
+#	    debug "   + ".$subreq->{'reqnum'};
 	    if( $subreq->{'reqnum'} == $id )
 	    {
 		return $subreq;
@@ -333,17 +335,17 @@ sub new_subrequest
 
     $Para::Frame::REQNUM ++;
 
-    if( my $site_in = $args->{'site'} )
-    {
-	my $site = $Para::Frame::CFG->{'site_class'}->get( $site_in );
-	debug "new_subrequest in site ".$site->desig;
-	if( $original_req->site->host ne $site->host )
-	{
+#    if( my $site_in = $args->{'site'} )
+#    {
+#	my $site = $Para::Frame::CFG->{'site_class'}->get( $site_in );
+#	debug "new_subrequest in site ".$site->desig;
+#	if( $original_req->site->host ne $site->host )
+#	{
 #	    debug "Host mismatch ".$site->host;
 #	    debug "Changing the client of the subrequest";
 	    $client = "background-$Para::Frame::REQNUM";
-	}
-    }
+#	}
+#    }
 
     $args->{'user'} ||= $original_req->user;
     my $req = Para::Frame::Request->new_minimal($Para::Frame::REQNUM, $client);
@@ -362,7 +364,18 @@ sub new_subrequest
     # This only registrer background requests. Other subrequests are
     # not registred
     #
-    $Para::Frame::REQUEST{$client} ||= $req;
+    if( $Para::Frame::REQUEST{$client} )
+    {
+	debug "  client $client already bound to ".
+	  $Para::Frame::REQUEST{$client}->id;
+    }
+    else
+    {
+	debug "  bound to client $client";
+	$Para::Frame::REQUEST{$client} = $req;
+    }
+
+
     $Para::Frame::RESPONSE{$client} ||= [];
 
     $req->minimal_init( $args ); ### <<--- INIT
@@ -434,8 +447,21 @@ sub new_bgrequest
     $Para::Frame::REQNUM ++;
     my $client = "background-$Para::Frame::REQNUM";
     my $req = Para::Frame::Request->new_minimal($Para::Frame::REQNUM, $client);
-    $Para::Frame::REQUEST{$client} = $req;
-    $Para::Frame::RESPONSE{$client} = [];
+
+    if( $Para::Frame::REQUEST{$client} )
+    {
+	debug "  client $client already bound to ".
+	  $Para::Frame::REQUEST{$client}->id;
+    }
+    else
+    {
+	debug "  bound to client $client";
+	$Para::Frame::REQUEST{$client} = $req;
+    }
+
+#    $Para::Frame::REQUEST{$client} = $req;
+
+    $Para::Frame::RESPONSE{$client} ||= [];
     Para::Frame::switch_req( $req, 1 );
     warn "\n\n$Para::Frame::REQNUM $msg\n";
     $req->minimal_init;
