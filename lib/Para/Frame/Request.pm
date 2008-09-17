@@ -2715,11 +2715,12 @@ sub get_child_result
     {
 	if( $req->is_from_client )
 	{
+
 	    $req->result->message( $message );
 	}
 	else
 	{
-	    debug $message;
+	    debug "Ignoring background child result ". $message;
 	}
     }
 
