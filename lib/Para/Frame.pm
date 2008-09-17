@@ -1137,7 +1137,17 @@ sub handle_code
     elsif( $code eq 'WORKERRESP' )
     {
 	 my( $caller_id, $result ) = thaw($INBUFFER{$client});
-	 if( my $req = Para::Frame::Request->get_by_id( $caller_id ) )
+	 my $req;
+	 if( $REQ->{reqnum} == $caller_id )
+	 {
+	     $req = $REQ;
+	 }
+	 else
+	 {
+	     $req = Para::Frame::Request->get_by_id( $caller_id );
+	 }
+
+	 if( $req )
 	 {
 	     unless( ($req->{'wait'}||0) > 0 )
 	     {
@@ -1633,6 +1643,7 @@ sub handle_request
 
     $REQNUM ++;
     warn "\n\n$REQNUM Handling new request\n";
+#    warn "client $client\n"; ### DEBUG
 
     ### Reload updated modules
     Para::Frame::Reload->check_for_updates;
