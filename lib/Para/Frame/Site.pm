@@ -796,7 +796,7 @@ Defaults to L</home>.
 
 sub loopback
 {
-    return $_[0]->{'loopback'} || $_[0]->home_url_path.'/';
+    return $_[0]->{'loopback'} || $_[0]->home_url_path.'/pf/clean/empty.tt';
 }
 
 
