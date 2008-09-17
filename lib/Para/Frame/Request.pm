@@ -166,11 +166,13 @@ sub new
 
 =head2 get_by_id
 
+  Para::Frame::Request->get_by_id( $id )
+
 =cut
 
 sub get_by_id
 {
-    my( $class, $id ) = @_;
+    my( $this, $id ) = @_;
 
     $id or die "id missing";
 
@@ -181,17 +183,46 @@ sub get_by_id
 	    return $req;
 	}
 
-	if( my $subreqs = $req->{'subrequest'} )
+	if( my $match = $req->get_subreq_by_id( $id ) )
 	{
-	    foreach my $subreq ( @$subreqs )
+	    return $match;
+	}
+    }
+
+    return undef;
+}
+
+
+#######################################################################
+
+=head2 get_subreq_by_id
+
+  $req->get_by_id( $id )
+
+Looks for the id in the subrequests of the req, recursive.
+
+=cut
+
+sub get_subreq_by_id
+{
+    my( $req, $id ) = @_;
+
+    $id or die "id missing";
+
+    if( my $subreqs = $req->{'subrequest'} )
+    {
+	foreach my $subreq ( @$subreqs )
+	{
+	    if( $subreq->{'reqnum'} == $id )
 	    {
-		if( $subreq->{'reqnum'} == $id )
-		{
-		    return $subreq;
-		}
+		return $subreq;
+	    }
+
+	    if( my $match = $subreq->get_subreq_by_id( $id ) )
+	    {
+		return $match;
 	    }
 	}
-
     }
 
     return undef;
