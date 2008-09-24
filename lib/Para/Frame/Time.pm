@@ -321,15 +321,31 @@ sub internet_date
 
 =head2 format_datetime
 
-  $t->format_datetime()
+  $t->format_datetime( \%args )
 
-Returns a string using the format given by L<Para::Frame/configure>.
+Using the DateTime::Format object given by L<Para::Frame/configure>.
+
+If C<format> are given, its used with L<DateTime/strftime> instead.
+
+Supported args are
+
+  format
+
+Returns a string representing the datetime
+
 
 =cut
 
 sub format_datetime
 {
-    return $FORMAT->format_datetime($_[0]);
+    my( $t, $args ) = @_;
+    $args ||= {};
+    if( $args->{'format'} )
+    {
+	return $t->strftime( $args->{'format'} );
+    }
+
+    return $FORMAT->format_datetime($t);
 }
 
 
@@ -345,7 +361,7 @@ Same as L</format_datetime>
 
 sub stamp
 {
-    $_[0]->format_datetime;
+    $_[0]->format_datetime($_[1]);
 }
 
 
@@ -361,7 +377,7 @@ Same as L</format_datetime>
 
 sub desig
 {
-    $_[0]->format_datetime;
+    $_[0]->format_datetime($_[1]);
 }
 
 
@@ -377,7 +393,7 @@ Same as L</format_datetime>
 
 sub plain
 {
-    $_[0]->format_datetime;
+    $_[0]->format_datetime($_[1]);
 }
 
 
@@ -395,7 +411,7 @@ TODO: Localize format
 
 sub loc($)
 {
-    return $_[0]->format_datetime;
+    return $_[0]->format_datetime(undef);
 }
 
 
