@@ -577,6 +577,7 @@ sub main_loop
 		{
 		    debug "Make watchdog restart us";
 		    debug "Executing HUP now";
+		    Para::Frame->kill_children;
 		    exit 1;
 		}
 
@@ -1367,11 +1368,13 @@ sub daemonize
     $SIG{CHLD} = sub
     {
 	warn "Error during daemonize\n";
+	Para::Frame->kill_children;
 	exit 1;
     };
     $SIG{USR1} = sub
     {
 	warn "Running in background\n" if $DEBUG > 3;
+	Para::Frame->kill_children;
 	exit 0;
     };
 
@@ -1391,6 +1394,7 @@ sub daemonize
 	    sleep 2;
 	    warn "---- Waiting for ready signal\n" if $DEBUG > 1;
 	}
+	Para::Frame->kill_children;
 	exit;
     }
 
@@ -1439,6 +1443,7 @@ sub restart
     $SERVER->close();
     open STDOUT, '>/dev/null' or die "Can't write to /dev/null: $!";
     system("$0&") == 0 or die "Exec failed";
+    Para::Frame->kill_children;
     exit 0;
 }
 
