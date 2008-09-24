@@ -113,10 +113,13 @@ sub updated
 
   header( \%attrs )
   header( $url )
+  header( 'none' )
 
 Draws a css header.
 
 Paths not beginning with / are relative to the site home.
+
+The specieal css 'none' disables the css header.
 
 The style may be given by using L<Para::Frame::Template::Meta/css> or
 by setting a TT param either for the site or globaly.
@@ -157,9 +160,14 @@ sub header
 
     if( $p )
     {
-	debug 2, "  Got css from tt param: ".datadump($p);
+#	debug 2, "  Got css from tt param: ".datadump($p);
 	unless( ref $p )
 	{
+	    if( $p eq 'none' )
+	    {
+		return "";
+	    }
+
 	    $p =
 	    {
 	     'persistent' => [ $p ],
