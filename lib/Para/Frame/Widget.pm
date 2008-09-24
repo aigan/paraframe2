@@ -1896,6 +1896,20 @@ sub pricify
 
 =head2 calendar
 
+  calendar( $field, $value, \%args )
+
+supported args are
+  id
+  tdlabel
+  label
+  label_class
+  separator
+  style
+  class
+  maxlength
+  size
+  onUpdate
+
 =cut
 
 sub calendar
