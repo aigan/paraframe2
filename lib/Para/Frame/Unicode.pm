@@ -77,6 +77,7 @@ sub addequal(@)
 	$EQASCII{$key} = $val;
     }
 
+    # cp1250 cp1252 cp-1252 (for finding code with searches)
     if( $char !~ /\p{InCP1252}/ and
 	$val =~ /^\p{InCP1252}+$/ )
     {
