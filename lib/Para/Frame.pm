@@ -622,7 +622,7 @@ sub switch_req
 	    $REQ->{'env'} = {%ENV};
 	}
 
-	Para::Frame->run_hook($REQ, 'before_switch_req');
+	Para::Frame->run_hook($REQ, 'before_switch_req', @_);
 
 	if( $_[0] and not $_[1] )
 	{

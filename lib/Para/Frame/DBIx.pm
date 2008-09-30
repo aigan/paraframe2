@@ -188,6 +188,7 @@ sub new
 
     Para::Frame->add_hook('before_switch_req', sub
 			  {
+			      debug 1, sprintf "From %s to %s", ($Para::Frame::REQ ? $Para::Frame::REQ->id : '-'), ($_[0] ? $_[0]->id : '-');
 			      $dbix->commit;
 			  });
 
