@@ -29,8 +29,6 @@ sub handler
 {
     my( $req ) = @_;
 
-    return "No login now. Database upgrade in process";
-
     my $q = $req->q;
     my $user_class = $Para::Frame::CFG->{'user_class'};
 
