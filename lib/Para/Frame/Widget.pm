@@ -1049,7 +1049,10 @@ sub htmlarea
     $params->{'wrap'} ||= "virtual";
     my $extra = tag_extra_from_params($params);
 
-    $value =~ s/\"/\\\"/;
+
+    $value =~ s/\"/\\\"/g;
+    $value =~ s/\r/\\r/g;
+    $value =~ s/\n/\\n/g;
 
     my $w = $cols * 10;
     $w = '100%';
@@ -1059,8 +1062,9 @@ sub htmlarea
 
 
     return $prefix .
-      '<input type="hidden" style="display:none" value="'. $value .'" '. $extra .' />'.
-	'<iframe id="'. $params->{'id'} .'___Frame" src="'. $home .'/pf/cms/fckeditor/editor/fckeditor.html?InstanceName='. $params->{'id'} .'&amp;Toolbar=ParaFrame" width="'. $w .'" height="'. $h .'" frameborder="0" scrolling="no"></iframe>';
+      '<input type="hidden" name="'. $params->{'id'} .'" style="display:none" value="" '. $extra .' />'.
+	'<script>document.getElementById(\''. $params->{'id'} . '\').value="'. $value .'"</script>'.
+	  '<iframe id="'. $params->{'id'} .'___Frame" src="'. $home .'/pf/cms/fckeditor/editor/fckeditor.html?InstanceName='. $params->{'id'} .'&amp;Toolbar=ParaFrame" width="'. $w .'" height="'. $h .'" frameborder="0" scrolling="no"></iframe>';
 }
 
 
