@@ -66,7 +66,7 @@ our @EXPORT_OK
             store_params clear_params add_params restore_params
             idn_encode idn_decode debug reset_hashref timediff
             extract_query_params fqdn retrieve_from_url get_from_fork
-            datadump client_send validate_utf8 );
+            datadump client_send validate_utf8 escape_js );
 
 use Para::Frame::Reload;
 #use Para::Frame::Unicode; # Loaded by Para::Frame
@@ -132,6 +132,45 @@ sub trim
 	$ref =~ s/\s\s+/ /g;
 	return $ref;
     }
+}
+
+
+#######################################################################
+
+=head2 escape_js
+
+  escape_js($string)
+
+Creates a string that can be placed in '' in javascript code.
+Not to be confused with L<CGI/escape> or L<CGI/escapeHTML>.
+
+This code uses \uxxxx format for escaping everything that isn't ascii.
+
+Returns: The escaped string
+
+=cut
+
+sub escape_js
+{
+    local $_ = $_[0];
+
+#    debug( 1, "Translating string");
+#    debug( 1, "  $_");
+
+    s/\\/\\/g;  # Backslash
+    s/\x08/\\b/g; # BS
+    s/\f/\\f/g;   # FF
+    s/\n/\\n/g;   # LF
+    s/\x00/\\0/g;  # NUL <- CHECKME
+    s/\r/\\r/g;   # CR
+    s/\t/\\t/g;   # HT
+    s/\x0b/\\v/g; # VT
+    s/'/\\'/g;    # Single Quote
+    s/"/\\"/g;    # Double Quote
+    s/(\P{IsASCII})/sprintf '\\u%.4x',ord($1)/ge;
+#    debug( 1, "  $_");
+
+    return $_;
 }
 
 
