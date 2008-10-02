@@ -897,7 +897,7 @@ sub input
 
     if( my $onchange = delete $params->{'onchange'} )
     {
-	$extra .= 'onchange="'. $onchange .'" ';
+	$extra .= ' onchange="'. $onchange .'" ';
     }
 
     # Objects is defined but may stringify to undef
