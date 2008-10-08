@@ -177,8 +177,13 @@ sub fh
 #    return IO::File->new( $uploaded->{'tempfile'}, @_ );
 
     my $fh = IO::File->new( $uploaded->{'tempfile'}, @_ );
-    my $mode = (stat($uploaded->{'tempfile'}))[2];
-    debug sprintf("Permissions are %04o\n", $mode & 07777);
+
+    if( debug )
+    {
+	my( $mode, $uid, $gid) = (stat($uploaded->{'tempfile'}))[2,4,5];
+	debug sprintf("Permissions are %04o uid%d gid%d\n",
+		      $mode & 07777, $uid, $gid);
+    }
 
     return $fh;
 }
