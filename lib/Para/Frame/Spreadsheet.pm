@@ -31,7 +31,7 @@ BEGIN
 }
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw datadump );
+use Para::Frame::Utils qw( throw datadump debug );
 
 =head1 SYNOPSIS
 
@@ -128,6 +128,7 @@ sub get_headers
     for( my $i=0; $i <= $#$row; $i++ )
     {
 	my $val = $row->[$i];
+	next unless $val;
 	$sh->{'cols'}[$i] = $val;
 	$sh->{'colnums'}{ $val } = $i;
     }
@@ -167,7 +168,14 @@ sub rowhash
 	my $rh = $sh->{'rowhash'} = {};
 	for( my $i=0; $i <= $#$row; $i++ )
 	{
-	    $rh->{ $cols->[$i] } = $row->[$i];
+	    my $key = $cols->[$i];
+	    unless( $key )
+	    {
+		debug "Column $i has no label";
+		next;
+	    }
+
+	    $rh->{ $key } = $row->[$i];
 	}
     }
 
