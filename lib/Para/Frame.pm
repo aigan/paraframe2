@@ -91,6 +91,7 @@ our $BGJOBDATE  ;
 our $BGJOBNR    ;
 our @BGJOBS_PENDING;       # New jobs to be added in background
 our $TERMINATE  ;
+our $MEMORY     ;
 our $IN_STARTUP ;          # True until we reach the watchdog loop
 our $ACTIVE_PIDFILE;       # The PID indicated by existing pidfile
 our $LAST       ;          # The last entering of the main loop
@@ -224,6 +225,7 @@ sub startup
 
     $LEVEL      = 0;
     $TERMINATE  = 0;
+    $MEMORY     = 0;
     $IN_STARTUP = 0;
 
     # No REQ exists yet!
@@ -295,6 +297,12 @@ sub main_loop
 	{
 
 	    my $client;
+
+	    if( $timeout == TIMEOUT_LONG )
+	    {
+		debug "waiting for read on socket..."; ### DEBUG
+	    }
+
 
 	    while( my( $client ) = $SELECT->can_read( $timeout ) )
 	    {
@@ -391,7 +399,7 @@ sub main_loop
 
 	    ### Do background jobs if no req jobs waiting
 	    #
-	    unless( $LEVEL or values %REQUEST )
+	    unless( values %REQUEST )
 	    {
 		add_background_jobs_conditional() and
 		  $timeout = TIMEOUT_SHORT;
@@ -415,7 +423,7 @@ sub main_loop
 	    }
 	    else
 	    {
-		if( $TERMINATE )
+		if( $TERMINATE or $MEMORY )
 		{
 		  TERMINATE_CHECK:
 		    {
@@ -441,6 +449,12 @@ sub main_loop
 				debug "PAGE RESULT WAITING for $sid";
 				last TERMINATE_CHECK;
 			    }
+			}
+
+			if( $MEMORY and not $TERMINATE )
+			{
+			    debug "MEMORY-initiated HUP";
+			    $TERMINATE = 'HUP';
 			}
 
 			if( $TERMINATE eq 'HUP' )
@@ -564,7 +578,7 @@ sub main_loop
 		warn "#>>\n";
 
 		my $emergency_level =
-		  Para::Frame::Watchdog::EMERGENCY_DEBUG_LEVEL;
+		  $Para::Frame::Watchdog::EMERGENCY_DEBUG_LEVEL;
 		if( $Para::Frame::DEBUG < $emergency_level )
 		{
 		    $Para::Frame::DEBUG =
@@ -1123,6 +1137,7 @@ sub handle_code
     {
 	debug(2,"MEMORY recieved");
 	my $size = $INBUFFER{$client};
+	$MEMORY = $size;
 	Para::Frame->run_hook(undef, 'on_memory', $size);
     }
     elsif( $code eq 'HUP' )
@@ -1489,13 +1504,22 @@ sub add_background_jobs_conditional
     # Add background jobs to do unless the load is too high, unless we
     # waited too long anyway
 
+    return if $LEVEL; # No bgjob if nested in req
+
+
     # Return it hasn't passed BGJOB_MAX secs since last time
     my $last_time = $BGJOBDATE ||= time;
     my $delta = time - $last_time;
 
-    debug(4,"Too few seconds for MAX: $delta < ". BGJOB_MAX)
-      if $delta < BGJOB_MAX;
-    return if $delta < BGJOB_MAX;
+    if( $MEMORY or $TERMINATE )
+    {
+	# Clear out existing jobs if we want to reload
+    }
+    elsif( $delta < BGJOB_MAX )
+    {
+	debug(4,"Too few seconds for MAX: $delta < ". BGJOB_MAX);
+	return;
+    }
 
     # Cache cleanup could safely be done here
     # But nothing that requires a $req
@@ -1538,8 +1562,15 @@ sub add_background_jobs_conditional
 	return;
     }
 
-    # Return if CPU load is over BGJOB_CPU
     my $sysload;
+
+    # Clear out existing jobs if we want to reload
+    if( @BGJOBS_PENDING and ( $MEMORY or $TERMINATE ) )
+    {
+	return add_background_jobs($delta, $sysload);
+    }
+
+    # Return if CPU load is over BGJOB_CPU
     if( $delta < BGJOB_MIN ) # unless a long time has passed
     {
 	$sysload = (Sys::CpuLoad::load)[1];
@@ -1560,7 +1591,7 @@ sub add_background_jobs_conditional
     ### Reload updated modules
     Para::Frame::Reload->check_for_updates;
 
-    add_background_jobs($delta, $sysload);
+    return add_background_jobs($delta, $sysload);
 }
 
 
@@ -1616,7 +1647,7 @@ sub add_background_jobs
 	    }
 	}
     }
-    elsif( not $TERMINATE )
+    elsif( not $TERMINATE and not $MEMORY )
     {
 	### Debug info
 	if( debug > 2 )
