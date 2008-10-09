@@ -298,10 +298,10 @@ sub main_loop
 
 	    my $client;
 
-	    if( $timeout == TIMEOUT_LONG )
-	    {
-		debug "waiting for read on socket..."; ### DEBUG
-	    }
+#	    if( $timeout == TIMEOUT_LONG )
+#	    {
+#		debug "waiting for read on socket..."; ### DEBUG
+#	    }
 
 
 	    while( my( $client ) = $SELECT->can_read( $timeout ) )
@@ -461,6 +461,7 @@ sub main_loop
 			{
 			    # Make watchdog restart us
 			    debug "Executing HUP now";
+			    $SERVER->close();
 			    Para::Frame->kill_children;
 			    exit 1;
 			}
@@ -468,15 +469,15 @@ sub main_loop
 			{
 			    # No restart
 			    debug "Executing TERM now";
+			    $SERVER->close();
 			    Para::Frame->kill_children;
 			    exit 0;
 			}
 			elsif( $TERMINATE eq 'RESTART' )
 			{
 			    debug "Executing RESTART now";
-			    Para::Frame->kill_children;
 			    Para::Frame->restart;
-			    die "Should never reach this point";
+			    debug "RESTART FAILED!!!";
 			}
 			else
 			{
@@ -591,6 +592,7 @@ sub main_loop
 		{
 		    debug "Make watchdog restart us";
 		    debug "Executing HUP now";
+		    $SERVER->close();
 		    Para::Frame->kill_children;
 		    exit 1;
 		}
@@ -1409,6 +1411,7 @@ sub daemonize
 	    sleep 2;
 	    warn "---- Waiting for ready signal\n" if $DEBUG > 1;
 	}
+	$SERVER->close();
 	Para::Frame->kill_children;
 	exit;
     }
@@ -1457,9 +1460,12 @@ sub restart
 
     $SERVER->close();
     open STDOUT, '>/dev/null' or die "Can't write to /dev/null: $!";
-    system("$0&") == 0 or die "Exec failed";
     Para::Frame->kill_children;
-    exit 0;
+#    system("$0&") == 0 or die "Exec failed";
+    exec("$0&"); warn "Exec failed: $!"; sleep 1;
+    exec("$0&"); warn "Exec failed: $!"; sleep 1;
+    exec("$0&"); warn "Exec failed: $!";
+    return 0;
 }
 
 
