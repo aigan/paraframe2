@@ -176,7 +176,11 @@ sub handler
     }
 
     my $port = $dirconfig->{'port'};
-    if( $BACKUP_PORT ) # Is resetted later
+    if( $Q->param('pfport') )
+    {
+	$port = $Q->param('pfport');
+    }
+    elsif( $BACKUP_PORT ) # Is resetted later
     {
 	$port = $BACKUP_PORT;
     }
