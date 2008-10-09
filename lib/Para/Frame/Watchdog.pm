@@ -24,6 +24,7 @@ use IO::File;
 use IO::Select;
 use POSIX qw(WNOHANG);
 use Proc::ProcessTable;
+use Linux::SysInfo;
 use Time::HiRes;
 use Carp;
 use Sys::CpuLoad;
@@ -58,6 +59,7 @@ our $INTERVAL_CONNECTION_CHECK =  60;
 our $INTERVAL_MAIN_LOOP        =  10;
 our $LIMIT_MEMORY              =3600;
 our $LIMIT_MEMORY_NOTICE       = 700;
+our $LIMIT_MEMORY_MIN          = 150;
 our $TIMEOUT_SERVER_STARTUP    =  45;
 our $TIMEOUT_CONNECTION_CHECK  =  60;
 our $LIMIT_CONNECTION_TRIES    =   5;
@@ -179,12 +181,31 @@ sub check_process
     {
 #	warn join '-', Sys::CpuLoad::load();
 	my( $usage ) = (Sys::CpuLoad::load())[0]*100;
+	my $systotal = memusage();
 	$CPU_USAGE = ($CPU_USAGE * 2 + $usage ) / 3;
 
-	if( debug > 3 or $CPU_USAGE > 200 or $size > $LIMIT_MEMORY_NOTICE )
+	if( debug > 2 or
+	    $CPU_USAGE > 200 or
+	    $size > $LIMIT_MEMORY_NOTICE or
+	    $systotal > 1
+	  )
 	{
-	    debug sprintf( "Serverstat %.2d%% (%.2d%%) %5d MB",
-			   $usage, $CPU_USAGE, $size );
+	    debug sprintf( "Serverstat %.2d%% CPU, %5d MB. %d%% sysmem",
+			   $usage, $size, $systotal*100  );
+	}
+
+	if( $systotal > 1 and ( $LIMIT_MEMORY > $LIMIT_MEMORY_MIN * 2  ) )
+	{
+	    debug sprintf "Systotal: %.2f", $systotal;
+	    my $total = ((($LIMIT_MEMORY - $LIMIT_MEMORY_MIN ) * 0.9)
+			 + $LIMIT_MEMORY_MIN );
+	    my $note  = ((($LIMIT_MEMORY_NOTICE - $LIMIT_MEMORY_MIN ) * 0.9)
+			 + $LIMIT_MEMORY_MIN );
+	    debug "Shrinking memory limits";
+	    debug sprintf "  Notice : %d -> %d", $LIMIT_MEMORY_NOTICE, $note;
+	    debug sprintf "  Max    : %d -> %d", $LIMIT_MEMORY, $total;
+	    $LIMIT_MEMORY = $total;
+	    $LIMIT_MEMORY_NOTICE = $note;
 	}
     }
 
@@ -194,6 +215,9 @@ sub check_process
     if( $size > $LIMIT_MEMORY )
     {
 	debug "Server using to much memory";
+	debug sprintf "  Using: %d MB", $size;
+	debug sprintf "  Limit: %d MB", $LIMIT_MEMORY;
+	debug sprintf "  Total system memory used: %d%%", (100*memusage());
 	debug "  Restarting...";
 	restart_server();
     }
@@ -204,7 +228,7 @@ sub check_process
 	send_to_server('HUP');
 	debug "  Sent soft HUP to $PID";
  	$MEMORY_CLEAR_TIME = time;
-   }
+    }
     elsif( $size > $LIMIT_MEMORY_NOTICE and
 	   time > $MEMORY_CLEAR_TIME + $TIMEOUT_CONNECTION_CHECK  )
     {
@@ -355,6 +379,8 @@ sub restart_server
 	    kill 'HUP', $PID; ## Terminate server
 	    debug "  Sent hard HUP to $PID";
 	}
+
+	&REAPER; # Handle missed calls
     }
 }
 
@@ -561,6 +587,8 @@ sub startup_in_fork
 {
     # Code from Para::Frame::Request->create_fork()
 
+    &REAPER; # Handle missed calls
+
     my $sleep_count = 0;
     my $fh = new IO::File;
 #    my $write_fh = new IO::File;  # Alternative top open -|
@@ -633,6 +661,8 @@ sub startup_in_fork
 sub REAPER
 {
     # Taken from example in perl doc
+
+#    debug "In reaper";
 
     my $child_pid;
     # If a second child dies while in the signal handler caused by the
@@ -974,6 +1004,28 @@ sub get_lsof
     }
 
     return \@list;
+}
+
+
+#######################################################################
+
+=head2 memusage
+
+=cut
+
+sub memusage
+{
+    my $sysinfo = Linux::SysInfo::sysinfo;
+
+    my $total = $sysinfo->{'totalram'};
+    my $free = $sysinfo->{'freeram'};
+    my $buffer = $sysinfo->{'bufferram'};
+    my $swap = $sysinfo->{'totalswap'} - $sysinfo->{'freeswap'};
+
+    my $usage = $total - $free - $buffer + $swap;
+    debug 2, "Usage: $usage";
+
+    return( $usage / $total );
 }
 
 
