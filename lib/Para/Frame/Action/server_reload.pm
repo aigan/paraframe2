@@ -15,7 +15,7 @@ package Para::Frame::Action::server_reload;
 
 use strict;
 
-use Para::Frame::Utils qw( throw );
+use Para::Frame::Utils qw( throw debug );
 
 =head1 NAME
 
@@ -35,6 +35,10 @@ sub handler
     }
 
     $Para::Frame::TERMINATE = 'HUP';
+
+    debug "Reloading server";
+
+    debug $req->server_report;
 
     return "Reloading server...";
 }
