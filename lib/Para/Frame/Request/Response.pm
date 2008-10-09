@@ -233,21 +233,25 @@ sub page_url_with_query_and_reqnum
 #    debug "CALLER query string is ".$req->original_url_params;
 #    debug datadump \%ENV;
 
+    my $urlstr;
+
     if( $path eq $req->original_url_string )
     {
 	if( my $query = $req->original_url_params )
 	{
-	    return $path . "?".$query.'&reqnum='.$req->id;
+	    $path .= "?".$query;
 	}
 	else
 	{
-	    return $path . '?reqnum='.$req->id;
+	    $path .= '?';
 	}
     }
     else
     {
-	return $path . '?reqnum='.$req->id;
+	$path .= '?';
     }
+
+    return $path . 'reqnum='.$req->id.'&pfport='.$Para::Frame::CFG->{'port'};
 }
 
 

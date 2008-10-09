@@ -244,14 +244,18 @@ sub init
 {
     my( $req ) = @_;
 
-    # Ingore this req if we are in TERMINATE mode unless its a dependant subrequest or waiting for loadpage
-    if( $Para::Frame::TERMINATE and not $req->q->param('req') and not $req->q->param('reqnum') )
+    # Ingore this req if we are in TERMINATE mode unless its bound to
+    # this port, in which case it ia a dependant subrequest or waiting
+    # for loadpage
+    my $q = $req->q;
+#    if( $Para::Frame::TERMINATE and not $req->q->param('req') and not $req->q->param('reqnum') )
+    if( $Para::Frame::TERMINATE and not $q->param('pfport') )
     {
 	debug "In TERMINATE!";
 	client_send($req->client, "RESTARTING\x001\n");
 	return 0;
     }
-    elsif( $Para::Frame::LEVEL > 20 and not $req->q->param('req') and not $req->q->param('reqnum') )
+    elsif( $Para::Frame::LEVEL > 20 and not $q->param('pfport') )
     {
 	debug "OVERLOADED!";
 	client_send($req->client, "RESTARTING\x001\n");
@@ -1813,7 +1817,7 @@ sub referer_query
 
 	    if( my(%query) = $url->query_form )
 	    {
-		unless( $query{'backtrack'} )
+		unless( $query{'backtrack'} or $query{'reqnum'} )
 		{
 		    debug 2, "Referer query from current http req";
 		    my $query_string = $url->query;
@@ -1831,7 +1835,7 @@ sub referer_query
 
 	    if( my(%query) = $url->query_form )
 	    {
-		unless( $query{'backtrack'} )
+		unless( $query{'backtrack'} or $query{'reqnum'} )
 		{
 		    debug 2, "Referer query from original http req";
 		    my $query_string = $url->query;
@@ -1992,7 +1996,8 @@ sub send_code
 		$scheme = 'https';
 	    }
 
-	    my $query = "run=wait_for_req&req=$client";
+	    my $port = $Para::Frame::CFG->{'port'};
+	    my $query = "run=wait_for_req&req=$client&pfport=$port";
 	    my $url = "$scheme://$webhost$webpath?$query";
 
 	    my $ua = LWP::UserAgent->new( timeout => 60*60 );
