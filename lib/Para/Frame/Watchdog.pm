@@ -54,15 +54,15 @@ our $MEMORY_CLEAR_TIME;    # When to send memory message
 our $USE_LOGFILE;          # Redirects STDERR to logfile
 our $EMERGENCY_MODE;       # Experienced a crash. Maximum debug
 
-use constant INTERVAL_CONNECTION_CHECK =>  60;
-use constant INTERVAL_MAIN_LOOP        =>  10;
-use constant LIMIT_MEMORY              =>3600;
-use constant LIMIT_MEMORY_NOTICE       => 700;
-use constant TIMEOUT_SERVER_STARTUP    =>  45;
-use constant TIMEOUT_CONNECTION_CHECK  =>  60;
-use constant LIMIT_CONNECTION_TRIES    =>   5;
-use constant TIMEOUT_CREATE_FORK       =>   5;
-use constant EMERGENCY_DEBUG_LEVEL     =>   2;
+our $INTERVAL_CONNECTION_CHECK =  60;
+our $INTERVAL_MAIN_LOOP        =  10;
+our $LIMIT_MEMORY              =3600;
+our $LIMIT_MEMORY_NOTICE       = 700;
+our $TIMEOUT_SERVER_STARTUP    =  45;
+our $TIMEOUT_CONNECTION_CHECK  =  60;
+our $LIMIT_CONNECTION_TRIES    =   5;
+our $TIMEOUT_CREATE_FORK       =   5;
+our $EMERGENCY_DEBUG_LEVEL     =   2;
 
 
 sub debug; # Use special version of debug
@@ -143,13 +143,13 @@ sub watch_loop
 	check_process();
 
 	# Do a connection check once a minute
-	if( time > $last_connection_check + INTERVAL_CONNECTION_CHECK )
+	if( time > $last_connection_check + $INTERVAL_CONNECTION_CHECK )
 	{
 	    $DO_CONNECTION_CHECK ++;
 	    $last_connection_check = time;
 	}
 
-	sleep INTERVAL_MAIN_LOOP;
+	sleep $INTERVAL_MAIN_LOOP;
     }
     debug "escaped watchdog main loop";
     exit 1;
@@ -181,7 +181,7 @@ sub check_process
 	my( $usage ) = (Sys::CpuLoad::load())[0]*100;
 	$CPU_USAGE = ($CPU_USAGE * 2 + $usage ) / 3;
 
-	if( debug > 3 or $CPU_USAGE > 200 or $size > LIMIT_MEMORY_NOTICE )
+	if( debug > 3 or $CPU_USAGE > 200 or $size > $LIMIT_MEMORY_NOTICE )
 	{
 	    debug sprintf( "Serverstat %.2d%% (%.2d%%) %5d MB",
 			   $usage, $CPU_USAGE, $size );
@@ -191,22 +191,22 @@ sub check_process
     $CHECKTIME = $sys_time;
 
     # Kill if server uses more than LIMIT_MEMORY MB of memory
-    if( $size > LIMIT_MEMORY )
+    if( $size > $LIMIT_MEMORY )
     {
 	debug "Server using to much memory";
 	debug "  Restarting...";
 	restart_server();
     }
-    elsif( $size > (LIMIT_MEMORY + LIMIT_MEMORY_NOTICE )/2 and
-	   time > $MEMORY_CLEAR_TIME + TIMEOUT_CONNECTION_CHECK )
+    elsif( $size > ($LIMIT_MEMORY + $LIMIT_MEMORY_NOTICE )/2 and
+	   time > $MEMORY_CLEAR_TIME + $TIMEOUT_CONNECTION_CHECK )
     {
 	debug "Server using to much memory";
 	send_to_server('HUP');
 	debug "  Sent soft HUP to $PID";
  	$MEMORY_CLEAR_TIME = time;
    }
-    elsif( $size > LIMIT_MEMORY_NOTICE and
-	   time > $MEMORY_CLEAR_TIME + TIMEOUT_CONNECTION_CHECK  )
+    elsif( $size > $LIMIT_MEMORY_NOTICE and
+	   time > $MEMORY_CLEAR_TIME + $TIMEOUT_CONNECTION_CHECK  )
     {
 	debug "Sending memory notice to server";
 	send_to_server('MEMORY', \$size );
@@ -223,7 +223,7 @@ sub check_process
 
 sub wait_for_server_setup
 {
-    my( $type, @args ) = get_server_message(TIMEOUT_SERVER_STARTUP);
+    my( $type, @args ) = get_server_message($TIMEOUT_SERVER_STARTUP);
     unless( $type )
     {
 	debug "Server failed to reach main loop (TIMEOUT)";
@@ -288,12 +288,12 @@ sub terminate_server
     my $signal_time = time;
     while( kill 0, $PID )
     {
-	if( time > $signal_time + TIMEOUT_CONNECTION_CHECK + TIMEOUT_CREATE_FORK )
+	if( time > $signal_time + $TIMEOUT_CONNECTION_CHECK + $TIMEOUT_CREATE_FORK )
 	{
 	    kill 'KILL', $PID; ## Terminate server
 	    debug 1,"  Sent hard KILL to $PID";
 	}
-	elsif( time > $signal_time + TIMEOUT_CONNECTION_CHECK )
+	elsif( time > $signal_time + $TIMEOUT_CONNECTION_CHECK )
 	{
 	    kill 'TERM', $PID; ## Terminate server
 	    debug 1,"  Sent hard TERM to $PID";
@@ -320,7 +320,7 @@ sub restart_server
 
     # Waiting for server to HUP
     my $signal_time = time;
-    my $grace_time = $hard ? 0 : TIMEOUT_CONNECTION_CHECK;
+    my $grace_time = $hard ? 0 : $TIMEOUT_CONNECTION_CHECK;
     my $sent = '';
 
     while( $pid == $PID )
@@ -442,7 +442,7 @@ sub check_connection
 	my $waited     = 0;
 	while()
 	{
-	    if( $select->can_read( INTERVAL_MAIN_LOOP ) )
+	    if( $select->can_read( $INTERVAL_MAIN_LOOP ) )
 	    {
 		my $resp = $sock->getline or last; ### During restart?
 		my $length;
@@ -471,8 +471,8 @@ sub check_connection
 		# Do some process cheking while we waite
 		check_process();
 
-		$waited += INTERVAL_MAIN_LOOP;
-	        next unless $waited >= TIMEOUT_CONNECTION_CHECK;
+		$waited += $INTERVAL_MAIN_LOOP;
+	        next unless $waited >= $TIMEOUT_CONNECTION_CHECK;
 	    }
 
 	    debug "  Timeout while waiting for ping response";
@@ -480,7 +480,7 @@ sub check_connection
 	    last CONNECTION_TRY;
 	}
 
-	if( $try >= LIMIT_CONNECTION_TRIES )
+	if( $try >= $LIMIT_CONNECTION_TRIES )
 	{
 	    debug "Tried $try times";
 	    return watchdog_crash();
@@ -527,12 +527,12 @@ sub watchdog_crash
     debug "\n\nWatchdog got an unexpected situation ($EMERGENCY_MODE)";
 
 
-    if( $Para::Frame::DEBUG <= EMERGENCY_DEBUG_LEVEL )
+    if( $Para::Frame::DEBUG <= $EMERGENCY_DEBUG_LEVEL )
     {
 	$Para::Frame::DEBUG =
 	    $Para::Frame::Client::DEBUG =
 	    $Para::Frame::CFG->{'debug'} =
-	    EMERGENCY_DEBUG_LEVEL;
+	      $EMERGENCY_DEBUG_LEVEL;
 	debug "Raising global debug to level $Para::Frame::DEBUG";
     }
 
@@ -584,7 +584,7 @@ sub startup_in_fork
 	unless( defined $PID )
 	{
 	    debug(0,"cannot fork: $!");
-	    exit 1 if $sleep_count++ >= TIMEOUT_CREATE_FORK;
+	    exit 1 if $sleep_count++ >= $TIMEOUT_CREATE_FORK;
 	    sleep 1;
 	}
     } until defined $PID;
