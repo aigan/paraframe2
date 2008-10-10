@@ -58,7 +58,7 @@ our $EMERGENCY_MODE;       # Experienced a crash. Maximum debug
 our $INTERVAL_CONNECTION_CHECK =  60;
 our $INTERVAL_MAIN_LOOP        =  10;
 our $LIMIT_MEMORY              =3600;
-our $LIMIT_MEMORY_NOTICE       = 700;
+our $LIMIT_MEMORY_NOTICE       =1500;
 our $LIMIT_MEMORY_MIN          = 150;
 our $TIMEOUT_SERVER_STARTUP    =  45;
 our $TIMEOUT_CONNECTION_CHECK  =  60;
