@@ -1033,8 +1033,8 @@ sub handle_code
 	my $req = $REQUEST{ $client };
 	unless( $req )
 	{
-	    debug "  Req not registred";
-	    next;
+	    debug "CANCEL from Req not registred: $client";
+	    return 0;
 	}
 
 	$req->cancel;
@@ -1285,10 +1285,6 @@ sub close_callback
 	{
 	    # Trying to breake reference loops for garbage collecting
 	    delete $req->{'subrequest'};
-	    delete $REQUEST{$client};
-	    delete $RESPONSE{$client};
-	    delete $INBUFFER{$client};
-	    delete $DATALENGTH{$client};
 
 	}
     }
@@ -1308,11 +1304,18 @@ sub close_callback
 	}
     }
 
+    delete $REQUEST{$client};
+    delete $RESPONSE{$client};
+    delete $INBUFFER{$client};
+    delete $DATALENGTH{$client};
+
     switch_req(undef);
 
-    if( ref $client ) # if not a background request
+    # if not a background request
+    if( ref $client and $client->connected )
     {
-	$client->shutdown(2); # I have stopped using this socket
+	# I have stopped using this socket
+	$client->shutdown(2);
 	$SELECT->remove($client);
 	$client->close;
     }
