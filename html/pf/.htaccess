@@ -1,1 +1,1 @@
-AddHandler perl-script css
+AddHandler perl-script css_tt
