@@ -480,6 +480,7 @@ source C<$page>. Also takes:
   arg umask defaults to 02
   arg params
   arg template_root
+  arg charset
 
 The C<$dest> is normalized with L<Para::Frame::File/normalize>. It's
 this normalized page that is rendered. That will be the object
@@ -548,8 +549,12 @@ sub precompile
 
     $rend->set_tt_params;
     my $ctype = Para::Frame::Request::Ctype->new();
+    my $charset = $args->{'charset'} || 'UTF-8';
     $ctype->set_type('text/plain');
+    $ctype->set_charset($charset);
     $rend->set_ctype($ctype);
+
+#    debug $ctype->sysdesig;
 
 
 #    my $destfile = $dest->sys_path;
