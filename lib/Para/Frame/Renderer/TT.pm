@@ -750,16 +750,22 @@ sub set_ctype
     my( $rend, $ctype ) = @_;
 
     my $tmpl = $rend->template;
+#    debug "Setting ctype for ".$tmpl->sysdesig;
     if( my $ext = $tmpl->suffix )
     {
+	$ext =~ s/_tt$//; # Use the destination ext
+
+#	debug "  ext $ext";
 	my( $type, $charset );
 	if( my $def = $TYPEMAP{ $ext } )
 	{
 	    $type = $def->{'type'};
 	    $charset = $def->{'charset'};
+#	    debug "  type $type";
+#	    debug "  charset $charset";
 	}
 
-	$charset ||= 'UTF-8';
+	$charset ||= $ctype->charset || 'UTF-8';
 
 	# Will keep previous value if non given here
 	if( $type )
