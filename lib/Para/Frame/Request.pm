@@ -22,7 +22,8 @@ Para::Frame::Request - The request from the client
 use strict;
 use CGI qw( -compile );
 use CGI::Cookie;
-use FreezeThaw qw( thaw );
+use FreezeThaw; ####### LEGACY
+use Storable; # qw( thaw );
 use HTTP::BrowserDetect;
 use IO::File;
 use Carp qw(cluck croak carp confess longmess );
@@ -81,7 +82,21 @@ sub new
 {
     my( $class, $reqnum, $client, $recordref ) = @_;
 
-    my( $value ) = thaw( $$recordref );
+
+    # For backward compatibility, we accept both FreezeThaw and
+    # Storable
+
+    my $value;
+    if( $$recordref =~ /^FrT/ )
+    {
+	( $value ) = FreezeThaw::thaw( $$recordref );
+    }
+    else
+    {
+	( $value ) = Storable::thaw( $$recordref );
+    }
+
+
     my( $params, $env, $orig_url_string, $orig_filename, $content_type, $dirconfig, $header_only, $files ) = @$value;
 
     # Modify $env for non-mod_perl mode

@@ -34,7 +34,8 @@ use DateTime::Format::Strptime;
 use Cwd qw( abs_path );
 use File::Basename; # dirname
 #use Template::Stash::ForceUTF8;
-use FreezeThaw qw( thaw );
+#use FreezeThaw qw( thaw );
+use Storable qw( thaw );
 
 our $VERSION;
 our $CVSVERSION;
@@ -58,6 +59,7 @@ use Para::Frame::L10N qw( loc );
 use Para::Frame::Email::Address;
 use Para::Frame::L10N;
 use Para::Frame::Worker;
+use Para::Frame::URI;
 use Para::Frame::Reload;
 
 use constant TIMEOUT_LONG   =>   5;
@@ -1164,7 +1166,7 @@ sub handle_code
     }
     elsif( $code eq 'WORKERRESP' )
     {
-	 my( $caller_id, $result ) = thaw($INBUFFER{$client});
+	 my( $caller_id, $result ) = @{thaw($INBUFFER{$client})};
 	 my $req;
 	 if( $REQ and ($REQ->{reqnum} == $caller_id) )
 	 {

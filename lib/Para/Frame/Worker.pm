@@ -21,7 +21,8 @@ Para::Frame::Worker - For worker childs
 
 use strict;
 use vars qw( $VERSION );
-use FreezeThaw qw( safeFreeze thaw );
+use FreezeThaw;
+use Storable qw(freeze thaw);
 use Carp qw( confess );
 
 
@@ -62,11 +63,14 @@ sub method
     my $code = 'OMETHOD';
     my $req = $Para::Frame::REQ;
 
-#    my @callargs = ( $req->client.'', $obj, $method, @args );
+    my @callargs = ( $req->client.'', $obj, $method, @args );
 #    debug datadump(\@callargs);
-    debug 2, "Freezing $obj -> $method ( @args )";
+#    debug 1, "Freezing $obj -> $method ( @args )";
 
-    my $val  = safeFreeze( $req->id, $obj, $method, @args );
+#    my $val  = safeFreeze( $req->id, $obj, $method, @args );
+    my($val) = freeze([ $req->id, $obj, $method, @args ]);
+#    debug "sending $val";
+
     Para::Frame::Client::connect_to_server( $port );
     $Para::Frame::Client::SOCK or die "No socket";
     Para::Frame::Client::send_to_server($code, \$val);
@@ -321,7 +325,9 @@ sub init
 			    utf8::decode($inbuffer);
 #			    debug validate_utf8(\$inbuffer);
 
-			    my( $req_id, $obj, $method, @args ) = thaw($inbuffer);
+#			    my( $req_id, $obj, $method, @args ) = thaw($inbuffer);
+			    my( $req_id, $obj, $method, @args ) = @{thaw($inbuffer)};
+#			    debug "inbuffer $inbuffer";
 			    debug 2, "Doing $method";
 #			    debug "obj ".datadump($obj);
 #			    debug "args ".datadump(\@args);
@@ -342,7 +348,9 @@ sub init
 
 
 			    debug 3, "Freezing result";
-			    my $data = safeFreeze( $req_id, $worker );
+#			    my $data = safeFreeze( $req_id, $worker );
+#			    my $data = FreezeThaw::safeFreeze($req_id, $worker);
+			    my( $data ) = freeze([$req_id, $worker]);
 			    my $port = $Para::Frame::CFG->{'port'};
 			    Para::Frame::Client::connect_to_server( $port );
 			    $Para::Frame::Client::SOCK or die "No socket";

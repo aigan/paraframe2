@@ -21,7 +21,9 @@ Para::Frame::Child::Result - Representing a child process result from CHILDs vie
 
 use strict;
 use vars qw( $VERSION );
-use FreezeThaw qw( safeFreeze );
+#use FreezeThaw qw( safeFreeze );
+use Storable qw( freeze);
+
 
 BEGIN
 {
@@ -51,7 +53,7 @@ CHILD is done.
 For example, you may call the object C<$fork> while in the CHILD and
 C<$result> while in PARENT.
 
-All parts of the object must survive L<FreezeThaw>.
+All parts of the object must survive L<Storable>.
 
 =cut
 
@@ -111,7 +113,7 @@ sub reset
 If C<$message> is defined adds that message to the message list.
 
 The messages can be anything. For example an object. But it must be
-something that survive L<FreezeThaw>.
+something that survive L<Storable>.
 
 In scalar context, returns the last message. In list context, returns
 all the messages.
@@ -138,7 +140,7 @@ sub message
 
 If C<$message> is defined, adds it with L</message>.
 
-The complete C<$fork> object is frozen with L<FreezeThaw/safeFreeze>,
+The complete C<$fork> object is frozen with L<Storable/freeze>,
 including all messages added by L</message>. The object is sent to the
 PARENT.
 
@@ -155,7 +157,7 @@ sub return
     debug(1,"Returning child result for $Para::Frame::REQ->{reqnum}");
 
     $result->message( $message ) if $message;
-    my $data = safeFreeze $result;
+    my $data = freeze( $result );
     my $length = length($data);
     debug(2,"Returning $length bytes of data");
     my $res = print $length . "\0" . $data . "\n";
@@ -185,7 +187,7 @@ sub return
 If C<$exception> is defined adds that exception to the exception list.
 
 The exceptions can be anything. For example an object. But it must be
-something that survive L<FreezeThaw>.
+something that survive L<Storable>.
 
 In scalar context, returns the last exception. In list context, returns
 all the exceptions.

@@ -21,7 +21,8 @@ Para::Frame::Child - Representing a child process from the PARENTs view
 
 use strict;
 use vars qw( $VERSION );
-use FreezeThaw qw( thaw );
+#use FreezeThaw qw( thaw );
+use Storable qw( thaw );
 use File::Slurp;
 
 BEGIN
@@ -48,7 +49,7 @@ the result from the CHILD.
 See L<Para::Frame::Request/create_fork> for examples.
 
 Large results may take considerable time to reconstruct by
-L<FreezeThaw/thaw>.
+L<Storable/thaw>.
 
 Then the child is done, it returns the L<Para::Frame::Child::Result>
 object. If the retrieval of the data succeed, it check for exceptions

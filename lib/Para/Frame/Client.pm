@@ -26,7 +26,8 @@ use bytes;
 use CGI;
 use IO::Socket;
 use IO::Select;
-use FreezeThaw qw( freeze );
+#use FreezeThaw qw( freeze );
+use Storable qw( freeze );
 use Time::HiRes;
 
 # See also
@@ -272,7 +273,7 @@ sub handler
 
 #    warn sprintf "URI %s FILE %s CTYPE %s\n", $uri, $filename, $ctype;
 
-    my $value = freeze [ \%params,  \%ENV, $uri, $filename, $ctype, $dirconfig, $r->header_only, \%files ];
+    my $value = freeze [ \%params,  \%ENV, $uri, $filename, $ctype, {%$dirconfig}, $r->header_only, \%files ];
 
     my $try = 0;
     while()
