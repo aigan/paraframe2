@@ -60,6 +60,7 @@ our $INTERVAL_MAIN_LOOP        =  10;
 our $LIMIT_MEMORY              =3600;
 our $LIMIT_MEMORY_NOTICE       =1500;
 our $LIMIT_MEMORY_MIN          = 150;
+our $LIMIT_SYSTOTAL            =   1;
 our $TIMEOUT_SERVER_STARTUP    =  45;
 our $TIMEOUT_CONNECTION_CHECK  =  60;
 our $LIMIT_CONNECTION_TRIES    =   5;
@@ -187,14 +188,15 @@ sub check_process
 	if( debug > 2 or
 	    $CPU_USAGE > 200 or
 	    $size > $LIMIT_MEMORY_NOTICE or
-	    $systotal > 1
+	    $systotal > $LIMIT_SYSTOTAL
 	  )
 	{
 	    debug sprintf( "Serverstat %.2d%% CPU, %5d MB. %d%% sysmem",
 			   $usage, $size, $systotal*100  );
 	}
 
-	if( $systotal > 1 and ( $LIMIT_MEMORY > $LIMIT_MEMORY_MIN * 2  ) )
+	if( $systotal > $LIMIT_SYSTOTAL and
+	    ( $LIMIT_MEMORY > $LIMIT_MEMORY_MIN * 2  ) )
 	{
 	    debug sprintf "Systotal: %.2f", $systotal;
 	    my $total = ((($LIMIT_MEMORY - $LIMIT_MEMORY_MIN ) * 0.9)
