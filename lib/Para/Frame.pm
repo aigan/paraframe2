@@ -316,6 +316,14 @@ sub main_loop
 		}
 		else
 		{
+		    # TODO: Fixme
+
+		    # I get strange loops then I'm not setting
+		    # switch_req(undef() here. But We should not need
+		    # to to this here. Investigate how to eliminate
+		    # the need for it. switch_req() should be called
+		    # in the specific sections later, where needed.
+
 		    switch_req(undef);
 		    get_value( $client );
 		    $timeout = TIMEOUT_SHORT; # Get next thing
@@ -1088,6 +1096,8 @@ sub handle_code
 	debug(2,"URI2FILE($val) recieved");
 
 	# Calling uri2file in the right $REQ
+	# Do we need to switch_req() ???
+
 	my $current_req = $REQ;
 	my $req = $REQUEST{ $caller_clientaddr } or
 	  die "Client $caller_clientaddr not registred";
