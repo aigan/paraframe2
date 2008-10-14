@@ -69,6 +69,7 @@ our @EXPORT_OK
             datadump client_send validate_utf8 escape_js );
 
 use Para::Frame::Reload;
+#use Para::Frame::URI;
 #use Para::Frame::Unicode; # Loaded by Para::Frame
 
 our %TEST; ### DEBUG
@@ -1702,17 +1703,24 @@ an explanation.
 
 sub retrieve_from_url
 {
-    my( $url ) = @_;
+    my( $url_in ) = @_;
 
     # We are doing this in the background and returns the result then
     # done.
 
-    my $req = $Para::Frame::REQ;
+    my $url = Para::Frame::URI->new( $url_in );
 
-    my $ua = LWP::UserAgent->new;
-    my $lwpreq = HTTP::Request->new(GET => $url);
+#    debug "Retrieving url ".ref($url);
+#    debug"https isa: ".datadump(@URI::https::ISA);
 
-    my( $res ) = Para::Frame::Worker->method($ua, 'request', $lwpreq);
+#    my $req = $Para::Frame::REQ;
+
+###    my $ua = LWP::UserAgent->new;
+###    my $lwpreq = HTTP::Request->new(GET => $url);
+###    my( $res ) = Para::Frame::Worker->method($ua, 'request', $lwpreq);
+#    debug "url $url isa ".datadump($url);
+
+    my( $res ) = Para::Frame::Worker->method($url, 'retrieve');
 
 #    debug datadump($res);
 
