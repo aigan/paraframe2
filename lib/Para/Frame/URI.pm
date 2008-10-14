@@ -22,7 +22,7 @@ Para::Frame::URI - Represent an URI
 use strict;
 
 use URI;
-use Carp qw( confess );
+use Carp qw( confess cluck );
 
 BEGIN
 {
@@ -74,7 +74,7 @@ sub new
 
 =head2 as_html
 
-  $a->as_html
+  $uri->as_html
 
 =cut
 
@@ -601,6 +601,34 @@ See L<URI/query_form_hash>
 sub query_form_hash
 {
     return shift->getset('query_form_hash',@_);
+}
+
+
+#######################################################################
+
+=head3 retrieve
+
+  $uri->retrieve()
+
+Does a GET request by L<LWP::UserAgent>.
+
+Makes sure that the scheme module is loaded. (Since the object may
+have been created in another process.)
+
+
+=cut
+
+sub retrieve
+{
+    my( $uri ) = @_;
+
+#    debug"https isa: ".datadump(@URI::https::ISA);
+#    debug "https class: $INC{'URI/https.pm'}";
+
+    my $ua = LWP::UserAgent->new;
+    my $lwpreq = HTTP::Request->new(GET => $uri);
+
+    return $ua->request($lwpreq);
 }
 
 
