@@ -3219,6 +3219,8 @@ The query string passed as part of the URL
 
 Not including any POST data.
 
+Used by L<Para::Frame::Requet::Response/page_url_with_query_and_reqnum>
+
 Returns: the unparsed string, after the '?', as given by
 $ENV{'QUERY_STRING'}. Saved on Req startup.
 
