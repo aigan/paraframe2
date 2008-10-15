@@ -227,7 +227,7 @@ sub page_url_with_query_and_reqnum
 {
     my( $resp ) = @_;
 
-    my $path = $resp->page->url_path_slash;
+    my $path = $resp->page->url_path_slash . '?';
     my $req = $Para::Frame::REQ;
 
 #    debug "CALLER query string is ".$req->original_url_params;
@@ -235,20 +235,18 @@ sub page_url_with_query_and_reqnum
 
     my $urlstr;
 
-    if( $path eq $req->original_url_string )
+    if( $path eq $req->original_url_string.'?' )
     {
 	if( my $query = $req->original_url_params )
 	{
-	    $path .= "?".$query;
+	    $query =~ s/reqnum=[^&]+&?//g;
+	    $query =~ s/pfport=[^&]+&?//g;
+
+	    if( length $query )
+	    {
+		$path .= $query . '&';
+	    }
 	}
-	else
-	{
-	    $path .= '?';
-	}
-    }
-    else
-    {
-	$path .= '?';
     }
 
     return $path . 'reqnum='.$req->id.'&pfport='.$Para::Frame::CFG->{'port'};

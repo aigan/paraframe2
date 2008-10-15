@@ -527,7 +527,7 @@ sub forward_url
 #    debug "In forward_url for $template with attr\n".datadump($attr);
 
     $template ||= $Para::Frame::REQ->env->{'REQUEST_URI'};
-    my $except = ['run','destination','reqnum','caller_page']; # FIXME
+    my $except = ['run','destination','reqnum','pfport','caller_page']; # FIXME
 
     if( $template =~ /(.*?)\?/ )
     {
@@ -633,7 +633,7 @@ sub preserve_data
     my $q = $Para::Frame::REQ->q;
 
     push @except, 'previous', 'run', 'route', 'selector',
-      'destination', 'session_vars_update', 'admin_mode', 'reqnum';
+      'destination', 'session_vars_update', 'admin_mode', 'reqnum', 'pfport';
 
   KEY:
     foreach my $key ( $q->param())

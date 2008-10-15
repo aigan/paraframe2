@@ -166,6 +166,7 @@ sub plan_next
 	my $url_norm = $Para::Frame::REQ->normalized_url( $url_in );
 	my $url = Para::Frame::URI->new($url_norm);
 	$url->query_param_delete('reqnum');
+	$url->query_param_delete('pfport');
 
 
 	# Used in skip_step...
@@ -180,6 +181,7 @@ sub plan_next
 	}
 
 	debug(1,"!!New step in route: $url");
+	debug(1,"!!  with caller_url ".$caller_url);
 
 	if( my $prev_url_clean = $route->{'route_clean'}[-1] )
 	{
@@ -219,6 +221,7 @@ sub plan_after
 	my $url_norm = $Para::Frame::REQ->normalized_url( $url_in );
 	my $url = Para::Frame::URI->new($url_norm);
 	$url->query_param_delete('reqnum');
+	$url->query_param_delete('pfport');
 
 
 	# Used in skip_step...
@@ -255,6 +258,8 @@ sub plan_after
 
   $route->caller_url
 
+This will use the post data if this was a post action.
+
 Returns the caller_url, excluding actions, as an L<URI> obj.
 
 =cut
@@ -265,8 +270,9 @@ sub caller_url
 
     my $referer = $Para::Frame::REQ->referer_with_query;
     my $caller_url = Para::Frame::URI->new( $referer );
-    $caller_url->query_param_delete('run');
     $caller_url->query_param_delete('reqnum');
+    $caller_url->query_param_delete('pfport');
+    $caller_url->query_param_delete('run');
     return $caller_url;
 }
 
@@ -611,6 +617,7 @@ sub skip_step
     my $dest;
 
     debug(1,"!!  called skip_step");
+    debug 1, "  for route ".join("'",@{$route->{'route'}});
 
     if( my $step = pop @{$route->{'route'}} )
     {
@@ -715,6 +722,7 @@ sub clear_special_params
     $q->delete('renderer');
     $q->delete('destination');
     $q->delete('reqnum');
+    $q->delete('pfport');
     $q->delete('backtrack');
 }
 
@@ -777,6 +785,7 @@ sub replace_query
     ###  DANGER  DANGER  DANGER
     # init() is not a public method
     debug(1,"Initiating query with string $query_string");
+    cluck "Empty query_string";
 
     $ENV{QUERY_STRING} = $query_string;
     $q->delete_all;
