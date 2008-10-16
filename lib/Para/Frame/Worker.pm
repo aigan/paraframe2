@@ -194,7 +194,7 @@ sub create_idle_worker
     $count ||= 1;
     for( my $i=1; $i<=$count; $i++ )
     {
-	debug "Creating a worker";
+	debug 2, "Creating a worker";
 	my $worker = $class->create_worker();
 	$class->init($worker);
 	push @Para::Frame::WORKER_IDLE, $worker;
@@ -251,7 +251,7 @@ sub init
 	my $port = $wsock->sockport;
 	my $wselect = IO::Select->new($wsock);
 
-	debug "using port '$port'";
+	debug 2, "using port '$port'";
 	print "$port\n"; ### Telling what port to use;
 	my $cnt =0;
 
