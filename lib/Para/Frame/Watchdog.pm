@@ -44,16 +44,23 @@ our $PID;                  # The PID to watch
 our $FH;                   # Server file-handle
 our $CRASHCOUNTER;         # Number of crashes
 our $CRASHTIME;
+
 our $DO_CONNECTION_CHECK;
 our $HARD_RESTART;
 our $SHUTDOWN;             # Should we shut down the server?
-our $MSGTYPE;              # Type of messages from server 
+our $DOWN;                 # Restart or shutdown in progress
+
+our $MSGTYPE;              # Type of messages from server
 our $CHECKTIME;            # Time of last proc check
 our $CPU_TIME;             # user + system time
 our $CPU_USAGE=0;          # Aproximate avarage usage
 our $MEMORY_CLEAR_TIME;    # When to send memory message
 our $USE_LOGFILE;          # Redirects STDERR to logfile
 our $EMERGENCY_MODE;       # Experienced a crash. Maximum debug
+
+our $SOCK;                 # Socket for sending
+our @MESSAGE;              # Messages pipe
+
 
 our $INTERVAL_CONNECTION_CHECK =  60;
 our $INTERVAL_MAIN_LOOP        =  10;
@@ -249,30 +256,30 @@ sub check_process
 
 sub wait_for_server_setup
 {
-    my( $type, @args ) = get_server_message($TIMEOUT_SERVER_STARTUP);
-    unless( $type )
+    while( my( $type, @args ) =
+	   get_next_server_message($TIMEOUT_SERVER_STARTUP) )
     {
-	debug "Server failed to reach main loop (TIMEOUT)";
-	return watchdog_crash();
-    }
-    if( $type ne 'STARTED' )
-    {
-	if( $type eq 'Loading' )
+	if( $type eq 'STARTED' )
+	{
+	    return 1;
+	}
+	elsif( $type eq 'Loading' )
 	{
 	    print "Loading @args\n";
-	    return wait_for_server_setup();
 	}
 	elsif( $type eq 'MAINLOOP' )
 	{
-	    return wait_for_server_setup();
+	    # ignoring...
 	}
 	else
 	{
-	    debug "Expected MAINLOOP message (got '$type')";
+	    debug "Unexpected message during startup: $type @args";
 	    return watchdog_crash();
 	}
     }
-    return 1;
+
+    debug "Server failed to reach main loop (TIMEOUT)";
+    return watchdog_crash();
 }
 
 
@@ -286,7 +293,7 @@ sub check_server_report
 {
     while()
     {
-	my( $type, @args ) = get_server_message();
+	my( $type, @args ) = get_next_server_message();
 	last unless $type;
 
 	if( $type eq 'TERMINATE' )
@@ -294,6 +301,16 @@ sub check_server_report
 	    debug "Got request to terminate server";
 	    terminate_server();
 	    exit 0;
+	}
+	elsif( $type eq 'PING')
+	{
+	    debug "Got a ping request. Checking connection";
+	    check_connection();
+	}
+	elsif( $type eq 'DOWN')
+	{
+	    debug "Server going down";
+	    $DOWN = 1;
 	}
     }
 }
@@ -389,6 +406,30 @@ sub restart_server
 
 #######################################################################
 
+=head2 get_next_server_message
+
+=cut
+
+sub get_next_server_message
+{
+    if( my $msg = shift @MESSAGE )
+    {
+	return( @$msg );
+    }
+
+    get_server_message( @_ );
+
+    if( my $msg = shift @MESSAGE )
+    {
+	return( @$msg );
+    }
+
+    return undef;
+}
+
+
+#######################################################################
+
 =head2 get_server_message
 
 =cut
@@ -402,7 +443,7 @@ sub get_server_message
 	IO::Select->new($FH)->can_read($timeout);
     }
 
-    if( my $report = $FH->getline )
+    while( my $report = $FH->getline )
     {
 	chomp $report;
 	my( $type, $argstring ) = split / /, $report;
@@ -411,13 +452,14 @@ sub get_server_message
 	unless( defined $argformat )
 	{
 	    debug "---> Got unrecognized server report: $report ($type)";
-	    return undef;
+	    next;
 	}
 
 	# Just return type if no argument was expected
 	if( $argformat == 0 and not $argstring )
 	{
-	    return $type;
+	    push @MESSAGE, [$type];
+	    next;
 	}
 
 	$argstring = '' unless defined $argstring; # accept 0
@@ -426,7 +468,7 @@ sub get_server_message
 	{
 	    debug 4, "Server reported $type\n";
 	    debug 5, "  returning args @args";
-	    return $type, @args;
+	    push @MESSAGE, [$type, @args];
 	}
 	else
 	{
@@ -434,7 +476,8 @@ sub get_server_message
 	    debug "  Argstring '$argstring' did not match argformat '$argformat'\n";
 	}
     }
-    return undef;
+
+    return 1;
 }
 
 
@@ -454,17 +497,19 @@ sub check_connection
   CONNECTION_TRY:
     while()
     {
+	check_server_report(); return 0 if $DOWN;
+
 	$try ++;
 	debug 4, "  Check $try";
 
-	my $sock = send_to_server('PING');
-	unless( $sock )
+	send_to_server('PING');
+	unless( $SOCK )
 	{
 	    debug "Failed to send PING to server";
 	    return watchdog_crash();
 	}
 
-	my $select = IO::Select->new($sock);
+	my $select = IO::Select->new($SOCK);
 
 	# Waiting for the response in TIMEOUT_CONNECTION_CHECK seconds
 	my $waited     = 0;
@@ -472,7 +517,7 @@ sub check_connection
 	{
 	    if( $select->can_read( $INTERVAL_MAIN_LOOP ) )
 	    {
-		my $resp = $sock->getline or last; ### During restart?
+		my $resp = $SOCK->getline or last; ### During restart?
 		my $length;
 
 		if( $resp =~ s/^(\d+)\x00// )
@@ -708,6 +753,7 @@ sub REAPER
 #		    exit $?;
 		}
 
+		$DOWN = 0;
 		on_crash();
 	    }
 	}
@@ -797,20 +843,97 @@ sub send_to_server
 {
     my( $code, $valref ) = @_;
 
-    # Returns the socket. Undef on failure!
+    my $DEBUG = 1;
 
     exit 0 if $SHUTDOWN; # Bail out if requested to...
 
-    my $port = $Para::Frame::CFG->{'port'};
-    Para::Frame::Client::connect_to_server( $port );
-    my $sock = $Para::Frame::Client::SOCK;
-    unless( $sock )
+    my @cfg =
+	(
+	 PeerAddr => 'localhost',
+	 PeerPort => $Para::Frame::CFG->{'port'},
+	 Proto    => 'tcp',
+	 Timeout  => 5,
+	 );
+
+    $SOCK = IO::Socket::INET->new(@cfg);
+
+    my $try = 1;
+    while( not $SOCK )
+    {
+	check_server_report(); return 0 if $DOWN;
+
+	$try ++;
+	warn "$$:   Trying again to connect to server ($try)\n" if $DEBUG;
+
+	$SOCK = IO::Socket::INET->new(@cfg);
+
+	last if $SOCK;
+
+	if( $try >= 5 )
+	{
+	    warn "$$: Tried connecting to server $try times - Giving up!\n";
+	    last;
+	}
+
+	sleep 1;
+    }
+
+    if( $SOCK )
+    {
+	binmode( $SOCK, ':raw' );
+	warn "$$: Established connection to server\n" if $DEBUG > 3;
+    }
+    else
     {
 	debug "Failed to connect to server";
 	return undef;
     }
-    Para::Frame::Client::send_to_server($code, $valref);
-    return $sock;
+
+    ############# CONNECTION ESTABLISHED
+
+    $valref ||= \ "1";
+    my $length_code = length($$valref) + length($code) + 1;
+
+    my $data = "$length_code\x00$code\x00" . $$valref;
+
+    if( $DEBUG > 3 )
+    {
+	warn "$$: Sending string $data\n";
+#	warn sprintf "$$:   at %.2f\n", Time::HiRes::time;
+    }
+
+    my $length = length($data);
+#    warn "$$: Length of block is ($length) ".bytes::length($data)."\n";
+    my $errcnt = 0;
+    my $chunk = 16384; # POSIX::BUFSIZ * 2
+    my $sent = 0;
+    for( my $i=0; $i<$length; $i+= $sent )
+    {
+	$sent = $SOCK->send( substr $data, $i, $chunk );
+	if( $sent )
+	{
+	    $errcnt = 0;
+	}
+	else
+	{
+	    check_server_report(); return 0 if $DOWN;
+
+	    $errcnt++;
+
+	    if( $errcnt >= 10 )
+	    {
+		warn "$$: Got over 10 failures to send chunk $i\n";
+		warn "$$: LOST CONNECTION\n";
+		return 0;
+	    }
+
+	    warn "$$:  Resending chunk $i of messge: $data\n";
+	    Time::HiRes::sleep(0.05);
+	    redo;
+	}
+    }
+
+    return 1;
 }
 
 
@@ -1071,6 +1194,9 @@ sub configure
     $HARD_RESTART = 0;
     $EMERGENCY_MODE = 0;
     $SHUTDOWN = 0;
+    $DOWN = 0;
+    $SOCK = undef;
+    @MESSAGE = ();
 
     # Message label and format of the arguments
     $MSGTYPE =
@@ -1078,6 +1204,8 @@ sub configure
         MAINLOOP => qr/^(\d+)$/,
 	TERMINATE => 0,
         STARTED => 0,
+        DOWN => 0,
+        PING => 0,
 	'Loading' => qr/(.*)/,
     };
 }
