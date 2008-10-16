@@ -471,16 +471,14 @@ sub main_loop
 			{
 			    # Make watchdog restart us
 			    debug "Executing HUP now";
-			    $SERVER->close();
-			    Para::Frame->kill_children;
+			    Para::Frame->go_down;
 			    exit 1;
 			}
 			elsif( $TERMINATE eq 'TERM' )
 			{
 			    # No restart
 			    debug "Executing TERM now";
-			    $SERVER->close();
-			    Para::Frame->kill_children;
+			    Para::Frame->go_down;
 			    exit 0;
 			}
 			elsif( $TERMINATE eq 'RESTART' )
@@ -602,8 +600,7 @@ sub main_loop
 		{
 		    debug "Make watchdog restart us";
 		    debug "Executing HUP now";
-		    $SERVER->close();
-		    Para::Frame->kill_children;
+		    Para::Frame->go_down;
 		    exit 1;
 		}
 
@@ -1395,24 +1392,28 @@ sub daemonize
 
     # Detatch AFTER watchdog started sucessfully
 
+    warn "--- daemonize\n";
+
     my $parent_pid = $$;
 
     $SIG{CHLD} = sub
     {
-	warn "Error during daemonize\n";
-	Para::Frame->kill_children;
+	warn "--- Error during daemonize\n";
+	Para::Frame->go_down;
 	exit 1;
     };
     $SIG{USR1} = sub
     {
-	warn "Running in background\n" if $DEBUG > 3;
-	Para::Frame->kill_children;
+#	warn "Running in background\n" if $DEBUG > 3;
+	warn "--- Running in background\n";
+
+#	Para::Frame->go_down;
 	exit 0;
     };
 
     my $orig_name = $0;
     $0 = abs_path($0);
-    warn "$orig_name resolved to $0\n";
+    warn "--- $orig_name resolved to $0\n";
 
     chdir '/'                 or die "Can't chdir to /: $!";
     defined(my $pid = fork)   or die "Can't fork: $!";
@@ -1424,16 +1425,19 @@ sub daemonize
 	{
 	    # Waiting for signal from child
 	    sleep 2;
-	    warn "---- Waiting for ready signal\n" if $DEBUG > 1;
+	    warn "--- Waiting for ready signal\n" if $DEBUG > 0;
 	}
-	$SERVER->close();
-	Para::Frame->kill_children;
+
+	warn "--- We should never come here\n";
+	Para::Frame->go_down;
 	exit;
     }
 
     # Reset signal handlers for the child
     $SIG{CHLD} = 'IGNORE';
     $SIG{USR1} = 'DEFAULT';
+
+    warn "--- In child\n";
 
     if( $run_watchdog )
     {
@@ -1473,13 +1477,58 @@ sub restart
 {
     my( $class ) = @_;
 
-    $SERVER->close();
+    debug "--- In restart";
+
+
+#    $SERVER->close();
+#    open STDOUT, '>/dev/null' or die "Can't write to /dev/null: $!";
+#    Para::Frame->kill_children;
+##    system("$0&") == 0 or die "Exec failed";
+#    exec("$0&"); warn "Exec failed: $!"; sleep 1;
+#    exec("$0&"); warn "Exec failed: $!"; sleep 1;
+#    exec("$0&"); warn "Exec failed: $!";
+#    return 0;
+#
+#    #---------------------------------------------------
+
+
+
+
+    Para::Frame->go_down;
+
+    # We MUST redirect STDOUT in order to release the parent process
+    #
     open STDOUT, '>/dev/null' or die "Can't write to /dev/null: $!";
-    Para::Frame->kill_children;
-#    system("$0&") == 0 or die "Exec failed";
-    exec("$0&"); warn "Exec failed: $!"; sleep 1;
-    exec("$0&"); warn "Exec failed: $!"; sleep 1;
-    exec("$0&"); warn "Exec failed: $!";
+
+    debug "--- executing $0 @ARGV";
+
+#    POSIX::setsid             or die "Can't start a new session: $!";
+#    $SIG{CHLD} = 'DEFAULT';
+
+#    system("$0 @ARGV&") == 0 or warn "Exec failed: $!\n";
+#    if ($? == -1)
+#    {
+#	debug "failed to execute: $!\n";
+#    }
+#    elsif ($? & 127)
+#    {
+#	debug sprintf "child died with signal %d, %s coredump\n",
+#	  ($? & 127),  ($? & 128) ? 'with' : 'without';
+#    }
+#    else
+#    {
+#	debug sprintf "child exited with value %d\n", $? >> 8;
+#    }
+#
+#    debug "----------------------------------------";
+#    exit 0;
+#    sleep 1;
+#    debug "executing $0";
+
+    exec("$0 @ARGV &"); warn "Exec failed: $!"; sleep 1;
+    debug "executing $0";
+    exec("$0 @ARGV &"); warn "Exec failed: $!";
+    debug "failing";
     return 0;
 }
 
@@ -1496,6 +1545,9 @@ sub kill_children
 {
     my( $class ) = @_;
 
+    $SIG{CHLD} = 'IGNORE'; # Not turing it back on!!!
+    $SIG{USR1} = 'DEFAULT';
+
     foreach my $child ( values %CHILD )
     {
 	my $cpid = $child->pid;
@@ -1510,6 +1562,38 @@ sub kill_children
 	kill 9, $cpid;
     }
 
+}
+
+
+#######################################################################
+
+=head2 go_down
+
+  Para::Frame->go_down()
+
+Assumes that we will exit one way or another after this. Thus, we will
+shut down the signal handling before killing the childs, and NOT turn
+it on afterwards.
+
+=cut
+
+sub go_down
+{
+    my( $class ) = @_;
+
+    $SERVER and $SERVER->close();
+
+    debug "Cleaning up";
+    print "DOWN\n";
+
+    open STDOUT, '>/dev/null' or die "Can't write to /dev/null: $!";
+
+    $SIG{CHLD} = 'IGNORE'; # Not turing it back on!!!
+    $SIG{USR1} = 'DEFAULT';
+
+    Para::Frame->kill_children;
+
+    return 1;
 }
 
 
