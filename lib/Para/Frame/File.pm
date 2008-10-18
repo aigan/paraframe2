@@ -191,7 +191,7 @@ sub new
 	}
 	elsif( UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
 	{
-	    if( $url_name =~ /\.(tt|html?|css)\/?$/ )
+	    if( $url_name =~ /\.(tt|html?|css|js)\/?$/ )
 	    {
 		confess "File $url_name doesn't look like a dir";
 	    }
@@ -267,7 +267,7 @@ sub new
 	if( -d $sys_name or
 	    UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
 	{
-	    if( $sys_name =~ /\.(tt|html?|css)\/?$/ )
+	    if( $sys_name =~ /\.(tt|html?|css|js)\/?$/ )
 	    {
 		confess "File $sys_name doesn't look like a dir";
 	    }
@@ -336,7 +336,7 @@ sub new
 	    {
 		my $preslash = $1;
 
-		if( $url_norm =~ /\.(tt|html?|css)\/?$/ )
+		if( $url_norm =~ /\.(tt|html?|css|js)\/?$/ )
 		{
 		    confess "File $url_norm doesn't look like a dir";
 		}
@@ -362,7 +362,7 @@ sub new
 	}
 	elsif( UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
 	{
-	    if( $sys_name =~ /\.(tt|html?|css)\/?$/ )
+	    if( $sys_name =~ /\.(tt|html?|css|js)\/?$/ )
 	    {
 		confess "File $sys_name doesn't look like a dir";
 	    }
@@ -1123,8 +1123,10 @@ sub base
 
 =head2 base_name
 
-The filename, but excluding the suffixes of the file
-along with the dots. For Dirs, excluding the trailing slash.
+The filename, but excluding the last suffix and the preceeding
+language suffix, if existing, along with the dots. For Dirs, excluding
+the trailing slash.  Be careful since this will return an empty string
+for hidden files like C<.htaccess>.
 
 Not valid for dirs
 
@@ -1135,7 +1137,7 @@ sub base_name
     my( $f ) = @_;
 
     my $template = $f->name;
-    if( $template =~ /^(.*?)(\.\w\w)?\.\w{2,4}$/ )
+    if( $template =~ /^(.*?)(\.\w\w)?\.[^\.\/]+$/ )
     {
 	return $1;
     }
