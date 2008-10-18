@@ -138,7 +138,7 @@ stylefiles. Those may be translated as above.
 Example:
     $attrs =
      {
-      persistent => [ "css/default.css" ],
+      persistent => [ "css/default.css_tt" ],
       alternate =>
       {
        light => [ "css/light.css" ],
@@ -192,8 +192,8 @@ sub header
 	    debug 2, "Falling back to default css";
 	    $p =
 	    {
-	     'persistent' => ['pf/css/paraframe.css',
-			      'pf/css/default.css'],
+	     'persistent' => ['pf/css/paraframe.css_tt',
+			      'pf/css/default.css_tt'],
 	    };
 	}
     }

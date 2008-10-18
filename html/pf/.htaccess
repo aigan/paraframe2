@@ -1,1 +1,2 @@
 AddHandler perl-script css_tt
+AddType text/css .css_tt
