@@ -936,12 +936,12 @@ sub uri
 	}
     }
 
-    my $query = join '&amp;', @parts;
+    my $query = join '&', @parts;
     if( $query )
     {
 	if( $template =~ /\?/ )
 	{
-	    $query = '&amp;'.$query;
+	    $query = '&'.$query;
 	}
 	else
 	{
