@@ -15,7 +15,7 @@ Check for needed modules by running
 
 Install the needed modules with cpan.
 
-Installation of Crypt::OpenPGP can be done in this order:
+Installation of Crypt::OpenPGP is OPTIONAL, and can be done in this order:
   1. Math::Pari
   2. Crypt::DSA
   3. Class::Loader
