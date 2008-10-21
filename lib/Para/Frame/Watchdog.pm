@@ -259,6 +259,8 @@ sub wait_for_server_setup
     while( my( $type, @args ) =
 	   get_next_server_message($TIMEOUT_SERVER_STARTUP) )
     {
+	next unless $type;
+
 	if( $type eq 'STARTED' )
 	{
 	    return 1;
