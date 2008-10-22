@@ -626,13 +626,26 @@ sub retrieve
 #    debug "https class: $INC{'URI/https.pm'}";
 
     my $ua = LWP::UserAgent->new;
-    my $lwpreq = HTTP::Request->new(GET => $uri);
+    my $lwpreq = HTTP::Request->new(GET => $uri->{'value'});
 
     return $ua->request($lwpreq);
 }
 
 
 #######################################################################
+
+#use vars qw($AUTOLOAD);
+#sub AUTOLOAD
+#{
+#    my $method = $AUTOLOAD;
+#    $method =~ s/.*:://;
+#    return if $method =~ /DESTROY$/;
+#    my $node = shift;
+#    my $class = ref($node);
+#
+#    confess "Called $node->$method(@_) for ".datadump($node);
+#}
+
 
 1;
 
