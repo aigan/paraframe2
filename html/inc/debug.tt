@@ -4,6 +4,7 @@
   [% END %]
 
   <h1>
+    Debug at level [% debug_level %]:
     [% IF req.result.errcnt %]
       [% IF req.result.errcnt == 1 %]
         [% req.result.errcnt %] error
