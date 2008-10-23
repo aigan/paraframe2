@@ -313,11 +313,11 @@ sub error_message
 
   $a->as_string
 
-Returns a string using L<Mail::Address/address>
+Same as L</address>
 
 =cut
 
-sub as_string { $_[0]->{addr}->address }
+sub as_string { $_[0]->address }
 
 
 #######################################################################
@@ -378,13 +378,43 @@ sub host { $_[0]->{addr}->host }
 
  $a->format
 
-Returns a string using L<Mail::Address/format>
+Reimplements L<Mail::Address/format>, since L</name> may have been
+subclassd.
 
 =cut
 
 sub format
 {
-    return $_[0]->{addr}->format;
+    my( $a ) = @_;
+
+    my $atext = '[\-\w !#$%&\'*+/=?^`{|}~]';
+
+    my $phrase = $a->phrase || $a->name || '';
+    my $addr = $a->address || '';
+    my $comment = $a->comment || '';
+    my @tmp = ();
+
+    if( length $phrase )
+    {
+	push @tmp, $phrase =~ /^(?:\s*$atext\s*)+$/ ? $phrase
+	  : $phrase =~ /(?<!\\)"/            ? $phrase
+	  :                                    qq("$phrase");
+
+	push(@tmp, "<" . $addr . ">") if length $addr;
+    }
+    else
+    {
+	push(@tmp, $addr) if length $addr;
+    }
+
+    if( $comment =~ /\S/ )
+    {
+	$comment =~ s/^\s*\(?/(/;
+	$comment =~ s/\)?\s*$/)/;
+    }
+
+    push(@tmp, $comment) if length $comment;
+    return join " ", @tmp;
 }
 
 
@@ -428,6 +458,38 @@ Returns the name for the email address.
 sub name
 {
     return shift->{addr}->name(@_);
+}
+
+
+#######################################################################
+
+=head2 phrase
+
+  $a->phrase
+
+Returns the phrase in the email address.
+
+=cut
+
+sub phrase
+{
+    return shift->{addr}->phrase(@_);
+}
+
+
+#######################################################################
+
+=head2 comment
+
+  $a->comment
+
+Returns the comment in the email address.
+
+=cut
+
+sub comment
+{
+    return shift->{addr}->comment(@_);
 }
 
 
