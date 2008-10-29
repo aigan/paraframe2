@@ -162,7 +162,9 @@ Availible params are:
 
   page_size      (default is 20 )
   display_pages  (default is 10 )
+  limit_pages    (default is 0 == unlimited)
   limit          (default is 0 == unlimited)
+  limit_display  (default is 0 == unlimited)
   materializer   (default is undef == list is material)
   type           (default is undef)
   allow_undef    (default is undef)
@@ -213,9 +215,12 @@ sub new
 
     if( $args )
     {
+	$l->{'allow_undef'} = $args->{'allow_undef'};
 	$l->{'limit'} = $args->{'limit'};
+	$l->{'limit_display'} = $args->{'limit_display'};
 	$l->{'page_size'} = $args->{'page_size'};
 	$l->{'display_pages'} = $args->{'display_pages'};
+	$l->{'limit_pages'} = $args->{'limit_pages'};
 	$l->{'sorted_on'} = $args->{'sorted_on'};
 	$l->{'sorted_on_key'} = $args->{'sorted_on_key'};
     }
@@ -353,8 +358,10 @@ sub new_empty
      'populated'     => 2,     # 1 for partly and 2 for fully populated
      '_OBJ'          => [], # the corresponding list of materalized elements
 #     'limit'         => 0,
+#     'limit_display' => 0,
 #     'page_size'     => 0,
 #     'display_pages' => 0,
+#     'limit_pages'   => 0,
 #     'stored_id'     => undef,
 #     'stored_time'   => undef,
     }, $class;
@@ -748,7 +755,7 @@ sub from_page
     my $end = List::Util::max( $start,
 			       List::Util::min(
 					       $start + $page_size,
-					       $l->size,
+					       $l->size_limited,
 					      ) -1,
 			     );
 
@@ -968,7 +975,18 @@ sub pages
 	return 1;
     }
 
-    return int( $l->max / $page_size ) + 1;
+    my $pages = int( $l->max_limited / $page_size ) + 1;
+
+    debug "page_size = ".$page_size;
+    debug "max_limited = ".$l->max_limited;
+    debug "pages = ".$pages;
+
+    if( my $lim = $l->limit_pages )
+    {
+	return List::Util::min( $lim, $pages );
+    }
+
+    return $pages;
 }
 
 #######################################################################
@@ -1161,6 +1179,68 @@ Sets and returns the given L</display_pages>.
 sub set_display_pages
 {
     $_[0]->{'display_pages'} = int($_[1]);
+    return "";
+}
+
+
+#######################################################################
+
+=head2 set_limit_pages
+
+Sets and returns the given L</limit_pages>.
+
+=cut
+
+sub set_limit_pages
+{
+    $_[0]->{'limit_pages'} = int($_[1]);
+    return "";
+}
+
+
+#######################################################################
+
+=head2 limit_pages
+
+  $l->limit_pages
+
+Returns the last page number that should be listed by L</pagelist>.
+
+=cut
+
+sub limit_pages
+{
+    return $_[0]->{'limit_pages'} || 0;
+}
+
+
+#######################################################################
+
+=head2 limit_display
+
+  $l->limit_display
+
+Returns how many results that will be shown then listed as pages
+
+=cut
+
+sub limit_display
+{
+    return $_[0]->{'limit_display'} || 0;
+}
+
+
+#######################################################################
+
+=head2 set_limit_display
+
+Sets and returns the given L</limit_display>.
+
+=cut
+
+sub set_limit_display
+{
+    $_[0]->{'limit_display'} = int($_[1]);
     return "";
 }
 
@@ -1676,7 +1756,6 @@ sub get_all
 }
 
 
-
 #######################################################################
 
 =head2 size
@@ -1706,6 +1785,33 @@ sub size
     return scalar @{$_[0]->{'_DATA'}};
 }
 
+
+#######################################################################
+
+=head2 size_limited
+
+  $l->size_limited()
+
+Returns: the L</size>, constraining to given L</limit_display>
+
+=cut
+
+sub size_limited
+{
+    unless( $_[0]->{'populated'} > 1 )
+    {
+	$_[0]->populate_all;
+    }
+
+    if( my $lim = $_[0]->{'limit_display'} )
+    {
+	return List::Util::min( $lim, scalar(@{$_[0]->{'_DATA'}}));
+    }
+
+    return scalar(@{$_[0]->{'_DATA'}});
+}
+
+
 #######################################################################
 
 =head2 original_size
@@ -1716,6 +1822,7 @@ sub original_size
 {
     return $_[0]->{'original_size'} ||= $_[0]->size;
 }
+
 
 #######################################################################
 
@@ -1736,6 +1843,32 @@ sub max
     unless( $_[0]->{'populated'} > 1 )
     {
 	$_[0]->populate_all;
+    }
+
+    return $#{$_[0]->{'_DATA'}};
+}
+
+
+#######################################################################
+
+=head2 max_limited
+
+  $l->max_limited()
+
+Returns: the L</max>, constraining to given L</limit_display>
+
+=cut
+
+sub max_limited
+{
+    unless( $_[0]->{'populated'} > 1 )
+    {
+	$_[0]->populate_all;
+    }
+
+    if( my $lim = $_[0]->{'limit_display'} )
+    {
+	return List::Util::min( ($lim-1), $#{$_[0]->{'_DATA'}});
     }
 
     return $#{$_[0]->{'_DATA'}};
@@ -2104,12 +2237,14 @@ sub clone_props
 
     my $args =
     {
-     'type' => $l->{'type'},
-     'allow_undef' => $l->{'allow_undef'},
-     'materializer' => $l->{'materializer'},
-     'page_size' => $l->{'page_size'},
+     'type'          => $l->{'type'},
+     'allow_undef'   => $l->{'allow_undef'},
+     'materializer'  => $l->{'materializer'},
+     'page_size'     => $l->{'page_size'},
      'display_pages' => $l->{'display_pages'},
      'limit'         => $l->{'limit'},
+     'limit_pages'   => $l->{'limit_pages'},
+     'limit_display' => $l->{'limit_display'},
     };
 
     return $args;
