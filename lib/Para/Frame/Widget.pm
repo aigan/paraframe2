@@ -770,6 +770,13 @@ sub list2block
     return $block;
 }
 
+
+#######################################################################
+
+=head2 sekectorder
+
+=cut
+
 sub selectorder
 {
     my( $id, $size ) = @_;
@@ -783,6 +790,13 @@ sub selectorder
     $result .= "</select>\n";
     return $result;
 }
+
+
+#######################################################################
+
+=head2 param_includes
+
+=cut
 
 sub param_includes
 {
@@ -799,7 +813,6 @@ sub param_includes
 
 
 #######################################################################
-
 
 =head2 hidden
 
@@ -1409,7 +1422,7 @@ If $header is defiend, it's a label first in the list without a value.
 
 Example:
 
-  <p>[% select( "sender", "",
+  <p>[% selector( "sender", "",
              select_list("from users"),
              valkey = "user_id", tagkey = "username",
              header = "Välj"
@@ -1423,7 +1436,7 @@ is the name of fhe field.
 
 Example:
 
-  <p>[% select("frequency", "",
+  <p>[% selector("frequency", "",
   {
   	'1' = "every month",
   	'2' = "every week",
@@ -1462,6 +1475,8 @@ sub selector
     my $header = delete $params->{'header'};
     my $out = '';
 
+#    debug(datadump(\@_));
+
     my @previous;
     if( my $q = $Para::Frame::REQ->q )
     {
@@ -1498,13 +1513,26 @@ sub selector
 	$params->{id} = $id;
     }
 
-    foreach my $key ( keys %$params )
+    my $extra = "";
+    if( my $class = delete ${$params}{'href_class'} )
     {
-	if( my $keyval = $params->{$key} )
-	{
-	    $extra .= sprintf " $key=\"%s\"",
-	      CGI->escapeHTML( $keyval );
-	}
+	$extra .= " class=\"$class\"";
+    }
+    if( my $val = delete ${$params}{'href_target'} )
+    {
+	$extra .= " target=\"$val\"";
+    }
+    if( my $val = delete ${$params}{'href_id'} )
+    {
+	$extra .= " id=\"$val\"";
+    }
+    if( my $val = delete ${$params}{'href_onchange'} )
+    {
+	$extra .= " onChange=\"$val\"";
+    }
+    if( my $val = delete ${$params}{'href_style'} )
+    {
+	$extra .= " style=\"$val\"";
     }
 
     if( $prefix )
@@ -1513,7 +1541,7 @@ sub selector
     }
     ###########
 
-    $out .= $prefix . '<select name="'. CGI->escapeHTML( $name ) .'">';
+    $out .= $prefix . '<select name="'. CGI->escapeHTML( $name ) .'"'.$extra.'>';
 
     if( $valkey )
     {
@@ -1533,12 +1561,12 @@ sub selector
     }
     else
     {
-	foreach my $key ( %$data )
+	foreach my $key ( keys %$data )
 	{
 	    my $selected = ( $key eq $current ?
 			     ' selected="selected"' : '' );
 
-	    $out .= '<option value="'. $key . $selected .'">'.
+	    $out .= '<option value="'. $key .'"'.$selected.'>'.
 	      $data->{$key} .'</option>';
 	}
     }
