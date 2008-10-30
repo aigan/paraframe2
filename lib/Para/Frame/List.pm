@@ -2805,14 +2805,17 @@ sub resort
     ( $sortargs, $sort_str, $sort_key ) =
       $list->parse_sortargs( $sortargs, $dir );
 
+#    debug "Resorting list ".Scalar::Util::refaddr($list);
 #    debug "sort_key: $sort_key";
 #    debug "prev key: ".($list->{'sorted_on_key'}||'');
 
     if( $sort_key eq ($list->{'sorted_on_key'}||'') )
     {
-#	debug "  SAME SORT";
+	debug "SAME SORT";
 	return $list;
     }
+
+    debug "RESORTING";
 
     my $new = $list->sorted($sortargs,
 			    {
