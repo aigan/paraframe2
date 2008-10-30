@@ -85,13 +85,7 @@ sub as_html
     return "" unless $url->{'value'};
 
     my $href = $url->{'value'}->as_string;
-    $label ||= $href;
-
-    $label =~ s/^https?:\/\///;
-    if( $url->path eq '/' )
-    {
-	$label =~ s/\/$//;
-    }
+    $label ||= $url->{'value'}->host;
 
     my $label_out = CGI->escapeHTML($label);
     my $href_out = CGI->escapeHTML($href);
