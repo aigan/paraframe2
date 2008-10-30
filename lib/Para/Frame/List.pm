@@ -977,9 +977,9 @@ sub pages
 
     my $pages = int( $l->max_limited / $page_size ) + 1;
 
-    debug "page_size = ".$page_size;
-    debug "max_limited = ".$l->max_limited;
-    debug "pages = ".$pages;
+#    debug "page_size = ".$page_size;
+#    debug "max_limited = ".$l->max_limited;
+#    debug "pages = ".$pages;
 
     if( my $lim = $l->limit_pages )
     {
@@ -2752,6 +2752,19 @@ sub flatten
     }
 
     return $list_in->new( \@list_out, $list_in->clone_props );
+}
+
+
+#######################################################################
+
+=head2 sorted_on
+
+
+=cut
+
+sub sorted_on
+{
+    return $_[0]->{'sorted_on'};
 }
 
 
