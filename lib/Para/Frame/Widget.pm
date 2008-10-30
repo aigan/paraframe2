@@ -1488,7 +1488,6 @@ sub selector
 
 
     #### Label etc
-    my $extra = "";
     my $prefix = "";
     my $separator = delete($params->{'separator'}) || '';
     if( my $tdlabel = delete $params->{'tdlabel'} )
