@@ -385,12 +385,12 @@ sub new_subrequest
     #
     if( $Para::Frame::REQUEST{$client} )
     {
-	debug "  client $client already bound to ".
-	  $Para::Frame::REQUEST{$client}->id;
+#	debug "  client $client already bound to ".
+#	  $Para::Frame::REQUEST{$client}->id;
     }
     else
     {
-	debug "  bound to client $client";
+#	debug "  bound to client $client";
 	$Para::Frame::REQUEST{$client} = $req;
     }
 
@@ -469,12 +469,12 @@ sub new_bgrequest
 
     if( $Para::Frame::REQUEST{$client} )
     {
-	debug "  client $client already bound to ".
-	  $Para::Frame::REQUEST{$client}->id;
+#	debug "  client $client already bound to ".
+#	  $Para::Frame::REQUEST{$client}->id;
     }
     else
     {
-	debug "  bound to client $client";
+#	debug "  bound to client $client";
 	$Para::Frame::REQUEST{$client} = $req;
     }
 
