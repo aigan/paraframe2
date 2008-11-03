@@ -1,4 +1,2739 @@
+2008-11-03  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/DBIx.pm: debug
+
+	* lib/Para/Frame.pm: docs
+
+2008-10-31  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: less debug
+
+2008-10-30  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: bugfix
+
+	* lib/Para/Frame/List.pm: debug
+
+	* lib/Para/Frame/URI.pm: Only display host for a URL in as_html
+
+	* lib/Para/Frame/Widget.pm: Bugfix of function selector()
+
+	* lib/Para/Frame/List.pm: Added method sorted_on
+
+2008-10-29  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/List.pm:
+	Added methods set_limit_pages(), limit_pages(), limit_display(), set_limit_display(), size_limited(), max_limited()
+
+2008-10-24  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/URI.pm: layout
+
+2008-10-23  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Email/Address/Fallback.pm, lib/Para/Frame/Email/Address.pm:
+	expanded
+
+	* html/inc/debug.tt: moved debug level indicator from top admin menu
+
+2008-10-22  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/URI.pm: bugfix
+
+2008-10-21  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm: Back to right
+
+	* INSTALL: docfix
+
+	* lib/Para/Frame/Watchdog.pm: undef-fix
+
+	* lib/Para/Frame/Utils.pm, lib/Para/Frame/Widget.pm: &amp;
+
+	* t/01_basic.t: synced
+
+2008-10-18  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/File.pm: handling css_tt and other long suffixes
+
+	* lib/Para/Frame/CSS.pm: handling css_tt
+
+	* lib/Para/Frame.pm: handling css_tt and js_tt
+
+	* html/pf/loading.html, html/pf/.htaccess: handling css_tt
+
+2008-10-16  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Worker.pm: less debug
+
+	* lib/Para/Frame/Watchdog.pm:
+	Added methods get_next_server_message() and handle server connection in get_server_message()
+
+	* lib/Para/Frame.pm: Added method go_down()
+
+2008-10-15  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Response.pm, lib/Para/Frame/Widget.pm, lib/Para/Frame/Route.pm:
+	handling pfport param
+
+	* lib/Para/Frame/Request.pm: docs
+
+2008-10-14  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Child/Result.pm, lib/Para/Frame/Worker.pm:
+	FreezeThaw -> Storable
+
+	* lib/Para/Frame/Utils.pm: Redirecting to Para::Frame::URI/retrieve
+
+	* lib/Para/Frame/URI.pm: Added method retrieve()
+
+	* lib/Para/Frame/Request.pm, lib/Para/Frame/Client.pm, lib/Para/Frame/Child.pm, lib/Para/Frame.pm:
+	FreezeThaw -> Storable
+
+	* lib/Para/Frame/Watchdog.pm: Made $LIMIT_SYSTOTAL configurable
+
+	* lib/Para/Frame/DBIx.pm: less debug
+
+	* lib/Para/Frame.pm: added code note
+
+2008-10-12  jonas <jonas@paranormal.se>
+
+	* html/pf/css/paraframe.css_tt:
+	Renamed file paraframe.css_tt, formerly paraframe.css
+
+	* html/pf/css/paraframe.css:
+	Renamed from paraframe.css to paraframe.css_tt
+
+	* lib/Para/Frame/Renderer/TT.pm: Introducing _tt-files
+
+	* lib/Para/Frame/Request/Ctype.pm:
+	Adding methods desig() and sysdesig()
+
+	* lib/Para/Frame/Template.pm: adding arg charset
+
+	* html/pf/.htaccess: introducing _tt-files
+
+	* html/pf/css/default.css_tt:
+	Renamed file default.css_tt, formerly default.css
+
+	* html/pf/css/default.css: Renamed from default.css to default.css_tt
+
+2008-10-11  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Watchdog.pm: Raising memlimit
+
+	* lib/Para/Frame.pm: bugfix
+
+2008-10-09  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Watchdog.pm: Automatic memory limit adjustment
+
+	* lib/Para/Frame.pm: Better restart handling
+
+	* Makefile.PL: Added Linux::SysInfo
+
+	* lib/Para/Frame/Action/server_reload.pm:
+	Dumps debug info on server reload request
+
+	* lib/Para/Frame/Watchdog.pm: Replaced constants with global variables
+
+	* lib/Para/Frame.pm: Added $MEMORY as a even softer HUP
+
+	* lib/Para/Frame/Request/Response.pm, lib/Para/Frame/Request.pm:
+	Better reload handling with pfport
+
+	* lib/Para/Frame/Client.pm: Better reloading handling
+
+2008-10-08  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Uploaded.pm: Changes regardin Ticket 3Y39KX
+
+	* lib/Para/Frame/Spreadsheet.pm: changes regarding Ticket 3Y39KX
+
+2008-10-02  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: bugfix
+
+	* lib/Para/Frame/Utils.pm: added function escape_js
+
+2008-10-01  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/user_login.pm: login enabled
+
+	* lib/Para/Frame/Action/user_login.pm: temp disabeling of login
+
+	* lib/Para/Frame/Widget.pm: fixes in html-area
+
+2008-09-30  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/DBIx.pm, lib/Para/Frame.pm: more debug
+
+2008-09-24  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: Added calendar doc
+
+	* lib/Para/Frame/Unicode.pm: docfix
+
+	* lib/Para/Frame/Time.pm: Added support for argument format in desig
+
+	* lib/Para/Frame/CSS.pm: added support for css none
+
+	* lib/Para/Frame.pm: bugfix
+
+2008-09-17  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Worker.pm: less debug
+
+	* lib/Para/Frame/Site.pm: new default loopback url
+
+	* lib/Para/Frame/Request.pm: clearer debug
+
+	* lib/Para/Frame/File.pm: cleanup
+
+	* html/pf/clean/inc/footer.tt, html/pf/clean/inc/header_prepare.tt:
+	for clean dir
+
+	* html/pf/clean/empty.tt: empty template
+
+	* lib/Para/Frame.pm: cleanup
+
+	* lib/Para/Frame/Request.pm: bugfixes in subreq registration hanlding
+
+	* lib/Para/Frame.pm: optimization
+
+	* lib/Para/Frame/Request.pm: testing
+
+	* lib/Para/Frame/Request.pm: more debug
+
+	* lib/Para/Frame/Request/Response.pm, lib/Para/Frame/Renderer/TT.pm:
+	I18N
+
+	* lib/Para/Frame/L10N/sv.pm: L10N + sorting
+
+	* lib/Para/Frame/L10N/en.pm: L10N
+
+	* lib/Para/Frame/Template.pm, lib/Para/Frame/Client.pm, lib/Para/Frame.pm:
+	I18N
+
+	* lib/Para/Frame/Request.pm: bugfix for get_req_by_id
+
+2008-09-11  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/File.pm: file2url translation bugfix
+
+	* lib/Para/Frame/Client.pm: less debug
+
+	* lib/Para/Frame/Request/Response.pm: debugging
+
+	* lib/Para/Frame/File.pm: Bugfix for //-paths
+
+	* lib/Para/Frame/Client.pm: bugfix for ///-patsh
+
+2008-09-05  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm: less debug
+
+2008-09-04  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: bugfix
+
+	* lib/Para/Frame.pm: more debug
+
+	* lib/Para/Frame/Request.pm: overloaded
+
+	* lib/Para/Frame.pm: bugfix
+
+	* lib/Para/Frame.pm: More debug
+
+	* lib/Para/Frame/Request.pm: Trying to handle overload
+
+	* lib/Para/Frame/Request.pm: less debug
+
+	* lib/Para/Frame/Request.pm: added nop
+
+	* lib/Para/Frame.pm: bugfix
+
+	* lib/Para/Frame.pm: trying to handle overload
+
+	* lib/Para/Frame.pm: Bugfix
+
+	* lib/Para/Frame.pm: bugfix
+
+	* lib/Para/Frame/Request.pm: added debug
+
+	* Makefile.PL: added dependency on Spreadsheet::ParseExcel 0.32
+
+	* lib/Para/Frame.pm: bugfix
+
+	* lib/Para/Frame.pm: handling lode
+
+	* lib/Para/Frame/Worker.pm, lib/Para/Frame.pm: more debug
+
+	* lib/Para/Frame.pm: handle large load
+
+	* lib/Para/Frame.pm: bugfix
+
+	* lib/Para/Frame.pm: trying to handle large load
+
+	* lib/Para/Frame.pm, lib/Para/Frame/Request.pm: bugfix
+
+	* lib/Para/Frame/Request.pm: more debug
+
+2008-08-21  jonas <jonas@paranormal.se>
+
+	* html/pf/cms/fckeditor/.htaccess: Disables MultiViews
+
+	* INSTALL: Added notes about MultiViews
+
+2008-08-20  jonas <jonas@paranormal.se>
+
+	* html/pf/cms/fckeditor/editor/dialog/fck_spellerpages/spellerpages/blank.html, html/pf/cms/fckeditor/editor/dialog/fck_spellerpages/spellerpages/controlWindow.js, html/pf/cms/fckeditor/editor/dialog/fck_spellerpages/spellerpages/controls.html, html/pf/cms/fckeditor/editor/dialog/fck_spellerpages/spellerpages/server-scripts/spellchecker.pl, html/pf/cms/fckeditor/editor/dialog/fck_spellerpages/spellerpages/spellChecker.js, html/pf/cms/fckeditor/editor/dialog/fck_spellerpages/spellerpages/spellchecker.html, html/pf/cms/fckeditor/editor/dialog/fck_spellerpages/spellerpages/spellerStyle.css, html/pf/cms/fckeditor/editor/dialog/fck_spellerpages/spellerpages/wordWindow.js:
+	new files
+
+2008-08-18  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Worker.pm, lib/Para/Frame/Client.pm: bugfix
+
+2008-08-07  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Connection.pm: less debug
+
+2008-08-05  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Child/Result.pm: less sleepy
+
+	* lib/Para/Frame.pm: less debug
+
+	* lib/Para/Frame/User.pm: more debug
+
+	* lib/Para/Frame/Child.pm: debug
+
+2008-08-04  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Child.pm, lib/Para/Frame.pm: more debug
+
+	* lib/Para/Frame/Child/Result.pm: bugfix
+
+	* html/pf/cms/source.tt: Linkiung to admin-index
+
+	* html/pf/cms/edit_src.tt: - Linking to admin-index
+	- Higher z-index on edit area
+
+	* html/inc/menu_admin_pf.tt: edit_src is better...
+
+	* html/def/admin-index.tt: linking to show source
+
+2008-07-21  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm: Making worker_startup a configuration variable
+
+	* lib/Para/Frame/Watchdog.pm: Fault tolerance?
+
+	* lib/Para/Frame/Client.pm: Bugfix
+
+	* lib/Para/Frame/Renderer/TT.pm:
+	Now uses $burner->pre_dir and $burner_inc_dir for TT include paths
+
+	* lib/Para/Frame/Worker.pm: less debug
+
+	* lib/Para/Frame/Template.pm: bugfix
+
+	* lib/Para/Frame/Request.pm:
+	Sending RESTARTING signal to client if TERMINATE set
+
+	* lib/Para/Frame/File.pm: Less debug
+
+	* lib/Para/Frame/Client.pm:
+	Uses backup_port if man server is restarting
+
+	* lib/Para/Frame/Burner.pm:
+	Now using pre_dir and inc_dir for setting up tt include paths
+
+	* lib/Para/Frame.pm: - Added method kill_children()
+	- Now using pre_dir and inc_dir for defining include paths
+
+	* html/inc_plain/css_components.tt:
+	inc_plain will not use interpolated variables anymore
+
+	* html/inc_plain/css_components.tt:
+	Renamed file inc_plain/css_components.tt, formerly inc/css_components.tt
+
+	* html/inc/css_components.tt:
+	Renamed from inc/css_components.tt to inc_plain/css_components.tt
+
+2008-07-20  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Worker.pm, lib/Para/Frame/Child.pm: Worker development
+
+	* lib/Para/Frame.pm: Worker bugfix
+
+	* lib/Para/Frame/Child/Result.pm: Added method reset()
+
+	* lib/Para/Frame/Worker.pm: Worker development
+
+	* lib/Para/Frame/Request.pm: Added method get_by_id()
+
+	* lib/Para/Frame/Child.pm, lib/Para/Frame.pm: Worker development
+
+2008-07-16  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Worker.pm: New class
+
+	* lib/Para/Frame/Watchdog.pm: cleanup
+
+	* lib/Para/Frame/Utils.pm: using workers
+
+	* lib/Para/Frame/Client.pm: added debug
+
+	* lib/Para/Frame.pm: - workers startup
+	- bugfix for close socket
+
+	* demo/demoserver.pl: added comments
+
+2008-07-14  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: bugfix
+
+	* lib/Para/Frame/Child.pm, lib/Para/Frame.pm: introducing workers
+
+2008-07-10  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Client.pm:
+	Just add a suggestion if a SetHandler perl-script may be missing
+
+	* lib/Para/Frame/Request.pm: Restores reaper on fork failure
+
+2008-07-06  jonas <jonas@paranormal.se>
+
+	* html/pf/cms/edit_html.tt: handles javascript content
+
+	* html/pf/cms/edit_src.tt: larger textarea
+
+	* html/pf/cms/edit_src.tt: fullscreen button working
+
+	* html/pf/images/fullscreen.gif: fullscreen button
+
+	* lib/Para/Frame/Request.pm: Trying to ease restart of server
+
+	* lib/Para/Frame.pm: less debug
+
+	* lib/Para/Frame.pm: Development
+
+2008-07-01  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/L10N.pm: changed load order
+
+2008-06-30  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm: Bugfix
+
+	* lib/Para/Frame/File.pm: added sanity check
+
+	* lib/Para/Frame/Dir.pm: debugging
+
+	* lib/Para/Frame/Dir.pm: dir debug
+
+	* lib/Para/Frame/Dir.pm: better error message
+
+	* lib/Para/Frame/List.pm: bugfix
+
+2008-06-29  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: Adding htmlarea, using fckeditor
+
+2008-06-28  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/File.pm: Not adding extra BOM on save
+
+	* lib/Para/Frame.pm: gives sid in session debug
+
+	* html/pf/config/inc/menu.tt: menu
+
+	* lib/Para/Frame/Watchdog.pm: bugfix
+
+	* lib/Para/Frame.pm: expiering old sessions
+
+	* lib/Para/Frame/Widget.pm: Changed loading order
+
+	* lib/Para/Frame/Watchdog.pm: Avoid importing all POSIX constants
+
+	* lib/Para/Frame/Utils.pm: Changed loading order
+
+	* lib/Para/Frame/Template.pm: undef fix
+
+	* lib/Para/Frame/Reload.pm: docfix
+
+	* lib/Para/Frame/L10N.pm: Changed loading order
+
+	* lib/Para/Frame/Email.pm: Makes Crypt::OpenPGP optional
+
+	* lib/Para/Frame.pm: Changed loading order
+
+	* INSTALL: libdatetime-set-perl availible
+
+2008-06-24  jonas <jonas@paranormal.se>
+
+	* INSTALL, Makefile.PL: Added Captcha::ReCAPTCHA dependency
+
+2008-06-23  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/send_mail.pm, lib/Para/Frame/Captcha.pm, lib/Para/Frame/L10N/sv.pm, lib/Para/Frame/Site.pm:
+	Added captcha functionality
+
+2008-06-19  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/imagedir_modify.pm: bugfix
+
+	* html/inc/menu_admin_pf.tt: updated admin buttons
+
+2008-06-18  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/imagedir_modify.pm: new action
+
+2008-06-17  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Ctype.pm: Make class usable without active req
+
+	* lib/Para/Frame/Renderer/TT.pm: Selects charset for compiled page
+
+	* lib/Para/Frame/Template.pm:
+	Save compiled pages with bom it charset is utf8
+
+	* lib/Para/Frame/File.pm: Check for doucble slashes
+
+	* lib/Para/Frame/Client.pm: Reomoves extra slashes
+
+2008-06-13  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Template.pm:
+	Using set_content_as_text() for storing file, in order to add the BOM
+
+	* lib/Para/Frame.pm:
+	No interpolation of plain text failes anymore, du to complications for js
+
+	* html/pf/css/paraframe.css, html/pf/css/default.css: No inline anymore
+
+	* html/pf/cms/fckeditor/.htaccess: added CRLF on the end
+
+2008-06-12  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/L10N/sv.pm, lib/Para/Frame/Action/user_login.pm, lib/Para/Frame/User.pm:
+	login development
+
+	* lib/Para/Frame.pm: Added hook before_user_login
+
+	* INSTALL: Added more packages
+
+2008-06-10  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/user_login.pm: i18n user login error message
+
+	* lib/Para/Frame.pm: bugfix
+
+	* Makefile.PL: PGP should be optional
+
+2008-06-07  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/store_content.pm: bugfix for /index.tt
+
+2008-05-28  jonas <jonas@paranormal.se>
+
+	* html/pf/cms/fckeditor/fckconfig.js: reverting to not escaping dollar
+
+	* html/pf/cms/fckeditor/.htaccess: bugfix
+
+	* html/pf/cms/fckeditor/editor/js/.htaccess, html/pf/cms/fckeditor/editor/js/fckeditorcode_gecko.js, html/pf/cms/fckeditor/editor/js/fckeditorcode_ie.js:
+	reverting to not escaping dollar
+
+2008-05-22  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/send_mail.pm: bugfix
+
+	* lib/Para/Frame/Action/send_mail.pm: Added docs
+
+	* lib/Para/Frame/Email.pm: more debug
+
+2008-05-13  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/DBIx.pm: less debug
+
+2008-05-12  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/List.pm: Bugfix for set_limit()
+
+	* lib/Para/Frame/List.pm: bugfix in merge
+
+2008-05-09  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: radio, previous
+
+2008-05-04  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: Exporting selector... som small fixes
+
+2008-04-29  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Dir.pm, lib/Para/Frame.pm: bugfix
+
+2008-04-16  jonas <jonas@paranormal.se>
+
+	* html/inc/form_start.tt, html/pf/js/pf.js:
+	Safing up for idiots (read: IE)
+
+2008-04-14  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: bugfix
+
+2008-04-09  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: Adding js pattern matching
+
+2008-04-08  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm: Dafults bg_user to root
+
+2008-04-04  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm: Should not rewrite the error message....
+
+	* lib/Para/Frame/Request.pm: maby handle more error cases
+
+	* Makefile.PL: added dependency
+
+	* lib/Para/Frame/Email/Address.pm:
+	desigs returns addres usable for inclusion in To field
+
+	* lib/Para/Frame/Burner.pm, lib/Para/Frame/Request.pm: docfix
+
+2008-04-03  jonas <jonas@paranormal.se>
+
+	* html/inc/css_components.tt: relative font-size
+
+2008-04-02  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Response.pm: less debug
+
+2008-04-01  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Client.pm: bugfix
+
+2008-03-30  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/L10N.pm: Not sending Vary if only one language in site
+
+	* lib/Para/Frame/Client.pm: more debug
+
+2008-03-25  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/File.pm: less debug
+
+	* tools/find_nonlatin1: New utf8 tool
+
+	* lib/Para/Frame/Email/Address.pm, lib/Para/Frame/Widget.pm: undef fix
+
+2008-03-23  jonas <jonas@paranormal.se>
+
+	* dev/inc_pre/header_prepare.tt, html/inc/border_bottom.tt, html/inc/form_start.tt, html/inc/header_prepare.tt, html/inc/js.tt, html/pf/js/pf.js, html/pf/loading.html, lib/Para/Frame/Client.pm, lib/Para/Frame/Widget.pm:
+	For xhtml1.1 compliance, removed name attribute from form. use document.forms['f'] instead!
+
+2008-03-18  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm, lib/Para/Frame/User.pm: bugfix
+
+2008-03-17  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm, lib/Para/Frame/Action/debug_change.pm, lib/Para/Frame/Action/language_set.pm, lib/Para/Frame/Action/mark.pm, lib/Para/Frame/Action/next_step.pm, lib/Para/Frame/Action/remove_step.pm, lib/Para/Frame/Action/send_mail.pm, lib/Para/Frame/Action/server_reload.pm, lib/Para/Frame/Action/server_restart.pm, lib/Para/Frame/Action/server_terminate.pm, lib/Para/Frame/Action/session_vars_update.pm, lib/Para/Frame/Action/skip_step.pm, lib/Para/Frame/Action/store_content.pm, lib/Para/Frame/Action/symdump.pm, lib/Para/Frame/Action/user_login.pm, lib/Para/Frame/Action/user_logout.pm, lib/Para/Frame/Action/wait_for_req.pm, lib/Para/Frame/Burner.pm, lib/Para/Frame/CGI.pm, lib/Para/Frame/CSS.pm, lib/Para/Frame/Change.pm, lib/Para/Frame/Child.pm, lib/Para/Frame/Child/Result.pm, lib/Para/Frame/Client.pm, lib/Para/Frame/Code/Class.pm, lib/Para/Frame/Connection.pm, lib/Para/Frame/Cookies.pm, lib/Para/Frame/DBIx.pm, lib/Para/Frame/DBIx/Pg.pm, lib/Para/Frame/DBIx/State.pm, lib/Para/Frame/DBIx/Table.pm, lib/Para/Frame/DBIx/mysql.pm, lib/Para/Frame/Dir.pm, lib/Para/Frame/Email.pm, lib/Para/Frame/Email/Address.pm, lib/Para/Frame/Email/Address/Fallback.pm, lib/Para/Frame/File.pm, lib/Para/Frame/Image.pm, lib/Para/Frame/L10N.pm, lib/Para/Frame/L10N/en.pm, lib/Para/Frame/L10N/sv.pm, lib/Para/Frame/List.pm, lib/Para/Frame/Logging.pm, lib/Para/Frame/Reload.pm, lib/Para/Frame/Renderer/Custom.pm, lib/Para/Frame/Renderer/HTML_Fallback.pm, lib/Para/Frame/Renderer/TT.pm, lib/Para/Frame/Request/Ctype.pm, lib/Para/Frame/Request/Response.pm, lib/Para/Frame/Result.pm, lib/Para/Frame/Result/Part.pm, lib/Para/Frame/Route.pm, lib/Para/Frame/Session.pm, lib/Para/Frame/Site.pm, lib/Para/Frame/Spreadsheet.pm, lib/Para/Frame/Spreadsheet/CSV.pm, lib/Para/Frame/Spreadsheet/Excel.pm, lib/Para/Frame/Template.pm, lib/Para/Frame/Template/Compiled.pm, lib/Para/Frame/Template/Plugin/Meta/Interpolate.pm, lib/Para/Frame/Template/Plugin/Sorted_table.pm, lib/Para/Frame/Template/Stash/CheckUTF8.pm, lib/Para/Frame/Time.pm, lib/Para/Frame/URI.pm, lib/Para/Frame/Unicode.pm, lib/Para/Frame/Uploaded.pm, lib/Para/Frame/User.pm, lib/Para/Frame/Utils.pm, lib/Para/Frame/Watchdog.pm, lib/Para/Frame/Widget.pm:
+	Removed DESCRIPTION from license part of modules and updated copyright
+
+2008-03-16  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm: less debug
+
+2008-03-12  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Response.pm: Setting cookies on stored page
+
+	* lib/Para/Frame/CSS.pm: spelling
+
+2008-03-08  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: added note
+
+2008-03-05  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm: docfix
+
+2008-03-03  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: Bugfix in submit()
+
+2008-02-28  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm: %USER not used
+
+2008-02-27  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Response.pm:
+	Includes a timestamp in response object
+
+	* lib/Para/Frame.pm:
+	Using timestamp in response rather than last request time
+
+	* lib/Para/Frame/Utils.pm: undef fix
+
+2008-02-14  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm:
+	Cleaned up href_args for go(), jump() and submit()
+
+2008-02-13  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: bugfix
+
+2008-02-12  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Ctype.pm: less debug
+
+2008-02-10  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm:
+	Handle exceptions from inside IO::Socket module
+
+	* lib/Para/Frame/Request.pm: Added note about secret ttc dir
+
+	* html/inc/js.tt: Added comment
+
+	* lib/Para/Frame.pm: debugging
+
+2008-02-08  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Route.pm: bugfix
+
+	* Makefile.PL: Added dependancy
+
+	* INSTALL: added dependancy
+
+2008-01-31  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/List.pm: Added method resort()
+
+	* html/pf/css/paraframe.css: No border around sort arrow
+
+2008-01-30  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm: better debug
+
+2008-01-29  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Email/Address.pm: Better error handling
+
+	* lib/Para/Frame/Utils.pm: added note
+
+	* lib/Para/Frame/DBIx.pm: Added method delete
+
+2008-01-22  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Result/Part.pm: docfix
+
+	* lib/Para/Frame/Site.pm: More debug
+
+	* lib/Para/Frame/List.pm: Added merge() and reverse()
+
+2008-01-16  jonas <jonas@paranormal.se>
+
+	* html/pf/cms/fckeditor/editor/js/fckeditorcode_gecko.js, html/pf/cms/fckeditor/editor/js/fckeditorcode_ie.js, html/pf/cms/fckeditor/fckconfig.js:
+	Escaping $
+
+2007-12-13  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Ctype.pm: adding graphviz
+
+2007-12-11  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Client/Fixup.pm: new module
+
+	* INSTALL: Added note about Para::Frame::Client::Fixup
+
+2007-12-10  jonas <jonas@paranormal.se>
+
+	* t/pod.t: new test
+
+	* lib/Para/Frame/Email/Address.pm:
+	Temporary force updated version of Net::Domain::TLD
+
+2007-12-05  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm: More exact timediff
+
+	* t/01_basic.t, MANIFEST: fix
+
+2007-12-04  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: docfix
+
+2007-11-26  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm, lib/Para/Frame/Watchdog.pm:
+	Detatching during server startup AFTER init done
+
+2007-11-23  jonas <jonas@paranormal.se>
+
+	* html/inc/components.tt, html/inc/form_start.tt: ajax
+
+2007-11-20  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Session.pm: Added method latest()
+
+	* lib/Para/Frame.pm: not TERMINATING if pages stored in session
+
+2007-11-13  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/File.pm, lib/Para/Frame/Dir.pm:
+	Checks if file exist before removing
+
+2007-11-07  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: more debug
+
+	* lib/Para/Frame.pm: added esc_apostophe filter
+
+	* dev/inc_pre/header_prepare.tt: Bugfix
+
+	* lib/Para/Frame/Request/Ctype.pm: bugfix
+
+2007-10-29  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/User.pm: i18n
+
+	* lib/Para/Frame.pm: better defaults
+
+2007-10-26  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: bugfix for 0
+
+2007-10-24  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Reload.pm: bugfix
+
+	* lib/Para/Frame/Widget.pm: exporting checkbox
+
+2007-10-17  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: bugfix
+
+	* lib/Para/Frame/Email.pm: bugfix. Using deunicode
+
+	* INSTALL: added dependency
+
+2007-10-16  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Unicode.pm: unicode module
+
+	* lib/Para/Frame/Utils.pm: using Para::Frame::Unicode
+
+	* Makefile.PL: added dependency
+
+	* lib/Para/Frame/Request.pm: bugfix
+
+2007-10-15  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Email/Address.pm: - validating domain
+	- removing invisible chars
+
+	* Makefile.PL: Added a dependency
+
+2007-10-14  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm: added note about password crypt
+
+2007-10-13  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Result.pm: Bugfix
+
+	* html/inc/menu_admin_pf.tt, lib/Para/Frame/Utils.pm: bugfix
+
+	* dev/inc_pre/header.tt: js changes
+
+	* lib/Para/Frame/Utils.pm: deunicode() now also removes BOM
+
+	* lib/Para/Frame/Email.pm: using deunicode()
+
+2007-10-09  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/List.pm: Added method as_listobj()
+
+2007-10-06  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm: And removed module previously used
+
+	* lib/Para/Frame/Utils.pm: enhanced deunicode()
+
+	* html/inc/alternatives_box.tt: bugfix
+
+	* lib/Para/Frame/Time.pm: Equals between date and nondate gives false
+
+2007-10-02  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm: less debug
+
+	* lib/Para/Frame/Request/Response.pm: More debug on strange situation
+
+2007-10-01  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: less debug
+
+	* lib/Para/Frame.pm: docfix
+
+2007-09-28  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm:
+	Using $U->name instead of desig in order to work with paraframe
+
+	* lib/Para/Frame/User.pm: reverting to not usign desig here
+
+	* lib/Para/Frame/User.pm: bugfix
+
+2007-09-27  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: widgets..
+
+2007-09-25  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm: Warnigns about faulty debug input
+
+	* lib/Para/Frame/Email.pm: X-Mailer not yet working...
+
+	* lib/Para/Frame/Email.pm: cperl uggliness
+
+	* lib/Para/Frame/Widget.pm: bugfix
+
+2007-09-24  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Email.pm:
+	Bugfix in render_message. Only using same header if to is the same...
+
+	* lib/Para/Frame/Utils.pm: docfix
+
+	* lib/Para/Frame/User.pm:
+	Added example for method become_temporary_user()
+
+	* lib/Para/Frame/Email.pm:
+	- moved method generate_message_id to here from Rit::Guides::Email
+	- Added docs
+	- Removed method render_body()
+	- Added method render_body_from_template()
+
+2007-09-20  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm:
+	Added another check for req cancellation befor trying to send result
+
+	* lib/Para/Frame.pm: - Give info on CANCEL in main_loop
+	- On restart, use same method as for HUP
+
+	* lib/Para/Frame/Utils.pm: bugfix- Going
+
+2007-09-19  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/server_terminate.pm: emacs tag perl -> cperl
+
+	* lib/Para/Frame/Widget.pm: utf8 fix
+
+	* lib/Para/Frame/URI.pm: Bugfix for method eq()
+
+	* lib/Para/Frame/Route.pm: Filtered out reqnum from routes
+
+	* lib/Para/Frame/DBIx.pm: More debug, for now
+
+	* lib/Para/Frame/Reload.pm:
+	Filters out warnings about changed subroutines but display other messages
+
+	* lib/Para/Frame.pm: Bugfix. Not removing hooks on reload
+
+	* lib/Para/Frame/Request.pm: - added method release_subreq()
+	- new_subreq() lets original req remember subrequests
+	- cancel() sistributes cancel to subrequests
+
+	* lib/Para/Frame.pm: Cleanup of method close_callback()
+
+2007-09-18  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Response.pm: minor bugfix
+
+	* lib/Para/Frame/Utils.pm: Checking if socket open before sending
+
+	* lib/Para/Frame/Request.pm: Reverting to older behaviour
+
+	* lib/Para/Frame/DBIx.pm: maby bugfix
+
+	* lib/Para/Frame.pm: Reverting to older behaviour
+
+	* lib/Para/Frame/Request.pm: bugfix
+
+	* lib/Para/Frame/Uploaded.pm: Better debug
+
+2007-09-17  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: - Registring subrequests
+	- Bugfixing of cancel functioning
+
+	* lib/Para/Frame.pm: Don't finishing canceling waiting requests
+
+	* lib/Para/Frame/Email.pm: utf8 bugfix
+
+	* lib/Para/Frame.pm: utf8fix
+
+2007-09-16  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Response.pm:
+	bugfix. set_renderer now uses HTML_Fallback if asked to
+
+	* lib/Para/Frame/Renderer/HTML_Fallback.pm:
+	Output is HTML. Not plain text
+
+	* lib/Para/Frame/Utils.pm: Log in utf8
+
+	* lib/Para/Frame/Client.pm:
+	Using query string part in suggested redirect
+
+2007-09-15  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm: Bugfix. Removing deregistred childs in main_loop
+
+	* lib/Para/Frame.pm: Cleaned up formatting of server report
+
+	* lib/Para/Frame/Time.pm:
+	For parsing epoch times with subsecond precision
+
+	* lib/Para/Frame/Utils.pm: bugfix for validate_utf8
+
+2007-09-14  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Response.pm:
+	Now lets the client_send() function handle the encoding and binmode
+
+	* lib/Para/Frame/Renderer/Custom.pm:
+	- Added methods response(), req(), site(), language() and url_path()
+	- Constructor blesses the given args hash
+
+	* lib/Para/Frame/Utils.pm: - Added method validate_utf8()
+	- Method client_send() can now send in any encoding
+
+	* lib/Para/Frame/Request.pm: Reworked Renderer
+
+	* lib/Para/Frame/File.pm: more debug
+
+	* lib/Para/Frame/Client.pm:
+	Making sure we are sending and recieving BYTES
+
+2007-09-13  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Renderer/Custom.pm, lib/Para/Frame/Renderer/HTML_Fallback.pm, lib/Para/Frame/Renderer/TT.pm:
+	Rendering and content-type reworked
+
+	* lib/Para/Frame/Request/Response.pm:
+	- Reworked for supporting sending files other than TT generated stuff
+	- Supports sending in other charsets
+	- renamed output_redirection() to send_redirection()
+	- renderer() now simply calls set_renderer() if not defined
+	- set_renderer() rewritten and extended
+
+	* lib/Para/Frame/Request/Ctype.pm:
+	Added methods set_type(), charset(), type()
+
+	* lib/Para/Frame/Template.pm: Changed params for renderer()
+
+	* lib/Para/Frame/Site.pm: Added method appbases()
+
+	* lib/Para/Frame/Session.pm: Removed utf8 checks from stored response
+
+	* lib/Para/Frame/Request.pm:
+	- Adding 'q' property also for minimal requests
+	- is_from_client() method now checks in env instead
+	- renamed output_redirection() to send_rediraction()
+	- Introduced sender() method
+
+	* lib/Para/Frame/File.pm:
+	- Moved most of code from renderer() to Para::Frame::Request::Response
+
+	* lib/Para/Frame/Client.pm: - Only default to utf8 for text mimetypes
+	- Lengthen timeout from 1.5 to 2 secs
+	- Starting Processign message with no dots
+
+2007-09-11  jonas <jonas@paranormal.se>
+
+	* Makefile.PL: Added dependency on DateTime::Incomplete
+
+	* lib/Para/Frame/List.pm: Bugfix
+
+	* lib/Para/Frame/List.pm: Added method flatten()
+
+2007-09-10  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Email.pm: Renewing header if to addr changed
+
+	* lib/Para/Frame/Email/Address.pm: Handling failed parsing in new()
+
+2007-09-09  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Session.pm, lib/Para/Frame/Change.pm: less debug
+
+2007-09-06  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/L10N/sv.pm, lib/Para/Frame/L10N/en.pm: bugfix
+
+	* lib/Para/Frame/Watchdog.pm:
+	Handling loading triggered by during upstart hooks
+
+2007-09-05  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/List.pm: about to convert sorted() to paraframe
+
+	* lib/Para/Frame/Widget.pm: label
+
+	* lib/Para/Frame/URI.pm: buggfix maby
+
+	* lib/Para/Frame.pm: added debug_level
+
+	* html/inc/border_bottom.tt: debug -> debug_level
+
+	* lib/Para/Frame/URI.pm: docfix
+
+	* lib/Para/Frame/URI.pm: bugfix
+
+	* lib/Para/Frame/URI.pm: canonical recursion
+
+	* lib/Para/Frame/URI.pm: misspelled scheme
+
+	* html/pf/js/calendar/calendar-setup.js, html/pf/js/calendar/lang/calendar-sv.js:
+	Moving js
+
+2007-09-04  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: Using Para::Frame::URI
+
+	* lib/Para/Frame/URI.pm: Made URI a wrapper class
+
+	* lib/Para/Frame/Widget.pm: undef fix
+
+	* html/inc/header.tt, html/pf/js/pf.js: Moving js
+
+	* html/pf/js/calendar/lang/calendar-sv.js: Converting to utf-8
+
+	* lib/Para/Frame/Logging.pm: Added methods at_level() and this_level()
+
+	* lib/Para/Frame/Widget.pm: label_from_params
+
+2007-09-03  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: Genericing labels etc
+
+	* demo/demoserver.pl: Bugfix for changed behaviour
+
+	* README: Text moved to INSTALL
+
+	* INSTALL: Installation instructions
+
+	* lib/Para/Frame/Template/Plugin/Meta/Interpolate.pm:
+	Bugfix for handling multiline interpolation
+
+	* lib/Para/Frame/L10N.pm: - Added function locescape()
+	- catching exceptions from maketext and presents them as comming from L10N
+
+	* lib/Para/Frame.pm: Added export for locescape + added docs
+
+2007-09-02  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Email/Address/Fallback.pm:
+	Class to use if the email address parsing fails
+
+	* lib/Para/Frame/Email/Address.pm:
+	- added methods parse_tolerant(), new(), broken()
+	- Using Para::Frame::Email::Address::Fallback if parsing fails
+
+2007-09-01  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm:
+	Got a warning on 'DEFAULT' handler. Trying 'IGNORE' instead, which also should work.
+
+	* lib/Para/Frame/Email/Address.pm:
+	Accepts more forms of input, like subclasses
+
+	* lib/Para/Frame/Utils.pm:
+	Use the starttime of the request as the default time in timediff()
+
+	* lib/Para/Frame/Email.pm: Buggfix and more debug
+
+	* lib/Para/Frame/DBIx.pm: - Added method parse_datetime()
+	- Replaced pgbool() with db-neutral bool()
+
+2007-08-31  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: less debug
+
+	* lib/Para/Frame/Request.pm:
+	Registres the creation time for the requests
+
+	* lib/Para/Frame.pm: Reports execution time
+
+	* lib/Para/Frame/Utils.pm: More spaces in timediff widget
+
+2007-08-30  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: added selector
+
+2007-08-29  jonas <jonas@paranormal.se>
+
+	* README: Installation instructions added
+
+	* lib/Para/Frame.pm: automaticly create logs dir
+
+	* lib/Para/Frame/List.pm: Not using Array::Window
+
+	* README: added to apt-get install row
+
+	* Makefile.PL: Sorted prerequisities
+
+2007-08-28  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: less debug
+
+	* lib/Para/Frame/Email.pm:
+	Divided send() method into render_body(), render_header() and render_message()
+
+	* lib/Para/Frame/Email/Address.pm: Translated exceptions to english
+
+2007-08-27  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: New widgets
+
+2007-08-26  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: Much larger timeout of userobjects
+
+	* lib/Para/Frame/Request.pm:
+	Clear out error in temporary fork error. Taken care of.
+
+	* lib/Para/Frame/Request.pm: Less debug
+
+	* lib/Para/Frame/DBIx.pm:
+	Make repeating DBIx command conditional on it having any arguments
+
+	* lib/Para/Frame/Client.pm, lib/Para/Frame.pm: Less debug
+
+	* lib/Para/Frame/Client.pm:
+	Recovering from server crash now resends the query params
+
+	* lib/Para/Frame/Client.pm: bugfix
+
+	* lib/Para/Frame/Request.pm: Gives the data a lot more time to come
+
+	* lib/Para/Frame.pm: Tries to be more tolerant in data timeout
+
+	* lib/Para/Frame.pm: A little less debug
+
+	* lib/Para/Frame/Request.pm: little less debug
+
+	* lib/Para/Frame/Request.pm:
+	More debugging of client server communication
+
+	* lib/Para/Frame/Client.pm, lib/Para/Frame.pm: More debugging
+
+2007-08-25  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm, lib/Para/Frame/Client.pm, lib/Para/Frame.pm:
+	More debugging
+
+	* lib/Para/Frame/Client.pm: trying to handle cancelling of active reqs
+
+	* lib/Para/Frame/Request.pm: handling cancelling actibve reqs
+
+	* lib/Para/Frame.pm: bugfix
+
+2007-08-24  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Response.pm: - Using client_send()
+	- moved send_in_chunks() to Para::Frame::Utils::client_send()
+
+	* lib/Para/Frame/Utils.pm:
+	Added method client_send(), moved from Para::Frame::Request::response->send_in_chunks()
+
+	* lib/Para/Frame/Request.pm: using client_send()
+
+	* lib/Para/Frame/Client.pm: loadpage problem handled
+
+	* lib/Para/Frame.pm: using client_send()
+
+	* lib/Para/Frame/Request/Response.pm:
+	Uses already rendered page on redirect
+
+	* lib/Para/Frame/Widget.pm: Removed caller_page from forward_url
+
+	* lib/Para/Frame/Utils.pm:
+	Moved queue_clear_params() to Para::Frame::Change
+
+	* lib/Para/Frame/Site.pm: less debug
+
+	* lib/Para/Frame/Route.pm: Changed backtrack param to backtrack=1
+
+	* lib/Para/Frame/Request.pm:
+	- Calls $req->change->before_render_output before render output
+	- Changed backtrack param to backtrack=1
+
+	* lib/Para/Frame/List.pm: less debug
+
+	* lib/Para/Frame/DBIx.pm: rollback now calls $req->change->rollback
+
+	* lib/Para/Frame/Change.pm:
+	- Added methods rollback(), queue_clear_params(), before_render_output()
+
+2007-08-23  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Response.pm:
+	Using the method $req->original_url_params
+
+	* lib/Para/Frame/Request.pm:
+	- Using query params from redirected req if this is a redirection
+	- Added method original_url_params()
+
+	* lib/Para/Frame/Template.pm: Hide system dirs from public
+
+	* lib/Para/Frame/Widget.pm: Bugfixes
+
+	* lib/Para/Frame/Route.pm, lib/Para/Frame/Widget.pm:
+	Filtering out reqnum from query forwarding
+
+	* lib/Para/Frame/Request/Response.pm:
+	- Added methods page_url_with_query() and page_url_with_query_and_reqnum
+	- Send stored page now uses another loadpage key (with query and reqnum)
+
+	* lib/Para/Frame/Widget.pm: bugfix
+
+	* lib/Para/Frame/Session.pm, lib/Para/Frame/Request.pm:
+	Send stored result uses new loadpage key
+
+2007-08-22  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm: Changed loadpage key
+
+	* lib/Para/Frame/Client.pm: Bugfix (important)
+
+	* lib/Para/Frame/Widget.pm: - calendar() moved from components.tt
+	- input_image moved from RG prop_fields.tt
+
+	* html/inc/components.tt: calendar() moved to Widget
+
+	* lib/Para/Frame/Widget.pm: bugfix
+
+2007-08-21  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: bugfix
+
+	* lib/Para/Frame.pm: added docs
+
+	* lib/Para/Frame.pm: Added support for settin template LOAD_PLUGINS
+
+2007-08-20  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: Expanded jump() to handle URI as input
+
+	* lib/Para/Frame/Utils.pm: cleanup
+
+	* lib/Para/Frame/Site.pm: docs
+
+	* lib/Para/Frame/Child.pm: Spelling
+
+	* lib/Para/Frame/Client.pm: Maby bugfix - raceconditions?
+
+	* lib/Para/Frame.pm: Bugfix
+
+2007-08-19  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm: less debug
+
+	* lib/Para/Frame/List.pm: - Added methods push_uniq(), unshift_uniq()
+	- Added AUTOLOAD for distributed method calls (like rb)
+
+	* lib/Para/Frame.pm: small bugfix
+
+2007-08-18  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Response.pm: Supports subclassing
+
+	* lib/Para/Frame/Request/Ctype.pm: Less debug
+
+2007-08-15  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/List.pm: dicfix
+
+	* lib/Para/Frame/File.pm: Bugfix: removing query part from file obj
+
+2007-08-13  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Template.pm, lib/Para/Frame/Request.pm, lib/Para/Frame/Burner.pm, lib/Para/Frame.pm:
+	Less debug
+
+	* html/pf/css/paraframe.css: Added table admin style to paraframe
+
+2007-08-09  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm:
+	Treating id param specialy in determaning if links goes to the same page
+
+	* lib/Para/Frame.pm: Accepting higher server loads
+
+	* lib/Para/Frame/Connection.pm: Less and better debug
+
+2007-08-08  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/skip_step.pm: I18N
+
+	* lib/Para/Frame/Utils.pm: Added method queue_clear_params()
+
+	* lib/Para/Frame/Request.pm: docfix
+
+2007-08-06  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Response.pm:
+	- Rewording faild to send chunk...
+
+	* lib/Para/Frame/Request.pm: - less debug
+	- Report errors to log for background action errors
+
+	* lib/Para/Frame.pm: Cleaned up RUN_ACTION
+
+2007-08-04  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm:
+	Avoid CHLD signal in the middle of reading data from CHLD
+
+2007-08-02  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: undef fix
+
+	* lib/Para/Frame/List.pm: bugfix
+
+2007-08-01  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: bugfix
+
+	* lib/Para/Frame/Request/Response.pm: - Removed methods not used
+	- send_in_chunks() must check number of bytes sent even for small pages
+
+	* lib/Para/Frame/List.pm:
+	- Method slice() uses the same list class for the new object
+	- Added method uniq()
+
+2007-07-30  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: Better error reporting for checkboxes
+
+	* html/inc/components.tt: Keep old date values
+
+	* html/inc/alternatives_box.tt: More debugging details
+
+2007-07-29  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Child.pm: More debug
+
+	* lib/Para/Frame.pm: Tries to avoid more raceconditions
+
+2007-07-26  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm, lib/Para/Frame/Child/Result.pm, lib/Para/Frame/Request.pm:
+	Less debug. Forking seems to work better now
+
+	* lib/Para/Frame/Child.pm:
+	Handling errors during retrieval of child results
+
+	* lib/Para/Frame.pm: Bugfix in child return
+
+	* lib/Para/Frame/Request.pm: handling timeouts of callbacks
+
+	* lib/Para/Frame.pm: more debug for forking
+
+	* lib/Para/Frame/Request.pm: more debug
+
+	* lib/Para/Frame/Child.pm: added docs
+
+	* lib/Para/Frame.pm: Better fork handling
+
+2007-07-25  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm: Don't interfere with REAPER
+
+	* lib/Para/Frame/Child/Result.pm: more debugging
+
+	* lib/Para/Frame/Request.pm: Tries to make childs work
+
+	* lib/Para/Frame/Request.pm:
+	Check if there is childs to be taken care of
+
+	* lib/Para/Frame.pm: Debugging paraframe
+
+2007-07-24  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: Added label to run_code() method
+
+	* lib/Para/Frame/Email.pm: Changed parameters for add_background_job
+
+	* lib/Para/Frame.pm:
+	- Clearing out @BGJOBS_PENDING even during TERMINATE
+	- Changed parameters for run_job
+
+	* lib/Para/Frame.pm: New way of defining the availible hooks
+
+2007-07-21  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm, lib/Para/Frame/File.pm:
+	Changed behaviour of uri2file
+
+2007-07-20  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Client.pm: docfix
+
+	* lib/Para/Frame/Utils.pm: param checks
+
+	* lib/Para/Frame/File.pm: - Handling URL DIRs mapping to files
+	- Added docs for chmod()
+	- bugfix in as_dir()
+
+	* lib/Para/Frame/Dir.pm: - Added method get_virtual_dir()
+	- bugfixes
+	- docs
+
+	* lib/Para/Frame/Client.pm: Dont translare URL .../ to .../index.*
+
+	* lib/Para/Frame/Request.pm: Handling forking race conditions
+
+2007-07-19  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: Widening..
+
+	* lib/Para/Frame/Watchdog.pm: Creates log directory if not existing
+
+	* lib/Para/Frame/Utils.pm: docfix
+
+2007-07-18  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: bugfix
+
+2007-07-07  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/List.pm: docfix
+
+	* lib/Para/Frame/Client.pm: Less debug
+
+	* lib/Para/Frame.pm: Updated docs for Apache2
+
+2007-07-03  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: Added an idcounter for checkboxes
+
+2007-06-30  jonas <jonas@paranormal.se>
+
+	* README: More modules availible through debian
+
+	* lib/Para/Frame.pm: Bumped version to 1.04
+
+2007-06-28  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Result/Part.pm: docfix
+
+	* lib/Para/Frame/List.pm: Added methods shift, pop, unshift and push
+
+	* html/inc/alternatives_box.tt:
+	Should not "Hoppa över" in an alternative choice
+
+2007-06-12  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Change.pm: Emacs mode perl -> cperl
+
+2007-06-11  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: sanitycheck
+
+	* lib/Para/Frame/Request.pm: Added method require_root_access()
+
+2007-06-05  jonas <jonas@paranormal.se>
+
+	* html/inc/components.tt: Avoid undef error
+
+2007-05-30  jonas <jonas@paranormal.se>
+
+	* html/inc/components.tt: Returnable forms...
+
+2007-05-22  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/File.pm: Less debug...
+
+	* lib/Para/Frame/Client.pm: Bugfix for lookups of nonexistant paths
+
+2007-05-21  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/File.pm: set_context_as_text inserts a BOM
+
+	* lib/Para/Frame/Email.pm: Converting email to iso-8859-1 on the fly.
+
+	* t/01_basic.t: Bugfix
+
+	* lib/Para/Frame/Request.pm: Less debug
+
+	* Makefile.PL: Added dependency on Data::Dump
+
+2007-05-16  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/DBIx.pm: Default to hande utf8 in DB
+
+	* lib/Para/Frame/Request.pm: bugfix
+
+2007-05-09  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/File.pm: Added method set_content_as_text()
+
+	* lib/Para/Frame/Action/store_content.pm:
+	Using new set_content_as_text() method
+
+	* lib/Para/Frame/Request/Response.pm:
+	Bugfix. Handling sending of partial chunks
+
+2007-05-07  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/User.pm: Added a check of input
+
+2007-05-04  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Renderer/Custom.pm: New renderer
+
+	* tools/insert_bom: less debug
+
+2007-05-03  jonas <jonas@paranormal.se>
+
+	* tools/insert_bom: Upgrade to UTF8
+
+	* tools/insert_bom: new bin
+
+2007-04-25  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Response.pm: Less debug
+
+	* lib/Para/Frame.pm: Extend time before loadpage with one sec
+
+	* lib/Para/Frame/Client.pm: bugfix
+
+2007-04-24  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Email.pm: UTF8
+
+2007-04-23  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/CGI.pm: Less debug
+
+	* lib/Para/Frame/Request/Ctype.pm: Avoid updating ctype
+
+	* lib/Para/Frame/Request/Response.pm: Not using sender anymore
+
+	* lib/Para/Frame/Request/Ctype.pm: Default to utf8
+
+	* lib/Para/Frame/Action/wait_for_req.pm:
+	Synced with Para::Frame::Request::Respose
+
+	* lib/Para/Frame/Request.pm: Using Para::Frame::CGI
+
+	* lib/Para/Frame/CGI.pm: New module
+
+	* lib/Para/Frame.pm: Check for obligatory appbase
+
+	* lib/Para/Frame/Client.pm: Setting default CTYPE to UTF-8
+
+2007-04-19  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Response.pm: Convering to utf8
+
+	* lib/Para/Frame/Widget.pm: Less debug
+
+	* lib/Para/Frame/Template/Stash/CheckUTF8.pm:
+	Also match strings ending with the utf8 char
+
+	* lib/Para/Frame.pm: Using CheckUTF8 again
+
+	* lib/Para/Frame/Request/Response.pm, lib/Para/Frame/Renderer/TT.pm:
+	Less debug
+
+	* lib/Para/Frame/Utils.pm, lib/Para/Frame/Template.pm: less debug
+
+	* lib/Para/Frame.pm: Turned off Para::Frame::Template::Stash::CheckUTF8
+
+	* html/pf/js/calendar/lang/calendar-sv.js: Turned back to latin1
+
+2007-04-18  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: Try to handle forking failures better
+
+	* README:
+	Added dependency on dpkg libextutils-cbuilder-perl and libdata-dump-perl
+
+	* Makefile.PL: Added dependency on Encode::Detect::Detector
+
+2007-04-16  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/File.pm: Fallback to UTF-8
+
+	* lib/Para/Frame/Template/Stash/CheckUTF8.pm: For testing UTF8
+
+	* lib/Para/Frame.pm: Temporary testing
+
+	* lib/Para/Frame/Action/user_login.pm, lib/Para/Frame/L10N.pm, lib/Para/Frame/L10N/sv.pm, lib/Para/Frame/Renderer/TT.pm, lib/Para/Frame/Request/Response.pm, lib/Para/Frame/Result/Part.pm, lib/Para/Frame/Session.pm, lib/Para/Frame/Template.pm, lib/Para/Frame/Widget.pm:
+	utf8 work
+
+	* lib/Para/Frame/File.pm:
+	Added methods contentref() and contentref_as_text()
+
+	* lib/Para/Frame/Burner.pm: Process in utf8 mode
+
+	* dev/inc_pre/border_top.tt, dev/inc_pre/footer.tt, dev/inc_pre/footer_prepare.tt, dev/inc_pre/header.tt, dev/inc_pre/header_prepare.tt, html/def/admin-index.tt, html/def/alternatives.tt, html/def/confirm.tt, html/def/denied.tt, html/def/env.tt, html/def/error.tt, html/def/index.tt, html/def/login.tt, html/def/page_not_found.tt, html/def/page_part_not_found.tt, html/inc/alternatives_box.tt, html/inc/border_bottom.tt, html/inc/border_top.tt, html/inc/calendar_init.tt, html/inc/components.tt, html/inc/css_components.tt, html/inc/debug.tt, html/inc/env.tt, html/inc/footer.tt, html/inc/footer_prepare.tt, html/inc/form_start.tt, html/inc/header.tt, html/inc/header_extra.tt, html/inc/header_prepare.tt, html/inc/headline.tt, html/inc/info_box.tt, html/inc/js.tt, html/inc/js_extra.tt, html/inc/login_box.tt, html/inc/menu_admin_pf.tt, html/inc/menu_bottom.tt, html/inc/menu_top.tt, html/inc/pagify.tt, html/inc/title.tt, html/index.tt, html/pf/cms/edit_html.tt, html/pf/cms/edit_src.tt, html/pf/cms/source.tt, html/pf/config/debuglist.tt, html/pf/config/inc/menu.tt, html/pf/config/index.tt, html/pf/config/server.tt, html/pf/email/default.tt:
+	Inserted BOM for UTF8 in file
+
+2007-04-04  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Response.pm: Handling UTF8 diffrent
+
+	* lib/Para/Frame/Request/Response.pm: Tempfix
+
+	* lib/Para/Frame/Request/Response.pm: tempfix
+
+	* lib/Para/Frame/File.pm, lib/Para/Frame/Renderer/TT.pm, lib/Para/Frame/URI.pm:
+	Removing extra utf-file (normal is utf now)
+
+	* lib/Para/Frame/File.pm: A hack for using File::MimeInfo in bytes mode
+
+	* html/pf/js/calendar/lang/calendar-sv-utf8.js:
+	Removing extra utf-file (normal is utf now)
+
+	* lib/Para/Frame/Request/Response.pm, lib/Para/Frame/File.pm, lib/Para/Frame/Utils.pm, dev/inc_pre/header_prepare.tt, html/def/admin-index.tt, html/def/denied.tt, html/def/index.tt, html/inc/alternatives_box.tt, html/inc/components.tt, html/inc/header_prepare.tt, html/pf/js/calendar/lang/calendar-sv.js, lib/Para/Frame.pm, lib/Para/Frame/Action/skip_step.pm, lib/Para/Frame/Action/user_login.pm, lib/Para/Frame/Email/Address.pm, lib/Para/Frame/L10N/sv.pm, lib/Para/Frame/List.pm, lib/Para/Frame/URI.pm, lib/Para/Frame/User.pm, lib/Para/Frame/Widget.pm:
+	Character translation to utf8
+
+	* lib/Para/Frame.pm:
+	Removing my strange hook-handling, and adding debug-data for bg-jobs.
+
+	* lib/Para/Frame.pm: spelling
+
+2007-04-03  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm, html/pf/config/server.tt:
+	Added a server report
+
+	* lib/Para/Frame.pm: Added server report
+
+	* lib/Para/Frame/Request.pm: Not sending notes if it's not a client req
+
+2007-04-02  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/List.pm: Less debug
+
+2007-03-30  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Site.pm: Spelling..
+
+	* lib/Para/Frame.pm, lib/Para/Frame/Connection.pm:
+	Update cache between servers...
+
+2007-03-29  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Connection.pm, html/inc/components.tt, lib/Para/Frame.pm, lib/Para/Frame/List.pm, lib/Para/Frame/Request.pm, lib/Para/Frame/Result.pm, lib/Para/Frame/Watchdog.pm:
+	Sending update_cache between servers
+
+2007-03-27  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm: Handling url's better
+
+	* lib/Para/Frame/Dir.pm: Ignores broken symlinks
+
+2007-03-19  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/DBIx/Pg.pm: use cperl emacs mode
+
+2007-03-15  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/File.pm: Better exist() handling
+
+	* lib/Para/Frame/Dir.pm: Less debug
+
+	* lib/Para/Frame.pm: Added comment
+
+2007-03-13  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/File.pm: Handling unicode URLs
+
+2007-03-07  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/send_mail.pm: Added docs
+
+	* lib/Para/Frame/Action/send_mail.pm: More docs
+
+	* lib/Para/Frame/Email.pm: more docs
+
+	* html/pf/email/default.tt: more info
+
+	* lib/Para/Frame/Action/send_mail.pm: Added docs
+
+	* lib/Para/Frame/File.pm: no real change
+
+	* lib/Para/Frame/L10N/sv.pm: Added translations
+
+	* lib/Para/Frame/Action/send_mail.pm, lib/Para/Frame/Email.pm: bugfix
+
+	* html/pf/email/default.tt:
+	Renamed file email/default.tt, formerly ../email/default.tt
+
+	* lib/Para/Frame/Action/send_mail.pm, lib/Para/Frame/Site.pm: bugfix
+
+	* lib/Para/Frame/Action/send_mail.pm: Default formmail functionality
+
+	* lib/Para/Frame/Site.pm: Added email and email_domains methods
+
+	* lib/Para/Frame/Email.pm: Added docs
+
+2007-03-04  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Client.pm: Added docs about file uploads
+
+2007-02-27  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Renderer/TT.pm, lib/Para/Frame/Template.pm:
+	Added template_root arg
+
+	* lib/Para/Frame/Utils.pm:
+	Die if we sends objects to the file functions
+
+	* lib/Para/Frame/Utils.pm: Give traceback on file chmod error
+
+2007-02-26  jonas <jonas@paranormal.se>
+
+	* html/pf/images/calendar.gif: cleaned up
+
+	* html/inc/components.tt, html/pf/images/calendar.gif:
+	More functions to calendar...
+
+2007-02-22  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Watchdog.pm:
+	Tries handling failure to connect to socket during pings
+
+	* lib/Para/Frame/Request.pm:
+	Handling unrecognized forms of HTTP_IF_MODIFIED_SINCE
+
+	* lib/Para/Frame/Client.pm: Better diagnostic
+
+2007-02-21  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Client.pm: Support for send_fd() for Apache2
+
+2007-02-19  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/List.pm: More docs
+
+2007-02-13  jonas <jonas@paranormal.se>
+
+	* html/pf/cms/source.tt, html/pf/cms/edit_html.tt: linkfix
+
+	* html/pf/cms/edit_html.tt, html/pf/cms/edit_src.tt: bugfix
+
+	* lib/Para/Frame/Action/store_content.pm: Action for updating files
+
+	* lib/Para/Frame/User.pm: Added stub method has_page_update_access()
+
+	* lib/Para/Frame/File.pm:
+	Added methods set_content() and content_as_text()
+
+	* html/pf/cms/edit_html.tt, html/pf/cms/edit_src.tt, html/pf/cms/source.tt:
+	Added button to/from source
+
+	* html/pf/cms/fckeditor/editor/plugins/simplecommands/fckplugin.js, html/pf/cms/fckeditor/editor/plugins/tablecommands/fckplugin.js, html/pf/js/.htaccess, html/pf/cms/fckeditor/editor/css/behaviors/disablehandles.htc, html/pf/cms/fckeditor/editor/css/behaviors/hiddenfield.gif, html/pf/cms/fckeditor/editor/css/behaviors/hiddenfield.htc, html/pf/cms/fckeditor/editor/css/behaviors/showtableborders.htc, html/pf/cms/fckeditor/editor/css/fck_editorarea.css, html/pf/cms/fckeditor/editor/css/fck_internal.css, html/pf/cms/fckeditor/editor/css/fck_showtableborders_gecko.css, html/pf/cms/fckeditor/editor/css/images/fck_anchor.gif, html/pf/cms/fckeditor/editor/css/images/fck_flashlogo.gif, html/pf/cms/fckeditor/editor/css/images/fck_pagebreak.gif, html/pf/cms/fckeditor/editor/dialog/common/fck_dialog_common.css, html/pf/cms/fckeditor/editor/dialog/common/fck_dialog_common.js, html/pf/cms/fckeditor/editor/dialog/common/fcknumericfield.htc, html/pf/cms/fckeditor/editor/dialog/common/images/locked.gif, html/pf/cms/fckeditor/editor/dialog/common/images/reset.gif, html/pf/cms/fckeditor/editor/dialog/common/images/unlocked.gif, html/pf/cms/fckeditor/editor/dialog/common/moz-bindings.xml, html/pf/cms/fckeditor/editor/dialog/fck_about.html, html/pf/cms/fckeditor/editor/dialog/fck_about/logo_fckeditor.gif, html/pf/cms/fckeditor/editor/dialog/fck_about/logo_fredck.gif, html/pf/cms/fckeditor/editor/dialog/fck_anchor.html, html/pf/cms/fckeditor/editor/dialog/fck_button.html, html/pf/cms/fckeditor/editor/dialog/fck_checkbox.html, html/pf/cms/fckeditor/editor/dialog/fck_colorselector.html, html/pf/cms/fckeditor/editor/dialog/fck_docprops.html, html/pf/cms/fckeditor/editor/dialog/fck_docprops/fck_document_preview.html, html/pf/cms/fckeditor/editor/dialog/fck_find.html, html/pf/cms/fckeditor/editor/dialog/fck_flash.html, html/pf/cms/fckeditor/editor/dialog/fck_flash/fck_flash.js, html/pf/cms/fckeditor/editor/dialog/fck_flash/fck_flash_preview.html, html/pf/cms/fckeditor/editor/dialog/fck_form.html, html/pf/cms/fckeditor/editor/dialog/fck_hiddenfield.html, html/pf/cms/fckeditor/editor/dialog/fck_image.html, html/pf/cms/fckeditor/editor/dialog/fck_image/fck_image.js, html/pf/cms/fckeditor/editor/dialog/fck_image/fck_image_preview.html, html/pf/cms/fckeditor/editor/dialog/fck_link.html, html/pf/cms/fckeditor/editor/dialog/fck_link/fck_link.js, html/pf/cms/fckeditor/editor/dialog/fck_listprop.html, html/pf/cms/fckeditor/editor/dialog/fck_paste.html, html/pf/cms/fckeditor/editor/dialog/fck_radiobutton.html, html/pf/cms/fckeditor/editor/dialog/fck_replace.html, html/pf/cms/fckeditor/editor/dialog/fck_select.html, html/pf/cms/fckeditor/editor/dialog/fck_select/fck_select.js, html/pf/cms/fckeditor/editor/dialog/fck_smiley.html, html/pf/cms/fckeditor/editor/dialog/fck_source.html, html/pf/cms/fckeditor/editor/dialog/fck_specialchar.html, html/pf/cms/fckeditor/editor/dialog/fck_spellerpages.html, html/pf/cms/fckeditor/editor/dialog/fck_table.html, html/pf/cms/fckeditor/editor/dialog/fck_tablecell.html, html/pf/cms/fckeditor/editor/dialog/fck_template.html, html/pf/cms/fckeditor/editor/dialog/fck_template/images/template1.gif, html/pf/cms/fckeditor/editor/dialog/fck_template/images/template2.gif, html/pf/cms/fckeditor/editor/dialog/fck_template/images/template3.gif, html/pf/cms/fckeditor/editor/dialog/fck_textarea.html, html/pf/cms/fckeditor/editor/dialog/fck_textfield.html, html/pf/cms/fckeditor/editor/fckdebug.html, html/pf/cms/fckeditor/editor/fckdialog.html, html/pf/cms/fckeditor/editor/fckeditor.html, html/pf/cms/fckeditor/editor/filemanager/browser/default/browser.css, html/pf/cms/fckeditor/editor/filemanager/browser/default/browser.html, html/pf/cms/fckeditor/editor/filemanager/browser/default/frmactualfolder.html, html/pf/cms/fckeditor/editor/filemanager/browser/default/frmcreatefolder.html, html/pf/cms/fckeditor/editor/filemanager/browser/default/frmfolders.html, html/pf/cms/fckeditor/editor/filemanager/browser/default/frmresourceslist.html, html/pf/cms/fckeditor/editor/filemanager/browser/default/frmresourcetype.html, html/pf/cms/fckeditor/editor/filemanager/browser/default/frmupload.html, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/ButtonArrow.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/Folder.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/Folder32.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/FolderOpened.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/FolderOpened32.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/FolderUp.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/ai.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/avi.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/bmp.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/cs.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/default.icon.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/dll.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/doc.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/exe.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/fla.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/gif.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/htm.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/html.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/jpg.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/js.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/mdb.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/mp3.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/pdf.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/ppt.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/rdp.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/swf.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/swt.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/txt.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/vsd.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/xls.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/xml.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/32/zip.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/ai.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/avi.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/bmp.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/cs.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/default.icon.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/dll.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/doc.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/exe.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/fla.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/gif.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/htm.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/html.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/jpg.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/js.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/mdb.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/mp3.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/pdf.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/ppt.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/rdp.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/swf.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/swt.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/txt.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/vsd.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/xls.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/xml.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/icons/zip.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/images/spacer.gif, html/pf/cms/fckeditor/editor/filemanager/browser/default/js/common.js, html/pf/cms/fckeditor/editor/filemanager/browser/default/js/fckxml.js, html/pf/cms/fckeditor/editor/images/anchor.gif, html/pf/cms/fckeditor/editor/images/arrow_ltr.gif, html/pf/cms/fckeditor/editor/images/arrow_rtl.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/angel_smile.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/angry_smile.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/broken_heart.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/cake.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/confused_smile.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/cry_smile.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/devil_smile.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/embaressed_smile.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/envelope.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/heart.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/kiss.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/lightbulb.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/omg_smile.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/regular_smile.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/sad_smile.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/shades_smile.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/teeth_smile.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/thumbs_down.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/thumbs_up.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/tounge_smile.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/whatchutalkingabout_smile.gif, html/pf/cms/fckeditor/editor/images/smiley/msn/wink_smile.gif, html/pf/cms/fckeditor/editor/images/spacer.gif, html/pf/cms/fckeditor/editor/js/fckeditorcode_gecko.js, html/pf/cms/fckeditor/editor/js/fckeditorcode_ie.js, html/pf/cms/fckeditor/editor/lang/af.js, html/pf/cms/fckeditor/editor/lang/ar.js, html/pf/cms/fckeditor/editor/lang/bg.js, html/pf/cms/fckeditor/editor/lang/bn.js, html/pf/cms/fckeditor/editor/lang/bs.js, html/pf/cms/fckeditor/editor/lang/ca.js, html/pf/cms/fckeditor/editor/lang/cs.js, html/pf/cms/fckeditor/editor/lang/da.js, html/pf/cms/fckeditor/editor/lang/de.js, html/pf/cms/fckeditor/editor/lang/el.js, html/pf/cms/fckeditor/editor/lang/en-au.js, html/pf/cms/fckeditor/editor/lang/en-ca.js, html/pf/cms/fckeditor/editor/lang/en-uk.js, html/pf/cms/fckeditor/editor/lang/en.js, html/pf/cms/fckeditor/editor/lang/eo.js, html/pf/cms/fckeditor/editor/lang/es.js, html/pf/cms/fckeditor/editor/lang/et.js, html/pf/cms/fckeditor/editor/lang/eu.js, html/pf/cms/fckeditor/editor/lang/fa.js, html/pf/cms/fckeditor/editor/lang/fi.js, html/pf/cms/fckeditor/editor/lang/fo.js, html/pf/cms/fckeditor/editor/lang/fr.js, html/pf/cms/fckeditor/editor/lang/gl.js, html/pf/cms/fckeditor/editor/lang/he.js, html/pf/cms/fckeditor/editor/lang/hi.js, html/pf/cms/fckeditor/editor/lang/hr.js, html/pf/cms/fckeditor/editor/lang/hu.js, html/pf/cms/fckeditor/editor/lang/it.js, html/pf/cms/fckeditor/editor/lang/ja.js, html/pf/cms/fckeditor/editor/lang/km.js, html/pf/cms/fckeditor/editor/lang/ko.js, html/pf/cms/fckeditor/editor/lang/lt.js, html/pf/cms/fckeditor/editor/lang/lv.js, html/pf/cms/fckeditor/editor/lang/mn.js, html/pf/cms/fckeditor/editor/lang/ms.js, html/pf/cms/fckeditor/editor/lang/nb.js, html/pf/cms/fckeditor/editor/lang/nl.js, html/pf/cms/fckeditor/editor/lang/no.js, html/pf/cms/fckeditor/editor/lang/pl.js, html/pf/cms/fckeditor/editor/lang/pt-br.js, html/pf/cms/fckeditor/editor/lang/pt.js, html/pf/cms/fckeditor/editor/lang/ro.js, html/pf/cms/fckeditor/editor/lang/ru.js, html/pf/cms/fckeditor/editor/lang/sk.js, html/pf/cms/fckeditor/editor/lang/sl.js, html/pf/cms/fckeditor/editor/lang/sr-latn.js, html/pf/cms/fckeditor/editor/lang/sr.js, html/pf/cms/fckeditor/editor/lang/sv.js, html/pf/cms/fckeditor/editor/lang/th.js, html/pf/cms/fckeditor/editor/lang/tr.js, html/pf/cms/fckeditor/editor/lang/uk.js, html/pf/cms/fckeditor/editor/lang/vi.js, html/pf/cms/fckeditor/editor/lang/zh-cn.js, html/pf/cms/fckeditor/editor/lang/zh.js, html/pf/cms/fckeditor/editor/plugins/autogrow/fckplugin.js, html/pf/cms/fckeditor/editor/plugins/placeholder/fck_placeholder.html, html/pf/cms/fckeditor/editor/plugins/placeholder/fckplugin.js, html/pf/cms/fckeditor/editor/plugins/placeholder/lang/de.js, html/pf/cms/fckeditor/editor/plugins/placeholder/lang/en.js, html/pf/cms/fckeditor/editor/plugins/placeholder/lang/fr.js, html/pf/cms/fckeditor/editor/plugins/placeholder/lang/it.js, html/pf/cms/fckeditor/editor/plugins/placeholder/lang/pl.js, html/pf/cms/fckeditor/editor/plugins/placeholder/placeholder.gif, html/pf/cms/fckeditor/editor/skins/default/fck_dialog.css, html/pf/cms/fckeditor/editor/skins/default/fck_editor.css, html/pf/cms/fckeditor/editor/skins/default/fck_strip.gif, html/pf/cms/fckeditor/editor/skins/default/images/toolbar.arrowright.gif, html/pf/cms/fckeditor/editor/skins/default/images/toolbar.buttonarrow.gif, html/pf/cms/fckeditor/editor/skins/default/images/toolbar.collapse.gif, html/pf/cms/fckeditor/editor/skins/default/images/toolbar.end.gif, html/pf/cms/fckeditor/editor/skins/default/images/toolbar.expand.gif, html/pf/cms/fckeditor/editor/skins/default/images/toolbar.separator.gif, html/pf/cms/fckeditor/editor/skins/default/images/toolbar.start.gif, html/pf/cms/fckeditor/editor/skins/office2003/fck_dialog.css, html/pf/cms/fckeditor/editor/skins/office2003/fck_editor.css, html/pf/cms/fckeditor/editor/skins/office2003/fck_strip.gif, html/pf/cms/fckeditor/editor/skins/office2003/images/toolbar.arrowright.gif, html/pf/cms/fckeditor/editor/skins/office2003/images/toolbar.bg.gif, html/pf/cms/fckeditor/editor/skins/office2003/images/toolbar.buttonarrow.gif, html/pf/cms/fckeditor/editor/skins/office2003/images/toolbar.collapse.gif, html/pf/cms/fckeditor/editor/skins/office2003/images/toolbar.end.gif, html/pf/cms/fckeditor/editor/skins/office2003/images/toolbar.expand.gif, html/pf/cms/fckeditor/editor/skins/office2003/images/toolbar.separator.gif, html/pf/cms/fckeditor/editor/skins/office2003/images/toolbar.start.gif, html/pf/cms/fckeditor/editor/skins/silver/fck_dialog.css, html/pf/cms/fckeditor/editor/skins/silver/fck_editor.css, html/pf/cms/fckeditor/editor/skins/silver/fck_strip.gif, html/pf/cms/fckeditor/editor/skins/silver/images/toolbar.arrowright.gif, html/pf/cms/fckeditor/editor/skins/silver/images/toolbar.buttonarrow.gif, html/pf/cms/fckeditor/editor/skins/silver/images/toolbar.buttonbg.gif, html/pf/cms/fckeditor/editor/skins/silver/images/toolbar.collapse.gif, html/pf/cms/fckeditor/editor/skins/silver/images/toolbar.end.gif, html/pf/cms/fckeditor/editor/skins/silver/images/toolbar.expand.gif, html/pf/cms/fckeditor/editor/skins/silver/images/toolbar.separator.gif, html/pf/cms/fckeditor/editor/skins/silver/images/toolbar.start.gif:
+	The FCK editor 2.4
+
+	* html/pf/cms/fckeditor/fckeditor.js:
+	Inserted a default place of the FCK editor
+
+	* html/pf/cms/edit_html.tt, html/pf/cms/edit_src.tt:
+	Added buttons to jump between the modes
+
+	* html/pf/cms/fckeditor/.htaccess, html/pf/cms/fckeditor/fckconfig.js, html/pf/cms/fckeditor/fckeditor.js, html/pf/cms/fckeditor/fckstyles.xml, html/pf/cms/fckeditor/fcktemplates.xml, html/pf/cms/fckeditor/license.txt:
+	The fckeditor
+
+	* html/pf/cms/edit_html.tt, html/pf/cms/edit_src.tt, html/pf/cms/editors.txt:
+	file update forms
+
+	* lib/Para/Frame/Request.pm: Removing "deep indentation" problem
+
+2007-02-08  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: bugfix
+
+	* html/def/alternatives.tt, html/def/confirm.tt, html/def/denied.tt, html/def/error.tt, html/def/login.tt, html/def/page_not_found.tt, html/def/page_part_not_found.tt:
+	Default level to 0 for these pages
+
+	* lib/Para/Frame/Widget.pm: Id fix
+
+2007-02-07  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm:
+	Removed destination in list of query params to not forward
+
+	* lib/Para/Frame/Site.pm: Added method sysdesig as alias for desig
+
+	* lib/Para/Frame/List.pm: Doc change
+
+	* lib/Para/Frame/File.pm: Added method content_as_html
+
+	* lib/Para/Frame.pm: Added docs for new function
+
+	* lib/Para/Frame.pm: Added file() tt function
+
+	* html/pf/cms/source.tt: Implemented show source
+
+2007-02-05  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/List.pm: Added method pagenum
+
+2007-01-31  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Response.pm: referer -> referer_path
+
+	* lib/Para/Frame/Action/session_vars_update.pm: Using cperl mode
+
+	* lib/Para/Frame/Action/next_step.pm: Using cperl node
+
+	* lib/Para/Frame/Action/mark.pm: cleanup...
+
+	* lib/Para/Frame/Widget.pm:
+	Added some exceptions of form data to not propagate
+
+	* lib/Para/Frame/User.pm, lib/Para/Frame/Route.pm, lib/Para/Frame/Request.pm, lib/Para/Frame/Logging.pm:
+	referer -> referer_path
+
+	* lib/Para/Frame/List.pm:
+	reimplemented support for sett ing page_size, et al, on construction
+
+2007-01-30  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Uploaded.pm: Adding tempfilename method
+
+	* html/pf/js/calendar/lang/calendar-sv-utf8.js:
+	UFT-version of calendar.
+
+2007-01-24  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/User.pm: Added check
+
+	* lib/Para/Frame/Result.pm: Added docs
+
+2007-01-23  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Site.pm: bugfix
+
+2007-01-22  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/List.pm: defined negation of list
+
+2007-01-15  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: bugfix
+
+2007-01-11  jonas <jonas@paranormal.se>
+
+	* html/inc/components.tt: Cleaning
+
+2007-01-10  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/File.pm: More specific sanity check for names of dirs
+
+2007-01-09  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Client.pm, lib/Para/Frame/List.pm: bugfix
+
+	* lib/Para/Frame/Request/Response.pm, lib/Para/Frame/File.pm, lib/Para/Frame/Client.pm:
+	Modified for Apache2
+
+	* demo/demoserver.pl: Setting default port here also....
+
+	* html/inc/css_components.tt: Better defaults...
+
+	* lib/Para/Frame/Request/Response.pm, lib/Para/Frame/L10N.pm:
+	header_out deprecated
+
+	* demo/demoserver.pl: Gives better help
+
+	* README: Added install tip for debian
+
+	* Makefile.PL: May use Apache or Apache2
+
+	* MANIFEST: Moved old files
+
+2006-12-21  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/File.pm: Less debug
+
+	* lib/Para/Frame/File.pm: Default mimetype to unknown/unknown
+
+2006-12-20  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/List.pm: Added doc synopsis
+
+	* lib/Para/Frame/File.pm: - removed unused code
+	- added doc
+
+	* Makefile.PL: more dependencies
+
+2006-12-19  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Image.pm: Added method is_image()
+
+	* lib/Para/Frame/File.pm:
+	Added methods mimetype(), mimetype_base() and is_image()
+
+	* Makefile.PL: New dependency
+
+2006-12-18  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/List.pm: Less debug
+
+	* lib/Para/Frame/Dir.pm: getting user and group
+
+	* lib/Para/Frame/Request.pm: bugfix
+
+2006-12-13  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm: Set a default site_class
+
+	* lib/Para/Frame/File.pm: bugfix
+
+	* lib/Para/Frame/File.pm: Only warn on dirs with extension
+
+	* lib/Para/Frame/Site.pm: Support subclassing
+
+	* lib/Para/Frame/Request.pm, lib/Para/Frame/File.pm, lib/Para/Frame.pm:
+	using site_class config
+
+	* lib/Para/Frame/Dir.pm: Better error reporting if file is not readable
+
+	* lib/Para/Frame/Logging.pm: Bugfix
+
+	* lib/Para/Frame/Template.pm: Less debug
+
+	* lib/Para/Frame/Burner.pm: Added methods add_type() and type()
+
+	* html/inc/components.tt, html/inc/css_components.tt: Better roundboxes
+
+	* lib/Para/Frame/Dir.pm: Checking readable rather than size
+
+	* lib/Para/Frame/Action/user_login.pm: Keeping error info
+
+	* lib/Para/Frame/Utils.pm: Added a litle docs
+
+	* lib/Para/Frame/File.pm: renamed hidden to hide
+
+	* lib/Para/Frame/Dir.pm: added all_files()
+
+	* lib/Para/Frame.pm: generalizing loadpage .htaccess param
+
+2006-12-12  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Route.pm: undef fix
+
+	* lib/Para/Frame/Request/Response.pm: bugfix
+
+	* lib/Para/Frame/List.pm: less debug
+
+	* lib/Para/Frame/Request/Response.pm: handling https
+
+	* lib/Para/Frame/Site.pm: Handling https
+
+	* lib/Para/Frame/Request.pm: - handling https
+	- using sys_base in errorpage handling
+
+	* lib/Para/Frame/Client.pm: Handling https with host backup
+
+	* lib/Para/Frame/File.pm:
+	Accept for example paranormal.se as a dir name
+
+2006-12-11  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Ctype.pm:
+	Not storing req since it could be coupled to an inactive request
+
+	* lib/Para/Frame/Request.pm: - added docs
+	- removed unused methods
+
+	* lib/Para/Frame/Logging.pm: Bugfix
+
+	* lib/Para/Frame/List.pm: added note
+
+	* lib/Para/Frame/File.pm: - less debug
+	- added docs
+
+2006-12-08  jonas <jonas@paranormal.se>
+
+	* html/pf/css/paraframe.css: Error-msg in ff-console
+
+2006-12-07  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Template/Plugin/Meta/Interpolate.pm: spelling
+
+	* html/inc/css_components.tt: Useless statement removed
+
+	* lib/Para/Frame.pm: Loadpage block
+
+2006-12-06  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Renderer/HTML_Fallback.pm: Better error reporting
+
+	* lib/Para/Frame/Result.pm: Better plaintext representation
+
+2006-12-05  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Ctype.pm: docfix
+
+	* lib/Para/Frame/Action/user_login.pm: Handling exceptions during login
+
+	* lib/Para/Frame/File.pm: docfix
+
+	* lib/Para/Frame/Email.pm: bugfixes
+
+	* lib/Para/Frame/Dir.pm: Added docs
+
+2006-12-04  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Site.pm: Handling other ports than 80
+
+	* lib/Para/Frame/Request.pm:
+	Don't send querystring for filename translation
+
+	* lib/Para/Frame/List.pm: bugfix
+
+	* lib/Para/Frame/Client.pm: Bugfix for handling partial data
+
+	* lib/Para/Frame/Template.pm, lib/Para/Frame/File.pm, lib/Para/Frame/Dir.pm:
+	Added some docs
+
+	* lib/Para/Frame/File.pm: Added some sanitychecks
+
+2006-12-03  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Site.pm: Less debug
+
+	* lib/Para/Frame/Dir.pm: less debug
+
+2006-12-02  jonas <jonas@paranormal.se>
+
+	* html/def/admin-index.tt: Synced with changes in Para::Frame::File
+
+	* lib/Para/Frame/Request/Response.pm:
+	Added method set_sender_and_repair_content() for handing indirect UTF8 in files
+
+	* lib/Para/Frame/Request/Ctype.pm:
+	Should change charset even if ctype not yet set
+
+	* lib/Para/Frame/Template.pm:
+	Do not return Template objects for nontemplate files
+
+	* html/def/admin-index.tt: Escape filestrings
+
+	* lib/Para/Frame.pm, lib/Para/Frame/Action/mark.pm, lib/Para/Frame/Action/symdump.pm, lib/Para/Frame/Action/wait_for_req.pm, lib/Para/Frame/Burner.pm, lib/Para/Frame/CSS.pm, lib/Para/Frame/Change.pm, lib/Para/Frame/Child.pm, lib/Para/Frame/Child/Result.pm, lib/Para/Frame/Client.pm, lib/Para/Frame/Connection.pm, lib/Para/Frame/Cookies.pm, lib/Para/Frame/DBIx/Pg.pm, lib/Para/Frame/DBIx/State.pm, lib/Para/Frame/DBIx/Table.pm, lib/Para/Frame/DBIx/mysql.pm, lib/Para/Frame/Dir.pm, lib/Para/Frame/Email.pm, lib/Para/Frame/Email/Address.pm, lib/Para/Frame/File.pm, lib/Para/Frame/Image.pm, lib/Para/Frame/L10N.pm, lib/Para/Frame/L10N/en.pm, lib/Para/Frame/L10N/sv.pm, lib/Para/Frame/List.pm, lib/Para/Frame/Logging.pm, lib/Para/Frame/Reload.pm, lib/Para/Frame/Request/Ctype.pm, lib/Para/Frame/Request/Response.pm, lib/Para/Frame/Result.pm, lib/Para/Frame/Result/Part.pm, lib/Para/Frame/Route.pm, lib/Para/Frame/Session.pm, lib/Para/Frame/Site.pm, lib/Para/Frame/Spreadsheet.pm, lib/Para/Frame/Spreadsheet/CSV.pm, lib/Para/Frame/Spreadsheet/Excel.pm, lib/Para/Frame/Template.pm, lib/Para/Frame/Template/Compiled.pm, lib/Para/Frame/Template/Plugin/Meta/Interpolate.pm, lib/Para/Frame/Template/Plugin/Sorted_table.pm, lib/Para/Frame/Time.pm, lib/Para/Frame/URI.pm, lib/Para/Frame/Uploaded.pm, lib/Para/Frame/User.pm, lib/Para/Frame/Utils.pm, lib/Para/Frame/Watchdog.pm, lib/Para/Frame/Widget.pm:
+	Cleaned up code
+
+	* lib/Para/Frame/Watchdog.pm:
+	Showing server load on on over 200 instead of 100
+
+	* lib/Para/Frame/Page.pm: Superseeded by Para::Frame::File etc
+
+2006-12-01  jonas <jonas@paranormal.se>
+
+	* html/inc/components.tt: Adding width/height to roundbox, for IE
+
+	* html/pf/loading.html: Making textarea readonly
+
+	* lib/Para/Frame/Widget.pm: bugfix
+
+	* lib/Para/Frame/List.pm: Bugfix in slice() (off by one)
+
+2006-11-30  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/File.pm:
+	die on possible error mixing up dirs with ordinary files
+
+	* lib/Para/Frame/Request.pm: Added method set_error_response_path()
+
+	* lib/Para/Frame/List.pm: - Optimizations
+	- Added method new_any()
+
+2006-11-29  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Site.pm: - Added methods get_by_url() and desig()
+	- Now uses a site key built up of both host and home path
+
+	* lib/Para/Frame/Request.pm: Handling URI input in set_response()
+
+	* lib/Para/Frame/File.pm: better debug
+
+	* lib/Para/Frame.pm: bugfix
+
+	* lib/Para/Frame.pm, lib/Para/Frame/Request.pm:
+	Making site mismatch nonfatal
+
+	* lib/Para/Frame/Cookies.pm:
+	Added methods get_val() and method add_by_jar()
+
+2006-11-28  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/List.pm: bugfix
+
+	* lib/Para/Frame/List.pm: - added som docs
+	- added handling of limits
+	- added methods original_size(), randomized() and clone_props()
+
+	* lib/Para/Frame/Request/Response.pm: - added set_is_error
+	- added docs
+
+	* lib/Para/Frame/Renderer/TT.pm: Added doc stubs
+
+	* lib/Para/Frame/Renderer/HTML_Fallback.pm:
+	Used for rendering fallback error pages
+
+	* lib/Para/Frame/Site.pm: less debug
+
+	* lib/Para/Frame/Request.pm:
+	Using Para::Frame::Renderer::HTML_Fallback for fallback error page
+
+	* lib/Para/Frame/File.pm: less debug
+
+	* html/inc/css_components.tt: saner defaults
+
+	* lib/Para/Frame/List.pm: renamed _element methods to _nos
+
+	* lib/Para/Frame/Request.pm: avoide infinite recursion
+
+	* lib/Para/Frame/Action/debug_change.pm: using emacs mode cperl
+
+	* lib/Para/Frame/Request/Response.pm: bugfix
+
+2006-11-27  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/List.pm:
+	Added _element() versions of some methods that otherwise returns a list instead of a single value
+
+	* lib/Para/Frame/List.pm: renamed as_elements() to as_array()
+
+	* lib/Para/Frame/List.pm:
+	Completely changed the class to use a hashref as object
+
+	* Makefile.PL: Depends on Array::Window
+
+2006-11-20  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: html-escape URLs
+
+	* lib/Para/Frame/Utils.pm: bugfix
+
+	* lib/Para/Frame/Route.pm: Spelling
+
+	* lib/Para/Frame/Utils.pm: Bugfix
+
+	* lib/Para/Frame/Request.pm: removed unused code
+
+2006-11-16  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Widget.pm: Adding tdlabel
+
+	* html/inc/components.tt: Adding img_placement to imgexpand
+
+	* lib/Para/Frame/Template.pm: Removed faulty debug indentation
+
+	* lib/Para/Frame/Site.pm: Added debug on site mismatch
+
+	* lib/Para/Frame/Reload.pm:
+	Limit information displayed on compilation error
+
+	* lib/Para/Frame/File.pm: - buggfix
+	- Only check all sites in file creation if configured to do so
+
+	* lib/Para/Frame/DBIx.pm: Using emacs mode cperl
+
+	* lib/Para/Frame/Client.pm, lib/Para/Frame.pm: Added source note
+
+	* Makefile.PL: Needs List::uniq
+
+2006-11-15  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Session.pm:
+	- added a count for the number of requests done in a session
+	- Formatted source
+
+	* lib/Para/Frame.pm: Added note about loadpages
+
+	* lib/Para/Frame.pm:
+	- Start count the number of requests made in a sessoion
+	- Do not produce a loadpage during the first request of a session
+
+	* lib/Para/Frame/Request/Response.pm: Added a debug
+
+2006-11-14  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Client.pm: Saying "Retrying" after server crach
+
+	* lib/Para/Frame/Route.pm: Synced with Paraframe::File
+
+	* lib/Para/Frame/Action/user_login.pm:
+	Handling multiple login fields in one form
+
+	* lib/Para/Frame/Request.pm: Fixed infinite recursion error
+
+	* lib/Para/Frame/Template.pm, lib/Para/Frame/File.pm:
+	added method as_template()
+
+	* lib/Para/Frame/Renderer/TT.pm: added note
+
+	* lib/Para/Frame/Request.pm: Set a fallback URL for handling errors
+
+	* lib/Para/Frame/File.pm:
+	Files may have changed from one type to another
+
+2006-11-13  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Dir.pm, lib/Para/Frame/File.pm, lib/Para/Frame/Renderer/TT.pm, lib/Para/Frame/Request.pm:
+	bugfixes
+
+	* lib/Para/Frame/Dir.pm: better debug
+
+	* lib/Para/Frame/Widget.pm: using emacs mode cperl
+
+	* html/inc/css_components.tt: Sainer defaults
+
+	* html/pf/js/calendar/calendar-setup.js: set range and position
+
+2006-11-10  jonas <jonas@paranormal.se>
+
+	* html/inc/components.tt: Calendar bugfix
+
+	* lib/Para/Frame/Request.pm: More debug
+
+	* lib/Para/Frame/File.pm: Allow files from other sites
+
+	* lib/Para/Frame/Renderer/TT.pm: Less debug
+
+	* lib/Para/Frame/Request/Response.pm:
+	- Added method renderer_if_existing()
+	- method render_output() now catches exceptions
+
+	* lib/Para/Frame/Renderer/TT.pm:
+	Changed way of catching output of rendering
+
+	* lib/Para/Frame/Template.pm: - Less debug
+	- Skipping template lookup if no suffix
+
+	* lib/Para/Frame/Request.pm: - Added method response_if_existing()
+	- Better way of handling uri2file
+	- Bugfixes
+	- Less debug
+
+	* lib/Para/Frame/File.pm:
+	Bugfixes - Taking care of faulty input about file/dir status
+
+	* lib/Para/Frame/Client.pm: Retrurns the whole url2file translation
+
+	* lib/Para/Frame/Burner.pm:
+	Take care of TT rendering errors without delay
+
+2006-11-09  jonas <jonas@paranormal.se>
+
+	* html/pf/js/calendar/lang/calendar-sv.js: added comment
+
+	* lib/Para/Frame/Widget.pm:
+	removed duplicate tdlabel from doc for input
+
+	* html/pf/js/calendar/lang/calendar-sv.old.js:
+	shouldn't be there in the first place...
+
+	* lib/Para/Frame/Request/Response.pm: bugfix
+
+	* lib/Para/Frame/Request.pm: Debugging
+
+	* lib/Para/Frame/File.pm: Notifying use of template finder
+
+	* lib/Para/Frame/Cookies.pm:
+	Using req->site since response not set during session init
+
+	* html/pf/js/calendar/lang/calendar-no.js: bugfix
+
+	* html/pf/js/calendar/skins/aqua/active-bg.gif, html/pf/js/calendar/skins/aqua/dark-bg.gif, html/pf/js/calendar/skins/aqua/hover-bg.gif, html/pf/js/calendar/skins/aqua/menuarrow.gif, html/pf/js/calendar/skins/aqua/normal-bg.gif, html/pf/js/calendar/skins/aqua/rowhover-bg.gif, html/pf/js/calendar/skins/aqua/status-bg.gif, html/pf/js/calendar/skins/aqua/theme.css, html/pf/js/calendar/skins/aqua/title-bg.gif, html/pf/js/calendar/skins/aqua/today-bg.gif, html/pf/js/calendar/doc/html/field-button.jpg, html/pf/js/calendar/doc/html/reference-Z-S.css, html/pf/js/calendar/doc/html/reference.css, html/pf/js/calendar/doc/html/reference.html, html/pf/js/calendar/lang/calendar-af.js, html/pf/js/calendar/lang/calendar-al.js, html/pf/js/calendar/lang/calendar-bg.js, html/pf/js/calendar/lang/calendar-big5-utf8.js, html/pf/js/calendar/lang/calendar-big5.js, html/pf/js/calendar/lang/calendar-br.js, html/pf/js/calendar/lang/calendar-ca.js, html/pf/js/calendar/lang/calendar-cs-utf8.js, html/pf/js/calendar/lang/calendar-cs-win.js, html/pf/js/calendar/lang/calendar-da.js, html/pf/js/calendar/lang/calendar-de.js, html/pf/js/calendar/lang/calendar-du.js, html/pf/js/calendar/lang/calendar-el.js, html/pf/js/calendar/lang/calendar-en.js, html/pf/js/calendar/lang/calendar-es.js, html/pf/js/calendar/lang/calendar-fi.js, html/pf/js/calendar/lang/calendar-fr.js, html/pf/js/calendar/lang/calendar-he-utf8.js, html/pf/js/calendar/lang/calendar-hr-utf8.js, html/pf/js/calendar/lang/calendar-hr.js, html/pf/js/calendar/lang/calendar-hu.js, html/pf/js/calendar/lang/calendar-it.js, html/pf/js/calendar/lang/calendar-jp.js, html/pf/js/calendar/lang/calendar-ko-utf8.js, html/pf/js/calendar/lang/calendar-ko.js, html/pf/js/calendar/lang/calendar-lt-utf8.js, html/pf/js/calendar/lang/calendar-lt.js, html/pf/js/calendar/lang/calendar-lv.js, html/pf/js/calendar/lang/calendar-nl.js, html/pf/js/calendar/lang/calendar-no.js, html/pf/js/calendar/lang/calendar-pl-utf8.js, html/pf/js/calendar/lang/calendar-pl.js, html/pf/js/calendar/lang/calendar-pt.js, html/pf/js/calendar/lang/calendar-ro.js, html/pf/js/calendar/lang/calendar-ru.js, html/pf/js/calendar/lang/calendar-ru_win_.js, html/pf/js/calendar/lang/calendar-si.js, html/pf/js/calendar/lang/calendar-sp.js, html/pf/js/calendar/lang/calendar-sv.js, html/pf/js/calendar/lang/calendar-sv.old.js, html/pf/js/calendar/lang/calendar-tr.js, html/pf/js/calendar/lang/calendar-zh.js, html/pf/js/calendar/lang/cn_utf8.js, html/pf/js/calendar/ChangeLog, html/pf/js/calendar/README, html/pf/js/calendar/bugtest-hidden-selects.html, html/pf/js/calendar/calendar-blue.css, html/pf/js/calendar/calendar-blue2.css, html/pf/js/calendar/calendar-brown.css, html/pf/js/calendar/calendar-green.css, html/pf/js/calendar/calendar-setup.js, html/pf/js/calendar/calendar-setup_stripped.js, html/pf/js/calendar/calendar-system.css, html/pf/js/calendar/calendar-tas.css, html/pf/js/calendar/calendar-win2k-1.css, html/pf/js/calendar/calendar-win2k-2.css, html/pf/js/calendar/calendar-win2k-cold-1.css, html/pf/js/calendar/calendar-win2k-cold-2.css, html/pf/js/calendar/calendar.js, html/pf/js/calendar/calendar.php, html/pf/js/calendar/calendar_stripped.js, html/pf/js/calendar/dayinfo.html, html/pf/js/calendar/img.gif, html/pf/js/calendar/index.html, html/pf/js/calendar/menuarrow.gif, html/pf/js/calendar/menuarrow2.gif, html/pf/js/calendar/multiple-dates.html, html/pf/js/calendar/release-notes.html, html/pf/js/calendar/simple-1.html, html/pf/js/calendar/simple-2.html, html/pf/js/calendar/simple-3.html, html/pf/js/calendar/test-position.html, html/pf/js/calendar/test.php:
+	files for javascript calendar
+
+	* lib/Para/Frame/Template/Components.pod: Added calendar
+
+	* html/inc/components.tt: Added calendar-widget
+
+	* html/inc/calendar_init.tt: Initialization file for calendar-widget
+
+	* lib/Para/Frame/L10N/sv.pm: Added translation for calendar-widget
+
+	* lib/Para/Frame/File.pm, lib/Para/Frame/Dir.pm: Less debug
+
+	* lib/Para/Frame/Burner.pm: Added source function separators
+
+	* lib/Para/Frame/Request/Response.pm: Initializing renderer on demand
+
+	* lib/Para/Frame/Template.pm: bugfixes
+
+	* lib/Para/Frame/Site.pm: Added method find_class()
+
+	* lib/Para/Frame/File.pm: Bugfixes
+
+	* lib/Para/Frame/Request/Response.pm:
+	Updated send_stored_result() for using the stored response for sending the page
+
+	* lib/Para/Frame/Request/Ctype.pm: Set default values for content type
+
+	* lib/Para/Frame/Renderer/TT.pm: Automaticly look for pages not found
+
+	* lib/Para/Frame/Request.pm: - bugfix in uri2file()
+	- added method send_stored_result()
+
+	* lib/Para/Frame/Client.pm: Less debug
+
+	* lib/Para/Frame.pm:
+	Don't identify user et al if we only is to send the stored result
+
+2006-11-08  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Response.pm: Bugfixes (ctype)
+
+	* lib/Para/Frame/Request/Ctype.pm: Added method is_defined()
+
+	* lib/Para/Frame/Renderer/TT.pm:
+	- Runs the action find_page if we can't find template
+	- Added set_template() and content_type_string()
+
+	* lib/Para/Frame/Template.pm: Less debug
+
+	* lib/Para/Frame/Request.pm: - bugfixes
+	- moved setup_jobs() to init()
+	- added add_action() and prepend_action()
+	- No longer take referer from session
+	- added original_content_type_string()
+
+	* lib/Para/Frame.pm: moved setup_jobs to req->init
+
+	* lib/Para/Frame/Renderer/TT.pm, lib/Para/Frame/Request.pm, lib/Para/Frame/Request/Response.pm, lib/Para/Frame/Template.pm:
+	Bugfixes (for error page redirection)
+
+	* lib/Para/Frame/File.pm: - bugfixes
+	- less debug
+
+	* lib/Para/Frame/Dir.pm: Skips hidden files in dir list
+
+	* lib/Para/Frame/Dir.pm: debugg
+
+	* lib/Para/Frame/Dir.pm, lib/Para/Frame/File.pm, lib/Para/Frame/Template.pm, lib/Para/Frame/Utils.pm:
+	Bugfixes
+
+2006-11-07  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Dir.pm, lib/Para/Frame/File.pm, lib/Para/Frame/Template.pm, lib/Para/Frame/Request.pm, lib/Para/Frame/Request/Response.pm:
+	- Less debug
+	- bugfixes
+
+	* Makefile.PL, lib/Para/Frame.pm, lib/Para/Frame/Action/language_set.pm, lib/Para/Frame/Action/take_five.pm, lib/Para/Frame/Burner.pm, lib/Para/Frame/Client.pm, lib/Para/Frame/Cookies.pm, lib/Para/Frame/Dir.pm, lib/Para/Frame/Email.pm, lib/Para/Frame/File.pm, lib/Para/Frame/L10N.pm, lib/Para/Frame/Logging.pm, lib/Para/Frame/Page.pm, lib/Para/Frame/Renderer/TT.pm, lib/Para/Frame/Request.pm, lib/Para/Frame/Request/Ctype.pm, lib/Para/Frame/Request/Response.pm, lib/Para/Frame/Result.pm, lib/Para/Frame/Route.pm, lib/Para/Frame/Session.pm, lib/Para/Frame/Site.pm, lib/Para/Frame/Template.pm, lib/Para/Frame/Template/Compiled.pm, lib/Para/Frame/Time.pm, lib/Para/Frame/Widget.pm:
+	Reworked Para::Frame::File framework
+
+2006-11-02  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: Spelling
+
+	* html/inc/debug.tt, html/inc/form_start.tt, html/inc/menu_admin_pf.tt, html/pf/loading.html, lib/Para/Frame/Utils.pm, lib/Para/Frame/Widget.pm:
+	Making (x)html-compliant.
+
+	* html/inc/components.tt, html/inc/css_components.tt, lib/Para/Frame/Template/Components.pod:
+	Adding widget roundbox.
+
+2006-10-30  jonas <jonas@paranormal.se>
+
+	* html/inc/js.tt: bugfix
+
+	* html/inc/js.tt: For using IE7
+
+2006-10-26  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Page.pm: bugfix
+
+	* lib/Para/Frame/Request.pm: Less debug
+
+	* lib/Para/Frame/Request/Ctype.pm: Fall back to current req
+
+	* lib/Para/Frame/Action/language_set.pm: Resets page on language change
+
+	* lib/Para/Frame/Request.pm: - more debug
+	- req page bugfixes (page obj may change)
+
+	* lib/Para/Frame/L10N.pm: added method code()
+
+2006-10-25  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm: Debug
+
+	* lib/Para/Frame/Request.pm: - Added method set_response_page()
+	- Added method uri2file_create()
+	- Refactoring
+
+	* lib/Para/Frame/Site.pm: Added method uri2file_create()
+
+	* lib/Para/Frame/Page.pm: - Added docs
+	- Misc changes
+
+	* lib/Para/Frame/File.pm: - Added method path_tmpl()
+	- Adde docs
+	- Refactoring
+
+	* lib/Para/Frame/Dir.pm: Added method remove()
+
+2006-10-18  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Result/Part.pm: emacs mode perl -> cperl
+
+2006-10-16  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/File.pm, lib/Para/Frame/Dir.pm: bugfix
+
+2006-10-14  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Dir.pm: warn -> debug
+
+2006-10-12  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/File.pm: bugfix
+
+2006-10-11  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request/Ctype.pm: Uses emacs mode cperl
+
+	* lib/Para/Frame/Watchdog.pm: - Uses emacs mode cperl
+	- Report att 100% CPU instead of 30%
+
+	* lib/Para/Frame/Uploaded.pm, lib/Para/Frame/Reload.pm:
+	Uses emacs mode cperl
+
+	* lib/Para/Frame/L10N.pm: less debug
+
+	* lib/Para/Frame/File.pm, lib/Para/Frame/Email.pm:
+	Restrucutred File classes
+
+	* lib/Para/Frame/Dir.pm, lib/Para/Frame/Page.pm, lib/Para/Frame/Site.pm:
+	Restructured File classes
+
+	* lib/Para/Frame/Cookies.pm, lib/Para/Frame/Client.pm, lib/Para/Frame/Child.pm:
+	emacs mode cperl
+
+	* lib/Para/Frame/Child.pm: More space and safer code!
+
+	* lib/Para/Frame/Spreadsheet/CSV.pm:
+	Excel-exported csv does not seem to be in wrong charset anymore...
+
+2006-10-09  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/CSS.pm: better default colour
+
+	* html/pf/css/paraframe.css: moved to default.css
+
+	* html/pf/css/default.css: moved from paraframe css
+
+	* html/pf/css/paraframe.css: moved som css stuff
+
+2006-10-06  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Spreadsheet.pm, lib/Para/Frame/Spreadsheet/CSV.pm, lib/Para/Frame/Spreadsheet/Excel.pm, lib/Para/Frame/Uploaded.pm:
+	Importation and contact_info updates...
+
+2006-10-04  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/L10N.pm: using cperl
+
+	* lib/Para/Frame/File.pm: bugfix
+
+	* lib/Para/Frame.pm: better docs
+
+2006-10-03  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Image.pm: Handles images
+
+	* lib/Para/Frame/File.pm: added filesize and sys_base
+
+2006-09-30  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Client.pm: optimize
+
+2006-09-26  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Watchdog.pm: Larger maximum memory limit, for big jobs
+
+	* lib/Para/Frame/Burner.pm: docfix
+
+	* lib/Para/Frame/Email.pm: Bugfix
+
+2006-09-25  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Action/server_terminate.pm: Added confirm_simple()
+
+	* lib/Para/Frame/Watchdog.pm: Added timestamp to watchdog messages
+
+	* lib/Para/Frame/Action/server_reload.pm, lib/Para/Frame/Action/server_restart.pm, lib/Para/Frame/Action/server_terminate.pm:
+	Authentication now uses $u->has_root_...
+
+	* lib/Para/Frame/User.pm: added has_root_access()
+
+	* lib/Para/Frame.pm: Added restart()
+
+	* html/pf/config/server.tt: linkfix
+
+2006-09-22  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Watchdog.pm: bugfix
+
+	* lib/Para/Frame/Watchdog.pm: cpu load now workning
+
+	* lib/Para/Frame/DBIx/State.pm: Not dying on unknown status codes
+
+	* lib/Para/Frame/DBIx.pm: more debug
+
+2006-09-21  jonas <jonas@paranormal.se>
+
+	* html/pf/config/server.tt: Template for restarting server
+
+	* html/pf/images/reload-100.png, html/pf/images/reload-26.png:
+	Added reload button
+
+	* html/pf/css/paraframe.css: Removed old reload button style
+
+	* html/inc/menu_admin_pf.tt: New reload button
+
+2006-09-20  jonas <jonas@paranormal.se>
+
+	* html/def/debug.tt: function now in pf/config
+
+	* lib/Para/Frame/Code/Class.pm: New class for Classes
+
+2006-09-19  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/User.pm:
+	Protect against infinite recurse in identify_user()
+
+	* lib/Para/Frame/Page.pm: bugfix
+
+2006-09-18  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: - added method set_header_only()
+	- added method http_if_modified_since()
+
+	* lib/Para/Frame/Page.pm: added method last_modified()
+
+	* lib/Para/Frame/File.pm: renaamed method updated() to mtime()
+
+	* lib/Para/Frame/CSS.pm: - Removed method set_headers()
+	- Added method updated()
+
+	* lib/Para/Frame.pm: Handles if_modified_since requests
+
+2006-09-15  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame.pm: bugfix
+
+	* html/pf/loading.html:
+	reference to image, but not using it since it may not be the right path
+
+2006-09-13  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/CSS.pm: doc spelling
+
+	* lib/Para/Frame/Template/Plugin/Meta/Interpolate.pm:
+	added ~ functionality
+
+	* lib/Para/Frame/Template/Meta.pod: updated doc
+
+	* lib/Para/Frame/Request/Ctype.pm: added is() method
+
+	* lib/Para/Frame/Widget.pm: removed css_header function
+
+	* lib/Para/Frame/Time.pm: bugfix
+
+	* lib/Para/Frame/Site.pm: addes css() method
+
+	* lib/Para/Frame/Page.pm: bugfix
+
+	* lib/Para/Frame/L10N.pm: added set_headers() method
+
+	* lib/Para/Frame/CSS.pm: New module for CSS things
+
+	* lib/Para/Frame.pm: CSS stuff moved to CSS class
+
+	* html/pf/css/paraframe.css: developing
+
+	* html/pf/css/default.css: twaked css
+
+	* html/inc/header.tt: using CSS class
+
+	* html/inc/form_start.tt: reverting to older behaviour
+
+	* html/inc/debug.tt: TT = -> IN
+
+	* dev/inc_pre/header.tt: using CSS class
+
+	* lib/Para/Frame/Utils.pm: better error messages
+
+	* lib/Para/Frame/Utils.pm: checks res of getgr*
+
+	* html/pf/css/paraframe.css:
+	gett css styloe from site rather than main config
+
+	* lib/Para/Frame/Page.pm, lib/Para/Frame/File.pm, lib/Para/Frame/Dir.pm:
+	docfix
+
+	* html/pf/css/default.css: Many parts moved to paraframe.css
+
+	* html/pf/css/paraframe.css: The standard paraframe styles
+
+2006-09-11  jonas <jonas@paranormal.se>
+
+	* dev/inc_pre/footer_prepare.tt:
+	Added another redirection for general stuff
+
+	* lib/Para/Frame/Template/Meta.pod: Added docs
+
+	* lib/Para/Frame/L10N/sv.pm: added a translation
+
+	* lib/Para/Frame/Result.pm: - linkfix
+	- support setting backtrack value
+
+	* lib/Para/Frame/Request.pm: added somw words in doc for searching
+
+	* lib/Para/Frame.pm: use footer_prepare instead of footer
+
+	* html/inc/form_start.tt:
+	always add site home to next_template and default_template if the starts with /
+
+	* html/inc/footer_prepare.tt:
+	Added another redirection for general stuff
+
+	* README: notes about Template 2.15
+
+	* Makefile.PL: The latest TT fixes some bugs
+
 2006-09-09  jonas <jonas@paranormal.se>
+
+	* Changes: updated Changes
+
+	* MANIFEST: updated manifest
+
+	* Makefile.PL: Lessoned requirement
+
+	* t/01_basic.t: updated test
 
 	* html/pf/css/default.css: added button highlight
 
@@ -7,9 +2742,6 @@
 	* html/pf/css/default.css: added stuff
 
 	* html/inc/menu_admin_pf.tt: moved to css
-
-	* lib/Para/Frame/Site/Page.pm:
-	using both dev and html for compiled sites
 
 2006-09-06  jonas <jonas@paranormal.se>
 
