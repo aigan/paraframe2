@@ -21,7 +21,7 @@ Para::Frame::DBIx - Wrapper module for DBI
 
 use strict;
 use DBI qw(:sql_types);
-use Carp qw( carp croak shortmess longmess confess );
+use Carp qw( carp croak shortmess longmess confess cluck );
 
 BEGIN
 {
@@ -692,7 +692,7 @@ sub commit
 
     Para::Frame->run_hook( $Para::Frame::REQ, 'before_db_commit', $dbix);
     $dbix->dbh->commit;
-#    warn "DB comitted\n";
+    warn "DB comitted\n";
 }
 
 
