@@ -326,6 +326,14 @@ sub main_loop
 		    # the need for it. switch_req() should be called
 		    # in the specific sections later, where needed.
 
+		    # The problem with switching reqs is that it will
+		    # trigger DB commit which will commit data that
+		    # should be rolled back in case of an error later
+		    # in the request. Arc creations should be made in
+		    # coherent (atomic) groups. Method calls that may
+		    # call yield should not be used in the middle of
+		    # DB work.
+
 		    switch_req(undef);
 		    get_value( $client );
 		    $timeout = TIMEOUT_SHORT; # Get next thing
@@ -376,7 +384,7 @@ sub main_loop
 			my $job = shift @{$req->{'jobs'}};
 			my( $cmd, @args ) = @$job;
 			switch_req( $req );
-			debug(1, sprintf "Found a job %s(%s) in %d", $cmd, join(', ', map {defined $_ ? $_ : '<undef>'} @args ), $req->{reqnum});
+			debug(2, sprintf "Found a job %s(%s) in %d", $cmd, join(', ', map {defined $_ ? $_ : '<undef>'} @args ), $req->{reqnum});
 			$req->$cmd( @args );
 #		    }
 		}
