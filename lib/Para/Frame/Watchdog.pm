@@ -64,8 +64,10 @@ our @MESSAGE;              # Messages pipe
 
 our $INTERVAL_CONNECTION_CHECK =  60;
 our $INTERVAL_MAIN_LOOP        =  10;
-our $LIMIT_MEMORY              =3600;
-our $LIMIT_MEMORY_NOTICE       =1500;
+our $LIMIT_MEMORY              ;
+our $LIMIT_MEMORY_NOTICE       ;
+our $LIMIT_MEMORY_BASE         =3600;
+our $LIMIT_MEMORY_NOTICE_BASE  =1500;
 our $LIMIT_MEMORY_MIN          = 150;
 our $LIMIT_SYSTOTAL            =   1;
 our $TIMEOUT_SERVER_STARTUP    =  45;
@@ -649,6 +651,10 @@ sub startup_in_fork
 
     $CPU_TIME  = undef;
     $CHECKTIME = undef;
+
+    $LIMIT_MEMORY = $LIMIT_MEMORY_BASE;
+    $LIMIT_MEMORY_NOTICE = $LIMIT_MEMORY_NOTICE_BASE;
+
 
     # Must autoflush STDOUT
     select STDOUT; $|=1;
