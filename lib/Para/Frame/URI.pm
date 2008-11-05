@@ -32,6 +32,7 @@ BEGIN
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( debug datadump );
+use Para::Frame::Widget;
 
 use overload ('""'     => sub { $_[0]->{'value'}->as_string },
               '=='     => sub { overload::StrVal($_[0]) CORE::eq
@@ -74,23 +75,33 @@ sub new
 
 =head2 as_html
 
-  $uri->as_html
+  $uri->as_html( \%attrs )
+
+Supported attrs are:
+
+  label
+  ... anything taken by jump
 
 =cut
 
 sub as_html
 {
-    my( $url, $label ) = @_;
+    my( $url, $attrs ) = @_;
 
     return "" unless $url->{'value'};
 
+    $attrs ||= {};
+
     my $href = $url->{'value'}->as_string;
-    $label ||= $url->{'value'}->host;
 
-    my $label_out = CGI->escapeHTML($label);
-    my $href_out = CGI->escapeHTML($href);
+    my $label = $attrs->{'label'} || $url->{'value'}->host;
 
-    return "<a href=\"$href_out\">$label_out</a>";
+    return Para::Frame::Widget::jump( $label, $href, $attrs );
+
+
+#    my $label_out = CGI->escapeHTML($label);
+#    my $href_out = CGI->escapeHTML($href);
+#    return "<a href=\"$href_out\">$label_out</a>";
 }
 
 
