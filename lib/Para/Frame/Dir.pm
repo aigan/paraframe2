@@ -566,7 +566,12 @@ sub create
     if( $dir->exist )
     {
 #	debug sprintf "Dir %s exist. Chmodding", $dir->desig;
-	$dir->chmod(undef,$args);
+
+	if( $dir->owned )
+	{
+	    # Dirs like /var chould not be chmodded
+	    $dir->chmod(undef,$args);
+	}
 	return $dir;
     }
 
