@@ -1061,8 +1061,8 @@ sub compile
     if( $@ )
     {
 	delete $INC{$filename};
-	delete $Para::Frame::Reload::COMPILED{$filename};
-	die $@;
+	### Keep compilation time so we know when we should try again
+	throw( 'compile', $@ );
     }
     return $res;
 }
