@@ -235,18 +235,21 @@ sub check_for_updates
 
 =head2 reload
 
+  Para::Frame::Reload->reload( $module, $mtime )
+
+C<$module> is the filename given to C<require>
+
 =cut
 
 sub reload
 {
     my( $class, $module, $mtime ) = @_;
 
-    unless( $INC{$module} )
+    unless( $INCS{$module} )
     {
-	$module = package_to_module( $module );
+	warn "Skipping unregistred module $module during reload\n";
+	return 0;
     }
-
-    return unless $INCS{$module}; # Skip if not registred
 
     $mtime ||= (stat $INCS{$module})[9]
 	or die "Lost contact with $module: $INCS{$module}";

@@ -1062,7 +1062,7 @@ sub compile
     {
 	delete $INC{$filename};
 	### Keep compilation time so we know when we should try again
-	throw( 'compile', $@ );
+	throw( 'compilation', $@ );
     }
     return $res;
 }
