@@ -200,6 +200,14 @@ sub new
 			      $dbix->commit;
 			  });
 
+    # Since a bookmarking usually will be followed by an exception, we
+    # will save changes before the actual exception.
+    #
+    Para::Frame->add_hook('after_bookmark', sub
+			  {
+			      $dbix->commit;
+			  });
+
     # I tried to just setting InactiveDestroy. But several processes
     # can't share a dbh. Multiple requests/multiple forks may/will
     # result in errors like "message type 0x43 arrived from server
