@@ -441,6 +441,10 @@ query params.
 This will add a step to the route with the page and all the query
 params we have at the moment, except file uploads.
 
+This will also run the hook after_bookmark which will commit the
+DB. The changes up to date is needed for the bookmarking to be
+effective.
+
 =cut
 
 sub bookmark
@@ -471,6 +475,8 @@ sub bookmark
 #	$url->query_form( @pairs );
 #    }
     $route->plan_next($url);
+
+    Para::Frame->run_hook($req, 'after_bookmark', $url );
 }
 
 
