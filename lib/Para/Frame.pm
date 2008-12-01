@@ -182,6 +182,7 @@ BEGIN
 			  before_render_output
 			  busy_background_job
 			  add_background_jobs
+			  after_bookmark
                         ))
     {
 	$HOOK{$hook} ||= [];
