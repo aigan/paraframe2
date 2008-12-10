@@ -2231,6 +2231,14 @@ sub yield
 	    else
 	    {
 		$wait ||= 1; # Avoids crazy fast iterations
+
+		# One more check that the req still lives
+		unless( $REQUEST{ $req->{'client'} } )
+		{
+		    debug "Connection lost without notifying the req";
+		    $req->cancel;
+		    $done = 1;
+		}
 	    }
 	}
     };
