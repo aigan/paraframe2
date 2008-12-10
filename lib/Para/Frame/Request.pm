@@ -2233,7 +2233,7 @@ sub yield
 		$wait ||= 1; # Avoids crazy fast iterations
 
 		# One more check that the req still lives
-		unless( $REQUEST{ $req->{'client'} } )
+		unless( $Para::Frame::REQUEST{ $req->{'client'} } )
 		{
 		    debug "Connection lost without notifying the req";
 		    $req->cancel;
