@@ -325,6 +325,7 @@ sub find
     my( $this, $page ) = @_;
     my $class = ref($this) || $this;
 
+#    Para::Frame::Logging->this_level(4);
    debug 3, "Finding template for page ".$page->sysdesig;
 
     my $req = $Para::Frame::REQ;
