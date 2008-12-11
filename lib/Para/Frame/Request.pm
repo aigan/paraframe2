@@ -3127,7 +3127,7 @@ If this is the first time, sets the URL from the req as the original
 page. The original page can be retrieved via L</original_response>.
 
 Should be used if we may want to use another template based on a
-changed language or something else in the context htat has changed.
+changed language or something else in the context that has changed.
 
 Calls L</set_response> and returns that response.
 
