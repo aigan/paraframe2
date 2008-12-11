@@ -1077,7 +1077,24 @@ sub renderer
 
   $resp->set_renderer( $renderer, \%args )
 
-Sets the renderer to be uses.
+Sets the renderer to be uses. Renderer will be chosen from the first
+defined among
+
+  1. the given $renderer
+  2. $args->{'renderer'}
+  3. $q->param('renderer')
+  4. $req->dirconfig->{'renderer'}
+  5. $resp->page->renderer()
+
+The renderer should be either
+ a) a renderer object, which will be returned as is
+ b) the module class name of the renderer
+    It will be looked for using the each of the appbases. Example; The
+    renderer 'TT' will be looked for as Para::Frame::Renderer::TT
+
+Loads and compiles the renderer if necessary
+
+Sets renderer by calling C<new()>
 
 =cut
 

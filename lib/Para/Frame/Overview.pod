@@ -33,6 +33,15 @@ generated, sends teh page and stops here.
 
 2.5. C<$req-E<gt>setup_jobs> determine the actions requested
 
+2.6 Initiates the response property of the req by calling
+L<Para::Frame::Request/reset_response> that will set the response page
+to the L<Para::Frame::Request/original_url_string> that was given by
+the L<Para::Frame::Client>
+
+2.7 This URL is given by L<Para::Frame::Request::Response/new> to
+L<Para::Frame::File/new> and is then normalized by
+L<Para::Frame::File/normalize>
+
 3. C<$req-E<gt>after_jobs> looks for things to do for the request
 
 3.1 Take a planned action unless an error has been encountered. If
@@ -40,16 +49,23 @@ there are more actions planned, go back to point 3.
 
 3.2 If an error occured, plan to redisplay the previous page
 
-3.3 Render the page to be sent back by calling C<$req-E<gt>render_output>
+3.3 If the C<$reqE<gt>response> is a redirection, send_redirection
 
-3.4 Send the resulting page
+3.4 Do C<$resp-E<gt>render_output>
 
-3.4.1 If the page chosen doesn't match the original URI, redirect the
-browser to the right URI. The next request stops at point 2.4.
+3.4.1 L<Para::Frame::Request::Response/render_output> looks up the
+L<Para::Frame::Request::Response/renderer> and calls it's
+C<render_output>. See L<Para::Frame::Request::Response/set_renderer>
 
-3.4.2. Sends the HTTP headers
+3.4.2 The default renderer is L<Para::Frame::Renderer::TT>. That
+renderer will lookup the template for the given page by calling
+L<Para::Frame::File/template>. This will use a template finder that
+can be given by dirconfig find but will defaults to
+L<Para::Frame::Template/find>.
 
-3.4.3. Sends the generated page
+3.5 If the C<$reqE<gt>response> is a redirection, send_redirection
+
+3.6 Do C<$resp-E<gt>senderE<gt>send_output>
 
 4. Finishing up and closing the connection
 

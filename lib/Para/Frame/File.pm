@@ -1942,15 +1942,10 @@ sub load_compiled
 
   $f->renderer( \%args )
 
-For gettign the renderer used for a request response, see
+For getting the renderer used for a request response, see
 L<Para::Frame::Request::Response/renderer>.
 
 The default renderer is L<Para::Frame::Renderer::TT>.
-
-OLD: C<$renderer> should be C<undef> for using the default, or the name of
-a renderer class that must have C<::Renderer::> in it's name, or a ref
-in which case it's taken to be a renderer object.
-
 
 
 Any C<%args> are given to the renderer constructor -- usually
