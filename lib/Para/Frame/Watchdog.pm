@@ -67,7 +67,7 @@ our $INTERVAL_MAIN_LOOP        =  10;
 our $LIMIT_MEMORY              ;
 our $LIMIT_MEMORY_NOTICE       ;
 our $LIMIT_MEMORY_BASE         =3600;
-our $LIMIT_MEMORY_NOTICE_BASE  =1500;
+our $LIMIT_MEMORY_NOTICE_BASE  =2000;
 our $LIMIT_MEMORY_MIN          = 150;
 our $LIMIT_SYSTOTAL            =   1;
 our $TIMEOUT_SERVER_STARTUP    =  45;
@@ -142,10 +142,12 @@ sub startup
 
 sub watch_loop
 {
+#    debug "startup succeeded";
     $Para::Frame::IN_STARTUP = 0; # Startup succeeded
     my $last_connection_check = time;
     while()
     {
+#	debug "--in watch_loop";
 	exit 0 if $SHUTDOWN;
 	check_server_report();
 	if( $DO_CONNECTION_CHECK )
@@ -162,6 +164,8 @@ sub watch_loop
 	}
 
 	sleep $INTERVAL_MAIN_LOOP;
+#	debug "--handle missed signals";
+	&REAPER; # Handle missed calls (WHY ARE THEY MISSED?!)
     }
     debug "escaped watchdog main loop";
     exit 1;
@@ -316,6 +320,8 @@ sub check_server_report
 	    debug "Server going down";
 	    $DOWN = 1;
 	}
+
+#	debug "--get_next_server_message";
     }
 }
 
@@ -459,6 +465,8 @@ sub get_server_message
 	    next;
 	}
 
+#	debug "Server reported $type\n";
+
 	# Just return type if no argument was expected
 	if( $argformat == 0 and not $argstring )
 	{
@@ -470,8 +478,7 @@ sub get_server_message
 	my( @args ) = $argstring =~ m/$argformat/;
 	if( defined $+ ) # Did we match?
 	{
-	    debug 4, "Server reported $type\n";
-	    debug 5, "  returning args @args";
+#	    debug "  returning args @args";
 	    push @MESSAGE, [$type, @args];
 	}
 	else
@@ -582,6 +589,17 @@ sub on_crash
 	debug "There was a request for a hard restart";
 	$HARD_RESTART = 0;
     }
+
+    if( $CRASHCOUNTER > 10 )
+    {
+	debug "Restartcounter at $CRASHCOUNTER";
+	debug "Doing a clean restart";
+	open STDOUT, '>/dev/null' or die "Can't write to /dev/null: $!";
+	exec("$0 @ARGV &"); warn "Exec failed: $!"; sleep 1;
+	debug "executing $0";
+	exec("$0 @ARGV &"); warn "Exec failed: $!";
+    }
+
     debug "\n\n\nRestart $CRASHCOUNTER at $CRASHTIME\n\n\n";
 
     return startup_in_fork();
