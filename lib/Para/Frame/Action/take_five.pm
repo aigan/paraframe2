@@ -1,6 +1,8 @@
 #  $Id$  -*-cperl-*-
 package Para::Frame::Action::take_five;
 
+use strict;
+
 # For testing purposes
 
 sub handler
