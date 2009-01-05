@@ -1250,7 +1250,7 @@ sub last_modified
 {
     my( $resp ) = @_;
 
-    my $type = $resp->ctype->type;
+    my $type = $resp->ctype->type || '';
 
     if( ($type eq 'text/css') or ($type eq 'application/x-javascript') )
     {
