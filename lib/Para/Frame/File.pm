@@ -6,7 +6,7 @@ package Para::Frame::File;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -667,7 +667,10 @@ sub set_depends_on
 
 =head2 is_updated
 
-Checks in the templates this has been compiled from has changed
+Checks if the templates this has been compiled from has changed.
+
+Depends on the info given by L</set_depends_on>
+
 
 =cut
 
@@ -677,6 +680,13 @@ sub is_updated
 
     if( $tmpl->exist )
     {
+	$tmpl->initiate;
+	my $raw_mtime = $tmpl->{'mtime'};
+	if( $tmpl->mtime_as_epoch > $raw_mtime )
+	{
+	    return 1;
+	}
+
 	$tmpl->{'depends_on'} ||= [];
       SRC:
 	foreach my $src (@{$tmpl->{'depends_on'}})
@@ -1866,6 +1876,9 @@ sub is_owned
 
 Returns a L<Para::Frame::Time> object based on the files mtime.
 
+This will update the object if mtime has changed.
+
+
 =cut
 
 sub mtime
@@ -1878,6 +1891,8 @@ sub mtime
 #######################################################################
 
 =head2 mtime_as_epoch
+
+This will update the object if mtime has changed.
 
 =cut
 
