@@ -1237,7 +1237,10 @@ sub render_output
 This method should return the last modification date of the page in
 its rendered form.
 
-This function currently only works for CSS pages.
+This function currently only works for css and js pages.
+
+TODO: Work with more than css and js pages.
+
 
 For other pages, returns undef
 
@@ -1247,18 +1250,21 @@ sub last_modified
 {
     my( $resp ) = @_;
 
-    if( $resp->ctype->is('text/css') )
+    my $type = $resp->ctype->type;
+
+    if( ($type eq 'text/css') or ($type eq 'application/x-javascript') )
     {
 	my $page = $resp->page;
-	my $updated = $page->site->css->updated;
+#	my $updated = $page->site->css->updated;
 #	debug "CSS updated $updated";
-	my $page_updated = $page->mtime;
+#	my $page_updated = $page->mtime;
 #	debug "CSS template updated $page_updated";
-	if( $page_updated > $updated )
+#	if( $page_updated > $updated )
+	if( $page->is_updated ) # May be a sub-page that was updated
 	{
-	    $updated = $page_updated;
+	    return Para::Frame::Time->now();
 	}
-	return $updated;
+	return $page->mtime;
     }
 
     return undef;
