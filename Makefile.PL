@@ -2,6 +2,7 @@
 # the contents of the Makefile that is written.
 
 BEGIN { require 5.008 }
+use strict;
 use ExtUtils::MakeMaker;
 
 WriteMakefile(
@@ -26,6 +27,7 @@ WriteMakefile(
 	          'DateTime::Format::HTTP'     => 0.00,
 	          'DateTime::Format::Pg'       => 0.08,
 	          'DateTime::Format::Strptime' => 0.00,
+		  'DateTime::Format;;MySQL'    => 0.00,
 		  'DateTime::Set'              => 0.22,
 		  'DateTime::TimeZone'         => 0.37,
 	          'DateTime::Incomplete'       => 0.02,
@@ -61,8 +63,6 @@ WriteMakefile(
 		  'Socket'                     => 1.77,
 		  'Sys::CpuLoad'               => 0.02,
 		  'Template'                   => 2.15,
-		  'Test::More'                 => 0.61,
-		  'Test::Warn'                 => 0.08,
 		  'Text::Autoformat'           => 1.12,
 		  'Time::HiRes'                => 1.66,
 		  'Time::Piece'                => 1.08,
@@ -72,6 +72,15 @@ WriteMakefile(
                   'Test::Pod::Coverage'        => 1.08,
 		  'Spreadsheet::ParseExcel'    => 0.32,
 		  'Linux::SysInfo'             => 0.10,
+
+# Testing
+		  'Test::More'                 => 0.61,
+		  'Test::Warn'                 => 0.08,
+		  'Test::Perl::Critic'         => 1.01,
+		  'Test::Distribution'         => 2.00,
+		  'Test::Pod'                  => 1.26,
+		  'Test::Strict'               => 0.09,
+		  
 	      },
 	      'dist'          =>
 	      {
