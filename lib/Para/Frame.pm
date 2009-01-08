@@ -844,24 +844,26 @@ sub fill_buffer
   PROCESS:
     {
 
-#	#### STATUS
-#	debug "\nCurrent buffers";
-#	foreach my $oclient ( keys %INBUFFER )
-#	{
-#	    my $msg = "  client ";
-#	    if( my $oreq = $REQUEST{ $oclient } )
-#	    {
-#		$msg .= $oreq->{reqnum};
-#	    }
-#	    debug "$msg $oclient: $INBUFFER{$oclient}";
-#	}
-#	debug "\n";
-#	sleep 1;
-
+	if( 0 ) # DEBUG
+	{
+	    #### STATUS
+	    debug "\nCurrent buffers";
+	    foreach my $oclient ( keys %INBUFFER )
+	    {
+		my $msg = "  client ";
+		if( my $oreq = $REQUEST{ $oclient } )
+		{
+		    $msg .= $oreq->{reqnum};
+		}
+		debug "$msg $oclient: $INBUFFER{$oclient}";
+	    }
+	    debug "\n";
+	    sleep 1;
+	}
 
 	my $length_buffer = length( $INBUFFER{$client}||='' );
 
-#	debug "Length is $length_buffer of ".($DATALENGTH{$client}||'?');
+	debug 4, "Length is $length_buffer of ".($DATALENGTH{$client}||'?');
 
 	unless( $DATALENGTH{$client} and
 		$length_buffer >= $DATALENGTH{$client} )
@@ -945,6 +947,11 @@ sub fill_buffer
 #		    throw('action', "Data timeout while talking to client\n");
 		}
 	    }
+	    else
+	    {
+		# TODO: Vulnerability. Drop connection after a given time
+	    }
+
 
 	    unless( $DATALENGTH{$client} )
 	    {
