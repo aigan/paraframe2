@@ -1,4 +1,6 @@
 #!perl
 
-use Test::Strict;
+use Test::Strict skip_all => "todo";
+
 all_perl_files_ok(); # Syntax ok and use strict;
+
