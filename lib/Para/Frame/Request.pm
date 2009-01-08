@@ -2015,6 +2015,10 @@ sub send_code
 	    my $query = "run=wait_for_req&req=$client&pfport=$port";
 	    my $url = "$scheme://$webhost$webpath?$query";
 
+
+
+	    # TODO: Use a worker instead
+	    #
 	    my $ua = LWP::UserAgent->new( timeout => 60*60 );
 	    my $lwpreq = HTTP::Request->new(GET => $url);
 
@@ -2028,6 +2032,8 @@ sub send_code
 		my $res = $ua->request($lwpreq);
 		# Might get result because of a timeout
 
+		delete $res->{'handlers'}; # Can't transfer code refs
+
 		if( debug > 1 )
 		{
 		    debug "  GOT result:";
@@ -2035,6 +2041,9 @@ sub send_code
 		}
 		$fork->return( $res );
 	    }
+
+
+
 	}
 
 	# Wait for the $ua to connect and give us it's $req
