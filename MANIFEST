@@ -499,7 +499,6 @@ lib/Para/Frame/Request/Response.pm
 lib/Para/Frame/Result.pm
 lib/Para/Frame/Result/Part.pm
 lib/Para/Frame/Route.pm
-lib/Para/Frame/Sender.pm
 lib/Para/Frame/Session.pm
 lib/Para/Frame/Site.pm
 lib/Para/Frame/Spreadsheet.pm

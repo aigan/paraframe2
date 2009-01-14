@@ -185,6 +185,7 @@ sub debug_data
 	$out .= "Result:\n".$req->result->as_string;
     }
 
+    return $out;
 }
 
 #######################################################################
