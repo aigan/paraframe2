@@ -6,7 +6,7 @@ package Para::Frame::URI;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2005-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2005-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -636,10 +636,17 @@ sub retrieve
 #    debug"https isa: ".datadump(@URI::https::ISA);
 #    debug "https class: $INC{'URI/https.pm'}";
 
+#    debug "Retrieve $uri";
+
     my $ua = LWP::UserAgent->new;
     my $lwpreq = HTTP::Request->new(GET => $uri->{'value'});
 
-    return $ua->request($lwpreq);
+    my $res = $ua->request($lwpreq);
+    delete $res->{'handlers'}; # Can't transfer code refs
+
+#    debug "Returning $res";
+
+    return $res;
 }
 
 
