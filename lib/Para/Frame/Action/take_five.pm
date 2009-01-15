@@ -9,7 +9,9 @@ sub handler
 {
     my( $req ) = @_;
 
-    for(1..15)
+    my $count = $req->q->param('count') || 5;
+
+    for(1..$count)
     {
 	sleep 1;
 	$req->yield;
