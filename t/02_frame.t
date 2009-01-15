@@ -4,11 +4,12 @@
 use strict;
 use warnings;
 use Test::Warn;
-use Test::More tests => 40;
+use Test::More tests => 61;
 #use Test::More qw(no_plan);
-use Storable qw( freeze );
+use Storable qw( freeze dclone );
 use FindBin;
 use Cwd 'abs_path';
+
 
 
 BEGIN
@@ -33,6 +34,49 @@ my $cfg_in =
  'dir_var'  => $pfdir.'/tmp/var',
  'debug'    => 0,
 };
+
+my $client_data =
+  [
+   {},
+   {
+    DOCUMENT_ROOT        => $approot."/www/",
+    GATEWAY_INTERFACE    => "CGI/1.1",
+    HTTP_ACCEPT          => "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    HTTP_ACCEPT_CHARSET  => "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
+    HTTP_ACCEPT_ENCODING => "gzip,deflate",
+    HTTP_ACCEPT_LANGUAGE => "sv,en;q=0.5",
+    HTTP_CONNECTION      => "keep-alive",
+    HTTP_COOKIE          => "paraframe-sid=1231334731-3; AWSUSER_ID=awsuser_id1228312333525r8791; AWSSESSION_ID=awssession_id1231334738627r8335",
+    HTTP_HOST            => "frame.para.se",
+    HTTP_KEEP_ALIVE      => 300,
+    HTTP_USER_AGENT      => "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) Gecko/2008111318 Ubuntu/9.04 (jaunty) Firefox/3.0.5",
+    MOD_PERL             => "mod_perl/2.0.4",
+    MOD_PERL_API_VERSION => 2,
+    PATH                 => "/usr/local/bin:/usr/bin:/bin",
+    QUERY_STRING         => "",
+    REMOTE_ADDR          => "213.88.136.203",
+    REMOTE_PORT          => 59248,
+    REQUEST_METHOD       => "GET",
+    REQUEST_URI          => "/test/",
+    SCRIPT_FILENAME      => $approot."/www/test/",
+    SCRIPT_NAME          => "/test/",
+    SERVER_ADDR          => "213.88.136.203",
+    SERVER_ADMIN         => "webmaster\@localhost",
+    SERVER_NAME          => "frame.para.se",
+    SERVER_PORT          => 80,
+    SERVER_PROTOCOL      => "HTTP/1.1",
+    SERVER_SIGNATURE     => "<address>Apache/2.2.9 (Ubuntu) mod_perl/2.0.4 Perl/v5.10.0 Server at frame.para.se Port 80</address>\n",
+    SERVER_SOFTWARE      => "Apache/2.2.9 (Ubuntu) mod_perl/2.0.4 Perl/v5.10.0",
+   },
+   "/test/",
+   $approot."/www/test/",
+   "text/html; charset=UTF-8",
+   {port => 9999, site => "test" },
+   0,
+   {},
+  ];
+
+
 
 warnings_like {Para::Frame->configure($cfg_in)}
 [ qr/^Timezone set to /,
@@ -80,11 +124,7 @@ warnings_like
  ], "startup";
 
 is( $stdout, "STARTED\n", "startup output" );
-$stdout = "";
-
-test_ping();
-test_ping2();
-test_fill_buffer();
+clear_stdout();
 
 
 %Para::Frame::Request::URI2FILE =
@@ -101,8 +141,78 @@ test_fill_buffer();
   );
 
 
-test_handle_req();
+remove_files_with_bg_req(); # REQ 1
 
+test_ping();
+test_ping2();
+test_fill_buffer();
+
+test_handle_req();          # REQ 2
+test_cancel_req();          # REQ cancelled
+test_cancel2_req();         # REQ 3
+
+
+#############################################
+
+sub remove_files_with_bg_req
+{
+    my @got_warning = ();
+  TEST:
+    {
+	local $SIG{__WARN__} = sub
+	{
+	    push @got_warning, shift();
+	};
+
+	my $req = Para::Frame::Request->new_bgrequest();
+	like( $stdout, qr/^Loading Para::Frame::L10N::en/, "Loaded L10N::en" );
+	clear_stdout();
+
+	Para::Frame::Dir->new({ filename => $pfdir.'/tmp', file_may_not_exist=>1})->remove;
+	is( $stdout, "MAINLOOP 1\n", "Gone through mainloop" );
+	clear_stdout();
+
+	$req->done;
+    }
+
+    my @expected =
+      (
+       qr/^\n\n1 Handling new request \(in background\)\n$/,
+       qr/^\s*Removing dir /,
+       qr/^\s*Removing file /,
+       qr/^\s*File .* created from the outside/m,
+       qr/^1 Done in   0\.\d\d secs$/,
+      );
+
+    my @failed;
+  TESTRES:
+    foreach my $warn ( @got_warning )
+    {
+#	warn "# checking $warn\n";
+	foreach my $re ( @expected )
+	{
+#	    warn "  with pattern $re\n";
+	    if( $warn =~ $re )
+	    {
+		next TESTRES;
+	    }
+	}
+#	warn "  failed\n";
+	push @failed, $warn;
+    }
+
+    if( scalar @failed )
+    {
+	my $err = join ', ', @failed;
+	$err =~ s/\n/ /g;
+	ok(0, "Removing tmp: $err");
+    }
+    else
+    {
+	ok(1, "Removing tmp");
+    }
+
+}
 
 #############################################
 
@@ -177,47 +287,6 @@ sub test_ping2
 
 sub test_handle_req
 {
-    my $client_data =
-      [
-       {},
-       {
-	DOCUMENT_ROOT        => $approot."/www/",
-	GATEWAY_INTERFACE    => "CGI/1.1",
-	HTTP_ACCEPT          => "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-	HTTP_ACCEPT_CHARSET  => "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-	HTTP_ACCEPT_ENCODING => "gzip,deflate",
-	HTTP_ACCEPT_LANGUAGE => "sv,en;q=0.5",
-	HTTP_CONNECTION      => "keep-alive",
-	HTTP_COOKIE          => "paraframe-sid=1231334731-3; AWSUSER_ID=awsuser_id1228312333525r8791; AWSSESSION_ID=awssession_id1231334738627r8335",
-	HTTP_HOST            => "frame.para.se",
-	HTTP_KEEP_ALIVE      => 300,
-	HTTP_USER_AGENT      => "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) Gecko/2008111318 Ubuntu/9.04 (jaunty) Firefox/3.0.5",
-	MOD_PERL             => "mod_perl/2.0.4",
-	MOD_PERL_API_VERSION => 2,
-	PATH                 => "/usr/local/bin:/usr/bin:/bin",
-	QUERY_STRING         => "",
-	REMOTE_ADDR          => "213.88.136.203",
-	REMOTE_PORT          => 59248,
-	REQUEST_METHOD       => "GET",
-	REQUEST_URI          => "/test/",
-	SCRIPT_FILENAME      => $approot."/www/test/",
-	SCRIPT_NAME          => "/test/",
-	SERVER_ADDR          => "213.88.136.203",
-	SERVER_ADMIN         => "webmaster\@localhost",
-	SERVER_NAME          => "frame.para.se",
-	SERVER_PORT          => 80,
-	SERVER_PROTOCOL      => "HTTP/1.1",
-	SERVER_SIGNATURE     => "<address>Apache/2.2.9 (Ubuntu) mod_perl/2.0.4 Perl/v5.10.0 Server at frame.para.se Port 80</address>\n",
-	SERVER_SOFTWARE      => "Apache/2.2.9 (Ubuntu) mod_perl/2.0.4 Perl/v5.10.0",
-       },
-       "/test/",
-       $approot."/www/test/",
-       "text/html; charset=UTF-8",
-       {port => 9999, site => "test" },
-       0,
-       {},
-      ];
-
     my $value = freeze $client_data;
 
     Para::Frame::Client::connect_to_server( $Para::Frame::CFG->{'port'} );
@@ -235,9 +304,6 @@ sub test_handle_req
     Para::Frame::switch_req(undef); # TODO: remove me
 
 
-#    Para::Frame::get_value( $client );
-
-
     my @got_warning = ();
   TEST:
     {
@@ -250,14 +316,16 @@ sub test_handle_req
 
     my @expected =
       (
-       qr/^\n\n1 Handling new request\n$/,
+       qr/^\n\n2 Handling new request\n$/,
        qr/^\# http:\/\/frame.para.se\/test\/\n$/m,
        qr/^\# 20\d\d-\d\d-\d\d \d\d\.\d\d\.\d\d - 213\.88\.136\.203\n\# Sid 1231334731-3 - 0 - Uid 0 - debug 0\n$/m,
        qr/^  This is the first request in this session$/,
        qr/^  Rendering page$/,
+       qr/^  Decoding UTF-8 file .*?\/html\/index\.tt \(<unknown>\) 20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d$/,
+       qr/^  Compiling .*?\/html\/index\.tt$/,
        qr/^Loading Para::Frame::Template::Plugin::Meta::Interpolate 1.10$/,
        qr/^Sending response\.\.\.$/,
-       qr/^1 Done in   0\.\d\d secs$/,
+       qr/^2 Done in   0\.\d\d secs$/,
       );
 
     for( my $i=0; $i<=$#got_warning; $i++ )
@@ -265,23 +333,107 @@ sub test_handle_req
 	like( $got_warning[$i], $expected[$i], "Processing request - warning $i" );
     }
 
-
-#    warnings_like { Para::Frame::get_value( $client ) }
-#      [
-#       qr/^\n\n1 Handling new request\n$/,
-#       qr/^\# http:\/\/frame.para.se\/test\/\n$/,
-#       qr/^\# 20\d\d-\d\d-\d\d \d\d\.\d\d\.\d\d - 213\.88\.136\.203\n\# Sid 1231334731-3 - 0 - Uid 0 - debug 0\n$/m,
-#       qr/^  This is the first request in this session$/,
-#       qr/^  Rendering page$/,
-#       qr/^Loading Para::Frame::Template::Plugin::Meta::Interpolate 1.10$/,
-#       qr/^Sending response\.\.\.$/,
-#       qr/^1 Done in   0\.\d\d secs$/,
-#      ],
-#	"Processing request";
+    is( $stdout, "", "no stdout" );
+}
 
 
-#    my $chunks = Para::Frame::Client::get_response();
+#############################################
 
+sub test_cancel_req
+{
+    my $value = freeze $client_data;
+
+    Para::Frame::Client::connect_to_server( $Para::Frame::CFG->{'port'} );
+    Para::Frame::Client::send_to_server('REQ', \$value );
+
+    Para::Frame::Client::send_to_server('CANCEL', \1 );
+
+    # New connection
+    my( $client ) = $Para::Frame::SELECT->can_read( 1 );
+    is( $client, $Para::Frame::SERVER, 'new connection' );
+    Para::Frame::add_client( $client );
+
+    # New data
+    ( $client ) = $Para::Frame::SELECT->can_read( 1 );
+    isnt( $client, $Para::Frame::SERVER, 'new data' );
+
+    Para::Frame::switch_req(undef); # TODO: remove me
+
+
+    warning_like
+    {
+	Para::Frame::get_value( $client );
+    } qr/^SKIPS CANCELLED REQ$/, "Skips cancelled req";
+
+    is( $stdout, "", "no stdout" );
+}
+
+
+#############################################
+
+sub test_cancel2_req
+{
+    my $cd2 = dclone( $client_data );
+    # make modifications
+
+    $cd2->[0]{run}  = ["take_five"];
+    $cd2->[0]{count}  = [1];
+    $cd2->[1]{QUERY_STRING} = "run=take_five&count=1";
+    $cd2->[1]{REQUEST_URI} = "/test/?run=take_five&count=1";
+
+    my $value = freeze $cd2;
+
+    Para::Frame::Client::connect_to_server( $Para::Frame::CFG->{'port'} );
+    Para::Frame::Client::send_to_server('REQ', \$value );
+
+
+    # New connection
+    my( $client ) = $Para::Frame::SELECT->can_read( 1 );
+    is( $client, $Para::Frame::SERVER, 'new connection' );
+    Para::Frame::add_client( $client );
+
+    # New data
+    ( $client ) = $Para::Frame::SELECT->can_read( 1 );
+    isnt( $client, $Para::Frame::SERVER, 'new data' );
+
+    Para::Frame::switch_req(undef); # TODO: remove me
+
+    Para::Frame::fill_buffer($client);
+    Para::Frame::Client::send_to_server('CANCEL', \1 );
+
+    my @got_warning = ();
+  TEST:
+    {
+	local $SIG{__WARN__} = sub
+	{
+	    push @got_warning, shift();
+	};
+	eval
+	{
+	    Para::Frame::handle_code($client);
+	};
+    }
+
+    is( "$@", 'cancel error - Request cancelled. Stopping jobs', "Cancel exception" );
+    undef $@;
+
+    is( $stdout, "MAINLOOP 1\n", "got through mainloop" );
+
+    my @expected =
+      (
+       qr/^\n\n3 Handling new request\n$/,
+       qr/^\# http:\/\/frame.para.se\/test\/\n$/m,
+       qr/^\# 20\d\d-\d\d-\d\d \d\d\.\d\d\.\d\d - 213\.88\.136\.203\n\# Sid 1231334731-3 - 1 - Uid 0 - debug 0\n$/m,
+       qr/^      CANCEL req 3$/,
+       qr/^  cancelled by request$/,
+       qr/^3 Done in   1\.\d\d secs$/,
+       qr/^  ACTION FAILED!$/,
+      );
+
+    for( my $i=0; $i<=$#got_warning; $i++ )
+    {
+	like( $got_warning[$i], $expected[$i], "Processing request - warning $i" );
+    }
 }
 
 
@@ -514,6 +666,13 @@ sub pf_extract_code
     $Para::Frame::DATALENGTH{$client} = 0;
 
     return( $code, $data );
+}
+
+sub clear_stdout
+{
+    close STDOUT;
+    $stdout="";
+    open STDOUT, ">:scalar", \$stdout   or die "Can't dup STDOUT to scalar: $!";
 }
 
 
