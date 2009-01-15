@@ -131,11 +131,11 @@ sub new
     {
 	if( my $file = $Para::Frame::File::Cache{ $key } )
 	{
-	    if( $class ne 'Para::Frame::File' )
+	    unless( UNIVERSAL::isa( $class, 'Para::Frame::File' ) )
 	    {
 		if( ref($file) ne $class )
 		{
-		    debug "Stored file not of the right class";
+		    debug "Stored file $key not of the right class: ".ref($file);
 		    last SHORTCUT;
 		}
 	    }
