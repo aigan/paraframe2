@@ -6,7 +6,7 @@ package Para::Frame::Widget;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -39,7 +39,7 @@ BEGIN
 use base qw( Exporter );
 our @EXPORT_OK
 
-      = qw( slider jump submit go go_js forward forward_url preserve_data alfanum_bar rowlist list2block selectorder param_includes hidden input textarea htmlarea filefield css_header confirm_simple inflect radio calendar input_image selector label_from_params checkbox );
+      = qw( slider jump submit go go_js forward forward_url preserve_data alfanum_bar rowlist list2block selectorder param_includes hidden input password textarea htmlarea filefield css_header confirm_simple inflect radio calendar input_image selector label_from_params checkbox );
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( trim throw debug uri store_params datadump );
@@ -844,6 +844,7 @@ sub hidden
 		   );
 }
 
+
 #######################################################################
 
 =head2 input
@@ -925,6 +926,97 @@ sub input
 
     # Stringify all params, in case they was objects
     return sprintf('%s<input type="text" name="%s" value="%s" size="%s" maxlength="%s"%s />',
+		   $prefix,
+		   CGI->escapeHTML( "$key" ),
+		   CGI->escapeHTML( "$value" ),
+		   CGI->escapeHTML( "$size" ),
+		   CGI->escapeHTML( "$maxlength" ),
+		   $extra,
+		  );
+}
+
+
+#######################################################################
+
+=head2 password
+
+  password( $field, $value, %attrs )
+
+Draws a password input field widget.
+
+Sets form field name to $field and value to $value.
+
+C<$value> will be taken from query param C<$field>
+
+
+Attributes:
+
+  size: width of input field  (default is 30)
+
+  maxlength: max number of chars (default is size times 3)
+
+  tdlabel: Sets C<label> and separates it with a C<td> tag.
+
+  label: draws a label before the field with the given text
+
+  label_class: Adds a class to the C<label> tag
+
+  separator: adds the unescaped string between label and input tag
+
+  id: used for label. Defaults to C<$field>
+
+  onchange: used for scripts, NOT html-escaped!
+
+All other attributes are directly added to the input tag, with the
+value html escaped.
+
+Example:
+
+  Drawing a password input field widget with a label
+  [% password('location_name', '', label=loc('Password')) %]
+
+
+
+=cut
+
+sub password
+{
+    my( $key, $value_in, $params ) = @_;
+
+    my $size = delete $params->{'size'} || 30;
+    my $maxlength = delete $params->{'maxlength'} || $size*3;
+    my $extra = '';
+    my $value; # Not using input value...
+
+    my @previous;
+    if( my $q = $Para::Frame::REQ->q )
+    {
+	@previous = $q->param($key);
+    }
+
+    if( $#previous == 0 ) # Just one value
+    {
+	$value = $previous[0];
+    }
+    $key   ||= 'query';
+
+    if( my $onchange = delete $params->{'onchange'} )
+    {
+	$extra .= ' onchange="'. $onchange .'" ';
+    }
+
+    # Objects is defined but may stringify to undef
+    unless( $value or Scalar::Util::looks_like_number($value) )
+    {
+	$value = '';
+    }
+
+    $params->{id} ||= $key;
+    my $prefix = label_from_params($params);
+    $extra .= tag_extra_from_params($params);
+
+    # Stringify all params, in case they was objects
+    return sprintf('%s<input type="password" name="%s" value="%s" size="%s" maxlength="%s"%s />',
 		   $prefix,
 		   CGI->escapeHTML( "$key" ),
 		   CGI->escapeHTML( "$value" ),
