@@ -65,7 +65,7 @@ sub method
 
 #    my @callargs = ( $req->client.'', $obj, $method, @args );
 #    debug datadump(\@callargs);
-    debug 3, "Freezing $obj -> $method ( @args )";
+#    debug 3, "Freezing $obj -> $method ( @args )";
 
 #    my $val  = safeFreeze( $req->id, $obj, $method, @args );
     $Storable::Deparse = 1;
