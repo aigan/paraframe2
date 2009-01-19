@@ -1179,43 +1179,44 @@ sub handle_code
     }
     elsif( $code eq 'WORKERRESP' )
     {
-	 my( $caller_id, $result ) = @{thaw($INBUFFER{$client})};
-	 my $req;
-	 if( $REQ and ($REQ->{reqnum} == $caller_id) )
-	 {
-	     $req = $REQ;
-	 }
-	 else
-	 {
-	     $req = Para::Frame::Request->get_by_id( $caller_id );
-	 }
+	local $Storable::Eval = 1;
+	my( $caller_id, $result ) = @{thaw($INBUFFER{$client})};
+	my $req;
+	if( $REQ and ($REQ->{reqnum} == $caller_id) )
+	{
+	    $req = $REQ;
+	}
+	else
+	{
+	    $req = Para::Frame::Request->get_by_id( $caller_id );
+	}
 
-	 if( $req )
-	 {
-	     unless( ($req->{'wait'}||0) > 0 )
-	     {
-		 die "Req $caller_id not waiting for a result";
-	     }
+	if( $req )
+	{
+	    unless( ($req->{'wait'}||0) > 0 )
+	    {
+		die "Req $caller_id not waiting for a result";
+	    }
 
-	     $req->{'workerresp'} = $result;
-	     $req->{'wait'} --;
-	     my $worker = delete $req->{'worker'};
-	     unless( $worker and $WORKER{ $worker->pid } )
-	     {
-		 # See REAPER. Worker may have died
-		 debug sprintf "Req %d lost a worker", $req->id;
-	     }
-	     else
-	     {
-		 push @WORKER_IDLE, $worker;
-	     }
-	 }
-	 else
-	 {
-	     debug "Req $caller_id no longer exist";
-	 }
+	    $req->{'workerresp'} = $result;
+	    $req->{'wait'} --;
+	    my $worker = delete $req->{'worker'};
+	    unless( $worker and $WORKER{ $worker->pid } )
+	    {
+		# See REAPER. Worker may have died
+		debug sprintf "Req %d lost a worker", $req->id;
+	    }
+	    else
+	    {
+		push @WORKER_IDLE, $worker;
+	    }
+	}
+	else
+	{
+	    debug "Req $caller_id no longer exist";
+	}
 
-	 close_callback($client); # That's all
+	close_callback($client); # That's all
     }
     else
     {
