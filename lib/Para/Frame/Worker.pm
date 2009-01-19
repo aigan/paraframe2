@@ -63,11 +63,12 @@ sub method
     my $code = 'OMETHOD';
     my $req = $Para::Frame::REQ;
 
-    my @callargs = ( $req->client.'', $obj, $method, @args );
+#    my @callargs = ( $req->client.'', $obj, $method, @args );
 #    debug datadump(\@callargs);
-#    debug 1, "Freezing $obj -> $method ( @args )";
+    debug 3, "Freezing $obj -> $method ( @args )";
 
 #    my $val  = safeFreeze( $req->id, $obj, $method, @args );
+    $Storable::Deparse = 1;
     my($val) = freeze([ $req->id, $obj, $method, @args ]);
 #    debug "sending $val";
 
@@ -326,6 +327,8 @@ sub init
 #			    debug validate_utf8(\$inbuffer);
 
 #			    my( $req_id, $obj, $method, @args ) = thaw($inbuffer);
+
+			    local $Storable::Eval = 1;
 			    my( $req_id, $obj, $method, @args ) = @{thaw($inbuffer)};
 #			    debug "inbuffer $inbuffer";
 			    debug 2, "Doing $method";
@@ -350,6 +353,8 @@ sub init
 			    debug 3, "Freezing result";
 #			    my $data = safeFreeze( $req_id, $worker );
 #			    my $data = FreezeThaw::safeFreeze($req_id, $worker);
+
+			    $Storable::Deparse = 1;
 			    my( $data ) = freeze([$req_id, $worker]);
 			    my $port = $Para::Frame::CFG->{'port'};
 			    Para::Frame::Client::connect_to_server( $port );
