@@ -6,7 +6,7 @@ package Para::Frame::List;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -49,9 +49,6 @@ use overload
 
 use base qw( Template::Iterator );
 
-# LOOK! REDEFINES shift, push, pop, unshift, splice, join
-
-
 =head2 SYNOPSIS
 
 # The right way:
@@ -88,6 +85,9 @@ use base qw( Template::Iterator );
 
 
 =head2 DESCRIPTION
+
+LOOK! REDEFINES shift, push, pop, unshift, splice, join, index
+
 
 The object is overloaded to be used as a ref to the list it
 contains. All list operations can be used as usual. Example:
