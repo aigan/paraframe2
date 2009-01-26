@@ -1,4 +1,134 @@
+2009-01-21  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/List.pm: docfix
+
+2009-01-19  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Worker.pm: less debug
+
+	* lib/Para/Frame/Worker.pm: Handling coderefs in worker
+
+	* lib/Para/Frame.pm: Handle coderefs from worker
+
+2009-01-18  jonas <jonas@paranormal.se>
+
+	* t/02_frame.t: bugfix
+
+	* lib/Para/Frame/Widget.pm: Added password widget
+
+	* INSTALL: more modules to get from apt
+
+2009-01-16  jonas <jonas@paranormal.se>
+
+	* t/app/www/test/.htaccess: dir-holder
+
+2009-01-15  jonas <jonas@paranormal.se>
+
+	* t/02_frame.t: Added 21 tests
+
+	* lib/Para/Frame/Action/take_five.pm:
+	Take a count value. defaults to five seconds
+
+	* lib/Para/Frame/File.pm: Cached files may also be templates
+
+2009-01-14  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/URI.pm: bugfixbugfix
+
+	* lib/Para/Frame/Logging.pm, MANIFEST: bugfix
+
+2009-01-08  jonas <jonas@paranormal.se>
+
+	* t/pod_coverage.t: new test
+
+	* t/strict.t, t/critic.t: todo
+
+	* t/02_frame.t: more tests
+
+	* lib/Para/Frame/Request.pm: bugfix
+
+	* lib/Para/Frame.pm: debug
+
+	* Makefile.PL: bugfix
+
+2009-01-05  jonas <jonas@paranormal.se>
+
+	* t/02_frame.t, t/Makefile, t/TODO, t/critic.t, t/distribution.t, t/pod.t, t/strict.t:
+	developed tests
+
+	* lib/Para/Frame/Request/Response.pm: undef-fix
+
+	* lib/Para/Frame/Action/take_five.pm: use strict
+
+	* Makefile.PL: more test modules
+
+	* MANIFEST: updated manifest
+
+	* INSTALL: more modules
+
+	* lib/Para/Frame/Request/Response.pm:
+	expanded last_modified for js files
+
+	* lib/Para/Frame/File.pm: is_updated() now checks mtime itself
+
+	* lib/Para/Frame/DBIx.pm: less debug
+
+2008-12-17  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Watchdog.pm:
+	Doing a restart by exec rather than fork after more than 10 forks
+
+2008-12-11  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Template.pm: debug
+
+	* lib/Para/Frame/Request/Response.pm: docs
+
+	* lib/Para/Frame/Request.pm: docfix
+
+	* lib/Para/Frame/Overview.pod, lib/Para/Frame/File.pm: docs
+
+2008-12-10  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Request.pm: oups. bugfix
+
+	* lib/Para/Frame/Request.pm: one extra precaution of cancelled req
+
+2008-12-01  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Route.pm: Runx hook after_bookmark after bookmark
+
+	* lib/Para/Frame/DBIx.pm: Commit DB after bookmark
+
+	* lib/Para/Frame.pm: added hook after_bookmark
+
+2008-11-27  jonas <jonas@paranormal.se>
+
+	* html/pf/js/awstats_misc_tracker.js: from awstats package
+
+2008-11-19  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Utils.pm, lib/Para/Frame/Reload.pm: bugfix
+
+2008-11-12  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Dir.pm: bugfix
+
+	* lib/Para/Frame/File.pm: added method is_owned()
+
+	* lib/Para/Frame/Dir.pm: Only chmod owned files on dir create
+
+2008-11-05  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/URI.pm: Generalized as_html()
+
+2008-11-04  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Watchdog.pm: Fixes Ticket 46HJ6G
+
 2008-11-03  jonas <jonas@paranormal.se>
+
+	* Changes: Updated Changes
 
 	* lib/Para/Frame/DBIx.pm: debug
 
