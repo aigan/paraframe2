@@ -6,7 +6,7 @@ package Para::Frame::Renderer::TT;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -104,6 +104,7 @@ sub new
 
     # Cache template -- May throw an exception -- may return undef
     my $tmpl = $rend->{'template'} = $args->{'template'} || $page->template;
+    debug 2, "Template initialy set to ".$tmpl->sysdesig;
 
     unless( ref $tmpl )
     {
@@ -576,6 +577,7 @@ sub template
 
 sub set_template
 {
+    debug 2, "Template set to ".$_[1]->sysdesig;
     return $_[0]->{'template'} = $_[1];
 }
 
