@@ -2556,7 +2556,7 @@ lists are not modified. Filters out parametrs that are not
 lists. Always returns a new list, even if it has the same content as
 the calling list.
 
-Uses the cloend args of the calling list.
+Uses the cloned args of the calling list.
 
 Compatible with L<Template::Manual::VMethods/List Virtual Methods>
 
