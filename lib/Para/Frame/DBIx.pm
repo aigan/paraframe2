@@ -6,7 +6,7 @@ package Para::Frame::DBIx;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -1709,7 +1709,7 @@ sub report_error
 
 	my $state_desc = $state->desc;
 
-	debug "Error number: $DBI::err";
+	debug "Error number: $DBI::err" if $DBI::err;
 	debug "Status: $DBI::state";
 
 	# Should be redundant, but may not be
