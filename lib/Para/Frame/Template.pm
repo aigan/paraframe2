@@ -499,6 +499,8 @@ sub precompile
 {
     my( $dest, $args ) = @_;
 
+    my $DEBUG = 0;
+
     my $req = $dest->req;
 
     $args ||= {};
@@ -517,7 +519,7 @@ sub precompile
     my $fh = new IO::File;
     $fh->open( $srcfile ) or die "Failed to open '$srcfile': $!\n";
 
-
+    debug 0, "Precompiling page using template $srcfile" if $DEBUG;
 
 
     #Normalize page URL
@@ -558,8 +560,12 @@ sub precompile
 #    debug $ctype->sysdesig;
 
 
-#    my $destfile = $dest->sys_path;
-#    debug "BURNING TO $destfile";
+    if( $DEBUG )
+    {
+	my $destfile = $dest->sys_path;
+	debug "BURNING TO $destfile";
+    }
+
     my $out = "";
 #    my $res = $rend->burn( $fh, $destfile );
     my $res = $rend->burn( $fh, \$out );
