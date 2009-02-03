@@ -152,6 +152,18 @@ sub new
 		}
 	    }
 
+	    # For nonexistant files, we may not detct it as a
+	    # dir. Convert object if expected as a dir
+	    #
+	    if( $class eq 'Para::Frame::Dir' and
+		ref $file eq 'Para::Frame::File' )
+	    {
+		debug 1, sprintf "Stored file %s not a %s - converting",
+		  $file->sysdesig, $class;
+
+		return $file->as_dir;
+	    }
+
 	    return $file;
 	}
     }
