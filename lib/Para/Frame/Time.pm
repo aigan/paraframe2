@@ -115,45 +115,63 @@ sub get
 
     return undef unless $time;
 
+    my $DEBUG = 0;
+
 
     my $class = ref($this) || $this;
     if( UNIVERSAL::isa $time, "DateTime" )
     {
 	if( UNIVERSAL::isa $time, $class )
 	{
-	    #debug "Keeping date '$time'";
+	    debug "Keeping date '$time'" if $DEBUG;
 	    return $time;
 	}
 	else
 	{
 	    # Rebless in right class. (May be subclass)
-	    #debug "Reblessing date '$time'";
+	    debug "Reblessing date '$time'" if $DEBUG;
 	    return bless $time, $class;
 	}
     }
 
-    #debug "Parsing date '$time'";
+    debug "Parsing date '$time'" if $DEBUG;
 
     my $date;
     if( $time =~ /^(\d{7,})([,\.]\d+)?$/ )
     {
 	# Epoch time. Maby with subsecond precision
+	debug "  as epoch" if $DEBUG;
 	$date = DateTime->from_epoch( epoch => $1 );
     }
     else
     {
-	#debug "Parsing with standard format";
+	debug "Parsing with standard format" if $DEBUG;
 
 	eval{ $date = $FORMAT->parse_datetime($time) };
     }
 
     unless( $date )
     {
-	#debug "Parsing common formats";
+	# Parsing historical years # NOT USING TZ !!!
+	if( $time =~ /^-?\d+$/ )
+	{
+	    debug "  as historical year" if $DEBUG;
+	    $date = DateTime->new( year => $time,
+				   time_zone => 'floating' );
+	    debug "  To ".$date->datetime if $DEBUG;
+	    bless($date, $class);
+	    $STRINGIFY and $date->set_formatter($STRINGIFY);
+	    return $date;
+	}
+    }
+
+    unless( $date )
+    {
+	debug "Parsing common formats" if $DEBUG;
 
 	if( $time =~ s/([\+\-]\d\d)\s*$/${1}00/ )
 	{
-	    #debug "Reformatted date to '$time'";
+	    debug "Reformatted date to '$time'" if $DEBUG;
 	}
 
 	eval{ $date = DateTime::Format::HTTP->parse_datetime( $time, $TZ ) };
@@ -162,7 +180,7 @@ sub get
     unless( $date )
     {
 	# Parsing in local timezone
-	#debug "Parsing universal as in a local timezone";
+	debug "Parsing universal as in a local timezone" if $DEBUG;
 	$date = $LOCAL_PARSER->parse_datetime(UnixDate($time,"%O"));
     }
 
