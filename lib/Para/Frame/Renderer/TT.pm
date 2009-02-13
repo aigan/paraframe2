@@ -104,7 +104,10 @@ sub new
 
     # Cache template -- May throw an exception -- may return undef
     my $tmpl = $rend->{'template'} = $args->{'template'} || $page->template;
-    debug 2, "Template initialy set to ".$tmpl->sysdesig;
+    if( $tmpl and debug)
+    {
+	debug 2, "Template initialy set to ".$tmpl->sysdesig;
+    }
 
     unless( ref $tmpl )
     {
