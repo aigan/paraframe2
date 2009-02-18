@@ -134,6 +134,10 @@ sub get
 	}
     }
 
+    # Trimming
+    $time =~ s/\s+$//;
+    $time =~ s/^\s+//;
+
     debug "Parsing date '$time'" if $DEBUG;
 
     my $date;
