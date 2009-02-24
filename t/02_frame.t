@@ -326,7 +326,7 @@ sub test_handle_req
        qr/^  Compiling .*?\/html\/index\.tt$/,
        qr/^Loading Para::Frame::Template::Plugin::Meta::Interpolate 1.10$/,
        qr/^Sending response\.\.\.$/,
-       qr/^2 Done in   0\.\d\d secs$/,
+       qr/^2 Done in   \d\.\d\d secs$/,
       );
 
     for( my $i=0; $i<=$#got_warning; $i++ )
