@@ -29,6 +29,7 @@ use CGI;
 use Para::Frame::URI;
 use POSIX qw(locale_h);
 use Scalar::Util;
+use JSON; # to_json
 
 BEGIN
 {
@@ -2032,6 +2033,7 @@ supported args are
   maxlength
   size
   onUpdate
+  showsTime
 
 =cut
 
@@ -2055,7 +2057,10 @@ sub calendar
     my $class = $args->{'class'} || '';
     my $maxlength = $args->{'maxlength'};
     my $size = $args->{'size'};
-    my $onUpdate = $args->{'onUpdate'};
+
+    debug "CALENDAR";
+    debug datadump($args);
+
 
     if( $tdlabel )
     {
@@ -2100,22 +2105,38 @@ sub calendar
     # ifFormat    : "%Y-%m-%d",        // the date format
     # button      : "[% id %]-button" // ID of the button
 
-    my $on_update_out = "";
-    if( $onUpdate )
+
+    my %setup  =
+      (
+       inputField  => "\"$id\"",
+       ifFormat    => "\"%Y-%m-%d\"",
+       button      => "\"${id}-button\"",
+      );
+
+    $args->{'onClose'} = $args->{'onUpdate'};
+
+    # Unescaped values
+    foreach my $key (qw( onClose showsTime ))
     {
-	$on_update_out = ", onClose  : $onUpdate";
+	next unless defined $args->{$key};
+	next unless length $args->{$key};
+	$setup{$key} = $args->{$key};
     }
+
+    if( $args->{'showsTime'} )
+    {
+	$setup{'ifFormat'} = "\"%Y-%m-%d %H.%M\"";
+    }
+
+    my $setup_json = "{".join(',',map{"\"$_\":".$setup{$_}} keys %setup)."}";
+
+
+#    my $setup_json = to_json(\%setup);
+    debug "CALENDER JSON ".$setup_json;
 
     $out .= qq[
     <script type="text/javascript">
-      Calendar.setup(
-      {
-	inputField  : "$id",
-        ifFormat    : "%Y-%m-%d",
-        button      : "${id}-button"
-        $on_update_out
-      }
-      );
+      Calendar.setup($setup_json);
     </script>
 ];
 
