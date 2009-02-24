@@ -1,3 +1,26 @@
+2009-02-09  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Time.pm: No TZ if only year is given
+
+2009-02-03  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/DBIx.pm: undef-bugfix
+
+	* lib/Para/Frame/Template.pm: debug
+
+	* lib/Para/Frame/File.pm:
+	Bugfix for setting file objs as dir if called as dir
+
+2009-01-29  jonas <jonas@paranormal.se>
+
+	* lib/Para/Frame/Renderer/TT.pm: more debug
+
+	* lib/Para/Frame/List.pm: spelling
+
+2009-01-26  jonas <jonas@paranormal.se>
+
+	* Changes: changelog update
+
 2009-01-21  jonas <jonas@paranormal.se>
 
 	* lib/Para/Frame/List.pm: docfix
