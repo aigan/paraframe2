@@ -2034,6 +2034,7 @@ supported args are
   size
   onUpdate
   showsTime
+  date
 
 =cut
 
@@ -2058,8 +2059,8 @@ sub calendar
     my $maxlength = $args->{'maxlength'};
     my $size = $args->{'size'};
 
-    debug "CALENDAR";
-    debug datadump($args);
+#    debug "CALENDAR";
+#    debug datadump($args);
 
 
     if( $tdlabel )
@@ -2123,6 +2124,16 @@ sub calendar
 	$setup{$key} = $args->{$key};
     }
 
+# TODO: Make it work
+#    if( my $date_in = $args->{'date'} )
+#    {
+#	my $date_fmt = $date_in->internet_date;
+#	my $val = "new Date(\"$date_fmt\")";
+#	$setup{'date'} = $val;
+#    }
+
+
+
     if( $args->{'showsTime'} )
     {
 	$setup{'ifFormat'} = "\"%Y-%m-%d %H.%M\"";
@@ -2132,7 +2143,7 @@ sub calendar
 
 
 #    my $setup_json = to_json(\%setup);
-    debug "CALENDER JSON ".$setup_json;
+#    debug "CALENDER JSON ".$setup_json;
 
     $out .= qq[
     <script type="text/javascript">
