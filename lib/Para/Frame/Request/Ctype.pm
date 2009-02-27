@@ -6,7 +6,7 @@ package Para::Frame::Request::Ctype;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -150,7 +150,10 @@ sub set_type
 
     unless( $type =~ /^[a-z]+\/[a-z\-\+\.0-9]+$/ )
     {
-	confess "Malformed content-type $type";
+	cluck "Malformed content-type $type";
+
+	# Default content type for unknown types
+	$type = 'application/octet-stream';
     }
 
     if( defined $ctype->{'ctype'} )
