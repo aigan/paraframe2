@@ -1941,7 +1941,7 @@ sub client_send
 	if( $enc eq 'utf8' )
 	{
 #	    debug "Sending with utf8 method: ".validate_utf8($dataref);
-	    debug "Sending with utf8 method";
+#	    debug "Sending with utf8 method";
 	    binmode( $client, ':utf8' );
 	}
 	else

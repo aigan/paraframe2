@@ -1426,7 +1426,7 @@ sub target_with_lang
 	$args->{'filename'} = $target;
     }
 
-    debug "TARGET $target";
+#    debug "TARGET $target";
 
     $args->{'file_may_not_exist'} = 1;
 
@@ -1507,7 +1507,7 @@ sub template
 
 	if( $finder )
 	{
-	    debug sprintf "%s->find(%s)", $finder, $f->sysdesig;
+#	    debug sprintf "%s->find(%s)", $finder, $f->sysdesig;
 	    return $f2t->{$f} = $finder->find($f) ||
 	      Para::Frame::Template->find($f);
 	}
