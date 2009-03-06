@@ -1081,6 +1081,10 @@ sub textarea
     }
     $value ||= '';
 
+    delete $params->{'rows'};
+    delete $params->{'cols'};
+    delete $params->{'size'};
+
     $params->{id} ||= $key;
     my $prefix = label_from_params($params);
     $params->{'wrap'} ||= "virtual";
