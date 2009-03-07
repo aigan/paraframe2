@@ -6,7 +6,7 @@ package Para::Frame;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -43,7 +43,7 @@ our $CVSVERSION;
 BEGIN
 {
     $CVSVERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    $VERSION = "1.04"; # Paraframe version
+    $VERSION = "1.05"; # Paraframe version
     print "Loading ".__PACKAGE__." $VERSION\n";
 }
 
