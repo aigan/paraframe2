@@ -533,5 +533,8 @@ t/Makefile
 t/pod.t
 t/strict.t
 t/TODO
+t/app/www/test/.htaccess
+t/critic.t
+t/pod_coverage.t
 tools/find_nonlatin1
 tools/insert_bom
