@@ -1,4 +1,9 @@
+Build.PL
 Changes
+INSTALL
+MANIFEST			This list of files
+Makefile.PL
+README
 demo/demoserver.pl
 dev/inc_pre/border_top.tt
 dev/inc_pre/footer.tt
@@ -96,11 +101,11 @@ html/pf/cms/fckeditor/editor/dialog/fck_source.html
 html/pf/cms/fckeditor/editor/dialog/fck_specialchar.html
 html/pf/cms/fckeditor/editor/dialog/fck_spellerpages.html
 html/pf/cms/fckeditor/editor/dialog/fck_spellerpages/spellerpages/blank.html
-html/pf/cms/fckeditor/editor/dialog/fck_spellerpages/spellerpages/controls.html
 html/pf/cms/fckeditor/editor/dialog/fck_spellerpages/spellerpages/controlWindow.js
+html/pf/cms/fckeditor/editor/dialog/fck_spellerpages/spellerpages/controls.html
 html/pf/cms/fckeditor/editor/dialog/fck_spellerpages/spellerpages/server-scripts/spellchecker.pl
-html/pf/cms/fckeditor/editor/dialog/fck_spellerpages/spellerpages/spellchecker.html
 html/pf/cms/fckeditor/editor/dialog/fck_spellerpages/spellerpages/spellChecker.js
+html/pf/cms/fckeditor/editor/dialog/fck_spellerpages/spellerpages/spellchecker.html
 html/pf/cms/fckeditor/editor/dialog/fck_spellerpages/spellerpages/spellerStyle.css
 html/pf/cms/fckeditor/editor/dialog/fck_spellerpages/spellerpages/wordWindow.js
 html/pf/cms/fckeditor/editor/dialog/fck_table.html
@@ -347,6 +352,8 @@ html/pf/images/reload-100.png
 html/pf/images/reload-26.png
 html/pf/js/.htaccess
 html/pf/js/awstats_misc_tracker.js
+html/pf/js/calendar/ChangeLog
+html/pf/js/calendar/README
 html/pf/js/calendar/bugtest-hidden-selects.html
 html/pf/js/calendar/calendar-blue.css
 html/pf/js/calendar/calendar-blue2.css
@@ -363,7 +370,6 @@ html/pf/js/calendar/calendar-win2k-cold-2.css
 html/pf/js/calendar/calendar.js
 html/pf/js/calendar/calendar.php
 html/pf/js/calendar/calendar_stripped.js
-html/pf/js/calendar/ChangeLog
 html/pf/js/calendar/dayinfo.html
 html/pf/js/calendar/doc/html/field-button.jpg
 html/pf/js/calendar/doc/html/reference-Z-S.css
@@ -416,7 +422,6 @@ html/pf/js/calendar/lang/cn_utf8.js
 html/pf/js/calendar/menuarrow.gif
 html/pf/js/calendar/menuarrow2.gif
 html/pf/js/calendar/multiple-dates.html
-html/pf/js/calendar/README
 html/pf/js/calendar/release-notes.html
 html/pf/js/calendar/simple-1.html
 html/pf/js/calendar/simple-2.html
@@ -439,7 +444,6 @@ html/pf/js/pf.js
 html/pf/js/pngfix.js
 html/pf/loading.html
 html/pf/styleswitch.js
-INSTALL
 lib/Para/Frame.pm
 lib/Para/Frame/Action/debug_change.pm
 lib/Para/Frame/Action/imagedir_modify.pm
@@ -461,8 +465,9 @@ lib/Para/Frame/Action/user_login.pm
 lib/Para/Frame/Action/user_logout.pm
 lib/Para/Frame/Action/wait_for_req.pm
 lib/Para/Frame/Burner.pm
-lib/Para/Frame/Captcha.pm
 lib/Para/Frame/CGI.pm
+lib/Para/Frame/CSS.pm
+lib/Para/Frame/Captcha.pm
 lib/Para/Frame/Change.pm
 lib/Para/Frame/Child.pm
 lib/Para/Frame/Child/Result.pm
@@ -471,12 +476,11 @@ lib/Para/Frame/Client/Fixup.pm
 lib/Para/Frame/Code/Class.pm
 lib/Para/Frame/Connection.pm
 lib/Para/Frame/Cookies.pm
-lib/Para/Frame/CSS.pm
 lib/Para/Frame/DBIx.pm
-lib/Para/Frame/DBIx/mysql.pm
 lib/Para/Frame/DBIx/Pg.pm
 lib/Para/Frame/DBIx/State.pm
 lib/Para/Frame/DBIx/Table.pm
+lib/Para/Frame/DBIx/mysql.pm
 lib/Para/Frame/Dir.pm
 lib/Para/Frame/Email.pm
 lib/Para/Frame/Email/Address.pm
@@ -505,9 +509,9 @@ lib/Para/Frame/Spreadsheet.pm
 lib/Para/Frame/Spreadsheet/CSV.pm
 lib/Para/Frame/Spreadsheet/Excel.pm
 lib/Para/Frame/Template.pm
+lib/Para/Frame/Template/CSS.pod
 lib/Para/Frame/Template/Compiled.pm
 lib/Para/Frame/Template/Components.pod
-lib/Para/Frame/Template/CSS.pod
 lib/Para/Frame/Template/Index.pod
 lib/Para/Frame/Template/Meta.pod
 lib/Para/Frame/Template/Overview.pod
@@ -515,21 +519,18 @@ lib/Para/Frame/Template/Plugin/Meta/Interpolate.pm
 lib/Para/Frame/Template/Plugin/Sorted_table.pm
 lib/Para/Frame/Template/Stash/CheckUTF8.pm
 lib/Para/Frame/Time.pm
+lib/Para/Frame/URI.pm
 lib/Para/Frame/Unicode.pm
 lib/Para/Frame/Uploaded.pm
-lib/Para/Frame/URI.pm
 lib/Para/Frame/User.pm
 lib/Para/Frame/Utils.pm
 lib/Para/Frame/Watchdog.pm
 lib/Para/Frame/Widget.pm
 lib/Para/Frame/Worker.pm
-Makefile.PL
-MANIFEST			This list of files
-README
 t/01_basic.t
 t/02_frame.t
-t/distribution.t
 t/Makefile
+t/distribution.t
 t/pod.t
 t/strict.t
 t/TODO
