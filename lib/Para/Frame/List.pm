@@ -939,16 +939,36 @@ sub store
 
 =head2 id
 
+DEPRECATED
+
   $l->id
 
 Returns the C<id> given to this object from L</store> in the
 L<Para::Frame::Session>.
 
-TODO: Rename this method!
-
 =cut
 
 sub id
+{
+    my( $l ) = @_;
+
+    cluck "DEPRECATED CALL to list->id()";
+
+    return $l->{'stored_id'};
+}
+
+######################################################################
+
+=head2 list_id
+
+  $l->list_id
+
+Returns the C<id> given to this object from L</store> in the
+L<Para::Frame::Session>.
+
+=cut
+
+sub list_id
 {
     my( $l ) = @_;
 
