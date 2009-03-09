@@ -154,7 +154,7 @@ sub slider
 	    $checked[$i] = 'checked="checked"';
 	}
 
-	$widget .= "<input type=\"radio\" name=\"$field\" value=\"$val[$i]\" $checked[$i]>\n";
+	$widget .= "<input type=\"radio\" name=\"$field\" value=\"$val[$i]\" $checked[$i]/>\n";
     }
     return $widget;
 }
@@ -894,6 +894,7 @@ sub input
 {
     my( $key, $value, $params ) = @_;
 
+    $params ||= {};
     my $size = delete $params->{'size'} || 30;
     my $maxlength = delete $params->{'maxlength'} || $size*3;
     my $extra = '';
@@ -1453,7 +1454,7 @@ sub radio
 	$suffix = $separator . $suffix;
     }
 
-    return sprintf('%s<input type="radio" name="%s" value="%s"%s>%s',
+    return sprintf('%s<input type="radio" name="%s" value="%s"%s/>%s',
 		   $prefix,
 		   CGI->escapeHTML( $field ),
 		   CGI->escapeHTML( $value ),
