@@ -46,6 +46,10 @@ our %TYPEMAP =
    {
     type => 'text/html',
    },
+   'xtt' =>
+   {
+    type => 'application/xhtml+xml',
+   },
   );
 
 
