@@ -929,7 +929,7 @@ sub store
 
 	$session->{'list'}{$id} = $l;
 
-	debug "storing list $id";
+#	debug "storing list $id";
     }
 
     return "";
