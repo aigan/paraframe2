@@ -1,6 +1,5 @@
 ﻿[% MACRO roundbox_css(class, imgdir, color, background, s_width, s_height) BLOCK %]
-  [% DEFAULT format    = "png";
-     DEFAULT s_width   = 8;
+  [% DEFAULT s_width   = 8;
      DEFAULT s_height  = s_width;
      DEFAULT visited   = link;
      DEFAULT hover     = link;
@@ -10,12 +9,13 @@
   table.[% class %] {
     margin-bottom:  10px;
     width:	    100%;
-    border:	    none;
+    border:	    1px solid [% background %];
+    padding:	    1px;
     z-index:	    10;
     color:	    [% color %];
   }
   table.[% class %] td.h_bg {
-    background:	    url("[% imgdir %]h_bg.[% format %]") repeat-x right top;
+    background:	    grey;
     font-size:	    110%;
     font-weight:    bold;
     line-height:    1.5em;
@@ -24,37 +24,8 @@
     margin-top:     0.3em;
     border:         none;
   }
-  table.[% class %] td.h_left {
-    background:	    url("[% imgdir %]h_left.[% format %]") no-repeat right top;
-    width:	    [% s_width %]px;
-  }
-  table.[% class %] td.h_right {
-    background:	    url("[% imgdir %]h_right.[% format %]") no-repeat right top;
-    width:	    [% s_width %]px;
-  }
-  table.[% class %] td.s_left {
-    background:	    url("[% imgdir %]s_left.[% format %]") repeat-y right top;
-  }
-  table.[% class %] td.s_right {
-    background:	    url("[% imgdir %]s_right.[% format %]") repeat-y right top;
-  }
-  table.[% class %] td.m_s_left {
-    background:	    url("[% imgdir %]m_s_left.[% format %]") no-repeat right top;
-  }
   table.[% class %] td.m_bg {
-    background:	    url("[% imgdir %]m_bg.[% format %]") repeat-x right top;
-  }
-  table.[% class %] td.m_s_right {
-    background:	    url("[% imgdir %]m_s_right.[% format %]") no-repeat right top;
-  }
-  table.[% class %] td.b_left {
-    background:	    url("[% imgdir %]b_left.[% format %]") no-repeat right top;
-  }
-  table.[% class %] td.b_bg {
-    background:	    url("[% imgdir %]b_bg.[% format %]") repeat-x right top;
-  }
-  table.[% class %] td.b_right {
-    background:	    url("[% imgdir %]b_right.[% format %]") no-repeat right top;
+    background:	    grey;
   }
   table.[% class %] td.content {
     background:	    [% background %];
@@ -83,25 +54,3 @@
     }
   [% END %]
 [% END %]
-
-
-[% MACRO roundjump_css(class, imgdir, color, background, radius) BLOCK %]
-  [% DEFAULT radius = 5 %]
-  [% roundbox_css(class, imgdir, color, background, radius) %]
-  table.[% class %] td.h_bg {
-    line-height: 1em;
-  }
-  table.[% class %] td.h_bg h3, table.[% class %] td.m_bg h3 {
-    margin-top:  0em;
-  }
-  table.[% class %] td.content {
-    padding-top: 0em;
-    text-align: center;
-  }
-  table.[% class %] td.content a, table.[% class %] td.content a:link {
-    color:  [% color %];
-    padding-top: 0em;
-    text-align: center;
-  }
-[% END %]
-

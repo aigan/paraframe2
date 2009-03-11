@@ -1,13 +1,14 @@
 ﻿[% MACRO box(part) BLOCK %]
-<table class="paraframe_box" style="background: $part.border"><tr><td>
-<table style="border-width: ${part.width}px"><tr><td style="background: $part.bg">
-   [% IF part.title %]<h1>$part.title</h1>[% END %]
-<pre>[% part.message | html %]</pre>
-[% IF part.context %]
-   <em>Context (line [% part.context_line %]):</em>
-   <pre>[% part.context | html %]</pre>
-[% END %]
-</table></table>
+  <table class="paraframe_box" style="background: $part.border"><tr><td>
+    <table style="border-width: ${part.width}px"><tr><td style="background: $part.bg">
+      [% IF part.title %]<h1>$part.title</h1>[% END %]
+      <pre>[% part.message | html %]</pre>
+      [% IF part.context %]
+        <em>Context (line [% part.context_line %]):</em>
+        <pre>[% part.context | html %]</pre>
+      [% END %]
+    </td></tr></table>
+  </td></tr></table>
 [% END %]
 
 
@@ -209,37 +210,16 @@ $content
   [% DEFAULT width=8 %]
   [% DEFAULT height=8 %]
   <table class="$class" cellspacing="0" cellpadding="0">
-    <tr class="top">
-      <td class="h_left"><img width="$width" height="$height" alt="" src="[% imgdir %]h_left_wh.$format"/></td>
-      <td class="h_bg"><div class="header_div"><h3>[% title %]</h3></div></td>
-      <td class="h_right"><img width="$width" height="$height" alt="" src="[% imgdir %]h_right_w.$format"/></td>
-    </tr>
-    <tr>
-      <td class="s_left">&nbsp;</td>
-      <td class="content"><div class="content_div">[% content %]</div></td>
-      <td class="s_right">&nbsp;</td>
-    </tr>
-    <tr>
-      <td class="b_left"><img width="$width" height="$height" alt="" src="[% imgdir %]b_height.$format"/></td>
-      <td class="b_bg"></td>
-      <td class="b_right"></td>
-    </tr>
+    <tr class="top"><td class="h_bg"><div class="header_div"><h3>[% title %]</h3></div></td></tr>
+    <tr><td class="content"><div class="content_div">[% content %]</div></td></tr>
   </table>
 [% END %]
 
 [% MACRO roundbox_subtitle(subtitle) BLOCK %]
   [% DEFAULT subtitle="SUBTITLE" %]
-    </div></td>
-    <td class="s_right">&nbsp;</td>
-  </tr>
-  <tr>
-    <td class="m_s_left">&nbsp;</td>
-    <td class="m_bg"><div class="header_div"><h3>[% subtitle %]</h3></div></td>
-    <td class="m_s_right">&nbsp;</td>
-  </tr>
-  <tr>
-    <td class="s_left">&nbsp;</td>
-    <td class="content"><div class="content_div">
+  </div></td></tr>
+  <tr><td class="m_bg"><div class="header_div"><h3>[% subtitle %]</h3></div></td></tr>
+  <tr><td class="content"><div class="content_div">
 [% END %]
 
 

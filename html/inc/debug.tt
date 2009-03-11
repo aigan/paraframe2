@@ -33,7 +33,7 @@
     <ol>
       [% FOREACH step IN route.list %]
         <li>
-          [% step %]
+          [% step | html %]
           [% IF loop.last %]
     	  [% backstep %]
     	  [% regret %]
@@ -52,7 +52,7 @@
       [% IF q.param(key).size > 1 %]
         <ol>
           [% FOREACH val IN q.param(key) %]
-          <li>[% val %]
+          <li>[% val | html %]
           [% END %]
         </ol>
       [% ELSE %]
@@ -60,7 +60,7 @@
 	  ********
         [% ELSIF key == 'debug_info' %]
         [% ELSE %]
-          [% q.param(key) %]
+          [% q.param(key) | html %]
         [% END %]
       [% END %]
       </td></tr>
