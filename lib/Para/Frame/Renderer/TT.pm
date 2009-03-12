@@ -217,7 +217,7 @@ sub render_output
     else
     {
 	$rend->set_tt_params;
-#	debug "BURNING $in";
+	debug "BURNING $in";
 	$rend->burn($in, $outref) or return 0;
     }
 
@@ -247,7 +247,7 @@ sub render_output
     }
 
 
-#    debug "BURNING DONE";
+    debug "BURNING DONE";
     return $outref;
 }
 
