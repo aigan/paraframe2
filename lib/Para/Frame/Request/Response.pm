@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::Request::Response;
 #=====================================================================
 #
@@ -6,7 +5,7 @@ package Para::Frame::Request::Response;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -58,7 +57,9 @@ redirection to a new page.
 
 =cut
 
+use 5.010;
 use strict;
+use warnings;
 use utf8;
 
 use Encode;
@@ -68,12 +69,6 @@ use File::Basename; # exports fileparse, basename, dirname
 use File::stat; # exports stat
 use File::Slurp; # Exports read_file, write_file, append_file, overwrite_file, read_dir
 use Scalar::Util qw(weaken);
-
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
-}
 
 use Para::Frame::Reload;
 use Para::Frame::Request::Ctype;

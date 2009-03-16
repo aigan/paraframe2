@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::Unicode;
 #=====================================================================
 #
@@ -6,7 +5,7 @@ package Para::Frame::Unicode;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2007-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2007-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -19,15 +18,12 @@ Para::Frame::Unicode - Handling conversions
 
 =cut
 
+use 5.010;
 use strict;
-use Carp qw(cluck croak carp confess shortmess );
+use warnings;
 use utf8; # Used in DATA part
 
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%01d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
-}
+use Carp qw(cluck croak carp confess shortmess );
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug datadump );
@@ -37,7 +33,6 @@ our( %EQUIVAL, %EQASCII, %EQLATIN1, %EQCP );
 
 
 sub addequal(@);
-
 
 #######################################################################
 

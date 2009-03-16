@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::Widget;
 #=====================================================================
 #
@@ -19,7 +18,9 @@ Para::Frame::Widget - Common template widgets
 
 =cut
 
+use 5.010;
 use strict;
+use warnings;
 use utf8; # Using Latin1 (åäö) in alfanum_bar()
 use locale;
 
@@ -31,11 +32,6 @@ use POSIX qw(locale_h);
 use Scalar::Util;
 use JSON; # to_json
 
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
-}
 
 use base qw( Exporter );
 our @EXPORT_OK

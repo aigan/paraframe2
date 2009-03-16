@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::Request;
 #=====================================================================
 #
@@ -6,7 +5,7 @@ package Para::Frame::Request;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -19,7 +18,11 @@ Para::Frame::Request - The request from the client
 
 =cut
 
+use 5.010;
 use strict;
+use warnings;
+use strict;
+
 use CGI qw( -compile );
 use CGI::Cookie;
 use FreezeThaw; ####### LEGACY
@@ -31,12 +34,6 @@ use LWP::UserAgent;
 use HTTP::Request;
 use Template::Document;
 use Time::HiRes;
-
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
-}
 
 use Para::Frame::Client;
 

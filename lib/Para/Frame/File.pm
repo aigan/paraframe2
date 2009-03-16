@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::File;
 #=====================================================================
 #
@@ -23,7 +22,9 @@ See also L<Para::Frame::Dir> and L<Para::Frame::Template>.
 
 =cut
 
+use 5.010;
 use strict;
+use warnings;
 use utf8; # Ã used in file
 
 use Encode;
@@ -39,9 +40,6 @@ use File::Remove;
 
 BEGIN
 {
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
-
     #### A hack for using this code in bytes mode
     package File::MimeInfo;
     use bytes;

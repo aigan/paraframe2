@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame;
 #=====================================================================
 #
@@ -19,8 +18,10 @@ Para::Frame - Web application framework
 
 =cut
 
-use 5.008;
+use 5.010;
 use strict;
+use warnings;
+
 use IO::Socket 1.18;
 use IO::Select;
 use Socket;
@@ -38,12 +39,10 @@ use File::Basename; # dirname
 use Storable qw( thaw );
 
 our $VERSION;
-our $CVSVERSION;
 
 BEGIN
 {
-    $CVSVERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    $VERSION = "1.05"; # Paraframe version
+    $VERSION = "1.06"; # Paraframe version
     print "Loading ".__PACKAGE__." $VERSION\n";
 }
 

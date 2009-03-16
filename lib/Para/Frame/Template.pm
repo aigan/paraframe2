@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::Template;
 #=====================================================================
 #
@@ -6,7 +5,7 @@ package Para::Frame::Template;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -19,15 +18,13 @@ Para::Frame::Template - Represents a Template file
 
 =cut
 
+use 5.010;
 use strict;
+use warnings;
+use base qw( Para::Frame::File );
+
 use Carp qw( croak confess cluck );
 use List::Uniq qw( uniq ); # keeps first of each value
-
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
-}
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug create_dir chmod_file idn_encode idn_decode datadump catch );
@@ -37,9 +34,6 @@ use Para::Frame::Burner;
 use Para::Frame::Template::Compiled;
 use Para::Frame::Time qw( now );
 use Para::Frame::L10N qw( loc );
-
-
-use base qw( Para::Frame::File );
 
 #######################################################################
 

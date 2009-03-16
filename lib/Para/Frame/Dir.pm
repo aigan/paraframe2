@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::Dir;
 #=====================================================================
 #
@@ -6,7 +5,7 @@ package Para::Frame::Dir;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -19,7 +18,11 @@ Para::Frame::Dir - Represents a directory in the site
 
 =cut
 
+use 5.010;
 use strict;
+use warnings;
+use base qw( Para::Frame::File );
+
 use Carp qw( croak confess cluck longmess );
 use IO::Dir;
 use File::stat; # exports stat
@@ -27,15 +30,6 @@ use File::Remove;
 use Scalar::Util qw(weaken);
 use User::grent;
 use User::pwent;
-
-
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
-}
-
-use base qw( Para::Frame::File );
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug datadump catch );

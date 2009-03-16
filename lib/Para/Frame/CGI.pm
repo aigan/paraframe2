@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::CGI;
 #=====================================================================
 #
@@ -6,7 +5,7 @@ package Para::Frame::CGI;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2007-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2007-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -19,22 +18,18 @@ Para::Frame::CGI - CGI class for mapping to/from UTF8
 
 =cut
 
+use 5.010;
 use strict;
+use warnings;
+use base 'CGI';
 
 use Carp qw( confess );
 use CGI;
-
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
-}
 
 use Para::Frame::Reload;
 
 use Para::Frame::Utils qw( debug datadump );
 
-use base 'CGI';
 
 #######################################################################
 

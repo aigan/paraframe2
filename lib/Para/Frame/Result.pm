@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::Result;
 #=====================================================================
 #
@@ -6,7 +5,7 @@ package Para::Frame::Result;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -19,15 +18,12 @@ Para::Frame::Result - Holds the results of actions and exceptions
 
 =cut
 
+use 5.010;
 use strict;
+use warnings;
+
 use Carp qw( carp shortmess croak confess );
 use Template::Exception;
-
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
-}
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( trim debug catch run_error_hooks datadump );

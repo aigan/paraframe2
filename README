@@ -43,7 +43,7 @@ DOCUMENTATION
 
 
 PREREQUISITIES
-    Perl v5.6 and Apache with mod_perl. I'm using DBD::Pg but others
+    Perl v5.10 and Apache with mod_perl. I'm using DBD::Pg but others
     should mosly work.
 
     This module is the oposite of minimalist. It includes lots of

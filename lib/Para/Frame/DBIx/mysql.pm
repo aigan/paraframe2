@@ -1,4 +1,3 @@
-#  $Id$  -*-perl-*-
 package Para::Frame::DBIx::mysql;
 #=====================================================================
 #
@@ -6,7 +5,7 @@ package Para::Frame::DBIx::mysql;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -19,22 +18,17 @@ Para::Frame::DBIx::mysql - Wrapper module for DBI mysql
 
 =cut
 
+use 5.010;
 use strict;
+use warnings;
+use base "Para::Frame::DBIx";
+
 use Carp qw( carp croak shortmess confess );
 use DateTime::Format::MySQL;
-
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
-}
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw catch debug package_to_module );
 use Para::Frame::List;
-
-use base "Para::Frame::DBIx";
-
 
 #######################################################################
 

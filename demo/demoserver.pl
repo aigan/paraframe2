@@ -1,6 +1,5 @@
 #!/usr/bin/perl -w
-#  $Id$  -*-cperl-*-
-
+# -*-cperl-*-
 #=====================================================================
 #
 # DESCRIPTION
@@ -10,9 +9,13 @@
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2005-2006 Avisita AB.  All Rights Reserved.
+#   Copyright (C) 2005-2009 Avisita AB.  All Rights Reserved.
 #
 #=====================================================================
+
+use 5.010;
+use strict;
+use warnings;
 
 our $APPROOT;
 our $PFROOT;
@@ -22,8 +25,7 @@ our $PORT;
 
 BEGIN
 {
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Starting ritguides $VERSION\n";
+    print "Starting ritguides\n";
 
     unless( @ARGV )
     {

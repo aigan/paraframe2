@@ -1,5 +1,6 @@
 package Para::Frame::Client::Fixup;
 
+use 5.010;
 use strict;
 use warnings FATAL => qw(all);
 

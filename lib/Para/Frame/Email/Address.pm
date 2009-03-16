@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::Email::Address;
 #=====================================================================
 #
@@ -6,7 +5,7 @@ package Para::Frame::Email::Address;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -19,7 +18,14 @@ Para::Frame::Email::Address - Represents an email address
 
 =cut
 
+use 5.010;
 use strict;
+use warnings;
+
+use overload '""' => \&as_string;
+use overload 'eq' => \&equals;
+use overload 'ne' => sub{ not &equals(@_) };
+
 use Net::DNS;
 use Net::SMTP;
 use Mail::Address;
@@ -27,19 +33,10 @@ use Data::Validate::Domain qw(is_domain); #);
 use Net::Domain::TLD 1.67;
 use Carp qw( carp confess cluck ); #);
 
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
-}
-
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw reset_hashref fqdn debug datadump ); #);
 use Para::Frame::Email::Address::Fallback;
 
-use overload '""' => \&as_string;
-use overload 'eq' => \&equals;
-use overload 'ne' => sub{ not &equals(@_) };
 
 =head1 DESCRIPTION
 

@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::Action::user_login;
 #=====================================================================
 #
@@ -6,14 +5,16 @@ package Para::Frame::Action::user_login;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
 #=====================================================================
 
+use 5.010;
 use strict;
+use warnings;
 
 use Para::Frame::Utils qw( throw passwd_crypt debug datadump );
 use Para::Frame::L10N qw( loc );

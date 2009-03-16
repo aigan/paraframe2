@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::Action::send_mail;
 #=====================================================================
 #
@@ -6,12 +5,16 @@ package Para::Frame::Action::send_mail;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2007-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2007-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
 #=====================================================================
+
+use 5.010;
+use strict;
+use warnings;
 
 =head1 NAME
 
@@ -64,8 +67,6 @@ recipient is specified, it defaults to the site email address. Example:
 
 
 =cut
-
-use strict;
 
 use Para::Frame::Email;
 use Para::Frame::Utils qw( throw debug );

@@ -1,7 +1,7 @@
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 
-BEGIN { require 5.008 }
+BEGIN { require 5.010 }
 use strict;
 use ExtUtils::MakeMaker;
 

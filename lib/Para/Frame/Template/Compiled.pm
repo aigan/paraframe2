@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::Template::Compiled;
 #=====================================================================
 #
@@ -6,7 +5,7 @@ package Para::Frame::Template::Compiled;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -19,18 +18,12 @@ Para::Frame::Template::Compiled - Represents a perl-compiled Template file
 
 =cut
 
+use 5.010;
 use strict;
-
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
-}
-
-use Para::Frame::Reload;
-
+use warnings;
 use base qw( Para::Frame::File );
 
+use Para::Frame::Reload;
 
 #######################################################################
 

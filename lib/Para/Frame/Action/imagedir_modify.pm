@@ -1,7 +1,8 @@
-#  $Id$  -*-perl-*-
 package Para::Frame::Action::imagedir_modify;
 
+use 5.010;
 use strict;
+use warnings;
 
 use Para::Frame::Utils qw( throw debug trim datadump );
 

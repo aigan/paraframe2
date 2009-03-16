@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::URI;
 #=====================================================================
 #
@@ -6,7 +5,7 @@ package Para::Frame::URI;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2005-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2005-2010 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -19,27 +18,23 @@ Para::Frame::URI - Represent an URI
 
 =cut
 
+use 5.010;
 use strict;
-
-use URI;
-use Carp qw( confess cluck );
-
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
-}
-
-use Para::Frame::Reload;
-use Para::Frame::Utils qw( debug datadump );
-use Para::Frame::Widget;
-
+use warnings;
 use overload ('""'     => sub { $_[0]->{'value'}->as_string },
               '=='     => sub { overload::StrVal($_[0]) CORE::eq
 		                overload::StrVal($_[1])
                               },
               fallback => 1,
              );
+
+use URI;
+use Carp qw( confess cluck );
+
+use Para::Frame::Reload;
+use Para::Frame::Utils qw( debug datadump );
+use Para::Frame::Widget;
+
 
 =head1 DESCRIPTION
 

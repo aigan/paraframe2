@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::Spreadsheet::Excel;
 #=====================================================================
 #
@@ -6,7 +5,7 @@ package Para::Frame::Spreadsheet::Excel;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -19,22 +18,15 @@ Para::Frame::Spreadsheet::Excel - Access data in Excel format
 
 =cut
 
+use 5.010;
 use strict;
-use vars qw( $VERSION );
-use Spreadsheet::ParseExcel;
+use warnings;
+use base 'Para::Frame::Spreadsheet';
 
-BEGIN
-{
-    $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    warn "  Loading Para::Frame::Spreadsheet::Excel $VERSION\n"
-      unless $Para::Frame::QUIET;
-}
+use Spreadsheet::ParseExcel;
 
 use Para::Frame::Utils qw( throw );
 use Para::Frame::Reload;
-
-use base 'Para::Frame::Spreadsheet';
-
 
 #######################################################################
 

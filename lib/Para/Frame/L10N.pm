@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::L10N;
 #=====================================================================
 #
@@ -6,7 +5,7 @@ package Para::Frame::L10N;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -30,29 +29,18 @@ Exportable functions are L</loc> and L</locescape>.
 
 =cut
 
+use 5.010;
 use strict;
-use Carp qw(cluck croak carp confess shortmess );
-
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%01d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
-}
-
-use base qw( Exporter );
+use warnings;
 use base qw(Locale::Maketext);
 
+use base qw( Exporter );
 our @EXPORT_OK = qw( loc locescape );
+
+use Carp qw(cluck croak carp confess shortmess );
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug datadump );
-
-#use Locale::Maketext::Lexicon
-#{
-#    en => [blabla => "L10N/en.pm"],
-#    sv => [blabla => "L10N/sv.pm"],
-#};
-
 
 
 #######################################################################

@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::User;
 #=====================================================================
 #
@@ -6,7 +5,7 @@ package Para::Frame::User;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -19,14 +18,11 @@ Para::Frame::User - Represents the user behind the request
 
 =cut
 
+use 5.010;
 use strict;
-use Carp qw( confess cluck );
+use warnings;
 
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
-}
+use Carp qw( confess cluck );
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw passwd_crypt debug datadump );

@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::Spreadsheet::CSV;
 #=====================================================================
 #
@@ -6,7 +5,7 @@ package Para::Frame::Spreadsheet::CSV;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -19,23 +18,16 @@ Para::Frame::Spreadsheet::CSV - Access data in CSV format
 
 =cut
 
+use 5.010;
 use strict;
-use vars qw( $VERSION );
+use warnings;
+use base 'Para::Frame::Spreadsheet';
+
 use Text::CSV_XS;
 use Encode qw( from_to );
 
-BEGIN
-{
-    $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    warn "  Loading Para::Frame::Spreadsheet::CSV $VERSION\n"
-      unless $Para::Frame::QUIET;
-}
-
 use Para::Frame::Utils qw( throw );
 use Para::Frame::Reload;
-
-use base 'Para::Frame::Spreadsheet';
-
 
 #######################################################################
 

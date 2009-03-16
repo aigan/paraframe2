@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::Request::Ctype;
 #=====================================================================
 #
@@ -19,15 +18,12 @@ Para::Frame::Request::Ctype - The request response content type
 
 =cut
 
+use 5.010;
 use strict;
+use warnings;
+
 use Carp qw( cluck confess longmess );
 use Scalar::Util qw(weaken);
-
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
-}
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( debug datadump );

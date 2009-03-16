@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::Time;
 #=====================================================================
 #
@@ -6,7 +5,7 @@ package Para::Frame::Time;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2006 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -19,9 +18,11 @@ Para::Frame::Time - Parses, calculates and presents dates and times
 
 =cut
 
-# Override Time::Piece with some new things
+use 5.010;
 use strict;
-#use POSIX qw(locale_h);
+use warnings;
+use base qw( DateTime );
+
 use Carp qw( cluck carp );
 use Date::Manip; # UnixDate ParseDate
 use DateTime; # Should use 0.3, but not required
@@ -29,14 +30,6 @@ use DateTime::Duration;
 use DateTime::Span;
 use DateTime::Format::Strptime;
 use DateTime::Format::HTTP;
-
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
-}
-
-use base qw( DateTime );
 
 
 # These are set in Para::Frame->configure
@@ -74,7 +67,7 @@ sub import
 
 =head1 DESCRIPTION
 
-Parses with Date::Manip and returns a modified Time::Piece object
+Parses with Date::Manip and returns a modified DateTime object
 Also supports returning DateTime objects
 
 This is a subclass to L<DateTime>, it automaticly strinigifies using

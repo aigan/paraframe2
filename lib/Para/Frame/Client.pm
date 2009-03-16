@@ -1,5 +1,3 @@
-#!/usr/bin/perl -w
-#  $Id$  -*-cperl-*-
 package Para::Frame::Client;
 #=====================================================================
 #
@@ -7,7 +5,7 @@ package Para::Frame::Client;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -20,13 +18,14 @@ Para::Frame::Client - The client for the Request
 
 =cut
 
+use 5.010;
 use strict;
+use warnings;
 use bytes;
 
 use CGI;
 use IO::Socket;
 use IO::Select;
-#use FreezeThaw qw( freeze );
 use Storable qw( freeze );
 use Time::HiRes;
 
@@ -35,13 +34,6 @@ use Time::HiRes;
 # Apache2::RequestIO
 # Apache2::SubRequest
 # Apache2::Connection
-
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n"
-	unless $ENV{'MOD_PERL'};
-}
 
 use Para::Frame::Reload;
 

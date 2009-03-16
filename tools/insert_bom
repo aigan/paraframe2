@@ -1,8 +1,11 @@
 #!/usr/bin/perl
+
+use 5.010;
 use strict;
 use warnings FATAL => 'all';
-use Cwd;
 use bytes;
+
+use Cwd;
 
 our $root = getcwd();
 our $bom = "\x{EF}\x{BB}\x{BF}";

@@ -1,7 +1,8 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::Action::test_ipc;
 
+use 5.010;
 use strict;
+use warnings;
 
 sub handler
 {

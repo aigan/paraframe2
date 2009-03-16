@@ -1,10 +1,13 @@
 #!perl
-#  $Id$  -*-cperl-*-
+# -*-cperl-*-
 
+
+use 5.010;
 use strict;
 use warnings;
+
 use Test::Warn;
-use Test::More tests => 61;
+use Test::More tests => 59;
 #use Test::More qw(no_plan);
 use Storable qw( freeze dclone );
 use FindBin;
@@ -165,7 +168,6 @@ sub remove_files_with_bg_req
 	};
 
 	my $req = Para::Frame::Request->new_bgrequest();
-	like( $stdout, qr/^Loading Para::Frame::L10N::en/, "Loaded L10N::en" );
 	clear_stdout();
 
 	Para::Frame::Dir->new({ filename => $pfdir.'/tmp', file_may_not_exist=>1})->remove;
@@ -324,7 +326,6 @@ sub test_handle_req
        qr/^  Rendering page$/,
        qr/^  Decoding UTF-8 file .*?\/html\/index\.tt \(<unknown>\) 20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d$/,
        qr/^  Compiling .*?\/html\/index\.tt$/,
-       qr/^Loading Para::Frame::Template::Plugin::Meta::Interpolate 1.10$/,
        qr/^Sending response\.\.\.$/,
        qr/^2 Done in   \d\.\d\d secs$/,
       );

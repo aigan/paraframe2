@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::Template::Plugin::Meta::Interpolate;
 #=====================================================================
 #
@@ -6,7 +5,7 @@ package Para::Frame::Template::Plugin::Meta::Interpolate;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -19,15 +18,10 @@ Para::Frame::Template::Plugin::Meta::Interpolate - Allow evaluation of META para
 
 =cut
 
-use Template::Plugin;
-use base "Template::Plugin";
+use 5.010;
 use strict;
-
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    warn "Loading ".__PACKAGE__." $VERSION\n";
-}
+use warnings;
+use base "Template::Plugin";
 
 =head1 SYNOPSIS
 

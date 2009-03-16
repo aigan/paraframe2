@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::DBIx;
 #=====================================================================
 #
@@ -19,15 +18,12 @@ Para::Frame::DBIx - Wrapper module for DBI
 
 =cut
 
+use 5.010;
 use strict;
+use warnings;
+
 use DBI qw(:sql_types);
 use Carp qw( carp croak shortmess longmess confess cluck );
-
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
-}
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw catch debug timediff package_to_module get_from_fork datadump );

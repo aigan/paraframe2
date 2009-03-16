@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::Renderer::TT;
 #=====================================================================
 #
@@ -19,15 +18,12 @@ Para::Frame::Renderer::TT - Renders a TT page
 
 =cut
 
+use 5.010;
 use strict;
+use warnings;
+
 use Carp qw( croak confess cluck );
 use Template::Exception;
-
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
-}
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug create_dir chmod_file idn_encode idn_decode datadump catch );
@@ -217,7 +213,7 @@ sub render_output
     else
     {
 	$rend->set_tt_params;
-	debug "BURNING $in";
+#	debug "BURNING $in";
 	$rend->burn($in, $outref) or return 0;
     }
 
@@ -247,7 +243,7 @@ sub render_output
     }
 
 
-    debug "BURNING DONE";
+#    debug "BURNING DONE";
     return $outref;
 }
 

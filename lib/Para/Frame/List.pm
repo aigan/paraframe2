@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::List;
 #=====================================================================
 #
@@ -19,18 +18,15 @@ Para::Frame::List - Methods for list manipulation
 
 =cut
 
+use 5.010;
 use strict;
+use warnings;
+use base qw( Template::Iterator );
+
 use Carp qw( carp croak shortmess confess cluck );
 use List::Util;
 use Template::Constants;
 use Scalar::Util;
-use vars qw($AUTOLOAD);
-
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
-}
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw catch debug timediff datadump );
@@ -47,7 +43,8 @@ use overload
   '.' => 'concatenate_by_overload',
   'fallback' => 0;
 
-use base qw( Template::Iterator );
+our $AUTOLOAD;
+
 
 =head2 SYNOPSIS
 

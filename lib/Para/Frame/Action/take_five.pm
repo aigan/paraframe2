@@ -1,7 +1,8 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::Action::take_five;
 
+use 5.010;
 use strict;
+use warnings;
 
 # For testing purposes
 

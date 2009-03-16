@@ -1,11 +1,12 @@
 #!perl
-#  $Id$  -*-cperl-*-
+# -*-cperl-*-
 
+use 5.010;
 use strict;
 use warnings;
+
 use Test::Warn;
 use Test::More tests => 20;
-
 
 BEGIN
 {

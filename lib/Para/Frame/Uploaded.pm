@@ -1,4 +1,3 @@
-#  $Id$  -*-cperl-*-
 package Para::Frame::Uploaded;
 #=====================================================================
 #
@@ -6,7 +5,7 @@ package Para::Frame::Uploaded;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2008 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2009 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -19,16 +18,13 @@ Para::Frame::Uploaded - Class for uploaded files
 
 =cut
 
+use 5.010;
 use strict;
+use warnings;
+
 use File::Copy; # copy, move
 use Net::SCP;
 use IO::File;
-
-BEGIN
-{
-    our $VERSION  = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
-    print "Loading ".__PACKAGE__." $VERSION\n";
-}
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( debug throw );
