@@ -186,6 +186,10 @@ sub desig
 
 #######################################################################
 
+=head2 page
+
+=cut
+
 sub page
 {
     my( $resp ) = @_;
@@ -196,6 +200,10 @@ sub page
 
 
 #######################################################################
+
+=head2 page_url_with_query
+
+=cut
 
 sub page_url_with_query
 {
@@ -218,6 +226,10 @@ sub page_url_with_query
 
 #######################################################################
 
+=head2 page_url_with_query_and_reqnum
+
+=cut
+
 sub page_url_with_query_and_reqnum
 {
     my( $resp ) = @_;
@@ -227,8 +239,6 @@ sub page_url_with_query_and_reqnum
 
 #    debug "CALLER query string is ".$req->original_url_params;
 #    debug datadump \%ENV;
-
-    my $urlstr;
 
     if( $path eq $req->original_url_string.'?' )
     {
@@ -245,6 +255,22 @@ sub page_url_with_query_and_reqnum
     }
 
     return $path . 'reqnum='.$req->id.'&pfport='.$Para::Frame::CFG->{'port'};
+}
+
+
+#######################################################################
+
+=head2 page_url_with_reqnum
+
+=cut
+
+sub page_url_with_reqnum
+{
+    my( $resp ) = @_;
+
+    my $path = $resp->page->url_path_slash;
+    my $req = $Para::Frame::REQ;
+    return $path . '?reqnum='.$req->id.'&pfport='.$Para::Frame::CFG->{'port'};
 }
 
 
@@ -590,8 +616,9 @@ sub send_output
     {
 	debug "!!! $url_in ne $url_out";
 
-	# Keep query string
-	$url_out = $resp->page_url_with_query_and_reqnum;
+#	# Keep query string
+#	$url_out = $resp->page_url_with_query_and_reqnum;
+	$url_out = $resp->page_url_with_reqnum;
 	$resp->forward($url_out);
 	return;
     }
@@ -612,8 +639,9 @@ sub send_output
 
 	if( $result eq 'LOADPAGE' )
 	{
-	    # Keep query string
-	    $url_out = $resp->page_url_with_query_and_reqnum;
+#	    # Keep query string
+#	    $url_out = $resp->page_url_with_query_and_reqnum;
+	    $url_out = $resp->page_url_with_reqnum;
 
 	    # We should not have come here for a head request!
 	    # TODO: fixme
@@ -640,7 +668,10 @@ sub send_output
 	if( $result eq 'LOADPAGE' )
 	{
 	    # Keep query string
-	    $url_out = $resp->page_url_with_query_and_reqnum;
+	    $url_out = $resp->page_url_with_reqnum;
+
+#	    # Keep query string
+#	    $url_out = $resp->page_url_with_query_and_reqnum;
 
 	    $req->cookies->add_to_header;
 
