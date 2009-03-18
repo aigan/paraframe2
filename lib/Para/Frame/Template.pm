@@ -536,7 +536,7 @@ sub precompile
     $rend->add_params({
 		       pf_source_file => $srcfile,
 		       pf_compiled_date => now->iso8601,
-		       pf_source_version => $tmpl->vcs_version(),
+#		       pf_source_version => $tmpl->vcs_version(),
 		      });
 
     if( my $params = $args->{'params'} )
