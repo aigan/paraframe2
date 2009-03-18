@@ -22,7 +22,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use Carp qw( confess cluck );
+use Carp qw( confess cluck carp );
 
 use Para::Frame::Reload;
 use Para::Frame::Time qw( now );
@@ -200,7 +200,12 @@ sub register_result_page
 {
     my( $s, $resp, $url ) = @_;
 
-    $url ||= $resp->page_url_with_query_and_reqnum;
+#    if( $url )
+#    {
+#	carp "with given url:";
+#    }
+#    $url ||= $resp->page_url_with_query_and_reqnum;
+    $url ||= $resp->page_url_with_reqnum;
 
     debug "Registred the page result for $url";
 
