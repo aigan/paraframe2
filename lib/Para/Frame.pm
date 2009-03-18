@@ -38,13 +38,8 @@ use File::Basename; # dirname
 #use FreezeThaw qw( thaw );
 use Storable qw( thaw );
 
-our $VERSION;
+our $VERSION = "1.06"; # Paraframe version
 
-BEGIN
-{
-    $VERSION = "1.06"; # Paraframe version
-    print "Loading ".__PACKAGE__." $VERSION\n";
-}
 
 use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir );
 use Para::Frame::Template::Stash::CheckUTF8;
