@@ -36,7 +36,7 @@ use File::Slurp qw(slurp); # May export read_file, write_file, append_file, over
 use Cwd 'abs_path';
 use File::Copy qw(); # NOT exports copy
 use File::Remove;
-use File::MimeInfo;
+use File::MimeInfo qw(); # NOT importing mimetype
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug datadump catch chmod_file create_dir deunicode validate_utf8 );
