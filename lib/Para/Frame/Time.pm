@@ -147,29 +147,60 @@ sub get
 	eval{ $date = $FORMAT->parse_datetime($time) };
     }
 
-    unless( $date )
+    unless( $date ) # Handling common compact dates and times
     {
-	# Parsing historical years # NOT USING TZ !!!
-	if( $time =~ /^-?\d+$/ )
+	# Recognized formats:
+	#
+	# 090102
+	# 20090102
+	# 09-01-02
+	# 2009-01-02
+	# date 304
+	# date 0304
+	# date 3:04
+	# date 03:04
+	# date 3.04
+	# date 03.04
+	# date 30405
+	# date 030405
+	# date 3.04.05
+	# date 03.04.05
+	# date 3:04:05
+	# date 03:04:05
+
+	if( $time =~ /^(19|20)?(\d\d)(-)?(\d\d)\3?(\d\d)(?:\s+(\d\d?)(\.|:)?(\d\d)(?:\7(\d\d))?)?\s*$/ )
 	{
-	    debug "  as historical year" if $DEBUG;
-	    $date = DateTime->new( year => $time,
-				   time_zone => 'floating' );
-	    debug "  To ".$date->datetime if $DEBUG;
-	    bless($date, $class);
-	    $STRINGIFY and $date->set_formatter($STRINGIFY);
-	    return $date;
+	    debug "Parsing date in compact format";
+
+	    my $cent = $1 || 20;
+	    my $year = $cent . $2;
+	    my $month = $4;
+	    my $day = $5;
+
+	    my $hour = $6 || 0;
+	    my $min = $8 || 0;
+	    my $sec = $9 || 0;
+
+	    $date = DateTime->new( year => $year,
+				   month => $month,
+				   day => $day,
+				   hour => $hour,
+				   minute => $min,
+				   second => $sec,
+				 );
 	}
     }
+
 
     unless( $date )
     {
 	debug "Parsing common formats" if $DEBUG;
 
-	if( $time =~ s/([\+\-]\d\d)\s*$/${1}00/ )
-	{
-	    debug "Reformatted date to '$time'" if $DEBUG;
-	}
+# NOTE: Give example of good reason before activating this
+#	if( $time =~ s/([\+\-]\d\d)\s*$/${1}00/ )
+#	{
+#	    debug "Reformatted date to '$time'" if $DEBUG;
+#	}
 
 	eval{ $date = DateTime::Format::HTTP->parse_datetime( $time, $TZ ) };
     }
@@ -179,6 +210,21 @@ sub get
 	# Parsing in local timezone
 	debug "Parsing universal as in a local timezone" if $DEBUG;
 	$date = $LOCAL_PARSER->parse_datetime(UnixDate($time,"%O"));
+    }
+
+    unless( $date )
+    {
+	# Parsing historical years # NOT USING TZ !!!
+	if( $time =~ /^-?\d{1,4}$/ )
+	{
+	    debug "  as historical year" if $DEBUG;
+	    $date = DateTime->new( year => $time,
+				   time_zone => 'floating' );
+	    debug "  To ".$date->datetime if $DEBUG;
+	    bless($date, $class);
+	    $STRINGIFY and $date->set_formatter($STRINGIFY);
+	    return $date;
+	}
     }
 
     unless( $date )
