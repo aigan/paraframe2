@@ -874,6 +874,8 @@ sub fill_buffer
 	    {
 		if( defined $rv ) # Empty string
 		{
+		    state $last_lost ||= '';
+
 		    debug "Lost connection to $client";
 		    if( my $req = $REQUEST{ $client } )
 		    {
@@ -881,6 +883,14 @@ sub fill_buffer
 		    }
 
 		    close_callback($client,'eof');
+
+		    if( $last_lost eq $client )
+		    {
+			confess "Double lost connection $client";
+		    }
+
+		    $last_lost = $client;
+
 		    return 0; # Is this right?
 		}
 
