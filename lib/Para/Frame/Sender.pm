@@ -116,7 +116,7 @@ sub connect_to_server
 
     binmode( $SOCK, ':raw' );
 
-    debug "Established connection on port $port";
+    debug 2, "Established connection on port $port";
 
     return $SOCK;
 }
