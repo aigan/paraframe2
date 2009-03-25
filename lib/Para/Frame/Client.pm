@@ -28,12 +28,11 @@ use IO::Socket;
 use IO::Select;
 use Storable qw( freeze );
 use Time::HiRes;
-
-# See also
-# Apache2::RequestRec
-# Apache2::RequestIO
-# Apache2::SubRequest
-# Apache2::Connection
+use Apache2::RequestRec;
+use Apache2::Connection;
+use Apache2::SubRequest;
+use Apache2::ServerUtil;
+use Apache2::RequestIO;
 
 use Para::Frame::Reload;
 
@@ -43,6 +42,7 @@ use constant DECLINED => -1; # From httpd.h
 use constant DONE     => -2; # From httpd.h
 
 our $DEBUG = 0;
+
 
 our $SOCK;
 our $r;
@@ -135,6 +135,7 @@ C<www-data>.)
 sub handler
 {
     ( $r ) = @_;
+    my $s = Apache2::ServerUtil->server;
 
     my $dirconfig = $r->dir_config;
 
@@ -147,26 +148,16 @@ sub handler
     $|=1;
     my $ctype = $r->content_type;
 
-
-    my $uri = $r->uri;
     my $filename = $r->filename;
 
     my %params = ();
     my %files = ();
 
 
-    if( $r->isa('Apache2::RequestRec') )
-    {
-#	warn "Requiering Apache2::SubRequest\n";
-	require Apache2::SubRequest;
-	Apache2::SubRequest->import();
-	require Apache2::Connection;
-	Apache2::Connection->import();
+    # Unparsed uri keeps multiple // at end of path
+    my $uri = $r->unparsed_uri;
+    $uri =~ s/\?.*//g;
 
-	# Unparsed uri keeps multiple // at end of path
-	$uri = $r->unparsed_uri;
-	$uri =~ s/\?.*//g;
-    }
 
     my $port = $dirconfig->{'port'};
     if( $Q->param('pfport') )
@@ -179,7 +170,7 @@ sub handler
     }
     else
     {
-	warn "$$: Client started\n" if $DEBUG;
+	$s->log_error("$$: Client started") if $DEBUG;
 
 	unless( $port )
 	{
@@ -189,13 +180,13 @@ sub handler
     }
 
     my $reqline = $r->the_request;
-#    warn substr(sprintf("[%s] %d: %s", scalar(localtime), $$, $reqline), 0, 79)."\n";
+    warn substr(sprintf("[%s] %d: %s", scalar(localtime), $$, $reqline), 0, 79)."\n";
 
     ### Optimize for the common case.
     #
     # May be modified in req, but this value guides Loadpage
     #
-    warn "$$: Orig ctype $ctype\n" if $ctype and $DEBUG;
+    $s->log_error("$$: Orig ctype $ctype") if $ctype and $DEBUG;
     if( not $ctype )
     {
 	if( $filename =~ /\.tt$/ )
@@ -226,7 +217,7 @@ sub handler
     {
 	if( $Q->upload($key) )
 	{
-	    warn "$$: param $key is a filehandle\n";
+	    $s->log_error("$$: param $key is a filehandle");
 
 	    my $val = $Q->param($key);
 	    my $info = $Q->uploadInfo($val);
@@ -258,7 +249,7 @@ sub handler
 	my $pdc = $prev->dir_config;
 	if( $pdc->{'renderer'} or $pdc->{'find'} )
 	{
-	    warn "$$: Consider using SetHandler perl-script in this dir\n";
+	    $s->log_error("$$: Consider using SetHandler perl-script in this dir");
 	}
     }
 
@@ -283,23 +274,23 @@ sub handler
 	my $chunks = 0;
 	if( send_to_server('REQ', \$value) )
 	{
-	    warn "$$: Sent data to server\n" if $DEBUG;
+	    $s->log_error("$$: Sent data to server") if $DEBUG;
 	    $chunks = get_response();
 	}
 
 	if( $chunks )
 	{
-	    warn "$$: Returned $chunks chunks\n" if $DEBUG;
+	    $s->log_error("$$: Returned $chunks chunks") if $DEBUG;
 	    last;
 	}
 	elsif( $CANCEL )
 	{
-	    warn "$$: Closing down CANCELLED request\n";
+	    $s->log_error("$$: Closing down CANCELLED request");
 	    last;
 	}
 	else
 	{
-	    warn "$$: Got no result on try $try\n" if $DEBUG;
+	    $s->log_error("$$: Got no result on try $try") if $DEBUG;
 
 	    if( $try >= 3 )
 	    {
@@ -309,18 +300,18 @@ sub handler
 	    }
 
 	    sleep 1; # Give server time to recover
-	    warn "$$: Trying again...\n" if $DEBUG;
+	    $s->log_error("$$: Trying again...") if $DEBUG;
 	}
     }
 
     foreach my $filefield (values %files)
     {
 	my $tempfile = $filefield->{tempfile};
-	warn "$$: Removing tempfile $tempfile\n";
-	unlink $tempfile or warn "$$:   failed: $!\n";;
+	$s->log_error("$$: Removing tempfile $tempfile");
+	unlink $tempfile or $s->log_error("$$:   failed: $!");;
     }
 
-    warn "$$: Done\n\n" if $DEBUG;
+    $s->log_error("$$: Done\n") if $DEBUG;
 
     return DONE;
 }
@@ -331,22 +322,23 @@ sub handler
 sub send_to_server
 {
     my( $code, $valref ) = @_;
+    my $s = Apache2::ServerUtil->server;
 
     $valref ||= \ "1";
     my $length_code = length($$valref) + length($code) + 1;
 
     my $data = "$length_code\x00$code\x00" . $$valref;
 
-#    warn "lengthcode ($length_code) ".(bytes::length($$valref) + bytes::length($code) + 1)."\n";
+#    $s->log_error("lengthcode ($length_code) ".(bytes::length($$valref) + bytes::length($code) + 1)."");
 
     if( $DEBUG > 3 )
     {
-	warn "$$: Sending string $data\n";
-#	warn sprintf "$$:   at %.2f\n", Time::HiRes::time;
+	$s->log_error("$$: Sending string $data");
+#	$s->log_error(sprintf "$$:   at %.2f"), Time::HiRes::time;
     }
 
     my $length = length($data);
-#    warn "$$: Length of block is ($length) ".bytes::length($data)."\n";
+#    $s->log_error("$$: Length of block is ($length) ".bytes::length($data)."");
     my $errcnt = 0;
     my $chunk = 16384; # POSIX::BUFSIZ * 2
     my $sent = 0;
@@ -363,12 +355,12 @@ sub send_to_server
 
 	    if( $errcnt >= 10 )
 	    {
-		warn "$$: Got over 10 failures to send chunk $i\n";
-		warn "$$: LOST CONNECTION\n";
+		$s->log_error("$$: Got over 10 failures to send chunk $i");
+		$s->log_error("$$: LOST CONNECTION");
 		return 0;
 	    }
 
-	    warn "$$:  Resending chunk $i of messge: $data\n";
+	    $s->log_error("$$:  Resending chunk $i of messge: $data");
 	    Time::HiRes::sleep(0.05);
 	    redo;
 	}
@@ -383,6 +375,7 @@ sub send_to_server
 sub connect_to_server
 {
     my( $port ) = @_;
+    my $s = Apache2::ServerUtil->server;
 
     # Retry a couple of times
 
@@ -400,7 +393,7 @@ sub connect_to_server
     while( not $SOCK )
     {
 	$try ++;
-	warn "$$:   Trying again to connect to server ($try)\n" if $DEBUG;
+	$s->log_error("$$:   Trying again to connect to server ($try)") if $DEBUG;
 
 	$SOCK = IO::Socket::INET->new(@cfg);
 
@@ -408,7 +401,7 @@ sub connect_to_server
 
 	if( $try >= TRIES )
 	{
-	    warn "$$: Tried connecting to port $port $try times - Giving up!\n";
+	    $s->log_error("$$: Tried connecting to port $port $try times - Giving up!");
 	    return undef;
 	}
 
@@ -417,7 +410,7 @@ sub connect_to_server
 
     binmode( $SOCK, ':raw' );
 
-    warn "$$: Established connection on port $port\n" if $DEBUG > 3;
+    $s->log_error("$$: Established connection on port $port") if $DEBUG > 3;
     return $SOCK;
 }
 
@@ -427,39 +420,23 @@ sub connect_to_server
 sub print_error_page
 {
     my( $error, $explain ) = @_;
+    my $s = Apache2::ServerUtil->server;
 
     $error ||= "Unexplaind error";
     $explain ||= "";
     chomp $explain;
 
-    my $apache2 = 0;
-    if( $r->isa('Apache2::RequestRec') )
-    {
-	$apache2 = 1;
-    }
-
-    warn "$$: Returning error: $error\n" if $DEBUG;
+    $s->log_error("$$: Returning error: $error") if $DEBUG;
 
     my $dirconfig = $r->dir_config;
     my $path;
-    if( $apache2 )
-    {
-	$path = $r->unparsed_uri;
-    }
-    else
-    {
-	$path = $r->uri;
-	if( my $args = $r->args )
-	{
-	    $path .= '?' . $args;
-	}
-    }
+    $path = $r->unparsed_uri;
 
     unless( $BACKUP_PORT )
     {
 	if( $BACKUP_PORT = $dirconfig->{'backup_port'} )
 	{
-	    warn "$$: Using backup port $BACKUP_PORT\n";
+	    $s->log_error("$$: Using backup port $BACKUP_PORT");
 	    handler($r);
 	    $BACKUP_PORT = 0;
 	    return;
@@ -470,7 +447,7 @@ sub print_error_page
 
     if( my $host = $dirconfig->{'backup_redirect'} )
     {
-	warn "$$: Refering to backup site\n";
+	$s->log_error("$$: Refering to backup site");
 	my $uri_out = "http://$host$path";
 	if( $host =~ s/:443$// )
 	{
@@ -478,21 +455,19 @@ sub print_error_page
 	}
 	$r->status( 302 );
 	$r->headers_out->set('Location', $uri_out );
-	$r->send_http_header() unless $apache2;
 	$r->print("<p>Try to get <a href=\"$uri_out\">$uri_out</a> instead</p>\n");
 	return;
     }
 
     my $errcode = 500;
-    warn "$$: Printing error page\n";
+    $s->log_error("$$: Printing error page");
     $r->status_line( $errcode." ".$error );
     $r->no_cache(1);
-    $r->send_http_header() unless $apache2;
     $r->print("<html><head><title>$error</title></head><body><h1>$error</h1>\n");
     foreach my $row ( split /\n/, $explain )
     {
 	$r->print("<p>$row</p>");
-	warn "$$:   $row\n" if $DEBUG;
+	$s->log_error("$$:   $row") if $DEBUG;
     }
 
     my $host = $r->hostname;
@@ -515,6 +490,7 @@ sub print_error_page
 sub copy_to_file
 {
     my( $filename, $fh ) = @_;
+    my $s = Apache2::ServerUtil->server;
 
     my $dir = $filename;
     $dir =~ s/\/[^\/]+$//;
@@ -525,7 +501,7 @@ sub copy_to_file
 
     unless( open OUT, ">$filename" )
     {
-	warn "$$: Couldn't write to $filename: $!\n";
+	$s->log_error("$$: Couldn't write to $filename: $!");
 	print_error_page("Upload error", "Couldn't write to $filename: $!");
 	return 0; #failed
     }
@@ -570,6 +546,8 @@ sub create_dir
 
 sub get_response
 {
+    my $s = Apache2::ServerUtil->server;
+
     $STARTED = time;
     $LOADPAGE = 0;
     $LOADPAGE_URI = undef;
@@ -586,17 +564,7 @@ sub get_response
     my $select = IO::Select->new($SOCK);
     my $c = $r->connection;
 
-    my( $apache2, $client_fn, $client_select );
-
-    if( $c->isa('Apache2::Connection') )
-    {
-	$apache2 = 1;
-    }
-    else
-    {
-	$client_fn = $c->fileno(1); # Direction right?!
-	$client_select = IO::Select->new($client_fn);
-    }
+    my( $client_fn, $client_select );
 
     my $chunks = 0;
     my $data='';
@@ -610,30 +578,18 @@ sub get_response
 	{
 	    if( ($CANCEL+15) < time )
 	    {
-		warn "$$: Waited 15 secs\n";
-		warn "$$: Closing down\n";
+		$s->log_error("$$: Waited 15 secs");
+		$s->log_error("$$: Closing down");
 		return 1;
 	    }
 	}
 	else
 	{
 	    ### Test connection to browser
-	    if( $apache2 )
+	    if( $c->aborted )
 	    {
-		if( $c->aborted )
-		{
-		    warn "$$: Lost connection to client $client_fn\n";
-		    warn "$$:   Sending CANCEL to server\n";
-		    send_to_server("CANCEL");
-		    $CANCEL = time;
-		}
-	    }
-	    elsif( not $client_select->can_write(0)
-		   or  $client_select->can_read(0)
-		 )
-	    {
-		warn "$$: Lost connection to client $client_fn\n";
-		warn "$$:   Sending CANCEL to server\n";
+		$s->log_error("$$: Lost connection to client $client_fn");
+		$s->log_error("$$:   Sending CANCEL to server");
 		send_to_server("CANCEL");
 		$CANCEL = time;
 	    }
@@ -649,12 +605,12 @@ sub get_response
 		{
 		    if( defined $rv )
 		    {
-			warn "$$: Buffer empty ($buffer)\n";
+			$s->log_error("$$: Buffer empty ($buffer)");
 			if( $buffer_empty_time )
 			{
 			    if( ($buffer_empty_time+5) < time )
 			    {
-				warn "$$: For 5 secs\n";
+				$s->log_error("$$: For 5 secs");
 			    }
 			    else
 			    {
@@ -671,10 +627,10 @@ sub get_response
 
 
 		    # EOF from server
-		    warn "$$: Nothing in socket $SOCK\n";
-		    warn "$$: rv: $rv\n";
-		    warn "$$: buffer: $buffer\n";
-		    warn "$$: EOF!\n";
+		    $s->log_error("$$: Nothing in socket $SOCK");
+		    $s->log_error("$$: rv: $rv");
+		    $s->log_error("$$: buffer: $buffer");
+		    $s->log_error("$$: EOF!");
 
 		    if( $LOADPAGE )
 		    {
@@ -700,8 +656,8 @@ sub get_response
 	    }
 	    else
 	    {
-#		warn "$$: Partial data: $data\n";
-		warn "$$: Partial data...\n";
+#		$s->log_error("$$: Partial data: $data");
+		$s->log_error("$$: Partial data...");
 		$partial++;
 		next;
 	    }
@@ -710,7 +666,7 @@ sub get_response
 	    {
 		if( my $len = length $data )
 		{
-		    warn "$$: $len bytes left in databuffer: $data\n";
+		    $s->log_error("$$: $len bytes left in databuffer: $data");
 		}
 	    }
 
@@ -723,9 +679,9 @@ sub get_response
 #		if( $DEBUG > 3 )
 		if( $DEBUG )
 		{
-		    warn( sprintf "$$: Got %s: %s\n", $code,
+		    $s->log_error( sprintf "$$: Got %s: %s", $code,
 			  join '-', split /\0/, $row );
-#		    warn sprintf "$$:   at %.2f\n", Time::HiRes::time;
+#		    $s->log_error(sprintf "$$:   at %.2f"), Time::HiRes::time;
 		}
 
 
@@ -785,13 +741,13 @@ sub get_response
 		# Do not send loadpage now
 		elsif( $code eq 'RESTARTING' )
 		{
-		    warn "Server restarting\n";
+		    $s->log_error("Server restarting");
 		    $SOCK->shutdown(2);
 		    $SOCK->close;
 
 		    if( $BACKUP_PORT = $r->dir_config->{'backup_port'} )
 		    {
-			warn "$$: Using backup port $BACKUP_PORT\n";
+			$s->log_error("$$: Using backup port $BACKUP_PORT");
 			handler($r);
 			$BACKUP_PORT = 0;
 			return 1;
@@ -835,8 +791,8 @@ sub get_response
 		    $WAITMSG||="";
 		    if( $DEBUG > 1 )
 		    {
-			warn "$$: Loadpage $LOADPAGE_URI in $LOADPAGE_TIME secs\n";
-			warn "$$: REQ $REQNUM\n";
+			$s->log_error("$$: Loadpage $LOADPAGE_URI in $LOADPAGE_TIME secs");
+			$s->log_error("$$: REQ $REQNUM");
 		    }
 		}
 		# Message to display during loading
@@ -853,12 +809,12 @@ sub get_response
 		}
 		else
 		{
-		    die "$$: Unrecognized code: $code\n";
+		    die "$$: Unrecognized code: $code";
 		}
 	    }
 	    else
 	    {
-		warn "$$: Unrecognized input: $row\n";
+		$s->log_error("$$: Unrecognized input: $row");
 		print_error_page("Unrecognized input",$row);
 		return 0;
 	    }
@@ -893,6 +849,7 @@ sub get_response
 
 sub send_loadpage
 {
+    my $s = Apache2::ServerUtil->server;
 
     # TODO:
     # We must handle the case then paraframe fails. That should prompt
@@ -914,36 +871,29 @@ sub send_loadpage
     {
 	$LOADPAGE = 1;
 	send_headers();
-	if( $r->isa('Apache2::RequestRec') )
-	{
-	    my $buffer;
+	my $buffer;
 
-	    while( 1 )
+	while( 1 )
+	{
+	    # do the read and see how much we got
+	    my $read_cnt = sysread( IN, $buffer, BUFSIZ ) ;
+	    if( defined $read_cnt )
 	    {
-		# do the read and see how much we got
-                my $read_cnt = sysread( IN, $buffer, BUFSIZ ) ;
-                if( defined $read_cnt )
-		{
-		    # good read. see if we hit EOF (nothing left to read)
-		    last if $read_cnt == 0 ;
+		# good read. see if we hit EOF (nothing left to read)
+		last if $read_cnt == 0 ;
 
-		    $r->print($buffer);
-                }
-		else
-		{
-		    warn "$$: Failed to read from '$filename': $!\n";
-		    last;
-		}
+		$r->print($buffer);
 	    }
-	}
-	else
-	{
-	    $r->send_fd(*IN);
+	    else
+	    {
+		$s->log_error("$$: Failed to read from '$filename': $!");
+		last;
+	    }
 	}
 	close IN;
 	$r->rflush;
 	send_to_server( 'LOADPAGE' );
-	warn "$$: LOADPAGE sent to browser\n";
+	$s->log_error("$$: LOADPAGE sent to browser");
 
 	while( my $note = shift @NOTES )
 	{
@@ -954,7 +904,7 @@ sub send_loadpage
     }
     else
     {
-	warn "$$: Cant open '$filename': $!\n";
+	$s->log_error("$$: Cant open '$filename': $!");
 	$WAIT = 1;
     }
 }
@@ -965,11 +915,12 @@ sub send_loadpage
 sub send_reload
 {
     my( $url, $message ) = @_;
+    my $s = Apache2::ServerUtil->server;
 
     $message ||= "Page Ready!";
     send_message($message);
 
-    warn "$$: Telling browser to reload page\n";
+    $s->log_error("$$: Telling browser to reload page");
 
 
     # More compatible..?
@@ -994,10 +945,6 @@ sub send_headers
 
     $r->content_type($content_type);
 
-    return 1 if $r->isa("Apache2::RequestRec");
-
-    $r->send_http_header();
-    $r->rflush;
     return 1;
 }
 
@@ -1007,7 +954,8 @@ sub send_headers
 sub send_body
 {
     my $data = $_[0] || ''; # From buffer
-    warn "$$: Waiting for body\n" if $DEBUG;
+    my $s = Apache2::ServerUtil->server;
+    $s->log_error("$$: Waiting for body") if $DEBUG;
     my $select = IO::Select->new($SOCK);
     my $chunk = 1;
     my $timeout = 30; # May have to wait for yield
@@ -1015,21 +963,21 @@ sub send_body
     if( $DEBUG )
     {
 	my $status = $r->status();
-	warn "$$: Page status is $status\n";
+	$s->log_error("$$: Page status is $status");
     }
 
     unless( length $data )
     {
-	warn "$$: Waiting for data\n" if $DEBUG;
+	$s->log_error("$$: Waiting for data") if $DEBUG;
 	unless( $select->can_read($timeout) )
 	{
-	    warn "$$: No body ready to be read from $SOCK";
+	    $s->log_error("$$: No body ready to be read from $SOCK");
 	    return 0;
 	}
 
 	unless( $SOCK->read($data, BUFSIZ) )
 	{
-	    warn "$$: The body was empty\n"; # Problably an empty file
+	    $s->log_error("$$: The body was empty"); # Problably an empty file
 	    return 1;
 	}
     }
@@ -1040,16 +988,16 @@ sub send_body
 	if( $DEBUG )
 	{
 	    my $len = bytes::length($data);
-	    warn "$$: Sending $len bytes to browser\n";
+	    $s->log_error("$$: Sending $len bytes to browser");
 	}
 	unless( $r->print( $data ) )
 	{
-	    warn "$$: Faild to send chunk $chunk to client\n";
-	    warn "$$:   Sending CANCEL to server\n";
+	    $s->log_error("$$: Faild to send chunk $chunk to client");
+	    $s->log_error("$$:   Sending CANCEL to server");
 	    send_to_server("CANCEL");
 	    return 1;
 	}
-	warn "$$: Waiting for more data\n" if $DEBUG;
+	$s->log_error("$$: Waiting for more data") if $DEBUG;
 	$SOCK->read($data, BUFSIZ) or last;
 	$chunk ++;
     }
@@ -1063,11 +1011,12 @@ sub send_body
 sub send_message
 {
     my( $msg ) = @_;
+    my $s = Apache2::ServerUtil->server;
     $LAST_MESSAGE = $msg;
     chomp $msg;
     $msg =~ s/\n/\\n/g;
 
-    warn "$$: Sending message to browser: $msg\n" if $DEBUG > 1;
+    $s->log_error("$$: Sending message to browser: $msg") if $DEBUG > 1;
     $r->print("<script type=\"text/javascript\">document.forms['f'].messages.value += \"$msg\\n\";bottom();</script>\n");
     $r->rflush;
 }
@@ -1100,18 +1049,18 @@ sub uri2file
 
     # HACK for reverting dir to file translation if
     # it's index.*
-#    warn "Looking up $_[0]\n";
+#    $s->log_error("Looking up $_[0]");
     my $filename = $sr->filename . ($sr->path_info||'');
-#    warn "       Got $filename\n";
+#    $s->log_error("       Got $filename");
     if( $filename =~ /\bindex.(\w+)(.*?)$/ )
     {
 	my $ext = $1;
 	my $tail = $2;
-#	warn "  Matched index.* with tail $tail\n";
+#	$s->log_error("  Matched index.* with tail $tail");
 	if( $_[0] !~ /\bindex.$ext$tail$/ )
 	{
 	    $filename =~ s/\bindex.$ext$tail$/$tail/;
-#	    warn "Trimming filename to $filename\n";
+#	    $s->log_error("Trimming filename to $filename");
 	}
     }
 

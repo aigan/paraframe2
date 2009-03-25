@@ -55,6 +55,7 @@ use Para::Frame::L10N;
 use Para::Frame::Worker;
 use Para::Frame::URI;
 use Para::Frame::Reload;
+use Para::Frame::Sender;
 
 use constant TIMEOUT_LONG   =>   5;
 use constant TIMEOUT_SHORT  =>   0.000;
@@ -594,9 +595,8 @@ sub main_loop
 		if( $Para::Frame::DEBUG < $emergency_level )
 		{
 		    $Para::Frame::DEBUG =
-		      $Para::Frame::Client::DEBUG =
 			$Para::Frame::CFG->{'debug'} =
-			  $emergency_level;
+			$emergency_level;
 		    warn "#Raising global debug to level $Para::Frame::DEBUG\n";
 		}
 		else
@@ -745,7 +745,7 @@ sub get_value
     if( $Para::Frame::FORK )
     {
 	debug(2,"Getting value inside a fork");
-	while( $_ = <$Para::Frame::Client::SOCK> )
+	while( $_ = <$Para::Frame::Sender::SOCK> )
 	{
 	    if( s/^([\w\-]{3,20})\0// )
 	    {
@@ -782,7 +782,7 @@ sub get_value
 	    }
 	}
 
-	undef $Para::Frame::Client::SOCK;
+	undef $Para::Frame::Sender::SOCK;
 	return 0;
     }
 
@@ -2250,8 +2250,7 @@ Defaults to code that C<get> C<guest> from L</user_class>.
 =head3 debug
 
 Sets global C<$Para::Frame::DEBUG> value that will be used as default
-debug value for all sessions. Also sets debug value for the
-C<Para::Frame::Client> then used from the server.
+debug value for all sessions.
 
 Default is 0.
 
@@ -2469,7 +2468,6 @@ sub configure
 
     ### Set main debug level
     $DEBUG = $CFG->{'debug'} || 0;
-    $Para::Frame::Client::DEBUG = $DEBUG;
 
     $CFG->{'dir_var'} ||= '/var';
     $CFG->{'dir_log'} ||= $CFG->{'dir_var'}."/log";

@@ -27,7 +27,7 @@ use Storable qw(freeze thaw);
 use Carp qw( confess );
 
 use Para::Frame::Reload; # Not working for active workers
-use Para::Frame::Client;
+use Para::Frame::Sender;
 
 use Para::Frame::Utils qw( debug throw client_send datadump validate_utf8 );
 
@@ -66,9 +66,9 @@ sub method
     my($val) = freeze([ $req->id, $obj, $method, @args ]);
 #    debug "sending $val";
 
-    Para::Frame::Client::connect_to_server( $port );
-    $Para::Frame::Client::SOCK or die "No socket";
-    Para::Frame::Client::send_to_server($code, \$val);
+    Para::Frame::Sender::connect_to_server( $port );
+    $Para::Frame::Sender::SOCK or die "No socket";
+    Para::Frame::Sender::send_to_server($code, \$val);
 
     debug 2, sprintf "Req %d waits on worker %d", $req->id, $worker->id;
 
@@ -351,10 +351,10 @@ sub init
 			    $Storable::Deparse = 1;
 			    my( $data ) = freeze([$req_id, $worker]);
 			    my $port = $Para::Frame::CFG->{'port'};
-			    Para::Frame::Client::connect_to_server( $port );
-			    $Para::Frame::Client::SOCK or die "No socket";
+			    Para::Frame::Sender::connect_to_server( $port );
+			    $Para::Frame::Sender::SOCK or die "No socket";
 			    debug 2, "Sending response";
-			    Para::Frame::Client::send_to_server('WORKERRESP', \$data);
+			    Para::Frame::Sender::send_to_server('WORKERRESP', \$data);
 
 
 			    # Another method would be to send result to on $wclient socket
