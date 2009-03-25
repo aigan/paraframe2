@@ -1170,7 +1170,7 @@ sub memusage
     my $swap = $sysinfo->{'totalswap'} - $sysinfo->{'freeswap'};
 
     my $usage = $total - $free - $buffer + $swap;
-    debug 2, "Usage: $usage";
+    debug 3, "Memusage: $usage bytes";
 
     return( $usage / $total );
 }
