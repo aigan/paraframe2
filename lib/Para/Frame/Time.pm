@@ -131,6 +131,8 @@ sub get
     $time =~ s/\s+$//;
     $time =~ s/^\s+//;
 
+    my $tz = $TZ;
+
     debug "Parsing date '$time'" if $DEBUG;
 
     my $date;
@@ -170,7 +172,7 @@ sub get
 
 	if( $time =~ /^(19|20)?(\d\d)(-)?(\d\d)\3?(\d\d)(?:\s+(\d\d?)(\.|:)?(\d\d)(?:\7(\d\d))?)?\s*$/ )
 	{
-	    debug "Parsing date in compact format";
+	    debug "Parsing date in compact format" if $DEBUG;
 
 	    my $cent = $1 || 20;
 	    my $year = $cent . $2;
@@ -202,7 +204,7 @@ sub get
 #	    debug "Reformatted date to '$time'" if $DEBUG;
 #	}
 
-	eval{ $date = DateTime::Format::HTTP->parse_datetime( $time, $TZ ) };
+	eval{ $date = DateTime::Format::HTTP->parse_datetime( $time, $tz ) };
     }
 
     unless( $date )
@@ -214,16 +216,12 @@ sub get
 
     unless( $date )
     {
-	# Parsing historical years # NOT USING TZ !!!
+	# Parsing historical years
 	if( $time =~ /^-?\d{1,4}$/ )
 	{
 	    debug "  as historical year" if $DEBUG;
-	    $date = DateTime->new( year => $time,
-				   time_zone => 'floating' );
-	    debug "  To ".$date->datetime if $DEBUG;
-	    bless($date, $class);
-	    $STRINGIFY and $date->set_formatter($STRINGIFY);
-	    return $date;
+	    $date = DateTime->new( year => $time );
+	    return bless($date, $class)->init('floating');
 	}
     }
 
@@ -245,7 +243,13 @@ sub get
 	}
     }
 
-    return bless($date, $class)->init;
+    if( $date->year < 1900 or $date->year > 2100 )
+    {
+	debug "Using floating time zone for historic ".$date->sysdesig;
+	$tz = 'floating';
+    }
+
+    return bless($date, $class)->init($tz);
 }
 
 
@@ -253,13 +257,16 @@ sub get
 
 =head2 init
 
+  $time->init()
+  $time->init($tz);
+
 =cut
 
 sub init
 {
     #debug "Initiating date: $_[0]";
     $STRINGIFY and $_[0]->set_formatter($STRINGIFY);
-    $_[0]->set_time_zone($TZ);
+    $_[0]->set_time_zone($_[1] || $TZ);
     #debug "Finaly: $_[0]";
     return $_[0];
 }
