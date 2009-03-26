@@ -245,7 +245,7 @@ sub get
 
     if( $date->year < 1900 or $date->year > 2100 )
     {
-	debug "Using floating time zone for historic ".$date->sysdesig;
+	debug "Using floating time zone for historic ".$date->iso8601;
 	$tz = 'floating';
     }
 
