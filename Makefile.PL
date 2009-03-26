@@ -25,7 +25,7 @@ WriteMakefile(
 		  'Date::Manip'                => 5.44,
 		  'DateTime'                   => 0.2901,
 	          'DateTime::Format::HTTP'     => 0.00,
-	          'DateTime::Format::Pg'       => 0.08,
+	          'DateTime::Format::Pg'       => 0.16003,
 	          'DateTime::Format::Strptime' => 0.00,
 		  'DateTime::Format::MySQL'    => 0.00,
 		  'DateTime::Set'              => 0.22,
