@@ -346,7 +346,7 @@ sub title
     my $type = $part->type;
     if( $type )
     {
-	return loc($ERROR_TYPE->{$type}{'title'}) ||
+	return loc($ERROR_TYPE->{$type}{'title'}||$type) ||
 	  sprintf "\u%s error...", loc($type);
     }
 }
