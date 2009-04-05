@@ -1,0 +1,459 @@
+
+
+1262 Handling new request (in background)
+  Added session_update background job
+  Registerd child 21443
+| 21443:   Sending update to test.avisita.com
+| 21443:   Sending update_cache to test.avisita.com:7788
+| 21443:   RESP recieved (Done)
+| 21443:   Sending update to admin.avisita.com
+| 21443:   Sending update_cache to admin.avisita.com:7789
+| 21443:   RESP recieved (Done)
+| 21443:   Sending update to admin2.avisita.com
+| 21443:   Sending update_cache to admin2.avisita.com:7788
+| 21443:   RESP recieved (Done)
+| 21443:   Sending update to backup.avisita.com
+| 21443:   Sending update_cache to backup.avisita.com:7789
+| 21443:   RESP recieved (Done)
+| 21443:   Sending update to www.avisita.com
+| 21443:     Skipping this site
+  Removing child 21443
+
+
+1263 Handling new request
+# http://www.hotellguiden.se/page_not_found.tt
+# Redirected from /molndal/ibis_hotel_goteborg-molndal/
+# 2009-03-20 09.42.59 - 90.233.140.44
+# Sid 1237537629-1135 - 26 - Uid 2672015 - debug 2
+  ===> Go existing
+  Genererar sidan
+1263 Done in   0.08 secs
+
+1262 Switching to req
+1262 Done in   0.28 secs
+
+
+1264 Handling new request (in background)
+    keeping currently loaded deals
+1264 Done in   0.02 secs
+
+
+1265 Handling RUN_ACTION (in background)
+  Action update_cache
+    added = 7636624
+    removed = 7627215,7627042
+    Update cache done
+1265 Done in   0.00 secs
+
+
+1266 Handling new request (in background)
+  Added session_update background job
+1266 Done in   0.00 secs
+  Expired old session 1237531435-696
+  Expired old session 1237531435-695
+  Expired old session 1237531466-697
+  Expired old session 1237531466-698
+  Expired old session 1237531486-700
+  Expired old session 1237531485-699
+
+
+1267 Handling new request
+# http://www.hotellguiden.se/thanks.tt
+# 2009-03-20 09.44.59 - 90.233.140.44
+# Sid 1237537629-1135 - 27 - Uid 2672015 - debug 2
+  Checking created = 2009-03-20 09.44
+  Checking telephone = 0706258382
+  find_by_anything: 0706258382 (valtext)
+    valtype 1213680: phone
+  PHONE +46-706258382
+  Plain value is '+46-706258382'
+  Created arc id 7636637[7636636]: 7636635 --telephone(phone)--> phone "+46-706258382" (N Di Ex) #43023
+  Checking name = catharina Holmgren
+  find_by_anything: catharina Holmgren (valtext)
+    valtype 721279: text
+  Plain value is 'catharina Holmgren'
+  Created arc id 7636639[7636638]: 7636635 --name(text)--> text "catharina Holmgren" (N Di Ex) #43024
+  Checking email_main = info@orsholmslackeringar.se
+  find_by_anything: info@orsholmslackeringar.se (valtext)
+    valtype 1213692: email
+  Plain value is 'info@orsholmslackeringar.se'
+  Created arc id 7636641[7636640]: 7636635 --email_main(email)--> email_address:info@orsholmslackeringar.se (N Di Ex) #43025
+  Checking is = Rit::Base::Resource=HASH(0x9335450)
+  Checking is = Rit::Base::Resource=HASH(0x9326f78)
+  find_by_anything: Rit::Base::Resource=HASH(0x9335450) (obj)
+    valtype 2672025: class
+  Created arc id 7636643[7636642]: 7636635 --is(class)--> 914447: Person (N Di Ex) #43026
+  find_by_anything: Rit::Base::Resource=HASH(0x9326f78) (obj)
+    valtype 2672025: class
+  Created arc id 7636645[7636644]: 7636635 --is(class)--> 1105: login_account (N Di Ex) #43027
+  Checking due = 2009-03-20 09.44
+  find_by_anything: 2009-03-20 09.44 (valdate)
+    valtype 1213707: valdate
+  Created arc id 7636648[7636647]: 7636646 --due(valdate)--> Date 2009-03-20 09.44.59 +0100 (N Di Ex) #43028
+  Checking name = lediga rum
+  find_by_anything: lediga rum (valtext)
+    valtype 721279: text
+  Plain value is 'lediga rum'
+  Created arc id 7636650[7636649]: 7636646 --name(text)--> text "lediga rum" (N Di Ex) #43029
+  Checking departure = 090809
+  find_by_anything: 090809 (valdate)
+    valtype 1213710: date
+  Created arc id 7636652[7636651]: 7636646 --departure(date)--> Date 90809-01-01 00.00.00 +0000 (N Di Ex) #43031
+  Checking description = Har ni några lediga rum 2 st dubbelrum 7 - 9 augusti?
+  find_by_anything: Har ni några lediga rum 2 st dubbelrum 7 - 9 augusti? (valtext)
+    valtype 721283: textbox
+  Plain value is 'Har ni några lediga rum 2 st dubbelrum 7 - 9 augusti?'
+  Created arc id 7636654[7636653]: 7636646 --description(textbox)--> textbox "Har ni några lediga rum 2 st dub..." (N Di Ex) #43032
+  Checking is = Rit::Base::Resource=HASH(0x93353a8)
+  find_by_anything: Rit::Base::Resource=HASH(0x93353a8) (obj)
+    valtype 2672025: class
+  Created arc id 7636656[7636655]: 7636646 --is(class)--> 4244425: Bokningsförfrågan (N Di Ex) #43033
+  Checking arrival = 090807
+  find_by_anything: 090807 (valdate)
+    valtype 1213710: date
+  Created arc id 7636658[7636657]: 7636646 --arrival(date)--> Date 90807-01-01 00.00.00 +0000 (N Di Ex) #43035
+  Checking site_code = www.hotellguiden.se
+  find_by_anything: www.hotellguiden.se (valtext)
+    valtype 721279: text
+  Plain value is 'www.hotellguiden.se'
+  Created arc id 7636660[7636659]: 7636646 --site_code(text)--> text "www.hotellguiden.se" (N Di Ex) #43037
+  Checking requestor = Rit::Base::Resource=HASH(0x38d91c70)
+  find_by_anything: Rit::Base::Resource=HASH(0x38d91c70) (obj)
+    valtype 1106: intelligent_agent
+  Created arc id 7636662[7636661]: 7636646 --requestor(intelligent_agent)--> 7636635 (N Di Ex) #43038
+  find_by_anything: Rit::Base::Metaclass::3982081_4016608_3973985_4048179=HASH(0x13bb94d0) (obj)
+    valtype 5: resource
+  Created arc id 7636664[7636663]: 7636646 --specified_place(resource)--> 6885: Ibis Hotel Göteborg-Mölndal (N Di Ex) #43039
+  Activating new arcs:
+  * 7636637[7636636]: 7636635 --telephone(phone)--> phone "+46-706258382" (N Di Ex) #43023
+  * 7636639[7636638]: 7636635 --name(text)--> text "catharina Holmgren" (N Di Ex) #43024
+  * 7636641[7636640]: 7636635: catharina Holmgren --email_main(email)--> email_address:info@orsholmslackeringar.se (N Di Ex) #43025
+  * 7636643[7636642]: 7636635: catharina Holmgren --is(class)--> 914447: Person (N Di Ex) #43026
+  initiating 2672025
+  initiating 914447
+  Reblessing 7636635: catharina Holmgren
+    from Rit::Base::Resource
+      to Rit::Base::Metaclass::Rit::Guides::Spatial_Thing::Addressable::Person
+  * 7636645[7636644]: 7636635: catharina Holmgren --is(class)--> 1105: login_account (N Di Ex) #43027
+  initiating 2672025
+  initiating 1105
+  initiating 914447
+  Reblessing 7636635: catharina Holmgren
+    from Rit::Base::Metaclass::Rit::Guides::Spatial_Thing::Addressable::Person
+      to Rit::Base::Metaclass::4048179_3974047
+  * 7636648[7636647]: 7636646 --due(valdate)--> Date 2009-03-20 09.44.59 +0100 (N Di Ex) #43028
+  * 7636650[7636649]: 7636646 --name(text)--> text "lediga rum" (N Di Ex) #43029
+  * 7636652[7636651]: 7636646: lediga rum --departure(date)--> Date 90809-01-01 00.00.00 +0000 (N Di Ex) #43031
+  * 7636654[7636653]: 7636646: lediga rum --description(textbox)--> textbox "Har ni några lediga rum 2 st dub..." (N Di Ex) #43032
+  * 7636656[7636655]: 7636646: lediga rum --is(class)--> 4244425: Bokningsförfrågan (N Di Ex) #43033
+  initiating 2672025
+  initiating 5334451
+  initiating 4244425
+  * 7636658[7636657]: 7636646: lediga rum --arrival(date)--> Date 90807-01-01 00.00.00 +0000 (N Di Ex) #43035
+  initiating 4244425
+  * 7636660[7636659]: 7636646: lediga rum --site_code(text)--> text "www.hotellguiden.se" (N Di Ex) #43037
+  initiating 4244425
+  * 7636662[7636661]: 7636646: lediga rum --requestor(intelligent_agent)--> 7636635: catharina Holmgren (N Di Ex) #43038
+  initiating 1105
+  initiating 914447
+  initiating 4244425
+  * 7636664[7636663]: 7636646: lediga rum --specified_place(resource)--> 6885: Ibis Hotel Göteborg-Mölndal (N Di Ex) #43039
+  initiating 1113
+  initiating 3982083
+  initiating 731880
+  initiating 1001
+  initiating 1107
+  initiating 1105
+  initiating 1106
+  initiating 4244425
+  find_by_anything: Rit::Base::Resource=HASH(0xa46db60) (obj)
+    valtype 2672025: class
+  Created arc id 7636666[7636665]: 7636635: catharina Holmgren --is(class)--> 5225381: personal_agent (A In Im) #43040
+  Got 0 arcs in 0.00 secs
+    value_old: 7636635: catharina Holmgren
+     type old: 1106: intelligent_agent
+    vnode old:
+  coltype old: obj
+    value_new: 7636635: catharina Holmgren
+   forced val: Yes
+     type new: 5: resource
+    vnode new:
+  coltype new: obj
+  initiating 5225381
+  initiating 1105
+  initiating 914447
+  UPDATED Arc 7636662 is created by 2672015
+  initiating 4244425
+  Updated arc 7636662[7636661]: 7636646: lediga rum --requestor(resource)--> 7636635: catharina Holmgren (A Di Ex) #43038
+  initiating 5225381
+  initiating 1105
+  initiating 914447
+  find_by_anything: Rit::Base::Resource=HASH(0x925f188) (obj)
+    valtype 2672025: class
+  Created arc id 7636668[7636667]: 7636635: catharina Holmgren --is(class)--> 1106: intelligent_agent (A In Im) #43041
+  Got 0 arcs in 0.00 secs
+  initiating 5225381
+  initiating 1105
+  initiating 914447
+  initiating 1106
+  find_by_anything: Rit::Base::Resource=HASH(0xa4d6390) (obj)
+    valtype 2672025: class
+  Created arc id 7636670[7636669]: 7636635: catharina Holmgren --is(class)--> 6358739: addressable (A In Im) #43042
+  initiating 5225381
+  initiating 1105
+  initiating 914447
+  initiating 1106
+  initiating 6358739
+  initiating 5225381
+  initiating 1105
+  initiating 914447
+  initiating 1106
+  initiating 6358739
+  initiating 5225381
+  initiating 1105
+  initiating 914447
+  initiating 1106
+  initiating 6358739
+  find_by_anything: Rit::Base::Resource=HASH(0x93396d0) (obj)
+    valtype 2672025: class
+  Created arc id 7636672[7636671]: 7636646: lediga rum --is(class)--> 4244417: Request ticket (A In Im) #43043
+  Got 0 arcs in 0.00 secs
+  initiating 4244425
+  initiating 4244417
+  Reblessing 7636646: lediga rum
+    from Rit::Base::Resource
+      to Rit::Base::Metaclass::Rit::Guides::Request_Ticket
+Constant create_rec doesn't exist at /usr/local/rb/lib/Rit/Base/Resource.pm line 6382
+        Rit::Base::Resource::get_by_label('Rit::Base::Pred', 'create_rec') called at /usr/local/rb/lib/Rit/Base/Pred.pm line 403
+        Rit::Base::Pred::find_by_anything('Rit::Base::Pred', 'create_rec', undef) called at /usr/local/rb/lib/Rit/Base/Resource.pm line 6240
+        Rit::Base::Resource::get_by_anything('Rit::Base::Pred', 'create_rec') called at /usr/local/rb/lib/Rit/Base/Resource.pm line 230
+        Rit::Base::Resource::get('Rit::Base::Pred', 'create_rec') called at /usr/local/rb/lib/Rit/Base/Resource.pm line 1963
+        Rit::Base::Resource::list('Rit::Base::Metaclass::Rit::Guides::Request_Ticket=HASH(0x3951...', 'create_rec') called at /usr/local/rb/lib/Rit/Base/Node.pm line 264
+        Rit::Base::Node::prop('Rit::Base::Metaclass::Rit::Guides::Request_Ticket=HASH(0x3951...', 'create_rec') called at /usr/local/rb/lib/Rit/Base/Node.pm line 1648
+        eval {...} called at /usr/local/rb/lib/Rit/Base/Node.pm line 1641
+        Rit::Base::Node::AUTOLOAD('Rit::Base::Metaclass::Rit::Guides::Request_Ticket=HASH(0x3951...') called at /usr/local/rg/lib/Rit/Guides/Request_Ticket.pm line 474
+        Rit::Guides::Request_Ticket::on_arc_add('Rit::Base::Metaclass::Rit::Guides::Request_Ticket=HASH(0x3951...', 'Rit::Base::Arc=HASH(0x35a36c30)', 'is', 'HASH(0x3952d570)') called at /usr/local/rb/lib/Rit/Base/Arc.pm line 5589
+        Rit::Base::Arc::create_check('Rit::Base::Arc=HASH(0x35a36c30)', 'HASH(0x3952d570)') called at /usr/local/rb/lib/Rit/Base/Arc.pm line 5254
+        Rit::Base::Arc::schedule_check_create('Rit::Base::Arc=HASH(0x35a36c30)', 'HASH(0x15520670)') called at /usr/local/rb/lib/Rit/Base/Arc.pm line 923
+        Rit::Base::Arc::create('Rit::Base::Arc', 'HASH(0x154a10b0)', 'HASH(0x15520670)') called at /usr/local/rb/lib/Rit/Base/Rule.pm line 712
+        Rit::Base::Rule::create_infere_rel('Rit::Base::Rule=HASH(0x9da2b90)', 'Rit::Base::Arc=HASH(0x3951c858)', 'HASH(0x3941b108)') called at /usr/local/rb/lib/Rit/Base/Arc.pm line 5557
+        Rit::Base::Arc::create_check('Rit::Base::Arc=HASH(0x3951c858)', 'HASH(0x3941b108)') called at /usr/local/rb/lib/Rit/Base/Arc.pm line 5407
+        Rit::Base::Arc::unlock('Rit::Base::Arc') called at /usr/local/rb/lib/Rit/Base/Utils.pm line 772
+        Rit::Base::Utils::arc_unlock() called at /usr/local/rb/lib/Rit/Base/Resource/Change.pm line 440
+        Rit::Base::Resource::Change::autocommit('Rit::Base::Resource::Change=HASH(0x39509ed0)', 'HASH(0x2d7301f8)') called at /usr/local/rg/lib/Rit/Guides/Action/booking_quotation.pm line 124
+        Rit::Guides::Action::booking_quotation::handler('Para::Frame::Request=HASH(0x1bb737d8)') called at /usr/local/pf/lib/Para/Frame/Request.pm line 1477
+        eval {...} called at /usr/local/pf/lib/Para/Frame/Request.pm line 1487
+        Para::Frame::Request::run_action('Para::Frame::Request=HASH(0x1bb737d8)', 'booking_quotation') called at /usr/local/pf/lib/Para/Frame/Request.pm line 1547
+        Para::Frame::Request::after_jobs('Para::Frame::Request=HASH(0x1bb737d8)') called at /usr/local/pf/lib/Para/Frame.pm line 1918
+        Para::Frame::handle_request('IO::Socket::INET=GLOB(0x394f3d28)', 'SCALAR(0x44481a0)') called at /usr/local/pf/lib/Para/Frame.pm line 1051
+        Para::Frame::handle_code('IO::Socket::INET=GLOB(0x394f3d28)') called at /usr/local/pf/lib/Para/Frame.pm line 823
+        Para::Frame::get_value('IO::Socket::INET=GLOB(0x394f3d28)') called at /usr/local/pf/lib/Para/Frame.pm line 339
+        eval {...} called at /usr/local/pf/lib/Para/Frame.pm line 300
+        Para::Frame::main_loop() called at /usr/local/pf/lib/Para/Frame/Watchdog.pm line 708
+        Para::Frame::Watchdog::startup_in_fork() called at /usr/local/pf/lib/Para/Frame/Watchdog.pm line 133
+        Para::Frame::Watchdog::startup('Para::Frame::Watchdog', 1) called at /usr/local/pf/lib/Para/Frame.pm line 1461
+        Para::Frame::daemonize('Para::Frame', 1) called at /usr/local/rg/bin/ritguides line 496
+  ROLLBACK DB
+  ROLLBACK NODES
+  Reblessing 7636646: 4JOH2U: <Untitled>
+    from Rit::Base::Metaclass::Rit::Guides::Request_Ticket
+      to Rit::Base::Resource
+  Reblessing 7636635
+    from Rit::Base::Metaclass::4048179_3974047
+      to Rit::Base::Resource
+  Arc 7636662 does not exist in DB
+  Arc 7636641 does not exist in DB
+  Arc 7636672 does not exist in DB
+  initiating 5334451
+  initiating 2672025
+  Arc 7636654 does not exist in DB
+  Arc 7636656 does not exist in DB
+  initiating 2672025
+  initiating 5334451
+  Arc 7636658 does not exist in DB
+  Arc 7636643 does not exist in DB
+  initiating 2672025
+  Arc 7636666 does not exist in DB
+  initiating 2672025
+  Arc 7636668 does not exist in DB
+  initiating 2672025
+  Arc 7636645 does not exist in DB
+  initiating 2672025
+  Arc 7636650 does not exist in DB
+  Arc 7636639 does not exist in DB
+  Arc 7636648 does not exist in DB
+  Arc 7636652 does not exist in DB
+  Arc 7636664 does not exist in DB
+  initiating 1113
+  initiating 3982083
+  initiating 731880
+  initiating 1001
+  initiating 1107
+  initiating 1105
+  initiating 1106
+  Arc 7636637 does not exist in DB
+  Arc 7636660 does not exist in DB
+  Arc 7636670 does not exist in DB
+  initiating 2672025
+  Removing resource 7636637[7636636]: 7636635 --telephone()--> phone "+46-706258382" (A Di Ex D) #43023
+  initiating 7636637
+  Removing resource 7636639[7636638]: 7636635 --name()--> text "catharina Holmgren" (A Di Ex D) #43024
+  initiating 7636639
+  Removing resource 7636641[7636640]: 7636635 --email_main()--> email_address:info@orsholmslackeringar.se (A Di Ex D) #43025
+  initiating 7636641
+  Removing resource 7636648[7636647]: 7636646 --due()--> Date 2009-03-20 09.44.59 +0100 (A Di Ex D) #43028
+  initiating 7636648
+  Removing resource 7636650[7636649]: 7636646 --name()--> text "lediga rum" (A Di Ex D) #43029
+  initiating 7636650
+  Removing resource 7636652[7636651]: 7636646 --departure()--> Date 90809-01-01 00.00.00 +0000 (A Di Ex D) #43031
+  initiating 7636652
+  Removing resource 7636654[7636653]: 7636646 --description()--> textbox "Har ni några lediga rum 2 st dub..." (A Di Ex D) #43032
+  initiating 7636654
+  Removing resource 7636658[7636657]: 7636646 --arrival()--> Date 90807-01-01 00.00.00 +0000 (A Di Ex D) #43035
+  initiating 7636658
+  Removing resource 7636660[7636659]: 7636646 --site_code()--> text "www.hotellguiden.se" (A Di Ex D) #43037
+  initiating 7636660
+  Removing resource 7636662[7636661]: 7636646 --requestor()--> 7636635 (A Di Ex D) #43038
+  initiating 7636662
+  Removing resource 7636664[7636663]: 7636646 --specified_place()--> 6885: Ibis Hotel Göteborg-Mölndal (A Di Ex D) #43039
+  initiating 7636664
+  initiating 1113
+  initiating 3982083
+  initiating 731880
+  initiating 1001
+  initiating 1107
+  initiating 1105
+  initiating 1106
+  $VAR1 = bless( {
+                   'error' => bless( [
+                                       'notfound',
+                                       'Constant create_rec doesn\'t exist',
+                                       \''
+                                     ], 'Template::Exception' ),
+                   'message' => []
+                 }, 'Para::Frame::Result::Part' );
+  ACTION FAILED!
+While calling create_rec for 7636646 (Rit::Base::Resource):
+Arc lock not in effect
+
+Para::Frame::Result::Part=HASH(0x346e8f88) at /usr/local/rb/lib/Rit/Base/Node.pm line 1685
+        Rit::Base::Node::AUTOLOAD('Rit::Base::Resource=HASH(0x39510f80)') called at /usr/local/rg/lib/Rit/Guides/Request_Ticket.pm line 474
+        Rit::Guides::Request_Ticket::on_arc_add('Rit::Base::Resource=HASH(0x39510f80)', 'Rit::Base::Arc=HASH(0x35a36c30)', 'is', 'HASH(0x3952d570)') called at /usr/local/rb/lib/Rit/Base/Arc.pm line 5589
+        Rit::Base::Arc::create_check('Rit::Base::Arc=HASH(0x35a36c30)', 'HASH(0x3952d570)') called at /usr/local/rb/lib/Rit/Base/Arc.pm line 5254
+        Rit::Base::Arc::schedule_check_create('Rit::Base::Arc=HASH(0x35a36c30)', 'HASH(0x15520670)') called at /usr/local/rb/lib/Rit/Base/Arc.pm line 923
+        Rit::Base::Arc::create('Rit::Base::Arc', 'HASH(0x154a10b0)', 'HASH(0x15520670)') called at /usr/local/rb/lib/Rit/Base/Rule.pm line 712
+        Rit::Base::Rule::create_infere_rel('Rit::Base::Rule=HASH(0x9da2b90)', 'Rit::Base::Arc=HASH(0x3951c858)', 'HASH(0x3941b108)') called at /usr/local/rb/lib/Rit/Base/Arc.pm line 5557
+        Rit::Base::Arc::create_check('Rit::Base::Arc=HASH(0x3951c858)', 'HASH(0x3941b108)') called at /usr/local/rb/lib/Rit/Base/Arc.pm line 5407
+        Rit::Base::Arc::unlock('Rit::Base::Arc') called at /usr/local/rb/lib/Rit/Base/Utils.pm line 772
+        Rit::Base::Utils::arc_unlock() called at /usr/local/rb/lib/Rit/Base/Resource/Change.pm line 440
+        Rit::Base::Resource::Change::autocommit('Rit::Base::Resource::Change=HASH(0x39509ed0)', 'HASH(0x2d7301f8)') called at /usr/local/rg/lib/Rit/Guides/Action/booking_quotation.pm line 124
+        Rit::Guides::Action::booking_quotation::handler('Para::Frame::Request=HASH(0x1bb737d8)') called at /usr/local/pf/lib/Para/Frame/Request.pm line 1477
+        eval {...} called at /usr/local/pf/lib/Para/Frame/Request.pm line 1487
+        Para::Frame::Request::run_action('Para::Frame::Request=HASH(0x1bb737d8)', 'booking_quotation') called at /usr/local/pf/lib/Para/Frame/Request.pm line 1547
+        Para::Frame::Request::after_jobs('Para::Frame::Request=HASH(0x1bb737d8)') called at /usr/local/pf/lib/Para/Frame.pm line 1918
+        Para::Frame::handle_request('IO::Socket::INET=GLOB(0x394f3d28)', 'SCALAR(0x44481a0)') called at /usr/local/pf/lib/Para/Frame.pm line 1051
+        Para::Frame::handle_code('IO::Socket::INET=GLOB(0x394f3d28)') called at /usr/local/pf/lib/Para/Frame.pm line 823
+        Para::Frame::get_value('IO::Socket::INET=GLOB(0x394f3d28)') called at /usr/local/pf/lib/Para/Frame.pm line 339
+        eval {...} called at /usr/local/pf/lib/Para/Frame.pm line 300
+        Para::Frame::main_loop() called at /usr/local/pf/lib/Para/Frame/Watchdog.pm line 708
+        Para::Frame::Watchdog::startup_in_fork() called at /usr/local/pf/lib/Para/Frame/Watchdog.pm line 133
+        Para::Frame::Watchdog::startup('Para::Frame::Watchdog', 1) called at /usr/local/pf/lib/Para/Frame.pm line 1461
+        Para::Frame::daemonize('Para::Frame', 1) called at /usr/local/rg/bin/ritguides line 496
+ROLLBACK DB
+ROLLBACK NODES
+FAILED ROLLBACK!
+Arc 7636662 not found at /usr/local/rb/lib/Rit/Base/Arc.pm line 4869
+        Rit::Base::Arc::init('Rit::Base::Arc=HASH(0x38d1a540)') called at /usr/local/rb/lib/Rit/Base/Resource.pm line 273
+        Rit::Base::Resource::get('Rit::Base::Arc', 7636662) called at /usr/local/rb/lib/Rit/Base/Resource.pm line 6737
+        Rit::Base::Resource::rollback('Rit::Base::Resource') called at /usr/local/rb/lib/Rit/Base.pm line 114
+        Rit::Base::__ANON__('Para::Frame::DBIx::Pg=HASH(0x4b92c28)') called at /usr/local/pf/lib/Para/Frame.pm line 2069
+        eval {...} called at /usr/local/pf/lib/Para/Frame.pm line 2068
+        Para::Frame::run_hook('Para::Frame', 'Para::Frame::Request=HASH(0x1bb737d8)', 'after_db_rollback', 'Para::Frame::DBIx::Pg=HASH(0x4b92c28)') called at /usr/local/pf/lib/Pa
+ra/Frame/DBIx.pm line 727
+        Para::Frame::DBIx::rollback('Para::Frame::DBIx::Pg=HASH(0x4b92c28)') called at /usr/local/pf/lib/Para/Frame/DBIx.pm line 254
+        eval {...} called at /usr/local/pf/lib/Para/Frame/DBIx.pm line 256
+        Para::Frame::DBIx::__ANON__('SCALAR(0x3138a28)', 'SCALAR(0x3138a58)', 'SCALAR(0x381f0c18)') called at /usr/local/pf/lib/Para/Frame.pm line 2069
+        eval {...} called at /usr/local/pf/lib/Para/Frame.pm line 2068
+        Para::Frame::run_hook('Para::Frame', 'Para::Frame::Request=HASH(0x1bb737d8)', 'on_error_detect', 'SCALAR(0x3138a28)', 'SCALAR(0x3138a58)', 'SCALAR(0x381f0c18)') called at
+ /usr/local/pf/lib/Para/Frame/Utils.pm line 423
+        Para::Frame::Utils::run_error_hooks('Template::Exception=ARRAY(0x394fe838)') called at /usr/local/pf/lib/Para/Frame/Result.pm line 190
+        Para::Frame::Result::exception('Para::Frame::Result=HASH(0x39505290)') called at /usr/local/pf/lib/Para/Frame/Request.pm line 1501
+        Para::Frame::Request::run_action('Para::Frame::Request=HASH(0x1bb737d8)', 'booking_quotation') called at /usr/local/pf/lib/Para/Frame/Request.pm line 1547
+        Para::Frame::Request::after_jobs('Para::Frame::Request=HASH(0x1bb737d8)') called at /usr/local/pf/lib/Para/Frame.pm line 1918
+        Para::Frame::handle_request('IO::Socket::INET=GLOB(0x394f3d28)', 'SCALAR(0x44481a0)') called at /usr/local/pf/lib/Para/Frame.pm line 1051
+        Para::Frame::handle_code('IO::Socket::INET=GLOB(0x394f3d28)') called at /usr/local/pf/lib/Para/Frame.pm line 823
+        Para::Frame::get_value('IO::Socket::INET=GLOB(0x394f3d28)') called at /usr/local/pf/lib/Para/Frame.pm line 339
+        eval {...} called at /usr/local/pf/lib/Para/Frame.pm line 300
+        Para::Frame::main_loop() called at /usr/local/pf/lib/Para/Frame/Watchdog.pm line 708
+        Para::Frame::Watchdog::startup_in_fork() called at /usr/local/pf/lib/Para/Frame/Watchdog.pm line 133
+        Para::Frame::Watchdog::startup('Para::Frame::Watchdog', 1) called at /usr/local/pf/lib/Para/Frame.pm line 1461
+        Para::Frame::daemonize('Para::Frame', 1) called at /usr/local/rg/bin/ritguides line 496
+Backtracking to previuos page because of errors
+Referer from current http req (http://www.hotellguiden.se/molndal/ibis_hotel_goteborg-molndal/)
+===> Go existing
+Template initialy set to /var/www/www.hotellguiden.se/public_html/go/molndal/ibis_hotel_goteborg-molndal/index.sv.tt (/go/molndal/ibis_hotel_goteborg-molndal/index.sv.tt) 2009-02
+-17 20.51
+Genererar sidan
+TH retrieved from stack
+Choosing a css config
+Got css from main config
+!!! /thanks.tt ne /molndal/ibis_hotel_goteborg-molndal/
+Forwarding to /molndal/ibis_hotel_goteborg-molndal/?reqnum=1267&pfport=7788
+Registred the page result for /molndal/ibis_hotel_goteborg-molndal/?reqnum=1267&pfport=7788
+--> Redirect to http://www.hotellguiden.se/molndal/ibis_hotel_goteborg-molndal/?reqnum=1267&pfport=7788
+LOADPAGE
+TH released to stack
+1267 Done in  49.48 secs
+
+
+1268 Handling RUN_ACTION (in background)
+  Action update_cache
+    added = 7636629,7636634
+    updated = 16842,1149
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)
+  Lost connection to IO::Socket::INET=GLOB(0x3756a9d8)

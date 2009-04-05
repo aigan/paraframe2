@@ -35,8 +35,7 @@ use HTTP::Request;
 use Template::Document;
 use Time::HiRes;
 
-use Para::Frame::Client;
-
+use Para::Frame::Sender;
 use Para::Frame::Reload;
 use Para::Frame::Cookies;
 use Para::Frame::Session;
@@ -1941,9 +1940,9 @@ sub send_code
 	my $val = $client . "\x00" . shift;
 	die "Too many args in send_code($code $val @_)" if @_;
 
-	Para::Frame::Client::connect_to_server( $port );
-	$Para::Frame::Client::SOCK or die "No socket";
-	Para::Frame::Client::send_to_server($code, \$val);
+	Para::Frame::Sender::connect_to_server( $port );
+	$Para::Frame::Sender::SOCK or die "No socket";
+	Para::Frame::Sender::send_to_server($code, \$val);
 
 	# Keep open the SOCK to get response later
 	return;

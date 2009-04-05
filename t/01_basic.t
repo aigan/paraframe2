@@ -1,5 +1,4 @@
 #!perl
-# -*-cperl-*-
 
 use 5.010;
 use strict;

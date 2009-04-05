@@ -1,6 +1,4 @@
 #!perl
-# -*-cperl-*-
-
 
 use 5.010;
 use strict;
@@ -106,7 +104,7 @@ warnings_like
 
 
 use_ok('Para::Frame::Watchdog');
-use_ok('Para::Frame::Client');
+use_ok('Para::Frame::Sender');
 
 
 
@@ -292,8 +290,8 @@ sub test_handle_req
 {
     my $value = freeze $client_data;
 
-    Para::Frame::Client::connect_to_server( $Para::Frame::CFG->{'port'} );
-    Para::Frame::Client::send_to_server('REQ', \$value );
+    Para::Frame::Sender::connect_to_server( $Para::Frame::CFG->{'port'} );
+    Para::Frame::Sender::send_to_server('REQ', \$value );
 
     # New connection
     my( $client ) = $Para::Frame::SELECT->can_read( 1 );
@@ -345,10 +343,10 @@ sub test_cancel_req
 {
     my $value = freeze $client_data;
 
-    Para::Frame::Client::connect_to_server( $Para::Frame::CFG->{'port'} );
-    Para::Frame::Client::send_to_server('REQ', \$value );
+    Para::Frame::Sender::connect_to_server( $Para::Frame::CFG->{'port'} );
+    Para::Frame::Sender::send_to_server('REQ', \$value );
 
-    Para::Frame::Client::send_to_server('CANCEL', \1 );
+    Para::Frame::Sender::send_to_server('CANCEL', \1 );
 
     # New connection
     my( $client ) = $Para::Frame::SELECT->can_read( 1 );
@@ -385,8 +383,8 @@ sub test_cancel2_req
 
     my $value = freeze $cd2;
 
-    Para::Frame::Client::connect_to_server( $Para::Frame::CFG->{'port'} );
-    Para::Frame::Client::send_to_server('REQ', \$value );
+    Para::Frame::Sender::connect_to_server( $Para::Frame::CFG->{'port'} );
+    Para::Frame::Sender::send_to_server('REQ', \$value );
 
 
     # New connection
@@ -401,7 +399,7 @@ sub test_cancel2_req
     Para::Frame::switch_req(undef); # TODO: remove me
 
     Para::Frame::fill_buffer($client);
-    Para::Frame::Client::send_to_server('CANCEL', \1 );
+    Para::Frame::Sender::send_to_server('CANCEL', \1 );
 
     my @got_warning = ();
   TEST:

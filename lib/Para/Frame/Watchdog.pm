@@ -34,7 +34,7 @@ use File::Basename; # dirname
 
 use Para::Frame::Utils qw( chmod_file create_dir );
 use Para::Frame::Time qw( now );
-use Para::Frame::Client;
+use Para::Frame::Sender;
 
 our $PID;                  # The PID to watch
 our $FH;                   # Server file-handle
@@ -621,9 +621,8 @@ sub watchdog_crash
     if( $Para::Frame::DEBUG <= $EMERGENCY_DEBUG_LEVEL )
     {
 	$Para::Frame::DEBUG =
-	    $Para::Frame::Client::DEBUG =
 	    $Para::Frame::CFG->{'debug'} =
-	      $EMERGENCY_DEBUG_LEVEL;
+	    $EMERGENCY_DEBUG_LEVEL;
 	debug "Raising global debug to level $Para::Frame::DEBUG";
     }
 
