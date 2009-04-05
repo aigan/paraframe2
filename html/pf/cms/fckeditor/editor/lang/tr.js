@@ -1,29 +1,24 @@
 ﻿/*
  * FCKeditor - The text editor for Internet - http://www.fckeditor.net
- * Copyright (C) 2003-2007 Frederico Caldeira Knabben
- * 
+ * Copyright (C) 2003-2009 Frederico Caldeira Knabben
+ *
  * == BEGIN LICENSE ==
- * 
+ *
  * Licensed under the terms of any of the following licenses at your
  * choice:
- * 
+ *
  *  - GNU General Public License Version 2 or later (the "GPL")
  *    http://www.gnu.org/licenses/gpl.html
- * 
+ *
  *  - GNU Lesser General Public License Version 2.1 or later (the "LGPL")
  *    http://www.gnu.org/licenses/lgpl.html
- * 
+ *
  *  - Mozilla Public License Version 1.1 or later (the "MPL")
  *    http://www.mozilla.org/MPL/MPL-1.1.html
- * 
+ *
  * == END LICENSE ==
- * 
- * File Name: tr.js
- * 	Turkish language file.
- * 
- * File Authors:
- * 		Bogac Guven (bogacmx@yahoo.com)
- * 		Burak Gürsoy (burak@cpan.org)
+ *
+ * Turkish language file.
  */
 
 var FCKLang =
@@ -49,7 +44,9 @@ RemoveFormat		: "Biçimi Kaldır",
 InsertLinkLbl		: "Köprü",
 InsertLink			: "Köprü Ekle/Düzenle",
 RemoveLink			: "Köprü Kaldır",
+VisitLink			: "Köprü Aç",
 Anchor				: "Çapa Ekle/Düzenle",
+AnchorDelete		: "Çapa Sil",
 InsertImageLbl		: "Resim",
 InsertImage			: "Resim Ekle/Düzenle",
 InsertFlashLbl		: "Flash",
@@ -75,6 +72,10 @@ RightJustify		: "Sağa Dayalı",
 BlockJustify		: "İki Kenara Yaslanmış",
 DecreaseIndent		: "Sekme Azalt",
 IncreaseIndent		: "Sekme Arttır",
+Blockquote			: "Blok Oluştur",
+CreateDiv			: "Div Ekle",
+EditDiv				: "Div Düzenle",
+DeleteDiv			: "Div Sil",
 Undo				: "Geri Al",
 Redo				: "Tekrarla",
 NumberedListLbl		: "Numaralı Liste",
@@ -108,20 +109,27 @@ SelectionField	: "Seçim Menüsü",
 ImageButton		: "Resimli Düğme",
 
 FitWindow		: "Düzenleyici boyutunu büyüt",
+ShowBlocks		: "Blokları Göster",
 
 // Context Menu
 EditLink			: "Köprü Düzenle",
 CellCM				: "Hücre",
 RowCM				: "Satır",
 ColumnCM			: "Sütun",
-InsertRow			: "Satır Ekle",
+InsertRowAfter		: "Satır Ekle - Sonra",
+InsertRowBefore		: "Satır Ekle - Önce",
 DeleteRows			: "Satır Sil",
-InsertColumn		: "Sütun Ekle",
+InsertColumnAfter	: "Kolon Ekle - Sonra",
+InsertColumnBefore	: "Kolon Ekle - Önce",
 DeleteColumns		: "Sütun Sil",
-InsertCell			: "Hücre Ekle",
+InsertCellAfter		: "Hücre Ekle - Sonra",
+InsertCellBefore	: "Hücre Ekle - Önce",
 DeleteCells			: "Hücre Sil",
 MergeCells			: "Hücreleri Birleştir",
-SplitCell			: "Hücre Böl",
+MergeRight			: "Birleştir - Sağdaki İle ",
+MergeDown			: "Birleştir - Aşağıdaki İle ",
+HorizontalSplitCell	: "Hücreyi Yatay Böl",
+VerticalSplitCell	: "Hücreyi Dikey Böl",
 TableDelete			: "Tabloyu Sil",
 CellProperties		: "Hücre Özellikleri",
 TableProperties		: "Tablo Özellikleri",
@@ -139,7 +147,7 @@ SelectionFieldProp	: "Seçim Menüsü Özellikleri",
 TextareaProp		: "Çok Satırlı Metin Özellikleri",
 FormProp			: "Form Özellikleri",
 
-FontFormats			: "Normal;Biçimli;Adres;Başlık 1;Başlık 2;Başlık 3;Başlık 4;Başlık 5;Başlık 6;Paragraf (DIV)",		//REVIEW : Check _getfontformat.html
+FontFormats			: "Normal;Biçimli;Adres;Başlık 1;Başlık 2;Başlık 3;Başlık 4;Başlık 5;Başlık 6;Paragraf (DIV)",
 
 // Alerts and Messages
 ProcessingXHTML		: "XHTML işleniyor. Lütfen bekleyin...",
@@ -153,6 +161,7 @@ UnknownToolbarSet	: "\"%1\" araç çubuğu öğesi mevcut değil",
 NoActiveX			: "Kullandığınız tarayıcının güvenlik ayarları bazı özelliklerin kullanılmasını engelliyor. Bu özelliklerin çalışması için \"Run ActiveX controls and plug-ins (Activex ve eklentileri çalıştır)\" seçeneğinin aktif yapılması gerekiyor. Kullanılamayan eklentiler ve hatalar konusunda daha fazla bilgi sahibi olun.",
 BrowseServerBlocked : "Kaynak tarayıcısı açılamadı. Tüm \"popup blocker\" programlarının devre dışı olduğundan emin olun. (Yahoo toolbar, Msn toolbar, Google toolbar gibi)",
 DialogBlocked		: "Diyalog açmak mümkün olmadı. Tüm \"Popup Blocker\" programlarının devre dışı olduğundan emin olun.",
+VisitLinkBlocked	: "Yeni pencere açmak mümkün olmadı. Tüm \"Popup Blocker\" programlarının devre dışı olduğundan emin olun",
 
 // Dialogs
 DlgBtnOK			: "Tamam",
@@ -234,7 +243,7 @@ DlgLnkURL			: "URL",
 DlgLnkAnchorSel		: "Çapa Seç",
 DlgLnkAnchorByName	: "Çapa Adı ile",
 DlgLnkAnchorById	: "Eleman Kimlik Numarası ile",
-DlgLnkNoAnchors		: "<Bu belgede hiç çapa yok>",		//REVIEW : Change < and > with ( and )
+DlgLnkNoAnchors		: "(Bu belgede hiç çapa yok)",
 DlgLnkEMail			: "E-Posta Adresi",
 DlgLnkEMailSubject	: "İleti Konusu",
 DlgLnkEMailBody		: "İleti Gövdesi",
@@ -299,6 +308,11 @@ DlgTableCellSpace	: "Izgara kalınlığı",
 DlgTableCellPad		: "Izgara yazı arası",
 DlgTableCaption		: "Başlık",
 DlgTableSummary		: "Özet",
+DlgTableHeaders		: "Başlıklar",
+DlgTableHeadersNone		: "Yok",
+DlgTableHeadersColumn	: "İlk Sütun",
+DlgTableHeadersRow		: "İlk Satır",
+DlgTableHeadersBoth		: "Her İkisi",
 
 // Table Cell Dialog
 DlgCellTitle		: "Hücre Özellikleri",
@@ -321,11 +335,17 @@ DlgCellVerAlignTop	: "Tepe",
 DlgCellVerAlignMiddle	: "Orta",
 DlgCellVerAlignBottom	: "Alt",
 DlgCellVerAlignBaseline	: "Taban Çizgisi",
+DlgCellType		: "Hücre Tipi",
+DlgCellTypeData		: "Veri",
+DlgCellTypeHeader	: "Başlık",
 DlgCellRowSpan		: "Satır Kapla",
 DlgCellCollSpan		: "Sütun Kapla",
 DlgCellBackColor	: "Arka Plan Rengi",
 DlgCellBorderColor	: "Kenar Rengi",
 DlgCellBtnSelect	: "Seç...",
+
+// Find and Replace Dialog
+DlgFindAndReplaceTitle	: "Bul ve Değiştir",
 
 // Find Dialog
 DlgFindTitle		: "Bul",
@@ -342,7 +362,6 @@ DlgReplaceReplAllBtn	: "Tümünü Değiştir",
 DlgReplaceWordChk		: "Kelimenin tamamı uysun",
 
 // Paste Operations / Dialog
-PasteErrorPaste	: "Gezgin yazılımınızın güvenlik ayarları düzenleyicinin otomatik yapıştırma işlemine izin vermiyor. İşlem için (Ctrl+V) tuşlarını kullanın.",
 PasteErrorCut	: "Gezgin yazılımınızın güvenlik ayarları düzenleyicinin otomatik kesme işlemine izin vermiyor. İşlem için (Ctrl+X) tuşlarını kullanın.",
 PasteErrorCopy	: "Gezgin yazılımınızın güvenlik ayarları düzenleyicinin otomatik kopyalama işlemine izin vermiyor. İşlem için (Ctrl+C) tuşlarını kullanın.",
 
@@ -350,9 +369,9 @@ PasteAsText		: "Düz Metin Olarak Yapıştır",
 PasteFromWord	: "Word'den yapıştır",
 
 DlgPasteMsg2	: "Lütfen aşağıdaki kutunun içine yapıştırın. (<STRONG>Ctrl+V</STRONG>) ve <STRONG>Tamam</STRONG> butonunu tıklayın.",
+DlgPasteSec		: "Gezgin yazılımınızın güvenlik ayarları düzenleyicinin direkt olarak panoya erişimine izin vermiyor. Bu pencere içine tekrar yapıştırmalısınız..",
 DlgPasteIgnoreFont		: "Yazı Tipi tanımlarını yoksay",
 DlgPasteRemoveStyles	: "Biçem Tanımlarını çıkar",
-DlgPasteCleanBox		: "Temizlik Kutusu",
 
 // Color Picker
 ColorAutomatic	: "Otomatik",
@@ -505,5 +524,11 @@ DlgAboutAboutTab	: "Hakkında",
 DlgAboutBrowserInfoTab	: "Gezgin Bilgisi",
 DlgAboutLicenseTab	: "Lisans",
 DlgAboutVersion		: "sürüm",
-DlgAboutInfo		: "Daha fazla bilgi için:"
+DlgAboutInfo		: "Daha fazla bilgi için:",
+
+// Div Dialog
+DlgDivGeneralTab	: "Genel",
+DlgDivAdvancedTab	: "Gelişmiş",
+DlgDivStyle		: "Sitil",
+DlgDivInlineStyle	: "Satıriçi Sitil"
 };

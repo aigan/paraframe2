@@ -1,2 +1,0 @@
-# Making sure not to render js files
-PerlSetVar site ignore

@@ -1,29 +1,24 @@
 ﻿/*
  * FCKeditor - The text editor for Internet - http://www.fckeditor.net
- * Copyright (C) 2003-2007 Frederico Caldeira Knabben
- * 
+ * Copyright (C) 2003-2009 Frederico Caldeira Knabben
+ *
  * == BEGIN LICENSE ==
- * 
+ *
  * Licensed under the terms of any of the following licenses at your
  * choice:
- * 
+ *
  *  - GNU General Public License Version 2 or later (the "GPL")
  *    http://www.gnu.org/licenses/gpl.html
- * 
+ *
  *  - GNU Lesser General Public License Version 2.1 or later (the "LGPL")
  *    http://www.gnu.org/licenses/lgpl.html
- * 
+ *
  *  - Mozilla Public License Version 1.1 or later (the "MPL")
  *    http://www.mozilla.org/MPL/MPL-1.1.html
- * 
+ *
  * == END LICENSE ==
- * 
- * File Name: ro.js
- * 	Romanian language file.
- * 
- * File Authors:
- * 		Adrian Nicoara (nicoara@users.sourceforge.net)
- * 		Ionut Traian Popa
+ *
+ * Romanian language file.
  */
 
 var FCKLang =
@@ -49,7 +44,9 @@ RemoveFormat		: "Înlătură formatarea",
 InsertLinkLbl		: "Link (Legătură web)",
 InsertLink			: "Inserează/Editează link (legătură web)",
 RemoveLink			: "Înlătură link (legătură web)",
+VisitLink			: "Open Link",	//MISSING
 Anchor				: "Inserează/Editează ancoră",
+AnchorDelete		: "Şterge ancoră",
 InsertImageLbl		: "Imagine",
 InsertImage			: "Inserează/Editează imagine",
 InsertFlashLbl		: "Flash",
@@ -75,6 +72,10 @@ RightJustify		: "Aliniere la dreapta",
 BlockJustify		: "Aliniere în bloc (Block Justify)",
 DecreaseIndent		: "Scade indentarea",
 IncreaseIndent		: "Creşte indentarea",
+Blockquote			: "Citat",
+CreateDiv			: "Create Div Container",	//MISSING
+EditDiv				: "Edit Div Container",	//MISSING
+DeleteDiv			: "Remove Div Container",	//MISSING
 Undo				: "Starea anterioară (undo)",
 Redo				: "Starea ulterioară (redo)",
 NumberedListLbl		: "Listă numerotată",
@@ -108,20 +109,27 @@ SelectionField	: "Câmp selecţie (SelectionField)",
 ImageButton		: "Buton imagine (ImageButton)",
 
 FitWindow		: "Maximizează mărimea editorului",
+ShowBlocks		: "Arată blocurile",
 
 // Context Menu
 EditLink			: "Editează Link",
 CellCM				: "Celulă",
 RowCM				: "Linie",
 ColumnCM			: "Coloană",
-InsertRow			: "Inserează linie",
+InsertRowAfter		: "Inserează linie după",
+InsertRowBefore		: "Inserează linie înainte",
 DeleteRows			: "Şterge linii",
-InsertColumn		: "Inserează coloană",
+InsertColumnAfter	: "Inserează coloană după",
+InsertColumnBefore	: "Inserează coloană înainte",
 DeleteColumns		: "Şterge celule",
-InsertCell			: "Inserează celulă",
+InsertCellAfter		: "Inserează celulă după",
+InsertCellBefore	: "Inserează celulă înainte",
 DeleteCells			: "Şterge celule",
 MergeCells			: "Uneşte celule",
-SplitCell			: "Împarte celulă",
+MergeRight			: "Uneşte la dreapta",
+MergeDown			: "Uneşte jos",
+HorizontalSplitCell	: "Împarte celula pe orizontală",
+VerticalSplitCell	: "Împarte celula pe verticală",
 TableDelete			: "Şterge tabel",
 CellProperties		: "Proprietăţile celulei",
 TableProperties		: "Proprietăţile tabelului",
@@ -139,7 +147,7 @@ SelectionFieldProp	: "Proprietăţi câmp selecţie (Selection Field)",
 TextareaProp		: "Proprietăţi suprafaţă text (Textarea)",
 FormProp			: "Proprietăţi formular (Form)",
 
-FontFormats			: "Normal;Formatted;Address;Heading 1;Heading 2;Heading 3;Heading 4;Heading 5;Heading 6;Normal (DIV)",		//REVIEW : Check _getfontformat.html	//MISSING
+FontFormats			: "Normal;Formatted;Address;Heading 1;Heading 2;Heading 3;Heading 4;Heading 5;Heading 6;Normal (DIV)",	//MISSING
 
 // Alerts and Messages
 ProcessingXHTML		: "Procesăm XHTML. Vă rugăm aşteptaţi...",
@@ -153,6 +161,7 @@ UnknownToolbarSet	: "Grupul din bara cu opţiuni \"%1\" nu există",
 NoActiveX			: "Setările de securitate ale programului dvs. cu care navigaţi pe internet (browser) pot limita anumite funcţionalităţi ale editorului. Pentru a evita asta, trebuie să activaţi opţiunea \"Run ActiveX controls and plug-ins\". Poate veţi întâlni erori sau veţi observa funcţionalităţi lipsă.",
 BrowseServerBlocked : "The resources browser could not be opened. Asiguraţi-vă că nu e activ niciun \"popup blocker\" (funcţionalitate a programului de navigat (browser) sau a unui plug-in al acestuia de a bloca deschiderea unui noi ferestre).",
 DialogBlocked		: "Nu a fost posibilă deschiderea unei ferestre de dialog. Asiguraţi-vă că nu e activ niciun \"popup blocker\" (funcţionalitate a programului de navigat (browser) sau a unui plug-in al acestuia de a bloca deschiderea unui noi ferestre).",
+VisitLinkBlocked	: "It was not possible to open a new window. Make sure all popup blockers are disabled.",	//MISSING
 
 // Dialogs
 DlgBtnOK			: "Bine",
@@ -234,7 +243,7 @@ DlgLnkURL			: "URL",
 DlgLnkAnchorSel		: "Selectaţi o ancoră",
 DlgLnkAnchorByName	: "după numele ancorei",
 DlgLnkAnchorById	: "după Id-ul elementului",
-DlgLnkNoAnchors		: "<Nicio ancoră disponibilă în document>",		//REVIEW : Change < and > with ( and )
+DlgLnkNoAnchors		: "(Nicio ancoră disponibilă în document)",
 DlgLnkEMail			: "Adresă de e-mail",
 DlgLnkEMailSubject	: "Subiectul mesajului",
 DlgLnkEMailBody		: "Conţinutul mesajului",
@@ -299,6 +308,11 @@ DlgTableCellSpace	: "Spaţiu între celule",
 DlgTableCellPad		: "Spaţiu în cadrul celulei",
 DlgTableCaption		: "Titlu (Caption)",
 DlgTableSummary		: "Rezumat",
+DlgTableHeaders		: "Headers",	//MISSING
+DlgTableHeadersNone		: "None",	//MISSING
+DlgTableHeadersColumn	: "First column",	//MISSING
+DlgTableHeadersRow		: "First Row",	//MISSING
+DlgTableHeadersBoth		: "Both",	//MISSING
 
 // Table Cell Dialog
 DlgCellTitle		: "Proprietăţile celulei",
@@ -321,11 +335,17 @@ DlgCellVerAlignTop	: "Sus",
 DlgCellVerAlignMiddle	: "Mijloc",
 DlgCellVerAlignBottom	: "Jos",
 DlgCellVerAlignBaseline	: "Linia de jos (Baseline)",
+DlgCellType		: "Cell Type",	//MISSING
+DlgCellTypeData		: "Data",	//MISSING
+DlgCellTypeHeader	: "Header",	//MISSING
 DlgCellRowSpan		: "Lungimea în linii (Span)",
 DlgCellCollSpan		: "Lungimea în coloane (Span)",
 DlgCellBackColor	: "Culoarea fundalului",
 DlgCellBorderColor	: "Culoarea marginii",
 DlgCellBtnSelect	: "Selectaţi...",
+
+// Find and Replace Dialog
+DlgFindAndReplaceTitle	: "Găseşte şi înlocuieşte",
 
 // Find Dialog
 DlgFindTitle		: "Găseşte",
@@ -342,7 +362,6 @@ DlgReplaceReplAllBtn	: "Înlocuieşte tot",
 DlgReplaceWordChk		: "Doar cuvintele întregi",
 
 // Paste Operations / Dialog
-PasteErrorPaste	: "Setările de securitate ale navigatorului (browser) pe care îl folosiţi nu permit editorului să execute automat operaţiunea de adăugare. Vă rugăm folosiţi tastatura (Ctrl+V).",
 PasteErrorCut	: "Setările de securitate ale navigatorului (browser) pe care îl folosiţi nu permit editorului să execute automat operaţiunea de tăiere. Vă rugăm folosiţi tastatura (Ctrl+X).",
 PasteErrorCopy	: "Setările de securitate ale navigatorului (browser) pe care îl folosiţi nu permit editorului să execute automat operaţiunea de copiere. Vă rugăm folosiţi tastatura (Ctrl+C).",
 
@@ -350,9 +369,9 @@ PasteAsText		: "Adaugă ca text simplu (Plain Text)",
 PasteFromWord	: "Adaugă din Word",
 
 DlgPasteMsg2	: "Vă rugăm adăugaţi în căsuţa următoare folosind tastatura (<STRONG>Ctrl+V</STRONG>) şi apăsaţi <STRONG>OK</STRONG>.",
+DlgPasteSec		: "Din cauza setărilor de securitate ale programului dvs. cu care navigaţi pe internet (browser), editorul nu poate accesa direct datele din clipboard. Va trebui să adăugaţi din nou datele în această fereastră.",
 DlgPasteIgnoreFont		: "Ignoră definiţiile Font Face",
 DlgPasteRemoveStyles	: "Şterge definiţiile stilurilor",
-DlgPasteCleanBox		: "Şterge căsuţa",
 
 // Color Picker
 ColorAutomatic	: "Automatic",
@@ -505,5 +524,11 @@ DlgAboutAboutTab	: "Despre",
 DlgAboutBrowserInfoTab	: "Informaţii browser",
 DlgAboutLicenseTab	: "Licenţă",
 DlgAboutVersion		: "versiune",
-DlgAboutInfo		: "Pentru informaţii amănunţite, vizitaţi"
+DlgAboutInfo		: "Pentru informaţii amănunţite, vizitaţi",
+
+// Div Dialog
+DlgDivGeneralTab	: "General",	//MISSING
+DlgDivAdvancedTab	: "Advanced",	//MISSING
+DlgDivStyle		: "Style",	//MISSING
+DlgDivInlineStyle	: "Inline Style"	//MISSING
 };

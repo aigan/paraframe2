@@ -1,29 +1,24 @@
 ﻿/*
  * FCKeditor - The text editor for Internet - http://www.fckeditor.net
- * Copyright (C) 2003-2007 Frederico Caldeira Knabben
- * 
+ * Copyright (C) 2003-2009 Frederico Caldeira Knabben
+ *
  * == BEGIN LICENSE ==
- * 
+ *
  * Licensed under the terms of any of the following licenses at your
  * choice:
- * 
+ *
  *  - GNU General Public License Version 2 or later (the "GPL")
  *    http://www.gnu.org/licenses/gpl.html
- * 
+ *
  *  - GNU Lesser General Public License Version 2.1 or later (the "LGPL")
  *    http://www.gnu.org/licenses/lgpl.html
- * 
+ *
  *  - Mozilla Public License Version 1.1 or later (the "MPL")
  *    http://www.mozilla.org/MPL/MPL-1.1.html
- * 
+ *
  * == END LICENSE ==
- * 
- * File Name: vi.js
- * 	Vietnamese language file.
- * 
- * File Authors:
- * 		Phan Binh Giang (bbbgiang@yahoo.com)
- * 		Hà Thanh Hải (thanhhai.ha@gmail.com)
+ *
+ * Vietnamese language file.
  */
 
 var FCKLang =
@@ -49,7 +44,9 @@ RemoveFormat		: "Xoá Định dạng",
 InsertLinkLbl		: "Liên kết",
 InsertLink			: "Chèn/Sửa Liên kết",
 RemoveLink			: "Xoá Liên kết",
+VisitLink			: "Mở Liên Kết",
 Anchor				: "Chèn/Sửa Neo",
+AnchorDelete		: "Gỡ bỏ Neo",
 InsertImageLbl		: "Hình ảnh",
 InsertImage			: "Chèn/Sửa Hình ảnh",
 InsertFlashLbl		: "Flash",
@@ -75,6 +72,10 @@ RightJustify		: "Canh phải",
 BlockJustify		: "Canh đều",
 DecreaseIndent		: "Dịch ra ngoài",
 IncreaseIndent		: "Dịch vào trong",
+Blockquote			: "Khối Trích dẫn",
+CreateDiv			: "Tạo Div Container",
+EditDiv				: "Chỉnh sửa Div Container",
+DeleteDiv			: "Gỡ bỏ Div Container",
 Undo				: "Khôi phục thao tác",
 Redo				: "Làm lại thao tác",
 NumberedListLbl		: "Danh sách có thứ tự",
@@ -108,20 +109,27 @@ SelectionField	: "Ô chọn",
 ImageButton		: "Nút hình ảnh",
 
 FitWindow		: "Mở rộng tối đa kích thước trình biên tập",
+ShowBlocks		: "Hiển thị các Khối",
 
 // Context Menu
 EditLink			: "Sửa Liên kết",
 CellCM				: "Ô",
 RowCM				: "Hàng",
 ColumnCM			: "Cột",
-InsertRow			: "Chèn Hàng",
+InsertRowAfter		: "Chèn Hàng Phía sau",
+InsertRowBefore		: "Chèn Hàng Phía trước",
 DeleteRows			: "Xoá Hàng",
-InsertColumn		: "Chèn Cột",
+InsertColumnAfter	: "Chèn Cột Phía sau",
+InsertColumnBefore	: "Chèn Cột Phía trước",
 DeleteColumns		: "Xoá Cột",
-InsertCell			: "Chèn Ô",
+InsertCellAfter		: "Chèn Ô Phía sau",
+InsertCellBefore	: "Chèn Ô Phía trước",
 DeleteCells			: "Xoá Ô",
-MergeCells			: "Trộn Ô",
-SplitCell			: "Chia Ô",
+MergeCells			: "Kết hợp Ô",
+MergeRight			: "Kết hợp Sang phải",
+MergeDown			: "Kết hợp Xuống dưới",
+HorizontalSplitCell	: "Tách ngang Ô",
+VerticalSplitCell	: "Tách dọc Ô",
 TableDelete			: "Xóa Bảng",
 CellProperties		: "Thuộc tính Ô",
 TableProperties		: "Thuộc tính Bảng",
@@ -139,7 +147,7 @@ SelectionFieldProp	: "Thuộc tính Ô chọn",
 TextareaProp		: "Thuộc tính Vùng văn bản",
 FormProp			: "Thuộc tính Biểu mẫu",
 
-FontFormats			: "Normal;Formatted;Address;Heading 1;Heading 2;Heading 3;Heading 4;Heading 5;Heading 6;Normal (DIV)",		//REVIEW : Check _getfontformat.html
+FontFormats			: "Normal;Formatted;Address;Heading 1;Heading 2;Heading 3;Heading 4;Heading 5;Heading 6;Normal (DIV)",
 
 // Alerts and Messages
 ProcessingXHTML		: "Đang xử lý XHTML. Vui lòng đợi trong giây lát...",
@@ -150,9 +158,10 @@ UnknownToolbarItem	: "Không rõ mục trên thanh công cụ \"%1\"",
 UnknownCommand		: "Không rõ lệnh \"%1\"",
 NotImplemented		: "Lệnh không được thực hiện",
 UnknownToolbarSet	: "Thanh công cụ \"%1\" không tồn tại",
-NoActiveX			: "Các thiết lập bảo mật của trình duyệt có thể giới hạn một số chức năng của trình biên tập. Bạn phải bật tùy chọn \"Run ActiveX controls and plug-ins\". Bạn có thể gặp một số lỗi và thấy thiếu đi một số chức năng.",
+NoActiveX			: "Các thiết lập bảo mật của trình duyệt có thể giới hạn một số chức năng của trình biên tập. Bạn phải bật tùy chọn \"Run ActiveX controls and plug-ins\". Bạn có thể gặp một số lỗi và thấy thiếu một số chức năng.",
 BrowseServerBlocked : "Không thể mở được bộ duyệt tài nguyên. Hãy đảm bảo chức năng chặn popup đã bị vô hiệu hóa.",
 DialogBlocked		: "Không thể mở được cửa sổ hộp thoại. Hãy đảm bảo chức năng chặn popup đã bị vô hiệu hóa.",
+VisitLinkBlocked	: "Không thể mở được cửa sổ trình duyệt mới. Hãy đảm bảo chức năng chặn popup đã bị vô hiệu hóa.",
 
 // Dialogs
 DlgBtnOK			: "Đồng ý",
@@ -190,7 +199,7 @@ DlgImgUpload		: "Tải lên",
 DlgImgAlt			: "Chú thích Hình ảnh",
 DlgImgWidth			: "Rộng",
 DlgImgHeight		: "Cao",
-DlgImgLockRatio		: "Giữ tỷ lệ",
+DlgImgLockRatio		: "Giữ nguyên tỷ lệ",
 DlgBtnResetSize		: "Kích thước gốc",
 DlgImgBorder		: "Đường viền",
 DlgImgHSpace		: "HSpace",
@@ -199,7 +208,7 @@ DlgImgAlign			: "Vị trí",
 DlgImgAlignLeft		: "Trái",
 DlgImgAlignAbsBottom: "Dưới tuyệt đối",
 DlgImgAlignAbsMiddle: "Giữa tuyệt đối",
-DlgImgAlignBaseline	: "Baseline",
+DlgImgAlignBaseline	: "Đường cơ sở",
 DlgImgAlignBottom	: "Dưới",
 DlgImgAlignMiddle	: "Giữa",
 DlgImgAlignRight	: "Phải",
@@ -234,7 +243,7 @@ DlgLnkURL			: "URL",
 DlgLnkAnchorSel		: "Chọn một Neo",
 DlgLnkAnchorByName	: "Theo Tên Neo",
 DlgLnkAnchorById	: "Theo Định danh Element",
-DlgLnkNoAnchors		: "<Không có Neo nào trong tài liệu>",		//REVIEW : Change < and > with ( and )
+DlgLnkNoAnchors		: "(Không có Neo nào trong tài liệu)",
 DlgLnkEMail			: "Thư điện tử",
 DlgLnkEMailSubject	: "Tiêu đề Thông điệp",
 DlgLnkEMailBody		: "Nội dung Thông điệp",
@@ -299,6 +308,11 @@ DlgTableCellSpace	: "Khoảng cách Ô",
 DlgTableCellPad		: "Đệm Ô",
 DlgTableCaption		: "Đầu đề",
 DlgTableSummary		: "Tóm lược",
+DlgTableHeaders		: "Headers",	//MISSING
+DlgTableHeadersNone		: "None",	//MISSING
+DlgTableHeadersColumn	: "First column",	//MISSING
+DlgTableHeadersRow		: "First Row",	//MISSING
+DlgTableHeadersBoth		: "Both",	//MISSING
 
 // Table Cell Dialog
 DlgCellTitle		: "Thuộc tính Ô",
@@ -320,12 +334,18 @@ DlgCellVerAlignNotSet	: "<Chưa thiết lập>",
 DlgCellVerAlignTop	: "Trên",
 DlgCellVerAlignMiddle	: "Giữa",
 DlgCellVerAlignBottom	: "Dưới",
-DlgCellVerAlignBaseline	: "Baseline",
+DlgCellVerAlignBaseline	: "Đường cơ sở",
+DlgCellType		: "Cell Type",	//MISSING
+DlgCellTypeData		: "Data",	//MISSING
+DlgCellTypeHeader	: "Header",	//MISSING
 DlgCellRowSpan		: "Nối Hàng",
 DlgCellCollSpan		: "Nối Cột",
 DlgCellBackColor	: "Màu nền",
 DlgCellBorderColor	: "Màu viền",
 DlgCellBtnSelect	: "Chọn...",
+
+// Find and Replace Dialog
+DlgFindAndReplaceTitle	: "Tìm kiếm và Thay Thế",
 
 // Find Dialog
 DlgFindTitle		: "Tìm kiếm",
@@ -342,7 +362,6 @@ DlgReplaceReplAllBtn	: "Thay thế Tất cả",
 DlgReplaceWordChk		: "Đúng toàn bộ từ",
 
 // Paste Operations / Dialog
-PasteErrorPaste	: "Các thiết lập bảo mật của trình duyệt không cho phép trình biên tập tự động thực thi lệnh dán. Hãy sử dụng bàn phím cho lệnh này (Ctrl+V).",
 PasteErrorCut	: "Các thiết lập bảo mật của trình duyệt không cho phép trình biên tập tự động thực thi lệnh cắt. Hãy sử dụng bàn phím cho lệnh này (Ctrl+X).",
 PasteErrorCopy	: "Các thiết lập bảo mật của trình duyệt không cho phép trình biên tập tự động thực thi lệnh sao chép. Hãy sử dụng bàn phím cho lệnh này (Ctrl+C).",
 
@@ -350,9 +369,9 @@ PasteAsText		: "Dán theo định dạng văn bản thuần",
 PasteFromWord	: "Dán với định dạng Word",
 
 DlgPasteMsg2	: "Hãy dán nội dung vào trong khung bên dưới, sử dụng tổ hợp phím (<STRONG>Ctrl+V</STRONG>) và nhấn vào nút <STRONG>Đồng ý</STRONG>.",
+DlgPasteSec		: "Because of your browser security settings, the editor is not able to access your clipboard data directly. You are required to paste it again in this window.",	//MISSING
 DlgPasteIgnoreFont		: "Chấp nhận các định dạng phông",
 DlgPasteRemoveStyles	: "Gỡ bỏ các định dạng Styles",
-DlgPasteCleanBox		: "Xóa nội dung",
 
 // Color Picker
 ColorAutomatic	: "Tự động",
@@ -364,7 +383,7 @@ DocProps		: "Thuộc tính Tài liệu",
 // Anchor Dialog
 DlgAnchorTitle		: "Thuộc tính Neo",
 DlgAnchorName		: "Tên của Neo",
-DlgAnchorErrorName	: "Hãy đưa vào tên của Neo",
+DlgAnchorErrorName	: "Hãy nhập vào tên của Neo",
 
 // Speller Pages Dialog
 DlgSpellNotInDic		: "Không có trong từ điển",
@@ -505,5 +524,11 @@ DlgAboutAboutTab	: "Giới thiệu",
 DlgAboutBrowserInfoTab	: "Thông tin trình duyệt",
 DlgAboutLicenseTab	: "Giấy phép",
 DlgAboutVersion		: "phiên bản",
-DlgAboutInfo		: "Để biết thêm thông tin, hãy truy cập"
+DlgAboutInfo		: "Để biết thêm thông tin, hãy truy cập",
+
+// Div Dialog
+DlgDivGeneralTab	: "Chung",
+DlgDivAdvancedTab	: "Nâng cao",
+DlgDivStyle		: "Kiểu Style",
+DlgDivInlineStyle	: "Kiểu Style Trực tiếp"
 };

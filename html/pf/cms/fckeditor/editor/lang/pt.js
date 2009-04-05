@@ -1,28 +1,24 @@
 ﻿/*
  * FCKeditor - The text editor for Internet - http://www.fckeditor.net
- * Copyright (C) 2003-2007 Frederico Caldeira Knabben
- * 
+ * Copyright (C) 2003-2009 Frederico Caldeira Knabben
+ *
  * == BEGIN LICENSE ==
- * 
+ *
  * Licensed under the terms of any of the following licenses at your
  * choice:
- * 
+ *
  *  - GNU General Public License Version 2 or later (the "GPL")
  *    http://www.gnu.org/licenses/gpl.html
- * 
+ *
  *  - GNU Lesser General Public License Version 2.1 or later (the "LGPL")
  *    http://www.gnu.org/licenses/lgpl.html
- * 
+ *
  *  - Mozilla Public License Version 1.1 or later (the "MPL")
  *    http://www.mozilla.org/MPL/MPL-1.1.html
- * 
+ *
  * == END LICENSE ==
- * 
- * File Name: pt.js
- * 	Portuguese language file.
- * 
- * File Authors:
- * 		Francisco Pereira (fjpereira@netcabo.pt)
+ *
+ * Portuguese language file.
  */
 
 var FCKLang =
@@ -48,7 +44,9 @@ RemoveFormat		: "Eliminar Formato",
 InsertLinkLbl		: "Hiperligação",
 InsertLink			: "Inserir/Editar Hiperligação",
 RemoveLink			: "Eliminar Hiperligação",
+VisitLink			: "Open Link",	//MISSING
 Anchor				: " Inserir/Editar Âncora",
+AnchorDelete		: "Remove Anchor",	//MISSING
 InsertImageLbl		: "Imagem",
 InsertImage			: "Inserir/Editar Imagem",
 InsertFlashLbl		: "Flash",
@@ -74,6 +72,10 @@ RightJustify		: "Alinhar à Direita",
 BlockJustify		: "Justificado",
 DecreaseIndent		: "Diminuir Avanço",
 IncreaseIndent		: "Aumentar Avanço",
+Blockquote			: "Blockquote",	//MISSING
+CreateDiv			: "Create Div Container",	//MISSING
+EditDiv				: "Edit Div Container",	//MISSING
+DeleteDiv			: "Remove Div Container",	//MISSING
 Undo				: "Anular",
 Redo				: "Repetir",
 NumberedListLbl		: "Numeração",
@@ -107,20 +109,27 @@ SelectionField	: "Caixa de Combinação",
 ImageButton		: "Botão de Imagem",
 
 FitWindow		: "Maximizar o tamanho do editor",
+ShowBlocks		: "Show Blocks",	//MISSING
 
 // Context Menu
 EditLink			: "Editar Hiperligação",
 CellCM				: "Célula",
 RowCM				: "Linha",
 ColumnCM			: "Coluna",
-InsertRow			: "Inserir Linha",
+InsertRowAfter		: "Insert Row After",	//MISSING
+InsertRowBefore		: "Insert Row Before",	//MISSING
 DeleteRows			: "Eliminar Linhas",
-InsertColumn		: "Inserir Coluna",
+InsertColumnAfter	: "Insert Column After",	//MISSING
+InsertColumnBefore	: "Insert Column Before",	//MISSING
 DeleteColumns		: "Eliminar Coluna",
-InsertCell			: "Inserir Célula",
+InsertCellAfter		: "Insert Cell After",	//MISSING
+InsertCellBefore	: "Insert Cell Before",	//MISSING
 DeleteCells			: "Eliminar Célula",
 MergeCells			: "Unir Células",
-SplitCell			: "Dividir Célula",
+MergeRight			: "Merge Right",	//MISSING
+MergeDown			: "Merge Down",	//MISSING
+HorizontalSplitCell	: "Split Cell Horizontally",	//MISSING
+VerticalSplitCell	: "Split Cell Vertically",	//MISSING
 TableDelete			: "Eliminar Tabela",
 CellProperties		: "Propriedades da Célula",
 TableProperties		: "Propriedades da Tabela",
@@ -138,7 +147,7 @@ SelectionFieldProp	: "Propriedades da Caixa de Combinação",
 TextareaProp		: "Propriedades da Área de Texto",
 FormProp			: "Propriedades do Formulário",
 
-FontFormats			: "Normal;Formatado;Endereço;Título 1;Título 2;Título 3;Título 4;Título 5;Título 6",		//REVIEW : Check _getfontformat.html
+FontFormats			: "Normal;Formatado;Endereço;Título 1;Título 2;Título 3;Título 4;Título 5;Título 6",
 
 // Alerts and Messages
 ProcessingXHTML		: "A Processar XHTML. Por favor, espere...",
@@ -152,6 +161,7 @@ UnknownToolbarSet	: "Nome de barra \"%1\" não definido",
 NoActiveX			: "As definições de segurança do navegador podem limitar algumas potencalidades do editr. Deve activar a opção \"Executar controlos e extensões ActiveX\". Pode ocorrer erros ou verificar que faltam potencialidades.",
 BrowseServerBlocked : "Não foi possível abrir o navegador de recursos. Certifique-se que todos os bloqueadores de popup estão desactivados.",
 DialogBlocked		: "Não foi possível abrir a janela de diálogo. Certifique-se que todos os bloqueadores de popup estão desactivados.",
+VisitLinkBlocked	: "It was not possible to open a new window. Make sure all popup blockers are disabled.",	//MISSING
 
 // Dialogs
 DlgBtnOK			: "OK",
@@ -233,7 +243,7 @@ DlgLnkURL			: "URL",
 DlgLnkAnchorSel		: "Seleccionar una referência",
 DlgLnkAnchorByName	: "Por Nome de Referência",
 DlgLnkAnchorById	: "Por ID de elemento",
-DlgLnkNoAnchors		: "<Não há referências disponíveis no documento>",		//REVIEW : Change < and > with ( and )
+DlgLnkNoAnchors		: "(Não há referências disponíveis no documento)",
 DlgLnkEMail			: "Endereço de E-Mail",
 DlgLnkEMailSubject	: "Título de Mensagem",
 DlgLnkEMailBody		: "Corpo da Mensagem",
@@ -298,6 +308,11 @@ DlgTableCellSpace	: "Esp. e/células",
 DlgTableCellPad		: "Esp. interior",
 DlgTableCaption		: "Título",
 DlgTableSummary		: "Sumário",
+DlgTableHeaders		: "Headers",	//MISSING
+DlgTableHeadersNone		: "None",	//MISSING
+DlgTableHeadersColumn	: "First column",	//MISSING
+DlgTableHeadersRow		: "First Row",	//MISSING
+DlgTableHeadersBoth		: "Both",	//MISSING
 
 // Table Cell Dialog
 DlgCellTitle		: "Propriedades da Célula",
@@ -320,11 +335,17 @@ DlgCellVerAlignTop	: "Topo",
 DlgCellVerAlignMiddle	: "Médio",
 DlgCellVerAlignBottom	: "Fundi",
 DlgCellVerAlignBaseline	: "Linha de Base",
+DlgCellType		: "Cell Type",	//MISSING
+DlgCellTypeData		: "Data",	//MISSING
+DlgCellTypeHeader	: "Header",	//MISSING
 DlgCellRowSpan		: "Unir Linhas",
 DlgCellCollSpan		: "Unir Colunas",
 DlgCellBackColor	: "Cor do Fundo",
 DlgCellBorderColor	: "Cor do Limite",
 DlgCellBtnSelect	: "Seleccione...",
+
+// Find and Replace Dialog
+DlgFindAndReplaceTitle	: "Find and Replace",	//MISSING
 
 // Find Dialog
 DlgFindTitle		: "Procurar",
@@ -341,7 +362,6 @@ DlgReplaceReplAllBtn	: "Substituir Tudo",
 DlgReplaceWordChk		: "Coincidir com toda a palavra",
 
 // Paste Operations / Dialog
-PasteErrorPaste	: "A configuração de segurança do navegador não permite a execução automática de operações de colar. Por favor use o teclado (Ctrl+V).",
 PasteErrorCut	: "A configuração de segurança do navegador não permite a execução automática de operações de cortar. Por favor use o teclado (Ctrl+X).",
 PasteErrorCopy	: "A configuração de segurança do navegador não permite a execução automática de operações de copiar. Por favor use o teclado (Ctrl+C).",
 
@@ -349,9 +369,9 @@ PasteAsText		: "Colar como Texto Simples",
 PasteFromWord	: "Colar do Word",
 
 DlgPasteMsg2	: "Por favor, cole dentro da seguinte caixa usando o teclado (<STRONG>Ctrl+V</STRONG>) e prima <STRONG>OK</STRONG>.",
+DlgPasteSec		: "Because of your browser security settings, the editor is not able to access your clipboard data directly. You are required to paste it again in this window.",	//MISSING
 DlgPasteIgnoreFont		: "Ignorar da definições do Tipo de Letra ",
 DlgPasteRemoveStyles	: "Remover as definições de Estilos",
-DlgPasteCleanBox		: "Caixa de Limpeza",
 
 // Color Picker
 ColorAutomatic	: "Automático",
@@ -504,5 +524,11 @@ DlgAboutAboutTab	: "Acerca",
 DlgAboutBrowserInfoTab	: "Informação do Nevegador",
 DlgAboutLicenseTab	: "Licença",
 DlgAboutVersion		: "versão",
-DlgAboutInfo		: "Para mais informações por favor dirija-se a"
+DlgAboutInfo		: "Para mais informações por favor dirija-se a",
+
+// Div Dialog
+DlgDivGeneralTab	: "General",	//MISSING
+DlgDivAdvancedTab	: "Advanced",	//MISSING
+DlgDivStyle		: "Style",	//MISSING
+DlgDivInlineStyle	: "Inline Style"	//MISSING
 };
