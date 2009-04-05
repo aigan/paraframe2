@@ -1,0 +1,3 @@
+SetHandler perl-script
+PerlSetVar loadpage no
+PerlSetVar renderer Para::Frame::Renderer::FCK::Connector
