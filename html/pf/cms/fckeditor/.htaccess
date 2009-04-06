@@ -15,5 +15,5 @@ Options -MultiViews
 
 #EOF
 
-AddHandler perl-script js_tt
-AddType application/x-javascript .js_tt
+AddHandler perl-script js_dtt
+AddType application/x-javascript .js_dtt

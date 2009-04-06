@@ -2597,7 +2597,7 @@ sub configure
 			      subdir_suffix => '_plain',
 			      pre_dir => 'inc_plain',
 			      inc_dir => 'inc_plain',
-			      handles => ['css_tt','js_tt'],
+			      handles => ['css_tt','js_tt','css_dtt','js_dtt'],
 			      ABSOLUTE => 1,
 			      TRIM => 1,
 			     });
