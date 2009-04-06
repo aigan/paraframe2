@@ -121,6 +121,11 @@ sub save_as
     $args ||= {};
     my $fromfile = $uploaded->{tempfile};
 
+    if( UNIVERSAL::isa $destfile, 'Para::Frame::File' )
+    {
+	$destfile = $destfile->sys_path;
+    }
+
     debug "Should save $fromfile as $destfile";
 
     if( $destfile =~ m{^//([^/]+)(.+)} )

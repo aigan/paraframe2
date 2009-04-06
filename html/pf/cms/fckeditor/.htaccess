@@ -1,15 +1,19 @@
-AddHandler default-handler css
+AddHandler None css
+AddHandler None js
 
 AddType application/x-javascript .js
 AddType text/css .css
 
 AddType text/xml .xml
 
-# Making sure not to render js files
-PerlSetVar site ignore
+## Making sure not to render js files
+#PerlSetVar site ignore
 
 # Multiviews will not work with dirs like fck_link if there is a file
 # in the same place with the name fck_link.html
 Options -MultiViews
 
 #EOF
+
+AddHandler perl-script js_dtt
+AddType application/x-javascript .js_dtt

@@ -1252,16 +1252,17 @@ sub vcs_version
 
   $file->filesize()
 
+Returns: the filesize in human readable format
+
 =cut
 
 sub filesize
 {
    my( $file ) = @_;
 
-   my $sys_path = $file->sys_path;
-   debug "Statting $sys_path";
+   $file->initiate;
 
-   return format_bytes(stat($file->sys_path)->size);
+   return format_bytes($file->{'size'});
 }
 
 #######################################################################

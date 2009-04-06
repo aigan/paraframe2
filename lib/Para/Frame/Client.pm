@@ -199,15 +199,18 @@ sub handler
 	$ctype = 'text/html';
     }
 
-    unless( $ctype =~ /\bcharset\b/ )
+    if( $ctype )
     {
-	if( $ctype =~ /^text\// )
+	unless( $ctype =~ /\bcharset\b/ )
 	{
-	    $ctype .= "; charset=UTF-8";
+	    if( $ctype =~ /^text\// )
+	    {
+		$ctype .= "; charset=UTF-8";
+	    }
 	}
-    }
 
-    $r->content_type($ctype);
+	$r->content_type($ctype);
+    }
 
 
     ### We let the daemon decide what to do with non-tt pages

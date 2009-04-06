@@ -1,0 +1,10 @@
+﻿
+FCKConfig.BaseHref = '[%site.scheme%]://[%site.host;home%]/' ;
+[% base = "$home/pf/cms/filemanager" %]
+[% connectorstr = "Connector=$base/connector/connector.pf" %]
+FCKConfig.LinkBrowserURL  = '[%base%]/browser/default/browser.html?[%connectorstr%]';
+FCKConfig.ImageBrowserURL = '[%base%]/browser/default/browser.html?Type=Image&[%connectorstr%]';
+FCKConfig.FlashBrowserURL = '[%base%]/browser/default/browser.html?Type=Flash&[%connectorstr%]';
+FCKConfig.LinkUploadURL   = '[%base%]/connector/upload.pf';
+FCKConfig.ImageUploadURL  = '[%base%]/connector/upload.pf?Type=Image';
+FCKConfig.FlashUploadURL  = '[%base%]/connector/upload.pf?Type=Flash' ;

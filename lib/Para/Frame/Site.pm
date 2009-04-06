@@ -532,7 +532,7 @@ sub uri2file
     my $req = $Para::Frame::REQ;
     my $req_site = $req->site;
 
-    if( $site->equals($req_site) )
+    if( $site->webhost eq $req_site->webhost )
     {
 #	debug "Getting uri2file from request";
 	return $req->uri2file(@_);
