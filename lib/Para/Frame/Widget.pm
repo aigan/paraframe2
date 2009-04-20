@@ -179,8 +179,6 @@ A 'href_id' attribute will set the id for the link.
 
 A 'href_style' attribute will set the style for the link.
 
-TODO: Do html escape of value
-
 If no class is set, the class will be C<same_place> if the link goes to
 the current page.  To be used with CSS for marking the current page in
 menues.
@@ -196,6 +194,14 @@ sub jump
     my( $label, $template, $attr ) = @_;
 
     $label = '???' unless length $label;
+
+    my $label_out = CGI->escapeHTML( $label );
+    my $content = $label_out;
+
+    if( my $src =  delete ${$attr}{'href_image'} )
+    {
+	$content = "<img alt=\"$label_out\" src=\"$src\">";
+    }
 
     my $extra = jump_extra( $template, $attr );
 
@@ -227,12 +233,12 @@ sub jump
 	return sprintf("<a href=\"%s\"%s>%s</a>",
 		       CGI->escapeHTML( $uri ),
 		       $extra,
-		       CGI->escapeHTML( $label ),
+		       $content,
 		       );
     }
     else
     {
-	return CGI->escapeHTML( $label );
+	return $content;
     }
 }
 

@@ -185,3 +185,8 @@ table.admin .selected img
 {
   border: 0px;
 }
+
+.paraframe_edit_link_overlay
+{
+  position: absolute;
+}
