@@ -324,10 +324,17 @@ sub find
 
     my $req = $Para::Frame::REQ;
 
-    # Handle index.tt
+    # Handle index.tt (for KNOWN dirs)
     if( $page->is_dir )
     {
-	$page = $page->get_virtual('index.tt');
+	if( $page->exist )
+	{
+	    $page = $page->get_virtual('index.tt');
+	}
+	else
+	{
+	    return( undef );
+	}
     }
 
     my $site = $page->site
