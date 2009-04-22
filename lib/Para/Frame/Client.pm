@@ -259,7 +259,7 @@ sub handler
 
 #    warn sprintf "URI %s FILE %s CTYPE %s\n", $uri, $filename, $ctype;
 
-    my $value = freeze [ \%params,  \%ENV, $uri, $filename, $ctype, {%$dirconfig}, $r->header_only, \%files ];
+    my $value = freeze [ \%params,  \%ENV, $uri, $filename, $ctype, {%$dirconfig}, $r->header_only, \%files, $r->status ];
 
     my $try = 0;
     while()
@@ -314,7 +314,7 @@ sub handler
 	unlink $tempfile or $s->log_error("$$:   failed: $!");;
     }
 
-    $s->log_error("$$: Done\n") if $DEBUG;
+    $s->log_error("$$: Done") if $DEBUG;
 
     return DONE;
 }

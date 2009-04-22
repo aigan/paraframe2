@@ -134,6 +134,7 @@ sub new
      'is_error_response' => 0,
      'moved_temporarily' => undef,
      'time'           => time,
+     'status'         => 200,
     }, $class;
 
     if( my $req = $args->{req} )
@@ -546,7 +547,9 @@ sub set_http_status
 {
     my( $resp, $status ) = @_;
     return 0 if $status < 100;
-    return $resp->req->send_code( 'AR-PUT', 'status', $status );
+    $resp->{'status'}  = $status;
+
+#    return $resp->req->send_code( 'AR-PUT', 'status', $status );
 }
 
 
@@ -913,6 +916,12 @@ sub send_headers
     }
 
     $ctype->commit;
+
+    if( $req->original_status != $resp->{'status'} )
+    {
+	$req->send_code( 'AR-PUT', 'status', $resp->{'status'} );
+    }
+
 
     my %multiple; # Replace first, but add later headers
     foreach my $header ( $resp->headers )

@@ -93,7 +93,7 @@ sub new
     }
 
 
-    my( $params, $env, $orig_url_string, $orig_filename, $content_type, $dirconfig, $header_only, $files ) = @$value;
+    my( $params, $env, $orig_url_string, $orig_filename, $content_type, $dirconfig, $header_only, $files, $orig_status ) = @$value;
 
     # Modify $env for non-mod_perl mode
     $env->{'REQUEST_METHOD'} = 'GET';
@@ -134,6 +134,7 @@ sub new
 	orig_ctype      => $content_type,
         orig_resp       => undef,
         orig_page       => undef,          ## Original page requested
+        orig_status     => $orig_status,
 	referer         => $q->referer,    ## The referer of this page
 	dirconfig       => $dirconfig,     ## Apache $r->dir_config
         page            => undef,          ## The page requested
@@ -3259,6 +3260,18 @@ sub original_content_type_string
 
 #######################################################################
 
+=head2 original_status
+
+=cut
+
+sub original_status
+{
+    return $_[0]->{'orig_status'} || 0;
+}
+
+
+#######################################################################
+
 =head2 handle_error
 
 =cut
@@ -3422,7 +3435,7 @@ sub handle_error
 
     if( $http_status )
     {
-	$new_resp->set_http_status(404);
+	$new_resp->set_http_status( $http_status );
     }
 
     debug "New response set with url $url";
