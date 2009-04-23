@@ -25,5 +25,5 @@
   </head>
 
   <body [% onload %][% IF body_class %] class="$body_class"[% END %]>
-
+  <base href="[% site.home.url %]" />
 [% PROCESS border_top.tt %]
