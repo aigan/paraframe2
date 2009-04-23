@@ -787,7 +787,7 @@ sub replace_query
     ###  DANGER  DANGER  DANGER
     # init() is not a public method
     debug(1,"Initiating query with string $query_string");
-    cluck "Empty query_string";
+#    cluck "Empty query_string";
 
     $ENV{QUERY_STRING} = $query_string;
     $q->delete_all;
