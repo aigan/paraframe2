@@ -1,5 +1,5 @@
 package Para::Frame::Template::Compiled;
-#=====================================================================
+#=============================================================================
 #
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
@@ -10,7 +10,7 @@ package Para::Frame::Template::Compiled;
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
-#=====================================================================
+#=============================================================================
 
 =head1 NAME
 
@@ -25,7 +25,7 @@ use base qw( Para::Frame::File );
 
 use Para::Frame::Reload;
 
-#######################################################################
+##############################################################################
 
 1;
 

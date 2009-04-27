@@ -1,5 +1,5 @@
 package Para::Frame::Action::debug_change;
-#=====================================================================
+#=============================================================================
 #
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
@@ -10,7 +10,7 @@ package Para::Frame::Action::debug_change;
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
-#=====================================================================
+#=============================================================================
 
 use 5.010;
 use strict;
