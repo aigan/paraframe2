@@ -515,6 +515,7 @@ sub new_minimal
      wait           => 0,	## Asked to wait?
      site           => undef,	## Default site for req
      started        => Time::HiRes::time,
+     page           => undef,
     }, $class;
 
     $req->{'params'} = {%$Para::Frame::PARAMS};
@@ -773,7 +774,7 @@ L<Para::Frame::Request::Response/page>.
 
 sub page
 {
-    return $_[0]->response->page || confess "Page not set";
+    return $_[0]->{'page'} || $_[0]->response->page || confess "Page not set";
 }
 
 
