@@ -915,9 +915,9 @@ sub uri
 
     if( $template !~ m(//) and $template !~ m(^/) )
     {
-        debug("Relative link $template");
+#        debug("Relative link $template");
         $template = $req->page->dir->url_path_slash.$template;
-        debug ("              $template");
+#        debug ("              $template");
     }
 
     my $extra = "";

@@ -15,5 +15,7 @@
 ^\.#
 /\.#
 /\.dolphinview
+^\.git
+^tmp/
 
 ^Para-Frame-
