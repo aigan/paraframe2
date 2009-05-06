@@ -52,7 +52,7 @@
       [% IF q.param(key).size > 1 %]
         <ol>
           [% FOREACH val IN q.param(key) %]
-          <li>[% val | html %]
+          <li>[% val | html %]</li>
           [% END %]
         </ol>
       [% ELSE %]

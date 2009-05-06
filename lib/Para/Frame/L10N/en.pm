@@ -1,5 +1,5 @@
 package Para::Frame::L10N::en;
-#=====================================================================
+#=============================================================================
 #
 # AUTHOR
 #   Jonas Liljegren   <jonas@paranormal.se>
@@ -10,7 +10,7 @@ package Para::Frame::L10N::en;
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
-#=====================================================================
+#=============================================================================
 
 =head1 NAME
 

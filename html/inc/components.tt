@@ -195,7 +195,7 @@ $content
    DEFAULT class_expand = "paraframe_imgexpand";
    DEFAULT class_expanded = "paraframe_imgexpanded";
 %]
-<span class="$class_expand" id="$id_label"><a href="javascript:showhide('$id_block')">[% IF img_placement == "before" %]<img alt="v" src="$label_expand_img"> [% END %]$label[% UNLESS img_placement == "before" %] <img alt="v" src="$label_expand_img">[% END %]</a></span>
+<span class="$class_expand" id="$id_label"><a href="javascript:showhide('$id_block')">[% IF img_placement == "before" %]<img alt="v" src="$label_expand_img" /> [% END %]$label[% UNLESS img_placement == "before" %] <img alt="v" src="$label_expand_img" />[% END %]</a></span>
 <div class="$class_expanded" id='$id_block' style="display:$paraframe_display">
 $content
 </div>
