@@ -913,7 +913,9 @@ sub uri
 
     $template ||= $req->site->home_url_path;
 
-    if( $template !~ m(//) and $template !~ m(^/) )
+    if( $template !~ m(//) and
+        $template !~ m(^/) and
+        $template !~ m(:) )
     {
 #        debug("Relative link $template");
         $template = $req->page->dir->url_path_slash.$template;
