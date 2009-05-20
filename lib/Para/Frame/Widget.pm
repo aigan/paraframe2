@@ -1699,7 +1699,8 @@ sub label_from_params
 	$params->{'label'} = $tdlabel;
     }
 
-    if( my $label = delete $params->{'label'} )
+    my $label = delete $params->{'label'} // '';
+    if( length $label )
     {
 	debug 2, "Drawing a label: ". $label;
 
