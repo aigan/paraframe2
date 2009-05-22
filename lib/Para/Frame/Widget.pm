@@ -200,7 +200,7 @@ sub jump
 
     if( my $src =  delete ${$attr}{'href_image'} )
     {
-	$content = "<img alt=\"$label_out\" src=\"$src\">";
+	$content = "<img alt=\"$label_out\" src=\"$src\" />";
     }
 
     my $extra = jump_extra( $template, $attr );
@@ -2240,6 +2240,7 @@ sub on_configure
 	'hidden'          => \&hidden,
 	'input'           => \&input,
 	'textarea'        => \&textarea,
+	'htmlarea'        => \&htmlarea,
         'checkbox'        => \&checkbox,
         'radio'           => \&radio,
 	'filefield'       => \&filefield,
