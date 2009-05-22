@@ -223,7 +223,7 @@ sub jump
 	}
     }
 
-
+    $template ||= $Para::Frame::REQ->page->url_path_slash;
 
 #    warn sprintf("Escaping '%s' and getting '%s'\n", $label,CGI->escapeHTML( $label ) );
     my $uri = Para::Frame::Utils::uri( $template, $attr );
@@ -1699,7 +1699,8 @@ sub label_from_params
 	$params->{'label'} = $tdlabel;
     }
 
-    if( my $label = delete $params->{'label'} )
+    my $label = delete $params->{'label'} // '';
+    if( length $label )
     {
 	debug 2, "Drawing a label: ". $label;
 

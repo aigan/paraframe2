@@ -893,6 +893,9 @@ sub uri_path
 
 Creates a URL with query parameters separated by '&'.
 
+Relative URLs will be expanded relative the current
+L<Para::Frame::Request/page>.
+
 C<$url> should not include a '?'.
 
 C<$url> defaults to L<Para::Frame::Site/home>.
@@ -909,6 +912,15 @@ sub uri
 	if $attr and not ref $attr;
 
     $template ||= $req->site->home_url_path;
+
+    if( $template !~ m(//) and
+        $template !~ m(^/) and
+        $template !~ m(:) )
+    {
+#        debug("Relative link $template");
+        $template = $req->page->dir->url_path_slash.$template;
+#        debug ("              $template");
+    }
 
     my $extra = "";
     my @parts = ();

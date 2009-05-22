@@ -503,9 +503,15 @@ sub precompile
     my $DEBUG = 0;
 
     my $req = $dest->req;
+    my $def_propargs = $args->{'default_propargs'};
 
     $args ||= {};
     $args->{'umask'} ||= 02;
+
+    if( $def_propargs )
+    {
+        $req->user->set_default_propargs($def_propargs);
+    }
 
     my $tmpl = $args->{'template'};
     unless($tmpl)
@@ -525,6 +531,7 @@ sub precompile
 
     #Normalize page URL
     my $page = $dest->normalize;
+    $req->{'page'} = $page;
 
     my $renderargs =
     {
@@ -585,6 +592,12 @@ sub precompile
 
     $dest->chmod($args);
     $dest->reset();
+    $req->{'page'} = undef;
+
+    if( $def_propargs )
+    {
+        $req->user->set_default_propargs(undef);
+    }
 
     if( $error )
     {
