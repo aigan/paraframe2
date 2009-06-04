@@ -44,6 +44,14 @@ memory footprint
 
 =head2 method
 
+  Para::Frame::Worker->method( $obj, $methodname, @args )
+
+This is a worker version of
+
+  $obj->$methodname( @args )
+
+The arguments are freezed with L<Storable/freeze>
+
 =cut
 
 sub method

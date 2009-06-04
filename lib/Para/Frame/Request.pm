@@ -1620,6 +1620,12 @@ sub after_jobs
 	}
 	elsif( $resp ne $new_resp )
 	{
+            if( $resp->is_error and $new_resp->is_error )
+            {
+                debug "DOUBLE TROUBLE";
+                $req->handle_error({ response => $new_resp });
+            }
+
 	    # Let us redo the page rendering
 	}
 	elsif( $render_result )
@@ -3328,10 +3334,26 @@ sub handle_error
 
 
     # Has a new response been selected
-    if( $new_resp and $resp and ($new_resp ne $resp) )
+    if( $new_resp and $resp )
     {
-	# Let the $req->after_jobs() render the new response
-	return 0;
+        if($new_resp ne $resp)
+        {
+            # Let the $req->after_jobs() render the new response
+            return 0;
+        }
+        elsif( $resp->is_error and $new_resp->is_error )
+        {
+            my $args =
+            {
+             resp => $resp,
+             req => $req,
+            };
+            my $err_rend = Para::Frame::Renderer::HTML_Fallback->new($args);
+            $resp->set_renderer($err_rend);
+            $resp->set_is_error;
+            $resp->set_http_status( 500 );
+            return 1;
+        }
     }
 
     my $error_tt; # A new page to render (the path string)
@@ -3416,6 +3438,7 @@ sub handle_error
 		my $err_rend = Para::Frame::Renderer::HTML_Fallback->new($args);
 		$resp->set_renderer($err_rend);
 		$resp->set_is_error;
+                $resp->set_http_status( 500 );
 		return 1;
 	    }
 	}
