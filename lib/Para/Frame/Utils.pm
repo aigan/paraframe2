@@ -58,7 +58,7 @@ our @EXPORT_OK
             store_params clear_params add_params restore_params
             idn_encode idn_decode debug reset_hashref timediff
             extract_query_params fqdn retrieve_from_url get_from_fork
-            datadump client_send validate_utf8 escape_js );
+            datadump client_send validate_utf8 escape_js parse_perlstruct );
 
 use Para::Frame::Reload;
 #use Para::Frame::URI;
@@ -2190,6 +2190,98 @@ sub validate_utf8
 	}
     }
 }
+
+##############################################################################
+
+=head2 parse_perlstruct
+
+Recursive array-refs implemented
+
+TODO: hashrefs
+
+=cut
+
+sub parse_perlstruct
+{
+    my( $str, $lvl ) = @_;
+
+    $lvl ||= 0;
+    $lvl ++;
+
+    my(  @data_in, @data_out );
+    my $re = qr{
+                   \G \s*              # start
+                   (                  # paren group 1 (parens)
+                     \[
+                     (                # paren group 2 (contents of parens)
+                         (?:
+                             (?> [^\[\]]+ )  # Non-parens without backtracking
+                         |
+                             (?1)          # Recurse to start of paren group 1
+                         )*
+                     )
+                     \]
+                     |
+                         ( [^\[\],]+ )  # Non-parens
+                 )
+                 \s* ,?                # end
+           }x;
+
+
+    my $cnt = 0;
+    while( $str =~ /$re/gc )
+    {
+        $cnt++;
+        if( defined( my $elem_a = $2) )
+        {
+#            debug 0, "  "x$lvl . "elem $cnt: A $elem_a";
+#            push @data_in, 'A'.$elem_a;
+            push @data_out, [ parse_perlstruct( $elem_a, $lvl ) ];
+        }
+        elsif( defined( my $elem_s = $3) )
+        {
+#            debug 0, "  "x$lvl . "elem $cnt: S $elem_s";
+#            push @data_in, 'S'.$elem_s;
+            $elem_s =~ s/^\s+//;
+            $elem_s =~ s/\s+$//;
+            push @data_out, $elem_s;
+        }
+        else
+        {
+            confess "empty part found";
+        }
+    }
+
+    my($pos ) = pos($str)||0;
+    if( $pos < length($str) )
+    {
+        debug "Got to $pos of ".length($str);
+        confess "Malformed arclim string $str";
+    }
+#
+#    foreach my $elem_in ( @data_in )
+#    {
+#        $elem_in =~ s/^([ASH])//;
+#        my $type = $1 or  confess "No type";
+#        if( $type eq 'A' )
+#        {
+#            push @data_out, [ parse_perlstruct( $elem_in, $lvl ) ];
+#        }
+#        elsif( $type eq 'S' )
+#        {
+#            $elem_in =~ s/^\s+//;
+#            $elem_in =~ s/\s+$//;
+#            push @data_out, $elem_in;
+#        }
+#        else
+#        {
+#            confess "Unknown type $type";
+#        }
+#    }
+
+    return @data_out;
+}
+
 
 ##############################################################################
 
