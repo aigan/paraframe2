@@ -229,7 +229,7 @@ sub get
     {
  	# Try once more, in english
 	my $cur_lang = $Date::Manip::Cnf{'Language'};
-	debug(1,"Trying in english...");
+	debug "Trying in english...";
 	Date_Init("Language=English");
 
 	$date = $LOCAL_PARSER->parse_datetime(UnixDate($time,"%O"));
@@ -266,7 +266,14 @@ sub init
 {
     #debug "Initiating date: $_[0]";
     $STRINGIFY and $_[0]->set_formatter($STRINGIFY);
-    $_[0]->set_time_zone($_[1] || $TZ);
+    eval{ $_[0]->set_time_zone($_[1] || $TZ) };
+    if( $@ =~ /^Invalid local time for date/ )
+    {
+	debug $@;
+	debug "Keeping timezone for ".$_[0]->sysdesig;
+	undef $@;
+    }
+
     #debug "Finaly: $_[0]";
     return $_[0];
 }
