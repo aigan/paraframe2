@@ -2568,7 +2568,7 @@ sub configure
 			      subdir_suffix => '',
 			      pre_dir => 'inc',
 			      inc_dir => 'inc',
-			      handles => ['tt'],
+			      handles => ['tt', 'html_tt'],
 			     });
 
 

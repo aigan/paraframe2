@@ -44,6 +44,8 @@ use Para::Frame::List;
 use Para::Frame::Dir;
 use Para::Frame::Template;
 use Para::Frame::Image;
+use Para::Frame::Time qw( now );
+use Para::Frame::Renderer::Static;
 
 ##############################################################################
 
@@ -1358,6 +1360,8 @@ sub target_with_lang
 
     $args ||= {};
 
+    my $ext = $args->{'ext'} || 'tt';
+
 #    debug "Finding the target for ".$file->desig." with ".datadump($args,2);
 
     my $target = $file->{'url_norm'} || $file->{'sys_norm'};
@@ -1365,7 +1369,7 @@ sub target_with_lang
     if( $target =~ /\/$/ )
     {
 	# Target indicates a dir. Make it so
-	$target .= "index.tt";
+	$target .= "index.$ext";
     }
 
     # The language
@@ -1377,7 +1381,7 @@ sub target_with_lang
 #	debug datadump $language;
     }
 
-    if( $target =~ /\/([^\/]+)(\.\w\w)\.tt$/ )
+    if( $target =~ /\/([^\/]+)(\.\w\w)\.$ext$/ )
     {
 	unless( $2 eq $code )
 	{
@@ -1387,7 +1391,7 @@ sub target_with_lang
     else
     {
 #	debug "Setting language to $code";
-	$target =~ s/ \/([^\/]+)\.tt$ /\/$1.$code.tt/x;
+	$target =~ s/ \/([^\/]+)\.$ext$ /\/$1.$code.$ext/x;
     }
 
     if( my $site = $file->site )
@@ -1422,6 +1426,8 @@ sub target_without_lang
 
     $args ||= {};
 
+    my $ext = $args->{'ext'} || 'tt';
+
 #    debug "Finding the target for ".$file->desig." with ".datadump($args,2);
 
     my $target = $file->{'url_norm'} || $file->{'sys_norm'};
@@ -1429,10 +1435,10 @@ sub target_without_lang
     if( $target =~ /\/$/ )
     {
 	# Target indicates a dir. Make it so
-	$target .= "index.tt";
+	$target .= "index.$ext";
     }
 
-    $target =~ s/\.\w\w\.tt$/.tt/;
+    $target =~ s/\.\w\w\.$ext$/.$ext/;
 
 
     if( my $site = $file->site )
@@ -1511,14 +1517,18 @@ with the flag C<may_not_exist>.
 
 sub normalize
 {
-    my( $f ) = @_;
+    my( $f, $args ) = @_;
+
+    $args ||= {};
+
+    my $ext = $args->{'ext'} || 'tt';
 
     if( my $url = $f->{'url_norm'} )
     {
 #	debug "normalizing $url";
 
-	$url =~ s/\.\w\w\.tt$/.tt/;
-	$url =~ s/\/index.tt$/\//;
+	$url =~ s/\.\w\w\.$ext$/.$ext/;
+	$url =~ s/\/index.$ext$/\//;
 
 	# Cleanup any remaining double slashes
 	$url =~ s(//+)(/)g;
@@ -1964,13 +1974,24 @@ sub renderer
 {
     my( $f, $args ) = @_;
 
+
+    debug "=========> Finding the renderer for ".$f->sysdesig;
+
     my $renderer;
 
     $args ||= {};
 
     $args->{'page'} = $f;
 
-    return Para::Frame::Renderer::TT->new( $args );
+#    my $target = $f->target_with_lang;
+#    if( $target->suffix eq 'html' )
+#    {
+#	return Para::Frame::Renderer::Static->new( $args );
+#    }
+#    else
+#    {
+	return Para::Frame::Renderer::TT->new( $args );
+#    }
 }
 
 ##############################################################################
@@ -2262,6 +2283,165 @@ sub set_content
 
 ##############################################################################
 
+=head2 precompile
+
+  $dest->precompile( \%args )
+
+C<$dest> is the file resulting from the compilation. It's the
+place there the precompiled file should be saved. You may get the
+C<$dest> from a L<Para::Frame::Dir/get_virtual> and it should be a
+(virual) file recognized as a template, for example by givin it a
+C<.tt> file suffix.
+
+The template to be used for the construction of this file is given
+by the arg C<template>.
+
+Send same args as for L</new> for creating the new page from thre
+source C<$page>. Also takes:
+
+  arg template
+  arg type defaults to html_pre
+  arg umask defaults to 02
+  arg params
+  arg template_root
+  arg charset
+
+The C<$dest> is normalized with L<Para::Frame::File/normalize>. It's
+this normalized page that is rendered. That will be the object
+availible in the template during rendering as the C<page> variable
+(both during the precompile and during later renderings).
+
+The args C<template> and C<template_root> is given to
+L<Para::Frame::Renderer::TT/new> via L<Para::Frame::File/renderer>.
+
+Returns: C<$dest>
+
+=cut
+
+sub precompile
+{
+    my( $dest, $args ) = @_;
+
+    my $DEBUG = 0;
+
+    my $req = $dest->req;
+    my $def_propargs = $args->{'default_propargs'};
+
+    $args ||= {};
+    $args->{'umask'} ||= 02;
+
+    if( $def_propargs )
+    {
+        $req->user->set_default_propargs($def_propargs);
+    }
+
+    my $tmpl = $args->{'template'};
+    unless($tmpl)
+    {
+	debug "CHECK THIS: ".datadump($tmpl,2);
+	$tmpl = $dest->template;
+    }
+
+    my $dir = $dest->dir->create($args); # With umask
+
+    my $srcfile = $tmpl->sys_path;
+    my $fh = new IO::File;
+    $fh->open( $srcfile ) or die "Failed to open '$srcfile': $!\n";
+
+    debug 0, "Precompiling page using template $srcfile" if $DEBUG;
+
+
+    #Normalize page URL
+    my $page = $dest->normalize;
+    $req->{'page'} = $page;
+
+    my $renderargs =
+    {
+     template => $tmpl,
+    };
+
+    if( my $htmlsrc = $args->{'template_root'} )
+    {
+	$renderargs->{'template_root'} = $htmlsrc;
+    }
+
+    my $rend = $page->renderer($renderargs );
+
+    $rend->set_burner_by_type($args->{'type'} || 'html_pre');
+
+    $rend->add_params({
+		       pf_source_file => $srcfile,
+		       pf_compiled_date => now->iso8601,
+#		       pf_source_version => $tmpl->vcs_version(),
+		      });
+
+    if( my $params = $args->{'params'} )
+    {
+	$rend->add_params($params);
+    }
+
+    $rend->set_tt_params;
+    my $ctype = Para::Frame::Request::Ctype->new();
+    my $charset = $args->{'charset'} || 'UTF-8';
+    $ctype->set_type('text/plain');
+    $ctype->set_charset($charset);
+    $rend->set_ctype($ctype);
+
+#    debug $ctype->sysdesig;
+
+
+    if( $DEBUG )
+    {
+	my $destfile = $dest->sys_path;
+	debug "BURNING TO $destfile";
+    }
+
+    my $out = "";
+#    my $res = $rend->burn( $fh, $destfile );
+    my $res = $rend->burn( $fh, \$out );
+    $fh->close;
+
+    if( $ctype->charset eq 'UTF-8' )
+    {
+	$dest->set_content_as_text(\$out);
+    }
+    else
+    {
+	$dest->set_content(\$out);
+    }
+
+    my $error = $rend->burner->error unless $res;
+
+    $dest->chmod($args);
+    $dest->reset();
+    $req->{'page'} = undef;
+
+    if( $def_propargs )
+    {
+        $req->user->set_default_propargs(undef);
+    }
+
+    if( $error )
+    {
+	debug "ERROR WHILE PRECOMPILING PAGE";
+	debug 0, $error;
+	my $part = $req->result->exception($error);
+	if( ref $error and $error->info =~ /not found/ )
+	{
+	    debug "Subtemplate for precompile not found";
+	    my $incpathstring = join "", map "- $_\n",
+		@{$rend->paths};
+	    $part->add_message("Include path is\n$incpathstring");
+	}
+
+	die $part;
+    }
+
+    return $dest;
+}
+
+
+##############################################################################
 
 1;
 
