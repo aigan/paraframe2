@@ -270,7 +270,8 @@ sub init
     if( $@ =~ /^Invalid local time for date/ )
     {
 	debug $@;
-	debug "Keeping timezone for ".$_[0]->sysdesig;
+	debug "Setting UTC for ".$_[0]->sysdesig;
+	$_[0]->set_time_zone('UTC');
 	undef $@;
     }
 
