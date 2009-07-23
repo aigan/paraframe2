@@ -196,25 +196,35 @@ sub render_output
 	throw('notfound', "Couldn't find a template for ".$rend->page->url_path);
     }
 
-    unless( ref $tmpl eq 'Para::Frame::Template' )
+
+    if( ref $tmpl eq 'Para::Frame::Template' )
     {
-	confess "$tmpl is not a template";
+	my $in = $tmpl->document;
+	my $burner = $rend->burner;
+	if( $burner )
+	{
+	    $rend->set_tt_params;
+	    $rend->burn($in, $outref) or return 0;
+	}
+	else
+	{
+	    debug "Getting '$in' as a static page";
+	    $rend->get_static( $in, $outref ) or return 0;
+	}
     }
-
-
-    my $in = $tmpl->document;
-
-    my $burner = $rend->burner;
-    if( not $burner )
+    elsif( UNIVERSAL::isa $tmpl, 'Para::Frame::File' )
     {
-	debug "Getting '$in' as a static page";
-	$rend->get_static( $in, $outref ) or return 0;
+	$outref = $tmpl->contentref_as_text;
+
+#	my $in = $tmpl->sys_path;
+#	debug "Getting '$in' as a static page";
+#	$rend->get_static( $in, $outref ) or return 0;
+#	utf8::upgrade( $$outref );
     }
     else
     {
-	$rend->set_tt_params;
-#	debug "BURNING $in";
-	$rend->burn($in, $outref) or return 0;
+	debug datadump($rend,2);
+	confess "$tmpl is not a template";
     }
 
 
