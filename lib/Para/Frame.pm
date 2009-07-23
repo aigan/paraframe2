@@ -886,7 +886,8 @@ sub fill_buffer
 
 		    if( $last_lost eq $client )
 		    {
-			confess "Double lost connection $client";
+#			confess "Double lost connection $client";
+			cluck "Double lost connection $client";
 		    }
 
 		    $last_lost = $client;
