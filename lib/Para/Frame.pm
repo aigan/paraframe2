@@ -745,6 +745,12 @@ sub get_value
     if( $Para::Frame::FORK )
     {
 	debug(2,"Getting value inside a fork");
+
+        unless( $Para::Frame::Sender::SOCK )
+        {
+            confess "get_value in FORK with no socket";
+        }
+
 	while( $_ = <$Para::Frame::Sender::SOCK> )
 	{
 	    if( s/^([\w\-]{3,20})\0// )
