@@ -300,6 +300,12 @@ sub main_loop
 #	    {
 #		debug "waiting for read on socket..."; ### DEBUG
 #	    }
+#            debug "can_read $SELECT with timeout $timeout for ".
+#              $SELECT->count()." handles";
+#            foreach my $cl ( $SELECT->handles )
+#            {
+#                debug " * $cl is ".($cl->connected?"connected":"DISCONNECTED");
+#            }
 
 
 	    while( my( $client ) = $SELECT->can_read( $timeout ) )
@@ -892,7 +898,7 @@ sub fill_buffer
 
 		    if( $last_lost eq $client )
 		    {
-			confess "Double lost connection $client";
+                        cluck("Double lost connection $client");
 		    }
 
 		    $last_lost = $client;
@@ -1348,12 +1354,19 @@ sub close_callback
     switch_req(undef);
 
     # if not a background request
-    if( ref $client and $client->connected )
+    if( ref $client )
     {
-	# I have stopped using this socket
-	$client->shutdown(2);
-	$SELECT->remove($client);
-	$client->close;
+        if( $SELECT->exists( $client ) )
+        {
+            $SELECT->remove($client);
+        }
+
+        if( $client->connected )
+        {
+            # I have stopped using this socket
+            $client->shutdown(2);
+            $client->close;
+        }
     }
 }
 
@@ -1650,7 +1663,7 @@ sub add_background_jobs_conditional
     elsif( $delta < BGJOB_MAX )
     {
 	debug(4,"Too few seconds for MAX: $delta < ". BGJOB_MAX);
-	return;
+	return 0;
     }
 
     # Cache cleanup could safely be done here
