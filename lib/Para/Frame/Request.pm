@@ -2709,6 +2709,7 @@ sub create_fork
 	### --> child
 
 	$Para::Frame::FORK = 1;
+        $Para::Frame::SELECT = undef;
  	my $result = Para::Frame::Child::Result->new;
 	$req->{'child_result'} = $result;
 	$req->run_hook('on_fork', $result );
