@@ -1355,7 +1355,10 @@ sub close_callback
     switch_req(undef);
 
     # if not a background request
-    if( ref $client )
+    if( ref $client and
+	$client->connected and
+	( $client != $SERVER )
+      )
     {
         if( $SELECT->exists( $client ) )
         {
