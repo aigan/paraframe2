@@ -1342,7 +1342,10 @@ sub close_callback
     switch_req(undef);
 
     # if not a background request
-    if( ref $client and $client->connected )
+    if( ref $client and
+	$client->connected and
+	( $client != $SERVER )
+      )
     {
 	# I have stopped using this socket
 	$client->shutdown(2);
