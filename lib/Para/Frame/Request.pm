@@ -1300,6 +1300,24 @@ sub add_background_job
 
 ##############################################################################
 
+=head2 prepend_background_job
+
+  $req->prepend_background_job( $label, \&code, @params )
+
+May still take a lot of time since the prepended background job is
+then appended to the list of current jobs.
+
+=cut
+
+sub prepend_background_job
+{
+    debug(5,"Added the background job $_[1] for $_[0]->{reqnum}");
+    unshift @Para::Frame::BGJOBS_PENDING, [@_];
+}
+
+
+##############################################################################
+
 =head2 run_code
 
   $req->run_code( $label, $codered, @args )

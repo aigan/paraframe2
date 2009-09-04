@@ -417,13 +417,12 @@ sub main_loop
 		$timeout = TIMEOUT_SHORT; ### Get the jobs done quick
 	    }
 
-	    ### Do background jobs if no req jobs waiting
+
+
+	    ### Do background jobs
 	    #
-	    unless( values %REQUEST )
-	    {
-		add_background_jobs_conditional() and
-		  $timeout = TIMEOUT_SHORT;
-	    }
+	    add_background_jobs_conditional();
+
 
 
 	    ### Waiting for a child? (*inside* a nested request)
@@ -1673,6 +1672,10 @@ sub add_background_jobs_conditional
     # Cache cleanup could safely be done here
     # But nothing that requires a $req
     Para::Frame->run_hook(undef, 'busy_background_job', $delta);
+
+    # Do background jobs if no req jobs waiting
+    #
+    return if values %REQUEST;
 
     # Expire old page results and sessions
     #
