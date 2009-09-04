@@ -89,7 +89,14 @@ sub as_html
 
     my $href = $url->{'value'}->as_string;
 
-    my $label = $attrs->{'label'} || $url->{'value'}->host;
+#    debug "Getting host for ".datadump($url->{'value'});
+    my $label = $attrs->{'label'};
+    if( not $label and $url->{'value'}->can('host') )
+    {
+	$label = $url->{'value'}->host;
+    }
+
+    $label ||= $url->{'value'}->as_string;
 
     return Para::Frame::Widget::jump( $label, $href, $attrs );
 
