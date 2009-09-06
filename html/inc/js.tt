@@ -19,7 +19,7 @@ function showhide(whichLayer) {
         }
     }
 }
-[% PROCESS js_extra.tt # use for loading external scripts! %]
+[%# PROCESS js_extra.tt # loaded from header.tt, not from js!  use for loading external scripts! %]
 </script>
 [% IF cfg.ie7 %]
    [%# compliance patch for microsoft browsers #%]

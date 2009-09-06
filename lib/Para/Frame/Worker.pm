@@ -168,6 +168,7 @@ sub create_worker
 	### --> child
 
 	$Para::Frame::FORK = 1;
+        $Para::Frame::SELECT = undef;
  	my $result = Para::Frame::Child::Result->new;
 
 	if( $Para::Frame::REQ )

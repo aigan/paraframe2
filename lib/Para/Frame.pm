@@ -300,6 +300,12 @@ sub main_loop
 #	    {
 #		debug "waiting for read on socket..."; ### DEBUG
 #	    }
+#            debug "can_read $SELECT with timeout $timeout for ".
+#              $SELECT->count()." handles";
+#            foreach my $cl ( $SELECT->handles )
+#            {
+#                debug " * $cl is ".($cl->connected?"connected":"DISCONNECTED");
+#            }
 
 
 	    while( my( $client ) = $SELECT->can_read( $timeout ) )
@@ -411,13 +417,12 @@ sub main_loop
 		$timeout = TIMEOUT_SHORT; ### Get the jobs done quick
 	    }
 
-	    ### Do background jobs if no req jobs waiting
+
+
+	    ### Do background jobs
 	    #
-	    unless( values %REQUEST )
-	    {
-		add_background_jobs_conditional() and
-		  $timeout = TIMEOUT_SHORT;
-	    }
+	    add_background_jobs_conditional();
+
 
 
 	    ### Waiting for a child? (*inside* a nested request)
@@ -745,6 +750,12 @@ sub get_value
     if( $Para::Frame::FORK )
     {
 	debug(2,"Getting value inside a fork");
+
+        unless( $Para::Frame::Sender::SOCK )
+        {
+            confess "get_value in FORK with no socket";
+        }
+
 	while( $_ = <$Para::Frame::Sender::SOCK> )
 	{
 	    if( s/^([\w\-]{3,20})\0// )
@@ -886,7 +897,8 @@ sub fill_buffer
 
 		    if( $last_lost eq $client )
 		    {
-			confess "Double lost connection $client";
+#			confess "Double lost connection $client";
+			cluck "Double lost connection $client";
 		    }
 
 		    $last_lost = $client;
@@ -1342,12 +1354,22 @@ sub close_callback
     switch_req(undef);
 
     # if not a background request
-    if( ref $client and $client->connected )
+    if( ref $client and
+	$client->connected and
+	( $client != $SERVER )
+      )
     {
-	# I have stopped using this socket
-	$client->shutdown(2);
-	$SELECT->remove($client);
-	$client->close;
+        if( $SELECT->exists( $client ) )
+        {
+            $SELECT->remove($client);
+        }
+
+        if( $client->connected )
+        {
+            # I have stopped using this socket
+            $client->shutdown(2);
+            $client->close;
+        }
     }
 }
 
@@ -1644,12 +1666,16 @@ sub add_background_jobs_conditional
     elsif( $delta < BGJOB_MAX )
     {
 	debug(4,"Too few seconds for MAX: $delta < ". BGJOB_MAX);
-	return;
+	return 0;
     }
 
     # Cache cleanup could safely be done here
     # But nothing that requires a $req
     Para::Frame->run_hook(undef, 'busy_background_job', $delta);
+
+    # Do background jobs if no req jobs waiting
+    #
+    return if values %REQUEST;
 
     # Expire old page results and sessions
     #
@@ -2568,7 +2594,7 @@ sub configure
 			      subdir_suffix => '',
 			      pre_dir => 'inc',
 			      inc_dir => 'inc',
-			      handles => ['tt'],
+			      handles => ['tt', 'html_tt'],
 			     });
 
 

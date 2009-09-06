@@ -347,6 +347,51 @@ sub parent
 
 ##############################################################################
 
+=head2 parent_sys
+
+We get the parent L<Para::Frame::Dir> object.
+
+Returns undef if we are trying to get the parent of the system root.
+
+Returns:
+
+ a L<Para::Frame::Dir> object
+
+=cut
+
+sub parent_sys
+{
+    my( $dir, $args ) = @_;
+
+    $args ||= {};
+
+    unless( $dir->{'parent_sys'}  )
+    {
+	unless( $dir->exist )
+	{
+	    $args->{'file_may_not_exist'} = 1;
+	}
+
+	my $parent = $dir->parent;
+
+	my( $pdir_path ) = $dir->sys_path =~ /^(.*)\/./
+	  or return undef;
+	$args->{'filename'} = $pdir_path.'/';
+	$dir->{'parent_sys'} = $dir->new($args);
+
+	if( $dir->{'parent_sys'}->sys_path_slash eq
+	    $parent->sys_path_slash )
+	{
+	    $dir->{'parent_sys'} = $parent;
+	}
+    }
+
+    return $dir->{'parent_sys'};
+}
+
+
+##############################################################################
+
 =head2 has_index
 
 True if there is a (readable) C<index.tt> in this dir.
@@ -559,7 +604,7 @@ sub create
     $dir->initiate;
     if( $dir->exist )
     {
-#	debug sprintf "Dir %s exist. Chmodding", $dir->desig;
+	debug sprintf "Dir %s exist. Chmodding", $dir->desig;
 
 	if( $dir->is_owned )
 	{
@@ -572,10 +617,10 @@ sub create
     $args ||= {};
     confess "Faulty args given" unless ref $args;
 
-#    my $dirname = $dir->sys_path;
-#    debug "  creating $dirname";
+    my $dirname = $dir->sys_path;
+    debug "  creating $dirname";
 
-    $dir->parent->create($args);
+    $dir->parent_sys->create($args);
 
 #    debug "Creating dir ".$dir->desig;
     mkdir $dir->sys_path, 0700 or

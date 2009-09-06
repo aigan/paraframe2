@@ -1300,6 +1300,24 @@ sub add_background_job
 
 ##############################################################################
 
+=head2 prepend_background_job
+
+  $req->prepend_background_job( $label, \&code, @params )
+
+May still take a lot of time since the prepended background job is
+then appended to the list of current jobs.
+
+=cut
+
+sub prepend_background_job
+{
+    debug(5,"Added the background job $_[1] for $_[0]->{reqnum}");
+    unshift @Para::Frame::BGJOBS_PENDING, [@_];
+}
+
+
+##############################################################################
+
 =head2 run_code
 
   $req->run_code( $label, $codered, @args )
@@ -1599,6 +1617,7 @@ sub after_jobs
 
 #	#
 #	debug "----> Resp $resp";
+#	debug datadump( $resp, 2);
 #	debug "----> Resp page is ".$resp->page->url_path;
 #	debug "----> Resp page is ".$resp->renderer->page->url_path;
 #	#
@@ -2708,6 +2727,7 @@ sub create_fork
 	### --> child
 
 	$Para::Frame::FORK = 1;
+        $Para::Frame::SELECT = undef;
  	my $result = Para::Frame::Child::Result->new;
 	$req->{'child_result'} = $result;
 	$req->run_hook('on_fork', $result );
