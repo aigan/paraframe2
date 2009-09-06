@@ -16,6 +16,8 @@ use 5.010;
 use strict;
 use warnings;
 
+use Digest::MD5  qw(md5_hex);
+
 use Para::Frame::Utils qw( throw passwd_crypt debug datadump );
 use Para::Frame::L10N qw( loc );
 
@@ -23,6 +25,10 @@ use Para::Frame::L10N qw( loc );
 =head1 NAME
 
 Para::Frame::Action::user_login - For logging in
+
+If md5_salt is set in config, it encrypts the password with this salt
+before passing it on; requiring that the password is checked with the
+same md5-encryption.
 
 =cut
 
@@ -68,6 +74,13 @@ sub handler
 
     $user_class->change_current_user( $u );
 
+    # If md5-salt is set, the password is encrypted in db, and double
+    # encrypted for cookie
+    my $md5_salt = $Para::Frame::CFG->{'md5_salt'};
+    $password = md5_hex($password, $md5_salt)
+      if( $md5_salt );
+
+    # Encrypt password with IP (for cookie)
     my $password_encrypted = passwd_crypt( $password );
 
     #Also catch exceptions
@@ -102,7 +115,7 @@ sub handler
 	die $err; # Since user change may reset $@
     }
 
-    $msg ||= "Inloggningen misslyckades";
+    $msg ||= loc("Login failed");
 
     return $msg;
 }
