@@ -899,6 +899,8 @@ sub fill_buffer
 		    {
 #			confess "Double lost connection $client";
 			cluck "Double lost connection $client";
+			debug "Trying to restart";
+			$TERMINATE eq 'HUP';
 		    }
 
 		    $last_lost = $client;
