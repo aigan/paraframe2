@@ -224,10 +224,10 @@ sub startup
     $LEVEL      = 0;
     $TERMINATE  = 0;
     $MEMORY     = 0;
-    $IN_STARTUP = 0;
+#    $IN_STARTUP = 0; # This is set from Watchdog
 
     # No REQ exists yet!
-    Para::Frame->run_hook(undef, 'on_startup');
+    Para::Frame->run_hook(undef, 'on_startup'); # before worker_startup
 
     $Template::BINMODE = ':utf8';
 
@@ -239,6 +239,8 @@ sub startup
 
     warn "Setup complete, accepting connections\n";
     print "STARTED\n";
+    $IN_STARTUP = 0;
+    return;
 }
 
 ##############################################################################
@@ -1487,17 +1489,18 @@ sub daemonize
     if( $run_watchdog )
     {
 	Para::Frame::Watchdog->startup(1);
-	open_logfile();
+#	open_logfile(); # done in watchdog startup
 	POSIX::setsid             or die "Can't start a new session: $!";
 	write_pidfile();
+#	debug "Signal ready to parent";
 	kill 'USR1', $parent_pid; # Signal parent
 	Para::Frame::Watchdog->watch_loop();
     }
     else
     {
 	warn "\n\nStarted process $$ on ".now()."\n\n";
-	Para::Frame->startup();
 	open_logfile();
+	Para::Frame->startup();
 	POSIX::setsid             or die "Can't start a new session: $!";
 	write_pidfile();
 	kill 'USR1', $parent_pid; # Signal parent

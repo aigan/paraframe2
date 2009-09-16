@@ -261,17 +261,26 @@ sub init
     # for loadpage
     my $q = $req->q;
 #    if( $Para::Frame::TERMINATE and not $req->q->param('req') and not $req->q->param('reqnum') )
-    if( $Para::Frame::TERMINATE and not $q->param('pfport') )
+    unless( $q->param('pfport') )
     {
-	debug "In TERMINATE!";
-	client_send($req->client, "RESTARTING\x001\n");
-	return 0;
-    }
-    elsif( $Para::Frame::LEVEL > 20 and not $q->param('pfport') )
-    {
-	debug "OVERLOADED!";
-	client_send($req->client, "RESTARTING\x001\n");
-	return 0;
+	if( $Para::Frame::TERMINATE )
+	{
+	    debug "In TERMINATE!";
+	    client_send($req->client, "RESTARTING\x001\n");
+	    return 0;
+	}
+	elsif( $Para::Frame::LEVEL > 20 )
+	{
+	    debug "OVERLOADED!";
+	    client_send($req->client, "RESTARTING\x001\n");
+	    return 0;
+	}
+	elsif( $Para::Frame::IN_STARTUP )
+	{
+	    debug "IN STARTUP";
+	    client_send($req->client, "RESTARTING\x001\n");
+	    return 0;
+	}
     }
 
     my $env = $req->{'env'};

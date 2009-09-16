@@ -105,28 +105,10 @@ sub startup
 
     debug 1, "\n\nStarted process $$ on ".now()."\n\n";
 
-    # Setup signal handling
-    # This will be redefined in the fork
-    #
-    $SIG{CHLD} = \&REAPER;
 
-    $SIG{TERM} = sub
-    {
-	terminate_server();
-	exit 0;
-    };
-
-    $SIG{USR1} = sub
-    {
-	restart_server();
-    };
-
-    $SIG{HUP} = sub
-    {
-	restart_server();
-    };
-
-    return startup_in_fork();
+    startup_in_fork();
+    sig_enable();
+    return;
 }
 
 
@@ -141,28 +123,39 @@ sub watch_loop
 #    debug "startup succeeded";
     $Para::Frame::IN_STARTUP = 0; # Startup succeeded
     my $last_connection_check = time;
+
     while()
     {
-#	debug "--in watch_loop";
-	exit 0 if $SHUTDOWN;
-	check_server_report();
-	if( $DO_CONNECTION_CHECK )
+	eval
 	{
-	    check_connection() or next;
-	}
-	check_process();
+	    sig_enable();
+	    while()
+	    {
+#		debug "--in watch_loop";
+		exit 0 if $SHUTDOWN;
+		check_server_report();
+		if( $DO_CONNECTION_CHECK )
+		{
+		    check_connection() or next;
+		}
+		check_process();
 
-	# Do a connection check once a minute
-	if( time > $last_connection_check + $INTERVAL_CONNECTION_CHECK )
-	{
-	    $DO_CONNECTION_CHECK ++;
-	    $last_connection_check = time;
-	}
+		# Do a connection check once a minute
+		if( time > $last_connection_check + $INTERVAL_CONNECTION_CHECK )
+		{
+		    $DO_CONNECTION_CHECK ++;
+		    $last_connection_check = time;
+		}
 
-	sleep $INTERVAL_MAIN_LOOP;
-#	debug "--handle missed signals";
-	&REAPER; # Handle missed calls (WHY ARE THEY MISSED?!)
+		sleep $INTERVAL_MAIN_LOOP;
+#		debug "--handle missed signals";
+		&REAPER; # Handle missed calls (WHY ARE THEY MISSED?!)
+	    }
+	};
+
+	on_crash(); # Handling exception
     }
+
     debug "escaped watchdog main loop";
     exit 1;
 }
@@ -258,10 +251,13 @@ sub check_process
 
 sub wait_for_server_setup
 {
+#    debug "Waiting for server setup";
     while( my( $type, @args ) =
 	   get_next_server_message($TIMEOUT_SERVER_STARTUP) )
     {
 	next unless $type;
+
+#	debug "While waiting, got: $type";
 
 	if( $type eq 'STARTED' )
 	{
@@ -269,7 +265,7 @@ sub wait_for_server_setup
 	}
 	elsif( $type eq 'Loading' )
 	{
-	    print "Loading @args\n";
+	    debug "Loading @args\n";
 	}
 	elsif( $type eq 'MAINLOOP' )
 	{
@@ -331,21 +327,22 @@ sub check_server_report
 sub terminate_server
 {
     send_to_server('TERM');
-    debug 1,"  Sent soft TERM to $PID";
+    debug 1,"  Sent soft TERM to server";
 
     # Waiting for server to TERM
     my $signal_time = time;
-    while( kill 0, $PID )
+    my $child_pid;
+    while (($child_pid = waitpid(-1, WNOHANG)) > 0)
     {
 	if( time > $signal_time + $TIMEOUT_CONNECTION_CHECK + $TIMEOUT_CREATE_FORK )
 	{
-	    kill 'KILL', $PID; ## Terminate server
-	    debug 1,"  Sent hard KILL to $PID";
+	    kill 'KILL', $child_pid; ## Terminate server
+	    debug 1,"  Sent hard KILL to $child_pid";
 	}
 	elsif( time > $signal_time + $TIMEOUT_CONNECTION_CHECK )
 	{
-	    kill 'TERM', $PID; ## Terminate server
-	    debug 1,"  Sent hard TERM to $PID";
+	    kill 'TERM', $child_pid; ## Terminate server
+	    debug 1,"  Sent hard TERM to $child_pid";
 
 	}
 	sleep 1;
@@ -374,6 +371,12 @@ sub restart_server
 
     while( $pid == $PID )
     {
+	unless( kill 0, $PID )
+	{
+	    sig_disable();
+	    die "#### Watchdog restart\n";
+	}
+
 	sleep 2;
 	if( $sent eq 'kill' )
 	{
@@ -385,9 +388,15 @@ sub restart_server
 	    next if $sent eq 'KILL';
 	    $sent = 'KILL';
 	    $HARD_RESTART = 1;
-	    kill 'KILL', $pid;  ## Terminate server
-	    debug "  Sent hard KILL to $pid";
-	    last;
+
+	    my $child_pid;
+	    while (($child_pid = waitpid(-1, WNOHANG)) > 0)
+	    {
+		kill 'KILL', $child_pid; ## Terminate server
+		debug 1,"  Sent hard KILL to $child_pid";
+	    }
+	    sig_disable();
+	    die "#### Watchdog hard restart\n";
 	}
 	elsif( time > $signal_time + $grace_time + 20 )
 	{
@@ -405,7 +414,7 @@ sub restart_server
 	    debug "  Sent hard HUP to $PID";
 	}
 
-	&REAPER; # Handle missed calls
+#	&REAPER; # Handle missed calls
     }
 }
 
@@ -574,6 +583,9 @@ sub check_connection
 
 =head2 on_crash
 
+This may shut down the server completely if restart fails...
+may want to handle this better
+
 =cut
 
 sub on_crash
@@ -630,11 +642,13 @@ sub watchdog_crash
     if( $PID and kill 0, $PID )
     {
 	restart_server(1);
-	# on_crash will be called from REAPER
+	# on_crash will be called via die from REAPER
     }
     else
     {
-	on_crash();
+	sig_disable();
+	die "#### Watchdog crash\n";
+#	on_crash();
     }
 
     return 0; # Make caller go back to main loop
@@ -651,7 +665,7 @@ sub startup_in_fork
 {
     # Code from Para::Frame::Request->create_fork()
 
-    &REAPER; # Handle missed calls
+#    &REAPER; # Handle missed calls
 
     my $sleep_count = 0;
     my $fh = new IO::File;
@@ -668,9 +682,13 @@ sub startup_in_fork
     $LIMIT_MEMORY = $LIMIT_MEMORY_BASE;
     $LIMIT_MEMORY_NOTICE = $LIMIT_MEMORY_NOTICE_BASE;
 
+    $Para::Frame::IN_STARTUP = 1;
+#    debug "IN_STARTUP set";
 
     # Must autoflush STDOUT
     select STDOUT; $|=1;
+
+    open_logfile() if $USE_LOGFILE; # in CHILD
 
     do
     {
@@ -691,15 +709,9 @@ sub startup_in_fork
 
 #	open STDOUT, ">&", $write_fh; ### DEBUG
 
-	# Reset signal handlers
-	$SIG{CHLD} = 'DEFAULT';
-	$SIG{USR1} = 'DEFAULT';
-	$SIG{TERM} = 'DEFAULT';
-	$SIG{HUP}  = 'DEFAULT';
-
+	sig_disable();
 	kill_competition();
 	Para::Frame->startup();
-	open_logfile() if $USE_LOGFILE;
 	Para::Frame::main_loop();
 	debug "Got outside main_loop";
 	exit 1;
@@ -775,7 +787,9 @@ sub REAPER
 		}
 
 		$DOWN = 0;
-		on_crash();
+		sig_disable();
+		die "#### Watchdog restart\n";
+#		on_crash();
 	    }
 	}
 	else
@@ -970,6 +984,7 @@ sub open_logfile
     create_dir( dirname $log);
 
     open STDERR, '>>', $log   or die "Can't append to $log: $!";
+    warn "\n-------------logfile--------------\n";
     warn "\nStarted process $$ on ".now()."\n\n";
 
     chmod_file($log);
@@ -1234,17 +1249,55 @@ sub configure
 
 ##############################################################################
 
+sub sig_enable
+{
+
+    # Setup signal handling
+    # This will be redefined in the fork
+    #
+    $SIG{CHLD} = \&REAPER;
+
+    $SIG{TERM} = sub
+    {
+	terminate_server();
+	exit 0;
+    };
+
+    $SIG{USR1} = sub
+    {
+	restart_server();
+    };
+
+    $SIG{HUP} = sub
+    {
+	restart_server();
+    };
+
+    &REAPER; # Handle missed calls
+}
+
+
+##############################################################################
+
+sub sig_disable
+{
+    # Reset signal handlers
+    $SIG{CHLD} = 'DEFAULT';
+    $SIG{USR1} = 'DEFAULT';
+    $SIG{TERM} = 'DEFAULT';
+    $SIG{HUP}  = 'DEFAULT';
+}
+
+
+##############################################################################
+
 =head2 END
 
 =cut
 
 END
 {
-    # Resetting signal handlers
-    $SIG{CHLD} = 'DEFAULT';
-    $SIG{TERM} = 'DEFAULT';
-    $SIG{USR1} = 'DEFAULT';
-    $SIG{HUP} = 'DEFAULT';
+    sig_disable();
 
     if( $PID )
     {
