@@ -778,18 +778,9 @@ sub REAPER
 	    }
 	    else
 	    {
-		if( $Para::Frame::IN_STARTUP )
-		{
-		    debug "  We are still in startup";
-		    debug "  Ignoring this signal...";
-		    return $?;
-#		    exit $?;
-		}
-
 		$DOWN = 0;
 		sig_disable();
 		die "#### Watchdog restart\n";
-#		on_crash();
 	    }
 	}
 	else
