@@ -903,6 +903,7 @@ sub fill_buffer
 			cluck "Double lost connection $client";
 			debug "Trying to restart";
 			$TERMINATE = 'HUP';
+			die "Lost connection to $client";
 		    }
 
 		    $last_lost = $client;
