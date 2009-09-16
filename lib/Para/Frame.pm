@@ -41,7 +41,7 @@ use Storable qw( thaw );
 our $VERSION = "1.07"; # Paraframe version
 
 
-use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir );
+use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir client_str );
 use Para::Frame::Template::Stash::CheckUTF8;
 use Para::Frame::Unicode;
 use Para::Frame::Watchdog;
@@ -402,7 +402,7 @@ sub main_loop
 			{
 			    my $creq = $child->req;
 			    my $creqnum = $creq->{'reqnum'};
-			    my $cclient = $creq->client;
+			    my $cclient = client_str($creq->client);
 			    my $cpid = $child->pid;
 			    debug "  Req $creqnum $cclient has a child with pid $cpid";
 			}
@@ -705,20 +705,18 @@ sub add_client
     my( $client ) = @_;
 
     # New connection.
-    my($iaddr, $address, $port, $peer_host);
     $client = $SERVER->accept;
     if(!$client)
     {
 	debug(0,"Problem with accept(): $!");
 	return;
     }
-    ($port, $iaddr) = sockaddr_in(getpeername($client));
-    $peer_host = gethostbyaddr($iaddr, AF_INET)
-	|| inet_ntoa($iaddr);
+
     $SELECT->add($client);
     nonblock($client);
 
-    debug(4, "New client connected: $client");
+#    debug(4, "New client connected: $client");
+    debug(1, "New client connected: ".client_str($client));
 }
 
 
@@ -889,7 +887,7 @@ sub fill_buffer
 		{
 		    state $last_lost ||= '';
 
-		    debug "Lost connection to $client";
+		    debug "Lost connection to ".client_str($client);
 		    if( my $req = $REQUEST{ $client } )
 		    {
 			$req->cancel;
@@ -900,10 +898,10 @@ sub fill_buffer
 		    if( $last_lost eq $client )
 		    {
 #			confess "Double lost connection $client";
-			cluck "Double lost connection $client";
+			cluck "Double lost connection ".client_str($client);
 			debug "Trying to restart";
 			$TERMINATE = 'HUP';
-			die "Lost connection to $client";
+			die "Lost connection to ".client_str($client);
 		    }
 
 		    $last_lost = $client;
@@ -926,7 +924,7 @@ sub fill_buffer
 		    {
 			my $orig_req = $REQ;
 			my $req = $REQUEST{$ready};
-			debug 2, "Switching req to client $ready";
+			debug 2, "Switching req to client ".client_str($ready);
 			switch_req($req);
 			eval
 			{
@@ -954,7 +952,7 @@ sub fill_buffer
 			debug 1, $req->logging->debug_data;
 		    }
 
-		    cluck "trace for $client";
+		    cluck "trace for ".client_str($client);
 
 		    # The caller will have to do the giving up
 
@@ -1077,7 +1075,7 @@ sub handle_code
 	my $req = $REQUEST{ $client };
 	unless( $req )
 	{
-	    debug "CANCEL from Req not registred: $client";
+	    debug "CANCEL from Req not registred: ".client_str($client);
 	    return 0;
 	}
 
@@ -1136,7 +1134,7 @@ sub handle_code
 
 	my $current_req = $REQ;
 	my $req = $REQUEST{ $caller_clientaddr } or
-	  die "Client $caller_clientaddr not registred";
+	  die "Client ".client_str($caller_clientaddr)." not registred";
 	my $file = $req->uri2file($val);
 
 	# Send response in calling $REQ
@@ -1895,7 +1893,7 @@ sub handle_request
 			 $session->u->id,
 			 $session->{'debug'},
 			);
-	    warn "# $client\n" if debug() > 4;
+	    warn "# ".client_str($client)."\n" if debug() > 4;
 
 	    $req->setup_jobs;
 	    $req->reset_response; # Needs lang and jobs
@@ -2773,7 +2771,7 @@ sub report
     {
 	my $creq = $child->req;
 	my $creqnum = $creq->{'reqnum'};
-	my $cclient = $creq->client;
+	my $cclient = client_str($creq->client);
 	my $cpid = $child->pid;
 	$out .= "  Req $creqnum $cclient has a child with pid $cpid\n";
     }

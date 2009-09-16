@@ -47,6 +47,7 @@ use Template::Exception;
 use DateTime::Duration;
 use URI;
 use URI::http;
+use Socket;
 
 use base qw( Exporter );
 our @EXPORT_OK
@@ -58,7 +59,8 @@ our @EXPORT_OK
             store_params clear_params add_params restore_params
             idn_encode idn_decode debug reset_hashref timediff
             extract_query_params fqdn retrieve_from_url get_from_fork
-            datadump client_send validate_utf8 escape_js parse_perlstruct );
+            datadump client_send validate_utf8 escape_js
+            parse_perlstruct client_str );
 
 use Para::Frame::Reload;
 #use Para::Frame::URI;
@@ -2147,6 +2149,24 @@ sub client_send
 	return $chrpos;
     }
 }
+
+
+##############################################################################
+
+=head2 client_str
+
+=cut
+
+sub client_str
+{
+    my( $client ) = @_;
+    return $client unless ref $client;
+    my($port, $iaddr) = sockaddr_in(getpeername($client));
+    my $peer_host = gethostbyaddr($iaddr, AF_INET)
+      || inet_ntoa($iaddr);
+    return $peer_host.':'.$port;
+}
+
 
 ##############################################################################
 

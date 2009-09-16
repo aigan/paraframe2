@@ -54,7 +54,7 @@ use Para::Frame::Request::Response;
 use Para::Frame::Renderer::HTML_Fallback;
 
 use Para::Frame::Utils qw( compile throw debug catch idn_decode
-                           datadump create_dir client_send );
+                           datadump create_dir client_send client_str );
 
 our %URI2FILE;
 
@@ -1972,7 +1972,7 @@ sub send_code
 	my $code = shift;
 	my $port = $Para::Frame::CFG->{'port'};
 	my $client = $req->client;
-	debug(3, "  to $client");
+	debug(3, "  to ".client_str($client));
 	my $val = $client . "\x00" . shift;
 	die "Too many args in send_code($code $val @_)" if @_;
 
