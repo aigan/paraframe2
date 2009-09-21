@@ -604,7 +604,7 @@ sub create
     $dir->initiate;
     if( $dir->exist )
     {
-	debug sprintf "Dir %s exist. Chmodding", $dir->desig;
+#	debug sprintf "Dir %s exist. Chmodding", $dir->desig;
 
 	if( $dir->is_owned )
 	{
