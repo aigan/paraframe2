@@ -2161,6 +2161,7 @@ sub client_str
 {
     my( $client ) = @_;
     return $client unless ref $client;
+    warn "client_str $client\n";
     my($port, $iaddr) = sockaddr_in(getpeername($client));
     my $peer_host = gethostbyaddr($iaddr, AF_INET)
       || inet_ntoa($iaddr);
