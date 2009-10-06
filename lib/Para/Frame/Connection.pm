@@ -162,7 +162,7 @@ sub send_code
     my $length = length($$valref) + length($code) + 1;
     my $socket = $conn->{'socket'};
 
-    debug 2, "Sending $length - $code - value";
+    debug 2, "Sending $length - $code - ".$$valref;
     unless( print $socket "$length\x00$code\x00" . $$valref )
     {
 	die "LOST CONNECTION while sending $code\n";
@@ -203,7 +203,7 @@ sub get_value
 	}
 	if( time > $time + $timeout )
 	{
-	    warn "Data timeout!!!";
+	    warn "Data timeout!!!\n";
 
 	    cluck "trace for $socket";
 	    throw('action', "Data timeout while talking to client\n");
