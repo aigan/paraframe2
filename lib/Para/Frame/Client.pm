@@ -265,30 +265,37 @@ sub handler
     while()
     {
 	$try ++;
+	my $chunks = 0;
 
 	connect_to_server( $port );
-	unless( $SOCK )
+	eval
 	{
-	    print_error_page("Can't find the Paraframe server",
-			     "The backend server are probably not running");
-	    last;
+	    unless( $SOCK )
+	    {
+		print_error_page("Can't find the Paraframe server",
+				 "The backend server are probably not running");
+		last;
+	    }
+
+	    if( send_to_server('REQ', \$value) )
+	    {
+		$s->log_error("$$: Sent data to server") if $DEBUG;
+		$chunks = get_response();
+	    }
+	};
+	if( $@ )
+	{
+	    $s->log_error($@);
 	}
 
-	my $chunks = 0;
-	if( send_to_server('REQ', \$value) )
-	{
-	    $s->log_error("$$: Sent data to server") if $DEBUG;
-	    $chunks = get_response();
-	}
-
-	if( $chunks )
-	{
-	    $s->log_error("$$: Returned $chunks chunks") if $DEBUG;
-	    last;
-	}
-	elsif( $CANCEL )
+	if( $CANCEL )
 	{
 	    $s->log_error("$$: Closing down CANCELLED request");
+	    last;
+	}
+	elsif( $chunks )
+	{
+	    $s->log_error("$$: Returned $chunks chunks") if $DEBUG;
 	    last;
 	}
 	else
@@ -458,7 +465,7 @@ sub print_error_page
 	}
 	$r->status( 302 );
 	$r->headers_out->set('Location', $uri_out );
-	$r->print("<p>Try to get <a href=\"$uri_out\">$uri_out</a> instead</p>\n");
+	rprint("<p>Try to get <a href=\"$uri_out\">$uri_out</a> instead</p>\n");
 	return;
     }
 
@@ -466,22 +473,22 @@ sub print_error_page
     $s->log_error("$$: Printing error page");
     $r->status_line( $errcode." ".$error );
     $r->no_cache(1);
-    $r->print("<html><head><title>$error</title></head><body><h1>$error</h1>\n");
+    rprint("<html><head><title>$error</title></head><body><h1>$error</h1>\n");
     foreach my $row ( split /\n/, $explain )
     {
-	$r->print("<p>$row</p>");
+	rprint("<p>$row</p>");
 	$s->log_error("$$:   $row") if $DEBUG;
     }
 
     my $host = $r->hostname;
-    $r->print("<p>Try to get <a href=\"$path\">$path</a> again</p>\n");
+    rprint("<p>Try to get <a href=\"$path\">$path</a> again</p>\n");
 
     if( my $backup = $dirconfig->{'backup'} )
     {
-	$r->print("<p>You may want to try <a href=\"http://$backup$path\">http://$backup$path</a> instead</p>\n");
+	rprint("<p>You may want to try <a href=\"http://$backup$path\">http://$backup$path</a> instead</p>\n");
     }
 
-    $r->print("</body></html>\n");
+    rprint("</body></html>\n");
     $r->rflush;
 
     return 1;
@@ -567,8 +574,6 @@ sub get_response
     my $select = IO::Select->new($SOCK);
     my $c = $r->connection;
 
-    my( $client_fn, $client_select );
-
     my $chunks = 0;
     my $data='';
     my $buffer = '';
@@ -591,6 +596,7 @@ sub get_response
 	    ### Test connection to browser
 	    if( $c->aborted )
 	    {
+		my $client_fn = $c->get_remote_host;
 		$s->log_error("$$: Lost connection to client $client_fn");
 		$s->log_error("$$:   Sending CANCEL to server");
 		send_to_server("CANCEL");
@@ -608,7 +614,7 @@ sub get_response
 		{
 		    if( defined $rv )
 		    {
-			$s->log_error("$$: Buffer empty ($buffer)");
+			$s->log_error("$$: Buffer empty");
 			if( $buffer_empty_time )
 			{
 			    if( ($buffer_empty_time+5) < time )
@@ -630,9 +636,9 @@ sub get_response
 
 
 		    # EOF from server
-		    $s->log_error("$$: Nothing in socket $SOCK");
-		    $s->log_error("$$: rv: $rv");
-		    $s->log_error("$$: buffer: $buffer");
+#		    $s->log_error("$$: Nothing in socket $SOCK");
+#		    $s->log_error("$$: rv: $rv");
+#		    $s->log_error("$$: buffer: $buffer");
 		    $s->log_error("$$: EOF!");
 
 		    if( $LOADPAGE )
@@ -885,7 +891,7 @@ sub send_loadpage
 		# good read. see if we hit EOF (nothing left to read)
 		last if $read_cnt == 0 ;
 
-		$r->print($buffer);
+		rprint($buffer);
 	    }
 	    else
 	    {
@@ -929,7 +935,7 @@ sub send_reload
     # More compatible..?
     # self.location.replace('$url');
 
-    $r->print("<script type=\"text/javascript\">window.location.href='$url';</script>");
+    rprint("<script type=\"text/javascript\">window.location.href='$url';</script>");
 #    $r->print("<a href=\"$url\">go</a>");
     $r->rflush;
 }
@@ -998,7 +1004,8 @@ sub send_body
 	    $s->log_error("$$: Faild to send chunk $chunk to client");
 	    $s->log_error("$$:   Sending CANCEL to server");
 	    send_to_server("CANCEL");
-	    return 1;
+	    $CANCEL = time;
+	    return 0;
 	}
 	$s->log_error("$$: Waiting for more data") if $DEBUG;
 	$SOCK->read($data, BUFSIZ) or last;
@@ -1020,7 +1027,7 @@ sub send_message
     $msg =~ s/\n/\\n/g;
 
     $s->log_error("$$: Sending message to browser: $msg") if $DEBUG > 1;
-    $r->print("<script type=\"text/javascript\">document.forms['f'].messages.value += \"$msg\\n\";bottom();</script>\n");
+    rprint("<script type=\"text/javascript\">document.forms['f'].messages.value += \"$msg\\n\";bottom();</script>\n");
     $r->rflush;
 }
 
@@ -1034,7 +1041,7 @@ sub send_message_waiting
     my $msg = "$WAITMSG \n";
     if( $msg eq $LAST_MESSAGE )
     {
-	$r->print("<script type=\"text/javascript\">e=document.forms['f'].messages;e.value = e.value.substring(0,e.value.length-2)+\"..\\n\";bottom();</script>\n");
+	rprint("<script type=\"text/javascript\">e=document.forms['f'].messages;e.value = e.value.substring(0,e.value.length-2)+\"..\\n\";bottom();</script>\n");
     $r->rflush;
     }
     else
@@ -1074,6 +1081,19 @@ sub uri2file
     return( $filename );
 }
 
+
+##############################################################################
+
+sub rprint
+{
+    unless( $r->print( @_ ) )
+    {
+	send_to_server("CANCEL");
+	$CANCEL = time;
+	die "cancel\n";
+    }
+    return 1;
+}
 
 ##############################################################################
 

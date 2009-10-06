@@ -2023,6 +2023,7 @@ sub send_code
 	    }
 	}
 
+	my $fork;
 	unless( $req->{'wait_for_active_reqest'} ++ )
 	{
 	    debug "  So we prepares for starting an UA";
@@ -2057,7 +2058,7 @@ sub send_code
 	    # Do the request in a fork. Let that req message us in the
 	    # action wait_for_req
 
-	    my $fork = $req->create_fork;
+	    $fork = $req->create_fork;
 	    if( $fork->in_child )
 	    {
 		debug "About to GET $url";
@@ -2066,9 +2067,9 @@ sub send_code
 
 		delete $res->{'handlers'}; # Can't transfer code refs
 
+		debug "GOT result";
 		if( debug > 1 )
 		{
-		    debug "  GOT result:";
 		    debug $res->as_string;
 		}
 		$fork->return( $res );
@@ -2079,10 +2080,55 @@ sub send_code
 	}
 
 	# Wait for the $ua to connect and give us it's $req
+	my $ar_start = time;
+	my $ar_cluck = 0;
 	while( not $req->{'active_reqest'} )
 	{
 	    debug 3, "Got an active_reqest yet?";
 	    $req->yield(1); # Give it some time to connect
+	    if( time - $ar_start > 5 )
+	    {
+		debug "Scary connection problem. We should have an acctive request connected from the fork by now.";
+
+		if( $fork )
+		{
+		    my $res = $fork->result;
+		    if( my $msg = $res->message )
+		    {
+			debug "Child got ".$msg->code." - ".$msg->message;
+			die "Background send_code failed\n";
+		    }
+		    else
+		    {
+			debug "No answer from child";
+		    }
+		}
+
+#		unless( $ar_cluck )
+#		{
+#		    $ar_cluck ++;
+#		    my $emergency_level =
+#		      $Para::Frame::Watchdog::EMERGENCY_DEBUG_LEVEL;
+#		    if( $Para::Frame::DEBUG < $emergency_level )
+#		    {
+#			$Para::Frame::DEBUG =
+#			  $Para::Frame::CFG->{'debug'} =
+#			    $emergency_level;
+#			warn "#Raising global debug to level $Para::Frame::DEBUG\n";
+#		    }
+#		}
+	    }
+
+	    if( $req->cancelled )
+	    {
+		throw 'cancel', "REQ is cancelled";
+	    }
+
+	    my $oreq = $req->original;
+	    if( $oreq and $oreq->cancelled )
+	    {
+		throw 'cancel', "Original REQ is cancelled";
+	    }
 	}
 
 	# Got it! Now send the message
