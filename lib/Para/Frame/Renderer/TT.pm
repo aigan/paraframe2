@@ -353,22 +353,9 @@ the page is rendered. You should not call it by yourself.
 
 The L<HTTP::BrowserDetect> object.  Not in StandAlone mode.
 
-=item dir
-
-The directory part of the filename, including the last '/'.  Symlinks
-resolved.
-
-=item u
-
-$req->{'user'} : The L<Para::Frame::User> object.
-
 =item ENV
 
 $req->env: The Environment hash (L<http://hoohoo.ncsa.uiuc.edu/cgi/env.html>).  Only in client mode.
-
-=item filename
-
-Holds the L<Para::Frame::Request/filename>.
 
 =item home
 
@@ -386,6 +373,10 @@ to L<Para::Frame::Request/original_response> C<page>
 C<url_path_slash>.  (For making it easier to link back to the intended
 page)
 
+=item page
+
+Holds the L<Para::Frame::Request/page>
+
 =item q
 
 The L<CGI> object.  You will probably mostly use
@@ -395,17 +386,13 @@ The L<CGI> object.  You will probably mostly use
 
 The C<req> object.
 
-=item reqnum
-
-The paraframe server request number
-
-=item result
-
-$req->{'result'} : The L<Para::Frame::Result> object
-
 =item site
 
 The <Para;;Frame::Site> object.
+
+=item u
+
+$req->{'user'} : The L<Para::Frame::User> object.
 
 =back
 
