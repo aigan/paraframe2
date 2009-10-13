@@ -1943,6 +1943,23 @@ sub send_to_daemon
     my( $req, $host_in, $code, $arg ) = @_;
 
     my $conn = Para::Frame::Connection->new( $host_in );
+    $conn->send_code( $code, $arg );
+    $conn->disconnect;
+    return 1;
+}
+
+
+##############################################################################
+
+=head2 talk_to_daemon
+
+=cut
+
+sub talk_to_daemon
+{
+    my( $req, $host_in, $code, $arg ) = @_;
+
+    my $conn = Para::Frame::Connection->new( $host_in );
     my $val = $conn->get_cmd_val( $code, $arg );
     $conn->disconnect;
     return $val;

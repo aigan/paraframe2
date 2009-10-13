@@ -1092,8 +1092,11 @@ sub handle_code
 	debug(5,"RESP $val ($req->{reqnum})");
 	push @{$RESPONSE{ $client }}, $val;
     }
-    elsif( $code eq 'RUN_ACTION' )
+    elsif( $code eq 'RUN_ACTION' ) # Not interactive
     {
+	# Starts action and drops connection.
+	# No wait on result
+
 	my $req =
 	  Para::Frame::Request->
 	      new_bgrequest("Handling RUN_ACTION (in background)");
@@ -1116,7 +1119,7 @@ sub handle_code
 #	debug "Running action: $action with params: ". datadump( \%params );
 	$req->add_job('run_action', $action, \%params);
 
-	client_send($client, "9\x00RESP\x00Done");
+#	client_send($client, "9\x00RESP\x00Done");
 	close_callback($client); # That's all
     }
     elsif( $code eq 'URI2FILE' ) # CHILD msg
@@ -2880,7 +2883,8 @@ Emit a warning in the error log, excluding the linenumber
 
 =back
 
-See also L<Para::Frame::Widget>
+See also L<Para::Frame::Widget> and
+L<Para::Frame::Renderer::TT/set_tt_params>
 
 =cut
 

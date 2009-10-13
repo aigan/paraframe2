@@ -2161,8 +2161,14 @@ sub client_str
 {
     my( $client ) = @_;
     return $client unless ref $client;
-    warn "client_str $client\n";
-    my($port, $iaddr) = sockaddr_in(getpeername($client));
+#    warn "client_str $client\n";
+    my $sockaddr = getpeername($client);
+    unless( $sockaddr )
+    {
+	debug "No peer connected to socket $client";
+	return "localhost:0";
+    }
+    my($port, $iaddr) = sockaddr_in($sockaddr);
     my $peer_host = gethostbyaddr($iaddr, AF_INET)
       || inet_ntoa($iaddr);
     return $peer_host.':'.$port;

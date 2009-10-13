@@ -10,7 +10,7 @@ sub handler
 
     my $daemon = "karl.rit.se:7791";
 
-    my $res = $req->send_to_daemon($daemon, 'run_action');
+    my $res = $req->talk_to_daemon($daemon, 'run_action');
 
     my $change = $req->change;
     $change->note("Contacted $daemon: $res");
