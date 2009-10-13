@@ -2092,16 +2092,17 @@ sub send_code
 
 		if( $fork )
 		{
-		    my $res = $fork->result;
-		    if( my $msg = $res->message )
+
+		    if( my $res = $fork->result )
 		    {
-			debug "Child got ".$msg->code." - ".$msg->message;
-			die "Background send_code failed\n";
+			if( my $msg = $res->message )
+			{
+			    debug "Child got ".$msg->code." - ".$msg->message;
+			    die "Background send_code failed\n";
+			}
 		    }
-		    else
-		    {
-			debug "No answer from child";
-		    }
+
+		    debug "No answer from child";
 		}
 
 #		unless( $ar_cluck )
