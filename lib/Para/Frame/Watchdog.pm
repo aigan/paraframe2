@@ -271,6 +271,11 @@ sub wait_for_server_setup
 	{
 	    # ignoring...
 	}
+	elsif( $type eq 'DOWN' )
+	{
+	    debug "Down and up. Round and round we go.";
+	    # ignoring...
+	}
 	else
 	{
 	    debug "Unexpected message during startup: $type @args";
