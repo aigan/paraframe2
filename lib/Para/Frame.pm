@@ -715,8 +715,7 @@ sub add_client
     $SELECT->add($client);
     nonblock($client);
 
-#    debug(4, "New client connected: $client");
-    debug(1, "New client connected: ".client_str($client));
+#    debug(1, "New client connected: ".client_str($client));
 }
 
 
