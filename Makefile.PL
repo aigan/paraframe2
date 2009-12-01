@@ -17,7 +17,7 @@ WriteMakefile(
 		  'BerkeleyDB'                 => 0.26,
                   'Captcha::reCAPTCHA'         => 0.92,
 		  'Carp'                       => 1.04,
-		  'CGI'                        => 3.10,
+		  'CGI'                        => 3.43,
 		  'CGI::Cookie'                => 1.25,
 #		  'Crypt::OpenPGP'             => 1.03,
 	          'Data::Dump'                 => 1.08,
