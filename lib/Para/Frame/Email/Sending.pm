@@ -42,6 +42,7 @@ use Para::Frame::Utils qw( throw debug fqdn datadump validate_utf8 deunicode );
 use Para::Frame::Widget;
 use Para::Frame::Time qw( date now ); #);
 use Para::Frame::Email::Address;
+use Para::Frame::Renderer::Email;
 #use Para::Frame::Renderer::TT_noplace;
 
 our $COUNTER = 1; # For generating message-id
