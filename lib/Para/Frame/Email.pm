@@ -48,7 +48,7 @@ sub new
 
     my $em = Email::MIME->create(
 				 header => $header,
-				 body   => $body,
+				 body   => $$body,
 				 attributes =>
 				 {
 				  charset  => 'ISO-8859-1',

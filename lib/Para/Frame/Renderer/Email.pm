@@ -165,7 +165,7 @@ sub render_header
     my( $rend, $to_addr ) = @_;
 
     my $p = $rend->params;
-    my $e = $rend->email_new([],$p->{'body'});
+    my $e = $rend->email_new([],$rend->{'body'});
     $rend->{'header_rendered_to'} = $to_addr;
 
     $e->apply_headers_from_params( $p, $to_addr );
@@ -183,7 +183,7 @@ sub render_body_from_template
 {
     my( $rend ) = @_;
 
-    cluck "PF render_body_from_template";
+#    cluck "PF render_body_from_template";
 
     my $p = $rend->params;
 
