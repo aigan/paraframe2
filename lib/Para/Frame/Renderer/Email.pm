@@ -54,7 +54,7 @@ sub new
 
     $rend->{'template'} = $args->{'template'};
 
-    $rend->{'params_in'} = $args->{'params'} or
+    $rend->{'params'} = $args->{'params'} or
       throw 'validation', "No email params given";
 
     if( $rend->{'email'} = $args->{'email'} )
@@ -133,6 +133,8 @@ sub render_message
     {
 	return $rend->{'dataref'};
     }
+
+    $rend->set_tt_params( $to_addr );
 
     unless( $use_existing_body and $rend->email )
     {
@@ -322,7 +324,7 @@ sub email_clone
 
 sub params
 {
-    return $_[0]->{'params_in'};
+    return $_[0]->{'params'};
 }
 
 ##############################################################################
@@ -335,6 +337,114 @@ sub set_dataref
 {
     return $_[0]->{'dataref'} = $_[1];
 }
+
+##############################################################################
+
+=head2 set_tt_params
+
+The standard functions availible in templates. This is called before
+the page is rendered. You should not call it by yourself.
+
+=over
+
+=item lang
+
+The L<Para::Frame::Request/preffered_language> value.
+
+=item req
+
+The C<req> object.
+
+=item u
+
+$req->{'user'} : The L<Para::Frame::User> object.
+
+=back
+
+=cut
+
+sub set_tt_params
+{
+    my( $rend, $to_addr ) = @_;
+
+    my $p = $rend->params;
+
+    my $from_addr = $p->{'from_addr'} or die "No from selected";
+    my $subject = $p->{'subject'}  or die "No subject selected";
+    my $envelope_from_addr = $p->{'envelope_from_addr'} || $from_addr;
+
+    unless( $to_addr )
+    {
+	die "no to selected";
+    }
+
+    $p->{'to_addr'} = $to_addr;
+
+    debug "Setting to_addr to ".$to_addr;
+
+
+
+    my $req = $Para::Frame::REQ;
+
+    # Keep alredy defined params  # Static within a request
+    $rend->add_params({
+	'u'               => $Para::Frame::U,
+	'lang'            => $req->language->preferred, # calculate once
+	'req'             => $req,
+    });
+}
+
+
+##############################################################################
+
+=head2 add_params
+
+  $resp->add_params( \%params )
+
+  $resp->add_params( \%params, $keep_old_flag )
+
+Adds template params. This can be variabls, objects, functions.
+
+If C<$keep_old_flag> is true, we will not replace existing params with
+the same name.
+
+=cut
+
+sub add_params
+{
+    my( $resp, $extra, $keep_old ) = @_;
+
+    my $param = $resp->{'params'} ||= {};
+
+    if( $keep_old )
+    {
+	while( my($key, $val) = each %$extra )
+	{
+	    next if $param->{$key};
+	    unless( defined $val )
+	    {
+		debug "The TT param $key has no defined value";
+		next;
+	    }
+	    $param->{$key} = $val;
+	    debug(4,"Add TT param $key: $val") if $val;
+	}
+    }
+    else
+    {
+	while( my($key, $val) = each %$extra )
+	{
+	    unless( defined $val )
+	    {
+		debug "The TT param $key has no defined value";
+		next;
+	    }
+	    $param->{$key} = $val;
+	    debug(3, "Add TT param $key: $val");
+	}
+     }
+}
+
 
 ##############################################################################
 

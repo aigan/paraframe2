@@ -77,6 +77,7 @@ sub clone
     my( $e ) = @_;
     my $class = ref($e);
 
+    $e->redraw;
     my $em = Email::MIME->new($e->{'em'}->as_string);
 
 
@@ -126,7 +127,8 @@ Retuns a scalar ref to the whole email with header in raw format.
 
 sub raw
 {
-    return \ shift->{'em'}->as_string;
+    $_[0]->redraw;
+    return \ $_[0]->{'em'}->as_string;
 }
 
 
@@ -140,14 +142,9 @@ sub apply_headers_from_params
 {
     my( $e, $p, $to_addr ) = @_;
 
-    my $from_addr = $p->{'from_addr'} or die "No from selected\n";
-    my $subject = $p->{'subject'}  or die "No subject selected\n";
-    my $envelope_from_addr = $p->{'envelope_from_addr'} || $from_addr;
-
-    unless( $to_addr )
-    {
-	die "no to selected";
-    }
+    my $from_addr = $p->{'from_addr'};
+    my $subject = $p->{'subject'};
+    my $envelope_from_addr = $p->{'envelope_from_addr'};
 
     debug "Rendering header from mail to $to_addr";
 
@@ -211,6 +208,18 @@ sub apply_headers_from_params
 	debug "Sender set to ".$envelope_from_addr->format." from envelope from";
     }
 }
+
+##############################################################################
+
+=head2 redraw
+
+=cut
+
+sub redraw
+{
+    return;
+}
+
 
 ##############################################################################
 
