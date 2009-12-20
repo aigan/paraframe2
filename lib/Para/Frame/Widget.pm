@@ -231,13 +231,19 @@ sub jump
 	}
     }
 
-    $template ||= $Para::Frame::REQ->page->url_path_slash;
+    unless( $template )
+    {
+	if( $Para::Frame::REQ->response_if_existing )
+	{
+	    $template = $Para::Frame::REQ->page->url_path_slash;
+	}
+    }
 
 #    warn sprintf("Escaping '%s' and getting '%s'\n", $label,CGI->escapeHTML( $label ) );
-    my $uri = Para::Frame::Utils::uri( $template, $attr );
 
     if( $template )
     {
+	my $uri = Para::Frame::Utils::uri( $template, $attr );
 	return sprintf("<a href=\"%s\"%s>%s</a>",
 		       CGI->escapeHTML( $uri ),
 		       $extra,
