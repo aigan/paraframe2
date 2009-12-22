@@ -576,6 +576,7 @@ sub main_loop
 		debug $err->info;
 		if( $REQ )
 		{
+		    debug $REQ;
 		    close_callback($REQ->client);
 		}
 	    }
@@ -585,6 +586,7 @@ sub main_loop
 		debug "LOST CONNECTION";
 		if( $REQ )
 		{
+		    debug $REQ;
 		    $REQ->cancel;
 		    close_callback($REQ->client,'lost connection');
 		}
