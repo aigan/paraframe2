@@ -1975,7 +1975,7 @@ sub renderer
     my( $f, $args ) = @_;
 
 
-    debug "=========> Finding the renderer for ".$f->sysdesig;
+#    debug "=========> Finding the renderer for ".$f->sysdesig;
 
     my $renderer;
 
