@@ -29,7 +29,7 @@ use IO::File;
 use CGI;
 use Para::Frame::URI;
 use POSIX qw(locale_h);
-use Scalar::Util;
+use Scalar::Util qw( blessed );
 use JSON; # to_json
 
 
@@ -195,7 +195,15 @@ sub jump
 
     $label = '???' unless length $label;
 
-    my $label_out = CGI->escapeHTML( $label );
+    my $label_out;
+    if( blessed $label and $label->can('as_html') )
+    {
+	$label_out = $label->as_html;
+    }
+    else
+    {
+	$label_out = CGI->escapeHTML( $label );
+    }
     my $content = $label_out;
 
     if( my $src =  delete ${$attr}{'href_image'} )
@@ -223,13 +231,19 @@ sub jump
 	}
     }
 
-    $template ||= $Para::Frame::REQ->page->url_path_slash;
+    unless( $template )
+    {
+	if( $Para::Frame::REQ->response_if_existing )
+	{
+	    $template = $Para::Frame::REQ->page->url_path_slash;
+	}
+    }
 
 #    warn sprintf("Escaping '%s' and getting '%s'\n", $label,CGI->escapeHTML( $label ) );
-    my $uri = Para::Frame::Utils::uri( $template, $attr );
 
     if( $template )
     {
+	my $uri = Para::Frame::Utils::uri( $template, $attr );
 	return sprintf("<a href=\"%s\"%s>%s</a>",
 		       CGI->escapeHTML( $uri ),
 		       $extra,

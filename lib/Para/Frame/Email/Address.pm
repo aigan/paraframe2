@@ -32,6 +32,7 @@ use Mail::Address;
 use Data::Validate::Domain qw(is_domain); #);
 use Net::Domain::TLD 1.67;
 use Carp qw( carp confess cluck ); #);
+use MIME::Words qw( encode_mimewords );
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw reset_hashref fqdn debug datadump ); #);
@@ -417,6 +418,53 @@ sub format
 
 ##############################################################################
 
+=head2 format_mime
+
+ $a->format_mime
+
+As L</format> but mime-encodes non-ascii chars.
+
+=cut
+
+sub format_mime
+{
+    my( $a ) = @_;
+
+    my $atext = '[\-\w !#$%&\'*+/=?^`{|}~]';
+
+    my $phrase = $a->phrase || $a->name || '';
+    my $addr = $a->address || '';
+    my $comment = $a->comment || '';
+    my @tmp = ();
+
+    if( length $phrase )
+    {
+	push @tmp, $phrase =~ /^(?:\s*$atext\s*)+$/ ? $phrase
+	  : $phrase =~ /(?<!\\)"/ 
+	  ? encode_mimewords($phrase)
+	  : '"'.encode_mimewords($phrase).'"';
+
+	push(@tmp, "<" . $addr . ">") if length $addr;
+    }
+    else
+    {
+	push(@tmp, $addr) if length $addr;
+    }
+
+    $comment =~ s/^\s*\(?//;
+    $comment =~ s/\)?\s*$//;
+    if( $comment =~ /\S/ )
+    {
+	$comment = '('.encode_mimewords($comment).')';
+    }
+
+    push(@tmp, $comment) if length $comment;
+    return join " ", @tmp;
+}
+
+
+##############################################################################
+
 =head2 format_human
 
  $a->format_human
@@ -508,14 +556,14 @@ sub desig
 # sub update
 # {
 #     my( $a, $a_in ) = @_;
-# 
+#
 #     my $a_new = $a->parse( $a_in );
-# 
+#
 #     reset_hashref( $a );
-# 
+#
 #     $a->{'addr'} = $a_new->{'addr'};
-# 
-#     return $a;    
+#
+#     return $a;
 # }
 
 

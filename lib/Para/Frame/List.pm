@@ -26,7 +26,7 @@ use base qw( Template::Iterator );
 use Carp qw( carp croak shortmess confess cluck );
 use List::Util;
 use Template::Constants;
-use Scalar::Util;
+use Scalar::Util qw(blessed reftype);
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw catch debug timediff datadump );
@@ -186,7 +186,7 @@ sub new
     my( $this, $data_in, $args ) = @_;
     my $class = ref($this) || $this;
 
-    if( $data_in and UNIVERSAL::isa($data_in, "Para::Frame::List") )
+    if( blessed $data_in and $data_in->isa("Para::Frame::List") )
     {
 	if( ref $data_in eq $class )
 	{
@@ -245,7 +245,7 @@ sub new
 	}
 	else
 	{
-	    unless( UNIVERSAL::isa($data_in, "ARRAY") )
+	    unless( eval{ $data_in->isa("ARRAY") } )
 	    {
 		my $type = ref $data_in;
 		die "$type is not an array ref";
@@ -311,19 +311,19 @@ sub new_any
 
    if( $data_in )
    {
-       if( UNIVERSAL::isa($data_in, "Para::Frame::List") )
+       if( blessed $data_in )
+       {
+	   if( $data_in->isa("Para::Frame::List") )
+	   {
+	       return $class->new( $data_in, $args );
+	   }
+       }
+       elsif( reftype $data_in eq "ARRAY")
        {
 	   return $class->new( $data_in, $args );
        }
 
-       if( UNIVERSAL::isa($data_in, "ARRAY") )
-       {
-	   return $class->new( $data_in, $args );
-       }
-       else
-       {
-	   return $class->new( [$data_in], $args );
-       }
+       return $class->new( [$data_in], $args );
    }
 
     return $class->new_empty();

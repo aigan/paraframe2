@@ -23,7 +23,7 @@ use strict;
 use warnings;
 use strict;
 
-use CGI qw( -compile );
+use CGI qw( -compile -utf8 );
 use CGI::Cookie;
 use FreezeThaw; ####### LEGACY
 use Storable; # qw( thaw );
@@ -45,7 +45,6 @@ use Para::Frame::Child::Result;
 use Para::Frame::Site;
 use Para::Frame::Change;
 use Para::Frame::URI;
-use Para::Frame::CGI;
 use Para::Frame::L10N qw( loc );
 use Para::Frame::Logging;
 use Para::Frame::Connection;
@@ -112,7 +111,7 @@ sub new
     #
     $env = \%ENV;
 
-    my $q = Para::Frame::CGI->new($params);
+    my $q = CGI->new($params);
     $q->cookie('password'); # Should cache all cookies
 
     my $req =  bless
@@ -165,7 +164,7 @@ sub new
 
 	unless( $q->param )
 	{
-	    $req->{'q'} = Para::Frame::CGI->new($req->{'orig_url_params'});
+	    $req->{'q'} = CGI->new($req->{'orig_url_params'});
 	}
     }
 

@@ -38,7 +38,7 @@ use File::Basename; # dirname
 #use FreezeThaw qw( thaw );
 use Storable qw( thaw );
 
-our $VERSION = "1.07"; # Paraframe version
+our $VERSION = "1.08"; # Paraframe version
 
 
 use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir client_str );
@@ -576,6 +576,7 @@ sub main_loop
 		debug $err->info;
 		if( $REQ )
 		{
+		    debug $REQ;
 		    close_callback($REQ->client);
 		}
 	    }
@@ -585,6 +586,7 @@ sub main_loop
 		debug "LOST CONNECTION";
 		if( $REQ )
 		{
+		    debug $REQ;
 		    $REQ->cancel;
 		    close_callback($REQ->client,'lost connection');
 		}
@@ -715,8 +717,7 @@ sub add_client
     $SELECT->add($client);
     nonblock($client);
 
-#    debug(4, "New client connected: $client");
-    debug(1, "New client connected: ".client_str($client));
+#    debug(1, "New client connected: ".client_str($client));
 }
 
 

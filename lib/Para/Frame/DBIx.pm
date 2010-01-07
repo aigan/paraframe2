@@ -645,7 +645,8 @@ sub connect
     if( $@ )
     {
 	debug(0,"Problem connecting to DB using @$connect[0..1]");
-	throw( $@ );
+	throw 'dbi', $DBI::errstr;
+#	throw( $@ );
     }
 
     if( $dbix->{'bind_dbh'} )
@@ -694,8 +695,9 @@ sub commit
 {
     my( $dbix ) = @_;
 
+    return 1 unless $dbix->{'dbh'};
     Para::Frame->run_hook( $Para::Frame::REQ, 'before_db_commit', $dbix);
-    $dbix->dbh->commit;
+    $dbix->{'dbh'}->commit;
 #    warn "DB comitted\n";
 }
 
@@ -719,7 +721,8 @@ sub rollback
 {
     my( $dbix ) = @_;
 
-    $dbix->dbh->rollback;
+    return 1 unless $dbix->{'dbh'};
+    $dbix->{'dbh'}->rollback;
     Para::Frame->run_hook( $Para::Frame::REQ, 'after_db_rollback', $dbix);
     if( my $req = $Para::Frame::REQ )
     {

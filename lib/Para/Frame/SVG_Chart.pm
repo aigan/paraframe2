@@ -15,6 +15,7 @@ use XML::Simple;
 
 
 use Para::Frame::Reload;
+use Para::Frame::Utils qw( debug );
 
 use Exporter qw( import );
 our @EXPORT_OK = qw( bar_chart_svg pie_chart_svg );
@@ -159,11 +160,31 @@ sub bar_chart_svg
 
     my $line_w           = $props{line_w}           || 1;
     my $bar_max_h        = $props{bar_max_h}        || 200;
-    my $grid_y_lines     = $props{grid_y_lines}     || 11;
+    my $grid_y_lines     = $props{grid_y_lines};
     my $text_margin      = $props{text_margin}      || 5;
     my $font_size_factor = $props{font_size_factor} || .7;
     my $label_func       = $props{label_func      } || sub{return @_};
 
+    my $max          = 0;
+    map { $max = ( $_->{value} > $max ? ( $_->{value} || 0 ) : $max ) } @$parts;
+
+    return ''
+      if $max == 0;
+
+    unless( $grid_y_lines )
+    {
+	if( $max < 15 )
+	{
+	    $grid_y_lines = $max;
+	}
+	else
+	{
+	    my $step = int($max/11);
+
+	    $grid_y_lines = 11;
+	    $max = ($step+1) * 11;
+	}
+    }
 
     # Chart is from 0,0, with the first bars bottom left at $line_w,0
     my $grid_h       = $bar_max_h / $grid_y_lines;
@@ -183,12 +204,8 @@ sub bar_chart_svg
     my $width        = $right_x - $left_x;
     my $bar_w        = ($chart_w - $line_w) / @$parts;
     my $bordercolor  = 'black';
+    my $font_size_bottom  = $bar_w * .7;
 
-    my $max          = 0;
-    map { $max = ( $_->{value} > $max ? ( $_->{value} || 0 ) : $max ) } @$parts;
-
-    return ''
-      if $max == 0;
 
     my $svg = {
                xmlns             => 'http://www.w3.org/2000/svg',
@@ -354,6 +371,7 @@ sub bar_chart_svg
              'text-anchor' => 'end',
              transform     => "rotate(310 $text_x, $text_margin )",
              content       => $part->{label},
+	     'font-size'   => $font_size_bottom,
             };
 
         $current_x += $bar_w;

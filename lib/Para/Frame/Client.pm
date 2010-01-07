@@ -547,7 +547,7 @@ sub create_dir
 
     my $orig_umask = umask;
     umask 0;
-    mkdir $dir, 02711; # 02755?
+    mkdir $dir, 02710; # Dir not listable. But files inside it accessible
     umask $orig_umask;
 }
 

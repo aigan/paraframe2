@@ -22,7 +22,7 @@ Para::Frame::Action::send_mail - Formmail
 
 =head1 DESCRIPTION
 
-See also L<Para::Frame::Email>.
+See also L<Para::Frame::Email::Sending>.
 
 =head1 SYNOPSIS
 
@@ -68,7 +68,7 @@ recipient is specified, it defaults to the site email address. Example:
 
 =cut
 
-use Para::Frame::Email;
+use Para::Frame::Email::Sending;
 use Para::Frame::Utils qw( throw debug );
 
 sub handler
@@ -76,12 +76,12 @@ sub handler
     my ($req) = @_;
 
     my $q = $req->q;
-    my $mail = Para::Frame::Email->new();
+    my $es = Para::Frame::Email::Sending->new();
 
     # copy all params by default
     foreach my $param ($q->param)
     {
-	$mail->params->{$param} = $q->param($param);
+	$es->params->{$param} = $q->param($param);
     }
 
     my $site = $req->site;
@@ -147,11 +147,11 @@ sub handler
 	$from_via = sprintf('"%s via %s" <%s>', $name, $site_name, $sitemailaddr);
     }
 
-    $mail->params->{'props'} = format_props($req);
+    $es->params->{'props'} = format_props($req);
 
     debug "Sending mail to: '$recipient'";
 
-    my $mail_params =
+    my $es_params =
     {
      subject    => $subject,
      to         => $recipient,
@@ -160,20 +160,20 @@ sub handler
 
     if( $from_via )
     {
-	$mail_params->{'from'} = $from_via;
-	$mail_params->{'reply_to'} = $from;
+	$es_params->{'from'} = $from_via;
+	$es_params->{'reply_to'} = $from;
     }
     else
     {
-	$mail_params->{'from'} = $from;
+	$es_params->{'from'} = $from;
     }
 
     if( my $reply_to = $q->param('reply_to') )
     {
-	$mail_params->{'reply_to'} = $reply_to;
+	$es_params->{'reply_to'} = $reply_to;
     }
 
-    $mail->send_by_proxy( $mail_params );
+    $es->send_by_proxy( $es_params );
 
     my $return_message = $q->param('return_message') || "";
     return $return_message;
@@ -211,6 +211,6 @@ sub format_props
 
 =head1 SEE ALSO
 
-L<Para::Frame::Email>
+L<Para::Frame::Email::Sending>
 
 =cut
