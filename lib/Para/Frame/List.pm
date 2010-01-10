@@ -318,9 +318,12 @@ sub new_any
 	       return $class->new( $data_in, $args );
 	   }
        }
-       elsif( reftype $data_in eq "ARRAY")
+       elsif( reftype $data_in )
        {
-	   return $class->new( $data_in, $args );
+	   if( reftype $data_in eq "ARRAY")
+	   {
+	       return $class->new( $data_in, $args );
+	   }
        }
 
        return $class->new( [$data_in], $args );
