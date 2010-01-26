@@ -44,6 +44,13 @@
     </ol>
   [% END %]
 
+
+[% IF ENV.REDIRECT_REQUEST_METHOD == 'POST' %]
+<h1 style="text-decoration:blink;font-size:xx-large" class='important'>Post data lost in redirect</h1>
+<p>Use <code>SetHandler perl-script</code> for all post destinations.</p>
+[% END %]
+
+
   <h4>Params</h4>
   <table>
     <tr><th>Name</th><th>Value</th></tr>
