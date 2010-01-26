@@ -26,7 +26,7 @@ use overload '""' => \&as_string;
 use overload 'eq' => \&equals;
 use overload 'ne' => sub{ not &equals(@_) };
 
-use Net::DNS;
+use Net::DNS; # mx
 use Net::SMTP;
 use Mail::Address;
 use Data::Validate::Domain qw(is_domain); #);
