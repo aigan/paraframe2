@@ -169,15 +169,24 @@ sub slider
 Draw a link to C<$template> with text C<$label> and query params
 C<%attrs>.
 
-A 'href_target' attribute will set the target frame for the link.
+Special attrs include
 
-A 'href_onclick' attribute will set the corresponding tag attribute.
+=over
 
-A 'href_class' attribute will set the class for the link.
+=item tag_attr
 
-A 'href_id' attribute will set the id for the link.
+See L</tag_extra_from_params>
 
-A 'href_style' attribute will set the style for the link.
+Used instead of deprecated attrs C<href_target>, C<href_onclick>,
+C<href_class>, C<href_id> and C<href_style>.
+
+=item tag_image
+
+Used instead of deprecated attrs C<href_image>.
+
+=item keep_params
+
+=back
 
 If no class is set, the class will be C<same_place> if the link goes to
 the current page.  To be used with CSS for marking the current page in
@@ -206,7 +215,12 @@ sub jump
     }
     my $content = $label_out;
 
+    # DEPRECATED
     if( my $src =  delete ${$attr}{'href_image'} )
+    {
+	$content = "<img alt=\"$label_out\" src=\"$src\" />";
+    }
+    if( my $src =  delete ${$attr}{'tag_image'} )
     {
 	$content = "<img alt=\"$label_out\" src=\"$src\" />";
     }
@@ -271,6 +285,8 @@ sub jump_extra
     $attr ||= {};
 
     my $extra = "";
+
+    ###### DEPRECATED
     if( my $val = delete ${$attr}{'href_target'} )
     {
 	$extra .= " target=\"$val\"";
@@ -293,7 +309,14 @@ sub jump_extra
     {
 	$extra .= " class=\"$class_val\"";
     }
-    elsif( not defined $class_val )
+
+    if( my $tag_attr = delete ${$attr}{'tag_attr'} )
+    {
+	$class_val = $tag_attr->{'class'};
+	$extra .= tag_extra_from_params( $tag_attr );
+    }
+
+    if( not defined $class_val )
     {
 	if( $Para::Frame::REQ->is_from_client and $template )
 	{
