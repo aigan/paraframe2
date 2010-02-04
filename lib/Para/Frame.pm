@@ -1362,7 +1362,6 @@ sub close_callback
 
     # if not a background request
     if( ref $client and
-	$client->connected and
 	( $client != $SERVER )
       )
     {
