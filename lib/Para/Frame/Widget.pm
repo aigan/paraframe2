@@ -434,16 +434,18 @@ Default $run = 'nop'
 All fields set by %attrs must exist in the form. (Maybe as hidden
 elements)
 
+Special attrs include
 
-A 'href_target' attribute will set the target frame for the link.
+=over
 
-A 'href_onclick' attribute will set the corresponding tag attribute.
+=item tag_attr
 
-A 'href_class' attribute will set the class for the link.
+See L</tag_extra_from_params>
 
-A 'href_id' attribute will set the id for the link.
+Used instead of deprecated attrs C<href_target>, C<href_onclick>,
+C<href_class>, C<href_id> and C<href_style>.
 
-A 'href_style' attribute will set the style for the link.
+=back
 
 TODO: Do html escape of value
 
@@ -488,8 +490,10 @@ sub go
 #	}
     }
 
-    my $extra = "";
+    my $extra = jump_extra( $template, $attr );
     my $onclick_extra = "";
+
+    # DEPRECATED
     if( my $val = delete $attr->{'href_target'} )
     {
 	$extra .= "target=\"$val\" ";
