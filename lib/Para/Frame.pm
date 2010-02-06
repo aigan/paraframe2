@@ -576,7 +576,8 @@ sub main_loop
 		debug $err->info;
 		if( $REQ )
 		{
-		    debug $REQ;
+		    cluck datadump($REQ) unless
+		      UNIVERSAL::isa $REQ, 'Para::Frame::Request';
 		    close_callback($REQ->client);
 		}
 	    }
@@ -586,7 +587,8 @@ sub main_loop
 		debug "LOST CONNECTION";
 		if( $REQ )
 		{
-		    debug $REQ;
+		    cluck datadump($REQ) unless
+		      UNIVERSAL::isa $REQ, 'Para::Frame::Request';
 		    $REQ->cancel;
 		    close_callback($REQ->client,'lost connection');
 		}
