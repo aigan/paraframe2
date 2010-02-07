@@ -150,6 +150,14 @@ sub render_message
 
     $rend->{'dataref'} =  $rend->email->raw;
 
+    ### Validating result
+    #
+    if( ${$rend->{'dataref'}} =~ /\[%/ )
+    {
+	debug "EAMIL:\n".${$rend->{'dataref'}};
+	die "Failed to parse TT from email";
+    }
+
     return $rend->{'dataref'};
 }
 
