@@ -5,7 +5,7 @@ package Para::Frame::List;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2010 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -1096,7 +1096,7 @@ sub pagelist
     }
     else
     {
-	$out .= forward("<", $me, {use_cached=>$id, table_page => ($pagenum-1), href_class=>"paraframe_previous"});
+	$out .= forward("<", $me, {use_cached=>$id, table_page => ($pagenum-1), tag_attr=>{class=>"paraframe_previous"}});
 #	$out .= forward("First", $me, {use_cached=>$id, page => 1});
 	$out .= " ";
     }
@@ -1133,7 +1133,7 @@ sub pagelist
     {
 	$out .= " ";
 #	$out .= forward("Sist", $me, {use_cached=>$id, page => $pages});
-	$out .= forward(">", $me, {use_cached=>$id, table_page => ($pagenum+1), href_class=>"paraframe_next"});
+	$out .= forward(">", $me, {use_cached=>$id, table_page => ($pagenum+1), tag_attr=>{class=>"paraframe_next"}});
     }
 
     return $out . "</span>";

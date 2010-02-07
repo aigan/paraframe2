@@ -20,9 +20,9 @@
 
 [% view = a.view %]
 [% DEFAULT view = me %]
-[% DEFAULT href_class='msg' %]
-<p>[% go('Backa', '', 'skip_step', href_class=href_class) +%]
-[%# go('Hoppa över', undef, 'skip_step&skip_step', href_class=href_class) %]
+[% DEFAULT tag_attr={class='msg'} %]
+<p>[% go('Backa', '', 'skip_step', tag_attr=tag_attr) +%]
+[%# go('Hoppa över', undef, 'skip_step&skip_step', tag_attr=tag_attr) %]
 
 [% IF a.trace %]
 <pre>

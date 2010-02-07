@@ -5,7 +5,7 @@ package Para::Frame::Widget;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2010 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -353,7 +353,7 @@ sub jump_extra
 
 =head2 submit
 
-  submit( $label, $setval )
+  submit( $label, $setval, \%attrs )
 
 Draw a form submit button with text $label and value $setval.
 
@@ -361,15 +361,18 @@ Default label = 'Continue'
 
 Default setval is to not have a value
 
-A 'href_target' attribute will set the target frame for the link.
+Special attrs include
 
-A 'href_onclick' attribute will set the corresponding tag attribute.
+=over
 
-A 'href_class' attribute will set the class for the link.
+=item tag_attr
 
-A 'href_id' attribute will set the id for the link.
+See L</tag_extra_from_params>
 
-A 'href_style' attribute will set the style for the link.
+Used instead of deprecated attrs C<href_target>, C<href_onclick>,
+C<href_class>, C<href_id> and C<href_style>.
+
+=back
 
 TODO: Do html escape of value
 
@@ -384,10 +387,11 @@ sub submit
     $label ||= 'Continue';
     $attr ||= {};
 
-    my $extra = "";
+    my $extra = jump_extra( undef, $attr );
 
     my $label_out = loc($label);
 
+    # DEPRECATED
     if( my $class = delete ${$attr}{'href_class'} )
     {
 	$extra .= " class=\"$class\"";
@@ -419,7 +423,7 @@ sub submit
 
 =head2 go
 
-  go( $label, $template, $run, %attrs )
+  go( $label, $template, $run, \%attrs )
 
 Draw a form submit button with text $label.  Sets template to $template
 and runs action $run.  %attrs specifies form fields to be set to
@@ -1546,8 +1550,9 @@ Name "selector" is because "select" is a protected term.
             valkey => $valkey,
             tagkey => $tagkey,
             header => $header,
+            %attrs,
            } )
-  selector( $field, $current, %data )
+  selector( $field, $current, %data, \%attrs )
 
 Draws a dropdown menu from a list of records (from a DB).
 
@@ -1602,7 +1607,18 @@ Example:
 
   id: used for label. Defaults to C<$field>
 
+Special attrs include
 
+=over
+
+=item tag_attr
+
+See L</tag_extra_from_params>
+
+Used instead of deprecated attrs C<href_class>, C<href_target>,
+C<href_id>, C<href_onchange> and C<href_style>.
+
+=back
 
 =cut
 
@@ -1653,7 +1669,9 @@ sub selector
 	$params->{id} = $id;
     }
 
-    my $extra = "";
+    my $extra = jump_extra( undef, $params );
+
+    ###### DEPRECATED
     if( my $class = delete ${$params}{'href_class'} )
     {
 	$extra .= " class=\"$class\"";

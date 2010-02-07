@@ -99,11 +99,6 @@ sub as_html
     $label ||= $url->{'value'}->as_string;
 
     return Para::Frame::Widget::jump( $label, $href, $attrs );
-
-
-#    my $label_out = CGI->escapeHTML($label);
-#    my $href_out = CGI->escapeHTML($href);
-#    return "<a href=\"$href_out\">$label_out</a>";
 }
 
 
