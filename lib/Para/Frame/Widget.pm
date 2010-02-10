@@ -270,9 +270,18 @@ sub jump
     }
 }
 
+
+##############################################################################
+
+=head2 jump_extra
+
+  jump_extra( $template, \%attr, \%args )
+
+=cut
+
 sub jump_extra
 {
-    my( $template, $attr ) = @_;
+    my( $template, $attr, $args ) = @_;
 
     if( UNIVERSAL::isa $template, 'URI' )
     {
@@ -283,6 +292,9 @@ sub jump_extra
     }
 
     $attr ||= {};
+
+    $args ||= {};
+    $args->{'highlight_same_place'} //= 1;
 
     my $extra = "";
 
@@ -316,7 +328,7 @@ sub jump_extra
 	$extra .= tag_extra_from_params( $tag_attr );
     }
 
-    if( not defined $class_val )
+    if( not defined $class_val and $args->{'highlight_same_place'} )
     {
 	if( $Para::Frame::REQ->is_from_client and $template )
 	{
@@ -387,7 +399,7 @@ sub submit
     $label ||= 'Continue';
     $attr ||= {};
 
-    my $extra = jump_extra( undef, $attr );
+    my $extra = jump_extra( undef, $attr, {highlight_same_place=>0} );
 
     my $label_out = loc($label);
 
@@ -494,7 +506,7 @@ sub go
 #	}
     }
 
-    my $extra = jump_extra( $template, $attr );
+    my $extra = jump_extra( $template, $attr, {highlight_same_place=>0} );
     my $onclick_extra = "";
 
     # DEPRECATED
@@ -556,7 +568,7 @@ sub forward
 {
     my( $label, $template, $attr ) = @_;
 
-    my $extra = jump_extra( $template, $attr );
+    my $extra = jump_extra( $template, $attr, {highlight_same_place=>0} );
 
     my $url = forward_url( $template, $attr );
 
@@ -1669,7 +1681,7 @@ sub selector
 	$params->{id} = $id;
     }
 
-    my $extra = jump_extra( undef, $params );
+    my $extra = jump_extra( undef, $params, {highlight_same_place=>0} );
 
     ###### DEPRECATED
     if( my $class = delete ${$params}{'href_class'} )
