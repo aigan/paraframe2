@@ -33,6 +33,7 @@ WriteMakefile(
 	          'DateTime::Incomplete'       => 0.02,
 		  'DBI'                        => 1.48,
 		  'Digest::MD5'                => 2.33,
+	          'Email::MIME'                => 1.902,
 		  'Encode'                     => 2.10,
 	          'Encode::Detect::Detector'   => 1.00,
 	          'Encode::InCharset'          => 0.03,
