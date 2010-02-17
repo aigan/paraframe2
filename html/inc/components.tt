@@ -78,7 +78,7 @@
 [% DEFAULT
        	label = 'Backa'
 %]
-   [% go(label, undef, 'skip_step', href_class=href_class) %]
+   [% go(label, undef, 'skip_step', tag_attr=tag_attr) %]
 [% END %]
 
 
@@ -87,7 +87,7 @@
 [% DEFAULT
        	label = 'Ta bort steg'
 %]
-   [% go(label, me, 'remove_step', href_class=href_class) %]
+   [% go(label, me, 'remove_step', tag_attr=tag_attr) %]
 [% END %]
 
 
@@ -96,7 +96,7 @@
 [% DEFAULT
        	label = 'Hoppa över'
 %]
-   [% go(label, undef, 'next_step', href_class=href_class) %]
+   [% go(label, undef, 'next_step', tag_attr=tag_attr) %]
    [% IF break_path %]
       [% hidden('break_path', break_path) %]
    [% END %]

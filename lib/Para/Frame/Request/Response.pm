@@ -1221,6 +1221,8 @@ sub renderer_if_existing
 
   $resp->render_output()
 
+  The caller must take care of C<$@> at failure
+
 Returns:
 
    true if a response was sucessfully generated

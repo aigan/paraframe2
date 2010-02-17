@@ -5,7 +5,7 @@ package Para::Frame::Widget;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2010 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -169,15 +169,24 @@ sub slider
 Draw a link to C<$template> with text C<$label> and query params
 C<%attrs>.
 
-A 'href_target' attribute will set the target frame for the link.
+Special attrs include
 
-A 'href_onclick' attribute will set the corresponding tag attribute.
+=over
 
-A 'href_class' attribute will set the class for the link.
+=item tag_attr
 
-A 'href_id' attribute will set the id for the link.
+See L</tag_extra_from_params>
 
-A 'href_style' attribute will set the style for the link.
+Used instead of deprecated attrs C<href_target>, C<href_onclick>,
+C<href_class>, C<href_id> and C<href_style>.
+
+=item tag_image
+
+Used instead of deprecated attrs C<href_image>.
+
+=item keep_params
+
+=back
 
 If no class is set, the class will be C<same_place> if the link goes to
 the current page.  To be used with CSS for marking the current page in
@@ -206,7 +215,12 @@ sub jump
     }
     my $content = $label_out;
 
+    # DEPRECATED
     if( my $src =  delete ${$attr}{'href_image'} )
+    {
+	$content = "<img alt=\"$label_out\" src=\"$src\" />";
+    }
+    if( my $src =  delete ${$attr}{'tag_image'} )
     {
 	$content = "<img alt=\"$label_out\" src=\"$src\" />";
     }
@@ -256,9 +270,18 @@ sub jump
     }
 }
 
+
+##############################################################################
+
+=head2 jump_extra
+
+  jump_extra( $template, \%attr, \%args )
+
+=cut
+
 sub jump_extra
 {
-    my( $template, $attr ) = @_;
+    my( $template, $attr, $args ) = @_;
 
     if( UNIVERSAL::isa $template, 'URI' )
     {
@@ -270,7 +293,12 @@ sub jump_extra
 
     $attr ||= {};
 
+    $args ||= {};
+    $args->{'highlight_same_place'} //= 1;
+
     my $extra = "";
+
+    ###### DEPRECATED
     if( my $val = delete ${$attr}{'href_target'} )
     {
 	$extra .= " target=\"$val\"";
@@ -293,7 +321,14 @@ sub jump_extra
     {
 	$extra .= " class=\"$class_val\"";
     }
-    elsif( not defined $class_val )
+
+    if( my $tag_attr = delete ${$attr}{'tag_attr'} )
+    {
+	$class_val = $tag_attr->{'class'};
+	$extra .= tag_extra_from_params( $tag_attr );
+    }
+
+    if( not defined $class_val and $args->{'highlight_same_place'} )
     {
 	if( $Para::Frame::REQ->is_from_client and $template )
 	{
@@ -330,7 +365,7 @@ sub jump_extra
 
 =head2 submit
 
-  submit( $label, $setval )
+  submit( $label, $setval, \%attrs )
 
 Draw a form submit button with text $label and value $setval.
 
@@ -338,15 +373,18 @@ Default label = 'Continue'
 
 Default setval is to not have a value
 
-A 'href_target' attribute will set the target frame for the link.
+Special attrs include
 
-A 'href_onclick' attribute will set the corresponding tag attribute.
+=over
 
-A 'href_class' attribute will set the class for the link.
+=item tag_attr
 
-A 'href_id' attribute will set the id for the link.
+See L</tag_extra_from_params>
 
-A 'href_style' attribute will set the style for the link.
+Used instead of deprecated attrs C<href_target>, C<href_onclick>,
+C<href_class>, C<href_id> and C<href_style>.
+
+=back
 
 TODO: Do html escape of value
 
@@ -361,10 +399,11 @@ sub submit
     $label ||= 'Continue';
     $attr ||= {};
 
-    my $extra = "";
+    my $extra = jump_extra( undef, $attr, {highlight_same_place=>0} );
 
     my $label_out = loc($label);
 
+    # DEPRECATED
     if( my $class = delete ${$attr}{'href_class'} )
     {
 	$extra .= " class=\"$class\"";
@@ -396,7 +435,7 @@ sub submit
 
 =head2 go
 
-  go( $label, $template, $run, %attrs )
+  go( $label, $template, $run, \%attrs )
 
 Draw a form submit button with text $label.  Sets template to $template
 and runs action $run.  %attrs specifies form fields to be set to
@@ -411,16 +450,18 @@ Default $run = 'nop'
 All fields set by %attrs must exist in the form. (Maybe as hidden
 elements)
 
+Special attrs include
 
-A 'href_target' attribute will set the target frame for the link.
+=over
 
-A 'href_onclick' attribute will set the corresponding tag attribute.
+=item tag_attr
 
-A 'href_class' attribute will set the class for the link.
+See L</tag_extra_from_params>
 
-A 'href_id' attribute will set the id for the link.
+Used instead of deprecated attrs C<href_target>, C<href_onclick>,
+C<href_class>, C<href_id> and C<href_style>.
 
-A 'href_style' attribute will set the style for the link.
+=back
 
 TODO: Do html escape of value
 
@@ -465,8 +506,10 @@ sub go
 #	}
     }
 
-    my $extra = "";
+    my $extra = jump_extra( $template, $attr, {highlight_same_place=>0} );
     my $onclick_extra = "";
+
+    # DEPRECATED
     if( my $val = delete $attr->{'href_target'} )
     {
 	$extra .= "target=\"$val\" ";
@@ -525,7 +568,7 @@ sub forward
 {
     my( $label, $template, $attr ) = @_;
 
-    my $extra = jump_extra( $template, $attr );
+    my $extra = jump_extra( $template, $attr, {highlight_same_place=>0} );
 
     my $url = forward_url( $template, $attr );
 
@@ -1519,8 +1562,9 @@ Name "selector" is because "select" is a protected term.
             valkey => $valkey,
             tagkey => $tagkey,
             header => $header,
+            %attrs,
            } )
-  selector( $field, $current, %data )
+  selector( $field, $current, %data, \%attrs )
 
 Draws a dropdown menu from a list of records (from a DB).
 
@@ -1575,7 +1619,18 @@ Example:
 
   id: used for label. Defaults to C<$field>
 
+Special attrs include
 
+=over
+
+=item tag_attr
+
+See L</tag_extra_from_params>
+
+Used instead of deprecated attrs C<href_class>, C<href_target>,
+C<href_id>, C<href_onchange> and C<href_style>.
+
+=back
 
 =cut
 
@@ -1626,7 +1681,9 @@ sub selector
 	$params->{id} = $id;
     }
 
-    my $extra = "";
+    my $extra = jump_extra( undef, $params, {highlight_same_place=>0} );
+
+    ###### DEPRECATED
     if( my $class = delete ${$params}{'href_class'} )
     {
 	$extra .= " class=\"$class\"";

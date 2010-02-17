@@ -1696,6 +1696,9 @@ sub fqdn
     return $FQDN;
 }
 
+
+##############################################################################
+
 =head2 retrieve_from_url
 
     retrieve_from_url( $url )
@@ -1995,7 +1998,7 @@ sub client_send
 		}
 		else
 		{
-		    debug("  Resending chunk $chrpos of messge: $$dataref");
+		    debug("  Resending chunk $chrpos of message: $$dataref");
 		    Time::HiRes::sleep(0.05);
 		}
 
@@ -2028,7 +2031,17 @@ sub client_send
 
 	for( $srcpos=0; $srcpos<$srclength; $srcpos+= $srcsent )
 	{
-	    $srcsent = $client->send( substr $$dataref, $srcpos, $chunk );
+	    eval
+	    {
+		$srcsent = 0;
+		$srcsent = $client->send( substr $$dataref, $srcpos, $chunk );
+	    };
+	    if( $@ )
+	    {
+		debug "GOT ERROR IN SOCKET SEND\n";
+		$Para::Frame::DEBUG = 3;
+	    }
+
 	    if( $srcsent )
 	    {
 		debug(3, "  Sent $srcsent bytes");
@@ -2049,7 +2062,7 @@ sub client_send
 		}
 		else
 		{
-		    debug("  Resending chunk $srcpos of messge");
+		    debug("  Resending chunk $srcpos of message");
 		    Time::HiRes::sleep(0.05);
 		}
 
@@ -2109,7 +2122,7 @@ sub client_send
 		}
 		else
 		{
-		    debug("  Resending chunk $chrpos of messge");
+		    debug("  Resending chunk $chrpos of message");
 		    Time::HiRes::sleep(0.05);
 		}
 

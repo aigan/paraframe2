@@ -150,6 +150,14 @@ sub render_message
 
     $rend->{'dataref'} =  $rend->email->raw;
 
+    ### Validating result
+    #
+    if( ${$rend->{'dataref'}} =~ /\[%/ )
+    {
+	debug "EAMIL:\n".${$rend->{'dataref'}};
+	die "Failed to parse TT from email";
+    }
+
     return $rend->{'dataref'};
 }
 
@@ -361,6 +369,16 @@ $req->{'user'} : The L<Para::Frame::User> object.
 
 =back
 
+Special params are:
+
+=over
+
+=item on_set_tt_params
+
+Will be called as a code reference with C<$param> as the first parameter.
+
+=back
+
 =cut
 
 sub set_tt_params
@@ -392,6 +410,11 @@ sub set_tt_params
 	'lang'            => $req->language->preferred, # calculate once
 	'req'             => $req,
     });
+
+    if( $p->{'on_set_tt_params'} )
+    {
+	&{$p->{'on_set_tt_params'}}( $rend );
+    }
 }
 
 

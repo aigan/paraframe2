@@ -351,6 +351,8 @@ sub main_loop
 	    my @requests = values %REQUEST;
 	    foreach my $req ( @requests )
 	    {
+		next unless $req; # If closed down
+
 		if( $req->{'cancel'} )
 		{
 		    switch_req( $req );
@@ -574,22 +576,22 @@ sub main_loop
 	    {
 		debug "REQUEST CANCELLED\n";
 		debug $err->info;
-		if( $REQ )
+		if( $REQ and $REQ->{'client'} )
 		{
-		    debug $REQ;
 		    close_callback($REQ->client);
 		}
+		undef $REQ; # In case of contamination
 	    }
 	    elsif( $err->type eq 'action' and
 		   $err->info =~ /^send: Cannot determine peer address/ )
 	    {
 		debug "LOST CONNECTION";
-		if( $REQ )
+		if( $REQ and $REQ->{'client'} )
 		{
-		    debug $REQ;
 		    $REQ->cancel;
 		    close_callback($REQ->client,'lost connection');
 		}
+		undef $REQ; # In case of contamination
 	    }
 	    else
 	    {
@@ -1362,7 +1364,6 @@ sub close_callback
 
     # if not a background request
     if( ref $client and
-	$client->connected and
 	( $client != $SERVER )
       )
     {
@@ -2726,7 +2727,7 @@ sub report
 #    $out .= "SERVER obj: $SERVER\n";
     $out .= "Global DEBUG level: $DEBUG\n";
     $out .= "DEBUG indent: $INDENT\n";
-    $out .= "Current requst is $REQ->{'reqnum'}\n";
+    $out .= "Current requst is $REQ->{'reqnum'}\n" if $REQ;
     $out .= "Level is $LEVEL\n";
     $out .= "Terminate is $TERMINATE\n";
 #    $out .= "Last running request was $REQ_LAST->{'reqnum'}\n";
