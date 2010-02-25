@@ -5,7 +5,7 @@ package Para::Frame::Email::Sending;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2010 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -848,6 +848,17 @@ sub renderer
 {
     return $_[0]->{renderer} ||=
       Para::Frame::Renderer::Email->new({params=>$_[0]->{'params'}});
+}
+
+##############################################################################
+
+=head2 email
+
+=cut
+
+sub email
+{
+    return $_[0]->renderer->email;
 }
 
 ##############################################################################

@@ -5,7 +5,7 @@ package Para::Frame::Renderer::Email;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2009-2010 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -94,12 +94,11 @@ sub render_message
 
     my $use_existing_header = 0;
     my $use_existing_body   = 0;
+    my $p = $rend->params;
 
 
     unless( $to_addr )
     {
-	my $p = $rend->params;
-
 	my @to = ref $p->{'to'} eq 'ARRAY' ? @{$p->{'to'}} : $p->{'to'};
 	if( scalar(@to) > 1 )
 	{
@@ -138,7 +137,19 @@ sub render_message
 
     unless( $use_existing_body and $rend->email )
     {
-	$rend->render_body_from_template;
+	if( $p->{'template'} )
+	{
+	    $rend->render_body_from_template;
+	}
+	elsif( $p->{'body'} )
+	{
+	    $rend->render_body_from_plain;
+	}
+	else
+	{
+	    throw 'validation', "No content given for email";
+	}
+
  	debug "Rendering body - done";
     }
 
@@ -260,10 +271,10 @@ sub render_body_from_template
     $burner->burn( $trend, $tmpl->document, \%params, \$data )
       or throw($burner->error);
 
-    debug "email before downgrade: ".validate_utf8(\$data);
+#    debug "email before downgrade: ".validate_utf8(\$data);
 
     $data_out = deunicode($data); # Convert to ISO-8859-1
-    debug "email after downgrade: ".validate_utf8(\$data_out);
+#    debug "email after downgrade: ".validate_utf8(\$data_out);
 
     if( $p->{'pgpsign'} )
     {
@@ -273,9 +284,56 @@ sub render_body_from_template
 
     if( utf8::is_utf8( $data_out ) )
     {
-	debug "Body before downgrade: ". validate_utf8( $data_out );
+#	debug "Body before downgrade: ". validate_utf8( $data_out );
 	$data_out = deunicode( $data_out ); # Convert to ISO-8859-1
-	debug "Body after downgrade: ". validate_utf8( $data_out );
+#	debug "Body after downgrade: ". validate_utf8( $data_out );
+    }
+
+
+    $rend->{'body'} = \ $data_out;
+
+#    debug datadump $data_out;
+#    die "CHECKME";
+
+    return 1;
+}
+
+
+##############################################################################
+
+=head2 render_body_from_plain
+
+=cut
+
+sub render_body_from_plain
+{
+    my( $rend ) = @_;
+
+#    cluck "PF render_body_from_template";
+
+    my $p = $rend->params;
+
+    my $data = $p->{'body'}
+      or throw 'validation', "No body selected";
+    my $data_out = "";
+
+    debug "Rendering body";
+#    debug "email before downgrade: ".validate_utf8(\$data);
+
+    $data_out = deunicode($data); # Convert to ISO-8859-1
+#    debug "email after downgrade: ".validate_utf8(\$data_out);
+
+    if( $p->{'pgpsign'} )
+    {
+	pgpsign(\$data_out, $p->{'pgpsign'} );
+    }
+
+
+    if( utf8::is_utf8( $data_out ) )
+    {
+#	debug "Body before downgrade: ". validate_utf8( $data_out );
+	$data_out = deunicode( $data_out ); # Convert to ISO-8859-1
+#	debug "Body after downgrade: ". validate_utf8( $data_out );
     }
 
 
@@ -299,6 +357,7 @@ sub email
     return $_[0]->{'email'};
 }
 
+
 ##############################################################################
 
 =head2 email_new
@@ -310,6 +369,7 @@ sub email_new
     my( $rend, $head, $body ) = @_;
     return $rend->{'email'} = Para::Frame::Email->new($head, $body);
 }
+
 
 ##############################################################################
 
@@ -324,6 +384,7 @@ sub email_clone
     return $rend->{'email'} = $eml->clone
 }
 
+
 ##############################################################################
 
 =head2 params
@@ -335,6 +396,7 @@ sub params
     return $_[0]->{'params'};
 }
 
+
 ##############################################################################
 
 =head2 set_dataref
@@ -345,6 +407,7 @@ sub set_dataref
 {
     return $_[0]->{'dataref'} = $_[1];
 }
+
 
 ##############################################################################
 
