@@ -5,7 +5,7 @@ package Para::Frame;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2010 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -178,6 +178,7 @@ BEGIN
 			  busy_background_job
 			  add_background_jobs
 			  after_bookmark
+			  after_action_success
                         ))
     {
 	$HOOK{$hook} ||= [];

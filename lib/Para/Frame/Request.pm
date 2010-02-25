@@ -5,7 +5,7 @@ package Para::Frame::Request;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2010 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -1499,6 +1499,7 @@ sub run_action
 	debug(3,"using $actionroot",1);
 	no strict 'refs';
 	@res = &{$actionroot.'::'.$c_run.'::handler'}($req, @args);
+	Para::Frame->run_hook($req, 'after_action_success', \@res );
 
 	if( $Para::Frame::FORK )
 	{
