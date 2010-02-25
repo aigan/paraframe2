@@ -425,8 +425,10 @@ sub main_loop
 
 	    ### Do background jobs
 	    #
-	    add_background_jobs_conditional();
-
+	    if( add_background_jobs_conditional() )
+	    {
+		$timeout = TIMEOUT_SHORT; # Get next thing
+	    }
 
 
 	    ### Waiting for a child? (*inside* a nested request)
@@ -1675,7 +1677,7 @@ sub add_background_jobs_conditional
     elsif( $delta < BGJOB_MAX )
     {
 	debug(4,"Too few seconds for MAX: $delta < ". BGJOB_MAX);
-	return 0;
+	return;
     }
 
     # Cache cleanup could safely be done here
@@ -1829,6 +1831,8 @@ sub add_background_jobs
 
     $BGJOBDATE = time;
     $BGJOBNR   = $REQNUM;
+
+    return 1;
 }
 
 
