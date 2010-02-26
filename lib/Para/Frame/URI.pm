@@ -649,6 +649,22 @@ sub retrieve
 
 ##############################################################################
 
+=head2 jump
+
+  $url->jump( $label, \%attrs )
+
+=cut
+
+sub jump
+{
+    my( $url, $label, $attrs ) = @_;
+
+    return Para::Frame::Widget::jump($label, $url, $attrs);
+}
+
+
+##############################################################################
+
 #use vars qw($AUTOLOAD);
 #sub AUTOLOAD
 #{

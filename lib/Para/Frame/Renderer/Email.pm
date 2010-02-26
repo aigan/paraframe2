@@ -94,8 +94,11 @@ sub render_message
 
     my $use_existing_header = 0;
     my $use_existing_body   = 0;
-    my $p = $rend->params;
 
+
+    my $p = $rend->params;
+    # Both variants used in diffrent places
+    $rend->{'template'} ||= $p->{'template'};
 
     unless( $to_addr )
     {
@@ -137,7 +140,7 @@ sub render_message
 
     unless( $use_existing_body and $rend->email )
     {
-	if( $p->{'template'} )
+	if( $rend->{'template'} )
 	{
 	    $rend->render_body_from_template;
 	}
