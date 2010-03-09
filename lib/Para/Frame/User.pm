@@ -5,7 +5,7 @@ package Para::Frame::User;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2010 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -366,6 +366,12 @@ Sets the user for this request to the object C<$new_user>.
 
 sub change_current_user
 {
+    unless( UNIVERSAL::isa $_[1], 'Para::Frame::User' )
+    {
+	cluck "Tried to set user to $_[1]";
+	throw('validation', sprintf "%s is not a valid user", $_[1]->sysdesig );
+    }
+
     $Para::Frame::U = $_[1];
     return $Para::Frame::U unless $Para::Frame::REQ;
     return $Para::Frame::REQ->session->{'user'} = $Para::Frame::U;

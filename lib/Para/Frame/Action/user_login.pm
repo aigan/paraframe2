@@ -5,7 +5,7 @@ package Para::Frame::Action::user_login;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2010 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -43,9 +43,10 @@ sub handler
 
     # Validation
     #
-    my $username = join('',$q->param('username'))
-	or throw('incomplete', loc("Name is missing"));
-    my $password = join('',$q->param('password')) || "";
+    my $username = (grep(length($_),$q->param('username')))[0]
+      or throw('incomplete', loc("Name is missing"));
+    my $password = (grep(length($_),$q->param('password')))[0]
+      or throw('incomplete', loc("Password is missing"));
     my $remember = $q->param('remember_login') || 0;
 
     $password or throw('incomplete', loc("Password is missing"));
