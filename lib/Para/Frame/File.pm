@@ -1135,9 +1135,19 @@ sub base
     {
 	$target = $f->url_path;
     }
-    $target =~ /^$home(.*?)(\.\w\w)?\.\w{2,4}$/
-      or confess "Couldn't get base from $target under $home";
-    return $1;
+
+    if( $target =~ /^$home(.*?)(\.\w\w)?\.\w{2,4}$/ )
+    {
+	return $1;
+    }
+    elsif( $target =~ /^$home(.*)$/ )
+    {
+	return $1;
+    }
+    else
+    {
+	confess "Couldn't get base from $target under $home";
+    }
 }
 
 
