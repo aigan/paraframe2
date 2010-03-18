@@ -15,7 +15,7 @@
 [% MACRO step(label, template, run) BLOCK %]
    [% IF template %]
       [% go(label, template, run) %]
-      [%+ backstep %]
+      [%# backstep %]
       [% IF route.size %]
          [%+ regret %]
       [% END %]
@@ -52,7 +52,7 @@
       IF route.caller_is_next_step;
          regret;
       ELSE;
-         backstep;
+         #backstep;
          IF route.size;
             regret;
          END;
