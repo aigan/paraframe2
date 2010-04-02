@@ -5,7 +5,7 @@ package Para::Frame::Client;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2010 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -138,8 +138,14 @@ sub handler
     my $s = Apache2::ServerUtil->server;
 
     my $dirconfig = $r->dir_config;
+    my $method = $r->method;
 
     if( $dirconfig->{'site'} and $dirconfig->{'site'} eq 'ignore' )
+    {
+	return DECLINED;
+    }
+
+    if( $method !~ /^(GET|HEAD|POST)$/ )
     {
 	return DECLINED;
     }
@@ -274,7 +280,7 @@ sub handler
 	    {
 		print_error_page("Can't find the Paraframe server",
 				 "The backend server are probably not running");
-		last;
+		return 0;
 	    }
 
 	    if( send_to_server('REQ', \$value) )
@@ -282,7 +288,8 @@ sub handler
 		$s->log_error("$$: Sent data to server") if $DEBUG;
 		$chunks = get_response();
 	    }
-	};
+	    1;
+	} or last;
 	if( $@ )
 	{
 	    $s->log_error($@);
