@@ -620,6 +620,10 @@ sub get_response
 			    if( ($buffer_empty_time+5) < time )
 			    {
 				$s->log_error("$$: For 5 secs");
+				$s->log_error("$$: Socket $SOCK");
+				$s->log_error("$$: atmark ".$SOCK->atmark);
+				$s->log_error("$$: connected ".$SOCK->connected);
+
 			    }
 			    else
 			    {
