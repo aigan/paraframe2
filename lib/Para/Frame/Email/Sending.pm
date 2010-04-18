@@ -96,7 +96,7 @@ sub new
     my( $class, $p ) = @_;
     my $req = $Para::Frame::REQ;
 
-    my $e = bless
+    my $s = bless
     {
      params =>
      {
@@ -105,10 +105,11 @@ sub new
       'date'     => sub{ date(@_) },
       'site'     => $req->site,
      },
+     result => {},
     }, $class;
 
-    $e->set($p) if $p;
-    return $e;
+    $s->set($p) if $p;
+    return $s;
 }
 
 
@@ -184,7 +185,7 @@ sub params
   @list    = $s->good()
   $bool    = $s->good($email)
 
-In scalar context, it retuns a listref of addresses successfully sent
+In scalar context, it retuns a hashref of addresses successfully sent
 to.
 
 In list context, it returns a list of addresses sucessfully sent to.
@@ -215,7 +216,7 @@ sub good
   @list    = $s->bad()
   $bool    = $s->bad($email)
 
-In scalar context, it retuns a listref of addresses not sent to.
+In scalar context, it retuns a hashref of addresses not sent to.
 
 In list context, it returns a list of addresses not sent to.
 
@@ -384,7 +385,8 @@ sub send_by_proxy
 Calls L</set> with the given params, adding or replacing the existing
 params.
 
-Resets the result status before sending.
+Results stays with the sender object. Create a new sender object for
+resetting the result.
 
 The required params are:
 
@@ -467,7 +469,7 @@ sub send
     $s = $s->new unless ref $s;
 
     my $err_msg = "";
-    my $res = $s->{'result'} = {}; # Reset results
+    my $res = $s->{'result'} ||= {};
     my $p = $s->set( $p_in );
 
     $p->{'from'}     or die "No from selected\n";
