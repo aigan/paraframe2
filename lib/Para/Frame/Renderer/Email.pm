@@ -475,11 +475,19 @@ sub set_tt_params
 	'u'               => $Para::Frame::U,
 	'lang'            => $req->language->preferred, # calculate once
 	'req'             => $req,
+        'date'     => sub{ date(@_) },
     });
 
-    if( $p->{'on_set_tt_params'} )
+    if( my $stp = $p->{'on_set_tt_params'} )
     {
-	&{$p->{'on_set_tt_params'}}( $rend );
+	if( ref $stp eq 'CODE' )
+	{
+	    &{$stp}( $rend );
+	}
+	else
+	{
+	    $stp->set_tt_params($rend);
+	}
     }
 }
 

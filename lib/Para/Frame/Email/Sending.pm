@@ -102,8 +102,9 @@ sub new
      {
       'u'        => $req->session->user,
       'q'        => $req->q,
-      'date'     => sub{ date(@_) },
       'site'     => $req->site,
+      'lang'     => $req->language->preferred, # calculate once
+#     'req'      => $req,
      },
      result => {},
     }, $class;
