@@ -60,7 +60,7 @@ use Para::Frame::Sender;
 use constant TIMEOUT_LONG   =>   5;
 use constant TIMEOUT_SHORT  =>   0.000;
 use constant BGJOB_MAX      =>   8;      # At most
-use constant BGJOB_MED      =>  60 *  5; # Even if no visitors
+use constant BGJOB_MED      =>  12;      # Even if no visitors
 use constant BGJOB_MIN      =>  60 * 15; # At least this often
 use constant BGJOB_CPU      =>   2.0;
 
