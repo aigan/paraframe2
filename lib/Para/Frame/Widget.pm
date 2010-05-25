@@ -26,7 +26,7 @@ use locale;
 
 use Carp qw( cluck confess croak );
 use IO::File;
-use CGI;
+#use CGI;
 use Para::Frame::URI;
 use POSIX qw(locale_h);
 use Scalar::Util qw( blessed );
