@@ -5,7 +5,7 @@ package Para::Frame::Route;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2010 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -266,6 +266,13 @@ sub caller_url
 
     my $referer = $Para::Frame::REQ->referer_with_query;
     my $caller_url = Para::Frame::URI->new( $referer );
+
+    unless( $caller_url->query )
+    {
+	# Get the query fron CGI
+	$caller_url->query_form_hash(store_params);
+    }
+
     $caller_url->query_param_delete('reqnum');
     $caller_url->query_param_delete('pfport');
     $caller_url->query_param_delete('run');

@@ -603,7 +603,11 @@ sub query_param_delete
 
 =head3 query_form_hash
 
-See L<URI/query_form_hash>
+Example:
+
+  $uri->query_form_hash( store_params );
+
+See L<URI/query_form_hash> and L<Para::Frame::Utils/store_params>
 
 =cut
 

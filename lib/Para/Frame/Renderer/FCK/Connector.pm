@@ -18,7 +18,7 @@ use warnings;
 use utf8;
 use base 'Para::Frame::Renderer::Custom';
 
-use CGI;
+#use CGI;
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( debug throw datadump escape_js );

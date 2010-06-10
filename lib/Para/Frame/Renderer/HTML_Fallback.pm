@@ -23,7 +23,7 @@ use strict;
 use warnings;
 
 use Carp qw( croak confess cluck );
-use CGI;
+#use CGI;
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug datadump );

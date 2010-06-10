@@ -35,7 +35,7 @@ use User::grent; # getgrgid getgrnam
 use User::pwent; # getpwuid
 use IO::Dir;
 use Data::Dumper;
-use CGI;
+#use CGI;
 use Digest::MD5  qw(md5_hex);
 use Time::Seconds qw( ONE_MONTH ONE_DAY ONE_HOUR ONE_MINUTE );
 use BerkeleyDB;

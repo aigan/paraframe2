@@ -794,6 +794,43 @@ sub as_string
 
 ##############################################################################
 
+=head2 as_html
+
+  $part->as_html
+
+Returns a representation of the part in plain html format.
+
+=cut
+
+#sub as_html
+#{
+#    my( $part ) = @_;
+#
+#    my $out = "";
+#    my $type = $part->type;
+#
+#    if( $part->prefix_message )
+#    {
+#	$out .= $part->prefix_message . "\n";
+#    }
+#
+#    my $msg  = $part->message;
+#    $out .= "$type:\n$msg\n";
+#
+#    if( $part->view_context )
+#    {
+#	my $line = $part->context_line;
+#	if( my $context = $part->context )
+#	{
+#	    $out .= loc("Context at line ([_1])", $line)."\n";
+#	    $out .= $context;
+#	}
+#    }
+#    return $out;
+#}
+
+##############################################################################
+
 1;
 
 =head1 SEE ALSO
