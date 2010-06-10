@@ -29,6 +29,7 @@ use overload ('""'     => sub { $_[0]->{'value'}->as_string },
              );
 
 use URI;
+use URI::QueryParam;
 use Carp qw( confess cluck );
 
 use Para::Frame::Reload;

@@ -5,7 +5,7 @@ package Para::Frame::Utils;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2010 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -908,6 +908,9 @@ sub uri
 {
     my( $template, $attr ) = @_;
 
+
+    ### TODO: Use Para::Frame::URI all the way
+
     my $req = $Para::Frame::REQ;
 
     throw('compilation', shortmess "Too many args for uri")
@@ -956,7 +959,8 @@ sub uri
     }
 
     debug(4, "Returning URI $template$query");
-    return $template.$query;
+    return Para::Frame::URI->new($template.$query);
+#    return $template.$query;
 }
 
 

@@ -5,7 +5,7 @@ package Para::Frame::Action::mark;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2010 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -16,8 +16,8 @@ use 5.010;
 use strict;
 use warnings;
 
-use Para::Frame::Utils qw( uri store_params);
-
+use Para::Frame::Utils qw( store_params debug );
+use Para::Frame::URI;
 
 
 =head1 NAME
@@ -36,12 +36,14 @@ sub handler
     my $q = $req->q;
     my $route = $req->s->route;
 
-    my @run = $q->param('run');
-    $q->delete('run');
+    my @run_in = $q->param('run');
+    my @run_out = grep {$_ ne 'mark'} @run_in;
+    $q->param('run', @run_out );
 
-    $route->bookmark( $req->referer_with_query );
+    my $uri = Para::Frame::URI->new($req->referer_with_query);
+    $uri->query_param('run',[@run_out]);
 
-    $q->param('run', grep {$_ ne 'mark'} @run );
+    $route->bookmark( $uri );
 
     return "";
 }
