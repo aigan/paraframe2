@@ -924,6 +924,9 @@ C<find>: Used by L<Para::Frame::File/template>
 C<loadpage>: Used by L<Para::Frame/handle_request>. If C<loadpage> is
 set to C<no>, a loadpage will not be sent.
 
+Example for a .htaccess
+  PerlSetVar site ignore
+
 =cut
 
 sub dirconfig

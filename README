@@ -52,7 +52,6 @@ PREREQUISITIES
 
 
 INSTALL
-
     You are not meant to install Para::Frame among your Perl
     libraries.  Copy the ditribution to /usr/local/paraframe
     See INSTALL for details.
@@ -63,6 +62,12 @@ DEVELOPMENT
     can find the developers mailinglist and more background
     information.  Please send any comments to the developer
     mailinglist.
+
+
+TROUBLESHOOTING
+    If your site includes other mod_perl programs, you may want to
+    place a "PerlSetVar site ignore" in the .htaccess in the root
+    directory of the other program.
 
 
 COPYRIGHT
