@@ -33,13 +33,12 @@ use Apache2::Connection;
 use Apache2::SubRequest;
 use Apache2::ServerUtil;
 use Apache2::RequestIO;
+use Apache2::Const -compile => qw( DECLINED DONE );
 
 use Para::Frame::Reload;
 
 use constant BUFSIZ => 8192; # Posix buffersize
 use constant TRIES    => 20; # 20 connection tries
-use constant DECLINED => -1; # From httpd.h
-use constant DONE     => -2; # From httpd.h
 
 our $DEBUG = 0;
 
@@ -142,12 +141,12 @@ sub handler
 
     if( $dirconfig->{'site'} and $dirconfig->{'site'} eq 'ignore' )
     {
-	return DECLINED;
+	return Apache2::Const::DECLINED;
     }
 
     if( $method !~ /^(GET|HEAD|POST)$/ )
     {
-	return DECLINED;
+	return Apache2::Const::DECLINED;
     }
 
     $Q = new CGI;
@@ -181,7 +180,7 @@ sub handler
 	unless( $port )
 	{
 	    print_error_page("No port configured for communication with the Paraframe server");
-	    return DONE;
+	    return Apache2::Const::DONE;
 	}
     }
 
@@ -236,7 +235,7 @@ sub handler
 	    my $keyfile = $key;
 	    $keyfile =~ s/[^\w_\-]//g; # Make it a normal filename
 	    my $dest = "/tmp/paraframe/$$-$keyfile";
-	    copy_to_file( $dest, $Q->upload($key) ) or return DONE;
+	    copy_to_file( $dest, $Q->upload($key) ) or return Apache2::Const::DONE;
 
 	    my $uploaded =
 	    {
@@ -330,7 +329,7 @@ sub handler
 
     $s->log_error("$$: Done") if $DEBUG;
 
-    return DONE;
+    return Apache2::Const::DONE;
 }
 
 
