@@ -73,6 +73,8 @@ WriteMakefile(
                   'Test::Pod::Coverage'        => 1.08,
 		  'Spreadsheet::ParseExcel'    => 0.32,
 		  'Linux::SysInfo'             => 0.10,
+		  'JSON'                       => 2.17,
+		  'XML::Simple'                => 2.18,
 
 # Testing
 		  'Test::More'                 => 0.61,
