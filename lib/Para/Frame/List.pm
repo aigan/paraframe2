@@ -2559,6 +2559,7 @@ sub uniq
     }
     else
     {
+	$l->reset;
 	return $l;
     }
 }
