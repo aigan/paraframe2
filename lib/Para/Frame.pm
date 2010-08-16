@@ -1274,7 +1274,7 @@ sub nonblock
     # defaulting to autoflush makes this function redundant
 
     use Fcntl;
-    my $flags= fcntl($socket, F_GETFL, 0) 
+    my $flags= fcntl($socket, F_GETFL, 0)
 	or die "Can't get flags for socket: $!\n";
     fcntl($socket, F_SETFL, $flags | O_NONBLOCK)
 	or die "Can't make socket nonblocking: $!\n";
@@ -2608,7 +2608,7 @@ sub configure
 			      subdir_suffix => '',
 			      pre_dir => 'inc',
 			      inc_dir => 'inc',
-			      handles => ['tt', 'html_tt'],
+			      handles => ['tt', 'html_tt', 'xtt'],
 			     });
 
 
