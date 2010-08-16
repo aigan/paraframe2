@@ -428,13 +428,15 @@ sub curve_chart_svg
     $chart_h += $grid_h; # Add 1 grid_h
 
 
-    my $top_y        = -($chart_h + $line_w) - $font_size;
-    $top_y -= $grid_h if( $props{label} );
+    my $top_y        = -($chart_h + $line_w);
+    $top_y -= $font_size if( $props{label} );
+    $top_y -= $grid_h if( $props{grid_y_lines} );
+
     my $bottom_y     = $line_w / 2;
 
     my $height       = $bottom_y - $top_y;
 
-    my $left_x       = -$font_size * 6 - $line_w;
+    my $left_x       = -$line_w; #-$font_size * 6 - $line_w;
     my $right_x      = $chart_w + $line_w;
 
     my $width        = $right_x - $left_x;
@@ -443,14 +445,17 @@ sub curve_chart_svg
 
 
     my $svg = {
-               xmlns             => 'http://www.w3.org/2000/svg',
-               'xmlns:xlink'     => 'http://www.w3.org/1999/xlink',
-               viewBox           => "$left_x $top_y $width $height",
-               g                 => [ {}, {}, {}, {} ], # Layers for rendering
-               stroke            => $bordercolor,
-               'stroke-linejoin' => 'round',
-               'stroke-width'    => $line_w,
-               'font-size'       => $font_size,
+               xmlns               => 'http://www.w3.org/2000/svg',
+               'xmlns:xlink'       => 'http://www.w3.org/1999/xlink',
+               viewBox             => "$left_x $top_y $width $height",
+               g                   => [ {}, {}, {}, {} ], # Layers for rendering
+               stroke              => $bordercolor,
+               'stroke-linejoin'   => 'round',
+               'stroke-width'      => $line_w,
+               'font-size'         => $font_size,
+               version             => '1.1',
+               preserveAspectRatio => 'none',
+               style               => 'width:100%; height:100%;'
               };
 
     # Chart frame and background
