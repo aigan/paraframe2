@@ -15,10 +15,10 @@ use XML::Simple;
 
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( debug );
+use Para::Frame::Utils qw( debug datadump );
 
 use Exporter qw( import );
-our @EXPORT_OK = qw( bar_chart_svg pie_chart_svg );
+our @EXPORT_OK = qw( bar_chart_svg pie_chart_svg curve_chart_svg );
 
 use constant PI => 4 * atan2(1, 1);
 
@@ -129,9 +129,9 @@ sub pie_chart_svg
 
 ##############################################################################
 
-=head2
+=head2 bar_chart_svg
 
-my $svg = pie_chart_svg( $parts,
+my $svg = bar_chart_svg( $parts,
                          label_func => \&sec_to_str,
                          label      => 'Header of all!',
                        );
@@ -376,6 +376,155 @@ sub bar_chart_svg
 
         $current_x += $bar_w;
     }
+
+    return XMLout( $svg, RootName => 'svg' );
+}
+
+
+##############################################################################
+
+=head2 curve_chart_svg
+
+my $svg = curve_chart_svg( $parts,
+                           %props
+                         );
+
+=cut
+
+sub curve_chart_svg
+{
+    my( $parts, %props ) = @_;
+
+    return ''
+      unless $parts and @$parts;
+
+    my $line_w           = $props{line_w           } || 1;
+    my $grid_y_lines     = $props{grid_y_lines     } || 0;
+    my $text_margin      = $props{text_margin      } || 5;
+    my $font_size_factor = $props{font_size_factor } || .7;
+    my $label_func       = $props{label_func       } || sub{return @_};
+
+    my $min_x = $props{min_x};
+    my $min_y = $props{min_y};
+    my $max_x = $props{max_x};
+    my $max_y = $props{max_y};
+    map {
+        map {
+            $max_x = ( not defined $max_x or $_->{x} > $max_x ) ? $_->{x} : $max_x;
+            $max_y = ( not defined $max_y or $_->{y} > $max_y ) ? $_->{y} : $max_y;
+            $min_x = ( not defined $min_x or $_->{x} < $min_x ) ? $_->{x} : $min_x;
+            $min_y = ( not defined $min_y or $_->{y} < $min_y ) ? $_->{y} : $min_y;
+        } @{$_->{markers}};
+        #debug datadump($_);
+    } @$parts;
+
+    # Chart is from 0,0, with the first bars bottom left at $line_w,0
+    my $chart_h        = $max_y - $min_y;
+    my $chart_w        = $max_x - $min_x;
+
+    my $grid_h         = $grid_y_lines ? $chart_h / $grid_y_lines : 0;
+    my $font_size      = $grid_h * .7 || $chart_h / 20;
+
+    $chart_h += $grid_h; # Add 1 grid_h
+
+
+    my $top_y        = -($chart_h + $line_w) - $font_size;
+    $top_y -= $grid_h if( $props{label} );
+    my $bottom_y     = $line_w / 2;
+
+    my $height       = $bottom_y - $top_y;
+
+    my $left_x       = -$font_size * 6 - $line_w;
+    my $right_x      = $chart_w + $line_w;
+
+    my $width        = $right_x - $left_x;
+    my $bordercolor  = 'black';
+    #my $font_size_bottom  = $bar_w * .7;
+
+
+    my $svg = {
+               xmlns             => 'http://www.w3.org/2000/svg',
+               'xmlns:xlink'     => 'http://www.w3.org/1999/xlink',
+               viewBox           => "$left_x $top_y $width $height",
+               g                 => [ {}, {}, {}, {} ], # Layers for rendering
+               stroke            => $bordercolor,
+               'stroke-linejoin' => 'round',
+               'stroke-width'    => $line_w,
+               'font-size'       => $font_size,
+              };
+
+    # Chart frame and background
+    push @{$svg->{g}[0]{rect}}
+      , {
+         x      => 0,
+         y      => -$chart_h,
+         width  => $chart_w,
+         height => $chart_h,
+         fill   => 'none',
+        };
+
+    # Add top label
+    if( $props{label} )
+    {
+        push @{$svg->{g}[0]{text}}
+          , {
+             x             => 0,
+             y             => $top_y + $font_size,
+             'text-anchor' => 'start',
+             content       => $props{label},
+            };
+    }
+
+    # Make grid
+    foreach my $line (0 .. $grid_y_lines)
+    {
+        push @{$svg->{g}[1]{line}}
+          , {
+             x1 => -$line_w / 2  -  $text_margin / 2,
+             y1 => -$line * $grid_h,
+             x2 => $chart_w  -  $line_w / 2,
+             y2 => -$line * $grid_h,
+            };
+#        push @{$svg->{g}[1]{text}}
+#          , {
+#             x             => -($line_w + $text_margin),
+#             y             => -$line * $grid_h  +  $font_size / 3,
+#             'text-anchor' => 'end',
+#             content       => &$label_func(int($line * $max_y / $grid_y_lines)),
+#            };
+    }
+
+
+    my @groups; # Putting it all in SVG groups to get order
+    foreach my $part (@$parts) {
+        my $current_x = $line_w;
+        my $current_y = 0;
+        my $path = "M $current_x $current_y ";
+        my $last_x = 0;
+
+        foreach my $marker (@{$part->{markers}}) {
+            my $x = $marker->{x};
+            my $y = -$marker->{y};
+            $path .= "L $x $y ";
+            $last_x = $x;
+        }
+
+        $path .= "L $last_x 0 Z"; # close curve
+
+        push @groups
+          , { path => [{
+                        d       => $path,
+                        fill    => $part->{color} || 'black',
+                        opacity => .8,
+                        stroke  => $part->{color} || 'black',
+                       }]
+            };
+
+    }
+
+    push @{$svg->{g}[2]{g}}
+      , @groups;
+
 
     return XMLout( $svg, RootName => 'svg' );
 }
