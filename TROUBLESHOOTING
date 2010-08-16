@@ -1,0 +1,13 @@
+MIXING PARAFRAME WITH OTHER STUFF
+
+For turning of Paraframe in a subdirectory, you may want to place a
+"PerlSetVar site ignore" in the .htaccess in the root directory of the
+other program.
+
+You may also have to negate the directory handling code by using the
+fixup handler by adding "PerlFixupHandler Para::Frame::Client::Fixup"
+in the .htaccess
+
+  PerlSetVar site ignore
+  PerlFixupHandler Para::Frame::Client::Fixup
+

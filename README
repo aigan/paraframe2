@@ -64,12 +64,6 @@ DEVELOPMENT
     mailinglist.
 
 
-TROUBLESHOOTING
-    If your site includes other mod_perl programs, you may want to
-    place a "PerlSetVar site ignore" in the .htaccess in the root
-    directory of the other program.
-
-
 COPYRIGHT
     Copyright (C) 2004-2007 Jonas Liljegren. All Rights Reserved.
 
