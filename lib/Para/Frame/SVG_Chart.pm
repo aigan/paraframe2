@@ -400,6 +400,7 @@ sub curve_chart_svg
 
     my $line_w           = $props{line_w           } || 1;
     my $grid_y_lines     = $props{grid_y_lines     } || 0;
+    my $grid_h           = $props{grid_h           } || 0;
     my $text_margin      = $props{text_margin      } || 5;
     my $font_size_factor = $props{font_size_factor } || .7;
     my $label_func       = $props{label_func       } || sub{return @_};
@@ -422,17 +423,17 @@ sub curve_chart_svg
     my $chart_h        = $max_y - $min_y;
     my $chart_w        = $max_x - $min_x;
 
-    my $grid_h         = $grid_y_lines ? $chart_h / $grid_y_lines : 0;
+    $grid_h //= $grid_y_lines ? $chart_h / $grid_y_lines : 0;
     my $font_size      = $grid_h * .7 || $chart_h / 20;
 
     $chart_h += $grid_h; # Add 1 grid_h
 
 
-    my $top_y        = -($chart_h + $line_w);
+    my $top_y        = -($max_y + $line_w);
     $top_y -= $font_size if( $props{label} );
     $top_y -= $grid_h if( $props{grid_y_lines} );
 
-    my $bottom_y     = $line_w / 2;
+    my $bottom_y     = $max_y + $line_w;
 
     my $height       = $bottom_y - $top_y;
 
@@ -480,16 +481,17 @@ sub curve_chart_svg
             };
     }
 
-    # Make grid
-    foreach my $line (0 .. $grid_y_lines)
-    {
-        push @{$svg->{g}[1]{line}}
-          , {
-             x1 => -$line_w / 2  -  $text_margin / 2,
-             y1 => -$line * $grid_h,
-             x2 => $chart_w  -  $line_w / 2,
-             y2 => -$line * $grid_h,
-            };
+    if( $grid_h ) {
+        # Make grid upwards
+        my $grid_start = - int($max_y / $grid_h) * $grid_h;
+        for( my $y = $grid_start; $y < $max_y; $y += $grid_h ) {
+            push @{$svg->{g}[1]{line}}
+              , {
+                 x1 => -$line_w / 2  -  $text_margin / 2,
+                 y1 => -$y,
+                 x2 => $chart_w  -  $line_w / 2,
+                 y2 => -$y,
+                };
 #        push @{$svg->{g}[1]{text}}
 #          , {
 #             x             => -($line_w + $text_margin),
@@ -497,6 +499,7 @@ sub curve_chart_svg
 #             'text-anchor' => 'end',
 #             content       => &$label_func(int($line * $max_y / $grid_y_lines)),
 #            };
+        }
     }
 
 
