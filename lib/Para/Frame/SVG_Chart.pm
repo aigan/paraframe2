@@ -393,7 +393,7 @@ my $svg = curve_chart_svg( $parts,
 
 sub curve_chart_svg
 {
-    my( $parts, %props ) = @_;
+    my( $class, $parts, %props ) = @_;
 
     return ''
       unless $parts and @$parts;
@@ -401,7 +401,7 @@ sub curve_chart_svg
     my $line_w           = $props{line_w           } || 1;
     my $grid_y_lines     = $props{grid_y_lines     } || 0;
     my $grid_h           = $props{grid_h           } || 0;
-    my $text_margin      = $props{text_margin      } || 5;
+    my $text_margin      = $props{text_margin      } || 0;
     my $font_size_factor = $props{font_size_factor } || .7;
     my $label_func       = $props{label_func       } || sub{return @_};
 
@@ -460,14 +460,14 @@ sub curve_chart_svg
               };
 
     # Chart frame and background
-    push @{$svg->{g}[0]{rect}}
-      , {
-         x      => 0,
-         y      => -$chart_h,
-         width  => $chart_w,
-         height => $chart_h,
-         fill   => 'none',
-        };
+    #push @{$svg->{g}[0]{rect}}
+    #  , {
+    #     x      => 0,
+    #     y      => -$chart_h,
+    #     width  => $chart_w,
+    #     height => $chart_h,
+    #     fill   => 'none',
+    #    };
 
     # Add top label
     if( $props{label} )
@@ -487,9 +487,9 @@ sub curve_chart_svg
         for( my $y = $grid_start; $y < $max_y; $y += $grid_h ) {
             push @{$svg->{g}[1]{line}}
               , {
-                 x1 => -$line_w / 2  -  $text_margin / 2,
+                 x1 => -$text_margin / 2,
                  y1 => -$y,
-                 x2 => $chart_w  -  $line_w / 2,
+                 x2 => $chart_w,
                  y2 => -$y,
                 };
 #        push @{$svg->{g}[1]{text}}
@@ -525,6 +525,7 @@ sub curve_chart_svg
                         fill    => $part->{color} || 'black',
                         opacity => .8,
                         stroke  => $part->{color} || 'black',
+                        'stroke-width' => 0,
                        }]
             };
 
