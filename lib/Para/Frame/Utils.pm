@@ -1542,7 +1542,7 @@ sub debug
 #    warn "This was called from ".(caller(1))[3];
 
     # Initialize here since DEBUG may be called before configure
-    my $debug = $Para::Frame::Logging::WATCH{(caller(1))[3]} ||
+    my $debug = $Para::Frame::Logging::WATCH{caller(1)?(caller(1))[3]:''} ||
       $Para::Frame::DEBUG  || 0;
     $Para::Frame::INDENT ||= 0;
 

@@ -5,7 +5,7 @@ package Para::Frame::DBIx::State;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2010 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -339,6 +339,7 @@ sub new
     my( $this, $dbix ) = @_;
     my $class = ref($this) || $this;
 
+    confess "no dbix" unless $dbix;
     my $dbh = $dbix->dbh;
     my $state_code = $dbh->state;
     my $state = $CODE{$state_code} || $CODE{'S1000'};
