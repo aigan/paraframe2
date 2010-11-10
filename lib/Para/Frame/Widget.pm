@@ -531,6 +531,13 @@ sub go
 	$extra .= "class=\"$val\" ";
     }
 
+    ### NEW FORMAT
+    if( my $tag_attr = delete ${$attr}{'tag_attr'} )
+    {
+	$extra .= tag_extra_from_params( $tag_attr );
+    }
+
+
     my $query = join '', map sprintf("document.forms['f'].$_.value='%s';", $attr->{$_}), keys %$attr;
     return "<input type=\"button\" value=\"$label\" onclick=\"${onclick_extra}${query}go('$template', '$run')\" $extra />";
 }

@@ -2251,6 +2251,11 @@ sub get_cmd_val
 		debug "code: @_";
 		$req->cancel;
 	    }
+            elsif( $req->{'timeout_cnt'} )
+            {
+                debug "Data timeout for code: @_";
+                $req->cancel;
+            }
 
 	    if( $req->{'cancel'} )
 	    {

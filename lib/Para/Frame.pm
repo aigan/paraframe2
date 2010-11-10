@@ -955,6 +955,7 @@ sub fill_buffer
 
 		    if( my $req = $REQUEST{$client} )
 		    {
+                        $req->{'timeout_cnt'} ++;
 			debug 1, $req->logging->debug_data;
 		    }
 
@@ -964,7 +965,7 @@ sub fill_buffer
 
 		    # I have seen that the actual response CAN take
 		    # longer than 5 secs. I don't know why but we
-		    # should let go know and come back in another
+		    # should let go now and come back in another
 		    # round, if necessary
 
 		    return 0;
