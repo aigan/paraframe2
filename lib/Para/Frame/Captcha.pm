@@ -5,7 +5,7 @@ package Para::Frame::Captcha;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2008-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2008-2011 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -76,7 +76,7 @@ sub as_html
     my $site = $c->{'site'} or die "No site given";
 
     my $public_key = $site->{'recaptcha_key_public'} or
-      die "No recaptcha_key_public found for site ".site->desig;
+      die "No recaptcha_key_public found for site ".$site->desig;
 
     my $co = Captcha::reCAPTCHA->new;
 

@@ -161,10 +161,10 @@ sub add
 
     my $site = $this->_new( $params );
 
-    debug "Registring site ".$site->name;
-
     my $home = $site->home_url_path || '';
     my $key = $site->host . $home;
+
+    debug "Registring site ".$key;
 
     $DATA{ $key }        ||= $site;
     $ALIAS{ $key }       ||= $site;
@@ -216,7 +216,7 @@ sub clone
 	};
     }
 
-    debug sprintf "Cloning %s as %s", $site->host, $params->{'webhost'};
+    debug sprintf "Cloning %s (%s) as %s", $site->host, $site->code, $params->{'webhost'};
 
     foreach my $key ( keys %$site )
     {
