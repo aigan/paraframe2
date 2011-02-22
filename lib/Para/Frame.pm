@@ -5,7 +5,7 @@ package Para::Frame;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2010 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2011 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -38,7 +38,7 @@ use File::Basename; # dirname
 #use FreezeThaw qw( thaw );
 use Storable qw( thaw );
 
-our $VERSION = "1.08"; # Paraframe version
+our $VERSION = "1.09"; # Paraframe version
 
 
 use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir client_str );
