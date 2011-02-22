@@ -905,7 +905,8 @@ sub hidden
 
     $value ||= '';
 
-    return sprintf('<input type="hidden" name="%s" value="%s" />',
+    return sprintf('<input type="hidden" id="%s" name="%s" value="%s" />',
+		   CGI->escapeHTML( $key ),
 		   CGI->escapeHTML( $key ),
 		   CGI->escapeHTML( $value ),
 		   );
