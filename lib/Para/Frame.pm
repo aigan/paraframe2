@@ -1527,6 +1527,10 @@ sub daemonize
 Restarts the daemon. We asume that we will restart in the background,
 with a watchdog.
 
+TODO: Will try to detect if the process is not a daemon and in that
+case restart in the foreground. (Must place new process in same
+terminal)
+
 =cut
 
 sub restart
@@ -1534,56 +1538,12 @@ sub restart
     my( $class ) = @_;
 
     debug "--- In restart";
-
-
-#    $SERVER->close();
-#    open STDOUT, '>/dev/null' or die "Can't write to /dev/null: $!";
-#    Para::Frame->kill_children;
-##    system("$0&") == 0 or die "Exec failed";
-#    exec("$0&"); warn "Exec failed: $!"; sleep 1;
-#    exec("$0&"); warn "Exec failed: $!"; sleep 1;
-#    exec("$0&"); warn "Exec failed: $!";
-#    return 0;
-#
-#    #---------------------------------------------------
-
-
-
-
     Para::Frame->go_down;
-
-    # We MUST redirect STDOUT in order to release the parent process
-    #
-    open STDOUT, '>/dev/null' or die "Can't write to /dev/null: $!";
-
     debug "--- executing $0 @ARGV";
 
-#    POSIX::setsid             or die "Can't start a new session: $!";
-#    $SIG{CHLD} = 'DEFAULT';
-
-#    system("$0 @ARGV&") == 0 or warn "Exec failed: $!\n";
-#    if ($? == -1)
-#    {
-#	debug "failed to execute: $!\n";
-#    }
-#    elsif ($? & 127)
-#    {
-#	debug sprintf "child died with signal %d, %s coredump\n",
-#	  ($? & 127),  ($? & 128) ? 'with' : 'without';
-#    }
-#    else
-#    {
-#	debug sprintf "child exited with value %d\n", $? >> 8;
-#    }
-#
-#    debug "----------------------------------------";
-#    exit 0;
-#    sleep 1;
-#    debug "executing $0";
-
-    exec("$0 @ARGV &"); warn "Exec failed: $!"; sleep 1;
+    exec("$0 @ARGV"); warn "Exec failed: $!"; sleep 1;
     debug "executing $0";
-    exec("$0 @ARGV &"); warn "Exec failed: $!";
+    exec("$0 @ARGV"); warn "Exec failed: $!";
     debug "failing";
     return 0;
 }
@@ -1643,9 +1603,6 @@ sub go_down
     print "DOWN\n";
 
     open STDOUT, '>/dev/null' or die "Can't write to /dev/null: $!";
-
-    $SIG{CHLD} = 'IGNORE'; # Not turing it back on!!!
-    $SIG{USR1} = 'DEFAULT';
 
     Para::Frame->kill_children;
 
@@ -2823,6 +2780,20 @@ sub report
 
 
     return $out;
+}
+
+
+##############################################################################
+
+=head2 flag_restart
+
+  Para::Frame->flag_restart()
+
+=cut
+
+sub flag_restart
+{
+    $Para::Frame::TERMINATE = 'RESTART';
 }
 
 
