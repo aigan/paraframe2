@@ -5,7 +5,7 @@ package Para::Frame::Utils;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2010 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2011 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -1088,7 +1088,7 @@ Returns an encrypted version of the given string, uses the current
 clients C-network IP as salt. The encrypted password will be diffrent
 if the client comes from a diffrent net or subnet.
 
-If the page is sent through a proxy, the oroginal address may be the
+If the page is sent through a proxy, the original address may be the
 first in a comma-separated list given in HTTP_X_FORWARDED_FOR. But
 that part of the header may be faked. If we are going to use it for
 authentication, we have to establish a trust of the proxy given by

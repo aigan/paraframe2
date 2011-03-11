@@ -5,7 +5,7 @@ package Para::Frame::User;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2010 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2011 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -100,6 +100,8 @@ templates.
 
 =head2 identify_user
 
+  $class->identify_user()
+
   $class->identify_user( $username )
 
   $class->identify_user( $username, \%args )
@@ -107,10 +109,20 @@ templates.
 C<%args> may include:
 
   password_encrypted
-  password
 
-For cases when where may be more than one user with the same username
+This will only identify who the client is claiming to
+be. Authentication is done by L</authenticate_user>.
 
+C<$username> will default to cookie C<username>.
+C<$args-E<gt>{password_encrypted}> will default to cookie C<password>.
+
+Password is used for cases when where may be more than one user with
+the same username.
+
+Subclass L</get> to actually looking up and returning the user.
+
+L</identify_user> and L</authenticate_user> is called at the beginning
+of each request that does not have a sotred result.
 
 =cut
 
@@ -206,23 +218,29 @@ sub authenticate_user
 
 	$class->logout;
 
-	if( debug )
-	{
-	    warn sprintf("  next_template was %s\n",
-			 $q->param('next_template'))
-		if $q->param('next_template');
-	    warn sprintf("  destination was %s\n",
-			 $q->param('destination'))
-		if $q->param('destination');
-	}
-
-	my $destination = $q->param('destination') || '';
-	unless( $destination eq 'dynamic' )
-	{
-	    $q->param('next_template', $req->referer_path);
-	    warn sprintf("  Setting next_tempalte to %s\n",
-			 $q->param('next_template'));
-	}
+#	if( 0 )
+#	{
+#	    warn sprintf("  next_template was %s\n",
+#			 $q->param('next_template'))
+#		if $q->param('next_template');
+#	    warn sprintf("  destination was %s\n",
+#			 $q->param('destination'))
+#		if $q->param('destination');
+#	}
+#
+#	my $destination = $q->param('destination') || '';
+#	unless( $destination eq 'dynamic' )
+#	{
+#	    my $home = $req->site->home_url_path;
+#	    my $next = $req->referer_path;
+#	    unless( $next =~ /^$home/ )
+#	    {
+#		$next = $home.'/';
+#	    }
+#
+#	    $q->param('next_template', $next );
+#	    warn sprintf("  Setting next_tempalte to %s\n", $next);
+#	}
 
 	return undef;
     }

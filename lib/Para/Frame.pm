@@ -38,7 +38,7 @@ use File::Basename; # dirname
 #use FreezeThaw qw( thaw );
 use Storable qw( thaw );
 
-our $VERSION = "1.09"; # Paraframe version
+our $VERSION = "1.10"; # Paraframe version
 
 
 use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir client_str );
@@ -179,6 +179,7 @@ BEGIN
 			  add_background_jobs
 			  after_bookmark
 			  after_action_success
+			  on_first_response
                         ))
     {
 	$HOOK{$hook} ||= [];
@@ -1865,9 +1866,10 @@ sub handle_request
 
 	    $req->setup_jobs;
 	    $req->reset_response; # Needs lang and jobs
+	    my $resp = $req->response;
+	    $req->run_hook('on_first_response', $resp);
 	    $session->route->init;
 
-	    my $resp = $req->response;
 	    if( my $client_time = $req->http_if_modified_since )
 	    {
 		if( my $mtime = $resp->last_modified )

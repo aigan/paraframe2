@@ -5,7 +5,7 @@ package Para::Frame::Site;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2011 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -662,7 +662,8 @@ sub loadpage
 
   $site->login_page
 
-Returns the C<login_page> to be used.
+Returns the C<login_page> to be used. That is, the page to go to AFTER
+login.
 
 Should be an URL path.
 

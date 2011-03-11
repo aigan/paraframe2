@@ -5,7 +5,7 @@ package Para::Frame::Request::Response;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2011 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -343,7 +343,7 @@ sub is_no_error
 
 sub set_is_error
 {
-    my $flag = defined( $_[0] ) ? $_[0] : 1;
+    my $flag = defined( $_[1] ) ? $_[1] : 1;
     $_[0]->{'is_error_response'} = $flag;
 }
 

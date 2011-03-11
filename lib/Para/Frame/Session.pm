@@ -5,7 +5,7 @@ package Para::Frame::Session;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2011 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -30,6 +30,7 @@ use Para::Frame::User;
 use Para::Frame::Route;
 use Para::Frame::URI;
 use Para::Frame::Utils qw( store_params debug );
+use Para::Frame::Widget qw( jump );
 
 our $SESSION_COOKIE_NAME = 'paraframe-sid';
 
@@ -400,6 +401,7 @@ sub count
     return $_[0]->{'count'};
 }
 
+
 ##############################################################################
 
 =head2 latest
@@ -409,6 +411,40 @@ sub count
 sub latest
 {
     return $_[0]->{'latest'};
+}
+
+
+##############################################################################
+
+=head2 wj_login
+
+=cut
+
+sub wj_login
+{
+    my( $s, $attrs ) = @_;
+    $attrs ||= {};
+    my $req = $Para::Frame::REQ;
+
+    my $label = delete($attrs->{'label'}) || 'Sign in';
+    return jump($label, $req->site->home_url_path.'/login.tt');
+}
+
+
+##############################################################################
+
+=head2 wj_logout
+
+=cut
+
+sub wj_logout
+{
+    my( $s, $attrs ) = @_;
+    $attrs ||= {};
+    my $req = $Para::Frame::REQ;
+
+    my $label = delete($attrs->{'label'}) || 'Sign out';
+    return jump($label, $req->site->logout_page, {run=>'user_logout'});
 }
 
 ##############################################################################

@@ -5,7 +5,7 @@ package Para::Frame::Request;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2010 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2011 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -1268,6 +1268,14 @@ sub prepend_action
 
 =head2 add_job
 
+  $req->add_job($method, @args)
+
+This will run C<$req-E<lt>$method(@args)> when the job is processed.
+
+For a custom job, use L</run_code>.
+
+Remember du add the job L</after_jobs> if this is the last job.
+
 =cut
 
 sub add_job
@@ -1331,7 +1339,15 @@ sub prepend_background_job
 
 =head2 run_code
 
-  $req->run_code( $label, $codered, @args )
+  $req->run_code( $label, $coderef, @args )
+
+This will run C<&{$coderef}($req, @args)>.
+
+Usually set up by
+
+  $req->add_job('run_code', $label, $coderef, @args);
+
+See L</add_job>.
 
 =cut
 
@@ -1755,6 +1771,12 @@ sub error_backtrack
 	my $previous = $req->referer_path;
 	if( $previous )
 	{
+	    my $home = $req->site->home_url_path;
+	    unless( $previous =~ /^$home/ )
+	    {
+		$previous = $home.'/';
+	    }
+
 	    $req->set_response( $previous );
 	}
 	return 1;
@@ -2873,6 +2895,8 @@ sub get_child_result
 ##############################################################################
 
 =head2 run_hook
+
+  $req->run_hook( $label, @args );
 
 =cut
 
