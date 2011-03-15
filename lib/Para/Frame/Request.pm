@@ -1378,6 +1378,13 @@ sub run_code
 
 =head2 run_action
 
+If the action requires the user to login, a new
+L<Para::Frame::Request::Response> will be created for the C</login.tt>
+template.
+
+If the session object can L<Para::Frame::Session/go_login>, it will be
+used instead of a redirection to C</login.tt> template.
+
 =cut
 
 sub run_action
@@ -1547,12 +1554,19 @@ sub run_action
 	{
 	    if( $error->type eq 'denied' )
 	    {
-		if( $req->session->u->level == 0 )
+		my $s = $req->session;
+		if( $s->u->level == 0 )
 		{
 		    # Ask to log in
+
+		    if( $s->can('go_login') )
+		    {
+			return $s->go_login();
+		    }
+
 		    my $error_tt = "/login.tt";
 		    $part->hide(1);
-		    $req->session->route->bookmark;
+		    $s->route->bookmark;
 		    my $home = $req->site->home_url_path;
 		    $req->set_error_response( $home.$error_tt );
 		}
@@ -1683,6 +1697,13 @@ sub after_jobs
 	else
 	{
 	    $req->handle_error({ response => $new_resp });
+	}
+
+	# The error handler may have set a redirection page
+	if( $new_resp->redirection )
+	{
+	    $new_resp->sender->send_redirection( $new_resp->redirection );
+	    return $req->done;
 	}
 
 	$req->add_job('after_jobs');
@@ -3406,6 +3427,11 @@ sub original_status
 
 =head2 handle_error
 
+Sets the L<Para::Frame::Request::Response> appropriate for the error.
+
+If the session object can L<Para::Frame::Session/go_login>, it will be
+used instead of a redirection to C</login.tt> template.
+
 =cut
 
 sub handle_error
@@ -3507,20 +3533,27 @@ sub handle_error
     }
     elsif( $error->type eq 'denied' )
     {
-	if( $req->session->u->level == 0 )
+	my $s = $req->session;
+	if( $s->u->level == 0 )
 	{
 	    # Ask to log in
+
+	    if( $s->can('go_login') )
+	    {
+		return $s->go_login($resp);
+	    }
+
 	    $error_tt = "/login.tt";
 	    $req->result->hide_part('denied');
 	    unless( $req->{'no_bookmark_on_failed_login'} )
 	    {
-		$req->session->route->bookmark();
+		$s->route->bookmark();
 	    }
 	}
 	else
 	{
 	    $error_tt = "/denied.tt";
-	    $req->session->route->plan_next($req->referer_path);
+	    $s->route->plan_next($req->referer_path);
 	}
     }
     elsif( $error->type eq 'notfound' )

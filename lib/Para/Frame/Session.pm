@@ -449,6 +449,19 @@ sub wj_logout
 
 ##############################################################################
 
+=head2 go_login
+
+  $s->go_login()
+
+  $s->go_login( $response )
+
+Implement this in a sub-class to replace redirection to default
+C</login.tt> page.
+
+=cut
+
+##############################################################################
+
 =head1 SEE ALSO
 
 L<Para::Frame>

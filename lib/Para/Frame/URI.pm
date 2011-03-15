@@ -5,7 +5,7 @@ package Para::Frame::URI;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2005-2010 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2005-2011 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -627,6 +627,8 @@ Does a GET request by L<LWP::UserAgent>.
 
 Makes sure that the scheme module is loaded. (Since the object may
 have been created in another process.)
+
+Returns: A L<HTTP::Response> object
 
 
 =cut
