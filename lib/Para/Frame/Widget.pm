@@ -1727,14 +1727,29 @@ sub selector
 	$out .= '<option value=""'. $rel .'>'. CGI->escapeHTML( $header ) .'</option>'
 	  if( $header );
 
+	if( UNIVERSAL::isa $data, 'Para::Frame::List' )
+	{
+	    $data = $data->as_arrayref;
+	}
+
 	foreach my $row ( @$data )
 	{
-	    my $selected = ( $row->{$valkey} eq $current ?
-			     ' selected="selected"' : '' );
-	    $rel = ( $relkey ? ' rel="'. $row->{$relkey} .'"' : '' );
-
-	    $out .= '<option value="'. $row->{$valkey} .'"'. $selected . $rel
-	      .'>'. $row->{$tagkey} .'</option>';
+	    if( UNIVERSAL::can $row, $valkey )
+	    {
+		my $selected = ( $row->$valkey eq $current ?
+				 ' selected="selected"' : '' );
+		$rel = ( $relkey ? ' rel="'. $row->$relkey .'"' : '' );
+		$out .= '<option value="'. $row->$valkey .'"'. $selected . $rel
+		  .'>'. $row->$tagkey .'</option>';
+	    }
+	    else
+	    {
+		my $selected = ( $row->{$valkey} eq $current ?
+				 ' selected="selected"' : '' );
+		$rel = ( $relkey ? ' rel="'. $row->{$relkey} .'"' : '' );
+		$out .= '<option value="'. $row->{$valkey} .'"'. $selected . $rel
+		  .'>'. $row->{$tagkey} .'</option>';
+	    }
 	}
     }
     else
