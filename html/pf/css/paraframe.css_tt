@@ -152,15 +152,23 @@ tr.odd
 
 /****************************/
 
-p#pi
+#pi
 {
-	text-align: right;
-}
+  font-family:Georgia,'Bitstream Charter',serif;
+  text-decoration:none;
+  position:fixed;
+  bottom:1em;
+  right:1em;
+  padding:0;
+  opacity:0.2;
+  filter:alpha(opacity=20);
+  }
 
-p#pi img
-{
-	border: 0;
-}
+#pf_reload img { border:0 }
+
+
+/****************************/
+
 
 table.admin
 {
