@@ -1382,8 +1382,9 @@ If the action requires the user to login, a new
 L<Para::Frame::Request::Response> will be created for the C</login.tt>
 template.
 
-If the session object can L<Para::Frame::Session/go_login>, it will be
-used instead of a redirection to C</login.tt> template.
+If the session object can L<Para::Frame::Session/go_login> and the
+method returns true, it will be used instead of a redirection to
+C</login.tt> template.
 
 =cut
 
@@ -1561,7 +1562,7 @@ sub run_action
 
 		    if( $s->can('go_login') )
 		    {
-			return $s->go_login();
+			return if $s->go_login();
 		    }
 
 		    my $error_tt = "/login.tt";
@@ -3429,8 +3430,9 @@ sub original_status
 
 Sets the L<Para::Frame::Request::Response> appropriate for the error.
 
-If the session object can L<Para::Frame::Session/go_login>, it will be
-used instead of a redirection to C</login.tt> template.
+If the session object can L<Para::Frame::Session/go_login> and the
+method returns true, it will be used instead of a redirection to
+C</login.tt> template.
 
 =cut
 
@@ -3540,7 +3542,7 @@ sub handle_error
 
 	    if( $s->can('go_login') )
 	    {
-		return $s->go_login($resp);
+		return if $s->go_login($resp);
 	    }
 
 	    $error_tt = "/login.tt";
