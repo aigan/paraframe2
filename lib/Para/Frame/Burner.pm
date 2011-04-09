@@ -226,7 +226,7 @@ sub add_ext
     else
     {
 	$EXT{$ext} = $burner;
-	debug "Regestring ext $ext to burner ".$burner->type;
+	debug "Registring ext $ext to burner ".$burner->type;
 	return 1;
     }
 }
