@@ -143,6 +143,8 @@ sub add
     my( $this, $config_in ) = @_;
     my $class = ref($this) || $this;
 
+ #   debug "Creating a TT obj with params\n".datadump($config_in);
+
     my $burner = $class->new( $config_in );
 
     my $handles = $burner->{'config'}{'handles'} || [];
@@ -418,8 +420,8 @@ sub burn
     my( $burner, $renderer, $in, $params, $out ) = @_;
     my $th = $burner->th();
 
-    $Template::Context::DEBUG = 1;
-    $th->{ DEBUG } = 1;
+#    $Template::Context::DEBUG = 1;
+#    $th->{ DEBUG } = 1;
 
     $th->{'pf_include_path'}[0] = $renderer;
     my $res = $th->process($in, $params, $out, {binmode=>':utf8'});

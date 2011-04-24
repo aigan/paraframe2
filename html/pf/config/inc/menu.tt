@@ -1,2 +1,2 @@
-﻿[% jump('Debug watch', 'debuglist.tt') %] |
+[% jump('Debug watch', 'debuglist.tt') %] |
 [% jump('Server', 'server.tt') %]

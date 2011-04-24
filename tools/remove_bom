@@ -1,0 +1,65 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings FATAL => 'all';
+use bytes;
+
+use Cwd;
+
+our $root = getcwd();
+our $bom = "\x{EF}\x{BB}\x{BF}";
+our $bombom = "\x{C3}\x{AF}\x{C2}\x{BB}\x{C2}\x{BF}";
+
+process_dir($root);
+
+sub process_dir
+{
+    my $dir = shift;
+    my @files = glob( $dir . "/*" );
+    foreach my $file (@files)
+    {
+	if( -f $file && $file =~ /\.tt$/ )
+	{
+	    process_file($file);
+	}
+	elsif( -d $file && $file !~ m/\/(\.|CVS)/ )
+	{
+	    process_dir($file);
+	}
+    }
+}
+
+sub process_file
+{
+    my $name = my $file = shift;
+    $name =~ s/^$root//;
+    print sprintf( "Processing : %-50s", $name );
+    local ( *FH, $/ );
+    open( FH, '<:bytes', $file )
+      or die "can't open $file: $!";
+    my $a = <FH>;
+    close FH;
+
+    my $b = $a;
+    $a =~ s/^$bombom//g;
+    $a =~ s/^$bom//g;
+#    print "\na1 is ".bytes::length($a)."\n";
+#    print "a2 is ".bytes::length($a)."\n";
+#    print "b2 is ".bytes::length($b)."\n";
+    if( $a ne $b )
+    {
+	open( FH, '>:bytes', $file )
+	  or die "can't write to $file : $!";
+	print FH $a;
+	close FH
+	  or die "can't close file $file";
+	print " ...Updated\n";
+#    die "Stopping here";
+    }
+    else
+    {
+#	print '['.(substr $a, 0, 10).']';
+	print "\n";
+    }
+}
