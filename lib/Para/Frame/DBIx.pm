@@ -660,6 +660,7 @@ sub connect
 	debug(2,"  Bound dbh");
     }
 
+    $dbix->on_connect; # Implemented by Pg/mysql
     Para::Frame->run_hook( $Para::Frame::REQ, 'after_db_connect', $dbix);
 
     return 1;
@@ -1873,6 +1874,16 @@ sub state
     return Para::Frame::DBIx::State->new($_[0]);
 }
 
+
+##############################################################################
+
+=head2 on_connect
+
+=cut
+
+sub on_conncect
+{
+}
 
 ##############################################################################
 
