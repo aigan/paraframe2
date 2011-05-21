@@ -39,14 +39,20 @@ sub init
 {
     my( $sh ) = @_;
 
-    my $csv = Text::CSV_XS->new({binary=>1, sep_char=>';'});
+    my $csv_conf = $sh->{'conf'}{'csv'} ||
+    {
+     binary=>1,
+     sep_char=>';',
+    };
+
+    my $csv = Text::CSV_XS->new($csv_conf);
     $sh->{'cxv'} = $csv or die "Failed to create CVS obj\n";
 
     my $fh = $sh->{'fh'};
 
     # Use DOS mode
     my $cfh = select $fh;
-    $/ = "\r\n";
+#    $/ = "\r\n";
     select $cfh;
 
     $sh->{'pos'} = 0; # Assuming we start at the beginning
@@ -71,22 +77,17 @@ sub next_row
 
 
     # Find a line with content, ignoring empty lines
-    my $line = "\r\n"; # Get started
-    while( $line =~ /^\r?\n$/ )
+    my $line = $fh->getline or return undef;
+    chomp($line);
+    while( not length($line) )
     {
-	$line = <$fh>;
-	return undef unless defined $line;
+        $line = $fh->getline;
+        return undef unless defined $line;
     }
 
-##    my $pos_b = tell $fh;
-##    ### This is crazy! -- Storing file position
-##    $sh->{'pos'} = $pos_b;
-##    warn sprintf "%.3d [%d -> %d: %d] '%s'\n", $., $pos_a, $pos_b, length($line), $line;
+#    warn sprintf "Parsing row [%d] %s\n", length($line), $line; ### DEBUG
 
-#    chomp $line;
-    warn sprintf "Parsing row [%d] %s\n", length($line), $line; ### DEBUG
-
-    $csv->parse($line)
+    $csv->parse($line."\n")
       or throw('validation',"Failed parsing row $.: ".$csv->error_input());
 
     my @row;

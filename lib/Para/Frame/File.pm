@@ -2436,8 +2436,15 @@ sub precompile
 
     my $out = "";
 #    my $res = $rend->burn( $fh, $destfile );
-    my $res = $rend->burn( $fh, \$out );
+    my $res;
+    $Para::Frame::File::COMPILING = 0; ### TODO: Cleanup this (disabled)
+    eval                               ### May not be needed...
+    {
+        $res = $rend->burn( $fh, \$out );
+    };
+    $Para::Frame::File::COMPILING = 0; ### TODO: Cleanup this
     $fh->close;
+    die $@ if $@;
 
     if( $ctype->charset eq 'UTF-8' )
     {

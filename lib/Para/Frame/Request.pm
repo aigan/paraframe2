@@ -3090,6 +3090,12 @@ sub cancel
 
 =head2 note
 
+  $req->note( $text )
+
+Sending text to show during loading of a page.
+
+Usable for progres indication.
+
 =cut
 
 sub note

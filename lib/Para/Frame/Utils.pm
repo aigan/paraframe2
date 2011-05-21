@@ -828,7 +828,7 @@ Returns the correspondoing praxis filename of the module.
 
 sub package_to_module
 {
-    my $package = shift;
+    my $package = shift or confess;
     $package =~ s/::/\//g;
     $package .= ".pm";
     return $package;
