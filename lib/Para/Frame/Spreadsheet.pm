@@ -131,7 +131,36 @@ sub get_headers
 	$sh->{'colnums'}{ $val } = $i;
     }
 
+    if( $sh->{'conf'}{extra_headers} )
+    {
+        return $sh->add_headers($sh->{'conf'}{extra_headers});
+    }
+
     return scalar @$row;
+}
+
+
+##############################################################################
+
+=head2 add_headers
+
+For adding extra headers, for fields added in row_filter
+
+=cut
+
+sub add_headers
+{
+    my( $sh, $headers ) = @_;
+
+    my $i = $#{$sh->{'cols'}};
+    foreach my $header (@$headers)
+    {
+        $i++;
+	$sh->{'cols'}[$i] = $header;
+	$sh->{'colnums'}{ $header } = $i;
+    }
+
+    return($i+1);
 }
 
 
