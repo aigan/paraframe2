@@ -181,6 +181,10 @@ sub new
 	debug "Error already is a part!";
 	return $params;
     }
+    elsif( not ref $params )
+    {
+        $params = { message => $params };
+    }
 
     my $message = delete $params->{'message'};
     my $part = bless($params, $class);

@@ -544,7 +544,7 @@ sub get_next
 	{
 	    if( @{ $args_replace{$key} } )
 	    {
-		debug 1, "replacing param $key with @{[$q->param($key)]}";
+		debug 1, "replacing param $key with @{$args_replace{$key}}";
 		$q->param( $key, @{ $args_replace{$key} } );
 	    }
 	    else

@@ -4,7 +4,7 @@
 
 <h1>[% a.title | html %]</h1>
 
-<p>[% req.result.find('alternatives').message | html | html_para %]</p>
+<p>[% req.result.find('alternatives').message | html | html_line_break %]</p>
 
 [% IF a.query_desig %]
 <pre>
