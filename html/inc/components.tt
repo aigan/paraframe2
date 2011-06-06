@@ -1,14 +1,12 @@
 ﻿[% MACRO box(part) BLOCK %]
-  <table class="paraframe_box" style="background: $part.border"><tr><td>
-    <table style="border-width: ${part.width}px"><tr><td style="background: $part.bg; padding:1em">
+  <div class="paraframe_box" style="border: 0.3em inset $part.border; background: $part.bg; padding:1em">
       [% IF part.title %]<h1>$part.title</h1>[% END %]
       <pre>[% part.message | html %]</pre>
       [% IF part.context %]
         <em>Context (line [% part.context_line %]):</em>
         <pre>[% part.context | html %]</pre>
       [% END %]
-    </td></tr></table>
-  </td></tr></table>
+  </div>
 [% END %]
 
 

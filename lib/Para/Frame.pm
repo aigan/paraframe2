@@ -5,7 +5,7 @@ package Para::Frame;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2010 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2011 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -38,7 +38,7 @@ use File::Basename; # dirname
 #use FreezeThaw qw( thaw );
 use Storable qw( thaw );
 
-our $VERSION = "1.08"; # Paraframe version
+our $VERSION = "1.18"; # Paraframe version
 
 
 use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir client_str );
@@ -179,6 +179,7 @@ BEGIN
 			  add_background_jobs
 			  after_bookmark
 			  after_action_success
+			  on_first_response
                         ))
     {
 	$HOOK{$hook} ||= [];
@@ -1527,6 +1528,10 @@ sub daemonize
 Restarts the daemon. We asume that we will restart in the background,
 with a watchdog.
 
+TODO: Will try to detect if the process is not a daemon and in that
+case restart in the foreground. (Must place new process in same
+terminal)
+
 =cut
 
 sub restart
@@ -1534,56 +1539,12 @@ sub restart
     my( $class ) = @_;
 
     debug "--- In restart";
-
-
-#    $SERVER->close();
-#    open STDOUT, '>/dev/null' or die "Can't write to /dev/null: $!";
-#    Para::Frame->kill_children;
-##    system("$0&") == 0 or die "Exec failed";
-#    exec("$0&"); warn "Exec failed: $!"; sleep 1;
-#    exec("$0&"); warn "Exec failed: $!"; sleep 1;
-#    exec("$0&"); warn "Exec failed: $!";
-#    return 0;
-#
-#    #---------------------------------------------------
-
-
-
-
     Para::Frame->go_down;
-
-    # We MUST redirect STDOUT in order to release the parent process
-    #
-    open STDOUT, '>/dev/null' or die "Can't write to /dev/null: $!";
-
     debug "--- executing $0 @ARGV";
 
-#    POSIX::setsid             or die "Can't start a new session: $!";
-#    $SIG{CHLD} = 'DEFAULT';
-
-#    system("$0 @ARGV&") == 0 or warn "Exec failed: $!\n";
-#    if ($? == -1)
-#    {
-#	debug "failed to execute: $!\n";
-#    }
-#    elsif ($? & 127)
-#    {
-#	debug sprintf "child died with signal %d, %s coredump\n",
-#	  ($? & 127),  ($? & 128) ? 'with' : 'without';
-#    }
-#    else
-#    {
-#	debug sprintf "child exited with value %d\n", $? >> 8;
-#    }
-#
-#    debug "----------------------------------------";
-#    exit 0;
-#    sleep 1;
-#    debug "executing $0";
-
-    exec("$0 @ARGV &"); warn "Exec failed: $!"; sleep 1;
+    exec("$0 @ARGV"); warn "Exec failed: $!"; sleep 1;
     debug "executing $0";
-    exec("$0 @ARGV &"); warn "Exec failed: $!";
+    exec("$0 @ARGV"); warn "Exec failed: $!";
     debug "failing";
     return 0;
 }
@@ -1643,9 +1604,6 @@ sub go_down
     print "DOWN\n";
 
     open STDOUT, '>/dev/null' or die "Can't write to /dev/null: $!";
-
-    $SIG{CHLD} = 'IGNORE'; # Not turing it back on!!!
-    $SIG{USR1} = 'DEFAULT';
 
     Para::Frame->kill_children;
 
@@ -1908,9 +1866,10 @@ sub handle_request
 
 	    $req->setup_jobs;
 	    $req->reset_response; # Needs lang and jobs
+	    my $resp = $req->response;
+	    $req->run_hook('on_first_response', $resp);
 	    $session->route->init;
 
-	    my $resp = $req->response;
 	    if( my $client_time = $req->http_if_modified_since )
 	    {
 		if( my $mtime = $resp->last_modified )
@@ -2582,6 +2541,7 @@ sub configure
 
     my %th_default =
 	(
+	 ENCODING => 'utf8',
 	 PRE_PROCESS => 'header_prepare.tt',
 	 POST_PROCESS => 'footer_prepare.tt',
 	 STASH => Para::Frame::Template::Stash::CheckUTF8->new,
@@ -2823,6 +2783,20 @@ sub report
 
 
     return $out;
+}
+
+
+##############################################################################
+
+=head2 flag_restart
+
+  Para::Frame->flag_restart()
+
+=cut
+
+sub flag_restart
+{
+    $Para::Frame::TERMINATE = 'RESTART';
 }
 
 

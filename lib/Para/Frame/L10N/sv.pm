@@ -73,7 +73,7 @@ our %Lexicon =
    'Flera alternativ',
 
    'Name' =>
-   'Användarnamn',
+   'Namn',
 
    'Name is missing' =>
    'Namn saknas',

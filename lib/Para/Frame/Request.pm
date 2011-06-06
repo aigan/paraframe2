@@ -5,7 +5,7 @@ package Para::Frame::Request;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2010 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2011 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -1268,6 +1268,14 @@ sub prepend_action
 
 =head2 add_job
 
+  $req->add_job($method, @args)
+
+This will run C<$req-E<lt>$method(@args)> when the job is processed.
+
+For a custom job, use L</run_code>.
+
+Remember du add the job L</after_jobs> if this is the last job.
+
 =cut
 
 sub add_job
@@ -1331,7 +1339,15 @@ sub prepend_background_job
 
 =head2 run_code
 
-  $req->run_code( $label, $codered, @args )
+  $req->run_code( $label, $coderef, @args )
+
+This will run C<&{$coderef}($req, @args)>.
+
+Usually set up by
+
+  $req->add_job('run_code', $label, $coderef, @args);
+
+See L</add_job>.
 
 =cut
 
@@ -1361,6 +1377,14 @@ sub run_code
 ##############################################################################
 
 =head2 run_action
+
+If the action requires the user to login, a new
+L<Para::Frame::Request::Response> will be created for the C</login.tt>
+template.
+
+If the session object can L<Para::Frame::Session/go_login> and the
+method returns true, it will be used instead of a redirection to
+C</login.tt> template.
 
 =cut
 
@@ -1531,12 +1555,19 @@ sub run_action
 	{
 	    if( $error->type eq 'denied' )
 	    {
-		if( $req->session->u->level == 0 )
+		my $s = $req->session;
+		if( $s->u->level == 0 )
 		{
 		    # Ask to log in
+
+		    if( $s->can('go_login') )
+		    {
+			return if $s->go_login();
+		    }
+
 		    my $error_tt = "/login.tt";
 		    $part->hide(1);
-		    $req->session->route->bookmark;
+		    $s->route->bookmark;
 		    my $home = $req->site->home_url_path;
 		    $req->set_error_response( $home.$error_tt );
 		}
@@ -1669,6 +1700,13 @@ sub after_jobs
 	    $req->handle_error({ response => $new_resp });
 	}
 
+	# The error handler may have set a redirection page
+	if( $new_resp->redirection )
+	{
+	    $new_resp->sender->send_redirection( $new_resp->redirection );
+	    return $req->done;
+	}
+
 	$req->add_job('after_jobs');
     }
 
@@ -1755,6 +1793,12 @@ sub error_backtrack
 	my $previous = $req->referer_path;
 	if( $previous )
 	{
+	    my $home = $req->site->home_url_path;
+	    unless( $previous =~ /^$home/ )
+	    {
+		$previous = $home.'/';
+	    }
+
 	    $req->set_response( $previous );
 	}
 	return 1;
@@ -2874,6 +2918,8 @@ sub get_child_result
 
 =head2 run_hook
 
+  $req->run_hook( $label, @args );
+
 =cut
 
 sub run_hook
@@ -3043,6 +3089,12 @@ sub cancel
 ##############################################################################
 
 =head2 note
+
+  $req->note( $text )
+
+Sending text to show during loading of a page.
+
+Usable for progres indication.
 
 =cut
 
@@ -3382,6 +3434,12 @@ sub original_status
 
 =head2 handle_error
 
+Sets the L<Para::Frame::Request::Response> appropriate for the error.
+
+If the session object can L<Para::Frame::Session/go_login> and the
+method returns true, it will be used instead of a redirection to
+C</login.tt> template.
+
 =cut
 
 sub handle_error
@@ -3483,20 +3541,27 @@ sub handle_error
     }
     elsif( $error->type eq 'denied' )
     {
-	if( $req->session->u->level == 0 )
+	my $s = $req->session;
+	if( $s->u->level == 0 )
 	{
 	    # Ask to log in
+
+	    if( $s->can('go_login') )
+	    {
+		return if $s->go_login($resp);
+	    }
+
 	    $error_tt = "/login.tt";
 	    $req->result->hide_part('denied');
 	    unless( $req->{'no_bookmark_on_failed_login'} )
 	    {
-		$req->session->route->bookmark();
+		$s->route->bookmark();
 	    }
 	}
 	else
 	{
 	    $error_tt = "/denied.tt";
-	    $req->session->route->plan_next($req->referer_path);
+	    $s->route->plan_next($req->referer_path);
 	}
     }
     elsif( $error->type eq 'notfound' )

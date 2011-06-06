@@ -5,7 +5,7 @@ package Para::Frame::Captcha;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2008-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2008-2011 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.

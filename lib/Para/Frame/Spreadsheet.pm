@@ -63,10 +63,13 @@ Handles mostly CSV and XML.
 
 sub new
 {
-    my( $class, $fh, $type ) = @_;
+    my( $class, $fh, $type, $conf ) = @_;
 
     my $sh = bless {}, $class;
     $sh->{'fh'} = $fh;
+
+    $conf ||= {};
+    $sh->{'conf'} = $conf;
 
     unless( $fh->isa("IO::Handle") or $fh->isa("Fh")  )
     {
@@ -76,20 +79,23 @@ sub new
 
     if( $type )
     {
-	if( $type eq 'text/comma-separated-values' )
-	{
-	    require Para::Frame::Spreadsheet::CSV;
-	    bless $sh, "Para::Frame::Spreadsheet::CSV";
-	}
-	elsif( $type eq 'application/vnd.ms-excel' )
-	{
-	    require Para::Frame::Spreadsheet::Excel;
-	    bless $sh, "Para::Frame::Spreadsheet::Excel";
-	}
-	else
-	{
-	    die "Spreadsheet type $type not implemented";
-	}
+        given( $type )
+        {
+            when(['text/comma-separated-values','text/csv'] )
+            {
+                require Para::Frame::Spreadsheet::CSV;
+                bless $sh, "Para::Frame::Spreadsheet::CSV";
+            }
+            when( 'application/vnd.ms-excel' )
+            {
+                require Para::Frame::Spreadsheet::Excel;
+                bless $sh, "Para::Frame::Spreadsheet::Excel";
+            }
+            default
+            {
+                die "Spreadsheet type $type not implemented";
+            }
+        }
 
 	$sh->init;
     }
@@ -125,7 +131,36 @@ sub get_headers
 	$sh->{'colnums'}{ $val } = $i;
     }
 
+    if( $sh->{'conf'}{extra_headers} )
+    {
+        return $sh->add_headers($sh->{'conf'}{extra_headers});
+    }
+
     return scalar @$row;
+}
+
+
+##############################################################################
+
+=head2 add_headers
+
+For adding extra headers, for fields added in row_filter
+
+=cut
+
+sub add_headers
+{
+    my( $sh, $headers ) = @_;
+
+    my $i = $#{$sh->{'cols'}};
+    foreach my $header (@$headers)
+    {
+        $i++;
+	$sh->{'cols'}[$i] = $header;
+	$sh->{'colnums'}{ $header } = $i;
+    }
+
+    return($i+1);
 }
 
 

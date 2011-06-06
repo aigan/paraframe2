@@ -82,13 +82,13 @@ my $client_data =
 warnings_like {Para::Frame->configure($cfg_in)}
 [ qr/^Timezone set to /,
   qr/^Stringify now set$/,
-  qr/^Regestring ext tt to burner html$/,
-  qr/^Regestring ext html_tt to burner html$/,
-  qr/^Regestring ext xtt to burner html$/,
-  qr/^Regestring ext css_tt to burner plain$/,
-  qr/^Regestring ext js_tt to burner plain$/,
-  qr/^Regestring ext css_dtt to burner plain$/,
-  qr/^Regestring ext js_dtt to burner plain$/,
+  qr/^Registring ext tt to burner html$/,
+  qr/^Registring ext html_tt to burner html$/,
+  qr/^Registring ext xtt to burner html$/,
+  qr/^Registring ext css_tt to burner plain$/,
+  qr/^Registring ext js_tt to burner plain$/,
+  qr/^Registring ext css_dtt to burner plain$/,
+  qr/^Registring ext js_dtt to burner plain$/,
   ],
     "Configuring";
 
@@ -103,7 +103,7 @@ warnings_like
 			    'webhome'     => '/test',
 			    'webhost'     => 'frame.para.se',
 			   });
-}[ qr/^Registring site Testing$/], "site registration";
+}[ qr/^Registring site frame.para.se\/test$/], "site registration";
 
 
 

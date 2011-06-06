@@ -514,7 +514,6 @@ lib/Para/Frame/Action/user_logout.pm
 lib/Para/Frame/Action/wait_for_req.pm
 lib/Para/Frame/Burner.pm
 lib/Para/Frame/Captcha.pm
-lib/Para/Frame/CGI.pm
 lib/Para/Frame/Change.pm
 lib/Para/Frame/Child.pm
 lib/Para/Frame/Child/Result.pm

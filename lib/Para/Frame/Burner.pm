@@ -5,7 +5,7 @@ package Para::Frame::Burner;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2011 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -143,6 +143,8 @@ sub add
     my( $this, $config_in ) = @_;
     my $class = ref($this) || $this;
 
+ #   debug "Creating a TT obj with params\n".datadump($config_in);
+
     my $burner = $class->new( $config_in );
 
     my $handles = $burner->{'config'}{'handles'} || [];
@@ -153,7 +155,7 @@ sub add
     foreach my $ext ( @$handles )
     {
 	$EXT{$ext} = $burner;
-	debug "Regestring ext $ext to burner $type";
+	debug "Registring ext $ext to burner $type";
     }
 
     $TYPE{ $type } = $burner;
@@ -226,7 +228,7 @@ sub add_ext
     else
     {
 	$EXT{$ext} = $burner;
-	debug "Regestring ext $ext to burner ".$burner->type;
+	debug "Registring ext $ext to burner ".$burner->type;
 	return 1;
     }
 }
@@ -417,6 +419,10 @@ sub burn
 {
     my( $burner, $renderer, $in, $params, $out ) = @_;
     my $th = $burner->th();
+
+#    $Template::Context::DEBUG = 1;
+#    $th->{ DEBUG } = 1;
+
     $th->{'pf_include_path'}[0] = $renderer;
     my $res = $th->process($in, $params, $out, {binmode=>':utf8'});
     if( $res )
@@ -427,7 +433,7 @@ sub burn
     else
     {
 	my $err = $th->error();
-#	debug "Checking out error: ".datadump($err);
+	debug "Checking out error: ".datadump($err);
 	die( $err );
     }
 

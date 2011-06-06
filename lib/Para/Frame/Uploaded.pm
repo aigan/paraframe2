@@ -174,10 +174,13 @@ Creates and returns an L<IO::File> object
 sub fh
 {
     debug "In Para::Frame::Uploaded->fh";
-    my( $uploaded ) = shift;
-#    return IO::File->new( $uploaded->{'tempfile'}, @_ );
+    my( $uploaded, $mode, $perms ) = @_;
 
-    my $fh = IO::File->new( $uploaded->{'tempfile'}, @_ );
+    $mode //= $uploaded->{'filemode'};
+
+    debug "Using mode $mode";
+
+    my $fh = IO::File->new( $uploaded->{'tempfile'}, $mode );
 
     if( debug )
     {
@@ -187,6 +190,19 @@ sub fh
     }
 
     return $fh;
+}
+
+
+##############################################################################
+
+=head2 set_mode
+
+=cut
+
+sub set_mode
+{
+    my(  $uploaded, $mode ) = @_;
+    $uploaded->{'filemode'} = $mode;
 }
 
 

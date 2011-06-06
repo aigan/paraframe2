@@ -5,7 +5,7 @@ package Para::Frame::Site;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2011 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -161,10 +161,10 @@ sub add
 
     my $site = $this->_new( $params );
 
-    debug "Registring site ".$site->name;
-
     my $home = $site->home_url_path || '';
     my $key = $site->host . $home;
+
+    debug "Registring site ".$key;
 
     $DATA{ $key }        ||= $site;
     $ALIAS{ $key }       ||= $site;
@@ -216,7 +216,7 @@ sub clone
 	};
     }
 
-    debug sprintf "Cloning %s as %s", $site->host, $params->{'webhost'};
+    debug sprintf "Cloning %s (%s) as %s", $site->host, $site->code, $params->{'webhost'};
 
     foreach my $key ( keys %$site )
     {
@@ -662,7 +662,8 @@ sub loadpage
 
   $site->login_page
 
-Returns the C<login_page> to be used.
+Returns the C<login_page> to be used. That is, the page to go to AFTER
+login.
 
 Should be an URL path.
 

@@ -1,4 +1,4 @@
-﻿[% META otitle="Show Source" %]
+[% META otitle="Show Source" %]
 
 [% page_path = q.param('page') %]
 [% DEFAULT page_path = req.referer_path %]

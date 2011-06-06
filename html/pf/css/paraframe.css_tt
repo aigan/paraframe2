@@ -24,7 +24,7 @@ form
 
 .same_place
 {
-  background: #ffffff;
+  background:  yellow;
 }
 
 .debug
@@ -152,15 +152,23 @@ tr.odd
 
 /****************************/
 
-p#pi
+#pi
 {
-	text-align: right;
-}
+  font-family:Georgia,'Bitstream Charter',serif;
+  text-decoration:none;
+  position:fixed;
+  bottom:1em;
+  right:1em;
+  padding:0;
+  opacity:0.2;
+  filter:alpha(opacity=20);
+  }
 
-p#pi img
-{
-	border: 0;
-}
+#pf_reload img { border:0 }
+
+
+/****************************/
+
 
 table.admin
 {
@@ -189,4 +197,10 @@ table.admin .selected img
 .paraframe_edit_link_overlay
 {
   position: absolute;
+}
+
+.notice
+{
+  border: 1px dotted #FF0000;
+  padding: 5px;
 }

@@ -2507,13 +2507,61 @@ Compatible with L<Template::Manual::VMethods/List Virtual Methods>
 
 sub join
 {
-    my( $l, $sep ) = CORE::shift(@_);
+    my( $l, $sep ) = @_;
 
     $l->materialize_all;
 
     $sep ||= "";
 
     return CORE::join($sep, @{$l->{'_OBJ'}});
+}
+
+
+##############################################################################
+
+=head2 complement
+
+  $l->complement($l2)
+
+=cut
+
+sub complement
+{
+    my( $l, $l2 ) = @_;
+    my $class = ref $l;
+
+#    debug "l2=".$l2;
+
+    my %keys;
+    my( $val2, $err2 ) = $l2->get_first;
+    while(! $err2 )
+    {
+	$keys{$val2}++;
+    }
+    continue
+    {
+	( $val2, $err2 ) = $l2->get_next;
+    }
+    $l2->reset;
+
+#    debug datadump(\%keys,1);
+
+    my @new;
+    my( $val, $err ) = $l->get_first;
+    while(! $err )
+    {
+#	debug "  looking at $val";
+	next if $keys{$val};
+#	debug "    added";
+	CORE::push @new, $val;
+    }
+    continue
+    {
+	( $val, $err ) = $l->get_next;
+    }
+    $l->reset;
+
+    return $class->new(\@new, $l->clone_props);
 }
 
 
