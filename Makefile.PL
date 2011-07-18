@@ -44,7 +44,7 @@ WriteMakefile(
 		  'File::Spec'                 => 3.05,
 		  'File::stat'                 => 1.00,
 		  'FreezeThaw'                 => 0.43,
-		  'HTTP::BrowserDetect'        => 0.98,
+		  'HTTP::BrowserDetect'        => 1.25,
 		  'HTTP::Request'              => 1.40,
 		  'IDNA::Punycode'             => 0.02,
 	          'Image::Magick'              => 6.002004,
@@ -83,7 +83,6 @@ WriteMakefile(
 		  'Test::Distribution'         => 2.00,
 		  'Test::Pod'                  => 1.26,
 		  'Test::Strict'               => 0.09,
-		  
 	      },
 	      'dist'          =>
 	      {
