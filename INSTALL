@@ -63,7 +63,6 @@ functionality.  Here is an example .htaccess file placed in
     ErrorDocument 406 /pf-test/page_not_found.tt
     <FilesMatch ".tt$|^$">
       SetHandler           perl-script
-      PerlFixupHandler     Para::Frame::Client::Fixup
       PerlHandler          Para::Frame::Client
     </FilesMatch>
     PerlSetVar port 7788
