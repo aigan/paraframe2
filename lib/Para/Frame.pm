@@ -38,7 +38,7 @@ use File::Basename; # dirname
 #use FreezeThaw qw( thaw );
 use Storable qw( thaw );
 
-our $VERSION = "1.18"; # Paraframe version
+our $VERSION = "1.19"; # Paraframe version
 
 
 use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir client_str );
@@ -180,6 +180,7 @@ BEGIN
 			  after_bookmark
 			  after_action_success
 			  on_first_response
+                          on_reload
                         ))
     {
 	$HOOK{$hook} ||= [];
@@ -1954,6 +1955,9 @@ L<Para::Frame::Result/exception>.
 =head3 on_fork
 
 Runs in the child just after the fork.
+
+=head3 on_reload
+
 
 =head3 done
 

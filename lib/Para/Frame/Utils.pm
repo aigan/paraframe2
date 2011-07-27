@@ -1074,6 +1074,8 @@ sub compile
 	### Keep compilation time so we know when we should try again
 	throw( 'compilation', $@ );
     }
+
+    Para::Frame->run_hook(undef, 'on_reload');
     return $res;
 }
 

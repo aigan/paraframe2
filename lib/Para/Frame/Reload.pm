@@ -5,7 +5,7 @@ package Para::Frame::Reload;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2011 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -134,6 +134,8 @@ sub register_module
 {
     my( $class, $package, $file ) = @_;
     my $module = package_to_module($package);
+
+    warn "REGISTER MODULE $package\n";
 
     if( $file )
     {
@@ -318,6 +320,8 @@ sub reload
 	Para::Frame::Reload->call_import($pkgname);
 #	warn "============ call_import done\n";
     }
+
+    Para::Frame->run_hook(undef, 'on_reload');
 
     # Remove eventual global error state
     delete $Para::Frame::Result::COMPILE_ERROR{$module};
