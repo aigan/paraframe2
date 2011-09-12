@@ -11,16 +11,20 @@ use Storable qw( freeze dclone );
 use FindBin;
 use Cwd 'abs_path';
 
+our $stdout;
 
 
 BEGIN
 {
-    open my $oldout, ">&STDOUT"     or die "Can't dup STDOUT: $!";
+    open(SAVEOUT, ">&STDOUT");
+#    open(SAVEERR, ">&STDERR");
+
+    close( STDOUT );
     open STDOUT, ">/dev/null"       or die "Can't dup STDOUT: $!";
 
     use_ok('Para::Frame');
 
-    open STDOUT, ">&", $oldout      or die "Can't dup \$oldout: $!";
+    open STDOUT, ">&", SAVEOUT      or die "Can't restore STDOUT: $!";
 }
 
 my $approot = $FindBin::Bin . "/app";
@@ -82,6 +86,7 @@ my $client_data =
 warnings_like {Para::Frame->configure($cfg_in)}
 [ qr/^Timezone set to /,
   qr/^Stringify now set$/,
+#  qr/^ttcdir set to/,
   qr/^Registring ext tt to burner html$/,
   qr/^Registring ext html_tt to burner html$/,
   qr/^Registring ext xtt to burner html$/,
@@ -114,16 +119,19 @@ use_ok('Para::Frame::Sender');
 
 # Capture STDOUT
 $|=1;
-my $stdout = "";
-open my $oldout, ">&STDOUT"         or die "Can't save STDOUT: $!";
-close STDOUT;
-open STDOUT, ">:scalar", \$stdout   or die "Can't dup STDOUT to scalar: $!";
+#my $stdout = "";
+#open my $oldout, ">&STDOUT"         or die "Can't save STDOUT: $!";
+#close STDOUT;
+#open STDOUT, ">:scalar", \$stdout   or die "Can't dup STDOUT to scalar: $!";
+
+clear_stdout();
 
 
 warnings_like
 {
     Para::Frame->startup;
 }[
+#  qr/^Looking up site default$/,
   qr/^Connected to port 9999$/,
   qr/^Setup complete, accepting connections$/,
  ], "startup";
@@ -183,6 +191,7 @@ sub remove_files_with_bg_req
     my @expected =
       (
        qr/^\n\n1 Handling new request \(in background\)\n$/,
+#       qr/^\s*Looking up site default$/,
        qr/^\s*Removing dir /,
        qr/^\s*Removing file /,
        qr/^\s*File .* created from the outside/m,

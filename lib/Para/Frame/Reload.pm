@@ -135,7 +135,7 @@ sub register_module
     my( $class, $package, $file ) = @_;
     my $module = package_to_module($package);
 
-    warn "REGISTER MODULE $package\n";
+    print "REGISTER MODULE $package\n";
 
     if( $file )
     {
