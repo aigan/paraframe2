@@ -12,10 +12,12 @@ use FindBin;
 use Cwd 'abs_path';
 
 our $stdout;
-
+our @got_warning;
 
 BEGIN
 {
+    $SIG{__WARN__} = sub{ push @got_warning, shift() };
+
     open(SAVEOUT, ">&STDOUT");
 #    open(SAVEERR, ">&STDERR");
 

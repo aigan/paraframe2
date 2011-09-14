@@ -7,8 +7,12 @@ use warnings;
 use Test::Warn;
 use Test::More tests => 20;
 
+our @got_warning;
+
 BEGIN
 {
+    $SIG{__WARN__} = sub{ push @got_warning, shift() };
+
     open my $oldout, ">&STDOUT"     or die "Can't dup STDOUT: $!";
     open STDOUT, ">/dev/null"       or die "Can't dup STDOUT: $!";
 

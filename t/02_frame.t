@@ -12,10 +12,13 @@ use FindBin;
 use Cwd 'abs_path';
 
 our $stdout;
+our @got_warning;
 
 
 BEGIN
 {
+    $SIG{__WARN__} = sub{ push @got_warning, shift() };
+
     open(SAVEOUT, ">&STDOUT");
 #    open(SAVEERR, ">&STDERR");
 
@@ -169,14 +172,9 @@ test_cancel2_req();         # REQ 3
 
 sub remove_files_with_bg_req
 {
-    my @got_warning = ();
+    @got_warning = ();
   TEST:
     {
-	local $SIG{__WARN__} = sub
-	{
-	    push @got_warning, shift();
-	};
-
 	my $req = Para::Frame::Request->new_bgrequest();
 	clear_stdout();
 
@@ -196,6 +194,7 @@ sub remove_files_with_bg_req
        qr/^\s*Removing file /,
        qr/^\s*File .* created from the outside/m,
        qr/^1 Done in   0\.\d\d secs$/,
+       qr/^REGISTER MODULE/,
       );
 
     my @failed;
@@ -318,13 +317,9 @@ sub test_handle_req
     Para::Frame::switch_req(undef); # TODO: remove me
 
 
-    my @got_warning = ();
+    @got_warning = ();
   TEST:
     {
-	local $SIG{__WARN__} = sub
-	{
-	    push @got_warning, shift();
-	};
 	Para::Frame::get_value( $client );
     }
 
@@ -414,13 +409,9 @@ sub test_cancel2_req
     Para::Frame::fill_buffer($client);
     Para::Frame::Sender::send_to_server('CANCEL', \1 );
 
-    my @got_warning = ();
+    @got_warning = ();
   TEST:
     {
-	local $SIG{__WARN__} = sub
-	{
-	    push @got_warning, shift();
-	};
 	eval
 	{
 	    Para::Frame::handle_code($client);
