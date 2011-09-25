@@ -193,9 +193,8 @@ sub make_passwd
     $length ||= 8;
     $type ||= 'easy';
 
+    # srand called in Para::Frame::Request::create_fork()
     # Needed, since srand is called just in the parent process
-    state $counter ++;
-    srand( time ^ $$ ^ $counter );
 
     given($type)
     {
