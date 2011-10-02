@@ -173,26 +173,61 @@ sub escape_js
 
 =head2 make_passwd
 
-  make_passwd()
+  make_passwd( $length, $type)
 
-Returns a string meant as a password, easy to remember but hard to guess.
+  $length defaults to 8
+
+Supported type
+  easy (default)
+  hard
+
+Returns a string meant as a password
 
 =cut
 
 sub make_passwd
 {
-    my @v = split '', "aeiouy";
-    my @c = split '', "bdfghjklmnprstv";
+    my( $length, $type ) = @_;
     my $password = '';
 
-    # Needed, since srand is called just in the parent process
-    srand(time ^ $$);
+    $length ||= 8;
+    $type ||= 'easy';
 
-    for (1..4)
+    # srand called in Para::Frame::Request::create_fork()
+    # Needed, since srand is called just in the parent process
+
+    given($type)
     {
-	$password .= $c[rand $#c];
-	$password .= $v[rand $#v];
+	when('easy')
+	{
+	    my @v = split '', "aeiouy";
+	    my @c = split '', "bdfghjklmnprstv";
+
+	    $length = int($length/2);
+
+	    for( 1 .. $length )
+	    {
+		$password .= $c[rand $#c];
+		$password .= $v[rand $#v];
+	    }
+	}
+
+	when('hard')
+	{
+	    my $possible = 'abcdefghijkmnpqrstuvwxyz23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+	    while( length($password) < $length )
+	    {
+		$password .= substr($possible, (int(rand(length($possible)))), 1);
+	    }
+	}
+
+	default
+	{
+	    croak "Type $type not recognized";
+	}
     }
+
+
     return $password;
 }
 

@@ -2853,6 +2853,7 @@ sub create_fork
 
 	$Para::Frame::FORK = 1;
         $Para::Frame::SELECT = undef;
+	srand( time ^ $$ );
  	my $result = Para::Frame::Child::Result->new;
 	$req->{'child_result'} = $result;
 	$req->run_hook('on_fork', $result );
