@@ -212,36 +212,20 @@ sub authenticate_user
 	return 1;
     }
 
-    unless( $u->verify_password( $password_encrypted ) )
+    if( $u->cas_session )
+    {
+	unless( $u->cas_verified )
+	{
+	    $req->result->message('Session expired');
+	    $class->logout;
+	    return undef;
+	}
+    }
+    elsif( not $u->verify_password( $password_encrypted ) )
     {
 	$req->result->exception('validation', "Wrong password for $username");
 
 	$class->logout;
-
-#	if( 0 )
-#	{
-#	    warn sprintf("  next_template was %s\n",
-#			 $q->param('next_template'))
-#		if $q->param('next_template');
-#	    warn sprintf("  destination was %s\n",
-#			 $q->param('destination'))
-#		if $q->param('destination');
-#	}
-#
-#	my $destination = $q->param('destination') || '';
-#	unless( $destination eq 'dynamic' )
-#	{
-#	    my $home = $req->site->home_url_path;
-#	    my $next = $req->referer_path;
-#	    unless( $next =~ /^$home/ )
-#	    {
-#		$next = $home.'/';
-#	    }
-#
-#	    $q->param('next_template', $next );
-#	    warn sprintf("  Setting next_tempalte to %s\n", $next);
-#	}
-
 	return undef;
     }
 
@@ -316,6 +300,30 @@ sub verify_password # Reimplement this method
 
     throw('validation', "Not implemented");
     0;
+}
+
+
+##############################################################################
+
+=head2 cas_session
+
+=cut
+
+sub cas_session
+{
+    return 0;
+}
+
+
+##############################################################################
+
+=head2 cas_verified
+
+=cut
+
+sub cas_verified
+{
+    return 0;
 }
 
 
