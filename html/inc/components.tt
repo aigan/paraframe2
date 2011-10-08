@@ -200,6 +200,21 @@ $content
 [% END %]
 
 
+[% MACRO exp_button(id,label) BLOCK %]
+[%
+   DEFAULT paraframe_display='none';
+   DEFAULT paraframe_label_display='block';
+   DEFAULT label_expand_img = "$home/pf/images/button.expand.down.gif";
+   DEFAULT label_hide_img = label_expand_img;
+   DEFAULT id_label = "${id}_label";
+   DEFAULT img_placement = "after";
+   DEFAULT class_expand = "paraframe_imgexpand";
+   DEFAULT class_expanded = "paraframe_imgexpanded";
+%]
+<span class="$class_expand" id="$id_label"><a href="javascript:showhide('$id')">[% IF img_placement == "before" %]<img alt="v" src="$label_expand_img" /> [% END %]$label[% UNLESS img_placement == "before" %] <img alt="v" src="$label_expand_img" />[% END %]</a></span>
+[% END %]
+
+
 [% BLOCK roundbox %]
   [% DEFAULT title="" %]
   [% DEFAULT imgdir="$home/img/dark_box/" %]
