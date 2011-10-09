@@ -1811,9 +1811,19 @@ sub label_from_params
 	      CGI->escapeHTML( $id );
 	}
 
+	my $label_out;
+	if( blessed $label and $label->can('as_html') )
+	{
+	    $label_out = $label->as_html;
+	}
+	else
+	{
+	    $label_out = CGI->escapeHTML( $label );
+	}
+
 	$out .= sprintf('<label%s>%s</label>',
 			$prefix_extra,
-			CGI->escapeHTML($label),
+			$label_out,
 		       );
     }
 
