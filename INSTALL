@@ -53,6 +53,10 @@ using "AllowOverride All". For example:
       AllowOverride All
     </Directory>
 
+This should be set in /etc/apache2/mods-enabled/userdir.conf and in
+/etc/apache2/sites-enabled/000-default, depending on your
+configuration.
+
 You can turn off apache functionality that is replaced by paraframe,
 like MultiViews. MultiViews will interfere with the uri2file lookup
 functionality.  Here is an example .htaccess file placed in
