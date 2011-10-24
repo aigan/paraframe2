@@ -7,8 +7,8 @@ use ExtUtils::MakeMaker;
 
 WriteMakefile(
 	      'NAME'	       => 'Para::Frame',
-	      'PMLIBDIRS'      => [],
-	      'SKIP'           => ['all','install'],
+#	      'PMLIBDIRS'      => [],
+#	      'SKIP'           => ['all','install'],
  	      'VERSION_FROM'   => 'lib/Para/Frame.pm', # finds $VERSION
 	      'ABSTRACT_FROM'  => 'lib/Para/Frame.pm',
 	      'AUTHOR'         => 'Jonas Liljegren <jonas@paranormal.se>',
@@ -105,6 +105,38 @@ sub test_via_harness
 
     return qq{\t$perl "-MExtUtils::Command::MM" }.
            qq{"-e" "test_harness(\$(TEST_VERBOSE), 'lib')" $tests\n};
+}
+
+sub postamble
+{
+    my ($mm, %args) = @_;
+    my $postamble = "";
+
+
+    # first, we must add a target in install::
+    for my $makeline (@{ $mm->{RESULT} }) {
+        $makeline =~ s/(install *::.+)\n/$1 priv_data_files\n/;
+    }
+
+    # then, declare the target with the files
+    $postamble .= "\nINSTALL = install -p -D\n\npriv_data_files:\n";
+#    $postamble .= "\tpwd\n";
+#    $postamble .= "\techo \$(DISTVNAME)\n";
+
+    use File::Find;
+    find(\&wanted, 'share');
+    sub wanted
+    {
+        next if -d;
+        $File::Find::name =~ m/^share\/(.*)/ or next;
+        my $file = $1;
+        $postamble .= "\tcd share && \$(INSTALL) $file \$(SITEPREFIX)/share/paraframe/$file\n";
+    }
+
+    return $postamble
+
+#    die $mm->dist_target;
+#    die "INSTALL!?!?";
 }
 
 
