@@ -31,7 +31,7 @@ BEGIN
 }
 
 my $approot = $FindBin::Bin . "/app";
-my $pfdir = abs_path($FindBin::Bin.'/..');
+my $pfdir = abs_path($FindBin::Bin.'/../share');
 
 my $cfg_in =
 {
