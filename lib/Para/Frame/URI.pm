@@ -656,6 +656,27 @@ sub retrieve
 
 ##############################################################################
 
+=head2 clear_special_params
+
+  $url->clear_special_params
+
+=cut
+
+sub clear_special_params
+{
+    my( $url ) = @_;
+    $url->query_param_delete('run');
+    $url->query_param_delete('reqnum');
+    $url->query_param_delete('pfport');
+    $url->query_param_delete('backtrack');
+    $url->query_param_delete('renderer');
+#    $url->query_param_delete('section'); #???
+    return( $url );
+}
+
+
+##############################################################################
+
 =head2 jump
 
   $url->jump( $label, \%attrs )
