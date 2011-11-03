@@ -2,3 +2,5 @@
 /Makefile.old
 /tmp
 /MANIFEST.bak
+/blib
+/pm_to_blib

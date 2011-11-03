@@ -172,6 +172,33 @@ sub new
 
 ##############################################################################
 
+=head2 clone
+
+=cut
+
+sub clone
+{
+    my( $resp_in, $args ) = @_;
+    my $class = ref($resp_in) or die;
+    $args ||= {};
+
+    my $resp = bless {%$resp_in}, $class;
+
+    my $rend_args = {%{$resp->{'renderer_args'}}};
+    foreach my $key ( keys %$args )
+    {
+        $rend_args->{$key} = $args->{$key};
+    }
+    $resp->{'renderer_args'} = $rend_args;
+    my $page = $resp->{'page'} = Para::Frame::File->new($rend_args)->normalize;
+
+    debug datadump($resp,2);
+
+    return $resp;
+}
+
+##############################################################################
+
 =head2 desig
 
 =cut
