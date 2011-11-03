@@ -3,4 +3,9 @@
 
 [% PROCESS debug.tt %]
 
+[% IF q.param('file_download_url') %]
+     <script type="text/javascript">
+        window.location.href='[% q.param('file_download_url') %]';
+     </script>
+[% END %]
 </body></html>
