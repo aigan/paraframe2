@@ -205,8 +205,8 @@ sub register_result_page
 #    {
 #	carp "with given url:";
 #    }
-#    $url ||= $resp->page_url_with_query_and_reqnum;
-    $url ||= $resp->page_url_with_reqnum;
+#    $url ||= $resp->page_url_path_with_query_and_reqnum;
+    $url ||= $resp->page_url_path_with_reqnum;
 
     debug "Registred the page result for $url";
 

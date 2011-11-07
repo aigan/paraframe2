@@ -3372,6 +3372,27 @@ sub original_response
 
 ##############################################################################
 
+=head2 original_url
+
+  $req->original_url
+
+=cut
+
+sub original_url
+{
+    my( $req ) = @_;
+    my $site = $req->site;
+    my $url_string = sprintf("%s://%s%s",
+			     $site->scheme,
+			     $site->host,
+                             $req->original_url_string);
+
+    return Para::Frame::URI->new($url_string);
+}
+
+
+##############################################################################
+
 =head2 original_url_string
 
   $req->original_url_string
@@ -3386,6 +3407,31 @@ sub original_url_string
 
 ##############################################################################
 
+=head2 original_url_with_query
+
+  $req->original_url_with_query
+
+=cut
+
+sub original_url_with_query
+{
+    my( $req ) = @_;
+    my $site = $req->site;
+    my $url_string = sprintf("%s://%s%s",
+			     $site->scheme,
+			     $site->host,
+                             $req->original_url_string);
+    if( my $query = $req->original_url_params )
+    {
+        $url_string .= "?".$query;
+    }
+
+    return Para::Frame::URI->new($url_string);
+}
+
+
+##############################################################################
+
 =head2 original_url_params
 
   $req->original_url_params
@@ -3394,7 +3440,7 @@ The query string passed as part of the URL
 
 Not including any POST data.
 
-Used by L<Para::Frame::Requet::Response/page_url_with_query_and_reqnum>
+Used by L<Para::Frame::Request::Response/page_url_path_with_query_and_reqnum>
 
 Returns: the unparsed string, after the '?', as given by
 $ENV{'QUERY_STRING'}. Saved on Req startup.

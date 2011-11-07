@@ -38,7 +38,7 @@ use File::Basename; # dirname
 #use FreezeThaw qw( thaw );
 use Storable qw( thaw );
 
-our $VERSION = "1.20"; # Paraframe version
+our $VERSION = "1.21"; # Paraframe version
 
 
 use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir client_str );

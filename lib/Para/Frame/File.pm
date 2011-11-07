@@ -5,7 +5,7 @@ package Para::Frame::File;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2011 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -1056,6 +1056,33 @@ sub url
 			     $site->scheme,
 			     $site->host,
 			     $page->{url_norm});
+
+    return Para::Frame::URI->new($url_string);
+}
+
+
+##############################################################################
+
+=head2 url_with_query
+
+Returns the L<URI> object, including the scheme, host, port and query string.
+
+=cut
+
+sub url_with_query
+{
+    my( $page ) = @_;
+
+    my $site = $page->site or confess "No site given";
+    my $url_string = sprintf("%s://%s%s",
+			     $site->scheme,
+			     $site->host,
+			     $page->{url_norm});
+
+    if( my $query = $Para::Frame::REQ->original_url_params )
+    {
+        $url_string .= "?".$query;
+    }
 
     return Para::Frame::URI->new($url_string);
 }
