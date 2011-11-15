@@ -18,3 +18,10 @@ function showhide(whichLayer) {
     }
 }
 
+function log(stuff)
+{
+    if( typeof console != 'undefined' )
+    {
+        console.log(stuff);
+    }
+}
