@@ -1448,6 +1448,12 @@ sub store_params
     foreach my $key ( $q->param() )
     {
 	# $key could have many values
+#        foreach my $val ( $q->param( $key ) )
+#        {
+#            next unless $val;
+#            debug(0, "$val: ".validate_utf8(\$val));
+#        }
+
 	$state->{ $key } = [ $q->param( $key ) ];
     }
 

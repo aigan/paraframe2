@@ -28,7 +28,7 @@ use overload ('""'     => sub { $_[0]->{'value'}->as_string },
               fallback => 1,
              );
 
-use URI;
+use URI 1.59;
 use URI::QueryParam;
 use Carp qw( confess cluck );
 
