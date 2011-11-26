@@ -1579,7 +1579,7 @@ sub get_next
   $l->get_next_nos()
 
 The same as L</get_next> except that it only returns ONE value, that
-may be undef.
+may be undef. (Get Next with NO Status)
 
 =cut
 

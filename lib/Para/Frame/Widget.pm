@@ -1330,12 +1330,30 @@ sub checkbox
     my $prefix = "";
     my $suffix = "";
     my $separator = delete $params->{'separator'} || '';
+
+    if( my $tdlabel = delete $params->{'tdlabel'} )
+    {
+	$separator = "</td><td>";
+	$params->{'prefix_label'} = $tdlabel;
+    }
+
+
     my $label_class = delete $params->{'label_class'};
     my $id = $params->{id} || ( $field.'-'.$IDCOUNTER++);
 
     my $suffix_label = $params->{'label'};
     if( $suffix_label ||= delete $params->{'suffix_label'} )
     {
+	my $label_out;
+	if( blessed $suffix_label and $suffix_label->can('as_html') )
+	{
+	    $label_out = $suffix_label->as_html;
+	}
+	else
+	{
+	    $label_out = CGI->escapeHTML( $suffix_label );
+	}
+
 	my $suffix_extra = "";
 	if( $label_class )
 	{
@@ -1345,13 +1363,23 @@ sub checkbox
 	$suffix .= sprintf('<label for="%s"%s>%s</label>',
 			   CGI->escapeHTML( $id ),
 			   $suffix_extra,
-			   CGI->escapeHTML($suffix_label),
-			   );
+			   $label_out,
+			  );
 	$params->{id} = $id;
     }
 
     if( my $prefix_label = delete $params->{'prefix_label'} )
     {
+	my $label_out;
+	if( blessed $prefix_label and $prefix_label->can('as_html') )
+	{
+	    $label_out = $prefix_label->as_html;
+	}
+	else
+	{
+	    $label_out = CGI->escapeHTML( $prefix_label );
+	}
+
 	my $prefix_extra = "";
 	if( $label_class )
 	{
@@ -1361,7 +1389,7 @@ sub checkbox
 	$prefix .= sprintf('<label for="%s"%s>%s</label>',
 			   CGI->escapeHTML( $id ),
 			   $prefix_extra,
-			   CGI->escapeHTML($prefix_label),
+			   $label_out,
 			   );
 	$params->{id} = $id;
     }
