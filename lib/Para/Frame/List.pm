@@ -309,7 +309,7 @@ sub new_any
     my( $this, $data_in, $args ) = @_;
     my $class = ref($this) || $this;
 
-   if( $data_in )
+   if( defined $data_in )
    {
        if( blessed $data_in )
        {
