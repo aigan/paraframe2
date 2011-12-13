@@ -2462,14 +2462,13 @@ sub precompile
     }
 
     my $out = "";
-#    my $res = $rend->burn( $fh, $destfile );
     my $res;
-    $Para::Frame::File::COMPILING = 0; ### TODO: Cleanup this (disabled)
-    eval                               ### May not be needed...
+    $req->{'in_precompile'} = $rend->{params};
+    eval
     {
         $res = $rend->burn( $fh, \$out );
     };
-    $Para::Frame::File::COMPILING = 0; ### TODO: Cleanup this
+    delete $req->{'in_precompile'};
     $fh->close;
     die $@ if $@;
 
