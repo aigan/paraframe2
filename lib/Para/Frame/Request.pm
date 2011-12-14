@@ -147,8 +147,15 @@ sub new
         header_only     => $header_only,   ## true if only sending header
         site            => undef,          ## Default site for req
         in_loadpage     => 0,              ## client uses loadpage
+        in_ajax         => 0,              ## request part of page
         started         => Time::HiRes::time,
     }, $class;
+
+    if( lc($ENV{HTTP_X_REQUESTED_WITH}||'') eq "xmlhttprequest" )
+    {
+        $req->{'in_ajax'} = 1;
+        debug "IN AJAX";
+    }
 
     # Log some info
     warn "# http://".$req->http_host."$orig_url_string\n";
@@ -167,7 +174,6 @@ sub new
 	    $req->{'q'} = CGI->new($req->{'orig_url_params'});
 	}
     }
-
 
     return $req;
 }
@@ -924,6 +930,9 @@ C<find>: Used by L<Para::Frame::File/template>
 C<loadpage>: Used by L<Para::Frame/handle_request>. If C<loadpage> is
 set to C<no>, a loadpage will not be sent.
 
+C<do_forward>: Used by L<Para::Frame::Request::Response/send_output>.
+If C<do_forward> is set to C<no>, we will not redirect, even on errors.
+
 Example for a .htaccess
   PerlSetVar site ignore
 
@@ -1553,7 +1562,7 @@ sub run_action
 	my $part = $req->result->exception;
 	if( my $error = $part->error )
 	{
-	    if( $error->type eq 'denied' )
+	    if( $error->type eq 'denied' and not $req->in_ajax )
 	    {
 		my $s = $req->session;
 		if( $s->u->level == 0 )
@@ -1779,6 +1788,18 @@ sub in_loadpage
 
 ##############################################################################
 
+=head2 in_ajax
+
+=cut
+
+sub in_ajax
+{
+    return $_[0]->{'in_ajax'};
+}
+
+
+##############################################################################
+
 =head2 in_precompile
 
 =cut
@@ -1799,7 +1820,8 @@ sub error_backtrack
 {
     my( $req ) = @_;
 
-    if( $req->result->backtrack and not $req->error_page_selected )
+    if( $req->result->backtrack and not $req->error_page_selected
+        and not $req->in_ajax )
     {
 	debug(2,"Backtracking to previuos page because of errors");
 	my $previous = $req->referer_path;

@@ -648,9 +648,9 @@ sub send_output
 
 #	# Keep query string
 #	$url_out = $resp->page_url_path_with_query_and_reqnum;
+
 	$url_out = $resp->page_url_path_with_reqnum;
-	$resp->forward($url_out);
-	return;
+	return if $resp->forward($url_out);
     }
 
     if( $req->header_only )
@@ -756,6 +756,10 @@ generated.
 
 To forward to a page not handled by the paraframe, use L</redirect>.
 
+Will not forward if it's an ajax request or req dirconfig loadpage is 'no'.
+
+Returns: true if the redirection was done
+
 =cut
 
 sub forward
@@ -763,6 +767,9 @@ sub forward
     my( $resp, $url_norm ) = @_;
 
     my $req = $resp->req;
+
+    return 0 if $req->in_ajax;
+    return 0 if $req->dirconfig->{'do_forward'}||'' eq 'no';
 
     my $page = $resp->page;
     my $site = $page->site;
@@ -790,7 +797,7 @@ sub forward
 #	$page->{url_norm} = $page->orig_url_path;
 #	$page->{sys_name} = undef;
 	$resp->send_output;
-	return;
+	return 1;
     }
 
     # Storing result page BEFORE sending redirection, in case the
@@ -801,6 +808,7 @@ sub forward
 
     $resp->sender->send_redirection($url_norm );
 
+    return 1;
 }
 
 
