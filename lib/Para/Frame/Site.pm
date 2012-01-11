@@ -258,7 +258,7 @@ sub get
 #    debug "Returning ".datadump($DATA{$name});
 
     return $DATA{$name} || $ALIAS{$name} ||
-	croak "Site $name is not registred";
+	confess "Site $name is not registred";
 }
 
 

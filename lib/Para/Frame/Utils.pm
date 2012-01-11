@@ -52,7 +52,7 @@ use Socket;
 use base qw( Exporter );
 our @EXPORT_OK
 
-      = qw( in trim make_passwd random throw catch run_error_hooks
+      = qw( in trim excerpt make_passwd random throw catch run_error_hooks
             create_file create_dir chmod_tree chmod_file chmod_dir
             package_to_module module_to_package dirsteps compile
             passwd_crypt deunicode paraframe_dbm_open elapsed_time uri
@@ -127,6 +127,78 @@ sub trim
 	$ref =~ s/\s\s+/ /g;
 	return $ref;
     }
+}
+
+
+##############################################################################
+
+=head2 excerpt
+
+  excerpt(\$string, $limit, $min
+
+Creates and returns an excerpt
+
+=cut
+
+sub excerpt
+{
+    my( $textref, $limit, $min, $with_point ) = @_;
+
+    my $text = $$textref;
+
+    $limit ||= 150;
+    $min   ||= int($limit/3);
+
+    my $point = $with_point ? '.' : '';
+
+    $text =~ s/^\s|\s$//sg;
+
+#    debug "Excerpt: $text";
+
+    if( length($text) < $limit )
+    {
+	return $text;
+    }
+
+    if( $text =~ /^(.*?)\n/ )
+    {
+	if( length($1) > $min )
+	{
+	    $text = $1;
+	    if( length($text) < $limit )
+	    {
+		return $1;
+	    }
+	}
+    }
+
+    my $textcent = $text;
+    while( $textcent =~ s/(.*)\.\s.*/$1$point/s )
+    {
+	if( length($textcent) > $min )
+	{
+	    $text = $textcent;
+	    if( length($text) < $limit )
+	    {
+		return $text;
+	    }
+	}
+	else
+	{
+	    last;
+	}
+    }
+
+#    debug "Text now: $text";
+#    debug "Length: ".length($text);
+    if( $text =~ /^(.{$min,$limit})[ \,]/s )
+#    if( $text =~ /^(.{55,})/ )
+    {
+#	debug "Found a cut";
+	return $1.'…';
+    }
+
+    return substr($text, 0, $limit).'…';
 }
 
 

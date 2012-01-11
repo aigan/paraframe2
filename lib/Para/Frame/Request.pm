@@ -3129,7 +3129,7 @@ sub cancel
 
 Sending text to show during loading of a page.
 
-Usable for progres indication.
+Usable for progress indication.
 
 =cut
 
