@@ -327,7 +327,7 @@ sub new
 
 		if( $url_norm =~ /\.(tt|html?|css|js)\/?$/ )
 		{
-		    confess "File $url_norm doesn't look like a dir";
+		    cluck "File $url_norm doesn't look like a dir";
 		}
 
 		# There may have been a mapping from dir to file
