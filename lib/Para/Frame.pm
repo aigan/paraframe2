@@ -2190,6 +2190,8 @@ sub open_logfile
 
     open STDOUT, '>>', $log   or die "Can't append to $log: $!";
     open STDERR, '>&STDOUT'   or die "Can't dup stdout: $!";
+    binmode(STDOUT, ":utf8");
+    binmode(STDERR, ":utf8");
 
     chmod_file($log);
 }

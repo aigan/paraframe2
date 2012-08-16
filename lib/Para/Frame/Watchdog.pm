@@ -985,6 +985,7 @@ sub open_logfile
     create_dir( dirname $log);
 
     open STDERR, '>>', $log   or die "Can't append to $log: $!";
+    binmode(STDERR, ":utf8");
     warn "\n-------------logfile--------------\n";
     warn "\nStarted process $$ on ".now()."\n\n";
 

@@ -261,12 +261,14 @@ sub reload
 	open OLDERR, ">&", \*STDERR  or die "Can't dup STDERR: $!";
 	close STDERR;
 	open STDERR, '>', \$errors   or die "Can't redirect STDERR: $!";
+        binmode(STDERR, ":utf8");
 
 	require $module;
     };
 
     open STDERR, ">&OLDERR"    or die "Can't dup OLDERR: $!";
     close OLDERR;
+    binmode(STDERR, ":utf8");
 
     if( $@ )
     {
