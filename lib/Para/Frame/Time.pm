@@ -228,13 +228,16 @@ sub get
     unless( $date )
     {
  	# Try once more, in english
-	my $cur_lang = $Date::Manip::Cnf{'Language'};
-	debug "Trying in english...";
-	Date_Init("Language=English");
+	my $cur_lang = $Date::Manip::Cnf{'Language'} || 'English';
+	if( $cur_lang ne 'English' )
+	{
+	    debug "Trying in english...";
+	    Date_Init("Language=English");
 
-	$date = $LOCAL_PARSER->parse_datetime(UnixDate($time,"%O"));
-
-	Date_Init("Language=$cur_lang"); # Reset language
+	    $date = $LOCAL_PARSER->parse_datetime(UnixDate($time,"%O"));
+	    
+	    Date_Init("Language=$cur_lang"); # Reset language
+	}
 
 	unless( $date )
 	{
