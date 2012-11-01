@@ -24,7 +24,7 @@ use warnings;
 use base qw( DateTime );
 
 use Carp qw( cluck carp );
-use Date::Manip; # UnixDate ParseDate
+use Date::Manip::Date;
 use DateTime; # Should use 0.3, but not required
 use DateTime::Duration;
 use DateTime::Span;
@@ -38,6 +38,7 @@ our $TZ;           # Default Timezone
 our $FORMAT;       # Default format
 our $STRINGIFY;    # Default format used for stringification
 our $LOCAL_PARSER; # For use with Date::Manip
+our %DM;           # DateManip objects
 
 our @EXPORT_OK = qw(internet_date date now timespan duration ); #for docs only
 
@@ -50,8 +51,11 @@ sub import
     my $class = shift;
 
     # Initiate Date::Manip
-    Date_Init("Language=English");
-    Date_Init("Language=Swedish"); # Reset language
+    $DM{'en'} = new Date::Manip::Date;
+    $DM{'en'}->config("Language","English","DateFormat","non-US");
+
+#    Date_Init("Language=English");
+#    Date_Init("Language=Swedish"); # Reset language
 
     #Export functions like Exporter do
     my $callpkg = caller();
@@ -60,8 +64,9 @@ sub import
 
 
     $LOCAL_PARSER =
-      DateTime::Format::Strptime->new( pattern => '%Y-%m-%dT%H:%M:%S',
-				       time_zone => 'floating');
+      DateTime::Format::Strptime->new( pattern => '%Y%m%d%H:%M:%S',
+				       time_zone => 'floating',
+                                     );
 }
 
 
@@ -207,11 +212,31 @@ sub get
 	eval{ $date = DateTime::Format::HTTP->parse_datetime( $time, $tz ) };
     }
 
+    my $lang;
+
     unless( $date )
     {
+        $lang = $Para::Frame::REQ->lang->preferred;
+
 	# Parsing in local timezone
 	debug "Parsing universal as in a local timezone" if $DEBUG;
-	$date = $LOCAL_PARSER->parse_datetime(UnixDate($time,"%O"));
+        unless( $DM{$lang} )
+        {
+            $DM{$lang} = new Date::Manip::Date;
+            $DM{$lang}->config("Language",$lang,"DateFormat","non-US");
+        }
+
+#        my $err = $DM{$lang}->parse($time);
+#        debug "Res of parsing is ".$DM{$lang}->value;
+#        debug "Err of parsing is $err";
+        unless( $DM{$lang}->parse($time) )
+        {
+            $date = $LOCAL_PARSER->parse_datetime(scalar $DM{$lang}->value);
+        }
+        else
+        {
+            carp( $DM{$lang}->err() );
+        }
     }
 
     unless( $date )
@@ -228,15 +253,25 @@ sub get
     unless( $date )
     {
  	# Try once more, in english
-	my $cur_lang = $Date::Manip::Cnf{'Language'} || 'English';
-	if( $cur_lang ne 'English' )
+#	my $cur_lang = $Date::Manip::Cnf{'Language'} || 'English';
+	if( $lang ne 'en' )
 	{
 	    debug "Trying in english...";
-	    Date_Init("Language=English");
+#	    Date_Init("Language=English");
 
-	    $date = $LOCAL_PARSER->parse_datetime(UnixDate($time,"%O"));
-	    
-	    Date_Init("Language=$cur_lang"); # Reset language
+#            debug "Using dm obj ".$DM{'en'};
+            unless( $DM{'en'}->parse($time) )
+            {
+#                debug( "DM res: ".$DM{'en'}->value );
+                $date = $LOCAL_PARSER->parse_datetime(scalar $DM{'en'}->value);
+#                debug "DM val ".$date;
+            }
+            else
+            {
+                carp( $DM{'en'}->err() );
+            }
+
+#	    Date_Init("Language=$cur_lang"); # Reset language
 	}
 
 	unless( $date )
