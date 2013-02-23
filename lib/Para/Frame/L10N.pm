@@ -472,9 +472,9 @@ sub preferred
 
     my $req = $Para::Frame::REQ;
     my $site;
-    if( $req->is_from_client )
+    if( my $resp = $req->response_if_existing )
     {
-	$site = $req->response->page->site;
+	$site = $resp->page->site;
     }
     else
     {
