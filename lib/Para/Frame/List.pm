@@ -2884,7 +2884,7 @@ sub resort
 	return $list;
     }
 
-    debug "RESORTING";
+    debug "RESORTING ".$list->size;
 
     my $new = $list->sorted($sortargs,
 			    {
