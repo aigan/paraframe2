@@ -693,12 +693,23 @@ sub materialize_all
 	if( my $mat = $l->{'materializer'} )
 	{
 	    my $max = $l->max();
+
+            if( $max >= 1000 )
+            {
+                $Para::Frame::REQ->note(sprintf "Materializing %d nodes", $max+1);
+            }
+
 	    if( $level < 1 ) # Nothing initialized
 	    {
 		my @objs;
 		for( my $i=0; $i<=$max; $i++ )
 		{
 		    CORE::push @objs, &{$mat}( $l, $i );
+                    unless( ($i+1) % 1000 )
+                    {
+                        $Para::Frame::REQ->note(sprintf "%5d", $i+1);
+                        $Para::Frame::REQ->may_yield;
+                    }
 		}
 		$l->{'_OBJ'} = \@objs;
 	    }
@@ -707,10 +718,18 @@ sub materialize_all
 		my $objs = $l->{'_OBJ'};
 		for( my $i=0; $i<=$max; $i++ )
 		{
+                    unless( ($i+1) % 1000 )
+                    {
+                        $Para::Frame::REQ->note(sprintf "%5d", $i+1);
+                        $Para::Frame::REQ->may_yield;
+                    }
+
 		    next if defined $objs->[$i];
 		    $objs->[$i] = &{$mat}( $l, $i );
 		}
 	    }
+
+	    $l->{'materialized'} = 2;
 	}
 	else
 	{
@@ -2861,6 +2880,11 @@ sub resort
 {
     my( $list, $sortargs, $dir ) = @_;
 
+    unless( $list->size )
+    {
+        return $list->new_empty();
+    }
+
     if( my $q = $Para::Frame::REQ->q )
     {
 	$sortargs ||= $q->param('order');
@@ -2883,8 +2907,6 @@ sub resort
 	debug "SAME SORT";
 	return $list;
     }
-
-    debug "RESORTING ".$list->size;
 
     my $new = $list->sorted($sortargs,
 			    {

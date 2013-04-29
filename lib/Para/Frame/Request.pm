@@ -3148,7 +3148,7 @@ sub note
     }
     else
     {
-	return $note;
+	debug $note;
     }
 }
 
