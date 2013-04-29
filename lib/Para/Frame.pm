@@ -466,8 +466,9 @@ sub main_loop
 			    foreach my $key ( keys %{$s->{'page_result'}} )
 			    {
 				my $result_time =
-				  $s->{'page_result'}{$key}{'time'};
-				if( time - $result_time > 120 )
+				  $s->{'page_result'}{$key}{'time_done'};
+				if( $result_time and
+                                    (time - $result_time > 120) )
 				{
 				    debug "Ignoring stale page result ".
 				      "from $sid";
@@ -1664,10 +1665,11 @@ sub add_background_jobs_conditional
 	foreach my $key ( keys %{$s->{'page_result'}} )
 	{
 	    my $result_time =
-	      $s->{'page_result'}{$key}{'time'};
-	    if( time - $result_time > 240 )
+	      $s->{'page_result'}{$key}{'time_done'};
+
+	    if( $result_time and (time - $result_time > 240) )
 	    {
-		debug "Expired page result from $sid";
+		debug "Expired page result from $sid: $key";
 		delete $s->{'page_result'}{$key};
 	    }
 	}

@@ -133,7 +133,8 @@ sub new
      'renderer'       => undef,
      'is_error_response' => 0,
      'moved_temporarily' => undef,
-     'time'           => time,
+     'time'           => time,           ## Start time
+     'time_done'      => undef,          ## Rendering finished
      'status'         => 200,
     }, $class;
 
@@ -1278,7 +1279,9 @@ sub render_output
 	debug 3, "Using renderer $renderer";
 
 	# May throw exceptions -- May return false
-	if( my $result = $renderer->render_output() )
+        my $result = $renderer->render_output();
+        $resp->{'time_done'} = time;
+	if( $result )
 	{
 	    return 0 unless ref $result;
 
