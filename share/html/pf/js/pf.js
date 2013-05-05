@@ -5,18 +5,6 @@ function go(template, run) {
     document.forms['f'].submit();
     return true;
 }
-function showhide(whichLayer) {
-    if(document.getElementById) {
-        var node2 = document.getElementById(whichLayer);
-        var style2 = node2.style;
-        var tag2 = node2.tagName;
-        if( style2.display != 'none' ) {
-            style2.display = 'none';
-        } else {
-            style2.display = '';
-        }
-    }
-}
 
 function log(stuff)
 {
@@ -28,7 +16,6 @@ function log(stuff)
 
 
 (function($) {
-
     function pf_document_ready()
     {
 	$('table.markrow input[type="checkbox"]').change(function(){
@@ -47,5 +34,12 @@ function log(stuff)
     jQuery(document).ready(pf_document_ready);
 }
 )(jQuery);
+
+function showhide(whichLayer)
+{
+    var node2 = document.getElementById(whichLayer);
+    $(node2).toggle();
+}
+
 
 log('PF js loaded');
