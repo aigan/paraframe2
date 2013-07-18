@@ -75,6 +75,8 @@ WriteMakefile(
 		  'Linux::SysInfo'             => 0.10,
 		  'JSON'                       => 2.17,
 		  'XML::Simple'                => 2.18,
+                  'Email::MIME::CreateHTML'    => 1.03,
+                  'HTML::FormatText::WithLinks'=> 0.14,
 
 # Testing
 		  'Test::More'                 => 0.61,

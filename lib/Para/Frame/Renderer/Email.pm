@@ -148,6 +148,10 @@ sub render_message
 	{
 	    $rend->render_body_from_plain;
 	}
+	elsif( $p->{'body_html'} )
+	{
+	    $rend->render_body_from_html;
+	}
 	else
 	{
 	    throw 'validation', "No content given for email";
@@ -189,7 +193,15 @@ sub render_header
     my( $rend, $to_addr ) = @_;
 
     my $p = $rend->params;
-    my $e = $rend->email_new([],$rend->{'body'});
+    my $e;
+    if( $p->{'body_html'} )
+    {
+        $e = $rend->email_new_html([],$rend->{'body'});
+    }
+    else
+    {
+        $e = $rend->email_new([],$rend->{'body'});
+    }
     $rend->{'header_rendered_to'} = $to_addr;
 
     $e->apply_headers_from_params( $p, $to_addr );
@@ -351,6 +363,52 @@ sub render_body_from_plain
 
 ##############################################################################
 
+=head2 render_body_from_html
+
+=cut
+
+sub render_body_from_html
+{
+    my( $rend ) = @_;
+
+#    cluck "PF render_body_from_template";
+
+    my $p = $rend->params;
+
+    my $data = $p->{'body_html'}
+      or throw 'validation', "No body selected";
+#    my $data_out = "";
+
+    debug "Rendering body from html ";
+#    debug "email before downgrade: ".validate_utf8(\$data);
+
+#    $data_out = deunicode($data); # Convert to ISO-8859-1
+#    debug "email after downgrade: ".validate_utf8(\$data_out);
+#    if( $p->{'pgpsign'} )
+#    {
+#	pgpsign(\$data_out, $p->{'pgpsign'} );
+#    }
+
+#    if( utf8::is_utf8( $data_out ) )
+#    {
+#	debug "Body before downgrade: ". validate_utf8( $data_out );
+#	$data_out = deunicode( $data_out ); # Convert to ISO-8859-1
+#	debug "Body after downgrade: ". validate_utf8( $data_out );
+#    }
+
+
+#    $rend->{'body'} = \ $data_out;
+    $rend->{'body'} = \ $data;
+
+#    debug datadump $data_out;
+#    die "CHECKME";
+
+    return 1;
+}
+
+
+##############################################################################
+
 =head2 email
 
 =cut
@@ -371,6 +429,22 @@ sub email_new
 {
     my( $rend, $head, $body ) = @_;
     return $rend->{'email'} = Para::Frame::Email->new($head, $body);
+}
+
+
+##############################################################################
+
+=head2 email_new_html
+
+=cut
+
+sub email_new_html
+{
+    my( $rend, $head, $body ) = @_;
+
+    debug "html email with body ".$$body;
+
+    return $rend->{'email'} = Para::Frame::Email->new_html($head, $body);
 }
 
 

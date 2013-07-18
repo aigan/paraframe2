@@ -23,11 +23,13 @@ use strict;
 use warnings;
 
 use Email::MIME;
+use Email::MIME::CreateHTML;
+use HTML::FormatText::WithLinks;
 use Carp qw( confess );
 
 use Para::Frame::Reload;
 use Para::Frame::Email::Address;
-use Para::Frame::Utils qw( debug datadump validate_utf8 );
+use Para::Frame::Utils qw( debug datadump validate_utf8 throw deunicode );
 
 ##############################################################################
 
@@ -56,6 +58,64 @@ sub new
 				 },
 				);
 
+
+    my $e = bless
+    {
+     em => $em,
+    }, $class;
+
+    return $e;
+}
+
+
+##############################################################################
+
+=head2 new_html
+
+=cut
+
+sub new_html
+{
+    my( $class, $header, $body ) = @_;
+
+
+    $body ||= \ '';
+    $header ||= [];
+
+    debug "c $class, h $header, b $body";
+#    confess "CHECKME";
+
+
+    my $em = Email::MIME->create_html
+      (
+       header => $header,
+       body   => $$body,
+       text_body => 'plain-placeholder',
+      );
+
+    my( $pp, @parts );
+    foreach my $part ( $em->subparts )
+    {
+        if( $part->body =~ /^plain-placeholder/ )
+        {
+            $pp = $part;
+        }
+        else
+        {
+            push @parts, $part;
+        }
+    }
+
+    my $ft = HTML::FormatText::WithLinks->new();
+    my $plain = $ft->parse($$body);
+    my $plain_out = deunicode($plain); # Convert to ISO-8859-1
+    $pp->charset_set( 'ISO-8859-1' );
+    $pp->encoding_set( 'quoted-printable' );
+    $pp->body_set( $plain_out );
+
+    $em->parts_set([$pp, @parts]);
+
+    debug "EM ".datadump $em;
 
     my $e = bless
     {
@@ -207,6 +267,15 @@ sub apply_headers_from_params
 	$e->header_set('Sender' => $envelope_from_addr->format );
 	debug "Sender set to ".$envelope_from_addr->format." from envelope from";
     }
+
+#    if( $p->{'body_html'} )
+#    {
+#        my $em = $e->{'em'};
+#        delete $em->{'attributes'};
+#        throw 'validation', "Apply headers for HTML";
+#    }
+
+
 }
 
 ##############################################################################
