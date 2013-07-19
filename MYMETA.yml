@@ -6,9 +6,8 @@ build_requires:
   ExtUtils::MakeMaker: 0
 configure_requires:
   ExtUtils::MakeMaker: 0
-distribution_type: module
 dynamic_config: 0
-generated_by: 'ExtUtils::MakeMaker version 6.57_05'
+generated_by: 'ExtUtils::MakeMaker version 6.66, CPAN::Meta::Converter version 2.112621'
 license: unknown
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -27,7 +26,7 @@ requires:
   DBI: 1.48
   Data::Dump: 1.08
   Data::Validate::Domain: 0.08
-  Date::Manip: 5.44
+  Date::Manip: 6.3
   DateTime: 0.2901
   DateTime::Format::HTTP: 0
   DateTime::Format::MySQL: 0
@@ -38,6 +37,7 @@ requires:
   DateTime::TimeZone: 0.37
   Digest::MD5: 2.33
   Email::MIME: 1.902
+  Email::MIME::CreateHTML: 1.03
   Encode: 2.1
   Encode::Detect::Detector: 1
   Encode::InCharset: 0.03
@@ -48,6 +48,7 @@ requires:
   File::Spec: 3.05
   File::stat: 1
   FreezeThaw: 0.43
+  HTML::FormatText::WithLinks: 0.14
   HTTP::BrowserDetect: 1.25
   HTTP::Request: 1.4
   IDNA::Punycode: 0.02

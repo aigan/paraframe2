@@ -140,15 +140,25 @@ sub render_message
 
     unless( $use_existing_body and $rend->email )
     {
+	my $body_type = $p->{'body_type'};
+	unless( $body_type )
+	{
+	    if( $p->{'body_html'} )
+	    {
+		$body_type = 'html';
+	    }
+	    $body_type ||= 'plain';
+	}
+
 	if( $rend->{'template'} )
 	{
 	    $rend->render_body_from_template;
 	}
-	elsif( $p->{'body'} )
+	elsif( $p->{'body'} and $body_type eq 'plain' )
 	{
 	    $rend->render_body_from_plain;
 	}
-	elsif( $p->{'body_html'} )
+	elsif( $p->{'body_html'} and $body_type eq 'html' )
 	{
 	    $rend->render_body_from_html;
 	}

@@ -722,7 +722,9 @@ sub uri2file
     use Data::Dump;
     warn Data::Dump::dump( \%Para::Frame::Request::URI2FILE );
 
-    die "uri2file not pre-defined\n";
+    
+
+    die "uri2file not pre-defined: ".join("", @got_warning);
 }
 
 
@@ -734,6 +736,17 @@ sub send_output
 {
     my( $resp ) = @_;
     warn "Sending response...\n";
+}
+
+
+#############################################
+
+package Para::Frame::File; # Imported and used from here
+#package Para::Frame::Utils;
+
+sub chmod_file
+{
+    return;
 }
 
 
