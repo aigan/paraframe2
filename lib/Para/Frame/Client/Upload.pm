@@ -83,6 +83,7 @@ sub handler
     $j_fu->upload_url_base( $ubase );
     $j_fu->script_url( $r->unparsed_uri );
     $j_fu->upload_dir( $udir );
+    $j_fu->tmp_dir( $udir );
     $j_fu->handle_request;
 
     my $file = $j_fu->filename;
