@@ -23,6 +23,7 @@ use strict;
 use warnings;
 
 use Carp qw( confess cluck );
+use JSON; # decode_json
 
 use Para::Frame::Reload;
 use Para::Frame::Email;
@@ -176,6 +177,11 @@ sub render_message
 	debug "Rendering header - done";
     }
 
+    ### Add Attachments
+    #
+    $rend->add_attachments();
+
+
     $rend->{'dataref'} =  $rend->email->raw;
 
     ### Validating result
@@ -189,6 +195,42 @@ sub render_message
     return $rend->{'dataref'};
 }
 
+
+##############################################################################
+
+=head2 add_attachments
+
+
+=cut
+
+sub add_attachments
+{
+    my( $rend ) = @_;
+
+    my $atts_in = $rend->{'params'}{'attachments'}
+      or return;
+    my $site = $Para::Frame::REQ->site;
+
+    my $atts = decode_json($atts_in);
+
+    debug( datadump( $atts ) );
+
+    foreach my $att ( @$atts )
+    {
+        my $url = $att->{'url'};
+        my $name = $att->{'name'};
+        my $f = Para::Frame::File->new
+          ({
+            site => $site,
+            url => $url,
+           });
+        debug $f->sysdesig;
+
+        $rend->email->add_attachment( $f, $name );
+    }
+
+    return;
+}
 
 ##############################################################################
 

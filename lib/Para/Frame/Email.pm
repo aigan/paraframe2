@@ -50,18 +50,21 @@ sub new
 
     my $em = Email::MIME->create(
 				 header => $header,
-				 body   => $$body,
-				 attributes =>
-				 {
-				  charset  => 'ISO-8859-1',
-				  encoding => 'quoted-printable',
-				 },
-				);
+                                );
 
+    my $part =  Email::MIME->create(
+                                    body   => $$body,
+                                    attributes =>
+                                    {
+                                     charset  => 'ISO-8859-1',
+                                     encoding => 'quoted-printable',
+                                    },
+                                   );
 
     my $e = bless
     {
      em => $em,
+     parts => [ $part ],
     }, $class;
 
     return $e;
@@ -82,19 +85,25 @@ sub new_html
     $body ||= \ '';
     $header ||= [];
 
-    debug "c $class, h $header, b $body";
+#    debug "c $class, h $header, b $body";
 #    confess "CHECKME";
 
 
-    my $em = Email::MIME->create_html
+    my $em = Email::MIME->create
       (
        header => $header,
+      );
+
+    my $emh = Email::MIME->create_html
+      (
+       header => [],
        body   => $$body,
        text_body => 'plain-placeholder',
       );
 
+
     my( $pp, @parts );
-    foreach my $part ( $em->subparts )
+    foreach my $part ( $emh->subparts )
     {
         if( $part->body =~ /^plain-placeholder/ )
         {
@@ -113,13 +122,17 @@ sub new_html
     $pp->encoding_set( 'quoted-printable' );
     $pp->body_set( $plain_out );
 
-    $em->parts_set([$pp, @parts]);
 
-    debug "EM ".datadump $em;
+    $emh->parts_set([$pp, @parts]);
+
+
+
+#    debug "EM ".datadump $em;
 
     my $e = bless
     {
      em => $em,
+     parts => [ $emh ],
     }, $class;
 
     return $e;
@@ -187,8 +200,36 @@ Retuns a scalar ref to the whole email with header in raw format.
 
 sub raw
 {
-    $_[0]->redraw;
-    return \ $_[0]->{'em'}->as_string;
+    my( $e ) = @_;
+
+    debug "raw 1";
+    $e->redraw;
+
+    my $em = $e->{'em'};
+
+    debug "raw 2";
+    if( @{$e->{'parts'}} > 1 )
+    {
+    debug "raw 3";
+#        $em->content_type_set('multipart/mixed');
+#        $em->body('This is a multi-part message in MIME format.');
+        $em->parts_set($e->{'parts'});
+
+    debug "raw 4";
+        return \ $_[0]->{'em'}->as_string;
+    }
+    else
+    {
+        my $h = $em->header_obj;;
+        my $part = $e->{'parts'}[0];
+    debug "raw 5";
+        foreach my $hn ( $h->header_names )
+        {
+            $part->header_set( $hn, $h->header($hn) );
+        }
+    debug "raw 6";
+        return \ $part->as_string;
+    }
 }
 
 
@@ -291,6 +332,34 @@ sub redraw
 
 
 ##############################################################################
+
+=head2 add_attachment
+
+=cut
+
+sub add_attachment
+{
+    my( $e, $f, $n ) = @_;
+
+    my $mime = $f->mimetype;
+    my $part = Email::MIME->create
+      (
+       attributes =>
+       {
+        encoding     => 'base64',
+        filename     => $n,
+        content_type => $mime,
+        name         => $n,
+        disposition  => "attachment",
+       },
+       body => $f->content,
+      );
+
+    push @{$e->{'parts'}}, $part;
+
+    return;
+}
+
 
 ##############################################################################
 

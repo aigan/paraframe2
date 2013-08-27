@@ -125,6 +125,7 @@ Adds and/or replaces the params to use for sending this email.
 Params with special meaning are:
 
   body
+  body_html
 #  body_encoded
   by_proxy
   envelope_from

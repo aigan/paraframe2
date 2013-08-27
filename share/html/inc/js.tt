@@ -21,9 +21,3 @@ function showhide(whichLayer) {
 }
 [%# PROCESS js_extra.tt # loaded from header.tt, not from js!  use for loading external scripts! %]
 </script>
-[% IF cfg.ie7 %]
-   [%# compliance patch for microsoft browsers #%]
-   <!--[if lt IE 7]><script src="[% cfg.ie7 %]/ie7-standard-p.js" type="text/javascript"></script><![endif]-->
-[% ELSE %]
-   <!--[if lt IE 7.]><script defer type="text/javascript" src="$home/pf/js/pngfix.js"></script><![endif]-->
-[% END %]
