@@ -1859,8 +1859,12 @@ sub retrieve_from_url
     }
     else
     {
-	my $message = $res->message;
-	throw('action', "Failed to retrieve '$url' content: $message");
+
+        $Para::Frame::REQ->result_message("Failed to retrieve '$url':\n".$res->status_line);
+        return undef;
+
+#	my $message = $res->message;
+#	throw('action', "Failed to retrieve '$url' content: $message");
     }
 
 #    my $fork = $req->create_fork;
