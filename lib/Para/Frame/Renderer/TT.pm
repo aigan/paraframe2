@@ -622,7 +622,7 @@ sub paths
 	}
 	my $paraframedir = $Para::Frame::CFG->{'paraframe'};
 
-	my @htmlsrc = $site->htmlsrc;
+	my @htmlsrc = $site->htmlsrc( $page->is_compiled );
 
 	my $template_root = $rend->{'template_root'};
 	if( ref $template_root )
@@ -659,7 +659,7 @@ sub paths
 #	}
 
 	my $subdir;
-	if( $site->is_compiled )
+	if( $page->is_compiled )
 	{
 	    push @places,
 	    {

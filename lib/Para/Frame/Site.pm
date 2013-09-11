@@ -1204,11 +1204,12 @@ sub supports_language
 
 sub htmlsrc # src dir for precompile or for getting inc files
 {
-    my( $site ) = @_;
+    my( $site, $compiled ) = @_;
+    $compiled //= $site->{'is_compiled'};
+
     return $site->{'htmlsrc'} ||
-      $site->{'is_compiled'} ?
-	($site->approot . "/dev") :
-	  $site->home->sys_path;
+      $compiled ? ($site->approot . "/dev") :
+        $site->home->sys_path;
 }
 
 

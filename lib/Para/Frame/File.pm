@@ -1932,6 +1932,26 @@ sub is_owned
 
 ##############################################################################
 
+=head2 is_compiled
+
+=cut
+
+sub is_compiled
+{
+    my( $f ) = @_;
+
+#    debug "PATH is ".$f->path;
+
+    # Quickfix for pf and rb. We will eventually remove precompileding
+    # completely...
+    return 0 if $f->path =~ /\/(pf|rb)\//;
+
+    return $f->site->is_compiled;
+}
+
+
+##############################################################################
+
 =head2 mtime
 
   $file->mtime()

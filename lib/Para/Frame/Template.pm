@@ -367,7 +367,7 @@ sub find
     my $dir_sps = $page->dir->sys_path_slash;
     my @searchpath = $dir_sps;
 
-    if( $site->is_compiled )
+    if( $page->is_compiled )
     {
 	push @searchpath, map $_."def/", @{$page->dirsteps};
     }
