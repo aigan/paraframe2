@@ -700,6 +700,34 @@ sub result
 
 ##############################################################################
 
+=head2 result_message
+
+  $req->result_message( $message )
+
+Sends a message to the result, or just the log if no result object.
+
+=cut
+
+sub result_message
+{
+    my $req = shift;
+    my $result = $req->{'result'};
+    if( $result )
+    {
+        $result->message( @_ );
+    }
+    else
+    {
+        foreach my $msg ( @_ )
+        {
+            $req->note( $msg );
+        }
+    }
+}
+
+
+##############################################################################
+
 =head2 language
 
   $req->language
