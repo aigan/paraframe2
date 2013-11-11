@@ -330,8 +330,8 @@ Returns a C<Para::Frame::Time> object representing current time.
 
 sub now
 {
-#    carp "Para::Frame::now called";
-    my $now = bless(DateTime->now(@_))->init;
+#    cluck "Para::Frame::now called with ".datadump(\@_);
+    my $now = bless(DateTime->now())->init;
 #    debug "Para::Frame::now returning '$now'";
     return $now;
 }
