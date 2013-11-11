@@ -207,7 +207,14 @@ sub raw
 
     my $em = $e->{'em'};
 
+    # TODO: Check this
+    # $e->{parts} not initialized for email templates
+    $e->{parts} ||= $em->{parts};
+
+
     debug "raw 2";
+#    debug datadump($e->{parts},2);
+#    debug datadump($em->{parts},2);
     if( @{$e->{'parts'}} > 1 )
     {
     debug "raw 3";
