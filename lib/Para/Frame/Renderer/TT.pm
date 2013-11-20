@@ -717,7 +717,7 @@ sub paths
 
 	    foreach my $place (@places)
 	    {
-		push @searchpath, ($paraframedir.$place->{'backdir'}.
+		push @searchpath, ($paraframedir.'/share'.$place->{'backdir'}.
 				   $step.$place->{'subdir'}.'/'
 				  );
 	    }
