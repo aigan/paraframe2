@@ -4,7 +4,7 @@
       "Jonas Liljegren <jonas@paranormal.se>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "ExtUtils::MakeMaker version 6.66, CPAN::Meta::Converter version 2.112621",
+   "generated_by" : "ExtUtils::MakeMaker version 6.82, CPAN::Meta::Converter version 2.120351",
    "license" : [
       "unknown"
    ],
@@ -22,12 +22,12 @@
    "prereqs" : {
       "build" : {
          "requires" : {
-            "ExtUtils::MakeMaker" : 0
+            "ExtUtils::MakeMaker" : "0"
          }
       },
       "configure" : {
          "requires" : {
-            "ExtUtils::MakeMaker" : 0
+            "ExtUtils::MakeMaker" : "0"
          }
       },
       "runtime" : {
@@ -42,10 +42,10 @@
             "Data::Validate::Domain" : "0.08",
             "Date::Manip" : "6.3",
             "DateTime" : "0.2901",
-            "DateTime::Format::HTTP" : 0,
-            "DateTime::Format::MySQL" : 0,
+            "DateTime::Format::HTTP" : "0",
+            "DateTime::Format::MySQL" : "0",
             "DateTime::Format::Pg" : "0.16003",
-            "DateTime::Format::Strptime" : 0,
+            "DateTime::Format::Strptime" : "0",
             "DateTime::Incomplete" : "0.02",
             "DateTime::Set" : "0.22",
             "DateTime::TimeZone" : "0.37",
@@ -97,12 +97,13 @@
             "Time::HiRes" : "1.66",
             "Time::Piece" : "1.08",
             "URI" : "1.59",
-            "URI::QueryParam" : 0,
+            "URI::QueryParam" : "0",
             "Unicode::MapUTF8" : "1.09",
-            "XML::Simple" : "2.18"
+            "XML::Simple" : "2.18",
+            "jQuery::File::Upload" : "0.16"
          }
       }
    },
    "release_status" : "stable",
-   "version" : "1.23"
+   "version" : "1.24"
 }
