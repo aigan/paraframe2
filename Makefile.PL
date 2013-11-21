@@ -78,6 +78,7 @@ WriteMakefile(
                   'Email::MIME::CreateHTML'    => 1.03,
                   'HTML::FormatText::WithLinks'=> 0.14,
                   'jQuery::File::Upload'       => 0.16,
+                  'Number::Format'             => 1.73,
 
 # Testing
 		  'Test::More'                 => 0.61,

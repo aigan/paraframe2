@@ -5,7 +5,7 @@ package Para::Frame;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2011 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2013 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -37,8 +37,9 @@ use File::Basename; # dirname
 #use Template::Stash::ForceUTF8;
 #use FreezeThaw qw( thaw );
 use Storable qw( thaw );
+use Number::Format;
 
-our $VERSION = "1.24"; # Paraframe version
+our $VERSION = "1.25"; # Paraframe version
 
 
 use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir client_str );
@@ -2545,6 +2546,17 @@ sub configure
     use Template::Plugins;
     push @$tt_plugin_loaders,
       Template::Plugins->new({PLUGIN_BASE => $tt_plugins});
+
+    ### Add custom VMethods
+    use Template::Stash;
+    my $number_format = Number::Format->new
+      (
+       DECIMAL_DIGITS => 0,
+       THOUSANDS_SEP => ' ',
+      );
+    $Template::Stash::SCALAR_OPS->{ format_number } = sub {
+        return $number_format->format_number(shift);
+    };
 
 
     my %th_default =
