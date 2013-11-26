@@ -26,7 +26,7 @@ use base qw( Template::Iterator );
 use Carp qw( carp croak shortmess confess cluck );
 use List::Util;
 use Template::Constants;
-use Scalar::Util qw(blessed reftype);
+use Scalar::Util qw(blessed reftype looks_like_number);
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw catch debug timediff datadump );
@@ -2925,6 +2925,36 @@ sub resort
     $list->{'sorted_on_key'}= $new->{'sorted_on_key'};
 
     return $list;
+}
+
+
+##############################################################################
+
+=head2 sum
+
+  $l->sum
+
+=cut
+
+sub sum
+{
+    my( $l ) = @_;
+    my $sum = 0;
+    my( $val, $err ) = $l->get_first;
+    while(! $err )
+    {
+        unless( looks_like_number $val )
+        {
+            die "Tried to sum with value $val";
+        }
+        $sum += $val;
+    }
+    continue
+    {
+	( $val, $err ) = $l->get_next;
+    }
+
+    return $sum;
 }
 
 
