@@ -558,11 +558,13 @@ sub new_possible_sysfile
 
 =head2 site
 
+  $f->site( $def_site )
+
 =cut
 
 sub site
 {
-    return $_[0]->{'site'};
+    return( $_[0]->{'site'} || $_[1] );
 }
 
 
@@ -898,6 +900,8 @@ sub name_slash
 
 =head2 path
 
+  $f->path( $def_site )
+
 The preffered URL for the file, relative the site home, begining with
 a slash. And for dirs, not ending with a slash.
 
@@ -905,9 +909,11 @@ a slash. And for dirs, not ending with a slash.
 
 sub path
 {
-    my( $f ) = @_;
+    my( $f, $def_site ) = @_;
 
-    my $site = $f->site or confess "No site given";
+#    debug "Path for ".$f->sysdesig;
+    my $site = $f->site;# || $def_site;
+    confess "No site given" unless $site;
     my $home = $site->home_url_path;
     my $url_path = $f->url_path;
     my( $site_url ) = $url_path =~ /^$home(.*?)$/
@@ -1934,19 +1940,26 @@ sub is_owned
 
 =head2 is_compiled
 
+  $f->is_compiled( $def_site )
+
 =cut
 
 sub is_compiled
 {
-    my( $f ) = @_;
+    my( $f, $site ) = @_;
 
+#    debug "is_compiled? ".$f->sysdesig;
 #    debug "PATH is ".$f->path;
 
     # Quickfix for pf and rb. We will eventually remove precompileding
     # completely...
-    return 0 if $f->path =~ /\/(pf|rb)\//;
+#    return 0 unless $f->url_path;
+    if( $f->url_path )
+    {
+        return 0 if $f->path($site) =~ /\/(pf|rb)\//;
+    }
 
-    return $f->site->is_compiled;
+    return $f->site($site)->is_compiled;
 }
 
 

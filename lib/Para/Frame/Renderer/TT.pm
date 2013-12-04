@@ -659,7 +659,8 @@ sub paths
 #	}
 
 	my $subdir;
-	if( $page->is_compiled )
+	if( $rend->template->is_compiled($site) )
+#	if( $page->is_compiled($site) )
 	{
 	    push @places,
 	    {
