@@ -386,7 +386,7 @@ sub find
 	    push @searchpath, $appback . '/html' . $dir;
 	}
 
-	push @searchpath, $paraframedir . '/share/html' . $dir;
+	push @searchpath, $paraframedir . '/html' . $dir;
 
 	foreach my $path ( Para::Frame::Utils::dirsteps($dir), '/' )
 	{
@@ -395,7 +395,7 @@ sub find
 	    {
 		push @searchpath, $appback . '/html' . $path . "def/";
 	    }
-	    push @searchpath,  $paraframedir . '/share/html' . $path . "def/";
+	    push @searchpath,  $paraframedir . '/html' . $path . "def/";
 	}
     }
 
