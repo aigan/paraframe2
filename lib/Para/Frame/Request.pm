@@ -5,7 +5,7 @@ package Para::Frame::Request;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2011 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2013 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -3166,17 +3166,13 @@ sub note
     my( $req, $note ) = @_;
 
     debug(0, $note);
-    $note =~ s/\n/\\n/g;
-    utf8::encode($note);
 
     my $creq = $req->original || $req; # client req
     if( $creq->is_from_client )
     {
+        $note =~ s/\n/\\n/g;
+        utf8::encode($note);
 	return $creq->send_code('NOTE', $note );
-    }
-    else
-    {
-	debug $note;
     }
 }
 
