@@ -5,7 +5,7 @@ package Para::Frame::List;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2010 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2013 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -2925,6 +2925,29 @@ sub resort
     $list->{'sorted_on_key'}= $new->{'sorted_on_key'};
 
     return $list;
+}
+
+
+##############################################################################
+
+=head2 sysdesig
+
+  $l->sysdesig
+
+Return a SCALAR string with the elements sysdesignation concatenated with
+C<' / '>.
+
+=cut
+
+sub sysdesig
+{
+#    warn "Stringifies object ".ref($_[0])."\n"; ### DEBUG
+    return join ' / ', map
+    {
+	UNIVERSAL::can($_, 'sysdesig') ?
+	    $_->sysdesig($_[1]) :
+	      $_;
+    } $_[0]->as_array;
 }
 
 
