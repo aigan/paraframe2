@@ -2942,7 +2942,7 @@ C<' / '>.
 sub sysdesig
 {
 #    warn "Stringifies object ".ref($_[0])."\n"; ### DEBUG
-    return join ' / ', map
+    return CORE::join ' / ', map
     {
 	UNIVERSAL::can($_, 'sysdesig') ?
 	    $_->sysdesig($_[1]) :
