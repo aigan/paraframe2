@@ -212,7 +212,7 @@ sub startup
     $SERVER= IO::Socket::INET->new(
 				   LocalPort  => $port,
 				   Proto      => 'tcp',
-				   Listen     => 10,    # max 5?
+				   Listen     => 10,    # max 5? max 128?
 				   ReuseAddr  => 1,
 				   )
 	or (die "Cannot connect to socket $port: $@\n");

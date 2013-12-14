@@ -929,7 +929,7 @@ turn.
 
 Attributes:
 
-  size: width of input field  (default is 30)
+  size: width of input field  (default is undef)
 
   maxlength: max number of chars (default is size times 3)
 
@@ -962,8 +962,10 @@ sub input
     my( $key, $value, $params ) = @_;
 
     $params ||= {};
-    my $size = delete $params->{'size'} || 30;
-    my $maxlength = delete $params->{'maxlength'} || $size*3;
+    if( $params->{'size'} )
+    {
+        $params->{'maxlength'} ||= $params->{'size'}*3;
+    }
     my $extra = '';
 
     my @previous;
@@ -994,12 +996,10 @@ sub input
     $extra .= tag_extra_from_params($params);
 
     # Stringify all params, in case they was objects
-    return sprintf('%s<input type="text" name="%s" value="%s" size="%s" maxlength="%s"%s />',
+    return sprintf('%s<input type="text" name="%s" value="%s"%s />',
 		   $prefix,
 		   CGI->escapeHTML( "$key" ),
 		   CGI->escapeHTML( "$value" ),
-		   CGI->escapeHTML( "$size" ),
-		   CGI->escapeHTML( "$maxlength" ),
 		   $extra,
 		  );
 }
@@ -1020,7 +1020,7 @@ C<$value> will be taken from query param C<$field>
 
 Attributes:
 
-  size: width of input field  (default is 30)
+  size: width of input field  (default is undef)
 
   maxlength: max number of chars (default is size times 3)
 
@@ -1052,8 +1052,11 @@ sub password
 {
     my( $key, $value_in, $params ) = @_;
 
-    my $size = delete $params->{'size'} || 30;
-    my $maxlength = delete $params->{'maxlength'} || $size*3;
+    $params ||= {};
+    if( $params->{'size'} )
+    {
+        $params->{'maxlength'} ||= $params->{'size'}*3;
+    }
     my $extra = '';
     my $value; # Not using input value...
 
@@ -1085,12 +1088,10 @@ sub password
     $extra .= tag_extra_from_params($params);
 
     # Stringify all params, in case they was objects
-    return sprintf('%s<input type="password" name="%s" value="%s" size="%s" maxlength="%s"%s />',
+    return sprintf('%s<input type="password" name="%s" value="%s"%s />',
 		   $prefix,
 		   CGI->escapeHTML( "$key" ),
 		   CGI->escapeHTML( "$value" ),
-		   CGI->escapeHTML( "$size" ),
-		   CGI->escapeHTML( "$maxlength" ),
 		   $extra,
 		  );
 }
@@ -1109,7 +1110,7 @@ turn.
 
 Attributes:
 
-  cols: width (default is 60)
+  cols: width (default is undef)
 
   rows: hight (default is 20)
 
@@ -1135,7 +1136,7 @@ sub textarea
     my( $key, $value, $params ) = @_;
 
     my $rows = $params->{'rows'} || 20;
-    my $cols = $params->{'cols'} || $params->{'size'} || 75;
+    my $cols = $params->{'cols'} || $params->{'size'};
     my @previous;
 
     if( my $q = $Para::Frame::REQ->q )
@@ -1152,16 +1153,17 @@ sub textarea
     delete $params->{'rows'};
     delete $params->{'cols'};
     delete $params->{'size'};
+    $params->{'cols'} = $cols;
+
 
     $params->{id} ||= $key;
     my $prefix = label_from_params($params);
     $params->{'wrap'} ||= "virtual";
     my $extra = tag_extra_from_params($params);
 
-    return sprintf('%s<textarea name="%s" cols="%s" rows="%s"%s>%s</textarea>',
+    return sprintf('%s<textarea name="%s" rows="%s"%s>%s</textarea>',
 		   $prefix,
 		   CGI->escapeHTML( $key ),
-		   CGI->escapeHTML( $cols ),
 		   CGI->escapeHTML( $rows ),
 		   $extra,
 		   CGI->escapeHTML( $value ),
