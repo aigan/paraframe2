@@ -28,6 +28,9 @@ function log(stuff)
 		$(this).parent().siblings().removeClass('highlighted');
             }
 	});
+
+        $("tr.oddeven:odd").addClass("odd");
+        $("tr.oddeven:even").addClass("even");
     };
     
     
