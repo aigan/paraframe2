@@ -2542,6 +2542,8 @@ sub join
 
   $l->complement($l2)
 
+Returns a list with the elements from $l not found in $l2
+
 =cut
 
 sub complement
