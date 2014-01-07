@@ -221,7 +221,7 @@ sub header
 	my $style = $style_in;
 	$style = &$style($req) if UNIVERSAL::isa($style,'CODE');
 	$style =~ s/^([^\/])/$home\/$1/;
-	$out .= "<link rel=\"Stylesheet\" href=\"$style\" type=\"text/css\" />\n";
+	$out .= "<link rel=\"Stylesheet\" href=\"$style\" type=\"text/css\">\n";
     }
 
     if( $default )
@@ -230,7 +230,7 @@ sub header
 	{
 	    $style = &$style($req) if UNIVERSAL::isa($style,'CODE');
 	    $style =~ s/^([^\/])/$home\/$1/;
-	    $out .= "<link rel=\"Stylesheet\" title=\"$default\" href=\"$style\" type=\"text/css\" />\n";
+	    $out .= "<link rel=\"Stylesheet\" title=\"$default\" href=\"$style\" type=\"text/css\">\n";
 	}
     }
 
@@ -241,7 +241,7 @@ sub header
 	{
 	    $style = &$style($req) if UNIVERSAL::isa($style,'CODE');
 	    $style =~ s/^([^\/])/$home\/$1/;
-	    $out .= "<link rel=\"alternate stylesheet\" title=\"$title\" href=\"$style\" type=\"text/css\" />\n";
+	    $out .= "<link rel=\"alternate stylesheet\" title=\"$title\" href=\"$style\" type=\"text/css\">\n";
 	}
     }
 
