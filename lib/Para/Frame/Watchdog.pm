@@ -718,6 +718,8 @@ sub startup_in_fork
 	### --> child
 
 #	open STDOUT, ">&", $write_fh; ### DEBUG
+        $Para::Frame::WATCHDOG_ACTIVE = 1;
+        debug "Watchdog: ".$Para::Frame::WATCHDOG_ACTIVE;
 
 	sig_disable();
 	kill_competition();

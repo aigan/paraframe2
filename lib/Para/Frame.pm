@@ -96,6 +96,10 @@ our $LAST       ;          # The last entering of the main loop
 our %WORKER     ;
 our @WORKER_IDLE;
 
+# More globals:
+# $WATCHDOG_ACTIVE
+# $FORK
+
 # STDOUT goes to the watchdog. Use well defined messages!
 # STDERR goes to the log
 
@@ -288,7 +292,8 @@ sub main_loop
     $LAST = time; # To give info about if it's time to yield
 
     debug(3,"Entering main_loop at level $LEVEL",1) if $LEVEL;
-    print "MAINLOOP $LEVEL\n" unless $Para::Frame::FORK;
+    print "MAINLOOP $LEVEL\n" unless $Para::Frame::FORK or not $Para::Frame::WATCHDOG_ACTIVE;
+#    print "FH ".$Para::Frame::Watchdog::FH;
 
     $timeout ||= TIMEOUT_SHORT;
 
