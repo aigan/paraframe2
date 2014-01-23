@@ -1,3 +1,4 @@
+=encoding utf-8
 =head1 NAME
 
 Para::Frame::Template::Components - Common template macro widgets
@@ -103,7 +104,7 @@ Example:
   <p>[% select( "sender", "",
              select_list("from users"),
              "user_id", "username",
-             "Välj" 
+             "Choose" 
   ) %]
 
 Second version:

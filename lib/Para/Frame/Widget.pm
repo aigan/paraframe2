@@ -1621,7 +1621,7 @@ Example:
   <p>[% selector( "sender", "",
              select_list("from users"),
              valkey = "user_id", tagkey = "username",
-             header = "Välj"
+             header = "Choose"
   ) %]
 
 Second version:
