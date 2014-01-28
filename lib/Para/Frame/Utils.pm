@@ -19,7 +19,7 @@ Para::Frame::Utils - Utility functions for ParaFrame and applications
 =cut
 
 use 5.014;
-no warnings "experimental";
+no if $] >= 5.018, warnings => "experimental";
 use locale;
 use utf8; # Using 'Ã' in deunicode()
 
