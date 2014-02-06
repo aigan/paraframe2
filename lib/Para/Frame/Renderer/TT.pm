@@ -702,11 +702,13 @@ sub paths
 	    }
 	}
 
+        my @appbacks = ( $site->approot, @{$site->appback} );
+
 	foreach my $step ( Para::Frame::Utils::dirsteps($dir), '/' )
 	{
 	    push @searchpath, map $_.$step.$subdir.'/', @htmlsrc;
 
-	    foreach my $appback (@{$site->appback})
+	    foreach my $appback ( @appbacks )
 	    {
 		foreach my $place (@places)
 		{
