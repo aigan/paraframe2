@@ -25,9 +25,10 @@ use warnings;
 use File::Copy; # copy, move
 use Net::SCP;
 use IO::File;
+use Carp qw( cluck );
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( debug throw );
+use Para::Frame::Utils qw( debug throw datadump );
 use Para::Frame::File;
 
 
@@ -176,8 +177,9 @@ sub fh
     debug "In Para::Frame::Uploaded->fh";
     my( $uploaded, $mode, $perms ) = @_;
 
-    $mode //= $uploaded->{'filemode'};
+    $mode //= $uploaded->{'filemode'} || 0;
 
+    cluck "No mode - ".datadump($uploaded) unless $mode;
     debug "Using mode $mode";
 
     my $fh = IO::File->new( $uploaded->{'tempfile'}, $mode );

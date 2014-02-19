@@ -5,7 +5,7 @@ package Para::Frame::Spreadsheet::CSV;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2014 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -26,7 +26,7 @@ use base 'Para::Frame::Spreadsheet';
 use Text::CSV_XS;
 use Encode qw( from_to );
 
-use Para::Frame::Utils qw( throw );
+use Para::Frame::Utils qw( throw debug datadump );
 use Para::Frame::Reload;
 
 ##############################################################################
@@ -87,8 +87,11 @@ sub next_row
 
 #    warn sprintf "Parsing row [%d] %s\n", length($line), $line; ### DEBUG
 
-    $csv->parse($line."\n")
-      or throw('validation',"Failed parsing row $.: ".$csv->error_input());
+    unless( $csv->parse($line."\n") )
+    {
+        debug datadump($csv, 2);
+        throw('validation',"Failed parsing row $.: ".$csv->error_input());
+    }
 
     my @row;
     foreach my $str ( $csv->fields )
