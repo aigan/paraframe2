@@ -79,7 +79,7 @@ WriteMakefile(
                   'HTML::FormatText::WithLinks'=> 0.14,
                   'jQuery::File::Upload'       => 0.16,
                   'Number::Format'             => 1.73,
-                  'HTTP::Parser::XS'           => 0.16,
+                  'HTTP::Parser::XS'           => 0.14,
 
 # Testing
 		  'Test::More'                 => 0.61,
