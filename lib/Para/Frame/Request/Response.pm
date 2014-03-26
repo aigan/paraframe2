@@ -1287,18 +1287,31 @@ sub set_renderer
 #    debug "renderer set to $renderer";
 
 
-    if( not $renderer and $resp->{'page'} )
+    eval
     {
-	$renderer = $resp->{'page'}->renderer( $args );
-    }
-    elsif( $resp->is_error_response and not $renderer_in )
-    {
-	# If this is an error response, we should not use a renderer
-	# from dirconfig. But always use the renderer given in
-	# $renderer_in, since that may be the HTML_Fallback renderer
-	# used as a last resort
+        if( not $renderer and $resp->{'page'} )
+        {
+            $renderer = $resp->{'page'}->renderer( $args );
+        }
+        elsif( $resp->is_error_response and not $renderer_in )
+        {
+            # If this is an error response, we should not use a renderer
+            # from dirconfig. But always use the renderer given in
+            # $renderer_in, since that may be the HTML_Fallback renderer
+            # used as a last resort
 
-	$renderer = $resp->{'page'}->renderer( $args );
+            $renderer = $resp->{'page'}->renderer( $args );
+        }
+    };
+    if( $@ )
+    {
+        ##################
+        debug $@;
+        ##################
+        # Copied from Para::Frame::Request/handle_error
+        $renderer = Para::Frame::Renderer::HTML_Fallback->new($args);
+        $resp->set_is_error;
+        $resp->set_http_status( 500 );
     }
 
     if( ref $renderer )

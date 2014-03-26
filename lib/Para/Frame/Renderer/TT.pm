@@ -5,7 +5,7 @@ package Para::Frame::Renderer::TT;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2014 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -115,28 +115,24 @@ sub new
 	{
 	    confess "Template $tmpl not an object";
 	}
-	else
-	{
-	  ### FIXME
 
-
-	    my $url_path = $page->url_path;
-	    my $tried_to_find = $Para::Frame::REQ->{'tried_to_find'} ||= {};
+        ### FIXME
+        my $url_path = $page->url_path;
+        my $tried_to_find = $Para::Frame::REQ->{'tried_to_find'} ||= {};
 #	    debug datadump($tried_to_find);
-	    unless( $tried_to_find->{ $url_path } ++ )
-	    {
-		my $orig_url_path = $Para::Frame::REQ->original_url_string;
+        unless( $tried_to_find->{ $url_path } ++ )
+        {
+            my $orig_url_path = $Para::Frame::REQ->original_url_string;
 #		debug "Comparing $url_path with $orig_url_path";
-		if( $url_path eq $Para::Frame::REQ->original_url_string )
-		{
-		    # Try to find the page
-		    $Para::Frame::REQ->prepend_action('find_page');
-		    return $rend;
-		}
-	    }
+            if( $url_path eq $Para::Frame::REQ->original_url_string )
+            {
+                # Try to find the page
+                $Para::Frame::REQ->prepend_action('find_page');
+                return $rend;
+            }
+        }
 
-	    throw('notfound', "No template found for $url_path");
-	}
+        throw('notfound', "No template found for $url_path");
     }
 
     return $rend;
