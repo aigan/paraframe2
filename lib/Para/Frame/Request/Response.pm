@@ -5,7 +5,7 @@ package Para::Frame::Request::Response;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2011 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2014 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -162,6 +162,60 @@ sub new
     unless( $args->{'always_move'} || 0 )
     {
 	$page->{'moved_temporarily'} = 1;
+    }
+
+    # Renderer sets page to current (normalized) page
+    $resp->{'renderer_args'} = $args;
+
+    return $resp;
+}
+
+
+##############################################################################
+
+=head2 new_minimal
+
+=cut
+
+sub new_minimal
+{
+    my( $this, $args ) = @_;
+    my $class = ref($this) || $this;
+
+    $args ||= {};
+
+    my $resp = bless
+    {
+     'req'            => undef,
+     'site'           => undef,          ## The site for the request
+     'page'           => undef,
+     'headers'        => [],             ## Headers to be sent to the client
+     'redirect'       => undef,          ## ... to other server
+     'ctype'          => undef,          ## The response content-type
+     'content'        => undef,          ## Ref to the generated page
+     'dir'            => undef,          ## Cached Para::Frame::Dir obj
+     'renderer'       => undef,
+     'is_error_response' => 0,
+     'moved_temporarily' => undef,
+     'time'           => time,           ## Start time
+     'time_done'      => undef,          ## Rendering finished
+     'status'         => 200,
+    }, $class;
+
+    if( my $req = $args->{req} )
+    {
+	$resp->{req} = $req;
+	weaken( $resp->{'req'} );
+
+	$args->{'site'} ||= $req->site;
+	$args->{'language'} ||= $req->language;
+    }
+
+    $args->{'resp'} = $resp;
+
+    if( $args->{'is_error_response'} )
+    {
+	$resp->{'is_error_response'} = 1;
     }
 
     # Renderer sets page to current (normalized) page
@@ -738,6 +792,53 @@ sub send_output
     }
 
 #    debug "send_output: done";
+}
+
+##############################################################################
+
+=head2 send_http_output
+
+  $resp->send_http_output
+
+HTTP sender
+
+Sends the previously generated page to the client.
+
+=cut
+
+sub send_http_output
+{
+    my( $resp ) = @_;
+
+    my $req = $resp->req;
+    my $client = $req->client;
+    my $content = $resp->{'content'};
+    my $encoding = $resp->{'encoding'};
+#    my $content_length = length( $content||'' );
+
+
+    require HTTP::Response;
+    require HTTP::Headers;
+
+    my $h = HTTP::Headers->
+      new(
+          'Content-Type' => 'application/json; charset=UTF-8',
+          'Server' => 'Para::Frame',
+          'Access-Control-Allow-Origin' => '*',
+         );
+    $h->date(time);
+    my $r = HTTP::Response->new(200,'ok',$h,$content);
+
+    my $out = 'HTTP/1.1 '. $r->as_string;
+
+#        debug "RENDER RESULT\n".$r->as_string;
+
+    client_send( $client, \$out,
+                 {
+                  req => $req,
+                  encoding => $encoding,
+                 } );
+    return;
 }
 
 ##############################################################################

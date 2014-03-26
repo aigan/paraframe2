@@ -5,7 +5,7 @@ package Para::Frame::Site;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2011 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2014 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -407,6 +407,23 @@ sub get_by_req
     }
 
     return $this->get('default')->clone($hostname);
+}
+
+
+#######################################################
+
+=head2 get_default
+
+  Para::Frame::Site->get_default()
+
+Get the default site
+
+=cut
+
+sub get_default
+{
+    my( $this ) = @_;
+    return $this->get('default');
 }
 
 

@@ -5,7 +5,7 @@ package Para::Frame::Request;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2013 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2014 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -32,6 +32,7 @@ use IO::File;
 use Carp qw(cluck croak carp confess longmess );
 use LWP::UserAgent;
 use HTTP::Request;
+use HTTP::Parser::XS qw(parse_http_request);
 use Template::Document;
 use Time::HiRes;
 
@@ -149,6 +150,7 @@ sub new
         in_loadpage     => 0,              ## client uses loadpage
         in_ajax         => 0,              ## request part of page
         started         => Time::HiRes::time,
+        is_backend      => 0,
     }, $class;
 
     if( lc($ENV{HTTP_X_REQUESTED_WITH}||'') eq "xmlhttprequest" )
@@ -502,6 +504,58 @@ sub new_bgrequest
 ##############################################################################
 
 
+=head2 http_init
+
+Initializes the L</http_init> request for http requests
+
+=cut
+
+sub http_init
+{
+    my( $req, $headerref ) = @_;
+
+    $req->set_site( 'default' );
+    $req->set_language( );
+
+    my $env = {};
+
+    my $ret = parse_http_request($$headerref, $env );
+    die "header corrupt " if  $ret < 1;
+
+    $req->{'env'} = $env;
+    %ENV = %$env;     # To make CGI happy
+    $env = \%ENV;
+    my $q = $req->{'q'} = CGI->new($env->{QUERY_STRING});
+
+    my $args =
+    {
+     req => $req,
+     url => $env->{PATH_INFO},
+     site => $req->site,
+    };
+
+    my $username = $q->param('cred[username]');
+    my $password = $q->param('cred[password]');
+    $q->delete('cred[username]','cred[password]');
+
+    my $resp = $req->{'resp'} = Para::Frame::Request::Response->
+      new_minimal($args);
+    $resp->set_renderer('RDF::Base::Renderer::AJAX');
+
+#    debug "HTTP REQUEST\n".$$headerref;
+
+    # Authenticate user identity
+    my $user_class = $Para::Frame::CFG->{'user_class'};
+    $user_class->identify_user($username);     # Will set $s->{user}
+    $user_class->authenticate_user($password);
+
+    return $req;
+}
+
+
+##############################################################################
+
+
 =head2 new_minimal
 
 Used for background jobs, without a calling browser client
@@ -530,6 +584,7 @@ sub new_minimal
      site           => undef,	## Default site for req
      started        => Time::HiRes::time,
      page           => undef,
+     is_backend     => 1,
     }, $class;
 
     $req->{'params'} = {%$Para::Frame::PARAMS};
@@ -537,7 +592,6 @@ sub new_minimal
     $req->{'result'}  = Para::Frame::Result->new($req);  # Before Session
     $req->{'s'}       = Para::Frame->Session->new_minimal();
     $req->{'q'}       = CGI->new({});
-
 
     return $req;
 }
@@ -917,14 +971,15 @@ sub change
 
   $req->is_from_client
 
-Returns true if this request is from a client and not a bacground
-server job or something else.
+Returns true if this request is from a client and not a background
+server job or something else. Not true for direct http_requests, as
+those are meant for ajax/json.
 
 =cut
 
 sub is_from_client
 {
-    return $_[0]->{'env'}{'REQUEST_METHOD'} ? 1 : 0;
+    return $_[0]->{'is_backend'} ? 0 : 1;
 }
 
 
@@ -1014,6 +1069,17 @@ sub set_header_only
     return $_[0]->{'header_only'};
 }
 
+
+##############################################################################
+
+=head2 is_backend
+
+=cut
+
+sub is_backend
+{
+    return $_[0]->{'is_backend'};
+}
 
 
 ##############################################################################
@@ -2638,7 +2704,7 @@ sub set_site
 
     # Check that site matches the client
     #
-    unless( $req->client =~ /^background/ )
+    unless( $req->is_backend )
     {
 	if( my $orig = $req->original )
 	{

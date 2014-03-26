@@ -5,7 +5,7 @@ package Para::Frame;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2013 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2014 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -39,7 +39,7 @@ use File::Basename; # dirname
 use Storable qw( thaw );
 use Number::Format;
 
-our $VERSION = "1.25"; # Paraframe version
+our $VERSION = "1.26"; # Paraframe version
 
 
 use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir client_str );
@@ -997,9 +997,18 @@ sub fill_buffer
 		    debug(4,"Setting length to $1");
 		    $DATALENGTH{$client} = $1;
 		}
+                elsif( $INBUFFER{$client} =~ s/^(GET .+\r\n\r\n)/HTTP\x00$1/s )
+                {
+                    ### Got an HTTP request
+                    #
+                    # converting to legacy format
+
+                    $DATALENGTH{$client} = length( $1 ) +5;
+#                    debug 1, "HTTP in INBUFFER";
+                }
 		else
 		{
-		    debug 1, "Strange INBUFFER content: $INBUFFER{$client}\n";
+		    debug 1, "Strange INBUFFER content: $INBUFFER{$client}\n.";
 		    close_callback($client, "Faulty inbuffer");
 		    return 0;
 		}
@@ -1085,6 +1094,17 @@ sub handle_code
 
 	handle_request( $client, \$record );
 	return 0; ### SPECIAL CASE
+    }
+    elsif( $code eq 'HTTP' )
+    {
+	my $record = $INBUFFER{$client};
+
+	# Clear BUFFER so that we can recieve more from
+	# same place.
+	$INBUFFER{$client} = $rest;
+	$DATALENGTH{$client} = 0;
+
+	handle_http( $client, \$record );
     }
     elsif( $code eq 'CANCEL' )
     {
@@ -1934,6 +1954,64 @@ sub handle_request
     }
 
     ### Clean up used globals
+}
+
+
+##############################################################################
+
+=head2 handle_http
+
+=cut
+
+sub handle_http
+{
+    my( $client, $headerref ) = @_;
+
+    $REQNUM ++;
+    warn "\n\n$REQNUM Handling new HTTP request\n";
+
+    ### Reload updated modules
+    Para::Frame::Reload->check_for_updates;
+
+    ### Create request ($REQ not yet set)
+    my $req = Para::Frame::Request->new_minimal( $REQNUM, $client );
+
+    ### Register the request
+    $REQUEST{ $client } = $req;
+    $RESPONSE{ $client } = []; ### Client response queue
+    switch_req( $req, 1 );
+
+    #################
+
+    $req->http_init( $headerref );
+    my $session = $req->session;
+
+    ### Debug info
+    my $t = now();
+    warn sprintf("# %s %s - %s\n# Sid %s - %d - Uid %d - debug %d\n",
+                 $t->ymd,
+                 $t->hms('.'),
+                 $req->client_ip,
+                 $session->id,
+                 $session->count,
+                 $session->u->id,
+                 $session->{'debug'},
+                );
+    warn "# ".client_str($client)."\n" if debug() > 4;
+
+#	    $req->setup_jobs;
+#	    $req->reset_response; # Needs lang and jobs
+#	    $req->run_hook('on_first_response', $resp);
+#	    $session->route->init;
+
+    my $resp = $req->response;
+    if( $resp->render_output() )
+    {
+        $resp->send_http_output();
+    }
+    debug "Error: $@" if $@;
+
+    return $req->done;
 }
 
 

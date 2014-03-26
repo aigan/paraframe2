@@ -164,6 +164,7 @@ sub new_minimal
 	debug          => $Para::Frame::CFG->{'debug'},
 	template_error => '', # Default
 	page_result    => {},
+        count => 1,
     }, $class;
 
     # Register s
