@@ -5,7 +5,7 @@ package Para::Frame::Email::Address;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2014 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -35,7 +35,7 @@ use Carp qw( carp confess cluck ); #);
 use MIME::Words qw( encode_mimewords );
 
 use Para::Frame::Reload;
-use Para::Frame::Utils qw( throw reset_hashref fqdn debug datadump ); #);
+use Para::Frame::Utils qw( throw reset_hashref fqdn debug datadump trim ); #);
 use Para::Frame::Email::Address::Fallback;
 
 
@@ -104,6 +104,7 @@ sub parse
 	# Remove invisible characters from string
 	$email_str = $email_str_in || '';
 	$email_str =~ s/\p{Other}//g;
+        trim(\$email_str);
 
 	# Retrieve first in list
 	( $addr ) = Mail::Address->parse( $email_str );

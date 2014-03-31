@@ -77,7 +77,7 @@ our $FQDN; # See fqdn()
 
 =head2 in
 
-  trim($string, @list)
+  in($string, @list)
 
 Returns true if C<$string> is a part of C<@list> using string
 comparsion
