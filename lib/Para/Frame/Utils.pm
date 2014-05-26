@@ -100,7 +100,8 @@ sub in ($@)
 
 =head2 trim
 
-  trim(\$string)
+  $string = trim(\$string)
+  $string_ref = trim( $string)
 
 Removes preceding and proceding whitespace. Also removes duplicate
 whitespace.

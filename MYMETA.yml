@@ -6,8 +6,9 @@ build_requires:
   ExtUtils::MakeMaker: 0
 configure_requires:
   ExtUtils::MakeMaker: 0
+distribution_type: module
 dynamic_config: 0
-generated_by: 'ExtUtils::MakeMaker version 6.66, CPAN::Meta::Converter version 2.120921'
+generated_by: 'ExtUtils::MakeMaker version 6.57_05'
 license: unknown
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -50,6 +51,7 @@ requires:
   FreezeThaw: 0.43
   HTML::FormatText::WithLinks: 0.14
   HTTP::BrowserDetect: 1.25
+  HTTP::Parser::XS: 0.14
   HTTP::Request: 1.4
   IDNA::Punycode: 0.02
   IO: 1.21
@@ -88,4 +90,4 @@ requires:
   Unicode::MapUTF8: 1.09
   XML::Simple: 2.18
   jQuery::File::Upload: 0.16
-version: 1.25
+version: 1.26
