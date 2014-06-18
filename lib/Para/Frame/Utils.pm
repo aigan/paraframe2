@@ -2025,8 +2025,11 @@ sub client_send
     $args ||= {};
 
     # localized values. Visible in &client_send_on_retry
-    # KEEP req undef if we don't want to yield!
-    my $req = $args->{'req'};
+    # req given in args means that we are allowed to yield
+    #
+    my $allow_yield = $args->{'req'};
+    my $req = $args->{'req'} || $Para::Frame::REQ;
+
     my $errcnt = 0;
     my $srclength = bytes::length( $$dataref ); # In octets
 
@@ -2089,16 +2092,8 @@ sub client_send
 	my $chrsent = 0;
 	while( $chrpos < $chrlength )
 	{
-	    eval
-	    {
-		$chrsent = 0;
-		$chrsent = $client->send( substr $$dataref, $chrpos, $chunk );
-	    };
-	    if( $@ )
-	    {
-		debug "GOT ERROR IN SOCKET SEND\n";
-		$Para::Frame::DEBUG = 3;
-	    }
+            $chrsent = 0;
+            $chrsent = $client->send( substr $$dataref, $chrpos, $chunk );
 
 	    if( $chrsent )
 	    {
@@ -2108,22 +2103,30 @@ sub client_send
 	    }
 	    else
 	    {
-		if( $req )
-		{
-		    if( $req->cancelled )
-		    {
-			debug("Request was cancelled. Giving up");
-			return $chrpos;
-		    }
+                my $err_code = 0 + $!;
+                my $err_msg = "$!";
+		debug sprintf( "GOT ERROR IN SOCKET SEND: %d - %s", $err_code, $err_msg );
+#		$Para::Frame::DEBUG = 3;
 
-		    $req->yield( 0.9 );
-		    debug(1,"  Resending chunk $chrpos");
-		}
-		else
-		{
-		    debug("  Resending chunk $chrpos of message: $$dataref");
-		    Time::HiRes::sleep(0.05);
-		}
+                if( $err_code == 11 ) # Temporary unavailible
+                {
+                    if( $allow_yield )
+                    {
+                        $req->yield( 0.9 );
+                    }
+                    else
+                    {
+                        Time::HiRes::sleep(0.05);
+                    }
+                    debug("Resending chunk $chrpos of message");
+                }
+                else
+                {
+                    $req->cancel if $req;
+                    debug("Request was cancelled. Giving up");
+                    return $chrpos;
+                }
+
 
 		$errcnt++;
 
@@ -2154,16 +2157,8 @@ sub client_send
 
 	for( $srcpos=0; $srcpos<$srclength; $srcpos+= $srcsent )
 	{
-	    eval
-	    {
-		$srcsent = 0;
-		$srcsent = $client->send( substr $$dataref, $srcpos, $chunk );
-	    };
-	    if( $@ )
-	    {
-		debug "GOT ERROR IN SOCKET SEND\n";
-		$Para::Frame::DEBUG = 3;
-	    }
+            $srcsent = 0;
+            $srcsent = $client->send( substr $$dataref, $srcpos, $chunk );
 
 	    if( $srcsent )
 	    {
@@ -2172,22 +2167,29 @@ sub client_send
 	    }
 	    else
 	    {
-		if( $req )
-		{
-		    if( $req->cancelled )
-		    {
-			debug("Request was cancelled. Giving up");
-			return $srcpos;
-		    }
+                my $err_code = 0 + $!;
+                my $err_msg = "$!";
+		debug sprintf( "GOT ERROR IN SOCKET SEND: %d - %s", $err_code, $err_msg );
+#		$Para::Frame::DEBUG = 3;
 
-		    $req->yield( 0.9 );
-		    debug(1,"  Resending chunk $srcpos");
-		}
-		else
-		{
-		    debug("  Resending chunk $srcpos of message");
-		    Time::HiRes::sleep(0.05);
-		}
+                if( $err_code == 11 ) # Temporary unavailible
+                {
+                    if( $allow_yield )
+                    {
+                        $req->yield( 0.9 );
+                    }
+                    else
+                    {
+                        Time::HiRes::sleep(0.05);
+                    }
+                    debug("Resending chunk $srcpos of message");
+                }
+                else
+                {
+                    $req->cancel if $req;
+                    debug("Request was cancelled. Giving up");
+                    return $srcpos;
+                }
 
 		$errcnt++;
 
@@ -2232,22 +2234,30 @@ sub client_send
 	    }
 	    else
 	    {
-		if( $req )
-		{
-		    if( $req->cancelled )
-		    {
-			debug("Request was cancelled. Giving up");
-			return $encpos;
-		    }
+                my $err_code = 0 + $!;
+                my $err_msg = "$!";
+		debug sprintf( "GOT ERROR IN SOCKET SEND: %d - %s", $err_code, $err_msg );
+#                $Para::Frame::DEBUG = 3;
 
-		    $req->yield( 0.9 );
-		    debug(1,"  Resending chunk $chrpos");
-		}
-		else
-		{
-		    debug("  Resending chunk $chrpos of message");
-		    Time::HiRes::sleep(0.05);
-		}
+                if( $err_code == 11 ) # Temporary unavailible
+                {
+                    if( $allow_yield )
+                    {
+                        $req->yield( 0.9 );
+                    }
+                    else
+                    {
+                        Time::HiRes::sleep(0.05);
+                    }
+                    debug("Resending chunk $chrpos of message");
+                }
+                else
+                {
+                    $req->cancel if $req;
+                    debug("Request was cancelled. Giving up");
+                    return $chrpos;
+                }
+
 
 		$errcnt++;
 

@@ -64,6 +64,7 @@
             "FreezeThaw" : "0.43",
             "HTML::FormatText::WithLinks" : "0.14",
             "HTTP::BrowserDetect" : "1.25",
+            "HTTP::Parser::XS" : "0.14",
             "HTTP::Request" : "1.4",
             "IDNA::Punycode" : "0.02",
             "IO" : "1.21",
@@ -106,5 +107,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "1.25"
+   "version" : "1.26"
 }
