@@ -532,10 +532,14 @@ sub go
     }
 
     ### NEW FORMAT
-    if( my $tag_attr = delete ${$attr}{'tag_attr'} )
-    {
-	$extra .= tag_extra_from_params( $tag_attr );
-    }
+    my $tag_attr = delete ${$attr}{'tag_attr'} || {};
+	$tag_attr->{'class'} ||= "";
+	$tag_attr->{'class'} .= " btn";
+	unless( $tag_attr->{'class'} =~ /btn-/)
+	{
+		$tag_attr->{'class'} .= " btn-default";
+	}
+		$extra .= tag_extra_from_params( $tag_attr );
 
 
     my $query = join '', map sprintf("document.forms['f'].$_.value='%s';", $attr->{$_}), keys %$attr;

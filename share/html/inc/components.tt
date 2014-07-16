@@ -26,7 +26,7 @@
 
 [% MACRO searchstep(label) BLOCK;
       DEFAULT label='Sök';
-      submit(label);
+      submit(label, "",tag_attr={class='btn btn-default'});
       IF route.caller_is_next_step;
          regret;
       ELSE;
@@ -46,7 +46,7 @@
             label = "Spara och fortsätt";
          END;
       END;
-      submit(label);
+      submit(label, "",tag_attr={class='btn btn-default'});
       IF route.caller_is_next_step;
          regret;
       ELSE;

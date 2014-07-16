@@ -84,4 +84,12 @@
       </td></tr>
     [% END %]
   </table>
+  <div class="admin_reload">
+<a href="[% forward_url %]"><img alt="Reload" src="$home/pf/images/reload-26.png"/></a>
+</div>
+
+<div class="admin_reload">
+Request [% req.id %]<br/>
+@ port [% cfg.port %]
+</div>
 </div>

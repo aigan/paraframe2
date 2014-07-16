@@ -31,9 +31,6 @@ form
 {
   background: [% main_background %];
   padding: 1em;
-  border-style: dotted;
-  border-width: 0.0em 0.2em 0.2em 0.2em;
-  border-color: [% border %];
 }
 
 tr.even
@@ -120,7 +117,7 @@ tr.odd
 
 .paraframe_menu_admin input[type="button"]:hover
 {
-    background-color: lightyellow;	
+
 }
 
 .paraframe_menu_admin
@@ -173,15 +170,13 @@ tr.odd
 table.admin
 {
   border-collapse: collapse;
-  border:          medium solid green;
-  width:           100%;
+  width: 100%;
 }
-
 table.admin td
 {
   border-collapse: collapse;
-  border: thin solid gray;
-  padding: 0.3em;
+  border: 1px solid #dddddd;
+  padding: 0.5em;
 }
 
 table.admin td td
@@ -209,3 +204,4 @@ table.admin .selected img
 {
     background: yellow;
 }
+
