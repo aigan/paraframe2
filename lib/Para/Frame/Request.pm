@@ -3101,7 +3101,16 @@ sub nop
 
 sub cancelled
 {
-    return $_[0]->{'cancel'};
+    my( $req ) = @_;
+#    debug "Cancelled?";
+    if( $req->is_from_client )
+    {
+#        debug "  from client";
+#        debug "  client ".$req->client;
+        return 1 unless $Para::Frame::REQUEST{$req->{'client'}};
+    }
+
+    return( $req->{'cancel'} );
 }
 
 
