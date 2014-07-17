@@ -440,10 +440,12 @@ sub format_mime
 
     if( length $phrase )
     {
-	push @tmp, $phrase =~ /^(?:\s*$atext\s*)+$/ ? $phrase
-	  : $phrase =~ /(?<!\\)"/ 
-	  ? encode_mimewords($phrase)
-	  : '"'.encode_mimewords($phrase).'"';
+#	push @tmp, $phrase =~ /^(?:\s*$atext\s*)+$/ ? $phrase
+#	  : $phrase =~ /(?<!\\)"/ 
+#	  ? encode_mimewords($phrase)
+#	  : '"'.encode_mimewords($phrase).'"';
+
+        push @tmp, encode_mimewords($phrase);
 
 	push(@tmp, "<" . $addr . ">") if length $addr;
     }

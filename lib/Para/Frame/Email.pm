@@ -242,7 +242,7 @@ sub raw
 
 ##############################################################################
 
-=head2 apply_header_from_params
+=head2 apply_headers_from_params
 
 =cut
 
