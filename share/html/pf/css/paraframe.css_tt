@@ -175,7 +175,7 @@ table.admin
 table.admin td
 {
   border-collapse: collapse;
-  border: 1px solid #dddddd;
+  border: 1px solid gray; /* Keep high contrast for visibility */
   padding: 0.5em;
 }
 
