@@ -291,7 +291,8 @@ sub broken
 
   $a->error_message
 
-Returns: the error message, if the email is broken
+Returns: the error message, if the email is broken, or from the latest
+validation.
 
 =cut
 
@@ -302,7 +303,7 @@ sub error_message
 	return $_[0]->{'error_message'} || 'undefined error';
     }
 
-    return "";
+    return $_[0]->{'error_message'};
 }
 
 
@@ -594,18 +595,20 @@ sub validate
 {
     my( $a ) = @_;
 
+    throw('email', $a->{'error_message'}) if $a->broken;
+
     my $fork = $Para::Frame::REQ->create_fork;
     if( $fork->in_child )
     {
 	my $success = $a->_validate;
-	$fork->{'error_msg'} = $a->{'error_msg'};
+	$fork->{'error_message'} = $a->{'error_message'};
 	$fork->{'success'} = $success;
 	$fork->return;
     }
     $fork->yield;
 
-    $a->{'error_msg'} = $fork->result->{'error_msg'};
-    throw('email', $a->{'error_msg'}) unless $fork->result->{'success'};
+    $a->{'error_message'} = $fork->result->{'error_message'};
+    throw('email', $a->{'error_message'}) unless $fork->result->{'success'};
     return 1;
 }
 
@@ -661,8 +664,8 @@ sub _validate
 	}
 	else
 	{
-	    $a->{'error_msg'} = $err_msg;
-	    $a->{'error_msg'} = "$host finns inte";
+	    $a->{'error_message'} = $err_msg;
+	    $a->{'error_message'} = "$host finns inte";
 	    return 0;
 	}
     }
@@ -705,24 +708,8 @@ sub _validate
 	next MX;
     }
     debug "Address bad";
-    $a->{'error_msg'} = $err_msg;
+    $a->{'error_message'} = $err_msg;
     return 0;
-}
-
-
-##############################################################################
-
-=head2 error_msg
-
-  $a->error_msg
-
-Returns the error message from the latest validation.
-
-=cut
-
-sub error_msg
-{
-    return $_[0]->{'error_msg'};
 }
 
 
