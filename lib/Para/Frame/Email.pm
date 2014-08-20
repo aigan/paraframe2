@@ -5,7 +5,7 @@ package Para::Frame::Email;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2014 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -30,6 +30,9 @@ use Carp qw( confess );
 use Para::Frame::Reload;
 use Para::Frame::Email::Address;
 use Para::Frame::Utils qw( debug datadump validate_utf8 throw deunicode );
+
+$Para::Frame::HOOK{'before_apply_email_headers'} = [];
+
 
 ##############################################################################
 
@@ -244,11 +247,43 @@ sub raw
 
 =head2 apply_headers_from_params
 
+supported headers:
+  subject
+  reply_to
+  message_id
+  in_reply_to
+  references
+  sender
+  bounce_to
+
+The bounce_to sets header X-Bounce-To and will work with this exim
+router (for remote addresses), placed before primary dnslookup router:
+
+  verp_router:
+  driver = dnslookup
+  domains = !+local_domains
+  condition = def:header_x-bounce-to
+  errors_to = $header_x-bounce-to
+  transport = remote_smtp
+  no_more
+
+Example for using 12345-bounces@avisita.com
+
+  ls1_bounces:
+  driver = redirect
+  domains = +local_domains
+  local_part_suffix = -bounces
+  data = studs@$domain
+
+
 =cut
 
 sub apply_headers_from_params
 {
     my( $e, $p, $to_addr ) = @_;
+
+    Para::Frame->run_hook($Para::Frame::REQ,
+                          'before_apply_email_headers', $e, $p, $to_addr);
 
     my $from_addr = $p->{'from_addr'};
     my $subject = $p->{'subject'};
@@ -316,13 +351,11 @@ sub apply_headers_from_params
 	debug "Sender set to ".$envelope_from_addr->format." from envelope from";
     }
 
-#    if( $p->{'body_html'} )
-#    {
-#        my $em = $e->{'em'};
-#        delete $em->{'attributes'};
-#        throw 'validation', "Apply headers for HTML";
-#    }
-
+    if( $p->{'bounce_to'} )
+    {
+        $e->header_set('X-Bounce-To' => $p->{'bounce_to'} );
+        debug "Bounce to ".$p->{'bounce_to'};
+    }
 
 }
 
