@@ -41,7 +41,11 @@ function log(stuff)
 function showhide(whichLayer)
 {
     var node2 = document.getElementById(whichLayer);
+    var node2_off = document.getElementById(whichLayer+'_label_off');
+    var node2_on = document.getElementById(whichLayer+'_label_on');
     $(node2).toggle();
+    $(node2_off).toggle();
+    $(node2_on).toggle();
 }
 
 

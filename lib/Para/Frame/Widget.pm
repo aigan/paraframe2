@@ -399,31 +399,16 @@ sub submit
     $label ||= 'Continue';
     $attr ||= {};
 
-    my $extra = jump_extra( undef, $attr, {highlight_same_place=>0} );
+    my $tag_attr = delete ${$attr}{'tag_attr'} || {};
+    $tag_attr->{'class'} ||= "";
+    $tag_attr->{'class'} .= " btn";
+    unless( $tag_attr->{'class'} =~ /btn-/)
+    {
+	$tag_attr->{'class'} .= " btn-default";
+    }
+    my $extra = tag_extra_from_params( $tag_attr );
 
     my $label_out = loc($label);
-
-    # DEPRECATED
-    if( my $class = delete ${$attr}{'href_class'} )
-    {
-	$extra .= " class=\"$class\"";
-    }
-    if( my $val = delete ${$attr}{'href_target'} )
-    {
-	$extra .= " target=\"$val\"";
-    }
-    if( my $val = delete ${$attr}{'href_id'} )
-    {
-	$extra .= " id=\"$val\"";
-    }
-    if( my $val = delete ${$attr}{'href_onclick'} )
-    {
-	$extra .= " onClick=\"$val\"";
-    }
-    if( my $val = delete ${$attr}{'href_style'} )
-    {
-	$extra .= " style=\"$val\"";
-    }
 
     my $name = '';
     $name = "name=\"$setval\"" if $setval;
@@ -506,44 +491,19 @@ sub go
 #	}
     }
 
-    my $extra = jump_extra( $template, $attr, {highlight_same_place=>0} );
-    my $onclick_extra = "";
-
-    # DEPRECATED
-    if( my $val = delete $attr->{'href_target'} )
-    {
-	$extra .= "target=\"$val\" ";
-    }
-    if( my $val = delete $attr->{'href_id'} )
-    {
-	$extra .= "id=\"$val\" ";
-    }
-    if( my $val = delete $attr->{'href_onclick'} )
-    {
-	$extra .= "onClick=\"$val\" ";
-    }
-    if( my $val = delete $attr->{'href_style'} )
-    {
-	$extra .= "style=\"$val\" ";
-    }
-    if( my $val = delete $attr->{'href_class'} )
-    {
-	$extra .= "class=\"$val\" ";
-    }
 
     ### NEW FORMAT
     my $tag_attr = delete ${$attr}{'tag_attr'} || {};
-	$tag_attr->{'class'} ||= "";
-	$tag_attr->{'class'} .= " btn";
-	unless( $tag_attr->{'class'} =~ /btn-/)
-	{
-		$tag_attr->{'class'} .= " btn-default";
-	}
-		$extra .= tag_extra_from_params( $tag_attr );
-
+    $tag_attr->{'class'} ||= "";
+    $tag_attr->{'class'} .= " btn";
+    unless( $tag_attr->{'class'} =~ /btn-/)
+    {
+	$tag_attr->{'class'} .= " btn-default";
+    }
+    my $extra = tag_extra_from_params( $tag_attr );
 
     my $query = join '', map sprintf("document.forms['f'].$_.value='%s';", $attr->{$_}), keys %$attr;
-    return "<input type=\"button\" value=\"$label\" onclick=\"${onclick_extra}${query}go('$template', '$run')\" $extra />";
+    return "<input type=\"button\" value=\"$label\" onclick=\"${query}go('$template', '$run')\" $extra />";
 }
 
 sub go_js
@@ -2242,8 +2202,9 @@ sub calendar
     $out .=
       (
        "</td>".
-       "<td valign=\"bottom\" style=\"width: 22px; text-align: right;vertical-align: bottom\">".
-       "<img class=\"nopad\" alt=\"calendar\" id=\"${id}-button\" src=\"$home/pf/images/calendar.gif\"/>".
+       "<td valign=\"middle\" style=\"text-align: center;vertical-align: middle\">".
+#       "<img src=\"$home/pf/images/calendar.gif\" id=\"date_start-button\" alt=\"calendar\" class=\"nopad\">".
+       "<i class=\"fa fa-calendar fa-lg\" id=\"${id}-button\" style=\"padding: 0 6px 0 12px;\"></i>".
        "</td></tr>"
       );
 

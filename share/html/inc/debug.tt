@@ -51,7 +51,7 @@
 [% END %]
 
 
-  <h4>Params</h4>
+  <h4 style="margin-top: 20px;">Params</h4>
   <table>
     <tr><th>Name</th><th>Value</th></tr>
     [% FOREACH key IN q.param %]
@@ -75,7 +75,7 @@
   </table>
 
 
-  <h4>Cookies</h4>
+  <h4 style="margin-top: 20px;">Cookies</h4>
   <table>
     <tr><th>Name</th><th>Value</th></tr>
     [% FOREACH key IN q.cookie %]
@@ -83,13 +83,17 @@
       [% q.cookie(key) %]
       </td></tr>
     [% END %]
-  </table>
-  <div class="admin_reload">
-<a href="[% forward_url %]"><img alt="Reload" src="$home/pf/images/reload-26.png"/></a>
+</table>
+<table width="100%">
+ <tr><td colspan="2"> 
+<div class="admin_reload">
+<a href="[% forward_url %]"><i class="fa fa-refresh fa-3x"></i></a>
 </div>
 
 <div class="admin_reload">
 Request [% req.id %]<br/>
 @ port [% cfg.port %]
 </div>
+</td></tr>
+</table>
 </div>

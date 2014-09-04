@@ -182,18 +182,32 @@ $content
 [%
    DEFAULT global.paraframe_formcount=0;
    global.paraframe_formcount = global.paraframe_formcount + 1;
-   DEFAULT paraframe_display='none';
-   DEFAULT paraframe_label_display='block';
-   DEFAULT label_expand_img = "$home/pf/images/button.expand.down.gif";
-   DEFAULT label_hide_img = label_expand_img;
+   DEFAULT paraframe_display='none';   
+   IF paraframe_display == 'none';
+		DEFAULT paraframe_label_display_on = 'inline';
+		DEFAULT paraframe_label_display_off = 'none';
+   ELSE;
+        DEFAULT paraframe_label_display_on ='none';
+		DEFAULT paraframe_label_display_off	='inline';
+   END;		
+   IF expand_type == 'more';
+        DEFAULT label_expand_html = "<i class=\"fa fa-bars btn btn-xs\"></i>";
+        DEFAULT label_hide_html = "<i class=\"fa fa-bars btn btn-xs\"></i>";
+		DEFAULT class="more_expand";
+   ELSE;
+        DEFAULT label_expand_html = "<i class=\"fa fa-caret-down btn btn-default btn-expand\"></i>";
+        DEFAULT label_hide_html = "<i class=\"fa fa-caret-up btn btn-default btn-expand\"></i>";
+   END;
    DEFAULT id_label = "paraframe_fid_${global.paraframe_formcount}_label";
    DEFAULT id_block = "paraframe_fid_${global.paraframe_formcount}";
    DEFAULT img_placement = "after";
    DEFAULT label = "";
    DEFAULT class_expand = "paraframe_imgexpand";
    DEFAULT class_expanded = "paraframe_imgexpanded";
+   DEFAULT class = "";
 %]
-<span class="$class_expand" id="$id_label"><a href="javascript:showhide('$id_block')">[% IF img_placement == "before" %]<img alt="v" src="$label_expand_img" /> [% END %]$label[% UNLESS img_placement == "before" %] <img alt="v" src="$label_expand_img" />[% END %]</a></span>
+<span class="$class_expand[% " no_label" UNLESS label;" ";img_placement;" ";class %]" id="[% id_label %]_off" style="display:$paraframe_label_display_on">[% IF img_placement == "before" %]<a href="javascript:showhide('$id_block')">[% label_expand_html %]</a>[% END %]$label[% UNLESS img_placement == "before" %]<a href="javascript:showhide('$id_block')">[% label_expand_html %]</a>[% END %]</span>
+<span class="$class_expand[% " no_label" UNLESS label;" ";img_placement;" ";class %]" id="[% id_label %]_on" style="display:$paraframe_label_display_off">[% IF img_placement == "before" %]<a href="javascript:showhide('$id_block')">[% label_hide_html %]</a>[% END %]$label[% UNLESS img_placement == "before" %]<a href="javascript:showhide('$id_block')">[% label_hide_html %]</a>[% END %]</span>
 <div class="$class_expanded" id='$id_block' style="display:$paraframe_display">
 $content
 </div>
@@ -211,7 +225,7 @@ $content
    DEFAULT class_expand = "paraframe_imgexpand";
    DEFAULT class_expanded = "paraframe_imgexpanded";
 %]
-<span class="$class_expand" id="$id_label"><a href="javascript:showhide('$id')">[% IF img_placement == "before" %]<img alt="v" src="$label_expand_img" /> [% END %]$label[% UNLESS img_placement == "before" %] <img alt="v" src="$label_expand_img" />[% END %]</a></span>
+<span class="$class_expand" id="$id_label"><a href="javascript:showhide('$id')">[% IF img_placement == "before" %]<i class="fa fa-caret-down"></i>[% END %]$label[% UNLESS img_placement == "before" %]<i class="fa fa-caret-down"></i>[% END %]</a></span>
 [% END %]
 
 
