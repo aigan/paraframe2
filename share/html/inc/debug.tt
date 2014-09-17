@@ -2,8 +2,8 @@
   [% IF emergency_mode %]
   <h1 class="important">Crashed $emergency_mode times</h1>
   [% END %]
-
-  <h1>
+<div class="float-left">
+  <h2>
     Debug at level [% debug_level %]:
     [% IF req.result.errcnt %]
       [% IF req.result.errcnt == 1 %]
@@ -14,7 +14,7 @@
     [% ELSE %]
       No errors
     [% END %]
-  </h1>
+  </h2>
 
   [% IF req.result.part %]
     <ol>
@@ -29,7 +29,7 @@
   [% END %]
 
   [% IF route.list.size >= 1 %]
-    <h4>Route</h4>
+    <p>Route</p>
     <ol>
       [% FOREACH step IN route.list %]
         <li>
@@ -46,14 +46,17 @@
 
 
 [% IF ENV.REDIRECT_REQUEST_METHOD == 'POST' %]
-<h1 style="text-decoration:blink;font-size:xx-large" class='important'>Post data lost in redirect</h1>
+<h1 class="important">Post data lost in redirect</h1>
 <p>Use <code>SetHandler perl-script</code> for all post destinations.</p>
 [% END %]
-
-
-  <h4 style="margin-top: 20px;">Params</h4>
-  <table>
-    <tr><th>Name</th><th>Value</th></tr>
+</div>
+<div class="float-right" style="margin-right: 20px;">	
+	<p>Request [% req.id %] :[% cfg.port %]<a href="[% forward_url %]"> <i class="fa fa-refresh fa-2x"></i></a></p>
+</div>
+<br clear="both">
+  <h2 style="margin-top: 20px;">Params</h2>
+  <table class="admin">
+    <tr class="header left"><th>Name</th><th>Value</th></tr>
     [% FOREACH key IN q.param %]
       [% tr2 %]<td>[% key %]</td><td>
       [% IF q.param(key).size > 1 %]
@@ -74,26 +77,13 @@
     [% END %]
   </table>
 
-
-  <h4 style="margin-top: 20px;">Cookies</h4>
-  <table>
-    <tr><th>Name</th><th>Value</th></tr>
+  <h2 style="margin-top: 20px;">Cookies</h2>
+  <table class="admin">
+    <tr class="header left"><th>Name</th><th>Value</th></tr>
     [% FOREACH key IN q.cookie %]
       [% tr2 %]<td>[% key %]</td><td>
       [% q.cookie(key) %]
       </td></tr>
     [% END %]
-</table>
-<table width="100%">
- <tr><td colspan="2"> 
-<div class="admin_reload">
-<a href="[% forward_url %]"><i class="fa fa-refresh fa-3x"></i></a>
-</div>
-
-<div class="admin_reload">
-Request [% req.id %]<br/>
-@ port [% cfg.port %]
-</div>
-</td></tr>
 </table>
 </div>
