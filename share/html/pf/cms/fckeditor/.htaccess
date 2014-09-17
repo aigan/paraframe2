@@ -11,7 +11,7 @@ AddType text/xml .xml
 
 # Multiviews will not work with dirs like fck_link if there is a file
 # in the same place with the name fck_link.html
-Options -MultiViews
+#Options -MultiViews
 
 #EOF
 
