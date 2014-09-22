@@ -1278,6 +1278,8 @@ Attributes:
 
   label: sets suffix_label
 
+  tdlabel: sets suffix_label followed by a td
+
   label_class: Adds a class to the C<label> tag
 
   separator: adds the unescaped string between label and checkbox tag
