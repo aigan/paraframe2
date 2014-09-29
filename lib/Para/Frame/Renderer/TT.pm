@@ -132,7 +132,9 @@ sub new
             }
         }
 
-        throw('notfound', "No template found for $url_path");
+	### Must return renderer even if template not found
+	# Error will be handled during the actual rendering
+#        throw('notfound', "No template found for $url_path");
     }
 
     return $rend;
