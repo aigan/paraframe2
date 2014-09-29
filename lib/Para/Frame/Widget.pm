@@ -2183,10 +2183,10 @@ sub calendar
 	$out .= $separator;
     }
 
-    $out .= "<table cellspacing=\"0\" cellpadding=\"0\" style=\"$style\" class=\"$class\">";
-    $out .= "<tr><td>";
+    $out .= "<div cellspacing=\"0\" cellpadding=\"0\" style=\"$style; margin-right:10px;\" class=\"$class\">";
+    $out .= "<div style=\"float:left\">";
 
-    my $input_style = "width: 100%";
+    my $input_style = "width: 100% !important";
 
     $out .= input( $field, $value,
 		   {
@@ -2201,11 +2201,10 @@ sub calendar
 
     $out .=
       (
-       "</td>".
-       "<td valign=\"middle\" style=\"text-align: center;vertical-align: middle\">".
-#       "<img src=\"$home/pf/images/calendar.gif\" id=\"date_start-button\" alt=\"calendar\" class=\"nopad\">".
-       "<i class=\"fa fa-calendar fa-lg\" id=\"${id}-button\" style=\"padding: 0 6px 0 12px;\"></i>".
-       "</td></tr>"
+       "</div>".
+       "<div valign=\"middle\" style=\"text-align: center;vertical-align: middle;float:left;\">".
+       "<i class=\"fa fa-calendar fa-lg\" id=\"${id}-button\" style=\"line-height: 1.6;margin-left:-12px;\"></i>".
+       "</div>"
       );
 
 
@@ -2258,7 +2257,7 @@ sub calendar
     </script>
 ];
 
-    $out .= "</table>";
+    $out .= "</div>";
 
     return $out;
 }

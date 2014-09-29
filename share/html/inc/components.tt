@@ -194,6 +194,10 @@ $content
         DEFAULT label_expand_html = "<i class=\"fa fa-bars btn btn-xs\"></i>";
         DEFAULT label_hide_html = "<i class=\"fa fa-bars btn btn-xs\"></i>";
 		DEFAULT class="more_expand";
+	ELSIF expand_type == 'help';
+        DEFAULT label_expand_html = "<i class=\"fa fa-question btn btn-primary btn-circle\"></i>";
+        DEFAULT label_hide_html = "<i class=\"fa fa-question btn btn-primary btn-circle\"></i>";
+		DEFAULT class="more_expand";
    ELSE;
         DEFAULT label_expand_html = "<i class=\"fa fa-caret-down btn btn-default btn-expand\"></i>";
         DEFAULT label_hide_html = "<i class=\"fa fa-caret-up btn btn-default btn-expand\"></i>";

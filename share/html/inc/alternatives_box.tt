@@ -2,29 +2,26 @@
 	a = req.result.info.alternatives;
 %]
 
-
-
-
-
-<table class="wide large_table emphasise_link">
+<table class="admin emphasise_link">
 	<tr>
-		<td style="background:#f6f6f6;">
-		<h2>[% a.title | html %]</h2>
-
-</td></tr>
-<tr><td>
-<!-- <h3 class="alt_h3" style="margin-top: 10px;"> -->[%# req.result.find('alternatives').message | html | html_line_break %]<!-- </h3> -->
-[% IF a.query_desig %]
-<pre>
-[% a.query_desig %]
-</pre>
-[% END %]			
+		<td class="header">
+			<h2>[% a.title | html %]</h2>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			[%# req.result.find('alternatives').message | html | html_line_break %]
+			[% IF a.query_desig %]
+			<pre>
+			[% a.query_desig %]
+			</pre>
+			[% END %]			
 			<ul style="margin: 10px 0 15px;">
-[% FOREACH part IN a.alts %]
-<li>
+			[% FOREACH part IN a.alts %]
+			<li>
 			<p><i class="fa fa-angle-double-right"></i> [% a.rowformat(part) %]</p>
-</li>
-[% END %]
+			</li>
+			[% END %]
 			</ul>
 		</td>
 	</tr>
