@@ -5,7 +5,7 @@ package Para::Frame::Child;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2014 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -24,6 +24,7 @@ use warnings;
 
 use Storable qw( thaw );
 use File::Slurp;
+use Digest::MD5 qw( md5_base64 );
 
 use Para::Frame::Reload;
 
@@ -276,7 +277,7 @@ sub get_results
 	# Some data may already be here, since IO may get stuck otherwise
 	#
 	$child->{'data'} .= read_file( $fh,
-				       'binmode'=>1,
+				       { binmode => ':raw' }
 				       ); # Undocumented flag
 	close($fh); # Should already be closed then kid exited
     }
@@ -302,9 +303,11 @@ sub get_results
 
     debug 2, "Data length is $length bytes";
 
+    my $data =  substr $child->{'data'}, $plength;
+#    debug 3, "MD5: ".md5_base64($data);
 
-#    warn "  got data: $data\n";
-    my( $result ) = thaw( substr $child->{'data'}, $plength );
+#    debug 1, "  got data: ".$child->{'data'};
+    my( $result ) = thaw( $data );
 #    warn "  result: $result\n"; ### DEBUG
     $child->{'result'} = $result;
     debug 2, "Data result stored for ".$child->req->id;
@@ -314,6 +317,7 @@ sub get_results
 
     if( $@ = $result->exception )
     {
+        debug "Got an exception from child";
 	die $@;
     }
 
