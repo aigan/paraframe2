@@ -5,7 +5,7 @@ package Para::Frame::Child::Result;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2014 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -23,10 +23,11 @@ use strict;
 use warnings;
 
 use Storable qw( freeze);
+use Digest::MD5 qw( md5_base64 );
 
 use Para::Frame::Reload;
 
-use Para::Frame::Utils qw( debug );
+use Para::Frame::Utils qw( debug datadump );
 use Para::Frame::Request;
 
 =head1 DESCRIPTION
@@ -151,12 +152,20 @@ sub return
 
     $result->message( $message ) if $message;
     my $data = freeze( $result );
+#    debug 3, "MD5: ".md5_base64($data);
+
     my $length = length($data);
     debug(2,"Returning $length bytes of data");
+
+    select STDOUT; $| = 1;  # make unbuffered
+    binmode(STDOUT); ## Turn on binmode for STDOUT
+
+#    my $res = print $length . "\0" . $data;
     my $res = print $length . "\0" . $data . "\n";
     if( $res )
     {
-	debug 3, "sent data";
+#	debug 3, "sent data";
+#        debug 1, "Sent ".datadump($result);
     }
     else
     {

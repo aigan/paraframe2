@@ -2930,6 +2930,8 @@ sub create_fork
     my $pid;
     my $fh = new IO::File;
 
+    $fh->binmode();
+
 #    $fh->autoflush(1);
 #    my $af = $fh->autoflush;
 #    warn "--> Autoflush is $af\n";
