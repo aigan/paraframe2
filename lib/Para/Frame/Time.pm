@@ -757,7 +757,7 @@ sub extract_date
     my( $date ) = $this->_extract_date( $string );
     if( $date )
     {
-	debug sprintf "Extracted date '%s' (%d)", $date, length($date);
+#	debug sprintf "Extracted date '%s' (%d)", $date, length($date);
 	# Weekdays always referse to the future
 
 	if( $date =~ /^$rx_long_weekday_en$/i )

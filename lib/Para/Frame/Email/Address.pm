@@ -86,12 +86,23 @@ sub parse
 	{
 	    return $email_str_in;
 	}
+        elsif( $class eq 'Para::Frame::Email::Address')
+        {
+            return $email_str_in; # Keep subclass
+        }
 	else
 	{
 	    # Rebless in right class. (May be subclass)
 	    return bless $email_str_in, $class;
 	}
     }
+
+    if( UNIVERSAL::can $email_str_in, 'address' )
+    {
+        # Assume this is a compatible class
+        return $email_str_in;
+    }
+
 
     my( $addr, $email_str );
 
