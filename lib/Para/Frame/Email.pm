@@ -48,7 +48,7 @@ sub new
     $body ||= \ '';
     $header ||= [];
 
-    debug "c $class, h $header, b $body";
+#    debug "c $class, h $header, b $body";
 #    confess "CHECKME";
 
     my $em = Email::MIME->create(
@@ -205,7 +205,7 @@ sub raw
 {
     my( $e ) = @_;
 
-    debug "raw 1";
+#    debug "raw 1";
     $e->redraw;
 
     my $em = $e->{'em'};
@@ -215,29 +215,31 @@ sub raw
     $e->{parts} ||= $em->{parts};
 
 
-    debug "raw 2";
+#    debug "raw 2";
 #    debug datadump($e->{parts},2);
 #    debug datadump($em->{parts},2);
     if( @{$e->{'parts'}} > 1 )
     {
-    debug "raw 3";
+#    debug "raw 3";
 #        $em->content_type_set('multipart/mixed');
 #        $em->body('This is a multi-part message in MIME format.');
         $em->parts_set($e->{'parts'});
 
-    debug "raw 4";
+#    debug "raw 4";
         return \ $_[0]->{'em'}->as_string;
     }
     else
     {
         my $h = $em->header_obj;;
+#        debug "Header: ".datadump($h);
         my $part = $e->{'parts'}[0];
-    debug "raw 5";
+#    debug "raw 5";
         foreach my $hn ( $h->header_names )
         {
-            $part->header_set( $hn, $h->header($hn) );
+#            debug "  Setting header $hn to ".$h->header($hn);
+            $part->header_set( $hn, $h->header_raw($hn) );
         }
-    debug "raw 6";
+#    debug "raw 6";
         return \ $part->as_string;
     }
 }
