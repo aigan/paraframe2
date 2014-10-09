@@ -114,8 +114,15 @@ whitespace.
 sub trim
 {
     my $ref = shift;
+
+    if( UNIVERSAL::can $ref, 'as_string' )
+    {
+        $ref = $ref->as_string;
+    }
+
     if( ref $ref )
     {
+
         confess "Expecting scalar ref ($ref) ".datadump($ref,1)
           unless ref $ref eq 'SCALAR';
 	return undef unless defined $$ref;

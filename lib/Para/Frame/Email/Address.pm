@@ -80,6 +80,8 @@ sub parse
 {
     my( $class, $email_str_in ) = @_;
 
+#    debug "PF EA parsing ".datadump($email_str_in,1);
+
     if( UNIVERSAL::isa $email_str_in, "Para::Frame::Email::Address" )
     {
 	if( UNIVERSAL::isa $email_str_in, $class )
@@ -112,8 +114,14 @@ sub parse
     }
     else
     {
+        if( UNIVERSAL::can $email_str_in, 'as_string' )
+        {
+            $email_str = $email_str_in->as_string;
+        }
+
+
 	# Remove invisible characters from string
-	$email_str = $email_str_in || '';
+	$email_str ||= $email_str_in || '';
 	$email_str =~ s/\p{Other}//g;
         trim(\$email_str);
 
