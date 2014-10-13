@@ -108,11 +108,23 @@ whitespace.
 
 =cut
 
+# Note: Para::Frame::Reload does not support prototypes. Add ($) when
+# it does
+
 sub trim
 {
     my $ref = shift;
+
+    if( UNIVERSAL::can $ref, 'as_string' )
+    {
+        $ref = $ref->as_string;
+    }
+
     if( ref $ref )
     {
+
+        confess "Expecting scalar ref ($ref) ".datadump($ref,1)
+          unless ref $ref eq 'SCALAR';
 	return undef unless defined $$ref;
 	$$ref =~ s/( ^ \s+ | \s+ $ )//gx;
 	$$ref =~ s/\s*\r?\n\s*/\n/g;

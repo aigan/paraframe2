@@ -257,6 +257,7 @@ sub render_header
     $rend->{'header_rendered_to'} = $to_addr;
 
     $e->apply_headers_from_params( $p, $to_addr );
+#    debug "Headers:\n".datadump($e,6);
     return 1;
 }
 

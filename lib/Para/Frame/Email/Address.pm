@@ -80,18 +80,31 @@ sub parse
 {
     my( $class, $email_str_in ) = @_;
 
+#    debug "PF EA parsing ".datadump($email_str_in,1);
+
     if( UNIVERSAL::isa $email_str_in, "Para::Frame::Email::Address" )
     {
 	if( UNIVERSAL::isa $email_str_in, $class )
 	{
 	    return $email_str_in;
 	}
+        elsif( $class eq 'Para::Frame::Email::Address')
+        {
+            return $email_str_in; # Keep subclass
+        }
 	else
 	{
 	    # Rebless in right class. (May be subclass)
 	    return bless $email_str_in, $class;
 	}
     }
+
+    if( UNIVERSAL::can $email_str_in, 'address' )
+    {
+        # Assume this is a compatible class
+        return $email_str_in;
+    }
+
 
     my( $addr, $email_str );
 
@@ -101,8 +114,14 @@ sub parse
     }
     else
     {
+        if( UNIVERSAL::can $email_str_in, 'as_string' )
+        {
+            $email_str = $email_str_in->as_string;
+        }
+
+
 	# Remove invisible characters from string
-	$email_str = $email_str_in || '';
+	$email_str ||= $email_str_in || '';
 	$email_str =~ s/\p{Other}//g;
         trim(\$email_str);
 
