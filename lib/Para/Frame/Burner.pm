@@ -5,7 +5,7 @@ package Para::Frame::Burner;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2011 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2014 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -433,7 +433,7 @@ sub burn
     else
     {
 	my $err = $th->error();
-	debug "Checking out error: ".datadump($err);
+#	debug "Checking out error: ".datadump($err);
 	die( $err );
     }
 
