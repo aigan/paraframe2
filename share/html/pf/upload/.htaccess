@@ -1,2 +1,5 @@
 PerlHandler Para::Frame::Client::Upload
+Order allow,deny
+Allow from all
 Require all granted
+Satisfy Any

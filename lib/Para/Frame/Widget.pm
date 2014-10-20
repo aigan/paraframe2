@@ -1547,7 +1547,7 @@ sub filefield
     my $cols = $params->{'cols'} || 60;
     my $value = $params->{'value'} || $Para::Frame::REQ->q->param($key) || "";
 
-    return sprintf('<input type="file" name="%s" value="%s" size="%s" />',
+    return sprintf('<input type="file" class="btn btn-primary" name="%s" value="%s" size="%s" />',
 		   CGI->escapeHTML( $key ),
 		   CGI->escapeHTML( $value ),
 		   CGI->escapeHTML( $cols ),
@@ -2205,7 +2205,7 @@ sub calendar
       (
        "</div>".
        "<div valign=\"middle\" style=\"text-align: center;vertical-align: middle;float:left;\">".
-       "<i class=\"fa fa-calendar fa-lg\" id=\"${id}-button\" style=\"line-height: 1.6;margin-left:-14px;\"></i>".
+       "<i class=\"fa fa-calendar fa-lg\" id=\"${id}-button\" style=\"line-height: 1.7;margin-left: -14px;font-size: 12px;\"></i>".
        "</div>"
       );
 

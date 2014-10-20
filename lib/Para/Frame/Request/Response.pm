@@ -132,7 +132,7 @@ sub new
      'dir'            => undef,          ## Cached Para::Frame::Dir obj
      'renderer'       => undef,
      'is_error_response' => 0,
-     'moved_temporarily' => undef,
+     'moved_permanently' => undef,
      'time'           => time,           ## Start time
      'time_done'      => undef,          ## Rendering finished
      'status'         => 200,
@@ -159,9 +159,9 @@ sub new
     $args->{'file_may_not_exist'} = 1;
     my $page = $resp->{'page'} = Para::Frame::File->new($args)->normalize;
 
-    unless( $args->{'always_move'} || 0 )
+    if( $args->{'always_move'} || 0 )
     {
-	$page->{'moved_temporarily'} = 1;
+        $resp->{'moved_permanently'} = $args->{'always_move'};
     }
 
     # Renderer sets page to current (normalized) page
@@ -196,7 +196,7 @@ sub new_minimal
      'dir'            => undef,          ## Cached Para::Frame::Dir obj
      'renderer'       => undef,
      'is_error_response' => 0,
-     'moved_temporarily' => undef,
+     'moved_permanently' => undef,
      'time'           => time,           ## Start time
      'time_done'      => undef,          ## Rendering finished
      'status'         => 200,
@@ -204,18 +204,18 @@ sub new_minimal
 
     if( my $req = $args->{req} )
     {
-	$resp->{req} = $req;
-	weaken( $resp->{'req'} );
+        $resp->{req} = $req;
+        weaken( $resp->{'req'} );
 
-	$args->{'site'} ||= $req->site;
-	$args->{'language'} ||= $req->language;
+        $args->{'site'} ||= $req->site;
+        $args->{'language'} ||= $req->language;
     }
 
     $args->{'resp'} = $resp;
 
     if( $args->{'is_error_response'} )
     {
-	$resp->{'is_error_response'} = 1;
+        $resp->{'is_error_response'} = 1;
     }
 
     # Renderer sets page to current (normalized) page
@@ -608,7 +608,7 @@ sub redirect
 {
     my( $resp, $url, $permanently ) = @_;
 
-   $resp->{'moved_temporarily'} ||= 1 unless $permanently;
+   $resp->{'moved_permanently'} ||= 1 unless $permanently;
 
     $resp->{'redirect'} = $url;
 }
@@ -950,56 +950,57 @@ sub send_redirection
     #
     if( $url_in =~ /^ https?:\/\/ (.*?) (: | \/ | $ ) /x )
     {
-	my $host_in = $1;
+        my $host_in = $1;
 #	warn "  matched '$host_in' in '$url_in'!\n";
-	my $host_out = idn_encode( $host_in );
+        my $host_out = idn_encode( $host_in );
 #	warn "  Encoded to '$host_out'\n";
-	if( $host_in ne $host_out )
-	{
-	    $url_in =~ s/$host_in/$host_out/;
-	}
+        if( $host_in ne $host_out )
+        {
+            $url_in =~ s/$host_in/$host_out/;
+        }
 
-	$url_out = $url_in;
+        $url_out = $url_in;
     }
     else
     {
-	my $scheme = 'http';
-	unless( ref $url_in )
-	{
-	    $scheme = $req->site->scheme;
-	}
+        my $scheme = 'http';
+        unless( ref $url_in )
+        {
+            $scheme = $req->site->scheme;
+        }
 
-	my $url = Para::Frame::URI->new($url_in, $scheme);
-	$url->host( idn_encode $req->http_host ) unless $url->host;
-	$url->port( $req->http_port ) unless $url->port;
-	$url->scheme($scheme);
+        my $url = Para::Frame::URI->new($url_in, $scheme);
+        $url->host( idn_encode $req->http_host ) unless $url->host;
+        $url->port( $req->http_port ) unless $url->port;
+        $url->scheme($scheme);
 
-	$url_out =  $url->canonical->as_string;
+        $url_out =  $url->canonical->as_string;
     }
 
     debug(2,"--> Redirect to $url_out");
 
-    my $moved_permanently = $resp->{'moved_temporarily'} ? 0 : 1;
+    my $moved_permanently = $resp->{'moved_permanently'};
 
 
     my $res = $req->get_cmd_val( 'WAIT' );
     if( $res eq 'LOADPAGE' )
     {
-	$req->send_code('PAGE_READY', $url_out, loc('page_ready') );
-	return;
+        $req->send_code('PAGE_READY', $url_out, loc('page_ready') );
+        return;
     }
 
     if( $moved_permanently )
     {
-	debug "MOVED PERMANENTLY";
-	$req->send_code( 'AR-PUT', 'status', 301 );
-	$req->send_code( 'AT-PUT', 'set', 'Cache-Control', 'public' );
+        debug "MOVED PERMANENTLY";
+        cluck "From where";
+        $req->send_code( 'AR-PUT', 'status', 301 );
+        $req->send_code( 'AT-PUT', 'set', 'Cache-Control', 'public' );
     }
     else # moved temporarily
     {
-	$req->send_code( 'AR-PUT', 'status', 302 );
-	$req->send_code( 'AT-PUT', 'set', 'Pragma', 'no-cache' );
-	$req->send_code( 'AT-PUT', 'set', 'Cache-Control', 'no-cache' );
+        $req->send_code( 'AR-PUT', 'status', 302 );
+        $req->send_code( 'AT-PUT', 'set', 'Pragma', 'no-cache' );
+        $req->send_code( 'AT-PUT', 'set', 'Cache-Control', 'no-cache' );
     }
     $req->send_code( 'AT-PUT', 'set', 'Location', $url_out );
 
@@ -1010,13 +1011,13 @@ sub send_redirection
 
     if( $req->header_only )
     {
-	$req->send_code( 'HEADER' );
+        $req->send_code( 'HEADER' );
     }
     else
     {
-	$req->send_code( 'AT-PUT', 'set', 'Content-Length', $length );
-	$req->send_code( 'BODY' );
-	client_send($req->client, $out);
+        $req->send_code( 'AT-PUT', 'set', 'Content-Length', $length );
+        $req->send_code( 'BODY' );
+        client_send($req->client, $out);
     }
 }
 

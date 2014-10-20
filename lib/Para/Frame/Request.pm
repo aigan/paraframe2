@@ -3343,40 +3343,40 @@ sub set_response
 
     if( ref $url_in )
     {
-	if( UNIVERSAL::isa($url_in, 'URI') )
-	{
-	    $args->{'url'} = $url_in->path;
-	    if( my $hostname = $url_in->host )
-	    {
-		my $site = $Para::Frame::CFG->{'site_class'}->get_by_url($url_in);
-		$args->{'site'} = $site;
-	    }
-	}
-	elsif( UNIVERSAL::isa($url_in, 'Para::Frame::File') )
-	{
-	    # Assume a page obj
-	    $args->{'url'} = $url_in->url_path_slash;
-	    $args->{'site'} = $url_in->site;
-	}
-	else
-	{
-	    confess "URL $url_in not recognized";
-	}
+        if( UNIVERSAL::isa($url_in, 'URI') )
+        {
+            $args->{'url'} = $url_in->path;
+            if( my $hostname = $url_in->host )
+            {
+                my $site = $Para::Frame::CFG->{'site_class'}->get_by_url($url_in);
+                $args->{'site'} = $site;
+            }
+        }
+        elsif( UNIVERSAL::isa($url_in, 'Para::Frame::File') )
+        {
+            # Assume a page obj
+            $args->{'url'} = $url_in->url_path_slash;
+            $args->{'site'} = $url_in->site;
+        }
+        else
+        {
+            confess "URL $url_in not recognized";
+        }
     }
 
     eval
     {
-	$resp = $req->{'resp'} = Para::Frame::Request::Response->new($args);
-	1;
+        $resp = $req->{'resp'} = Para::Frame::Request::Response->new($args);
+        1;
     };
     if( $@ )
     {
-	debug "ERROR DURING RESPONSE INIT:";
-	debug $@;
-	debug "Handling error:";
+        debug "ERROR DURING RESPONSE INIT:";
+        debug $@;
+        debug "Handling error:";
 
-	$req->handle_error($args);
-	$resp = $req->{'resp'}; # Changed in handle_error
+        $req->handle_error($args);
+        $resp = $req->{'resp'}; # Changed in handle_error
     }
 
 #    debug "Response set to ".$resp->desig;
@@ -3634,22 +3634,22 @@ sub handle_error
 
     if( $resp = $args_in->{'response'} )
     {
-	$url = $resp->page->url_path_slash;
-	$site = $resp->page->site;
-	$rend = $resp->renderer_if_existing;
+        $url = $resp->page->url_path_slash;
+        $site = $resp->page->site;
+        $rend = $resp->renderer_if_existing;
     }
     elsif( $url = $args_in->{'url'} )
     {
-	$site = $req->site;
+        $site = $req->site;
     }
     else
     {
-	confess "Missing args ".datadump($args_in,2);
+        confess "Missing args ".datadump($args_in,2);
     }
 
     unless( $@ )
     {
-	$@ = "No renderer result";
+        $@ = "No renderer result";
     }
 
 
@@ -3662,12 +3662,12 @@ sub handle_error
 
     unless( $error )
     {
-	confess "Failed to retrieve the error?!";
+        confess "Failed to retrieve the error?!";
     }
 
     if( $part->view_context )
     {
-	$part->prefix_message(loc("During the processing of [_1]",$url)."\n");
+        $part->prefix_message(loc("During the processing of [_1]",$url)."\n");
     }
 
     # May not be defined yet...
@@ -3708,63 +3708,62 @@ sub handle_error
 
     if( $error->type eq 'file' )
     {
-	if( $error->info =~ /not found/ )
-	{
-	    debug "Subtemplate not found";
-	    $error_tt = '/page_part_not_found.tt';
-	    if( $rend )
-	    {
-		my $incpathstring = join "", map "- $_\n", @{$rend->paths};
-		$part->add_message(loc("Include path is")."\n$incpathstring");
-	    }
-	    $part->view_context(1);
-	    $part->prefix_message(loc("During the processing of [_1]",$url)."\n");
-	}
-	else
-	{
-	    debug "Other template file error";
-	    $part->type('template');
-	    $error_tt = '/error.tt';
-	}
-	debug $error->as_string();
+        if( $error->info =~ /not found/ )
+        {
+            debug "Subtemplate not found";
+            $error_tt = '/page_part_not_found.tt';
+            if( $rend )
+            {
+                my $incpathstring = join "", map "- $_\n", @{$rend->paths};
+                $part->add_message(loc("Include path is")."\n$incpathstring");
+            }
+            $part->view_context(1);
+            $part->prefix_message(loc("During the processing of [_1]",$url)."\n");
+        }
+        else
+        {
+            debug "Other template file error";
+            $part->type('template');
+            $error_tt = '/error.tt';
+        }
+        debug $error->as_string();
     }
     elsif( $error->type eq 'denied' )
     {
-	my $s = $req->session;
-	if( $s->u->level == 0 )
-	{
-	    # Ask to log in
+        my $s = $req->session;
+        if( $s->u->level == 0 )
+        {
+            # Ask to log in
+            if( $s->can('go_login') )
+            {
+                return if $s->go_login($resp);
+            }
 
-	    if( $s->can('go_login') )
-	    {
-		return if $s->go_login($resp);
-	    }
-
-	    $error_tt = "/login.tt";
-	    $req->result->hide_part('denied');
-	    unless( $req->{'no_bookmark_on_failed_login'} )
-	    {
-		$s->route->bookmark();
-	    }
-	}
-	else
-	{
-	    $error_tt = "/denied.tt";
-	    $s->route->plan_next($req->referer_path);
-	}
+            $error_tt = "/login.tt";
+            $req->result->hide_part('denied');
+            unless( $req->{'no_bookmark_on_failed_login'} )
+            {
+                $s->route->bookmark();
+            }
+        }
+        else
+        {
+            $error_tt = "/denied.tt";
+            $s->route->plan_next($req->referer_path);
+        }
     }
     elsif( $error->type eq 'notfound' )
     {
-	$error_tt = "/page_not_found.tt";
-	$http_status = 404;
+        $error_tt = "/page_not_found.tt";
+        $http_status = 404;
     }
     elsif( $error->type eq 'cancel' )
     {
-	throw('cancel', "request cancelled");
+        throw('cancel', "request cancelled");
     }
     else
     {
-	$error_tt = '/error.tt';
+        $error_tt = '/error.tt';
     }
 
     debug "Setting error template to $error_tt";
@@ -3773,30 +3772,30 @@ sub handle_error
 
     # Avoid recursive failure (only checks for TT renderer)
     if( $resp and $resp->renderer_if_existing and
-	$resp->renderer->can('template')
+        $resp->renderer->can('template')
       )
     {
-	if( my $tmpl = $resp->renderer->template )
-	{
-	    my $tmpl_sys_base = $tmpl->sys_base;
-	    my $error_sys_base = $error_tt_template->sys_base;
-	    debug sprintf "Comparing %s with %s",
-	      $tmpl_sys_base, $error_sys_base;
-	    # Same error page again?
-	    if($tmpl_sys_base eq $error_sys_base )
-	    {
-		my $args =
-		{
-		 resp => $resp,
-		 req => $req,
-		};
-		my $err_rend = Para::Frame::Renderer::HTML_Fallback->new($args);
-		$resp->set_renderer($err_rend);
-		$resp->set_is_error;
+        if( my $tmpl = $resp->renderer->template )
+        {
+            my $tmpl_sys_base = $tmpl->sys_base;
+            my $error_sys_base = $error_tt_template->sys_base;
+            debug sprintf "Comparing %s with %s",
+              $tmpl_sys_base, $error_sys_base;
+            # Same error page again?
+            if($tmpl_sys_base eq $error_sys_base )
+            {
+                my $args =
+                {
+                 resp => $resp,
+                 req => $req,
+                };
+                my $err_rend = Para::Frame::Renderer::HTML_Fallback->new($args);
+                $resp->set_renderer($err_rend);
+                $resp->set_is_error;
                 $resp->set_http_status( 500 );
-		return 1;
-	    }
-	}
+                return 1;
+            }
+        }
     }
 
     # default URL
@@ -3814,7 +3813,7 @@ sub handle_error
 
     if( $http_status )
     {
-	$new_resp->set_http_status( $http_status );
+        $new_resp->set_http_status( $http_status );
     }
 
     debug "New response set with url $url";

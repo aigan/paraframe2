@@ -104,16 +104,18 @@ sub handler
 
 }
 
-our %errors =  (
-	'_validate_max_file_size' => 'File is too big',
-	'_validate_min_file_size' => 'File is too small',
-	'_validate_accept_file_types' => 'Filetype not allowed',
-	'_validate_reject_file_types' => 'Filetype not allowed',
-	'_validate_max_number_of_files' => 'Maximum number of files exceeded',
-	'_validate_max_width' => 'Image exceeds maximum width',
-	'_validate_min_width' => 'Image requires a minimum width',
-	'_validate_max_height' => 'Image exceeds maximum height',
-	'_validate_min_height' => 'Image requires a minimum height'
+our %errors =
+  (
+   '_validate_max_file_size' => 'File is too big',
+   '_validate_min_file_size' => 'File is too small',
+   '_validate_accept_file_types' => 'Filetype not allowed',
+   '_validate_reject_file_types' => 'Filetype not allowed',
+   '_validate_max_number_of_files' => 'Maximum number of files exceeded',
+   '_validate_max_width' => 'Image exceeds maximum width',
+   '_validate_min_width' => 'Image requires a minimum width',
+   '_validate_max_height' => 'Image exceeds maximum height',
+   '_validate_min_height' => 'Image requires a minimum height',
+   'io' => 'Could not save file',
 );
 
 
@@ -871,7 +873,7 @@ sub post_get {
 
 sub _generate_output { 
 	my $self = shift;
-  	
+
 	my $method = $self->_get_request_method;
 	my $obj;
 
@@ -884,7 +886,8 @@ sub _generate_output {
 			$hash{'delete_type'} = 'DELETE';
 			$hash{error} = $self->_generate_error;
 		}
-		else { 
+		else {
+            $s->log_error( $self->{user_error} ) if $DEBUG;
 			$self->_prepare_file_basics;
 			$hash{error} = $self->{user_error};
 		}
@@ -1040,12 +1043,20 @@ sub _set_uri {
 	}
 }
 
-sub _generate_error { 
+sub _generate_error
+{
 	my $self = shift;
 	return undef unless defined $self->{error} and @{$self->{error}};
 
-	my $restrictions = join ',', @{$self->{error}->[1]};
-	return $errors{$self->{error}->[0]} . " Restriction: $restrictions Provided: " . $self->{error}->[2];
+    if( $self->{error}[0] =~ /^_/ )
+    {
+        my $restrictions = join ',', @{$self->{error}->[1]};
+        return $errors{$self->{error}[0]} . " Restriction: $restrictions Provided: " . $self->{error}[2];
+    }
+    else
+    {
+        return $errors{$self->{error}[0]}.": ".$self->{error}[1];
+    }
 }
 
 sub _validate_file { 
@@ -1132,12 +1143,14 @@ sub _auth_user {
 	return $ssh2;
 }
 
-sub _save_local { 
+sub _save_local
+{
 	my $self = shift;
 
 	#if image
-	if($self->is_image) { 
-		rename $self->{tmp_file_path}, $self->absolute_filename;
+	if($self->is_image)
+    {
+        rename $self->{tmp_file_path}, $self->absolute_filename;
 		rename $self->{tmp_thumb_path}, $self->absolute_thumbnail_filename;
 	}
 	#if non-image with catalyst
@@ -1145,12 +1158,18 @@ sub _save_local {
 		$self->{upload}->link_to($self->absolute_filename);
 	}
 	#if non-image with regular CGI perl
-	else { 
+	else
+    {
 		my $io_handle = $self->{fh}->handle;
 
 		my $buffer;
-		open (OUTFILE,'>', $self->absolute_filename);
-		while (my $bytesread = $io_handle->read($buffer,1024)) {
+		open (OUTFILE,'>', $self->absolute_filename) or do
+        {
+            $self->{user_error} = "Could not save file: $!";
+            return;
+        };
+		while (my $bytesread = $io_handle->read($buffer,1024))
+        {
 			print OUTFILE $buffer;
 		}
 
