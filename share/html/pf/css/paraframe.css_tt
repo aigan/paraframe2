@@ -125,6 +125,18 @@ tr.odd
 	margin: 0;
 }
 
+
+.not_translated td.phrase
+{
+    border-left: thick solid red;
+    padding-left: 0.5em;
+}
+.translated td.phrase
+{
+    border-left: thick solid green;
+    padding-left: 0.5em;
+}
+
 /********* imgexpand **************/
 
 .paraframe_imgexpanded
