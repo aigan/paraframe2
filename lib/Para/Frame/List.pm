@@ -5,7 +5,7 @@ package Para::Frame::List;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2013 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2014 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -356,7 +356,7 @@ sub new_empty
      'materializer'  => undef,
      '_DATA'         => [],
      'populated'     => 2,     # 1 for partly and 2 for fully populated
-     '_OBJ'          => [], # the corresponding list of materalized elements
+#     '_OBJ'          => [], # the corresponding list of materalized elements
 #     'limit'         => 0,
 #     'limit_display' => 0,
 #     'page_size'     => 0,
@@ -365,6 +365,8 @@ sub new_empty
 #     'stored_id'     => undef,
 #     'stored_time'   => undef,
     }, $class;
+
+    $l->{'_OBJ'} = $l->{'_DATA'};
 
     return $l;
 }
@@ -2399,6 +2401,10 @@ sub push
 		    $objs->[$i] = &{$mat}( $l, $i );
 		}
 	    }
+	}
+	else
+	{
+	    CORE::push( @{$l->{'_OBJ'}}, @_ );
 	}
     }
 

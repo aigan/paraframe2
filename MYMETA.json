@@ -4,7 +4,7 @@
       "Jonas Liljegren <jonas@paranormal.se>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "ExtUtils::MakeMaker version 6.82, CPAN::Meta::Converter version 2.120351",
+   "generated_by" : "ExtUtils::MakeMaker version 6.66, CPAN::Meta::Converter version 2.120921",
    "license" : [
       "unknown"
    ],
@@ -39,6 +39,7 @@
             "Carp" : "1.04",
             "DBI" : "1.48",
             "Data::Dump" : "1.08",
+            "Data::GUID" : "0.046",
             "Data::Validate::Domain" : "0.08",
             "Date::Manip" : "6.3",
             "DateTime" : "0.2901",
