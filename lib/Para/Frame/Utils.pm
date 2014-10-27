@@ -1254,46 +1254,46 @@ sub deunicode
 {
     unless( $_[0] )
     {
-	cluck "undef?";
-	return $_[0]; # Not needing deunicoding
+        cluck "undef?";
+        return $_[0]; # Not needing deunicoding
     }
 
     if( utf8::is_utf8( $_[0] ) )
     {
-	if( ord(substr($_[0],0,1)) == 65279 ) # BOM
-	{
+        if( ord(substr($_[0],0,1)) == 65279 ) # BOM
+        {
+            debug("Removing BOM");
+            $_[0] = substr($_[0],1);
+        }
 
-	    debug("Removing BOM");
-	    $_[0] = substr($_[0],1);
-	}
+        if( $_[0] =~ /Ã/ ) # Could be double-encoded unicode
+        {
+            debug(1, "************** decoding double-encoded string" );
+            my $decoded;
+            while( length $_[0] )
+            {
+                $decoded .= decode("UTF-8", $_[0], Encode::FB_QUIET);
+                $decoded .= substr($_[0], 0, 1, "") if length $_[0];
+            }
+            $_[0] = $decoded;
+        }
 
-	if( $_[0] =~ /Ã/ ) # Could be double-encoded unicode
-	{
-	    my $decoded;
-	    while( length $_[0] )
-	    {
-		$decoded .= decode("UTF-8", $_[0], Encode::FB_QUIET);
-		$decoded .= substr($_[0], 0, 1, "") if length $_[0];
-	    }
-	    $_[0] = $decoded;
-	}
-
-	utf8::encode($_[0]);
+        utf8::encode($_[0]);
     }
 
     if( $_[0] =~ /Ã/ ) # Could be unicode
     {
-	my $decoded;
+        my $decoded;
 
-	while( length $_[0] )
-	{
-	    $decoded .= decode("UTF-8", $_[0], Encode::FB_QUIET);
-	    $decoded .= substr($_[0], 0, 1, "") if length $_[0];
-	}
+        while( length $_[0] )
+        {
+            $decoded .= decode("UTF-8", $_[0], Encode::FB_QUIET);
+            $decoded .= substr($_[0], 0, 1, "") if length $_[0];
+        }
 
-	my $final = encode("Latin-1", $decoded, \&Para::Frame::Unicode::map_to_latin1);
+        my $final = encode("Latin-1", $decoded, \&Para::Frame::Unicode::map_to_latin1);
 
-	return $final;
+        return $final;
     }
 
     return $_[0];
@@ -2347,32 +2347,32 @@ sub validate_utf8
 {
     if( utf8::is_utf8(${$_[0]}) )
     {
-	if( utf8::valid(${$_[0]}) )
-	{
-	    if( ${$_[0]} =~ /Ã/ )
-	    {
-		return "DOUBLE-ENCODED utf8";
-	    }
-	    else
-	    {
-		return "valid utf8";
-	    }
-	}
-	else
-	{
-	    return "as INVALID utf8";
-	}
+        if( utf8::valid(${$_[0]}) )
+        {
+            if( ${$_[0]} =~ /Ã/ )
+            {
+                return "DOUBLE-ENCODED utf8";
+            }
+            else
+            {
+                return "valid utf8";
+            }
+        }
+        else
+        {
+            return "as INVALID utf8";
+        }
     }
     else
     {
-	if( ${$_[0]} =~ /Ã/ )
-	{
-	    return "UNMARKED utf8";
-	}
-	else
-	{
-	    return "NOT Marked as utf8";
-	}
+        if( ${$_[0]} =~ /Ã/ )
+        {
+            return "UNMARKED utf8";
+        }
+        else
+        {
+            return "NOT Marked as utf8";
+        }
     }
 }
 
