@@ -352,9 +352,9 @@ sub render_body_from_template
 
     if( utf8::is_utf8( $data_out ) )
     {
-#	debug "Body before downgrade: ". validate_utf8( $data_out );
+	debug "Body before downgrade: ". validate_utf8( $data_out );
 	$data_out = deunicode( $data_out ); # Convert to ISO-8859-1
-#	debug "Body after downgrade: ". validate_utf8( $data_out );
+	debug "Body after downgrade: ". validate_utf8( $data_out );
     }
 
 

@@ -25,7 +25,7 @@ See also L<Para::Frame::Dir> and L<Para::Frame::Template>.
 use 5.010;
 use strict;
 use warnings;
-use utf8; # Ã used in file
+use utf8; # Ã not used in file
 
 use Encode;
 use Carp qw( croak confess cluck );
@@ -1602,12 +1602,6 @@ sub normalize
 
 	# Cleanup any remaining double slashes
 	$url =~ s(//+)(/)g;
-
-#	if( $url =~ /Ã/ )
-#	{
-#	    $url = deunicode( $url );
-#	    debug "Translating file to $url";
-#	}
 
 	if( $url ne $f->{'url_norm'} )
 	{

@@ -1700,38 +1700,38 @@ sub _create_tmp_image {
 
 ##############################################################################
 
-sub validate_utf8
-{
-    if( utf8::is_utf8(${$_[0]}) )
-    {
-	if( utf8::valid(${$_[0]}) )
-	{
-	    if( ${$_[0]} =~ /Ã/ )
-	    {
-		return "DOUBLE-ENCODED utf8";
-	    }
-	    else
-	    {
-		return "valid utf8";
-	    }
-	}
-	else
-	{
-	    return "as INVALID utf8";
-	}
-    }
-    else
-    {
-	if( ${$_[0]} =~ /Ã/ )
-	{
-	    return "UNMARKED utf8";
-	}
-	else
-	{
-	    return "NOT Marked as utf8";
-	}
-    }
-}
+#sub validate_utf8
+#{
+#    if( utf8::is_utf8(${$_[0]}) )
+#    {
+#	if( utf8::valid(${$_[0]}) )
+#	{
+#	    if( ${$_[0]} =~ /Ã/ )
+#	    {
+#		return "DOUBLE-ENCODED utf8";
+#	    }
+#	    else
+#	    {
+#		return "valid utf8";
+#	    }
+#	}
+#	else
+#	{
+#	    return "as INVALID utf8";
+#	}
+#    }
+#    else
+#    {
+#	if( ${$_[0]} =~ /Ã/ )
+#	{
+#	    return "UNMARKED utf8";
+#	}
+#	else
+#	{
+#	    return "NOT Marked as utf8";
+#	}
+#    }
+#}
 
 ##############################################################################
 

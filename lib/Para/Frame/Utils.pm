@@ -21,7 +21,7 @@ Para::Frame::Utils - Utility functions for ParaFrame and applications
 use 5.014;
 no if $] >= 5.018, warnings => "experimental";
 use locale;
-use utf8; # Using 'Ã' in deunicode()
+use utf8; # (not) Using 'Ã' in deunicode()
 
 use Encode; # encode decode
 use Carp qw(carp croak cluck confess shortmess longmess );
@@ -58,7 +58,7 @@ our @EXPORT_OK
             store_params clear_params add_params restore_params
             idn_encode idn_decode debug reset_hashref timediff
             extract_query_params fqdn retrieve_from_url get_from_fork
-            datadump client_send validate_utf8 escape_js
+            datadump client_send validate_utf8 repair_utf8 escape_js
             parse_perlstruct client_str );
 
 use Para::Frame::Reload;
@@ -71,6 +71,30 @@ our $FQDN; # See fqdn()
 =head1 FUNCTIONS
 
 =cut
+
+
+##############################################################################
+
+### UTF8-related regexps
+
+our $latin1_as_utf8 = qr/[\xC2\xC3][\x80-\xBF]/;
+
+# (Taken from Test::utf8 module)
+# A Regexp string to match valid UTF8 bytes
+# this info comes from page 78 of "The Unicode Standard 4.0"
+# published by the Unicode Consortium
+our $valid_utf8_regexp = qr/
+        [\x{00}-\x{7f}]
+      | [\x{c2}-\x{df}][\x{80}-\x{bf}]
+      |         \x{e0} [\x{a0}-\x{bf}][\x{80}-\x{bf}]
+      | [\x{e1}-\x{ec}][\x{80}-\x{bf}][\x{80}-\x{bf}]
+      |         \x{ed} [\x{80}-\x{9f}][\x{80}-\x{bf}]
+      | [\x{ee}-\x{ef}][\x{80}-\x{bf}][\x{80}-\x{bf}]
+      |         \x{f0} [\x{90}-\x{bf}][\x{80}-\x{bf}]
+      | [\x{f1}-\x{f3}][\x{80}-\x{bf}][\x{80}-\x{bf}][\x{80}-\x{bf}]
+      |         \x{f4} [\x{80}-\x{8f}][\x{80}-\x{bf}][\x{80}-\x{bf}]
+/x;
+
 
 
 ##############################################################################
@@ -1258,45 +1282,78 @@ sub deunicode
         return $_[0]; # Not needing deunicoding
     }
 
-    if( utf8::is_utf8( $_[0] ) )
-    {
-        if( ord(substr($_[0],0,1)) == 65279 ) # BOM
-        {
-            debug("Removing BOM");
-            $_[0] = substr($_[0],1);
-        }
+    repair_utf8(\ $_[0]);
 
-        if( $_[0] =~ /Ã/ ) # Could be double-encoded unicode
+    if( ord(substr($_[0],0,1)) == 65279 ) # BOM
+    {
+        debug("Removing BOM");
+        $_[0] = substr($_[0],1);
+    }
+
+    return encode("Latin-1", $_[0], \&Para::Frame::Unicode::map_to_latin1);
+}
+
+
+##############################################################################
+
+=head2 repair_utf8
+
+  repair_utf8( \ $text )
+
+=cut
+
+sub repair_utf8
+{
+    my( $tref ) = @_;
+
+#    debug("Repairing $$tref");
+
+    my $normal = '';
+    my $length = length($$tref);
+    while()
+    {
+        if( $$tref =~ m{\G($valid_utf8_regexp+)}gc)
+#        if( $$tref =~ m{\G($valid_utf8_regexp+?)(?=$latin1_as_utf8)}gc)
         {
-            debug(1, "************** decoding double-encoded string" );
-            my $decoded;
-            while( length $_[0] )
+#            debug(sprintf "Good at %3d: %s",pos($$tref), $1);
+            if( not length($normal) and pos($$tref) == $length )
             {
-                $decoded .= decode("UTF-8", $_[0], Encode::FB_QUIET);
-                $decoded .= substr($_[0], 0, 1, "") if length $_[0];
+                # All is valid
+#                debug("All valid");
+                last;
             }
-            $_[0] = $decoded;
+
+            $normal .= $1;
         }
 
-        utf8::encode($_[0]);
-    }
+#        if( $$tref =~ m{\G($latin1_as_utf8+)}gc)
+#        {
+#            debug(sprintf "Latin at %3d: %s",pos($$tref), $1);
+#        }
 
-    if( $_[0] =~ /Ã/ ) # Could be unicode
-    {
-        my $decoded;
-
-        while( length $_[0] )
+        if( $$tref =~ m{\G(.)}gc )
         {
-            $decoded .= decode("UTF-8", $_[0], Encode::FB_QUIET);
-            $decoded .= substr($_[0], 0, 1, "") if length $_[0];
+#            debug( sprintf "Bad at %3d: %s",pos($$tref), $1 );
+            my $copy = $1; utf8::encode($copy);
+            $normal .= $copy;
         }
 
-        my $final = encode("Latin-1", $decoded, \&Para::Frame::Unicode::map_to_latin1);
-
-        return $final;
+        if( pos($$tref) == $length )
+        {
+            $$tref = $normal;
+            last;
+        }
     }
 
-    return $_[0];
+    utf8::decode($$tref);
+
+    if( $$tref =~ $latin1_as_utf8 ) #Potentially Double-encoded
+    {
+        debug("Double-encoding detected");
+        repair_utf8( $tref );
+    }
+
+    return $tref;
 }
 
 
@@ -2347,25 +2404,18 @@ sub validate_utf8
 {
     if( utf8::is_utf8(${$_[0]}) )
     {
-        if( utf8::valid(${$_[0]}) )
+        if( ${$_[0]} =~ $latin1_as_utf8 )
         {
-            if( ${$_[0]} =~ /Ã/ )
-            {
-                return "DOUBLE-ENCODED utf8";
-            }
-            else
-            {
-                return "valid utf8";
-            }
+            return "DOUBLE-ENCODED utf8";
         }
         else
         {
-            return "as INVALID utf8";
+            return "valid utf8";
         }
     }
     else
     {
-        if( ${$_[0]} =~ /Ã/ )
+        if( ${$_[0]} =~ $latin1_as_utf8 )
         {
             return "UNMARKED utf8";
         }
