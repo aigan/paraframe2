@@ -21,7 +21,7 @@ Para::Frame::Widget - Common template widgets
 use 5.010;
 use strict;
 use warnings;
-use utf8; # Using Latin1 (åäö) in alfanum_bar()
+use utf8;                       # Using Latin1 (åäö) in alfanum_bar()
 use locale;
 
 use Carp qw( cluck confess croak );
@@ -30,13 +30,13 @@ use IO::File;
 use Para::Frame::URI;
 use POSIX qw(locale_h);
 use Scalar::Util qw( blessed );
-use JSON; # to_json
+use JSON;                       # to_json
 
 
 use base qw( Exporter );
 our @EXPORT_OK
 
-      = qw( slider jump submit go go_js forward forward_url preserve_data alfanum_bar rowlist list2block selectorder param_includes hidden input password textarea htmlarea filefield css_header confirm_simple inflect radio calendar input_image selector label_from_params checkbox );
+  = qw( slider jump submit go go_js forward forward_url preserve_data alfanum_bar rowlist list2block selectorder param_includes hidden input password textarea htmlarea filefield css_header confirm_simple inflect radio calendar input_image selector label_from_params checkbox );
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( trim throw debug uri store_params datadump );
@@ -141,16 +141,16 @@ sub slider
     my( @checked ) = ('')x$number;
     my $delta = ($max - $min ) / ($number-1);
     my $widget = "";
-    for( my $i=0; $i<$number; $i++ )
+    for ( my $i=0; $i<$number; $i++ )
     {
-	$val[$i] = int($min + $i*$delta);
-	if( defined $current and ($current >=  ($min + $i*$delta - $delta/2)) and
-	      ($current <  ($min + $i*$delta + $delta/2)))
-	{
-	    $checked[$i] = 'checked="checked"';
-	}
+        $val[$i] = int($min + $i*$delta);
+        if ( defined $current and ($current >=  ($min + $i*$delta - $delta/2)) and
+             ($current <  ($min + $i*$delta + $delta/2)))
+        {
+            $checked[$i] = 'checked="checked"';
+        }
 
-	$widget .= "<input type=\"radio\" name=\"$field\" value=\"$val[$i]\" $checked[$i]/>\n";
+        $widget .= "<input type=\"radio\" name=\"$field\" value=\"$val[$i]\" $checked[$i]/>\n";
     }
     return $widget;
 }
@@ -205,68 +205,68 @@ sub jump
     $label = '???' unless length $label;
 
     my $label_out;
-    if( blessed $label and $label->can('as_html') )
+    if ( blessed $label and $label->can('as_html') )
     {
-	$label_out = $label->as_html;
+        $label_out = $label->as_html;
     }
     else
     {
-	$label_out = CGI->escapeHTML( $label );
+        $label_out = CGI->escapeHTML( $label );
     }
     my $content = $label_out;
 
     # DEPRECATED
-    if( my $src =  delete ${$attr}{'href_image'} )
+    if ( my $src =  delete ${$attr}{'href_image'} )
     {
-	$content = "<img alt=\"$label_out\" src=\"$src\" />";
+        $content = "<img alt=\"$label_out\" src=\"$src\" />";
     }
-    if( my $src =  delete ${$attr}{'tag_image'} )
+    if ( my $src =  delete ${$attr}{'tag_image'} )
     {
-	$content = "<img alt=\"$label_out\" src=\"$src\" />";
+        $content = "<img alt=\"$label_out\" src=\"$src\" />";
     }
 
     my $extra = jump_extra( $template, $attr );
 
     {
-	my $q = $Para::Frame::REQ->q;
-	my @keep_params = @{ $attr->{'keep_params'}||[] };
-	delete $attr->{'keep_params'};
-	if( $q )
-	{
-	    @keep_params = $q->param('keep_params')
-		unless @keep_params;
-	}
+        my $q = $Para::Frame::REQ->q;
+        my @keep_params = @{ $attr->{'keep_params'}||[] };
+        delete $attr->{'keep_params'};
+        if ( $q )
+        {
+            @keep_params = $q->param('keep_params')
+              unless @keep_params;
+        }
 #	warn "keep_params are @keep_params\n"; ### DEBUG
-	foreach my $key ( @keep_params )
-	{
-	    $attr->{$key} = $q->param($key)
-		unless defined $attr->{$key} and length $attr->{$key};
-	    delete $attr->{$key} unless $attr->{$key}; # Only if TRUE
-	}
+        foreach my $key ( @keep_params )
+        {
+            $attr->{$key} = $q->param($key)
+              unless defined $attr->{$key} and length $attr->{$key};
+            delete $attr->{$key} unless $attr->{$key}; # Only if TRUE
+        }
     }
 
     unless( $template )
     {
-	if( $Para::Frame::REQ->response_if_existing )
-	{
-	    $template = $Para::Frame::REQ->page->url_path_slash;
-	}
+        if ( $Para::Frame::REQ->response_if_existing )
+        {
+            $template = $Para::Frame::REQ->page->url_path_slash;
+        }
     }
 
 #    warn sprintf("Escaping '%s' and getting '%s'\n", $label,CGI->escapeHTML( $label ) );
 
-    if( $template )
+    if ( $template )
     {
-	my $uri = Para::Frame::Utils::uri( $template, $attr );
-	return sprintf("<a href=\"%s\"%s>%s</a>",
-		       CGI->escapeHTML( $uri ),
-		       $extra,
-		       $content,
-		       );
+        my $uri = Para::Frame::Utils::uri( $template, $attr );
+        return sprintf("<a href=\"%s\"%s>%s</a>",
+                       CGI->escapeHTML( $uri ),
+                       $extra,
+                       $content,
+                      );
     }
     else
     {
-	return $content;
+        return $content;
     }
 }
 
@@ -283,12 +283,12 @@ sub jump_extra
 {
     my( $template, $attr, $args ) = @_;
 
-    if( UNIVERSAL::isa $template, 'URI' )
+    if ( UNIVERSAL::isa $template, 'URI' )
     {
-	if( $template->host eq $Para::Frame::REQ->site->host )
-	{
-	    $template = $template->path_query;
-	}
+        if ( $template->host eq $Para::Frame::REQ->site->host )
+        {
+            $template = $template->path_query;
+        }
     }
 
     $attr ||= {};
@@ -299,62 +299,62 @@ sub jump_extra
     my $extra = "";
 
     ###### DEPRECATED
-    if( my $val = delete ${$attr}{'href_target'} )
+    if ( my $val = delete ${$attr}{'href_target'} )
     {
-	$extra .= " target=\"$val\"";
+        $extra .= " target=\"$val\"";
     }
-    if( my $val = delete ${$attr}{'href_id'} )
+    if ( my $val = delete ${$attr}{'href_id'} )
     {
-	$extra .= " id=\"$val\"";
+        $extra .= " id=\"$val\"";
     }
-    if( my $val = delete ${$attr}{'href_onclick'} )
+    if ( my $val = delete ${$attr}{'href_onclick'} )
     {
-	$extra .= " onClick=\"$val\"";
+        $extra .= " onClick=\"$val\"";
     }
-    if( my $val = delete ${$attr}{'href_style'} )
+    if ( my $val = delete ${$attr}{'href_style'} )
     {
-	$extra .= " style=\"$val\"";
+        $extra .= " style=\"$val\"";
     }
 
     my $class_val = delete ${$attr}{'href_class'};
-    if( $class_val )
+    if ( $class_val )
     {
-	$extra .= " class=\"$class_val\"";
+        $extra .= " class=\"$class_val\"";
     }
 
-    if( my $tag_attr = delete ${$attr}{'tag_attr'} )
+    if ( my $tag_attr = delete ${$attr}{'tag_attr'} )
     {
-	$class_val = $tag_attr->{'class'};
-	$extra .= tag_extra_from_params( $tag_attr );
+        $class_val = $tag_attr->{'class'};
+        $extra .= tag_extra_from_params( $tag_attr );
     }
 
-    if( not defined $class_val and $args->{'highlight_same_place'} )
+    if ( not defined $class_val and $args->{'highlight_same_place'} )
     {
-	if( $Para::Frame::REQ->is_from_client and $template )
-	{
-	    my $template_path = $template;
-	    $template_path =~ s/\?.*//;
+        if ( $Para::Frame::REQ->is_from_client and $template )
+        {
+            my $template_path = $template;
+            $template_path =~ s/\?.*//;
 
-	    # Mark as same_place if link goes to current page
-	    if( $Para::Frame::REQ->page->url_path_slash eq $template_path
-		and not $attr->{'run'} )
-	    {
-		# Special handling of attribute id
-		my $oid = $Para::Frame::REQ->q->param('id') || 0;
-		my $nid = $attr->{'id'} || 0;
-		unless( $nid )
-		{
-		    if( $template =~ /(\?|&)id=(.+?)(&|$)/ )
-		    {
-			$nid = CGI->unescape($2) || 0;
-		    }
-		}
-		if( $nid eq $oid )
-		{
-		    $extra .= " class=\"same_place\"";
-		}
-	    }
-	}
+            # Mark as same_place if link goes to current page
+            if ( $Para::Frame::REQ->page->url_path_slash eq $template_path
+                 and not $attr->{'run'} )
+            {
+                # Special handling of attribute id
+                my $oid = $Para::Frame::REQ->q->param('id') || 0;
+                my $nid = $attr->{'id'} || 0;
+                unless( $nid )
+                {
+                    if ( $template =~ /(\?|&)id=(.+?)(&|$)/ )
+                    {
+                        $nid = CGI->unescape($2) || 0;
+                    }
+                }
+                if ( $nid eq $oid )
+                {
+                    $extra .= " class=\"same_place\"";
+                }
+            }
+        }
     }
 
     return $extra;
@@ -402,9 +402,9 @@ sub submit
     my $tag_attr = delete ${$attr}{'tag_attr'} || {};
     $tag_attr->{'class'} ||= "";
     $tag_attr->{'class'} .= " btn";
-    unless( $tag_attr->{'class'} =~ /btn-/)
+    unless ( $tag_attr->{'class'} =~ /btn-/)
     {
-	$tag_attr->{'class'} .= " btn-default";
+        $tag_attr->{'class'} .= " btn-default";
     }
     my $extra = tag_extra_from_params( $tag_attr );
 
@@ -463,20 +463,20 @@ sub go
     $run ||= 'nop';
     $attr ||= {};
 
-    if( utf8::is_utf8($label) )
+    if ( utf8::is_utf8($label) )
     {
-	if( utf8::valid($label) )
-	{
+        if ( utf8::valid($label) )
+        {
 #	    debug "Label '$label' is valid UTF8";
-	}
-	else
-	{
-	    confess "Label '$label' is INVALID UTF8";
-	}
+        }
+        else
+        {
+            confess "Label '$label' is INVALID UTF8";
+        }
     }
     else
     {
-	utf8::decode($label);
+        utf8::decode($label);
 #	debug "Label '$label' decoded to UTF8";
 #	if( utf8::is_utf8($label) )
 #	{
@@ -496,9 +496,9 @@ sub go
     my $tag_attr = delete ${$attr}{'tag_attr'} || {};
     $tag_attr->{'class'} ||= "";
     $tag_attr->{'class'} .= " btn";
-    unless( $tag_attr->{'class'} =~ /btn-/)
+    unless ( $tag_attr->{'class'} =~ /btn-/)
     {
-	$tag_attr->{'class'} .= " btn-default";
+        $tag_attr->{'class'} .= " btn-default";
     }
     my $extra = tag_extra_from_params( $tag_attr );
 
@@ -560,30 +560,30 @@ sub forward_url
     $template ||= $Para::Frame::REQ->env->{'REQUEST_URI'};
     my $except = ['run','destination','reqnum','pfport','caller_page']; # FIXME
 
-    if( $template =~ /(.*?)\?/ )
+    if ( $template =~ /(.*?)\?/ )
     {
 #	debug "Processing query part of template";
-	my $uri = Para::Frame::URI->new($template);
-	$template = $1;
-	my( %urlq ) = $uri->query_form;
+        my $uri = Para::Frame::URI->new($template);
+        $template = $1;
+        my( %urlq ) = $uri->query_form;
 
       KEY1:
-	foreach my $key ( keys %urlq )
-	{
-	    # Not supporting multiple values
-	    next if defined $attr->{$key};
+        foreach my $key ( keys %urlq )
+        {
+            # Not supporting multiple values
+            next if defined $attr->{$key};
 
-	    foreach my $exception ( @$except )
-	    {
-		if( $key eq $exception )
-		{
-		    next KEY1;
-		}
-	    }
+            foreach my $exception ( @$except )
+            {
+                if ( $key eq $exception )
+                {
+                    next KEY1;
+                }
+            }
 
 #	    debug "  Adding $key";
-	    $attr->{$key} = [$urlq{$key}];
-	}
+            $attr->{$key} = [$urlq{$key}];
+        }
     }
 
     my $q = $Para::Frame::REQ->q;
@@ -592,19 +592,19 @@ sub forward_url
   KEY2:
     foreach my $key ( $q->param() )
     {
-	next if defined $attr->{$key};
-	next unless $q->param($key);
+        next if defined $attr->{$key};
+        next unless $q->param($key);
 
-	foreach my $exception ( @$except )
-	{
-	    if( $key eq $exception )
-	    {
-		next KEY2;
-	    }
-	}
+        foreach my $exception ( @$except )
+        {
+            if ( $key eq $exception )
+            {
+                next KEY2;
+            }
+        }
 
 #	debug "  Adding $key";
-	$attr->{$key} = [$q->param($key)];
+        $attr->{$key} = [$q->param($key)];
     }
 
     my @parts = ();
@@ -612,31 +612,31 @@ sub forward_url
     foreach my $key ( keys %$attr )
     {
 #	debug "  Encoding $key";
-	my $value = $attr->{$key};
-	if( UNIVERSAL::isa($value, 'ARRAY') )
-	{
-	    foreach my $val (@$value)
-	    {
-		push @parts, sprintf("%s=%s", $key, $q->escape($val));
-	    }
-	}
-	else
-	{
-	    push @parts, sprintf("%s=%s", $key, $q->escape($value));
-	}
+        my $value = $attr->{$key};
+        if ( UNIVERSAL::isa($value, 'ARRAY') )
+        {
+            foreach my $val (@$value)
+            {
+                push @parts, sprintf("%s=%s", $key, $q->escape($val));
+            }
+        }
+        else
+        {
+            push @parts, sprintf("%s=%s", $key, $q->escape($value));
+        }
     }
 
     my $query = join '&amp;', @parts;
-    if( $query )
+    if ( $query )
     {
-	if( $template =~ /\?/ )
-	{
-	    $query = '&'.$query;
-	}
-	else
-	{
-	    $query = '?'.$query;
-	}
+        if ( $template =~ /\?/ )
+        {
+            $query = '&'.$query;
+        }
+        else
+        {
+            $query = '?'.$query;
+        }
     }
     return $template.$query;
 }
@@ -669,18 +669,18 @@ sub preserve_data
   KEY:
     foreach my $key ( $q->param())
     {
-	foreach( @except )
-	{
+        foreach ( @except )
+        {
 #	    warn "Testing $key =~ /^$_\$/\n";
-	    next KEY if $key =~ /^$_$/;
+            next KEY if $key =~ /^$_$/;
 #	    warn "  PASSED\n";
-	}
-	my @vals = $q->param($key);
-	foreach my $val ( @vals )
-	{
-	    $val = $q->escapeHTML($val);
-	    $text .= "<input type=\"hidden\" name=\"$key\" value=\"$val\" />\n";
-	}
+        }
+        my @vals = $q->param($key);
+        foreach my $val ( @vals )
+        {
+            $val = $q->escapeHTML($val);
+            $text .= "<input type=\"hidden\" name=\"$key\" value=\"$val\" />\n";
+        }
     }
     return $text;
 }
@@ -710,24 +710,24 @@ sub alfanum_bar
     $attr ||= {};
     $part ||= '';
     my $extra = '';
-    if( $part )
+    if ( $part )
     {
-	$extra = ' rel="nofollow"';
+        $extra = ' rel="nofollow"';
     }
 
     my @keep_params = @{ $attr->{'keep_params'}||[] };
     delete $attr->{'keep_params'};
     @keep_params = $q->param('keep_params')
-	unless @keep_params;
+      unless @keep_params;
 #	warn "keep_params are @keep_params\n"; ### DEBUG
     foreach my $key ( @keep_params )
     {
-	next if $key eq 'offset';
-	next if $key eq 'part';
+        next if $key eq 'offset';
+        next if $key eq 'part';
 
-	$attr->{$key} = $q->param($key)
-	    unless defined $attr->{$key} and length $attr->{$key};
-	delete $attr->{$key} unless $attr->{$key}; # Only if TRUE
+        $attr->{$key} = $q->param($key)
+          unless defined $attr->{$key} and length $attr->{$key};
+        delete $attr->{$key} unless $attr->{$key}; # Only if TRUE
     }
 
     # locale should have been set previously!
@@ -764,9 +764,9 @@ sub rowlist
     my @list;
     foreach my $row ( split /\r?\n/, ($q->param($name)||'') )
     {
-	trim(\$row);
-	next unless length $row;
-	push @list, $row;
+        trim(\$row);
+        next unless length $row;
+        push @list, $row;
     }
     return \@list;
 }
@@ -793,10 +793,10 @@ sub list2block
     my $block;
     foreach my $name ( @_ )
     {
-	foreach my $row ( $q->param($name) )
-	{
-	    $block .= $row."\n";
-	}
+        foreach my $row ( $q->param($name) )
+        {
+            $block .= $row."\n";
+        }
     }
     return $block;
 }
@@ -814,9 +814,9 @@ sub selectorder
 
     my $result = "<select name=\"placeobj_$id\">\n";
     $result .= "<option selected=\"selected\">--\n";
-    for(my $i=1;$i<=$size;$i++)
+    for (my $i=1;$i<=$size;$i++)
     {
-	$result .= sprintf("<option value=\"$i\">%.2d\n", $i);
+        $result .= sprintf("<option value=\"$i\">%.2d\n", $i);
     }
     $result .= "</select>\n";
     return $result;
@@ -837,7 +837,7 @@ sub param_includes
 
     foreach my $val ($q->param($key))
     {
-	return 1 if $val eq $value;
+        return 1 if $val eq $value;
     }
     return 0;
 }
@@ -870,10 +870,10 @@ sub hidden
     $value ||= '';
 
     return sprintf('<input type="hidden" id="%s" name="%s" value="%s" />',
-		   CGI->escapeHTML( $key ),
-		   CGI->escapeHTML( $key ),
-		   CGI->escapeHTML( $value ),
-		   );
+                   CGI->escapeHTML( $key ),
+                   CGI->escapeHTML( $key ),
+                   CGI->escapeHTML( $value ),
+                  );
 }
 
 
@@ -926,33 +926,33 @@ sub input
     my( $key, $value, $params ) = @_;
 
     $params ||= {};
-    if( $params->{'size'} )
+    if ( $params->{'size'} )
     {
         $params->{'maxlength'} ||= $params->{'size'}*3;
     }
     my $extra = '';
 
     my @previous;
-    if( my $q = $Para::Frame::REQ->q )
+    if ( my $q = $Para::Frame::REQ->q )
     {
-	@previous = $q->param($key);
+        @previous = $q->param($key);
     }
 
-    if( $#previous == 0 ) # Just one value
+    if ( $#previous == 0 )      # Just one value
     {
-	$value = $previous[0];
+        $value = $previous[0];
     }
     $key   ||= 'query';
 
-    if( my $onchange = delete $params->{'onchange'} )
+    if ( my $onchange = delete $params->{'onchange'} )
     {
-	$extra .= ' onchange="'. $onchange .'" ';
+        $extra .= ' onchange="'. $onchange .'" ';
     }
 
     # Objects is defined but may stringify to undef
     unless( $value or Scalar::Util::looks_like_number($value) )
     {
-	$value = '';
+        $value = '';
     }
 
     $params->{id} ||= $key;
@@ -961,11 +961,11 @@ sub input
 
     # Stringify all params, in case they was objects
     return sprintf('%s<input type="text" name="%s" value="%s"%s />',
-		   $prefix,
-		   CGI->escapeHTML( "$key" ),
-		   CGI->escapeHTML( "$value" ),
-		   $extra,
-		  );
+                   $prefix,
+                   CGI->escapeHTML( "$key" ),
+                   CGI->escapeHTML( "$value" ),
+                   $extra,
+                  );
 }
 
 
@@ -1017,34 +1017,34 @@ sub password
     my( $key, $value_in, $params ) = @_;
 
     $params ||= {};
-    if( $params->{'size'} )
+    if ( $params->{'size'} )
     {
         $params->{'maxlength'} ||= $params->{'size'}*3;
     }
     my $extra = '';
-    my $value; # Not using input value...
+    my $value;                  # Not using input value...
 
     my @previous;
-    if( my $q = $Para::Frame::REQ->q )
+    if ( my $q = $Para::Frame::REQ->q )
     {
-	@previous = $q->param($key);
+        @previous = $q->param($key);
     }
 
-    if( $#previous == 0 ) # Just one value
+    if ( $#previous == 0 )      # Just one value
     {
-	$value = $previous[0];
+        $value = $previous[0];
     }
     $key   ||= 'query';
 
-    if( my $onchange = delete $params->{'onchange'} )
+    if ( my $onchange = delete $params->{'onchange'} )
     {
-	$extra .= ' onchange="'. $onchange .'" ';
+        $extra .= ' onchange="'. $onchange .'" ';
     }
 
     # Objects is defined but may stringify to undef
     unless( $value or Scalar::Util::looks_like_number($value) )
     {
-	$value = '';
+        $value = '';
     }
 
     $params->{id} ||= $key;
@@ -1053,11 +1053,11 @@ sub password
 
     # Stringify all params, in case they was objects
     return sprintf('%s<input type="password" name="%s" value="%s"%s />',
-		   $prefix,
-		   CGI->escapeHTML( "$key" ),
-		   CGI->escapeHTML( "$value" ),
-		   $extra,
-		  );
+                   $prefix,
+                   CGI->escapeHTML( "$key" ),
+                   CGI->escapeHTML( "$value" ),
+                   $extra,
+                  );
 }
 
 
@@ -1103,14 +1103,14 @@ sub textarea
     my $cols = $params->{'cols'} || $params->{'size'};
     my @previous;
 
-    if( my $q = $Para::Frame::REQ->q )
+    if ( my $q = $Para::Frame::REQ->q )
     {
-	@previous = $q->param($key);
+        @previous = $q->param($key);
     }
 
-    if( $#previous == 0 ) # Just one value
+    if ( $#previous == 0 )      # Just one value
     {
-	$value = $previous[0];
+        $value = $previous[0];
     }
     $value ||= '';
 
@@ -1126,12 +1126,12 @@ sub textarea
     my $extra = tag_extra_from_params($params);
 
     return sprintf('%s<textarea name="%s" rows="%s"%s>%s</textarea>',
-		   $prefix,
-		   CGI->escapeHTML( $key ),
-		   CGI->escapeHTML( $rows ),
-		   $extra,
-		   CGI->escapeHTML( $value ),
-		   );
+                   $prefix,
+                   CGI->escapeHTML( $key ),
+                   CGI->escapeHTML( $rows ),
+                   $extra,
+                   CGI->escapeHTML( $value ),
+                  );
 }
 
 
@@ -1177,14 +1177,14 @@ sub htmlarea
     my $cols = $params->{'cols'} || $params->{'size'} || 75;
     my @previous;
 
-    if( my $q = $Para::Frame::REQ->q )
+    if ( my $q = $Para::Frame::REQ->q )
     {
-	@previous = $q->param($key);
+        @previous = $q->param($key);
     }
 
-    if( $#previous == 0 ) # Just one value
+    if ( $#previous == 0 )      # Just one value
     {
-	$value = $previous[0];
+        $value = $previous[0];
     }
     $value ||= '';
 
@@ -1207,8 +1207,8 @@ sub htmlarea
 
     return $prefix .
       '<input type="hidden" name="'. $params->{'id'} .'" style="display:none" value="" '. $extra .' />'.
-	'<script>document.getElementById(\''. $params->{'id'} . '\').value="'. $value .'"</script>'.
-	  '<iframe id="'. $params->{'id'} .'___Frame" src="'. $home .'/pf/cms/fckeditor/editor/fckeditor.html?InstanceName='. $params->{'id'} .'&amp;Toolbar=ParaFrame" width="'. $w .'" height="'. $h .'" frameborder="0" scrolling="no"></iframe>';
+        '<script>document.getElementById(\''. $params->{'id'} . '\').value="'. $value .'"</script>'.
+          '<iframe id="'. $params->{'id'} .'___Frame" src="'. $home .'/pf/cms/fckeditor/editor/fckeditor.html?InstanceName='. $params->{'id'} .'&amp;Toolbar=ParaFrame" width="'. $w .'" height="'. $h .'" frameborder="0" scrolling="no"></iframe>';
 }
 
 
@@ -1257,41 +1257,41 @@ sub checkbox
 
     # Detecting how many params are given to the checkbox
     #
-    if( ref $checked and
-	not $params and
-	(ref $checked eq 'HASH')
-	)
+    if ( ref $checked and
+         not $params and
+         (ref $checked eq 'HASH')
+       )
     {
-	$params = $checked;
-	$checked = undef;
+        $params = $checked;
+        $checked = undef;
     }
 
-    if( ref $value and
-	not $checked and
-	not $params and
-	(ref $value eq 'HASH')
-	)
+    if ( ref $value and
+         not $checked and
+         not $params and
+         (ref $value eq 'HASH')
+       )
     {
-	$params = $value;
-	$value = 1;
+        $params = $value;
+        $value = 1;
     }
 
     $value ||= 1;
 
     my @previous;
 
-    if( my $q = $Para::Frame::REQ->q )
+    if ( my $q = $Para::Frame::REQ->q )
     {
-	@previous = $q->param($field);
+        @previous = $q->param($field);
     }
 
     foreach my $prev ( @previous )
     {
-	if( $prev eq $value )
-	{
-	    $checked = 1;
-	    last;
-	}
+        if ( $prev eq $value )
+        {
+            $checked = 1;
+            last;
+        }
     }
 
     my $extra = "";
@@ -1299,10 +1299,10 @@ sub checkbox
     my $suffix = "";
     my $separator = delete $params->{'separator'} || '';
 
-    if( my $tdlabel = delete $params->{'tdlabel'} )
+    if ( my $tdlabel = delete $params->{'tdlabel'} )
     {
-	$separator = "</td><td>";
-	$params->{'prefix_label'} = $tdlabel;
+        $separator = "</td><td>";
+        $params->{'prefix_label'} = $tdlabel;
     }
 
 
@@ -1310,91 +1310,91 @@ sub checkbox
     my $id = $params->{id} || ( $field.'-'.$IDCOUNTER++);
 
     my $suffix_label = $params->{'label'};
-    if( $suffix_label ||= delete $params->{'suffix_label'} )
+    if ( $suffix_label ||= delete $params->{'suffix_label'} )
     {
-	my $label_out;
-	if( blessed $suffix_label and $suffix_label->can('as_html') )
-	{
-	    $label_out = $suffix_label->as_html;
-	}
-	else
-	{
-	    $label_out = CGI->escapeHTML( $suffix_label );
-	}
+        my $label_out;
+        if ( blessed $suffix_label and $suffix_label->can('as_html') )
+        {
+            $label_out = $suffix_label->as_html;
+        }
+        else
+        {
+            $label_out = CGI->escapeHTML( $suffix_label );
+        }
 
-	my $suffix_extra = "";
-	if( $label_class )
-	{
-	    $suffix_extra .= sprintf " class=\"%s\"",
-	    CGI->escapeHTML( $label_class );
-	}
-	$suffix .= sprintf('<label for="%s"%s>%s</label>',
-			   CGI->escapeHTML( $id ),
-			   $suffix_extra,
-			   $label_out,
-			  );
-	$params->{id} = $id;
+        my $suffix_extra = "";
+        if ( $label_class )
+        {
+            $suffix_extra .= sprintf " class=\"%s\"",
+              CGI->escapeHTML( $label_class );
+        }
+        $suffix .= sprintf('<label for="%s"%s>%s</label>',
+                           CGI->escapeHTML( $id ),
+                           $suffix_extra,
+                           $label_out,
+                          );
+        $params->{id} = $id;
     }
 
-    if( my $prefix_label = delete $params->{'prefix_label'} )
+    if ( my $prefix_label = delete $params->{'prefix_label'} )
     {
-	my $label_out;
-	if( blessed $prefix_label and $prefix_label->can('as_html') )
-	{
-	    $label_out = $prefix_label->as_html;
-	}
-	else
-	{
-	    $label_out = CGI->escapeHTML( $prefix_label );
-	}
+        my $label_out;
+        if ( blessed $prefix_label and $prefix_label->can('as_html') )
+        {
+            $label_out = $prefix_label->as_html;
+        }
+        else
+        {
+            $label_out = CGI->escapeHTML( $prefix_label );
+        }
 
-	my $prefix_extra = "";
-	if( $label_class )
-	{
-	    $prefix_extra .= sprintf " class=\"%s\"",
-	    CGI->escapeHTML( $label_class );
-	}
-	$prefix .= sprintf('<label for="%s"%s>%s</label>',
-			   CGI->escapeHTML( $id ),
-			   $prefix_extra,
-			   $label_out,
-			   );
-	$params->{id} = $id;
+        my $prefix_extra = "";
+        if ( $label_class )
+        {
+            $prefix_extra .= sprintf " class=\"%s\"",
+              CGI->escapeHTML( $label_class );
+        }
+        $prefix .= sprintf('<label for="%s"%s>%s</label>',
+                           CGI->escapeHTML( $id ),
+                           $prefix_extra,
+                           $label_out,
+                          );
+        $params->{id} = $id;
     }
 
     foreach my $key ( keys %$params )
     {
-	$extra .= sprintf " $key=\"%s\"",
-	  CGI->escapeHTML( $params->{$key} );
+        $extra .= sprintf " $key=\"%s\"",
+          CGI->escapeHTML( $params->{$key} );
     }
 
-    if( ref $checked )
+    if ( ref $checked )
     {
-	confess "Checkbox called with a non-boolean value: $checked";
+        confess "Checkbox called with a non-boolean value: $checked";
     }
 
-    if( $checked and $checked ne 'f')
+    if ( $checked and $checked ne 'f')
     {
-	$extra .= ' checked="checked"';
+        $extra .= ' checked="checked"';
     }
 
-    if( $prefix )
+    if ( $prefix )
     {
-	$prefix .= $separator;
+        $prefix .= $separator;
     }
 
-    if( $suffix )
+    if ( $suffix )
     {
-	$suffix = $separator . $suffix;
+        $suffix = $separator . $suffix;
     }
 
     return sprintf('%s<input type="checkbox" name="%s" value="%s"%s/>%s',
-		   $prefix,
-		   CGI->escapeHTML( $field ),
-		   CGI->escapeHTML( $value ),
-		   $extra,
-		   $suffix,
-		   );
+                   $prefix,
+                   CGI->escapeHTML( $field ),
+                   CGI->escapeHTML( $value ),
+                   $extra,
+                   $suffix,
+                  );
 }
 
 
@@ -1434,22 +1434,22 @@ sub radio
 {
     my( $field, $value, $checked, $params ) = @_;
 
-    if( ref $checked )
+    if ( ref $checked )
     {
-	$params = $checked;
-	$checked = undef;
+        $params = $checked;
+        $checked = undef;
     }
 
     my @previous;
 
-    if( my $q = $Para::Frame::REQ->q )
+    if ( my $q = $Para::Frame::REQ->q )
     {
-	@previous = $q->param($field);
+        @previous = $q->param($field);
     }
 
-    if( $#previous == 0 ) # Just one value
+    if ( $#previous == 0 )      # Just one value
     {
-	$checked = ($previous[0] eq $value) ? 1 : 0;
+        $checked = ($previous[0] eq $value) ? 1 : 0;
     }
 
     defined $value or croak "value param for radio missing";
@@ -1462,68 +1462,68 @@ sub radio
     my $id = $params->{id} || $field .'_'. $value;
 
     my $suffix_label = $params->{'label'};
-    if( $suffix_label ||= delete $params->{'suffix_label'} )
+    if ( $suffix_label ||= delete $params->{'suffix_label'} )
     {
-	$id or croak "id param for radio missing";
-	my $suffix_extra = "";
-	if( $label_class )
-	{
-	    $suffix_extra .= sprintf " class=\"%s\"",
-	    CGI->escapeHTML( $label_class );
-	}
-	$suffix .= sprintf('<label for="%s"%s>%s</label>',
-			   CGI->escapeHTML( $id ),
-			   $suffix_extra,
-			   CGI->escapeHTML($suffix_label),
-			   );
-	$params->{id} = $id;
+        $id or croak "id param for radio missing";
+        my $suffix_extra = "";
+        if ( $label_class )
+        {
+            $suffix_extra .= sprintf " class=\"%s\"",
+              CGI->escapeHTML( $label_class );
+        }
+        $suffix .= sprintf('<label for="%s"%s>%s</label>',
+                           CGI->escapeHTML( $id ),
+                           $suffix_extra,
+                           CGI->escapeHTML($suffix_label),
+                          );
+        $params->{id} = $id;
     }
 
-    if( my $prefix_label = delete $params->{'prefix_label'} )
+    if ( my $prefix_label = delete $params->{'prefix_label'} )
     {
-	$id or croak "id param for radio missing";
-	my $prefix_extra = "";
-	if( $label_class )
-	{
-	    $prefix_extra .= sprintf " class=\"%s\"",
-	    CGI->escapeHTML( $label_class );
-	}
-	$prefix .= sprintf('<label for="%s"%s>%s</label>',
-			   CGI->escapeHTML( $id ),
-			   $prefix_extra,
-			   CGI->escapeHTML($prefix_label),
-			   );
-	$params->{id} = $id;
+        $id or croak "id param for radio missing";
+        my $prefix_extra = "";
+        if ( $label_class )
+        {
+            $prefix_extra .= sprintf " class=\"%s\"",
+              CGI->escapeHTML( $label_class );
+        }
+        $prefix .= sprintf('<label for="%s"%s>%s</label>',
+                           CGI->escapeHTML( $id ),
+                           $prefix_extra,
+                           CGI->escapeHTML($prefix_label),
+                          );
+        $params->{id} = $id;
     }
 
     foreach my $key ( keys %$params )
     {
-	$extra .= sprintf " $key=\"%s\"",
-	  CGI->escapeHTML( $params->{$key} );
+        $extra .= sprintf " $key=\"%s\"",
+          CGI->escapeHTML( $params->{$key} );
     }
 
-    if( $checked and $checked ne 'f')
+    if ( $checked and $checked ne 'f')
     {
-	$extra .= ' checked="checked"';
+        $extra .= ' checked="checked"';
     }
 
-    if( $prefix )
+    if ( $prefix )
     {
-	$prefix .= $separator;
+        $prefix .= $separator;
     }
 
-    if( $suffix )
+    if ( $suffix )
     {
-	$suffix = $separator . $suffix;
+        $suffix = $separator . $suffix;
     }
 
     return sprintf('%s<input type="radio" name="%s" value="%s"%s/>%s',
-		   $prefix,
-		   CGI->escapeHTML( $field ),
-		   CGI->escapeHTML( $value ),
-		   $extra,
-		   $suffix,
-		   );
+                   $prefix,
+                   CGI->escapeHTML( $field ),
+                   CGI->escapeHTML( $value ),
+                   $extra,
+                   $suffix,
+                  );
 }
 
 
@@ -1548,10 +1548,10 @@ sub filefield
     my $value = $params->{'value'} || $Para::Frame::REQ->q->param($key) || "";
 
     return sprintf('<input type="file" class="btn btn-primary" name="%s" value="%s" size="%s" />',
-		   CGI->escapeHTML( $key ),
-		   CGI->escapeHTML( $value ),
-		   CGI->escapeHTML( $cols ),
-		   );
+                   CGI->escapeHTML( $key ),
+                   CGI->escapeHTML( $value ),
+                   CGI->escapeHTML( $cols ),
+                  );
 }
 
 
@@ -1651,113 +1651,113 @@ sub selector
 #    debug(datadump(\@_));
 
     my @previous;
-    if( my $q = $Para::Frame::REQ->q )
+    if ( my $q = $Para::Frame::REQ->q )
     {
-	@previous = $q->param($name);
+        @previous = $q->param($name);
 
-	$current = $previous[0]
-	  if( $#previous == 0 ); # Just one value
+        $current = $previous[0]
+          if ( $#previous == 0 ); # Just one value
     }
 
 
     #### Label etc
     my $prefix = "";
     my $separator = delete($params->{'separator'}) || '';
-    if( my $tdlabel = delete $params->{'tdlabel'} )
+    if ( my $tdlabel = delete $params->{'tdlabel'} )
     {
-	$separator = "</td><td>";
-	$params->{'label'} = $tdlabel;
+        $separator = "</td><td>";
+        $params->{'label'} = $tdlabel;
     }
-    if( my $label = delete $params->{'label'} )
+    if ( my $label = delete $params->{'label'} )
     {
-	my $id = $params->{id} || $name;
-	my $prefix_extra = "";
-	if( my $class = delete $params->{'label_class'} )
-	{
-	    $prefix_extra .= sprintf " class=\"%s\"",
-	    CGI->escapeHTML( $class );
-	}
-	$prefix .= sprintf('<label for="%s"%s>%s</label>',
-			   CGI->escapeHTML( $id ),
-			   $prefix_extra,
-			   CGI->escapeHTML($label),
-			   );
-	$params->{id} = $id;
+        my $id = $params->{id} || $name;
+        my $prefix_extra = "";
+        if ( my $class = delete $params->{'label_class'} )
+        {
+            $prefix_extra .= sprintf " class=\"%s\"",
+              CGI->escapeHTML( $class );
+        }
+        $prefix .= sprintf('<label for="%s"%s>%s</label>',
+                           CGI->escapeHTML( $id ),
+                           $prefix_extra,
+                           CGI->escapeHTML($label),
+                          );
+        $params->{id} = $id;
     }
 
     my $extra = jump_extra( undef, $params, {highlight_same_place=>0} );
 
     ###### DEPRECATED
-    if( my $class = delete ${$params}{'href_class'} )
+    if ( my $class = delete ${$params}{'href_class'} )
     {
-	$extra .= " class=\"$class\"";
+        $extra .= " class=\"$class\"";
     }
-    if( my $val = delete ${$params}{'href_target'} )
+    if ( my $val = delete ${$params}{'href_target'} )
     {
-	$extra .= " target=\"$val\"";
+        $extra .= " target=\"$val\"";
     }
-    if( my $val = delete ${$params}{'href_id'} )
+    if ( my $val = delete ${$params}{'href_id'} )
     {
-	$extra .= " id=\"$val\"";
+        $extra .= " id=\"$val\"";
     }
-    if( my $val = delete ${$params}{'href_onchange'} )
+    if ( my $val = delete ${$params}{'href_onchange'} )
     {
-	$extra .= " onChange=\"$val\"";
+        $extra .= " onChange=\"$val\"";
     }
-    if( my $val = delete ${$params}{'href_style'} )
+    if ( my $val = delete ${$params}{'href_style'} )
     {
-	$extra .= " style=\"$val\"";
+        $extra .= " style=\"$val\"";
     }
 
-    if( $prefix )
+    if ( $prefix )
     {
-	$prefix .= $separator;
+        $prefix .= $separator;
     }
     ###########
 
     $out .= $prefix . '<select name="'. CGI->escapeHTML( $name ) .'"'.$extra.'>';
 
-    if( $valkey )
+    if ( $valkey )
     {
-	my $rel = ( $relkey ? ' rel="nop"' : '' );
-	$out .= '<option value=""'. $rel .'>'. CGI->escapeHTML( $header ) .'</option>'
-	  if( $header );
+        my $rel = ( $relkey ? ' rel="nop"' : '' );
+        $out .= '<option value=""'. $rel .'>'. CGI->escapeHTML( $header ) .'</option>'
+          if ( $header );
 
-	if( UNIVERSAL::isa $data, 'Para::Frame::List' )
-	{
-	    $data = $data->as_arrayref;
-	}
+        if ( UNIVERSAL::isa $data, 'Para::Frame::List' )
+        {
+            $data = $data->as_arrayref;
+        }
 
-	foreach my $row ( @$data )
-	{
-	    if( UNIVERSAL::can $row, $valkey )
-	    {
-		my $selected = ( $row->$valkey eq $current ?
-				 ' selected="selected"' : '' );
-		$rel = ( $relkey ? ' rel="'. $row->$relkey .'"' : '' );
-		$out .= '<option value="'. $row->$valkey .'"'. $selected . $rel
-		  .'>'. $row->$tagkey .'</option>';
-	    }
-	    else
-	    {
-		my $selected = ( $row->{$valkey} eq $current ?
-				 ' selected="selected"' : '' );
-		$rel = ( $relkey ? ' rel="'. $row->{$relkey} .'"' : '' );
-		$out .= '<option value="'. $row->{$valkey} .'"'. $selected . $rel
-		  .'>'. $row->{$tagkey} .'</option>';
-	    }
-	}
+        foreach my $row ( @$data )
+        {
+            if ( UNIVERSAL::can $row, $valkey )
+            {
+                my $selected = ( $row->$valkey eq $current ?
+                                 ' selected="selected"' : '' );
+                $rel = ( $relkey ? ' rel="'. $row->$relkey .'"' : '' );
+                $out .= '<option value="'. $row->$valkey .'"'. $selected . $rel
+                  .'>'. $row->$tagkey .'</option>';
+            }
+            else
+            {
+                my $selected = ( $row->{$valkey} eq $current ?
+                                 ' selected="selected"' : '' );
+                $rel = ( $relkey ? ' rel="'. $row->{$relkey} .'"' : '' );
+                $out .= '<option value="'. $row->{$valkey} .'"'. $selected . $rel
+                  .'>'. $row->{$tagkey} .'</option>';
+            }
+        }
     }
     else
     {
-	foreach my $key ( keys %$data )
-	{
-	    my $selected = ( $key eq $current ?
-			     ' selected="selected"' : '' );
+        foreach my $key ( keys %$data )
+        {
+            my $selected = ( $key eq $current ?
+                             ' selected="selected"' : '' );
 
-	    $out .= '<option value="'. $key .'"'.$selected.'>'.
-	      $data->{$key} .'</option>';
-	}
+            $out .= '<option value="'. $key .'"'.$selected.'>'.
+              $data->{$key} .'</option>';
+        }
     }
 
     $out .= '</select>';
@@ -1783,44 +1783,44 @@ sub label_from_params
 
 
     my $separator = delete($params->{'separator'}) || '';
-    if( my $tdlabel = delete $params->{'tdlabel'} )
+    if ( my $tdlabel = delete $params->{'tdlabel'} )
     {
-	$separator = "</td><td>";
-	$params->{'label'} = $tdlabel;
+        $separator = "</td><td>";
+        $params->{'label'} = $tdlabel;
     }
 
     my $label = delete $params->{'label'} // '';
-    if( length $label )
+    if ( length $label )
     {
-	debug 2, "Drawing a label: ". $label;
+        debug 2, "Drawing a label: ". $label;
 
-	my $prefix_extra = "";
-	if( my $class = delete $params->{'label_class'} )
-	{
-	    $prefix_extra .= sprintf " class=\"%s\"",
-	      CGI->escapeHTML( $class );
-	}
+        my $prefix_extra = "";
+        if ( my $class = delete $params->{'label_class'} )
+        {
+            $prefix_extra .= sprintf " class=\"%s\"",
+              CGI->escapeHTML( $class );
+        }
 
-	if( my $id = $params->{id} )
-	{
-	    $prefix_extra .= sprintf " for=\"%s\"",
-	      CGI->escapeHTML( $id );
-	}
+        if ( my $id = $params->{id} )
+        {
+            $prefix_extra .= sprintf " for=\"%s\"",
+              CGI->escapeHTML( $id );
+        }
 
-	my $label_out;
-	if( blessed $label and $label->can('as_html') )
-	{
-	    $label_out = $label->as_html;
-	}
-	else
-	{
-	    $label_out = CGI->escapeHTML( $label );
-	}
+        my $label_out;
+        if ( blessed $label and $label->can('as_html') )
+        {
+            $label_out = $label->as_html;
+        }
+        else
+        {
+            $label_out = CGI->escapeHTML( $label );
+        }
 
-	$out .= sprintf('<label%s>%s</label>',
-			$prefix_extra,
-			$label_out,
-		       );
+        $out .= sprintf('<label%s>%s</label>',
+                        $prefix_extra,
+                        $label_out,
+                       );
     }
 
     $out .= $separator
@@ -1849,11 +1849,11 @@ sub tag_extra_from_params
 
     foreach my $key ( keys %$params )
     {
-	if( my $keyval = $params->{$key} )
-	{
-	    $out .= sprintf " $key=\"%s\"",
-	      CGI->escapeHTML( $keyval );
-	}
+        if ( my $keyval = $params->{$key} )
+        {
+            $out .= sprintf " $key=\"%s\"",
+              CGI->escapeHTML( $keyval );
+        }
     }
 
     return $out;
@@ -1892,7 +1892,7 @@ sub favicon_header
 
     unless( $url )
     {
-	$url = "pf/images/favicon.ico";
+        $url = "pf/images/favicon.ico";
     }
 
     my $home = $Para::Frame::REQ->site->home_url_path;
@@ -1901,21 +1901,21 @@ sub favicon_header
 
 
     my $type = "image/x-icon";
-    if( $url =~ /\.(\w+)$/ )
+    if ( $url =~ /\.(\w+)$/ )
     {
-	my $ext = lc($1);
-	if( $ext eq 'ico' )
-	{
-	    $type = "image/x-icon";
-	}
-	elsif( $ext eq 'png' )
-	{
-	    $type = "image/png";
-	}
-	elsif( $ext eq 'gif' )
-	{
-	    $type = "image/gif";
-	}
+        my $ext = lc($1);
+        if ( $ext eq 'ico' )
+        {
+            $type = "image/x-icon";
+        }
+        elsif ( $ext eq 'png' )
+        {
+            $type = "image/png";
+        }
+        elsif ( $ext eq 'gif' )
+        {
+            $type = "image/gif";
+        }
     }
 
 
@@ -1975,8 +1975,8 @@ sub confirm_simple
 
     foreach my $confirmed ( $q->param('confirmed') )
     {
-	warn "Comparing '$confirmed' with '$headline'\n";
-	return 1 if $confirmed eq $headline;
+        warn "Comparing '$confirmed' with '$headline'\n";
+        return 1 if $confirmed eq $headline;
     }
 
     ## Set up route, confirmation data and throw exception
@@ -2026,41 +2026,41 @@ returns "0 things"
 
 =cut
 
-sub inflect # inflection = böjning
+sub inflect                     # inflection = böjning
 {
     my( $number, $none, $one, $many ) = @_;
 
     # Support calling with or without the $none option
 
-    if( $many )
+    if ( $many )
     {
-	# If called with %d, interpolate the number
-	$many =~ s/\%d/$number/;
+        # If called with %d, interpolate the number
+        $many =~ s/\%d/$number/;
     }
     else
     {
-	$many = $one;
+        $many = $one;
 
-	# If called with %d, interpolate the number
-	$many =~ s/\%d/$number/;
+        # If called with %d, interpolate the number
+        $many =~ s/\%d/$number/;
 
-	$one = $none;
-	$none = $many;
+        $one = $none;
+        $none = $many;
     }
 
 
-    if( $number == 0 )
+    if ( $number == 0 )
     {
-	return $none;
+        return $none;
     }
-    elsif( $number == 1 )
+    elsif ( $number == 1 )
     {
-	return $one;
+        return $one;
     }
     else
     {
-	# Also for negative numbers
-	return $many;
+        # Also for negative numbers
+        return $many;
     }
 }
 
@@ -2080,17 +2080,17 @@ sub pricify
 
     my $old_numeric = setlocale(LC_NUMERIC);
     my $old_monetary = setlocale(LC_MONETARY);
-    if( $req->language->preferred eq "sv" )
+    if ( $req->language->preferred eq "sv" )
     {
-	setlocale(LC_MONETARY, "sv_SE");
+        setlocale(LC_MONETARY, "sv_SE");
     }
     else
     {
-	setlocale(LC_MONETARY, "en_GB");
+        setlocale(LC_MONETARY, "en_GB");
     }
 
     my ($thousands_sep, $grouping, $decimal_point) =
-	@{localeconv()}{'mon_thousands_sep', 'mon_grouping', 'mon_decimal_point'};
+      @{localeconv()}{'mon_thousands_sep', 'mon_grouping', 'mon_decimal_point'};
     setlocale(LC_MONETARY, $old_monetary);
 
     # Apply defaults if values are missing
@@ -2098,11 +2098,14 @@ sub pricify
     $decimal_point = ',' unless $decimal_point;
 
     my @grouping;
-    if ($grouping) {
-	@grouping = unpack("C*", $grouping);
-    } else {
-	#warn "Using default grouping!";
-	@grouping = (3);
+    if ($grouping)
+    {
+        @grouping = unpack("C*", $grouping);
+    }
+    else
+    {
+        #warn "Using default grouping!";
+        @grouping = (3);
     }
 
     # To split it surely...
@@ -2114,7 +2117,7 @@ sub pricify
     # Thousand grouping
     $_ = $whole;
     1 while
-	s/(\d)(\d{$grouping[0]}($|$thousands_sep))/$1$thousands_sep$2/;
+      s/(\d)(\d{$grouping[0]}($|$thousands_sep))/$1$thousands_sep$2/;
 #    warn "$_";
     $whole = $_;
 
@@ -2171,18 +2174,18 @@ sub calendar
 #    debug datadump($args);
 
 
-    if( $tdlabel )
+    if ( $tdlabel )
     {
-	$label = $tdlabel;
-	$separator ||= "</td><td>";
+        $label = $tdlabel;
+        $separator ||= "</td><td>";
     }
 
-    if( $label )
+    if ( $label )
     {
-	my $label_out = CGI->escapeHTML( $label );
+        my $label_out = CGI->escapeHTML( $label );
 
-	$out .= "<label class=\"$label_class\" for=\"$field\">$label_out</label>";
-	$out .= $separator;
+        $out .= "<label class=\"$label_class\" for=\"$field\">$label_out</label>";
+        $out .= $separator;
     }
 
     $out .= "<div cellspacing=\"0\" cellpadding=\"0\" style=\"$style; margin-right:10px;\" class=\"$class\">";
@@ -2191,13 +2194,13 @@ sub calendar
     my $input_style = "width: 100% !important";
 
     $out .= input( $field, $value,
-		   {
-		    size => $size,
-		    maxlength => $maxlength,
-		    id => $id,
-		    class => $class,
-		    style => $input_style,
-		   });
+                   {
+                    size => $size,
+                    maxlength => $maxlength,
+                    id => $id,
+                    class => $class,
+                    style => $input_style,
+                   });
 
     my $home = $Para::Frame::REQ->site->home_url_path;
 
@@ -2227,9 +2230,9 @@ sub calendar
     # Unescaped values
     foreach my $key (qw( onClose showsTime ))
     {
-	next unless defined $args->{$key};
-	next unless length $args->{$key};
-	$setup{$key} = $args->{$key};
+        next unless defined $args->{$key};
+        next unless length $args->{$key};
+        $setup{$key} = $args->{$key};
     }
 
 # TODO: Make it work
@@ -2242,9 +2245,9 @@ sub calendar
 
 
 
-    if( $args->{'showsTime'} )
+    if ( $args->{'showsTime'} )
     {
-	$setup{'ifFormat'} = "\"%Y-%m-%d %H.%M\"";
+        $setup{'ifFormat'} = "\"%Y-%m-%d %H.%M\"";
     }
 
     my $setup_json = "{".join(',',map{"\"$_\":".$setup{$_}} keys %setup)."}";
@@ -2290,25 +2293,25 @@ sub input_image
     my $version = $args->{'version'};
     my $image_url = $args->{'image_url'} ||
       $Para::Frame::CFG->{'images_uploaded_url'} ||
-	'/images';
+        '/images';
 
-    if( $value )
+    if ( $value )
     {
-	# TODO: rewrite code
+        # TODO: rewrite code
 
-	unless( $version )
-	{
-	    # Hack to recognise radio-context
-	    # arc SHOULD be set...
-	    $out .= hidden("check_$key", 1);
-	    $out .= checkbox($key, $value, 1);
-	}
+        unless( $version )
+        {
+            # Hack to recognise radio-context
+            # arc SHOULD be set...
+            $out .= hidden("check_$key", 1);
+            $out .= checkbox($key, $value, 1);
+        }
 
-	$out .= "<img alt=\"\" src=\"$image_url/$value\"/>";
+        $out .= "<img alt=\"\" src=\"$image_url/$value\"/>";
     }
     else
     {
-	$out .= filefield("${key}__file_image__maxw_${maxw}__maxh_${maxh}");
+        $out .= filefield("${key}__file_image__maxw_${maxw}__maxh_${maxh}");
     }
 
     return $out;
@@ -2324,31 +2327,31 @@ sub on_configure
 
     my $params =
     {
-	'selectorder'     => \&selectorder,
-	'selector'        => \&selector,
-	'slider'          => \&slider,
-	'jump'            => \&jump,
-	'submit'          => \&submit,
-	'go'              => \&go,
-	'go_js'           => \&go_js,
-	'forward'         => \&forward,
-	'forward_url'     => \&forward_url,
-	'alfanum_bar'     => \&alfanum_bar,
-	'rowlist'         => \&rowlist,
-	'list2block'      => \&list2block,
-	'preserve_data'   => \&preserve_data,
-	'param_includes'  => \&param_includes,
-	'hidden'          => \&hidden,
-	'input'           => \&input,
-	'textarea'        => \&textarea,
-	'htmlarea'        => \&htmlarea,
-        'checkbox'        => \&checkbox,
-        'radio'           => \&radio,
-	'filefield'       => \&filefield,
-	'css_header'      => \&css_header,
-	'favicon_header'  => \&favicon_header,
-	'inflect'         => \&inflect,
-	'calendar'        => \&calendar,
+     'selectorder'     => \&selectorder,
+     'selector'        => \&selector,
+     'slider'          => \&slider,
+     'jump'            => \&jump,
+     'submit'          => \&submit,
+     'go'              => \&go,
+     'go_js'           => \&go_js,
+     'forward'         => \&forward,
+     'forward_url'     => \&forward_url,
+     'alfanum_bar'     => \&alfanum_bar,
+     'rowlist'         => \&rowlist,
+     'list2block'      => \&list2block,
+     'preserve_data'   => \&preserve_data,
+     'param_includes'  => \&param_includes,
+     'hidden'          => \&hidden,
+     'input'           => \&input,
+     'textarea'        => \&textarea,
+     'htmlarea'        => \&htmlarea,
+     'checkbox'        => \&checkbox,
+     'radio'           => \&radio,
+     'filefield'       => \&filefield,
+     'css_header'      => \&css_header,
+     'favicon_header'  => \&favicon_header,
+     'inflect'         => \&inflect,
+     'calendar'        => \&calendar,
     };
 
     Para::Frame->add_global_tt_params( $params );
@@ -2358,8 +2361,8 @@ sub on_configure
     # Define TT filters
     #
     Para::Frame::Burner->get_by_type('html')->add_filters({
-	'pricify' => \&pricify,
-    });
+                                                           'pricify' => \&pricify,
+                                                          });
 
 
 }
