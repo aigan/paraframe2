@@ -209,7 +209,7 @@ sub register_result_page
 #    $url ||= $resp->page_url_path_with_query_and_reqnum;
     $url ||= $resp->page_url_path_with_reqnum;
 
-    debug "Registred the page result for $url";
+#    debug "Registred the page result for $url";
 
     $s->{'page_result'}{$url} = $resp;
 }

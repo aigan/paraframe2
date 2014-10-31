@@ -164,7 +164,7 @@ sub new
 
     if( $params->{'import_tt_params'} )
     {
-	debug "Adding global params for dbix $dbix->{connect}[0]";
+#	debug "Adding global params for dbix $dbix->{connect}[0]";
 	Para::Frame->add_global_tt_params({
 	    'cached_select_list'       => sub{ $dbix->cached_select_list(@_) },
 	    'select_list'              => sub{ $dbix->select_list(@_) },
@@ -1791,11 +1791,11 @@ sub rebless
 
     my $package = "Para::Frame::DBIx::$driver";
     my $module = package_to_module($package);
-    debug "DBIx uses package $package";
+#    debug "DBIx uses package $package";
 
     if( eval{ require $module } )
     {
-	debug "Reblessing dbix into $package";
+#	debug "Reblessing dbix into $package";
 	bless $_[0], $package;
     }
 

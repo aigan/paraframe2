@@ -3673,8 +3673,8 @@ sub handle_error
     # May not be defined yet...
     my $new_resp = $req->{'resp'}; # May have change
 
-    debug "Old resp rend: ".$resp->renderer;
-    debug "New resp: ".$new_resp->renderer;
+#    debug "Old resp rend: ".$resp->renderer;
+#    debug "New resp: ".$new_resp->renderer;
     if( $new_resp->can('render_error') )
     {
         return $new_resp->render_error($part);

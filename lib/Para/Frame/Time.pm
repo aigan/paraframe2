@@ -700,7 +700,7 @@ sub set_stringify
 	}
     }
 
-    debug "Stringify now set";
+#    debug "Stringify now set";
 
     return $STRINGIFY;
 }
@@ -725,7 +725,7 @@ sub set_timezone
     my( $this, $name ) = @_;
 
     $TZ = DateTime::TimeZone->new( name => $name );
-    debug "Timezone set to ".$TZ->name;
+#    debug "Timezone set to ".$TZ->name;
 
 
 #    # TODO; DO NOT USE Date::Manip anymore :(

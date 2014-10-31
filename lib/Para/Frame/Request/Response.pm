@@ -699,7 +699,7 @@ sub send_output
 
     if( $url_in ne $url_out )
     {
-	debug "!!! $url_in ne $url_out";
+#	debug "!!! $url_in ne $url_out";
 
 #	# Keep query string
 #	$url_out = $resp->page_url_path_with_query_and_reqnum;
