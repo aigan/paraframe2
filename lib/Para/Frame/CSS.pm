@@ -56,15 +56,15 @@ sub new
 
     foreach my $param ( keys %{$Para::Frame::CFG->{'css'}{'params'}} )
     {
-	$css->{'params'}{$param}
-	  ||= $Para::Frame::CFG->{'css'}{'params'}{$param};
+        $css->{'params'}{$param}
+          ||= $Para::Frame::CFG->{'css'}{'params'}{$param};
     }
 
     $css->{'params'} ||= {};
     foreach my $param ( keys %$css_params )
     {
-	$css->{'params'}{$param}
-	  ||= $css_params->{$param};
+        $css->{'params'}{$param}
+          ||= $css_params->{$param};
     }
 
     $css->{'modified'} = now();
@@ -154,44 +154,44 @@ sub header
 
     debug 2, "Choosing a css config";
 
-    if( $p )
+    if ( $p )
     {
 #	debug 2, "  Got css from tt param: ".datadump($p);
-	unless( ref $p )
-	{
-	    if( $p eq 'none' )
-	    {
-		return "";
-	    }
+        unless( ref $p )
+        {
+            if ( $p eq 'none' )
+            {
+                return "";
+            }
 
-	    $p =
-	    {
-	     'persistent' => [ $p ],
-	    };
-	}
+            $p =
+            {
+             'persistent' => [ $p ],
+            };
+        }
     }
     else
     {
-	if( $css->{'persistent'} or $css->{'alternate'} )
-	{
-	    debug 2, "Got css from site css";
-	    $p = $css;
-	}
-	elsif( $Para::Frame::CFG->{'css'}{'persistent'} or
-	       $Para::Frame::CFG->{'css'}{'alternate'} )
-	{
-	    debug 2, "Got css from main config";
-	    $p = $Para::Frame::CFG->{'css'};
-	}
-	else
-	{
-	    debug 2, "Falling back to default css";
-	    $p =
-	    {
-	     'persistent' => ['pf/css/paraframe.css_tt',
-			      'pf/css/default.css_tt'],
-	    };
-	}
+        if ( $css->{'persistent'} or $css->{'alternate'} )
+        {
+            debug 2, "Got css from site css";
+            $p = $css;
+        }
+        elsif ( $Para::Frame::CFG->{'css'}{'persistent'} or
+                $Para::Frame::CFG->{'css'}{'alternate'} )
+        {
+            debug 2, "Got css from main config";
+            $p = $Para::Frame::CFG->{'css'};
+        }
+        else
+        {
+            debug 2, "Falling back to default css";
+            $p =
+            {
+             'persistent' => ['pf/css/paraframe.css_tt',
+                              'pf/css/default.css_tt'],
+            };
+        }
     }
 
     my $default = $Para::Frame::U->style || $p->{'default'} || 'default';
@@ -199,50 +199,50 @@ sub header
     my $alternate = $p->{'alternate'} || {};
     $persistent = [$persistent] unless ref $persistent;
 
-    unless( $alternate->{$default} )
+    unless ( $alternate->{$default} )
     {
-	$default = $p->{'default'};
+        $default = $p->{'default'};
     }
 
-    if( not $default )
+    if ( not $default )
     {
-	# Just take any of them as a default
-	foreach my $key ( keys %$alternate )
-	{
-	    $default = $key;
-	    last;
-	}
+        # Just take any of them as a default
+        foreach my $key ( keys %$alternate )
+        {
+            $default = $key;
+            last;
+        }
     }
 
     my $out = "";
 
     foreach my $style_in ( @$persistent )
     {
-	my $style = $style_in;
-	$style = &$style($req) if UNIVERSAL::isa($style,'CODE');
-	$style =~ s/^([^\/])/$home\/$1/;
-	$out .= "<link rel=\"Stylesheet\" href=\"$style\" type=\"text/css\">\n";
+        my $style = $style_in;
+        $style = &$style($req) if UNIVERSAL::isa($style,'CODE');
+        $style =~ s/^([^\/])/$home\/$1/;
+        $out .= "<link rel=\"Stylesheet\" href=\"$style\" type=\"text/css\">\n";
     }
 
-    if( $default )
+    if ( $default )
     {
-	foreach my $style ( @{$alternate->{$default}} )
-	{
-	    $style = &$style($req) if UNIVERSAL::isa($style,'CODE');
-	    $style =~ s/^([^\/])/$home\/$1/;
-	    $out .= "<link rel=\"Stylesheet\" title=\"$default\" href=\"$style\" type=\"text/css\">\n";
-	}
+        foreach my $style ( @{$alternate->{$default}} )
+        {
+            $style = &$style($req) if UNIVERSAL::isa($style,'CODE');
+            $style =~ s/^([^\/])/$home\/$1/;
+            $out .= "<link rel=\"Stylesheet\" title=\"$default\" href=\"$style\" type=\"text/css\">\n";
+        }
     }
 
     foreach my $title ( keys %$alternate )
     {
-	next if $title eq $default;
-	foreach my $style ( @{$alternate->{$title}} )
-	{
-	    $style = &$style($req) if UNIVERSAL::isa($style,'CODE');
-	    $style =~ s/^([^\/])/$home\/$1/;
-	    $out .= "<link rel=\"alternate stylesheet\" title=\"$title\" href=\"$style\" type=\"text/css\">\n";
-	}
+        next if $title eq $default;
+        foreach my $style ( @{$alternate->{$title}} )
+        {
+            $style = &$style($req) if UNIVERSAL::isa($style,'CODE');
+            $style =~ s/^([^\/])/$home\/$1/;
+            $out .= "<link rel=\"alternate stylesheet\" title=\"$title\" href=\"$style\" type=\"text/css\">\n";
+        }
     }
 
 #    debug "Returning: $out";
