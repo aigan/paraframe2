@@ -39,7 +39,7 @@ use File::Basename; # dirname
 use Storable qw( thaw );
 use Number::Format;
 
-our $VERSION = "1.26"; # Paraframe version
+our $VERSION = "1.30"; # Paraframe version
 
 
 use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir client_str );

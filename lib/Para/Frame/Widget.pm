@@ -458,6 +458,20 @@ sub go
 
     die "Too many args for go()" if $attr and not ref $attr;
 
+#    debug "go ".datadump(\@_); ### DEBUG
+
+    if( UNIVERSAL::isa $run, 'HASH' )
+    {
+        $attr = $run;
+        undef $run;
+    }
+    elsif(  UNIVERSAL::isa $template, 'HASH' )
+    {
+        $attr = $template;
+        undef $template;
+    }
+
+
     $label = '???' unless length $label;
     $template ||= '';
     $run ||= 'nop';
@@ -957,7 +971,13 @@ sub input
 
     $params->{id} ||= $key;
     my $prefix = label_from_params($params);
-    $extra .= tag_extra_from_params($params);
+
+    if ( my $tag_attr = $params->{'tag_attr'} )
+    {
+        $extra .= tag_extra_from_params( $tag_attr );
+    }
+
+#    $extra .= tag_extra_from_params($params);
 
     # Stringify all params, in case they was objects
     return sprintf('%s<input type="text" name="%s" value="%s"%s />',
@@ -1099,8 +1119,10 @@ sub textarea
 {
     my( $key, $value, $params ) = @_;
 
-    my $rows = $params->{'rows'} || 20;
-    my $cols = $params->{'cols'} || $params->{'size'};
+    my $tag_attr = $params->{tag_attr} || {};
+
+    my $rows = $tag_attr->{'rows'} || 20;
+    my $cols = $tag_attr->{'cols'} || $tag_attr->{'size'};
     my @previous;
 
     if ( my $q = $Para::Frame::REQ->q )
@@ -1114,21 +1136,17 @@ sub textarea
     }
     $value ||= '';
 
-    delete $params->{'rows'};
-    delete $params->{'cols'};
-    delete $params->{'size'};
-    $params->{'cols'} = $cols;
+    $tag_attr->{'cols'} = $cols;
 
 
-    $params->{id} ||= $key;
+    $tag_attr->{id} ||= $key;
     my $prefix = label_from_params($params);
     $params->{'wrap'} ||= "virtual";
-    my $extra = tag_extra_from_params($params);
+    my $extra = tag_extra_from_params($tag_attr);
 
-    return sprintf('%s<textarea name="%s" rows="%s"%s>%s</textarea>',
+    return sprintf('%s<textarea name="%s"%s>%s</textarea>',
                    $prefix,
                    CGI->escapeHTML( $key ),
-                   CGI->escapeHTML( $rows ),
                    $extra,
                    CGI->escapeHTML( $value ),
                   );
@@ -2195,12 +2213,14 @@ sub calendar
 
     $out .= input( $field, $value,
                    {
-                    size => $size,
-                    maxlength => $maxlength,
-                    id => $id,
-                    class => $class,
-                    style => $input_style,
-                   });
+                    tag_attr =>
+                    {
+                     size => $size,
+                     maxlength => $maxlength,
+                     id => $id,
+                     class => $class,
+                     style => $input_style,
+                    }});
 
     my $home = $Para::Frame::REQ->site->home_url_path;
 
