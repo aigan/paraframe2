@@ -5,7 +5,7 @@ package Para::Frame::CSS;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2014 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -152,7 +152,7 @@ sub header
     my $req = $Para::Frame::REQ;
     my $home = $req->site->home_url_path;
 
-    debug 2, "Choosing a css config";
+#    debug 1, "Choosing a css config";
 
     if ( $p )
     {
@@ -172,20 +172,22 @@ sub header
     }
     else
     {
+#        debug "Looking in ".datadump($css,2);
+
         if ( $css->{'persistent'} or $css->{'alternate'} )
         {
-            debug 2, "Got css from site css";
+#            debug 1, "Got css from site css";
             $p = $css;
         }
         elsif ( $Para::Frame::CFG->{'css'}{'persistent'} or
                 $Para::Frame::CFG->{'css'}{'alternate'} )
         {
-            debug 2, "Got css from main config";
+#            debug 1, "Got css from main config";
             $p = $Para::Frame::CFG->{'css'};
         }
         else
         {
-            debug 2, "Falling back to default css";
+#            debug 1, "Falling back to default css";
             $p =
             {
              'persistent' => ['pf/css/paraframe.css_tt',

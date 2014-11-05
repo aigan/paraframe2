@@ -1,0 +1,174 @@
+
+/*********************** Admin Menu ************************/
+[% import(site.css.params) %]
+
+
+.menu_row .icon_right {
+	float: right;
+}
+.menu_row .on {
+	color: [% green %];	
+}
+.menu_row off {
+	color: [% medium_txt %];
+}
+
+
+.menu_row
+{
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 200;
+	width: 100%;
+	background: [% medium_mid %];
+	border-bottom: 1px solid [% medium_low %];
+}
+
+.menu_row > div {
+	float: left;
+}
+
+.menu_row > div > ul > li > a
+{
+    padding: 0.5em 1em;
+}
+
+.menu_row .icon a
+{
+    padding: 0.5em 1em;
+}
+
+.menu_row ul {
+	list-style: none;
+	padding: 0;
+	width: 10em;
+	float: left;
+}
+.menu_row a,
+.menu_row h3 {
+	display: block;
+	margin: 0;
+	color: [% medium_txt %];
+	background: [% medium_mid %];
+	text-decoration: none;
+}
+
+.menu_row a:hover {
+	cursor: pointer;
+}
+.menu_row h3:hover {
+	cursor: default;
+}
+.menu_row a:hover,
+.menu_row h3:hover {
+	color: [% medium_txt %];
+	background: [% medium_high %];
+} 
+.menu_row li {
+	position: relative;
+	transition: opacity 0.5s 0 ease;
+}
+.menu_row li:hover,
+.menu_row li:hover h3 {
+	transition: opacity 0.5s 5s ease;
+	background: [% main_bg %];
+}
+.menu_row ul ul {
+	position: absolute;
+	z-index: 500;
+	width: 18em;
+}
+.menu_row ul li ul li {
+	border-bottom: 1px solid [% medium_low %];
+	border-top: 1px solid [% medium_high %];
+	margin-top: -1px;
+}
+.menu_row ul li ul li:first-child {
+	border-top: 1px solid [% medium_low %];
+}
+.menu_row ul li ul li a {
+	padding: 0.5em 1.0em;
+	border-right: 1px solid [% medium_low %];
+	font-size: 11px;font-size: 1.1rem;
+}
+.menu_row ul ul ul {
+	position: absolute;
+	top: 0;
+	left: 100%;
+}
+.menu_row ul ul,
+.menu_row ul li:hover ul ul,
+.menu_row ul ul li:hover ul ul {
+	display: none;
+}
+#menu ul ul,
+.menu_row .notiser ul  {
+	box-shadow: 0px 1px 5px 1px rgba(79, 79, 79, 0.5);
+-moz-box-shadow: 0px 1px 5px 1px rgba(79, 79, 79, 0.5);
+-webkit-box-shadow: 0px 1px 5px 1px rgba(79, 79, 79, 0.5);
+}
+
+#menu ul ul,
+#menu ul li:hover ul ul,
+#menu ul ul li:hover ul ul {
+	display: none;
+}
+#menu ul li:hover ul,
+#menu ul ul li:hover ul,
+#menu ul ul ul li:hover ul {
+	display: block;    
+}
+#menu ul li ul {margin-top: 1px;}
+
+.menu-top {
+	width: 100%;
+/*	height: 45px;*/
+	background: [% light %];
+}
+.menu_row .float_right ul ul {
+	right: 100%;
+	left: -15em !important;
+	color: [% medium_txt %];
+}
+
+
+.menu_row .notiser ul {
+	background: [% agenda_low %];
+	left: -70px !important;
+	color: [% medium_txt %];
+}
+.menu_row .notiser ul li{
+ 	background: #4f4f4f;
+	padding: 10px;
+}
+.menu_row .notiser ul li a{
+	border: none !important;
+}
+.menu_row .notiser ul li a:hover{
+	color: [% light %];
+	background: none !important;
+}
+.menu_row .notiser p.btn a {
+	color: #4f4f4f;
+	background-color: #f6f6f6;
+	border-color: #BBBBBB;
+	padding:0;
+}
+
+.notis_counter {
+	background: [% red_bg %];
+	color: white;
+	border-radius: 2px;
+	font-size: 0.9rem;
+	font-size: 9px;
+	padding: 3px;
+	position: absolute;
+	top: 7px;
+	right: 7px;
+box-shadow: 0px 1px 1px 0px rgba(0, 0, 0, 0.75);
+-moz-box-shadow: 0px 1px 1px 0px rgba(0, 0, 0, 0.75);
+-webkit-box-shadow: 0px 1px 1px 0px rgba(0, 0, 0, 0.75);
+}
+
+

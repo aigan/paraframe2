@@ -428,7 +428,12 @@ sub wj_login
     my $req = $Para::Frame::REQ;
 
     my $label = delete($attrs->{'label'}) || 'Sign in';
-    return jump($label, $req->site->home_url_path.'/login.tt');
+    my $path = $attrs->{path} || $req->site->home_url_path.'/login.tt';
+    my $span_class = $attrs->{span_class} || "";
+
+    return sprintf '<a href="%s"><span class="%s"><i class="fa fa-sign-in"></i></span>%s</a>', $path, $span_class, $label;
+
+#    return jump($label, $req->site->home_url_path.'/login.tt');
 }
 
 
@@ -445,7 +450,12 @@ sub wj_logout
     my $req = $Para::Frame::REQ;
 
     my $label = delete($attrs->{'label'}) || 'Sign out';
-    return jump($label, $req->site->logout_page, {run=>'user_logout'});
+    my $path = $attrs->{path} || uri($req->site->logout_page, {run=>'user_logout'});
+    my $span_class = $attrs->{span_class} || "";
+
+    return sprintf '<a href="%s"><span class="%s"><i class="fa fa-sign-out"></i></span>%s</a>', $path, $span_class, $label;
+
+#    return jump($label, $req->site->logout_page, {run=>'user_logout'});
 }
 
 ##############################################################################
