@@ -146,7 +146,7 @@ function log(stuff)
 
     function pf_menu_height_adjust()
     {
-        $menu = $('.notiser ul');
+        $menu = $('.notifications ul');
         $south = $menu.height() + $menu.offset().top;
         //    log("Menu height: "+$south);
         
