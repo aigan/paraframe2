@@ -2,7 +2,6 @@
 /*********************** Admin Menu ************************/
 [% import(site.css.params) %]
 
-
 .menu_row .icon_right {
 	float: right;
 }
@@ -23,10 +22,17 @@
 	width: 100%;
 	background: [% medium_mid %];
 	border-bottom: 1px solid [% medium_low %];
+
+/*    height: 40px;*/
+/*    overflow: hidden;*/
 }
 
 .menu_row > div {
-	float: left;
+    float: left;
+}
+
+#compact_menu {
+    display: none;
 }
 
 .menu_row > div > ul > li > a
@@ -45,8 +51,7 @@
 	width: 10em;
 	float: left;
 }
-.menu_row a,
-.menu_row h3 {
+.menu_row a {
 	display: block;
 	margin: 0;
 	color: [% medium_txt %];
@@ -57,56 +62,47 @@
 .menu_row a:hover {
 	cursor: pointer;
 }
-.menu_row h3:hover {
-	cursor: default;
-}
-.menu_row a:hover,
-.menu_row h3:hover {
+.menu_row a:hover {
 	color: [% medium_txt %];
 	background: [% medium_high %];
 } 
-.menu_row li {
+.menu_row .sub li {
 	position: relative;
 	transition: opacity 0.5s 0 ease;
 }
-.menu_row li:hover,
-.menu_row li:hover h3 {
+.menu_row .sub li:hover {
 	transition: opacity 0.5s 5s ease;
 	background: [% main_bg %];
 }
-.menu_row ul ul {
+.menu_row ul.sub ul,
+#compact_menu ul ul
+ {
 	position: absolute;
 	z-index: 500;
 	width: 18em;
 }
-.menu_row ul li ul li {
+.menu_row ul.sub li ul li {
 	border-bottom: 1px solid [% medium_low %];
 	border-top: 1px solid [% medium_high %];
 	margin-top: -1px;
 }
-.menu_row ul li ul li:first-child {
+.menu_row ul.sub li ul li:first-child {
 	border-top: 1px solid [% medium_low %];
 }
-.menu_row ul li ul li a {
+.menu_row ul.sub li ul li a {
 	padding: 0.5em 1.0em;
 	border-right: 1px solid [% medium_low %];
 	font-size: 11px;font-size: 1.1rem;
 }
-.menu_row ul ul ul {
+.menu_row ul.sub ul ul {
 	position: absolute;
 	top: 0;
 	left: 100%;
 }
-.menu_row ul ul,
-.menu_row ul li:hover ul ul,
-.menu_row ul ul li:hover ul ul {
+.menu_row ul.sub ul,
+.menu_row ul.sub li:hover ul ul,
+.menu_row ul.sub ul li:hover ul ul {
 	display: none;
-}
-#menu ul ul,
-.menu_row .notiser ul  {
-	box-shadow: 0px 1px 5px 1px rgba(79, 79, 79, 0.5);
--moz-box-shadow: 0px 1px 5px 1px rgba(79, 79, 79, 0.5);
--webkit-box-shadow: 0px 1px 5px 1px rgba(79, 79, 79, 0.5);
 }
 
 #menu ul ul,
@@ -126,49 +122,8 @@
 /*	height: 45px;*/
 	background: [% light %];
 }
-.menu_row .float_right ul ul {
+.menu_row .float_right ul.sub ul {
 	right: 100%;
 	left: -15em !important;
 	color: [% medium_txt %];
 }
-
-
-.menu_row .notiser ul {
-	background: [% agenda_low %];
-	left: -70px !important;
-	color: [% medium_txt %];
-}
-.menu_row .notiser ul li{
- 	background: #4f4f4f;
-	padding: 10px;
-}
-.menu_row .notiser ul li a{
-	border: none !important;
-}
-.menu_row .notiser ul li a:hover{
-	color: [% light %];
-	background: none !important;
-}
-.menu_row .notiser p.btn a {
-	color: #4f4f4f;
-	background-color: #f6f6f6;
-	border-color: #BBBBBB;
-	padding:0;
-}
-
-.notis_counter {
-	background: [% red_bg %];
-	color: white;
-	border-radius: 2px;
-	font-size: 0.9rem;
-	font-size: 9px;
-	padding: 3px;
-	position: absolute;
-	top: 7px;
-	right: 7px;
-box-shadow: 0px 1px 1px 0px rgba(0, 0, 0, 0.75);
--moz-box-shadow: 0px 1px 1px 0px rgba(0, 0, 0, 0.75);
--webkit-box-shadow: 0px 1px 1px 0px rgba(0, 0, 0, 0.75);
-}
-
-
