@@ -34,30 +34,30 @@ sub handler
     our %BLACKLIST;
     unless( %BLACKLIST )
     {
-	%BLACKLIST = map {$_=>1}
-	    qw(
-	       sid
-	       active
-	       created
-	       latest
-	       user
-	       debug
-	       template_error
-	       list
-	       listid
-	       route
-	       referer
-	       page_result
-	      );
+        %BLACKLIST = map {$_=>1}
+          qw(
+                sid
+                active
+                created
+                latest
+                user
+                debug
+                template_error
+                list
+                listid
+                route
+                referer
+                page_result
+           );
     }
 
     foreach my $key ( @varlist )
     {
-	if( $BLACKLIST{$key} )
-	{
-	    die "You should not update session $key in this way";
-	}
-	$session->{$key} = $q->param($key);
+        if ( $BLACKLIST{$key} )
+        {
+            die "You should not update session $key in this way";
+        }
+        $session->{$key} = $q->param($key);
     }
 
     return "";
