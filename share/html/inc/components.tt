@@ -7,10 +7,10 @@
         <pre>[% part.context | html %]</pre>
       [% END %]
   </div>
-[% END %]
+[% END;
 
 
-[% MACRO step(label, template, run) BLOCK %]
+MACRO step(label, template, run) BLOCK %]
    [% IF template %]
       [% go(label, template, run) %]
       [%# backstep %]
@@ -22,9 +22,10 @@
    [% ELSE %]
       [% nostep(label) %]
    [% END %]
-[% END %]
+[% END;
 
-[% MACRO searchstep(label) BLOCK;
+
+MACRO searchstep(label) BLOCK;
       DEFAULT label='Sök';
       submit(label, "",tag_attr={class='btn btn-default'});
       IF route.caller_is_next_step;
@@ -35,10 +36,10 @@
             regret;
          END;
       END;
-   END;
-%]
+END;
 
-[% MACRO actionstep(label) BLOCK;
+
+MACRO actionstep(label) BLOCK;
       UNLESS label;
          IF uri_path(form_action) == me;
             label = "Spara";
@@ -55,10 +56,10 @@
             regret;
          END;
       END;
-   END;
-%]
+END;
 
-[% MACRO nostep(label) BLOCK;
+
+MACRO nostep(label) BLOCK;
       DEFAULT label='Fortsätt med nästa sak';
       IF route.caller_is_next_step;
          backstep(label);
@@ -68,29 +69,26 @@
       ELSE;
          backstep(label);
       END;
-   END;
-%]
+END;
 
 
-[% MACRO regret(label) BLOCK %]
+MACRO regret(label) BLOCK %]
 [% DEFAULT
        	label = 'Backa'
 %]
    [% go(label, undef, 'skip_step', tag_attr=tag_attr) %]
-[% END %]
+[% END;
 
 
-
-[% MACRO remove_step(label) BLOCK %]
+MACRO remove_step(label) BLOCK %]
 [% DEFAULT
        	label = 'Ta bort steg'
 %]
    [% go(label, me, 'remove_step', tag_attr=tag_attr) %]
-[% END %]
+[% END;
 
 
-
-[% MACRO backstep(label, break_path) BLOCK %]
+MACRO backstep(label, break_path) BLOCK %]
 [% DEFAULT
        	label = 'Hoppa över'
 %]
@@ -98,17 +96,15 @@
    [% IF break_path %]
       [% hidden('break_path', break_path) %]
    [% END %]
-[% END %]
+[% END;
 
 
-
-[% MACRO hr BLOCK %]
+MACRO hr BLOCK %]
 <hr width="5%">
-[% END %]
+[% END;
 
 
-
-[% MACRO select(name, current, data, valkey, tagkey, header) BLOCK %]
+MACRO select(name, current, data, valkey, tagkey, header) BLOCK %]
    [%- IF q.param(name) %]
       [% current = q.param(name) %]
    [% END %]
@@ -125,19 +121,19 @@
      [%+ END %]
   [% END %]
   </select>
-[% END %]
+[% END;
 
 
-
-[% MACRO tr2 BLOCK %]
+MACRO tr2 BLOCK %]
    [% IF (loop.count||0) MOD 2 %]
    <tr class="odd">
    [% ELSE %]
    <tr class="even">
    [% END %]
-[% END %]
+[% END;
 
-[% MACRO sort(name, value, defdir) BLOCK;
+
+MACRO sort(name, value, defdir) BLOCK;
    DEFAULT value = name;
    DEFAULT defdir = 'asc';
    DEFAULT direction = defdir;
@@ -161,9 +157,9 @@
 [% END %]
 </a>
 [% END;
-%]
 
-[% BLOCK expand %]
+
+BLOCK expand %]
    [% DEFAULT global.paraframe_formcount=0 %]
    [% global.paraframe_formcount = global.paraframe_formcount + 1 %]
    [% paraframe_display='none' %]
@@ -176,9 +172,10 @@
 <a href="javascript:showhide('paraframe_fid_[% global.paraframe_formcount %]');showhide('paraframe_fid_[% global.paraframe_formcount %]_label');">[% label_hide %]</a>
 $content
 </div>
-[% END %]
+[% END;
 
-[% BLOCK imgexpand %]
+
+BLOCK imgexpand %]
 [%
    DEFAULT global.paraframe_formcount=0;
    global.paraframe_formcount = global.paraframe_formcount + 1;
@@ -215,10 +212,10 @@ $content
 <div class="$class_expanded" id='$id_block' style="display:$paraframe_display">
 $content
 </div>
-[% END %]
+[% END;
 
 
-[% MACRO exp_button(id,label) BLOCK %]
+MACRO exp_button(id,label) BLOCK %]
 [%
    DEFAULT paraframe_display='none';
    DEFAULT paraframe_label_display='block';
@@ -230,10 +227,10 @@ $content
    DEFAULT class_expanded = "paraframe_imgexpanded";
 %]
 <span class="$class_expand" id="$id_label"><a href="javascript:showhide('$id')">[% IF img_placement == "before" %]<i class="fa fa-caret-down"></i>[% END %]$label[% UNLESS img_placement == "before" %]<i class="fa fa-caret-down"></i>[% END %]</a></span>
-[% END %]
+[% END;
 
 
-[% BLOCK roundbox %]
+BLOCK roundbox %]
   [% DEFAULT title="" %]
   [% DEFAULT imgdir="$home/img/dark_box/" %]
   [% DEFAULT class="round_box" %]
@@ -244,17 +241,18 @@ $content
     <tr class="top"><td class="h_bg"><div class="header_div"><h3>[% title %]</h3></div></td></tr>
     <tr><td class="content"><div class="content_div">[% content %]</div></td></tr>
   </table>
-[% END %]
+[% END;
 
-[% MACRO roundbox_subtitle(subtitle) BLOCK %]
+
+MACRO roundbox_subtitle(subtitle) BLOCK %]
   [% DEFAULT subtitle="SUBTITLE" %]
   </div></td></tr>
   <tr><td class="m_bg"><div class="header_div"><h3>[% subtitle %]</h3></div></td></tr>
   <tr><td class="content"><div class="content_div">
-[% END %]
+[% END;
 
 
-[% BLOCK ajax_div %]
+BLOCK ajax_div %]
    [% DEFAULT divid = ajax.new_form_id %]
    [% DEFAULT update_url = "" %]
    [% DEFAULT args = "" %]

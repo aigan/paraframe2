@@ -1,20 +1,20 @@
-﻿[% USE Meta.Interpolate %]
+﻿[% USE Meta.Interpolate -%]
 [%
    PROCESS components.tt;
    TRY; PROCESS "app_components.tt";
    CATCH file; END;
-%]
+-%]
 
 [% next_template =  q.param('next_template') ||
                     next_template;
-%]
+-%]
 
 [% IF level and u.level < level;
       THROW denied "Du måste vara minst nivå $level";
    END
-%]
+-%]
 [% IF focus;
       onload = " onLoad=\"document.forms['f'].${focus}.focus()\"";
    END;
-%]
-[% PROCESS header.tt %]
+-%]
+[% PROCESS header.tt -%]
