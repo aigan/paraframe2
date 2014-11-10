@@ -1380,6 +1380,13 @@ sub checkbox
         $params->{id} = $id;
     }
 
+
+    if ( my $tag_attr = delete ${$params}{'tag_attr'} )
+    {
+        $extra .= tag_extra_from_params( $tag_attr );
+    }
+
+    ### DEPRECATED
     foreach my $key ( keys %$params )
     {
         $extra .= sprintf " $key=\"%s\"",
