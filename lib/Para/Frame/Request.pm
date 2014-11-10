@@ -25,8 +25,8 @@ use strict;
 
 use CGI qw( -compile -utf8 );
 use CGI::Cookie;
-use FreezeThaw; ####### LEGACY
-use Storable; # qw( thaw );
+use FreezeThaw;                 ####### LEGACY
+use Storable;                   # qw( thaw );
 use HTTP::BrowserDetect;
 use IO::File;
 use Carp qw(cluck croak carp confess longmess );
@@ -83,13 +83,13 @@ sub new
     # Storable
 
     my $value;
-    if( $$recordref =~ /^FrT/ )
+    if ( $$recordref =~ /^FrT/ )
     {
-	( $value ) = FreezeThaw::thaw( $$recordref );
+        ( $value ) = FreezeThaw::thaw( $$recordref );
     }
     else
     {
-	( $value ) = Storable::thaw( $$recordref );
+        ( $value ) = Storable::thaw( $$recordref );
     }
 
 
@@ -99,13 +99,13 @@ sub new
     $env->{'REQUEST_METHOD'} = 'GET';
     delete $env->{'MOD_PERL'};
 
-    if( $Para::Frame::REQ )
+    if ( $Para::Frame::REQ )
     {
-	# Detatch previous %ENV
-	$Para::Frame::REQ->{'env'} = {%ENV};
+        # Detatch previous %ENV
+        $Para::Frame::REQ->{'env'} = {%ENV};
     }
 
-    %ENV = %$env;     # To make CGI happy
+    %ENV = %$env;               # To make CGI happy
 
     # Turn back and make $env a ref to the actual %ENV symbol table
     # entry. This keeps them in sync
@@ -113,47 +113,47 @@ sub new
     $env = \%ENV;
 
     my $q = CGI->new($params);
-    $q->cookie('password'); # Should cache all cookies
+    $q->cookie('password');     # Should cache all cookies
 
     my $req =  bless
     {
-        resp            => undef,
-	indent          => 1,              ## debug indentation
-	client          => $client,
-	jobs            => [],             ## queue of jobs to perform
-        actions         => [],             ## queue of actions to perform
-	'q'             => $q,
-        'files'         => $files,         ## Uploaded files
-	env             => $env,
-	's'             => undef,          ## Session object
-	lang            => undef,          ## Chosen language
-	browser         => undef,          ## browser detection object
-	result          => undef,
-	orig_url_string => $orig_url_string,
-        orig_url_params => $ENV{'QUERY_STRING'},
-	orig_ctype      => $content_type,
-        orig_resp       => undef,
-        orig_page       => undef,          ## Original page requested
-        orig_status     => $orig_status,
-	referer         => $q->referer,    ## The referer of this page
-	dirconfig       => $dirconfig,     ## Apache $r->dir_config
-        page            => undef,          ## The page requested
-	childs          => 0,              ## counter in parent
-	in_yield        => 0,              ## inside a yield
-	child_result    => undef,          ## the child res if in child
-	reqnum          => $reqnum,        ## The request serial number
-	wait            => 0,              ## Waiting for something else to finish
-	cancel          => 0,              ## True if we should abort
-	change          => undef,
-        header_only     => $header_only,   ## true if only sending header
-        site            => undef,          ## Default site for req
-        in_loadpage     => 0,              ## client uses loadpage
-        in_ajax         => 0,              ## request part of page
-        started         => Time::HiRes::time,
-        is_backend      => 0,
+     resp            => undef,
+     indent          => 1,      ## debug indentation
+     client          => $client,
+     jobs            => [],     ## queue of jobs to perform
+     actions         => [],     ## queue of actions to perform
+     'q'             => $q,
+     'files'         => $files, ## Uploaded files
+     env             => $env,
+     's'             => undef,  ## Session object
+     lang            => undef,  ## Chosen language
+     browser         => undef,  ## browser detection object
+     result          => undef,
+     orig_url_string => $orig_url_string,
+     orig_url_params => $ENV{'QUERY_STRING'},
+     orig_ctype      => $content_type,
+     orig_resp       => undef,
+     orig_page       => undef,  ## Original page requested
+     orig_status     => $orig_status,
+     referer         => $q->referer, ## The referer of this page
+     dirconfig       => $dirconfig,  ## Apache $r->dir_config
+     page            => undef,       ## The page requested
+     childs          => 0,           ## counter in parent
+     in_yield        => 0,           ## inside a yield
+     child_result    => undef,       ## the child res if in child
+     reqnum          => $reqnum,     ## The request serial number
+     wait            => 0,     ## Waiting for something else to finish
+     cancel          => 0,     ## True if we should abort
+     change          => undef,
+     header_only     => $header_only, ## true if only sending header
+     site            => undef,        ## Default site for req
+     in_loadpage     => 0,            ## client uses loadpage
+     in_ajax         => 0,            ## request part of page
+     started         => Time::HiRes::time,
+     is_backend      => 0,
     }, $class;
 
-    if( lc($ENV{HTTP_X_REQUESTED_WITH}||'') eq "xmlhttprequest" )
+    if ( lc($ENV{HTTP_X_REQUESTED_WITH}||'') eq "xmlhttprequest" )
     {
         $req->{'in_ajax'} = 1;
         debug "IN AJAX";
@@ -163,18 +163,18 @@ sub new
     warn "# http://".$req->http_host."$orig_url_string\n";
 
     # Handle Apache internal redirection
-    if( my $redirect_uri = $ENV{REDIRECT_URL} || $ENV{'REDIRECT_SCRIPT_URI'} )
+    if ( my $redirect_uri = $ENV{REDIRECT_URL} || $ENV{'REDIRECT_SCRIPT_URI'} )
     {
-	# Apache may set the file part to 'undefined'
-	$redirect_uri =~ s(/undefined$)(/);
-	warn "# Redirected from $redirect_uri\n";
-	$req->{'orig_url_string'} = $redirect_uri;
-	$req->{'orig_url_params'} = $ENV{'REDIRECT_QUERY_STRING'};
+        # Apache may set the file part to 'undefined'
+        $redirect_uri =~ s(/undefined$)(/);
+        warn "# Redirected from $redirect_uri\n";
+        $req->{'orig_url_string'} = $redirect_uri;
+        $req->{'orig_url_params'} = $ENV{'REDIRECT_QUERY_STRING'};
 
-	unless( $q->param )
-	{
-	    $req->{'q'} = CGI->new($req->{'orig_url_params'});
-	}
+        unless( $q->param )
+        {
+            $req->{'q'} = CGI->new($req->{'orig_url_params'});
+        }
     }
 
     return $req;
@@ -199,15 +199,15 @@ sub get_by_id
     foreach my $req ( values %Para::Frame::REQUEST )
     {
 #	debug " + ".$req->{'reqnum'};
-	if( $req->{'reqnum'} == $id )
-	{
-	    return $req;
-	}
+        if ( $req->{'reqnum'} == $id )
+        {
+            return $req;
+        }
 
-	if( my $match = $req->get_subreq_by_id( $id ) )
-	{
-	    return $match;
-	}
+        if ( my $match = $req->get_subreq_by_id( $id ) )
+        {
+            return $match;
+        }
     }
 
     return undef;
@@ -230,23 +230,23 @@ sub get_subreq_by_id
 
     $id or die "id missing";
 
-    if( my $subreqs = $req->{'subrequest'} )
+    if ( my $subreqs = $req->{'subrequest'} )
     {
-	foreach my $subreq ( @$subreqs )
-	{
-	    next if $Para::Frame::REQUEST{$subreq->{'reqnum'}};
+        foreach my $subreq ( @$subreqs )
+        {
+            next if $Para::Frame::REQUEST{$subreq->{'reqnum'}};
 
 #	    debug "   + ".$subreq->{'reqnum'};
-	    if( $subreq->{'reqnum'} == $id )
-	    {
-		return $subreq;
-	    }
+            if ( $subreq->{'reqnum'} == $id )
+            {
+                return $subreq;
+            }
 
-	    if( my $match = $subreq->get_subreq_by_id( $id ) )
-	    {
-		return $match;
-	    }
-	}
+            if ( my $match = $subreq->get_subreq_by_id( $id ) )
+            {
+                return $match;
+            }
+        }
     }
 
     return undef;
@@ -270,24 +270,24 @@ sub init
 #    if( $Para::Frame::TERMINATE and not $req->q->param('req') and not $req->q->param('reqnum') )
     unless( $q->param('pfport') )
     {
-	if( $Para::Frame::TERMINATE )
-	{
-	    debug "In TERMINATE!";
-	    client_send($req->client, "RESTARTING\x001\n");
-	    return 0;
-	}
-	elsif( $Para::Frame::LEVEL > 20 )
-	{
-	    debug "OVERLOADED!";
-	    client_send($req->client, "RESTARTING\x001\n");
-	    return 0;
-	}
-	elsif( $Para::Frame::IN_STARTUP )
-	{
-	    debug "IN STARTUP";
-	    client_send($req->client, "RESTARTING\x001\n");
-	    return 0;
-	}
+        if ( $Para::Frame::TERMINATE )
+        {
+            debug "In TERMINATE!";
+            client_send($req->client, "RESTARTING\x001\n");
+            return 0;
+        }
+        elsif ( $Para::Frame::LEVEL > 20 )
+        {
+            debug "OVERLOADED!";
+            client_send($req->client, "RESTARTING\x001\n");
+            return 0;
+        }
+        elsif ( $Para::Frame::IN_STARTUP )
+        {
+            debug "IN STARTUP";
+            client_send($req->client, "RESTARTING\x001\n");
+            return 0;
+        }
     }
 
     my $env = $req->{'env'};
@@ -295,15 +295,15 @@ sub init
     ### Further initialization that requires $REQ
     $req->{'cookies'} = Para::Frame::Cookies->new($req);
 
-    if( $env->{'HTTP_USER_AGENT'} )
+    if ( $env->{'HTTP_USER_AGENT'} )
     {
-	local $^W = 0;
-	$req->{'browser'} = new HTTP::BrowserDetect($env->{'HTTP_USER_AGENT'});
+        local $^W = 0;
+        $req->{'browser'} = new HTTP::BrowserDetect($env->{'HTTP_USER_AGENT'});
     }
-    $req->{'result'}  = Para::Frame::Result->new();  # Before Session
+    $req->{'result'}  = Para::Frame::Result->new(); # Before Session
 
     $req->set_site or return undef;
-    $req->set_language;   # Needs site
+    $req->set_language;         # Needs site
 #    $req->setup_jobs;
 #    $req->reset_response; # Needs lang and jobs
 
@@ -375,7 +375,7 @@ sub new_subrequest
 #	{
 #	    debug "Host mismatch ".$site->host;
 #	    debug "Changing the client of the subrequest";
-	    $client = "background-$Para::Frame::REQNUM";
+    $client = "background-$Para::Frame::REQNUM";
 #	}
 #    }
 
@@ -396,7 +396,7 @@ sub new_subrequest
     # This only registrer background requests. Other subrequests are
     # not registred
     #
-    if( $Para::Frame::REQUEST{$client} )
+    if ( $Para::Frame::REQUEST{$client} )
     {
 #	debug "  client $client already bound to ".
 #	  $Para::Frame::REQUEST{$client}->id;
@@ -404,7 +404,7 @@ sub new_subrequest
     else
     {
 #	debug "  bound to client $client";
-	$Para::Frame::REQUEST{$client} = $req;
+        $Para::Frame::REQUEST{$client} = $req;
     }
 
 
@@ -415,7 +415,7 @@ sub new_subrequest
 
     my $res = eval
     {
-	&$coderef( $req, @params );
+        &$coderef( $req, @params );
     };
 
     my $err = catch($@);
@@ -431,9 +431,9 @@ sub new_subrequest
     # added to release active requests. I.e. release_active_request()
 
 
-    if( $err )
+    if ( $err )
     {
-	die $err; # Subrequest failed
+        die $err;               # Subrequest failed
     }
 
     return $res;
@@ -452,10 +452,10 @@ sub release_subreq
     my @subreq;
     foreach my $sreq ( @{$original_req->{'subrequest'} ||=[]} )
     {
-	if( $sreq->id != $req->id )
-	{
-	    push @subreq, $req;
-	}
+        if ( $sreq->id != $req->id )
+        {
+            push @subreq, $req;
+        }
     }
 
     $original_req->{'subrequest'} = \@subreq;
@@ -480,7 +480,7 @@ sub new_bgrequest
     my $client = "background-$Para::Frame::REQNUM";
     my $req = Para::Frame::Request->new_minimal($Para::Frame::REQNUM, $client);
 
-    if( $Para::Frame::REQUEST{$client} )
+    if ( $Para::Frame::REQUEST{$client} )
     {
 #	debug "  client $client already bound to ".
 #	  $Para::Frame::REQUEST{$client}->id;
@@ -488,7 +488,7 @@ sub new_bgrequest
     else
     {
 #	debug "  bound to client $client";
-	$Para::Frame::REQUEST{$client} = $req;
+        $Para::Frame::REQUEST{$client} = $req;
     }
 
 #    $Para::Frame::REQUEST{$client} = $req;
@@ -523,7 +523,7 @@ sub http_init
     die "header corrupt " if  $ret < 1;
 
     $req->{'env'} = $env;
-    %ENV = %$env;     # To make CGI happy
+    %ENV = %$env;               # To make CGI happy
     $env = \%ENV;
     my $q = $req->{'q'} = CGI->new($env->{QUERY_STRING});
 
@@ -546,7 +546,7 @@ sub http_init
 
     # Authenticate user identity
     my $user_class = $Para::Frame::CFG->{'user_class'};
-    $user_class->identify_user($username);     # Will set $s->{user}
+    $user_class->identify_user($username); # Will set $s->{user}
     $user_class->authenticate_user($password);
 
     return $req;
@@ -568,19 +568,19 @@ sub new_minimal
 
     my $req =  bless
     {
-     indent         => 1,	## debug indentation
+     indent         => 1,       ## debug indentation
      client         => $client,	## Just the unique name
-     jobs           => [],	## queue of actions to perform
-     actions        => [],	## queue of actions to perform
-     env            => {},	## No env for minimals!
+     jobs           => [],      ## queue of actions to perform
+     actions        => [],      ## queue of actions to perform
+     env            => {},      ## No env for minimals!
      's'            => undef,	## Session object
      result         => undef,
-     dirconfig      => {},	## Apache $r->dir_config
-     childs         => 0,	## counter in parent
-     in_yield       => 0,	## inside a yield
+     dirconfig      => {},      ## Apache $r->dir_config
+     childs         => 0,       ## counter in parent
+     in_yield       => 0,       ## inside a yield
      child_result   => undef,	## the child res if in child
      reqnum         => $reqnum,	## The request serial number
-     wait           => 0,	## Asked to wait?
+     wait           => 0,       ## Asked to wait?
      site           => undef,	## Default site for req
      started        => Time::HiRes::time,
      page           => undef,
@@ -589,7 +589,7 @@ sub new_minimal
 
     $req->{'params'} = {%$Para::Frame::PARAMS};
 
-    $req->{'result'}  = Para::Frame::Result->new($req);  # Before Session
+    $req->{'result'}  = Para::Frame::Result->new($req); # Before Session
     $req->{'s'}       = Para::Frame->Session->new_minimal();
     $req->{'q'}       = CGI->new({});
 
@@ -627,15 +627,15 @@ sub minimal_init
     my $site_in = $args->{'site'};
     unless( $site_in )
     {
-	if( $req->is_from_client )
-	{
-	    $site_in = $req->dirconfig->{'site'} || $req->host_from_env;
-	}
-	else
-	{
-	    $site_in = 'default';
+        if ( $req->is_from_client )
+        {
+            $site_in = $req->dirconfig->{'site'} || $req->host_from_env;
+        }
+        else
+        {
+            $site_in = 'default';
 #	    cluck "Site not set! Using default";
-	}
+        }
     }
     $req->set_site( $site_in );
 
@@ -689,7 +689,7 @@ Returns the L<Para::Frame::Session> object.
 
 =cut
 
-sub s { shift->{'s'} }             ;;## formatting
+sub s { shift->{'s'} }             ;; ## formatting
 sub session { shift->{'s'} }
 
 ##############################################################################
@@ -766,7 +766,7 @@ sub result_message
 {
     my $req = shift;
     my $result = $req->{'result'};
-    if( $result )
+    if ( $result )
     {
         $result->message( @_ );
     }
@@ -823,7 +823,7 @@ sub set_language
 #    debug "Setting language";
     $req->{'lang'} = $Para::Frame::CFG->{'l10n_class'}->
       set( $language_in, $args )
-	or die "Couldn't set language";
+        or die "Couldn't set language";
 }
 
 
@@ -943,7 +943,7 @@ sub require_root_access
     my $user = $_[0]->user;
     unless( $user->has_root_access )
     {
-	throw( 'denied', loc("Permission denied") );
+        throw( 'denied', loc("Permission denied") );
     }
     return 1;
 }
@@ -1062,9 +1062,9 @@ sub header_only { $_[0]->{'header_only'} }
 sub set_header_only
 {
     my( $req, $val ) = @_;
-    if( defined $val )
+    if ( defined $val )
     {
-	return $_[0]->{'header_only'} = $val;
+        return $_[0]->{'header_only'} = $val;
     }
     return $_[0]->{'header_only'};
 }
@@ -1154,27 +1154,27 @@ sub uri2file
 {
     my( $req, $url, $file, $may_not_exist ) = @_;
 
-    $url =~ s/\?.*//; # Remove query part if given
+    $url =~ s/\?.*//;           # Remove query part if given
     my $key = $req->host . $url;
 
-    if( $file )
+    if ( $file )
     {
 #	confess "DEPRECATED";
-	debug 5, "Storing URI2FILE in key $key: $file";
-	return $URI2FILE{ $key } = $file;
+        debug 5, "Storing URI2FILE in key $key: $file";
+        return $URI2FILE{ $key } = $file;
     }
 
-    if( $file = $URI2FILE{ $key } )
+    if ( $file = $URI2FILE{ $key } )
     {
 #	debug "Return  URI2FILE for    $key: $file";
-	return $file;
+        return $file;
     }
 
     confess "url missing" unless defined $url;
 
-    if( $url =~ m/^\/var\/ttc\// )
+    if ( $url =~ m/^\/var\/ttc\// )
     {
-	debug "The ttc dir shoule not reside inside a site docroot";
+        debug "The ttc dir shoule not reside inside a site docroot";
     }
 
 #    warn "    From client\n";
@@ -1210,15 +1210,15 @@ sub uri2file_clear
 {
     my( $req, $url ) = @_;
 
-    if( $url )
+    if ( $url )
     {
-	my $key = $req->host . $url;
+        my $key = $req->host . $url;
 
-	delete $URI2FILE{ $key };
+        delete $URI2FILE{ $key };
     }
     else
     {
-	%URI2FILE = ();
+        %URI2FILE = ();
     }
     return;
 }
@@ -1256,36 +1256,36 @@ sub normalized_url
 
     unless( defined $url )
     {
-	confess "deprecated";
+        confess "deprecated";
     }
 
     $params ||= {};
 
 #    debug "Normalizing $url";
 
-    if( $params->{keep_langpart} )
+    if ( $params->{keep_langpart} )
     {
-	$url =~ s/\/index.tt(\?.*)?$/\/$1/;
+        $url =~ s/\/index.tt(\?.*)?$/\/$1/;
     }
     else
     {
-	$url =~ s/\/index(\.\w{2})?\.tt(\?.*)?$/\/$2/ or
-	  $url =~ s/\.\w{2}\.tt(\?.*)?$/.tt$1/;
+        $url =~ s/\/index(\.\w{2})?\.tt(\?.*)?$/\/$2/ or
+          $url =~ s/\.\w{2}\.tt(\?.*)?$/.tt$1/;
 
     }
 
 
 
-    unless( $params->{no_check} )
+    unless ( $params->{no_check} )
     {
-	my $url_file = $req->uri2file( $url );
+        my $url_file = $req->uri2file( $url );
 
-	if( -d $url_file and $url !~ /\/(\?.*)?$/ )
-	{
-	    $url =~ s/\?/\/?/
-	      or $url .= '/';
-	    return $url;
-	}
+        if ( -d $url_file and $url !~ /\/(\?.*)?$/ )
+        {
+            $url =~ s/\?/\/?/
+              or $url .= '/';
+            return $url;
+        }
     }
 
 #    debug "Normal   url: $url";
@@ -1310,17 +1310,17 @@ sub setup_jobs
 
     # Setup actions
     my $actions = [];
-    if( $req->{'dirconfig'}{'action'} )
+    if ( $req->{'dirconfig'}{'action'} )
     {
-	push @$actions, $req->{'dirconfig'}{'action'};
+        push @$actions, $req->{'dirconfig'}{'action'};
     }
     foreach my $run_str ( $q->param('run') )
     {
-	foreach my $run ( split /&/, $run_str )
-	{
-	    push @$actions, $run;
+        foreach my $run ( split /&/, $run_str )
+        {
+            push @$actions, $run;
 #	    $req->add_job('run_action', $run);
-	}
+        }
     }
     # We will not execute later actions if one of them fail
     $req->{'actions'} = $actions;
@@ -1339,9 +1339,9 @@ sub add_action
     my( $req ) = shift;
     debug(2,"Added action @_ for $req->{reqnum}");
     push @{ $req->{'actions'} }, @_;
-    if( $req->in_last_job )
+    if ( $req->in_last_job )
     {
-	$req->add_job('after_jobs');
+        $req->add_job('after_jobs');
     }
 }
 
@@ -1357,9 +1357,9 @@ sub prepend_action
     my( $req ) = shift;
 #    debug("====> Prepended action @_ for $req->{reqnum}");
     unshift @{ $req->{'actions'} }, @_;
-    if( $req->in_last_job )
+    if ( $req->in_last_job )
     {
-	$req->add_job('after_jobs');
+        $req->add_job('after_jobs');
     }
 #    debug "Jobs: @{${$req->{'jobs'}}[0]}";
 #    debug "ACTIONS: @{ $req->{'actions'} }";
@@ -1462,17 +1462,18 @@ sub run_code
     my $res;
     eval
     {
-	$res = &{$coderef}($req, @_) ;
+        $res = &{$coderef}($req, @_) ;
     };
-    if( $@ )
+    if ( $@ )
     {
-	my $err = catch($@);
-	debug(0,"RUN CODE FAILED");
-	debug(0,$err->as_string);
-	Para::Frame->run_hook($req, 'on_error_detect',
-			      \ $err->type, \ $err->info );
-	return 0;
-    };
+        my $err = catch($@);
+        debug(0,"RUN CODE FAILED");
+        debug(0,$err->as_string);
+        Para::Frame->run_hook($req, 'on_error_detect',
+                              \ $err->type, \ $err->info );
+        return 0;
+    }
+    ;
     return $res;
 }
 
@@ -1495,7 +1496,7 @@ sub run_action
 {
     my( $req, $run, @args ) = @_;
 
-    return 1 if $run eq 'nop'; #shortcut
+    return 1 if $run eq 'nop';  #shortcut
 
 #    debug "==> RUN ACTION $run";
 
@@ -1508,16 +1509,16 @@ sub run_action
 
     foreach my $family ( @$appfmly )
     {
-	push @$actionroots, "${family}::Action";
+        push @$actionroots, "${family}::Action";
     }
     push @$actionroots, "Para::Frame::Action";
 
     my( $c_run ) = $run =~ m/^([\w\-]+)$/
-	or do
-    {
-	debug "bad chars in run: $run";
-	return 0;
-    };
+      or do
+      {
+          debug "bad chars in run: $run";
+          return 0;
+      };
     debug(2,"Will now require $c_run");
 
     # Only keep error if all tries failed
@@ -1525,165 +1526,166 @@ sub run_action
     my( $actionroot, %errors );
     foreach my $tryroot ( @$actionroots )
     {
-	my $path = $tryroot;
-	$path =~ s/::/\//g;
-	my $file = "$path/${c_run}.pm";
-	debug(3,"testing $file",1);
-	eval
-	{
-	    compile($file);
-	    # exceptions will be rewritten: "Can't locate $filename: $@"
-	};
-	if( $@ )
-	{
-	    # What went wrong?
-	    debug(3,$@);
+        my $path = $tryroot;
+        $path =~ s/::/\//g;
+        my $file = "$path/${c_run}.pm";
+        debug(3,"testing $file",1);
+        eval
+        {
+            compile($file);
+            # exceptions will be rewritten: "Can't locate $filename: $@"
+        };
+        if ( $@ )
+        {
+            # What went wrong?
+            debug(3,$@);
 
-	    if( $@ =~ /.*Can\'t locate (.*?) in \@INC/ )
-	    {
-		if( $1 eq $file )
-		{
-		    push @{$errors{'notfound'}}, "$c_run wasn't found in  $tryroot";
-		    debug(-1);
-		    next; # Try next
-		}
+            if ( $@ =~ /.*Can\'t locate (.*?) in \@INC/ )
+            {
+                if ( $1 eq $file )
+                {
+                    push @{$errors{'notfound'}}, "$c_run wasn't found in  $tryroot";
+                    debug(-1);
+                    next;       # Try next
+                }
 
-		my $info = "";
-		my $notfound = $1;
-		if( $@ =~ /^BEGIN failed--compilation aborted at (.*?) line (\d+)/m )
-		{
-		    my $source_file = $1;
-		    my $source_line = $2;
+                my $info = "";
+                my $notfound = $1;
+                if ( $@ =~ /^BEGIN failed--compilation aborted at (.*?) line (\d+)/m )
+                {
+                    my $source_file = $1;
+                    my $source_line = $2;
 
-		    # Propagate error if no match
-		    $source_file =~ /((?:\/[^\/]+){1,4})$/ or die;
-		    my $part_path = $1;
-		    $part_path =~ s/^\///;
-		    $info .= "Problem in $part_path, row $source_line:\n";
-		    $info .= "Can't find $notfound\n\n";
-		}
-		else
-		{
-		    debug(3,"Not matching BEGIN failed");
-		    $info = $@;
-		}
-		push @{$errors{'compilation'}}, $info;
-	    }
-	    elsif( $@ =~ /(syntax error at .*?)$/m )
-	    {
-		debug(2,"Syntax error in require $file");
-		push @{$errors{'compilation'}}, $1;
-	    }
-	    elsif( $@ =~ /^Can\'t locate $file/ )
-	    {
-		push @{$errors{'notfound'}}, "$c_run wasn't found in  $tryroot";
-		debug(-1);
-		next; # Try next
-	    }
-	    else
-	    {
-		debug(2,"Generic error in require $file");
-		push @{$errors{'compilation'}}, $@;
-	    }
-	    debug(-1);
-	    last; # HOLD IT
-	}
-	else
-	{
-	    $actionroot = $tryroot;
-	    debug(-1);
-	    last; # Success!
-	}
-	debug(-1);
+                    # Propagate error if no match
+                    $source_file =~ /((?:\/[^\/]+){1,4})$/ or die;
+                    my $part_path = $1;
+                    $part_path =~ s/^\///;
+                    $info .= "Problem in $part_path, row $source_line:\n";
+                    $info .= "Can't find $notfound\n\n";
+                }
+                else
+                {
+                    debug(3,"Not matching BEGIN failed");
+                    $info = $@;
+                }
+                push @{$errors{'compilation'}}, $info;
+            }
+            elsif ( $@ =~ /(syntax error at .*?)$/m )
+            {
+                debug(2,"Syntax error in require $file");
+                push @{$errors{'compilation'}}, $1;
+            }
+            elsif ( $@ =~ /^Can\'t locate $file/ )
+            {
+                push @{$errors{'notfound'}}, "$c_run wasn't found in  $tryroot";
+                debug(-1);
+                next;           # Try next
+            }
+            else
+            {
+                debug(2,"Generic error in require $file");
+                push @{$errors{'compilation'}}, $@;
+            }
+            debug(-1);
+            last;               # HOLD IT
+        }
+        else
+        {
+            $actionroot = $tryroot;
+            debug(-1);
+            last;               # Success!
+        }
+        debug(-1);
     }
 
 
-    if( not $actionroot )
+    if ( not $actionroot )
     {
-	debug(3,"ACTION NOT LOADED!");
+        debug(3,"ACTION NOT LOADED!");
 
-	# Keep the error info from all failure
-	foreach my $type ( keys %errors )
-	{
-	    my $info = "";
-	    foreach my $result ( @{$errors{$type}} )
-	    {
-		$info .= $result. "\n";
-	    }
+        # Keep the error info from all failure
+        foreach my $type ( keys %errors )
+        {
+            my $info = "";
+            foreach my $result ( @{$errors{$type}} )
+            {
+                $info .= $result. "\n";
+            }
 
-	    if( $req->is_from_client )
-	    {
-		$req->result->exception([$type, $info]);
-	    }
+            if ( $req->is_from_client )
+            {
+                $req->result->exception([$type, $info]);
+            }
 
-	    warn $info;
-	}
-	return 0; # Don't perform more actions
-    };
+            warn $info;
+        }
+        return 0;               # Don't perform more actions
+    }
+    ;
 
     # Execute action
     #
     my @res;
     eval
     {
-	debug(3,"using $actionroot",1);
-	no strict 'refs';
-	@res = &{$actionroot.'::'.$c_run.'::handler'}($req, @args);
-	Para::Frame->run_hook($req, 'after_action_success', \@res );
+        debug(3,"using $actionroot",1);
+        no strict 'refs';
+        @res = &{$actionroot.'::'.$c_run.'::handler'}($req, @args);
+        Para::Frame->run_hook($req, 'after_action_success', \@res );
 
-	if( $Para::Frame::FORK )
-	{
-	    debug "  Fork failed to return result\n";
-	    exit;
-	}
-	1;
+        if ( $Para::Frame::FORK )
+        {
+            debug "  Fork failed to return result\n";
+            exit;
+        }
+        1;
     }
-    or do
-    {
-	if( $Para::Frame::FORK )
-	{
-	    my $result = $req->{'child_result'};
-	    $result->exception( $@ );
-	    debug(0,"Fork child got EXCEPTION: $@");
-	    $result->return;
-	    exit;
-	}
+      or do
+      {
+          if ( $Para::Frame::FORK )
+          {
+              my $result = $req->{'child_result'};
+              $result->exception( $@ );
+              debug(0,"Fork child got EXCEPTION: $@");
+              $result->return;
+              exit;
+          }
 
-	# TODO: Use handle_error()
+          # TODO: Use handle_error()
 
-	debug(0,"ACTION FAILED!");
-	debug(1,$@,-1);
-	my $part = $req->result->exception;
-	if( my $error = $part->error )
-	{
-	    if( $error->type eq 'denied' and not $req->in_ajax )
-	    {
-		my $s = $req->session;
-		if( $s->u->level == 0 )
-		{
-		    # Ask to log in
+          debug(0,"ACTION FAILED!");
+          debug(1,$@,-1);
+          my $part = $req->result->exception;
+          if ( my $error = $part->error )
+          {
+              if ( $error->type eq 'denied' and not $req->in_ajax )
+              {
+                  my $s = $req->session;
+                  if ( $s->u->level == 0 )
+                  {
+                      # Ask to log in
 
-		    if( $s->can('go_login') )
-		    {
-			return if $s->go_login();
-		    }
+                      if ( $s->can('go_login') )
+                      {
+                          return if $s->go_login();
+                      }
 
-		    my $error_tt = "/login.tt";
-		    $part->hide(1);
-		    $s->route->bookmark;
-		    my $home = $req->site->home_url_path;
-		    $req->set_error_response( $home.$error_tt );
-		}
-	    }
-	}
-	return 0;
-    };
+                      my $error_tt = "/login.tt";
+                      $part->hide(1);
+                      $s->route->bookmark;
+                      my $home = $req->site->home_url_path;
+                      $req->set_error_response( $home.$error_tt );
+                  }
+              }
+          }
+          return 0;
+      };
 
     ### Other info is stored in $req->result->{'info'}
     $req->result->message( @res );
 
     debug(-1);
-    return 1; # All OK
+    return 1;                   # All OK
 }
 
 
@@ -1702,64 +1704,64 @@ sub after_jobs
 #    debug "ACTIONS: @{ $req->{'actions'} }";
 
     # Take a planned action unless an error has been encountered
-    if( my $action = shift @{ $req->{'actions'} } )
+    if ( my $action = shift @{ $req->{'actions'} } )
     {
-	unless( $req->result->errcnt )
-	{
-	    $req->run_action($action);
-	    if( @{$req->{'actions'}} )
-	    {
-		$req->add_job('after_jobs');
-	    }
-	}
+        unless( $req->result->errcnt )
+        {
+            $req->run_action($action);
+            if ( @{$req->{'actions'}} )
+            {
+                $req->add_job('after_jobs');
+            }
+        }
     }
 
-    if( $req->in_last_job )
+    if ( $req->in_last_job )
     {
-	# Check for each thing. If more jobs, stop and add a new after_jobs
+        # Check for each thing. If more jobs, stop and add a new after_jobs
 
-	### Waiting for children?
-	if( $req->{'wait'} )
-	{
-	    # Waiting for something else to finish...
-	    debug 5, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
-	    $req->add_job('after_jobs');
-	}
-	elsif( $req->{'childs'} )
-	{
-	    debug(2,"Waiting for childs");
+        ### Waiting for children?
+        if ( $req->{'wait'} )
+        {
+            # Waiting for something else to finish...
+            debug 5, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
+            $req->add_job('after_jobs');
+        }
+        elsif ( $req->{'childs'} )
+        {
+            debug(2,"Waiting for childs");
 
-	    # Remember to come back then done
-	    $req->{'on_last_child_done'} = "after_jobs";
-	    return;
-	}
+            # Remember to come back then done
+            $req->{'on_last_child_done'} = "after_jobs";
+            return;
+        }
 
-	### Do pre backtrack stuff
-	if( $req->cancelled )
-	{
-	    throw('cancel', "Request cancelled. Stopping jobs");
-	}
-	### Do backtrack stuff
-	$req->error_backtrack or
-	    $req->session->route->check_backtrack;
-	### Do last job stuff
+        ### Do pre backtrack stuff
+        if ( $req->cancelled )
+        {
+            throw('cancel', "Request cancelled. Stopping jobs");
+        }
+        ### Do backtrack stuff
+        $req->error_backtrack or
+          $req->session->route->check_backtrack;
+        ### Do last job stuff
     }
 
     # Backtracking could have added more jobs
     #
-    if( $req->in_last_job )
+    if ( $req->in_last_job )
     {
-	# Redirection requestd?
-	my $resp = $req->response; # May have changed
-	if( $resp->is_no_error and $resp->redirection )
-	{
- 	    $resp->sender->send_redirection( $resp->redirection );
-	    return $req->done;
-	}
+        # Redirection requestd?
+        my $resp = $req->response; # May have changed
+        if ( $resp->is_no_error and $resp->redirection )
+        {
+            $resp->sender->send_redirection( $resp->redirection );
+            return $req->done;
+        }
 
 
-	Para::Frame->run_hook( $req, 'before_render_output');
-	$req->change->before_render_output;
+        Para::Frame->run_hook( $req, 'before_render_output');
+        $req->change->before_render_output;
 
 #	#
 #	debug "----> Resp $resp";
@@ -1769,48 +1771,48 @@ sub after_jobs
 #	#
 
 
-	# May be a custom renderer
-	my $render_result = $resp->render_output();
-	if( $req->cancelled )
-	{
-	    throw('cancel', "Request cancelled. Not sending page result");
-	}
+        # May be a custom renderer
+        my $render_result = $resp->render_output();
+        if ( $req->cancelled )
+        {
+            throw('cancel', "Request cancelled. Not sending page result");
+        }
 
-	# The renderer may have set a redirection page
-	my $new_resp = $req->response; # May have changed
-	if( $new_resp->redirection )
-	{
-	    $new_resp->sender->send_redirection( $new_resp->redirection );
-	    return $req->done;
-	}
-	elsif( $resp ne $new_resp )
-	{
-            if( $resp->is_error and $new_resp->is_error )
+        # The renderer may have set a redirection page
+        my $new_resp = $req->response; # May have changed
+        if ( $new_resp->redirection )
+        {
+            $new_resp->sender->send_redirection( $new_resp->redirection );
+            return $req->done;
+        }
+        elsif ( $resp ne $new_resp )
+        {
+            if ( $resp->is_error and $new_resp->is_error )
             {
                 debug "DOUBLE TROUBLE";
                 $req->handle_error({ response => $new_resp });
             }
 
-	    # Let us redo the page rendering
-	}
-	elsif( $render_result )
-	{
- 	    $new_resp->sender->send_output;
-	    return $req->done;
-	}
-	else
-	{
-	    $req->handle_error({ response => $new_resp });
-	}
+            # Let us redo the page rendering
+        }
+        elsif ( $render_result )
+        {
+            $new_resp->sender->send_output;
+            return $req->done;
+        }
+        else
+        {
+            $req->handle_error({ response => $new_resp });
+        }
 
-	# The error handler may have set a redirection page
-	if( $new_resp->redirection )
-	{
-	    $new_resp->sender->send_redirection( $new_resp->redirection );
-	    return $req->done;
-	}
+        # The error handler may have set a redirection page
+        if ( $new_resp->redirection )
+        {
+            $new_resp->sender->send_redirection( $new_resp->redirection );
+            return $req->done;
+        }
 
-	$req->add_job('after_jobs');
+        $req->add_job('after_jobs');
     }
 
     return 1;
@@ -1827,15 +1829,15 @@ sub done
 {
     my( $req ) = @_;
 
-    if( $req->is_from_client )
+    if ( $req->is_from_client )
     {
-	$req->session->after_request( $req );
+        $req->session->after_request( $req );
     }
 
     # Redundant shortcut
-    unless( $req->{'wait'} or
-	    $req->{'childs'} or
-	    @{$req->{'jobs'}} )
+    unless ( $req->{'wait'} or
+             $req->{'childs'} or
+             @{$req->{'jobs'}} )
     {
 #	warn "\nFinishing up $req->{reqnum}\n";
 #
@@ -1849,8 +1851,8 @@ sub done
 #
 #	warn "childs\n" if $req->{'childs'};
 
-	$req->run_hook('done');
-	Para::Frame::close_callback($req->{'client'});
+        $req->run_hook('done');
+        Para::Frame::close_callback($req->{'client'});
     }
     return;
 }
@@ -1914,22 +1916,22 @@ sub error_backtrack
 {
     my( $req ) = @_;
 
-    if( $req->result->backtrack and not $req->error_page_selected
-        and not $req->in_ajax )
+    if ( $req->result->backtrack and not $req->error_page_selected
+         and not $req->in_ajax )
     {
-	debug(2,"Backtracking to previuos page because of errors");
-	my $previous = $req->referer_path;
-	if( $previous )
-	{
-	    my $home = $req->site->home_url_path;
-	    unless( $previous =~ /^$home/ )
-	    {
-		$previous = $home.'/';
-	    }
+        debug(2,"Backtracking to previuos page because of errors");
+        my $previous = $req->referer_path;
+        if ( $previous )
+        {
+            my $home = $req->site->home_url_path;
+            unless( $previous =~ /^$home/ )
+            {
+                $previous = $home.'/';
+            }
 
-	    $req->set_response( $previous );
-	}
-	return 1;
+            $req->set_response( $previous );
+        }
+        return 1;
     }
     return 0;
 }
@@ -1960,34 +1962,34 @@ sub referer_path
 
   TRY:
     {
-	# Explicit caller_page could be given
-	if( my $url = $req->q->param('caller_page') )
-	{
-	    debug 2, "Referer from caller_page";
-	    return Para::Frame::URI->new($url)->path;
-	}
+        # Explicit caller_page could be given
+        if ( my $url = $req->q->param('caller_page') )
+        {
+            debug 2, "Referer from caller_page";
+            return Para::Frame::URI->new($url)->path;
+        }
 
-	# The query could have been changed by route
-	if( my $url = $req->q->referer )
-	{
-	    $url = Para::Frame::URI->new($url);
+        # The query could have been changed by route
+        if ( my $url = $req->q->referer )
+        {
+            $url = Para::Frame::URI->new($url);
 #	    debug "May use referer ".$url->as_string;
-	    last if $url->host_port ne $req->host_with_port;
+            last if $url->host_port ne $req->host_with_port;
 
-	    debug 2, "Referer from current http req ($url)";
-	    return $url->path;
-	}
+            debug 2, "Referer from current http req ($url)";
+            return $url->path;
+        }
 
-	# The actual referer is more acurate in this order
-	if( my $url = $req->{'referer'} )
-	{
-	    $url = Para::Frame::URI->new($url);
+        # The actual referer is more acurate in this order
+        if ( my $url = $req->{'referer'} )
+        {
+            $url = Para::Frame::URI->new($url);
 #	    debug "May use referer ".$url->as_string;
-	    last if $url->host_port ne $req->host_with_port;
+            last if $url->host_port ne $req->host_with_port;
 
-	    debug 2, "Referer from original http req";
-	    return $url->path;
-	}
+            debug 2, "Referer from original http req";
+            return $url->path;
+        }
 
 #	# This could be confusing if several browser windows uses the same
 #	# session
@@ -2024,54 +2026,54 @@ sub referer_query
 
   TRY:
     {
-	# Explicit caller_page could be given
-	if( my $url = $req->q->param('caller_page') )
-	{
-	    debug 2, "Referer query from caller_page";
-	    return Para::Frame::URI->new($url)->query;
-	}
+        # Explicit caller_page could be given
+        if ( my $url = $req->q->param('caller_page') )
+        {
+            debug 2, "Referer query from caller_page";
+            return Para::Frame::URI->new($url)->query;
+        }
 
-	# The query could have been changed by route
-	if( my $url = $req->q->referer )
-	{
-	    $url = Para::Frame::URI->new($url);
-	    last if $url->host_port ne $req->host_with_port;
+        # The query could have been changed by route
+        if ( my $url = $req->q->referer )
+        {
+            $url = Para::Frame::URI->new($url);
+            last if $url->host_port ne $req->host_with_port;
 
-	    if( my(%query) = $url->query_form )
-	    {
-		unless( $query{'backtrack'} or $query{'reqnum'} )
-		{
-		    debug 2, "Referer query from current http req";
-		    my $query_string = $url->query;
-		    debug "Returning query $query_string";
-		    return $query_string;
-		}
-	    }
-	}
+            if ( my(%query) = $url->query_form )
+            {
+                unless ( $query{'backtrack'} or $query{'reqnum'} )
+                {
+                    debug 2, "Referer query from current http req";
+                    my $query_string = $url->query;
+                    debug "Returning query $query_string";
+                    return $query_string;
+                }
+            }
+        }
 
-	# The actual referer is more acurate in this order
-	if( my $url = $req->{'referer'} )
-	{
-	    $url = Para::Frame::URI->new($url);
-	    last if $url->host_port ne $req->host_with_port;
+        # The actual referer is more acurate in this order
+        if ( my $url = $req->{'referer'} )
+        {
+            $url = Para::Frame::URI->new($url);
+            last if $url->host_port ne $req->host_with_port;
 
-	    if( my(%query) = $url->query_form )
-	    {
-		unless( $query{'backtrack'} or $query{'reqnum'} )
-		{
-		    debug 2, "Referer query from original http req";
-		    my $query_string = $url->query;
-		    debug "Returning query $query_string";
-		    return $query_string;
-		}
-	    }
-	}
+            if ( my(%query) = $url->query_form )
+            {
+                unless ( $query{'backtrack'} or $query{'reqnum'} )
+                {
+                    debug 2, "Referer query from original http req";
+                    my $query_string = $url->query;
+                    debug "Returning query $query_string";
+                    return $query_string;
+                }
+            }
+        }
 
-	# This could be confusing if several browser windows uses the same
-	# session
-	#
-	debug 1, "Referer query from session";
-	return $req->session->referer->query if $req->session->referer;
+        # This could be confusing if several browser windows uses the same
+        # session
+        #
+        debug 1, "Referer query from session";
+        return $req->session->referer->query if $req->session->referer;
     }
 
     debug 1, "Referer query from default value";
@@ -2095,13 +2097,13 @@ sub referer_with_query
 {
     my( $req ) = @_;
 
-    if( my $query = $req->referer_query )
+    if ( my $query = $req->referer_query )
     {
-	return $req->referer_path . '?' . $query;
+        return $req->referer_path . '?' . $query;
     }
     else
     {
-	return $req->referer_path;
+        return $req->referer_path;
     }
 }
 
@@ -2154,148 +2156,148 @@ sub send_code
     # To get a response, use get_cmd_val()
 
 #    Para::Frame::Logging->this_level(5);
-    $_[1] ||= 1; # Must be at least one param
+    $_[1] ||= 1;                # Must be at least one param
     debug( 5, "Sending  ".join("-", @_)." ($req->{reqnum}) ".$req->client);
 #    debug sprintf "  at %.2f\n", Time::HiRes::time;
 
-    if( $Para::Frame::FORK )
+    if ( $Para::Frame::FORK )
     {
-	debug(2, "redirecting to parent");
-	my $code = shift;
-	my $port = $Para::Frame::CFG->{'port'};
-	my $client = $req->client;
-	debug(3, "  to ".client_str($client));
-	my $val = $client . "\x00" . shift;
-	die "Too many args in send_code($code $val @_)" if @_;
+        debug(2, "redirecting to parent");
+        my $code = shift;
+        my $port = $Para::Frame::CFG->{'port'};
+        my $client = $req->client;
+        debug(3, "  to ".client_str($client));
+        my $val = $client . "\x00" . shift;
+        die "Too many args in send_code($code $val @_)" if @_;
 
-	Para::Frame::Sender::connect_to_server( $port );
-	$Para::Frame::Sender::SOCK or die "No socket";
-	Para::Frame::Sender::send_to_server($code, \$val);
+        Para::Frame::Sender::connect_to_server( $port );
+        $Para::Frame::Sender::SOCK or die "No socket";
+        Para::Frame::Sender::send_to_server($code, \$val);
 
-	# Keep open the SOCK to get response later
-	return;
+        # Keep open the SOCK to get response later
+        return;
     }
 
     my $client = $req->client;
-    if( $client =~ /^background/ )
+    if ( $client =~ /^background/ )
     {
 
-	# We need to access Apache. We will now act as a browser in
-	# order to give ouerself a client to send this command
-	# to. This will be ... entertaining...
+        # We need to access Apache. We will now act as a browser in
+        # order to give ouerself a client to send this command
+        # to. This will be ... entertaining...
 
-	debug 2, "Req $req->{reqnum} will now considering starting an UA";
+        debug 2, "Req $req->{reqnum} will now considering starting an UA";
 
-	# Use existing
-	$req->{'wait_for_active_reqest'} ||= 0;
-	debug 2, "  It waits for $req->{'wait_for_active_reqest'} active requests";
+        # Use existing
+        $req->{'wait_for_active_reqest'} ||= 0;
+        debug 2, "  It waits for $req->{'wait_for_active_reqest'} active requests";
 
-	# Validate that the active request is alive
-	if( my $areq = $req->{'active_reqest'} )
-	{
-	    if( $areq->cancelled )
-	    {
-		debug "Active request CANCELLED";
-		debug "Releasing active_request $req->{'reqnum'}";
-		debug "Removing the referens to that request";
+        # Validate that the active request is alive
+        if ( my $areq = $req->{'active_reqest'} )
+        {
+            if ( $areq->cancelled )
+            {
+                debug "Active request CANCELLED";
+                debug "Releasing active_request $req->{'reqnum'}";
+                debug "Removing the referens to that request";
 
-		$areq->{'wait'} = 0;
-		$req->{'wait_for_active_reqest'} = 0;
-		delete $req->{'active_reqest'};
-	    }
-	    elsif( not $areq->client->connected )
-	    {
-		debug "Active request NOT CONNECTED anymore";
-		debug "Releasing active_request $req->{'reqnum'}";
-		debug "Removing the referens to that request";
+                $areq->{'wait'} = 0;
+                $req->{'wait_for_active_reqest'} = 0;
+                delete $req->{'active_reqest'};
+            }
+            elsif ( not $areq->client->connected )
+            {
+                debug "Active request NOT CONNECTED anymore";
+                debug "Releasing active_request $req->{'reqnum'}";
+                debug "Removing the referens to that request";
 
-		$areq->{'wait'} = 0;
-		$req->{'wait_for_active_reqest'} = 0;
-		delete $req->{'active_reqest'};
-	    }
-	}
+                $areq->{'wait'} = 0;
+                $req->{'wait_for_active_reqest'} = 0;
+                delete $req->{'active_reqest'};
+            }
+        }
 
-	my $fork;
-	unless( $req->{'wait_for_active_reqest'} ++ )
-	{
-	    debug "  So we prepares for starting an UA";
-	    debug "  Now it waits for 1 active request";
+        my $fork;
+        unless ( $req->{'wait_for_active_reqest'} ++ )
+        {
+            debug "  So we prepares for starting an UA";
+            debug "  Now it waits for 1 active request";
 
 
 #	    debug longmess();
 
-	    my $origreq = $req->{'original_request'};
+            my $origreq = $req->{'original_request'};
 
-	    my $site = $req->site;
+            my $site = $req->site;
 
-	    my $webhost = $site->webhost;
-	    my $webpath = $site->loopback;
-	    my $scheme = 'http';
-	    if( $site->port == 443 ) # HTTPS
-	    {
-		$scheme = 'https';
-	    }
+            my $webhost = $site->webhost;
+            my $webpath = $site->loopback;
+            my $scheme = 'http';
+            if ( $site->port == 443 ) # HTTPS
+            {
+                $scheme = 'https';
+            }
 
-	    my $port = $Para::Frame::CFG->{'port'};
-	    my $query = "run=wait_for_req&req=$client&pfport=$port";
-	    my $url = "$scheme://$webhost$webpath?$query";
-
-
-
-	    # TODO: Use a worker instead
-	    #
-	    my $ua = LWP::UserAgent->new( timeout => 60*60 );
-	    my $lwpreq = HTTP::Request->new(GET => $url);
-
-	    # Do the request in a fork. Let that req message us in the
-	    # action wait_for_req
-
-	    $fork = $req->create_fork;
-	    if( $fork->in_child )
-	    {
-		debug "About to GET $url";
-		my $res = $ua->request($lwpreq);
-		# Might get result because of a timeout
-
-		delete $res->{'handlers'}; # Can't transfer code refs
-
-		debug "GOT result";
-		if( debug > 1 )
-		{
-		    debug $res->as_string;
-		}
-		$fork->return( $res );
-	    }
+            my $port = $Para::Frame::CFG->{'port'};
+            my $query = "run=wait_for_req&req=$client&pfport=$port";
+            my $url = "$scheme://$webhost$webpath?$query";
 
 
 
-	}
+            # TODO: Use a worker instead
+            #
+            my $ua = LWP::UserAgent->new( timeout => 60*60 );
+            my $lwpreq = HTTP::Request->new(GET => $url);
 
-	# Wait for the $ua to connect and give us it's $req
-	my $ar_start = time;
-	my $ar_cluck = 0;
-	while( not $req->{'active_reqest'} )
-	{
-	    debug 3, "Got an active_reqest yet?";
-	    $req->yield(1); # Give it some time to connect
-	    if( time - $ar_start > 5 )
-	    {
-		debug "Scary connection problem. We should have an acctive request connected from the fork by now.";
+            # Do the request in a fork. Let that req message us in the
+            # action wait_for_req
 
-		if( $fork )
-		{
+            $fork = $req->create_fork;
+            if ( $fork->in_child )
+            {
+                debug "About to GET $url";
+                my $res = $ua->request($lwpreq);
+                # Might get result because of a timeout
 
-		    if( my $res = $fork->result )
-		    {
-			if( my $msg = $res->message )
-			{
-			    debug "Child got ".$msg->code." - ".$msg->message;
-			    die "Background send_code failed\n";
-			}
-		    }
+                delete $res->{'handlers'}; # Can't transfer code refs
 
-		    debug "No answer from child";
-		}
+                debug "GOT result";
+                if ( debug > 1 )
+                {
+                    debug $res->as_string;
+                }
+                $fork->return( $res );
+            }
+
+
+
+        }
+
+        # Wait for the $ua to connect and give us it's $req
+        my $ar_start = time;
+        my $ar_cluck = 0;
+        while ( not $req->{'active_reqest'} )
+        {
+            debug 3, "Got an active_reqest yet?";
+            $req->yield(1);     # Give it some time to connect
+            if ( time - $ar_start > 5 )
+            {
+                debug "Scary connection problem. We should have an acctive request connected from the fork by now.";
+
+                if ( $fork )
+                {
+
+                    if ( my $res = $fork->result )
+                    {
+                        if ( my $msg = $res->message )
+                        {
+                            debug "Child got ".$msg->code." - ".$msg->message;
+                            die "Background send_code failed\n";
+                        }
+                    }
+
+                    debug "No answer from child";
+                }
 
 #		unless( $ar_cluck )
 #		{
@@ -2310,35 +2312,35 @@ sub send_code
 #			warn "#Raising global debug to level $Para::Frame::DEBUG\n";
 #		    }
 #		}
-	    }
+            }
 
-	    if( $req->cancelled )
-	    {
-		throw 'cancel', "REQ is cancelled";
-	    }
+            if ( $req->cancelled )
+            {
+                throw 'cancel', "REQ is cancelled";
+            }
 
-	    my $oreq = $req->original;
-	    if( $oreq and $oreq->cancelled )
-	    {
-		throw 'cancel', "Original REQ is cancelled";
-	    }
-	}
+            my $oreq = $req->original;
+            if ( $oreq and $oreq->cancelled )
+            {
+                throw 'cancel', "Original REQ is cancelled";
+            }
+        }
 
-	# Got it! Now send the message
-	#
-	debug 2, "We got the active request $req->{'active_reqest'}{reqnum} now";
-	my $aclient = $req->{'active_reqest'}->client;
+        # Got it! Now send the message
+        #
+        debug 2, "We got the active request $req->{'active_reqest'}{reqnum} now";
+        my $aclient = $req->{'active_reqest'}->client;
 
 #	debug "Sending  @_";
-	client_send( $aclient, join( "\0", @_ ) . "\n" );
+        client_send( $aclient, join( "\0", @_ ) . "\n" );
 
-	# Set up release code
-	$req->add_job('release_active_request');
+        # Set up release code
+        $req->add_job('release_active_request');
     }
     else
     {
 #	debug "Sending  @_";
-	client_send( $client, join( "\0", @_ ) . "\n" );
+        client_send( $client, join( "\0", @_ ) . "\n" );
     }
 }
 
@@ -2353,24 +2355,24 @@ sub release_active_request
 {
     my( $req ) = @_;
 
-    if( $req->{'wait_for_active_reqest'} > 0 )
+    if ( $req->{'wait_for_active_reqest'} > 0 )
     {
-	$req->{'wait_for_active_reqest'} --;
-	debug 2, "$req->{reqnum} is now waiting for one active req less";
+        $req->{'wait_for_active_reqest'} --;
+        debug 2, "$req->{reqnum} is now waiting for one active req less";
     }
 
-    if( $req->{'wait_for_active_reqest'} )
+    if ( $req->{'wait_for_active_reqest'} )
     {
-	debug 2, "More jobs for active request ($req->{'wait_for_active_reqest'})";
+        debug 2, "More jobs for active request ($req->{'wait_for_active_reqest'})";
     }
     else
     {
         debug 1, "Releasing active_request $req->{'active_reqest'}{'reqnum'}";
-	$req->{'active_reqest'}{'wait'} --;
-	debug 1, "That request is now waiting for $req->{'active_reqest'}{'wait'} things";
+        $req->{'active_reqest'}{'wait'} --;
+        debug 1, "That request is now waiting for $req->{'active_reqest'}{'wait'} things";
 
-	debug 2, "Removing the referens to that request";
-	delete $req->{'active_reqest'};
+        debug 2, "Removing the referens to that request";
+        delete $req->{'active_reqest'};
     }
 }
 
@@ -2390,53 +2392,53 @@ sub get_cmd_val
 
     eval
     {
-	$req->send_code( @_ );
-	Para::Frame::get_value( $req );
+        $req->send_code( @_ );
+        Para::Frame::get_value( $req );
 
-	# Something besides the answer may be waiting before the answer
+        # Something besides the answer may be waiting before the answer
 
-	if( my $areq = $req->{'active_reqest'} )
-	{
-	    # We expects response in the active_request
-	    $queue = $Para::Frame::RESPONSE{ $areq->client };
-	    unless( $queue )
-	    {
-		throw('cancel', "request $areq->{reqnum} decomposed");
-	    }
-	}
-	else
-	{
-	    $queue = $Para::Frame::RESPONSE{ $req->client };
-	    unless( $queue )
-	    {
-		throw('cancel', "request $req->{reqnum} decomposed");
-	    }
-	}
+        if ( my $areq = $req->{'active_reqest'} )
+        {
+            # We expects response in the active_request
+            $queue = $Para::Frame::RESPONSE{ $areq->client };
+            unless( $queue )
+            {
+                throw('cancel', "request $areq->{reqnum} decomposed");
+            }
+        }
+        else
+        {
+            $queue = $Para::Frame::RESPONSE{ $req->client };
+            unless( $queue )
+            {
+                throw('cancel', "request $req->{reqnum} decomposed");
+            }
+        }
 
 
-	my $cnt = 1;
-	while( not @$queue )
-	{
-	    if( $cnt >= 20 )
-	    {
-		debug "We can't seem to get that answer to our code";
-		debug "code: @_";
-		$req->cancel;
-	    }
-            elsif( $req->{'timeout_cnt'} )
+        my $cnt = 1;
+        while ( not @$queue )
+        {
+            if ( $cnt >= 20 )
+            {
+                debug "We can't seem to get that answer to our code";
+                debug "code: @_";
+                $req->cancel;
+            }
+            elsif ( $req->{'timeout_cnt'} )
             {
                 debug "Data timeout for code: @_";
                 $req->cancel;
             }
 
-	    if( $req->{'cancel'} )
-	    {
-		throw('cancel', "request cancelled");
-	    }
+            if ( $req->{'cancel'} )
+            {
+                throw('cancel', "request cancelled");
+            }
 
-	    Para::Frame::get_value( $req );
-	    $cnt ++;
-	}
+            Para::Frame::get_value( $req );
+            $cnt ++;
+        }
     };
 
     $req->{'in_yield'} --;
@@ -2466,9 +2468,9 @@ sub may_yield
 {
     my( $req, $wait ) = @_;
 
-    if( time - ($Para::Frame::LAST||0) > 2 )
+    if ( time - ($Para::Frame::LAST||0) > 2 )
     {
-	$Para::Frame::REQ->yield( $wait );
+        $Para::Frame::REQ->yield( $wait );
     }
 }
 
@@ -2498,51 +2500,51 @@ sub yield
     # In case there is an exception in main_loop()...
     eval
     {
-	$req->{'in_yield'} ++;
-	my $done = 0;
+        $req->{'in_yield'} ++;
+        my $done = 0;
 
-	while( not $done )
-	{
-	    # The reqnum param is just for getting it in backtrace
-	    Para::Frame::main_loop( 1, $wait, $req->{'reqnum'} );
-	    if( $req->{'cancel'} )
-	    {
-		$done = 1;
-	    }
-	    elsif( not $req->{'wait'} )
-	    {
-		$done = 1;
-	    }
-	    else
-	    {
-		$wait ||= 1; # Avoids crazy fast iterations
+        while ( not $done )
+        {
+            # The reqnum param is just for getting it in backtrace
+            Para::Frame::main_loop( 1, $wait, $req->{'reqnum'} );
+            if ( $req->{'cancel'} )
+            {
+                $done = 1;
+            }
+            elsif ( not $req->{'wait'} )
+            {
+                $done = 1;
+            }
+            else
+            {
+                $wait ||= 1;    # Avoids crazy fast iterations
 
-		# One more check that the req still lives
-		unless( $Para::Frame::REQUEST{ $req->{'client'} } )
-		{
-		    debug "Connection lost without notifying the req";
-		    $req->cancel;
-		    $done = 1;
-		}
-	    }
-	}
+                # One more check that the req still lives
+                unless ( $Para::Frame::REQUEST{ $req->{'client'} } )
+                {
+                    debug "Connection lost without notifying the req";
+                    $req->cancel;
+                    $done = 1;
+                }
+            }
+        }
     };
-    if( $@ )
+    if ( $@ )
     {
-	debug "ERROR IN YIELD: $@";
+        debug "ERROR IN YIELD: $@";
     }
     $req->{'in_yield'} --;
 
-    if( $req->{'cancel'} ) # DEBUG
+    if ( $req->{'cancel'} )     # DEBUG
     {
-	debug 2, "Should close down this req soon";
+        debug 2, "Should close down this req soon";
     }
 
     Para::Frame::switch_req( $req );
 
-    if( $req->{'cancel'} )
+    if ( $req->{'cancel'} )
     {
-	throw('cancel', "request cancelled");
+        throw('cancel', "request cancelled");
     }
 }
 
@@ -2563,22 +2565,22 @@ sub http_host
 {
     my $host = $ENV{HTTP_HOST} || $ENV{SERVER_NAME};
 
-    $host =~ s/:\d+$//; # May be empty even if not port 80 (https)
+    $host =~ s/:\d+$//;     # May be empty even if not port 80 (https)
 
-    if( my $server_port = $ENV{SERVER_PORT} )
+    if ( my $server_port = $ENV{SERVER_PORT} )
     {
-	if( $server_port == 80 )
-	{
-	    return idn_decode( $host );
-	}
-	elsif( $server_port == 443 )
-	{
-	    return idn_decode( $host );
-	}
-	else
-	{
-	    return idn_decode( "$host:$server_port" );
-	}
+        if ( $server_port == 80 )
+        {
+            return idn_decode( $host );
+        }
+        elsif ( $server_port == 443 )
+        {
+            return idn_decode( $host );
+        }
+        else
+        {
+            return idn_decode( "$host:$server_port" );
+        }
     }
 
     return undef;
@@ -2615,13 +2617,13 @@ Either http or https
 
 sub http_scheme
 {
-    if( $ENV{SERVER_PORT} == 443 )
+    if ( $ENV{SERVER_PORT} == 443 )
     {
-	return "https";
+        return "https";
     }
     else
     {
-	return "http";
+        return "http";
     }
 }
 
@@ -2640,13 +2642,13 @@ If no such time was given with the request, returns undef.
 
 sub http_if_modified_since
 {
-    if( my $val = $ENV{HTTP_IF_MODIFIED_SINCE} )
+    if ( my $val = $ENV{HTTP_IF_MODIFIED_SINCE} )
     {
-	$val =~ s/;\s*length=\d+$//; # May be part of string
-	return eval # Ignoring exceptions (returns undef)
-	{
-	    return Para::Frame::Time->get($val);
-	}
+        $val =~ s/;\s*length=\d+$//; # May be part of string
+        return eval             # Ignoring exceptions (returns undef)
+        {
+            return Para::Frame::Time->get($val);
+        }
     }
     return undef;
 }
@@ -2693,48 +2695,48 @@ sub set_site
     my( $req, $site_in, $args ) = @_;
 
     my $site;
-    if( $site_in )
+    if ( $site_in )
     {
-	$site = $Para::Frame::CFG->{'site_class'}->get( $site_in );
+        $site = $Para::Frame::CFG->{'site_class'}->get( $site_in );
     }
     else
     {
-	 $site = $Para::Frame::CFG->{'site_class'}->get_by_req( $req );
+        $site = $Para::Frame::CFG->{'site_class'}->get_by_req( $req );
     }
 
     # Check that site matches the client
     #
     unless( $req->is_backend )
     {
-	if( my $orig = $req->original )
-	{
-	    my $orig_site = $orig->site;
-	    unless( $orig_site->host eq $site->host )
-	    {
-		my $site_name = $site->name;
-		my $site_host = $site->host;
-		my $orig_name = $orig_site->name;
-		my $orig_host = $orig_site->host;
-		debug "Host mismatch";
-		debug "orig site: $orig_host -> $orig_name";
-		debug "New name : $site_host -> $site_name";
-		confess "set_site called";
-	    }
-	}
-	else
-	{
-	    unless( $site->host eq $req->host_from_env )
-	    {
-		my $site_name = $site->name;
-		my $site_host = $site->host;
-		my $req_site_name = $req->host_from_env;
-		debug "Host mismatch";
-		debug "Req site : $req_site_name";
-		debug "New name : $site_host -> $site_name";
+        if ( my $orig = $req->original )
+        {
+            my $orig_site = $orig->site;
+            unless( $orig_site->host eq $site->host )
+            {
+                my $site_name = $site->name;
+                my $site_host = $site->host;
+                my $orig_name = $orig_site->name;
+                my $orig_host = $orig_site->host;
+                debug "Host mismatch";
+                debug "orig site: $orig_host -> $orig_name";
+                debug "New name : $site_host -> $site_name";
+                confess "set_site called";
+            }
+        }
+        else
+        {
+            unless( $site->host eq $req->host_from_env )
+            {
+                my $site_name = $site->name;
+                my $site_host = $site->host;
+                my $req_site_name = $req->host_from_env;
+                debug "Host mismatch";
+                debug "Req site : $req_site_name";
+                debug "New name : $site_host -> $site_name";
 #		carp "set_site called";
-		return undef;
-	    }
-	}
+                return undef;
+            }
+        }
     }
 
     return $req->{'site'} = $site;
@@ -2781,13 +2783,13 @@ sub host_from_env
     my $port = $ENV{SERVER_PORT};
 
     cluck "No host info" unless $port;
-    if( $port == 80 )
+    if ( $port == 80 )
     {
-	return $ENV{SERVER_NAME};
+        return $ENV{SERVER_NAME};
     }
     else
     {
-	return sprintf "%s:%d", $ENV{SERVER_NAME}, $port;
+        return sprintf "%s:%d", $ENV{SERVER_NAME}, $port;
     }
 }
 
@@ -2803,17 +2805,17 @@ if port differs from 80.
 
 =cut
 
-sub host # Inkludes port if not :80
+sub host                        # Inkludes port if not :80
 {
     my( $req ) = @_;
 
-    if( $ENV{SERVER_NAME} )
+    if ( $ENV{SERVER_NAME} )
     {
-	return $req->host_from_env;
+        return $req->host_from_env;
     }
     else
     {
-	return $req->site->webhost;
+        return $req->site->webhost;
     }
 }
 
@@ -2855,13 +2857,13 @@ sub host_with_port
     my( $req ) = @_;
 
     my $host = $req->host;
-    if( $host =~ /:\d+$/ )
+    if ( $host =~ /:\d+$/ )
     {
-	return $host;
+        return $host;
     }
     else
     {
-	return $host.":80";
+        return $host.":80";
     }
 }
 
@@ -2942,53 +2944,53 @@ sub create_fork
 
     do
     {
-	eval # May throw a fatal "Can't fork"
-	{
-	    $pid = open($fh, "-|");
-	};
-	unless( defined $pid )
-	{
-	    debug(0,"cannot fork: $!");
-	    if( $sleep_count++ > 6 )
-	    {
-		$SIG{CHLD} = \&Para::Frame::REAPER;
-		die "Realy can't fork! bailing out";
-	    }
-	    sleep 1;
-	}
-	$@ = undef;
+        eval                    # May throw a fatal "Can't fork"
+        {
+            $pid = open($fh, "-|");
+        };
+        unless( defined $pid )
+        {
+            debug(0,"cannot fork: $!");
+            if ( $sleep_count++ > 6 )
+            {
+                $SIG{CHLD} = \&Para::Frame::REAPER;
+                die "Realy can't fork! bailing out";
+            }
+            sleep 1;
+        }
+        $@ = undef;
     } until defined $pid;
 
-    if( $pid )
+    if ( $pid )
     {
-	### --> parent
+        ### --> parent
 
-	# Do not block on read, since we will try reading before all
-	# data are sent, so that the buffer will not get full
-	#
-	$fh->blocking(0);
+        # Do not block on read, since we will try reading before all
+        # data are sent, so that the buffer will not get full
+        #
+        $fh->blocking(0);
 
-	my $child = $req->register_child( $pid, $fh );
+        my $child = $req->register_child( $pid, $fh );
 
-	# Now we can turn the signal handling back on
-	$SIG{CHLD} = \&Para::Frame::REAPER;
+        # Now we can turn the signal handling back on
+        $SIG{CHLD} = \&Para::Frame::REAPER;
 
-	# See if we got any more signals
-	&Para::Frame::REAPER;
-	return $child;
+        # See if we got any more signals
+        &Para::Frame::REAPER;
+        return $child;
     }
     else
     {
-	### --> child
+        ### --> child
 
-	$Para::Frame::FORK = 1;
+        $Para::Frame::FORK = 1;
         $Para::Frame::SELECT = undef;
-	srand( time ^ $$ );
- 	my $result = Para::Frame::Child::Result->new;
-	$req->{'child_result'} = $result;
-	$req->run_hook('on_fork', $result );
-	return $result;
-   }
+        srand( time ^ $$ );
+        my $result = Para::Frame::Child::Result->new;
+        $req->{'child_result'} = $result;
+        $req->run_hook('on_fork', $result );
+        return $result;
+    }
 }
 
 
@@ -3019,26 +3021,26 @@ sub get_child_result
     my $result;
     eval
     {
-	$result = $child->get_results( $length );
+        $result = $child->get_results( $length );
     } or do
     {
-	$req->result->exception;
-	return 0;
+        $req->result->exception;
+        return 0;
     };
 
 #    warn datadump $result;
 
     foreach my $message ( $result->message )
     {
-	if( $req->is_from_client )
-	{
+        if ( $req->is_from_client )
+        {
 
-	    $req->result->message( $message );
-	}
-	else
-	{
-	    debug "Ignoring background child result ". $message;
-	}
+            $req->result->message( $message );
+        }
+        else
+        {
+            debug "Ignoring background child result ". $message;
+        }
     }
 
     return 1;
@@ -3105,7 +3107,7 @@ sub cancelled
 {
     my( $req ) = @_;
 #    debug "Cancelled?";
-    if( $req->is_from_client )
+    if ( $req->is_from_client )
     {
 #        debug "  from client";
 #        debug "  client ".$req->client;
@@ -3144,82 +3146,82 @@ sub cancel
 
     $req->{'cancel'} = 1;
 
-    if( $req->{'childs'} )
+    if ( $req->{'childs'} )
     {
-	debug "  Killing req childs";
-	foreach my $child ( values %Para::Frame::CHILD )
-	{
-	    my $creq = $child->req;
-	    my $cpid = $child->pid;
-	    if( $creq->{'reqnum'} == $req->{'reqnum'} )
-	    {
-		kill 9, $child->pid;
-	    }
-	}
-	$req->{'childs'} = 0;
+        debug "  Killing req childs";
+        foreach my $child ( values %Para::Frame::CHILD )
+        {
+            my $creq = $child->req;
+            my $cpid = $child->pid;
+            if ( $creq->{'reqnum'} == $req->{'reqnum'} )
+            {
+                kill 9, $child->pid;
+            }
+        }
+        $req->{'childs'} = 0;
     }
 
-    if( my $worker = $req->{'worker'} )
+    if ( my $worker = $req->{'worker'} )
     {
-	debug "  Killing worker";
-	unless( $Para::Frame::WORKER{ $worker->pid } )
-	{
-	    # See REAPER. Worker may have died
-	    debug sprintf "Req %d lost a worker", $req->id;
-	}
-	else
-	{
-	    kill 9, $worker->pid;
-	}
-	delete $req->{'worker'};
+        debug "  Killing worker";
+        unless ( $Para::Frame::WORKER{ $worker->pid } )
+        {
+            # See REAPER. Worker may have died
+            debug sprintf "Req %d lost a worker", $req->id;
+        }
+        else
+        {
+            kill 9, $worker->pid;
+        }
+        delete $req->{'worker'};
     }
 
-    if( my $orig_req = $req->original )
+    if ( my $orig_req = $req->original )
     {
-	$orig_req->cancel;
+        $orig_req->cancel;
     }
 
-    if( $req->{'wait'} > 0 )
+    if ( $req->{'wait'} > 0 )
     {
-	foreach my $subreq ( @{$req->{'subrequest'}} )
-	{
-	    debug "A servant ($subreq->{reqnum}) of req $req->{reqnum} got cancelled";
-	    debug "Both uses the same client. Cancel servant also";
-	    $subreq->cancel;
-	}
+        foreach my $subreq ( @{$req->{'subrequest'}} )
+        {
+            debug "A servant ($subreq->{reqnum}) of req $req->{reqnum} got cancelled";
+            debug "Both uses the same client. Cancel servant also";
+            $subreq->cancel;
+        }
 
-	foreach my $oreq ( values %Para::Frame::REQUEST )
-	{
-	    if( $oreq->active and ( $oreq->active->id == $req->id ) )
-	    {
-		# The common case: The active req created this request
-		# in order to communicate with the client. If this rec
-		# was cancelled it can't answer questions from the
-		# active request.
+        foreach my $oreq ( values %Para::Frame::REQUEST )
+        {
+            if ( $oreq->active and ( $oreq->active->id == $req->id ) )
+            {
+                # The common case: The active req created this request
+                # in order to communicate with the client. If this rec
+                # was cancelled it can't answer questions from the
+                # active request.
 
-		debug "A servant ($req->{'reqnum'}) of req $oreq->{'reqnum'} got cancelled";
+                debug "A servant ($req->{'reqnum'}) of req $oreq->{'reqnum'} got cancelled";
 
-		if( $oreq->cancelled )
-		{
-		    debug "Master req also cancelled";
-		}
-		else
-		{
-		    debug "Master may be in the middle of getting information  from this servant";
-		    debug "Keep it alive a litle longer";
-		    $req->{'wait'} = 1;
-		}
-	    }
-	}
+                if ( $oreq->cancelled )
+                {
+                    debug "Master req also cancelled";
+                }
+                else
+                {
+                    debug "Master may be in the middle of getting information  from this servant";
+                    debug "Keep it alive a litle longer";
+                    $req->{'wait'} = 1;
+                }
+            }
+        }
     }
 
-    if( my $areq = $req->{'active_reqest'} )
+    if ( my $areq = $req->{'active_reqest'} )
     {
-	debug "Master ($req->{'reqnum'} of active req $areq->{'reqnum'} got cancelled";
+        debug "Master ($req->{'reqnum'} of active req $areq->{'reqnum'} got cancelled";
 
-	debug "Cancelling servant";
-	$areq->cancel;
-	delete $req->{'active_reqest'};
+        debug "Cancelling servant";
+        $areq->cancel;
+        delete $req->{'active_reqest'};
     }
 
 #    debug "This was a cancel at ".longmess;
@@ -3245,11 +3247,11 @@ sub note
     debug(0, $note);
 
     my $creq = $req->original || $req; # client req
-    if( $creq->is_from_client )
+    if ( $creq->is_from_client )
     {
         $note =~ s/\n/\\n/g;
         utf8::encode($note);
-	return $creq->send_code('NOTE', $note );
+        return $creq->send_code('NOTE', $note );
     }
 }
 
@@ -3268,26 +3270,26 @@ sub set_page
     my $page_old_str = $page_old->sys_path_slash;
     my $page_new;
 
-    if( ref $page_in )
+    if ( ref $page_in )
     {
-	$page_new = $page_in;
+        $page_new = $page_in;
     }
     else
     {
-	$page_new = Para::Frame::File->new({
-					    url => $page_in,
-					    site => $req->site,
-					    file_may_not_exist => 1,
-					   });
+        $page_new = Para::Frame::File->new({
+                                            url => $page_in,
+                                            site => $req->site,
+                                            file_may_not_exist => 1,
+                                           });
     }
 
-    if( $page_new->sys_path_slash ne $page_old_str )
+    if ( $page_new->sys_path_slash ne $page_old_str )
     {
-	$req->set_response( $page_in );
+        $req->set_response( $page_in );
     }
     else
     {
-	$page_new = $page_old;
+        $page_new = $page_old;
     }
 
     return $page_new;
@@ -3341,18 +3343,18 @@ sub set_response
     $args->{'url'} = $url_in;
     $args->{'site'} ||= $req->site;
 
-    if( ref $url_in )
+    if ( ref $url_in )
     {
-        if( UNIVERSAL::isa($url_in, 'URI') )
+        if ( UNIVERSAL::isa($url_in, 'URI') )
         {
             $args->{'url'} = $url_in->path;
-            if( my $hostname = $url_in->host )
+            if ( my $hostname = $url_in->host )
             {
                 my $site = $Para::Frame::CFG->{'site_class'}->get_by_url($url_in);
                 $args->{'site'} = $site;
             }
         }
-        elsif( UNIVERSAL::isa($url_in, 'Para::Frame::File') )
+        elsif ( UNIVERSAL::isa($url_in, 'Para::Frame::File') )
         {
             # Assume a page obj
             $args->{'url'} = $url_in->url_path_slash;
@@ -3369,7 +3371,7 @@ sub set_response
         $resp = $req->{'resp'} = Para::Frame::Request::Response->new($args);
         1;
     };
-    if( $@ )
+    if ( $@ )
     {
         debug "ERROR DURING RESPONSE INIT:";
         debug $@;
@@ -3445,16 +3447,16 @@ sub reset_response
     # Clear out page2template cache
     $Para::Frame::REQ->{'file2template'} = {};
 
-    if( my $resp = $req->{'resp'} )
+    if ( my $resp = $req->{'resp'} )
     {
-	$url = $resp->page->url_path_slash;
-	return $req->set_response( $url, $args );
+        $url = $resp->page->url_path_slash;
+        return $req->set_response( $url, $args );
     }
     else
     {
-	$url = $req->{'orig_url_string'};
-	my $resp = $req->set_response( $url, $args );
-	return $req->{'orig_resp'} = $resp;
+        $url = $req->{'orig_url_string'};
+        my $resp = $req->set_response( $url, $args );
+        return $req->{'orig_resp'} = $resp;
     }
 }
 
@@ -3518,8 +3520,8 @@ sub original_url
     my( $req ) = @_;
     my $site = $req->site;
     my $url_string = sprintf("%s://%s%s",
-			     $site->scheme,
-			     $site->host,
+                             $site->scheme,
+                             $site->host,
                              $req->original_url_string);
 
     return Para::Frame::URI->new($url_string);
@@ -3553,10 +3555,10 @@ sub original_url_with_query
     my( $req ) = @_;
     my $site = $req->site;
     my $url_string = sprintf("%s://%s%s",
-			     $site->scheme,
-			     $site->host,
+                             $site->scheme,
+                             $site->host,
                              $req->original_url_string);
-    if( my $query = $req->original_url_params )
+    if ( my $query = $req->original_url_params )
     {
         $url_string .= "?".$query;
     }
@@ -3632,13 +3634,13 @@ sub handle_error
 
     my( $resp, $rend, $url, $site, $http_status );
 
-    if( $resp = $args_in->{'response'} )
+    if ( $resp = $args_in->{'response'} )
     {
         $url = $resp->page->url_path_slash;
         $site = $resp->page->site;
         $rend = $resp->renderer_if_existing;
     }
-    elsif( $url = $args_in->{'url'} )
+    elsif ( $url = $args_in->{'url'} )
     {
         $site = $req->site;
     }
@@ -3665,7 +3667,7 @@ sub handle_error
         confess "Failed to retrieve the error?!";
     }
 
-    if( $part->view_context )
+    if ( $part->view_context )
     {
         $part->prefix_message(loc("During the processing of [_1]",$url)."\n");
     }
@@ -3675,21 +3677,21 @@ sub handle_error
 
 #    debug "Old resp rend: ".$resp->renderer;
 #    debug "New resp: ".$new_resp->renderer;
-    if( $new_resp->can('render_error') )
+    if ( $new_resp->can('render_error') )
     {
         return $new_resp->render_error($part);
     }
 
 
     # Has a new response been selected
-    if( $new_resp and $resp )
+    if ( $new_resp and $resp )
     {
-        if($new_resp ne $resp)
+        if ($new_resp ne $resp)
         {
             # Let the $req->after_jobs() render the new response
             return 0;
         }
-        elsif( $resp->is_error and $new_resp->is_error )
+        elsif ( $resp->is_error and $new_resp->is_error )
         {
             my $args =
             {
@@ -3704,15 +3706,15 @@ sub handle_error
         }
     }
 
-    my $error_tt; # A new page to render (the path string)
+    my $error_tt;             # A new page to render (the path string)
 
-    if( $error->type eq 'file' )
+    if ( $error->type eq 'file' )
     {
-        if( $error->info =~ /not found/ )
+        if ( $error->info =~ /not found/ )
         {
             debug "Subtemplate not found";
             $error_tt = '/page_part_not_found.tt';
-            if( $rend )
+            if ( $rend )
             {
                 my $incpathstring = join "", map "- $_\n", @{$rend->paths};
                 $part->add_message(loc("Include path is")."\n$incpathstring");
@@ -3728,20 +3730,20 @@ sub handle_error
         }
         debug $error->as_string();
     }
-    elsif( $error->type eq 'denied' )
+    elsif ( $error->type eq 'denied' )
     {
         my $s = $req->session;
-        if( $s->u->level == 0 )
+        if ( $s->u->level == 0 )
         {
             # Ask to log in
-            if( $s->can('go_login') )
+            if ( $s->can('go_login') )
             {
                 return if $s->go_login($resp);
             }
 
             $error_tt = "/login.tt";
             $req->result->hide_part('denied');
-            unless( $req->{'no_bookmark_on_failed_login'} )
+            unless ( $req->{'no_bookmark_on_failed_login'} )
             {
                 $s->route->bookmark();
             }
@@ -3752,12 +3754,12 @@ sub handle_error
             $s->route->plan_next($req->referer_path);
         }
     }
-    elsif( $error->type eq 'notfound' )
+    elsif ( $error->type eq 'notfound' )
     {
         $error_tt = "/page_not_found.tt";
         $http_status = 404;
     }
-    elsif( $error->type eq 'cancel' )
+    elsif ( $error->type eq 'cancel' )
     {
         throw('cancel', "request cancelled");
     }
@@ -3771,18 +3773,18 @@ sub handle_error
     my $error_tt_template = $site->home->get_virtual($error_tt)->template;
 
     # Avoid recursive failure (only checks for TT renderer)
-    if( $resp and $resp->renderer_if_existing and
-        $resp->renderer->can('template')
-      )
+    if ( $resp and $resp->renderer_if_existing and
+         $resp->renderer->can('template')
+       )
     {
-        if( my $tmpl = $resp->renderer->template )
+        if ( my $tmpl = $resp->renderer->template )
         {
             my $tmpl_sys_base = $tmpl->sys_base;
             my $error_sys_base = $error_tt_template->sys_base;
             debug sprintf "Comparing %s with %s",
               $tmpl_sys_base, $error_sys_base;
             # Same error page again?
-            if($tmpl_sys_base eq $error_sys_base )
+            if ($tmpl_sys_base eq $error_sys_base )
             {
                 my $args =
                 {
@@ -3811,7 +3813,7 @@ sub handle_error
     };
     $new_resp = $req->{'resp'} = Para::Frame::Request::Response->new($args);
 
-    if( $http_status )
+    if ( $http_status )
     {
         $new_resp->set_http_status( $http_status );
     }
