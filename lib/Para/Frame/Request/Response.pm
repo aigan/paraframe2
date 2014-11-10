@@ -65,8 +65,8 @@ use utf8;
 use Encode;
 use Carp qw( croak confess cluck );
 use IO::File;
-use File::Basename; # exports fileparse, basename, dirname
-use File::stat; # exports stat
+use File::Basename;             # exports fileparse, basename, dirname
+use File::stat;                 # exports stat
 use File::Slurp; # Exports read_file, write_file, append_file, overwrite_file, read_dir
 use Scalar::Util qw(weaken);
 
@@ -123,35 +123,35 @@ sub new
     my $resp = bless
     {
      'req'            => undef,
-     'site'           => undef,          ## The site for the request
+     'site'           => undef, ## The site for the request
      'page'           => undef,
-     'headers'        => [],             ## Headers to be sent to the client
-     'redirect'       => undef,          ## ... to other server
-     'ctype'          => undef,          ## The response content-type
-     'content'        => undef,          ## Ref to the generated page
-     'dir'            => undef,          ## Cached Para::Frame::Dir obj
+     'headers'        => [],    ## Headers to be sent to the client
+     'redirect'       => undef, ## ... to other server
+     'ctype'          => undef, ## The response content-type
+     'content'        => undef, ## Ref to the generated page
+     'dir'            => undef, ## Cached Para::Frame::Dir obj
      'renderer'       => undef,
      'is_error_response' => 0,
      'moved_permanently' => undef,
-     'time'           => time,           ## Start time
-     'time_done'      => undef,          ## Rendering finished
+     'time'           => time,  ## Start time
+     'time_done'      => undef, ## Rendering finished
      'status'         => 200,
     }, $class;
 
-    if( my $req = $args->{req} )
+    if ( my $req = $args->{req} )
     {
-	$resp->{req} = $req;
-	weaken( $resp->{'req'} );
+        $resp->{req} = $req;
+        weaken( $resp->{'req'} );
 
-	$args->{'site'} ||= $req->site;
-	$args->{'language'} ||= $req->language;
+        $args->{'site'} ||= $req->site;
+        $args->{'language'} ||= $req->language;
     }
 
     $args->{'resp'} = $resp;
 
-    if( $args->{'is_error_response'} )
+    if ( $args->{'is_error_response'} )
     {
-	$resp->{'is_error_response'} = 1;
+        $resp->{'is_error_response'} = 1;
     }
 
     # NOTE: We set the normalized page
@@ -159,7 +159,7 @@ sub new
     $args->{'file_may_not_exist'} = 1;
     my $page = $resp->{'page'} = Para::Frame::File->new($args)->normalize;
 
-    if( $args->{'always_move'} || 0 )
+    if ( $args->{'always_move'} || 0 )
     {
         $resp->{'moved_permanently'} = $args->{'always_move'};
     }
@@ -187,22 +187,22 @@ sub new_minimal
     my $resp = bless
     {
      'req'            => undef,
-     'site'           => undef,          ## The site for the request
+     'site'           => undef, ## The site for the request
      'page'           => undef,
-     'headers'        => [],             ## Headers to be sent to the client
-     'redirect'       => undef,          ## ... to other server
-     'ctype'          => undef,          ## The response content-type
-     'content'        => undef,          ## Ref to the generated page
-     'dir'            => undef,          ## Cached Para::Frame::Dir obj
+     'headers'        => [],    ## Headers to be sent to the client
+     'redirect'       => undef, ## ... to other server
+     'ctype'          => undef, ## The response content-type
+     'content'        => undef, ## Ref to the generated page
+     'dir'            => undef, ## Cached Para::Frame::Dir obj
      'renderer'       => undef,
      'is_error_response' => 0,
      'moved_permanently' => undef,
-     'time'           => time,           ## Start time
-     'time_done'      => undef,          ## Rendering finished
+     'time'           => time,  ## Start time
+     'time_done'      => undef, ## Rendering finished
      'status'         => 200,
     }, $class;
 
-    if( my $req = $args->{req} )
+    if ( my $req = $args->{req} )
     {
         $resp->{req} = $req;
         weaken( $resp->{'req'} );
@@ -213,7 +213,7 @@ sub new_minimal
 
     $args->{'resp'} = $resp;
 
-    if( $args->{'is_error_response'} )
+    if ( $args->{'is_error_response'} )
     {
         $resp->{'is_error_response'} = 1;
     }
@@ -295,12 +295,12 @@ sub page_url_path_with_query
     my $path = $resp->page->url_path_slash;
 
     my $req = $Para::Frame::REQ;
-    if( $path eq $req->original_url_string )
+    if ( $path eq $req->original_url_string )
     {
-	if( my $query = $req->original_url_params )
-	{
-	    $path .= "?".$query;
-	}
+        if ( my $query = $req->original_url_params )
+        {
+            $path .= "?".$query;
+        }
     }
 
     return $path;
@@ -323,18 +323,18 @@ sub page_url_path_with_query_and_reqnum
 #    debug "CALLER query string is ".$req->original_url_params;
 #    debug datadump \%ENV;
 
-    if( $path eq $req->original_url_string.'?' )
+    if ( $path eq $req->original_url_string.'?' )
     {
-	if( my $query = $req->original_url_params )
-	{
-	    $query =~ s/reqnum=[^&]+&?//g;
-	    $query =~ s/pfport=[^&]+&?//g;
+        if ( my $query = $req->original_url_params )
+        {
+            $query =~ s/reqnum=[^&]+&?//g;
+            $query =~ s/pfport=[^&]+&?//g;
 
-	    if( length $query )
-	    {
-		$path .= $query . '&';
-	    }
-	}
+            if ( length $query )
+            {
+                $path .= $query . '&';
+            }
+        }
     }
 
     return $path . 'reqnum='.$req->id.'&pfport='.$Para::Frame::CFG->{'port'};
@@ -480,7 +480,7 @@ sub set_headers
 
     unless( ref $headers eq 'ARRAY' )
     {
-	confess "Faulty headers: ".datadump($headers);
+        confess "Faulty headers: ".datadump($headers);
     }
 
 #    debug "Headers set to ".datadump($headers);
@@ -509,17 +509,17 @@ sub set_header
     my $changes = 0;
     foreach my $part ( @{$resp->{'headers'}} )
     {
-	if( $key eq $part->[0] )
-	{
-	    $part->[1] = $val;
-	    $changes ++;
-	}
+        if ( $key eq $part->[0] )
+        {
+            $part->[1] = $val;
+            $changes ++;
+        }
     }
 
     unless( $changes )
     {
-	push @{$resp->{'headers'}}, [$key,$val];
-	$changes ++;
+        push @{$resp->{'headers'}}, [$key,$val];
+        $changes ++;
     }
 
 #    debug "Headers set to ".datadump($resp->{'headers'});
@@ -570,9 +570,9 @@ sub ctype
 
     # Needs $REQ
 
-    unless( $resp->{'ctype'} )
+    unless ( $resp->{'ctype'} )
     {
-	$resp->{'ctype'} = Para::Frame::Request::Ctype->new($resp->req);
+        $resp->{'ctype'} = Para::Frame::Request::Ctype->new($resp->req);
     }
 
     return $resp->{'ctype'};
@@ -608,7 +608,7 @@ sub redirect
 {
     my( $resp, $url, $permanently ) = @_;
 
-   $resp->{'moved_permanently'} ||= 1 unless $permanently;
+    $resp->{'moved_permanently'} ||= 1 unless $permanently;
 
     $resp->{'redirect'} = $url;
 }
@@ -674,13 +674,13 @@ sub send_output
 
     # Forward if URL differs from url_path
 
-    if( debug > 2 )
+    if ( debug > 2 )
     {
-	debug(0,"Sending the page ".$page->url_path);
-	unless( $req->error_page_not_selected )
-	{
-	    debug(0,"An error page was selected");
-	}
+        debug(0,"Sending the page ".$page->url_path);
+        unless( $req->error_page_not_selected )
+        {
+            debug(0,"An error page was selected");
+        }
     }
 
 
@@ -697,98 +697,98 @@ sub send_output
 #    debug "URL norm $url_norm";
 #    debug "URL orig $url_orig";
 
-    if( $url_in ne $url_out )
+    if ( $url_in ne $url_out )
     {
 #	debug "!!! $url_in ne $url_out";
 
 #	# Keep query string
 #	$url_out = $resp->page_url_path_with_query_and_reqnum;
 
-	$url_out = $resp->page_url_path_with_reqnum;
-	return if $resp->forward($url_out);
+        $url_out = $resp->page_url_path_with_reqnum;
+        return if $resp->forward($url_out);
     }
 
-    if( $req->header_only )
+    if ( $req->header_only )
     {
-	my $result;
-	if( $req->in_loadpage )
-	{
-	    $result = "LOADPAGE";
-	}
-	else
-	{
-	    $req->cookies->add_to_header;
-	    $resp->send_headers;
-	    $result = $req->get_cmd_val( 'HEADER' );
-	}
+        my $result;
+        if ( $req->in_loadpage )
+        {
+            $result = "LOADPAGE";
+        }
+        else
+        {
+            $req->cookies->add_to_header;
+            $resp->send_headers;
+            $result = $req->get_cmd_val( 'HEADER' );
+        }
 
-	if( $result eq 'LOADPAGE' )
-	{
+        if ( $result eq 'LOADPAGE' )
+        {
 #	    # Keep query string
 #	    $url_out = $resp->page_url_path_with_query_and_reqnum;
-	    $url_out = $resp->page_url_path_with_reqnum;
+            $url_out = $resp->page_url_path_with_reqnum;
 
-	    # We should not have come here for a head request!
-	    # TODO: fixme
+            # We should not have come here for a head request!
+            # TODO: fixme
 
-	    $req->session->register_result_page($resp, $url_out);
-	    $req->send_code('PAGE_READY', $url_out, loc('page_ready'));
-	}
-	return;
+            $req->session->register_result_page($resp, $url_out);
+            $req->send_code('PAGE_READY', $url_out, loc('page_ready'));
+        }
+        return;
     }
     else
     {
-	my $result;
-	if( $req->in_loadpage )
-	{
-	    $result = "LOADPAGE";
-	}
-	else
-	{
-	    $req->cookies->add_to_header;
-	    $resp->send_headers;
-	    $result = $req->get_cmd_val( 'BODY' );
-	}
+        my $result;
+        if ( $req->in_loadpage )
+        {
+            $result = "LOADPAGE";
+        }
+        else
+        {
+            $req->cookies->add_to_header;
+            $resp->send_headers;
+            $result = $req->get_cmd_val( 'BODY' );
+        }
 
-	if( $result eq 'LOADPAGE' )
-	{
-	    # Keep query string
-	    $url_out = $resp->page_url_path_with_reqnum;
+        if ( $result eq 'LOADPAGE' )
+        {
+            # Keep query string
+            $url_out = $resp->page_url_path_with_reqnum;
 
 #	    # Keep query string
 #	    $url_out = $resp->page_url_path_with_query_and_reqnum;
 
-	    $req->cookies->add_to_header;
+            $req->cookies->add_to_header;
 
-	    $req->session->register_result_page($resp, $url_out);
-	    $req->send_code('PAGE_READY', $url_out, loc('page_ready'));
-	}
-	elsif( $result eq 'SEND' )
-	{
-	    my $encoding = $resp->{'encoding'};
-	    unless( $encoding )
-	    {
-		my $ctype = $resp->ctype;
-		if( $ctype->type =~ /^text\// )
-		{
-		    $encoding = $ctype->charset;
-		}
-	    }
+            $req->session->register_result_page($resp, $url_out);
+            $req->send_code('PAGE_READY', $url_out, loc('page_ready'));
+        }
+        elsif ( $result eq 'SEND' )
+        {
+            my $encoding = $resp->{'encoding'};
+            unless( $encoding )
+            {
+                my $ctype = $resp->ctype;
+                if ( $ctype->type =~ /^text\// )
+                {
+                    $encoding = $ctype->charset;
+                }
+            }
 
-	    my $res = client_send($client, $content,
-				  {
-				   req => $req,
-				   encoding => $encoding,
-				  });
-	}
-	else
-	{
-	    debug "Strange response '$result'";
-	    debug $req->logging->debug_data;
-	    confess "Not good";
-	}
+            my $res = client_send($client, $content,
+                                  {
+                                   req => $req,
+                                   encoding => $encoding,
+                                  });
+        }
+        else
+        {
+            debug "Strange response '$result'";
+            debug $req->logging->debug_data;
+            confess "Not good";
+        }
 
-	return;
+        return;
     }
 
 #    debug "send_output: done";
@@ -881,25 +881,25 @@ sub forward
 
     debug "Forwarding to $url_norm";
 
-    if( not( $resp->{'content'} or $resp->{'sender'} or $req->header_only ) )
+    if ( not( $resp->{'content'} or $resp->{'sender'} or $req->header_only ) )
     {
-	cluck "forward() called without a generated page";
-	unless( $url_norm =~ /\.html$/ )
-	{
-	    $url_norm = $site->home_url_path."/error.tt";
-	}
+        cluck "forward() called without a generated page";
+        unless( $url_norm =~ /\.html$/ )
+        {
+            $url_norm = $site->home_url_path."/error.tt";
+        }
     }
-    elsif( $url_norm =~ /\.html$/ )
+    elsif ( $url_norm =~ /\.html$/ )
     {
-	debug "Forward to html page: $url_norm";
-	my $referer = $req->referer_path;
-	debug "  Referer is $referer";
-	debug "  Cancelling forwarding";
-	$resp = $req->set_response($req->original_url_string);
+        debug "Forward to html page: $url_norm";
+        my $referer = $req->referer_path;
+        debug "  Referer is $referer";
+        debug "  Cancelling forwarding";
+        $resp = $req->set_response($req->original_url_string);
 #	$page->{url_norm} = $page->orig_url_path;
 #	$page->{sys_name} = undef;
-	$resp->send_output;
-	return 1;
+        $resp->send_output;
+        return 1;
     }
 
     # Storing result page BEFORE sending redirection, in case the
@@ -948,13 +948,13 @@ sub send_redirection
     # URL module doesn't support punycode. Bypass module if we
     # redirect to specified domain
     #
-    if( $url_in =~ /^ https?:\/\/ (.*?) (: | \/ | $ ) /x )
+    if ( $url_in =~ /^ https?:\/\/ (.*?) (: | \/ | $ ) /x )
     {
         my $host_in = $1;
 #	warn "  matched '$host_in' in '$url_in'!\n";
         my $host_out = idn_encode( $host_in );
 #	warn "  Encoded to '$host_out'\n";
-        if( $host_in ne $host_out )
+        if ( $host_in ne $host_out )
         {
             $url_in =~ s/$host_in/$host_out/;
         }
@@ -983,20 +983,20 @@ sub send_redirection
 
 
     my $res = $req->get_cmd_val( 'WAIT' );
-    if( $res eq 'LOADPAGE' )
+    if ( $res eq 'LOADPAGE' )
     {
         $req->send_code('PAGE_READY', $url_out, loc('page_ready') );
         return;
     }
 
-    if( $moved_permanently )
+    if ( $moved_permanently )
     {
         debug "MOVED PERMANENTLY";
         cluck "From where";
         $req->send_code( 'AR-PUT', 'status', 301 );
         $req->send_code( 'AT-PUT', 'set', 'Cache-Control', 'public' );
     }
-    else # moved temporarily
+    else                        # moved temporarily
     {
         $req->send_code( 'AR-PUT', 'status', 302 );
         $req->send_code( 'AT-PUT', 'set', 'Pragma', 'no-cache' );
@@ -1009,7 +1009,7 @@ sub send_redirection
 
     $req->send_code( 'AR-PUT', 'content_type', 'text/plain' );
 
-    if( $req->header_only )
+    if ( $req->header_only )
     {
         $req->send_code( 'HEADER' );
     }
@@ -1046,34 +1046,34 @@ sub send_headers
 
     $resp->renderer->set_ctype($ctype);
 
-    $req->lang->set_headers;               # lang
+    $req->lang->set_headers;    # lang
 
-    if( my $last_modified = $resp->last_modified )
+    if ( my $last_modified = $resp->last_modified )
     {
-	$resp->set_header('Last-Modified' => $last_modified->internet_date);
+        $resp->set_header('Last-Modified' => $last_modified->internet_date);
     }
 
     $ctype->commit;
 
-    if( $req->original_status != $resp->{'status'} )
+    if ( $req->original_status != $resp->{'status'} )
     {
-	$req->send_code( 'AR-PUT', 'status', $resp->{'status'} );
+        $req->send_code( 'AR-PUT', 'status', $resp->{'status'} );
     }
 
 
-    my %multiple; # Replace first, but add later headers
+    my %multiple;               # Replace first, but add later headers
     foreach my $header ( $resp->headers )
     {
-	if( $multiple{$header->[0]} ++ )
-	{
-	    debug(3,"Send header add @$header");
-	    $req->send_code( 'AT-PUT', 'add', @$header);
-	}
-	else
-	{
-	    debug(3,"Send header_out @$header");
-	    $req->send_code( 'AT-PUT', 'set', @$header);
-	}
+        if ( $multiple{$header->[0]} ++ )
+        {
+            debug(3,"Send header add @$header");
+            $req->send_code( 'AT-PUT', 'add', @$header);
+        }
+        else
+        {
+            debug(3,"Send header_out @$header");
+            $req->send_code( 'AT-PUT', 'set', @$header);
+        }
     }
 }
 
@@ -1092,48 +1092,49 @@ sub send_stored_result
 
     debug 2, "Sending stored page result";
 
-    if( my $content = $resp->{'content'} ) # May be header only
+    if ( my $content = $resp->{'content'} ) # May be header only
     {
 #	debug "  ".validate_utf8($content);
 
-	$resp->send_headers;
-	my $res = $req->get_cmd_val( 'BODY' );
-	if( $res eq 'LOADPAGE' )
-	{
-	    die "Was too slow to send the pregenerated page";
-	}
-	else
-	{
-	    my $client = $req->client;
-	    my $encoding = $resp->{'encoding'};
-	    unless( $encoding )
-	    {
-		my $ctype = $resp->ctype;
-		if( $ctype->type =~ /^text\// )
-		{
-		    $encoding = $ctype->charset;
-		}
-	    }
+        $resp->send_headers;
+        my $res = $req->get_cmd_val( 'BODY' );
+        if ( $res eq 'LOADPAGE' )
+        {
+            die "Was too slow to send the pregenerated page";
+        }
+        else
+        {
+            my $client = $req->client;
+            my $encoding = $resp->{'encoding'};
+            unless( $encoding )
+            {
+                my $ctype = $resp->ctype;
+                if ( $ctype->type =~ /^text\// )
+                {
+                    $encoding = $ctype->charset;
+                }
+            }
 
 #	    my $content_length = length( $$content||'' );
 #	    debug "Resp content has length $content_length";
 
-	    client_send($client, $content,
-			{
-			 req => $req,
-			 encoding => $encoding,
-			});
-	}
+            client_send($client, $content,
+                        {
+                         req => $req,
+                         encoding => $encoding,
+                        });
+        }
     }
     else
     {
-	debug 4, "  as HEADER";
-	$resp->send_headers;
-	my $res = $req->get_cmd_val( 'HEADER' );
-	if( $res eq 'LOADPAGE' )
-	{
-	    die "Was to slow to send the pregenerated page";
-	};
+        debug 4, "  as HEADER";
+        $resp->send_headers;
+        my $res = $req->get_cmd_val( 'HEADER' );
+        if ( $res eq 'LOADPAGE' )
+        {
+            die "Was to slow to send the pregenerated page";
+        }
+        ;
     }
 
     #debug "Sending stored page result: done";
@@ -1210,13 +1211,13 @@ sub set_sender
 
 sub sender
 {
-    if( $_[0]->{'sender'} )
+    if ( $_[0]->{'sender'} )
     {
-	return $_[0]->{'sender'};
+        return $_[0]->{'sender'};
     }
     else
     {
-	return $_[0]; # Send with this response obj
+        return $_[0];           # Send with this response obj
     }
 }
 
@@ -1234,9 +1235,9 @@ Returns: the renderer to be used
 
 sub renderer
 {
-    unless( $_[0]->{'renderer'} )
+    unless ( $_[0]->{'renderer'} )
     {
-	$_[0]->{'renderer'} = $_[0]->set_renderer();
+        $_[0]->{'renderer'} = $_[0]->set_renderer();
     }
 
 #    debug "Returning renderer ".ref($_[0]->{'renderer'});
@@ -1279,9 +1280,9 @@ sub set_renderer
     my $args = $args_in || $resp->{'renderer_args'} || {};
     my $renderer =
       ( $renderer_in
-	|| $args->{'renderer'}
-	|| $req->q->param('renderer')
-	|| $req->dirconfig->{'renderer'}
+        || $args->{'renderer'}
+        || $req->q->param('renderer')
+        || $req->dirconfig->{'renderer'}
       );
 
 
@@ -1290,11 +1291,11 @@ sub set_renderer
 
     eval
     {
-        if( not $renderer and $resp->{'page'} )
+        if ( not $renderer and $resp->{'page'} )
         {
             $renderer = $resp->{'page'}->renderer( $args );
         }
-        elsif( $resp->is_error_response and not $renderer_in )
+        elsif ( $resp->is_error_response and not $renderer_in )
         {
             # If this is an error response, we should not use a renderer
             # from dirconfig. But always use the renderer given in
@@ -1304,7 +1305,7 @@ sub set_renderer
             $renderer = $resp->{'page'}->renderer( $args );
         }
     };
-    if( $@ )
+    if ( $@ )
     {
         ##################
         debug $@;
@@ -1315,39 +1316,39 @@ sub set_renderer
         $resp->set_http_status( 500 );
     }
 
-    if( ref $renderer )
+    if ( ref $renderer )
     {
-	return $resp->{'renderer'} = $renderer;
+        return $resp->{'renderer'} = $renderer;
     }
 
-    if( $renderer !~ /::/ )
+    if ( $renderer !~ /::/ )
     {
-	my $site = $req->site;
-	my @errors;
-	foreach my $base ( $site->appbases )
-	{
-	    my $pkg = $base.'::Renderer::'.$renderer;
-	    my $mod = package_to_module($pkg);
-	    if( eval{compile($mod)} )
-	    {
-		return $resp->{'renderer'} = $pkg->new($args);
-	    }
+        my $site = $req->site;
+        my @errors;
+        foreach my $base ( $site->appbases )
+        {
+            my $pkg = $base.'::Renderer::'.$renderer;
+            my $mod = package_to_module($pkg);
+            if ( eval{compile($mod)} )
+            {
+                return $resp->{'renderer'} = $pkg->new($args);
+            }
 
-	    if( $@ )
-	    {
-		push @errors, $@;
-	    }
-	}
+            if ( $@ )
+            {
+                push @errors, $@;
+            }
+        }
 
-	foreach my $err ( @errors )
-	{
-	    $req->result->exception($err);
-	}
+        foreach my $err ( @errors )
+        {
+            $req->result->exception($err);
+        }
     }
 
     unless( $renderer =~ /::Renderer::/i )
     {
-	confess "Renderer $renderer is invalid";
+        confess "Renderer $renderer is invalid";
     }
 
     my $mod = package_to_module($renderer);
@@ -1388,31 +1389,31 @@ sub render_output
 
     return eval
     {
-	debug 3, "Rendering output";
-	# May throw exceptions
-	my $renderer = $resp->renderer;
-	debug 3, "Using renderer $renderer";
+        debug 3, "Rendering output";
+        # May throw exceptions
+        my $renderer = $resp->renderer;
+        debug 3, "Using renderer $renderer";
 
-	# May throw exceptions -- May return false
+        # May throw exceptions -- May return false
         my $result = $renderer->render_output();
         $resp->{'time_done'} = time;
-	if( $result )
-	{
-	    return 0 unless ref $result;
+        if ( $result )
+        {
+            return 0 unless ref $result;
 
-	    if( ref $result eq 'SCALAR' )
-	    {
-		$resp->set_content( $result );
-	    }
-	    else
-	    {
-		$resp->set_sender( $result );
-	    }
-	    debug 3, "Returning true";
-	    return 1;
-	}
-	debug 3, "Returning false";
-	return 0;
+            if ( ref $result eq 'SCALAR' )
+            {
+                $resp->set_content( $result );
+            }
+            else
+            {
+                $resp->set_sender( $result );
+            }
+            debug 3, "Returning true";
+            return 1;
+        }
+        debug 3, "Returning false";
+        return 0;
     };
     debug 3, "Got an error";
     return 0;
@@ -1442,19 +1443,19 @@ sub last_modified
 
     my $type = $resp->ctype->type || '';
 
-    if( ($type eq 'text/css') or ($type eq 'application/x-javascript') )
+    if ( ($type eq 'text/css') or ($type eq 'application/x-javascript') )
     {
-	my $page = $resp->page;
+        my $page = $resp->page;
 #	my $updated = $page->site->css->updated;
 #	debug "CSS updated $updated";
 #	my $page_updated = $page->mtime;
 #	debug "CSS template updated $page_updated";
 #	if( $page_updated > $updated )
-	if( $page->is_updated ) # May be a sub-page that was updated
-	{
-	    return Para::Frame::Time->now();
-	}
-	return $page->mtime;
+        if ( $page->is_updated ) # May be a sub-page that was updated
+        {
+            return Para::Frame::Time->now();
+        }
+        return $page->mtime;
     }
 
     return undef;
