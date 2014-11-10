@@ -25,18 +25,18 @@ See also L<Para::Frame::Dir> and L<Para::Frame::Template>.
 use 5.010;
 use strict;
 use warnings;
-use utf8; # Ã not used in file
+use utf8;                       # Ã not used in file
 
 use Encode;
 use Carp qw( croak confess cluck );
-use File::stat; # exports stat
+use File::stat;                 # exports stat
 use Scalar::Util qw(weaken);
 use Number::Bytes::Human qw(format_bytes);
 use File::Slurp qw(slurp); # May export read_file, write_file, append_file, overwrite_file, read_dir
 use Cwd 'abs_path';
-use File::Copy qw(); # NOT exports copy
+use File::Copy qw();            # NOT exports copy
 use File::Remove;
-use File::MimeInfo qw(); # NOT importing mimetype
+use File::MimeInfo qw();        # NOT importing mimetype
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw debug datadump catch chmod_file create_dir deunicode validate_utf8 );
@@ -83,66 +83,66 @@ sub new
     my $site_in = $args->{'site'};
 
     my $key = $sys_in;
-    if( $key )
+    if ( $key )
     {
-	confess "Not a string: $sys_in" if ref $sys_in;
+        confess "Not a string: $sys_in" if ref $sys_in;
     }
     else
     {
-	confess "Missing site" unless $site_in;
-	if( ref $url_in )
-	{
-	    $url_in = $url_in->url_path_slash;
-	}
-	else
-	{
-	    # Clear out query part, if existing
-	    $url_in =~ s/(\?|#).*//;
-	}
-	$key = $site_in->code . $url_in;
+        confess "Missing site" unless $site_in;
+        if ( ref $url_in )
+        {
+            $url_in = $url_in->url_path_slash;
+        }
+        else
+        {
+            # Clear out query part, if existing
+            $url_in =~ s/(\?|#).*//;
+        }
+        $key = $site_in->code . $url_in;
     }
     # Key should be the same with or without trailing slash
     $key =~ s/\/$//;
 
- SHORTCUT:
+  SHORTCUT:
     {
-	if( my $file = $Para::Frame::File::Cache{ $key } )
-	{
-	    unless( UNIVERSAL::isa( $class, 'Para::Frame::File' ) )
-	    {
-		if( ref($file) ne $class )
-		{
-		    debug "Stored file $key not of the right class: ".ref($file);
-		    last SHORTCUT;
-		}
-	    }
+        if ( my $file = $Para::Frame::File::Cache{ $key } )
+        {
+            unless( UNIVERSAL::isa( $class, 'Para::Frame::File' ) )
+            {
+                if ( ref($file) ne $class )
+                {
+                    debug "Stored file $key not of the right class: ".ref($file);
+                    last SHORTCUT;
+                }
+            }
 
-	    if( $DEBUG )
-	    {
-		if( $file->exist )
-		{
-		    debug "Got from CACHE: $key - exist";
-		}
-		else
-		{
-		    debug "Got from CACHE: $key";
-		}
-	    }
+            if ( $DEBUG )
+            {
+                if ( $file->exist )
+                {
+                    debug "Got from CACHE: $key - exist";
+                }
+                else
+                {
+                    debug "Got from CACHE: $key";
+                }
+            }
 
-	    # For nonexistant files, we may not detct it as a
-	    # dir. Convert object if expected as a dir
-	    #
-	    if( $class eq 'Para::Frame::Dir' and
-		ref $file eq 'Para::Frame::File' )
-	    {
-		debug 1, sprintf "Stored file %s not a %s - converting",
-		  $file->sysdesig, $class;
+            # For nonexistant files, we may not detct it as a
+            # dir. Convert object if expected as a dir
+            #
+            if ( $class eq 'Para::Frame::Dir' and
+                 ref $file eq 'Para::Frame::File' )
+            {
+                debug 1, sprintf "Stored file %s not a %s - converting",
+                  $file->sysdesig, $class;
 
-		return $file->as_dir;
-	    }
+                return $file->as_dir;
+            }
 
-	    return $file;
-	}
+            return $file;
+        }
     }
 
     debug "--------> CREATING file $key" if $DEBUG;
@@ -169,201 +169,201 @@ sub new
 
     my( $url_norm, $sys_norm, $url_name, $sys_name, $site );
 
-    if( $url_in )
+    if ( $url_in )
     {
-	$url_name = $url_in;
-	$url_name =~ s/\/+$//; # No trailing slash
+        $url_name = $url_in;
+        $url_name =~ s/\/+$//;  # No trailing slash
 
-	if( $sys_in )
-	{
-	    die "Don't specify filename with uri";
-	}
-	elsif( UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
-	{
-	    if( $url_name =~ /\.(tt|html?|css|js)\/?$/ )
-	    {
-		confess "File $url_name doesn't look like a dir";
-	    }
-	    $url_norm = $url_name . '/';
-	}
-	else
-	{
-	    # Taken as dir if ending with slash
-	    $url_norm = $url_in;
-	}
+        if ( $sys_in )
+        {
+            die "Don't specify filename with uri";
+        }
+        elsif ( UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
+        {
+            if ( $url_name =~ /\.(tt|html?|css|js)\/?$/ )
+            {
+                confess "File $url_name doesn't look like a dir";
+            }
+            $url_norm = $url_name . '/';
+        }
+        else
+        {
+            # Taken as dir if ending with slash
+            $url_norm = $url_in;
+        }
 
-	# TODO: Use URL for extracting the site
-	my $site = $file->set_site( $site_in || $req->site );
+        # TODO: Use URL for extracting the site
+        my $site = $file->set_site( $site_in || $req->site );
 
-	# $sys_name is without trailing slash
-	$sys_name = $site->uri2file($url_in, undef, $may_not_exist );
+        # $sys_name is without trailing slash
+        $sys_name = $site->uri2file($url_in, undef, $may_not_exist );
 
-	# This may give a dir to file translation. Only keep dir part
-	if( $url_in =~ /\/$/ )
-	{
-	    unless( $sys_name =~ /\/$/ )
-	    {
-		debug "URL $url_in (DIR) was mapped to file $sys_name";
-		$sys_name =~ s/\/[^\/]+$/\//;
-		debug "  Remapping to $sys_name";
-	    }
-	}
+        # This may give a dir to file translation. Only keep dir part
+        if ( $url_in =~ /\/$/ )
+        {
+            unless( $sys_name =~ /\/$/ )
+            {
+                debug "URL $url_in (DIR) was mapped to file $sys_name";
+                $sys_name =~ s/\/[^\/]+$/\//;
+                debug "  Remapping to $sys_name";
+            }
+        }
 
-	$sys_name =~ s/\/$//;
+        $sys_name =~ s/\/$//;
 
-	# $sys_norm is undef
+        # $sys_norm is undef
     }
-    elsif( $sys_in )
+    elsif ( $sys_in )
     {
-	$sys_name = $sys_in;
-	$sys_name =~ s/\/+$//; # No trailing slash
+        $sys_name = $sys_in;
+        $sys_name =~ s/\/+$//;  # No trailing slash
 
-	# $sys_norm is undef
+        # $sys_norm is undef
     }
     else
     {
-	confess "Filename missing ($class): ".datadump($args);
+        confess "Filename missing ($class): ".datadump($args);
     }
 
     # $sys_name is defined
     # $sys_norm is undef
 
     debug "Constructing $sys_name" if $DEBUG;
-    if( $sys_name =~ m(//) )
+    if ( $sys_name =~ m(//) )
     {
-	cluck "Sysname $sys_name has double slashes";
+        cluck "Sysname $sys_name has double slashes";
     }
 
     # May happen if a rewrite is done to full URL without the R flag
     # RewriteRule ^(.*)$ http://test.avisita.com$1 [L,R]
     #
-    if( $sys_name =~ /^https?:/ )
+    if ( $sys_name =~ /^https?:/ )
     {
-	confess "sys_name $sys_name is not a system path";
+        confess "sys_name $sys_name is not a system path";
     }
 
-    if( -r $sys_name )
+    if ( -r $sys_name )
     {
-	$exist = 1;
+        $exist = 1;
 
 # ... This is bad for sites with symlinks!
 #
 #	# Resolve relative parts in the path
 #	$sys_name = abs_path( $sys_name );
 
-	debug "File $sys_name exist" if $DEBUG;
+        debug "File $sys_name exist" if $DEBUG;
 
-	if( -d $sys_name or
-	    UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
-	{
-	    if( $sys_name =~ /\.(tt|html?|css|js)\/?$/ )
-	    {
-		confess "File $sys_name doesn't look like a dir";
-	    }
+        if ( -d $sys_name or
+             UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
+        {
+            if ( $sys_name =~ /\.(tt|html?|css|js)\/?$/ )
+            {
+                confess "File $sys_name doesn't look like a dir";
+            }
 
-	    if( -d $sys_name )
-	    {
-		$sys_norm = $sys_name . '/';
-		if( $url_name )
-		{
-		    $url_norm = $url_name . '/';
-		}
+            if ( -d $sys_name )
+            {
+                $sys_norm = $sys_name . '/';
+                if ( $url_name )
+                {
+                    $url_norm = $url_name . '/';
+                }
 
-		unless( UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
-		{
-		    unless( $class eq 'Para::Frame::File' )
-		    {
-			croak "The file $sys_name is a dir (not a $class)";
-		    }
-		    bless $file, 'Para::Frame::Dir';
-		}
-	    }
-	    else
-	    {
-	        cluck"The file $sys_name is not a dir";
-		bless $file, 'Para::Frame::File';
-	    }
-	}
+                unless( UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
+                {
+                    unless( $class eq 'Para::Frame::File' )
+                    {
+                        croak "The file $sys_name is a dir (not a $class)";
+                    }
+                    bless $file, 'Para::Frame::Dir';
+                }
+            }
+            else
+            {
+                cluck"The file $sys_name is not a dir";
+                bless $file, 'Para::Frame::File';
+            }
+        }
 
-	unless( -d $sys_name )
-	{
-	    $sys_name =~ s/\/+$//;
-	    $sys_norm = $sys_name;
+        unless( -d $sys_name )
+        {
+            $sys_name =~ s/\/+$//;
+            $sys_norm = $sys_name;
 
-	    # Compare with $url_norm
-	    if( $url_norm and $url_norm =~ /\/$/ )
-	    {
-		cluck "The URL $url_norm ($sys_norm) is not a dir";
-		$url_norm =~ s/\/+$//;
-	    }
-	}
+            # Compare with $url_norm
+            if ( $url_norm and $url_norm =~ /\/$/ )
+            {
+                cluck "The URL $url_norm ($sys_norm) is not a dir";
+                $url_norm =~ s/\/+$//;
+            }
+        }
 
-	# $sys_norm is defined
+        # $sys_norm is defined
     }
     else
     {
-	$exist = 0;
+        $exist = 0;
 
-	if( not -e $sys_name )
-	{
-	    unless( $may_not_exist )
-	    {
-		confess "The file $sys_name is not found";#.datadump([$sys_name, $args]);
-	    }
-	}
-	elsif( not -r $sys_name )
-	{
-	    confess "The file $sys_name is not readable";
-	}
+        if ( not -e $sys_name )
+        {
+            unless( $may_not_exist )
+            {
+                confess "The file $sys_name is not found"; #.datadump([$sys_name, $args]);
+            }
+        }
+        elsif ( not -r $sys_name )
+        {
+            confess "The file $sys_name is not readable";
+        }
 
-	debug "File $sys_name doesn't exist" if $DEBUG;
+        debug "File $sys_name doesn't exist" if $DEBUG;
 
-	# determine if dir by class or input
-	if( $class eq 'Para::Frame::File' )
-	{
-	    if( $url_norm and $url_norm =~ /([^\/]*)\/$/ )
-	    {
-		my $preslash = $1;
+        # determine if dir by class or input
+        if ( $class eq 'Para::Frame::File' )
+        {
+            if ( $url_norm and $url_norm =~ /([^\/]*)\/$/ )
+            {
+                my $preslash = $1;
 
-		if( $url_norm =~ /\.(tt|html?|css|js)\/?$/ )
-		{
-		    cluck "File $url_norm doesn't look like a dir";
-		}
+                if ( $url_norm =~ /\.(tt|html?|css|js)\/?$/ )
+                {
+                    cluck "File $url_norm doesn't look like a dir";
+                }
 
-		# There may have been a mapping from dir to file
-		debug 2, "sys_name: $sys_name";
-		debug 2, "preslash: $preslash";
-		if( $preslash and $sys_name =~ /\b$preslash$/ )
-		{
-		    debug 2, "Blessing as a dir";
-		    bless $file, 'Para::Frame::Dir';
-		    $sys_norm = $sys_name . '/';
-		}
-		else
-		{
-		    $sys_norm = $sys_name;
-		}
-	    }
-	    else
-	    {
-		$sys_norm = $sys_name;
-	    }
-	}
-	elsif( UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
-	{
-	    if( $sys_name =~ /\.(tt|html?|css|js)\/?$/ )
-	    {
-		confess "File $sys_name doesn't look like a dir";
-	    }
+                # There may have been a mapping from dir to file
+                debug 2, "sys_name: $sys_name";
+                debug 2, "preslash: $preslash";
+                if ( $preslash and $sys_name =~ /\b$preslash$/ )
+                {
+                    debug 2, "Blessing as a dir";
+                    bless $file, 'Para::Frame::Dir';
+                    $sys_norm = $sys_name . '/';
+                }
+                else
+                {
+                    $sys_norm = $sys_name;
+                }
+            }
+            else
+            {
+                $sys_norm = $sys_name;
+            }
+        }
+        elsif ( UNIVERSAL::isa( $class, "Para::Frame::Dir" ) )
+        {
+            if ( $sys_name =~ /\.(tt|html?|css|js)\/?$/ )
+            {
+                confess "File $sys_name doesn't look like a dir";
+            }
 
-	    $sys_norm = $sys_name . '/';
-	}
-	else
-	{
-	    $sys_norm = $sys_name;
-	}
+            $sys_norm = $sys_name . '/';
+        }
+        else
+        {
+            $sys_norm = $sys_name;
+        }
 
-	# $sys_norm is defined
+        # $sys_norm is defined
     }
 
     $file->{'exist'} = $exist;
@@ -371,92 +371,92 @@ sub new
     $file->{'sys_name'} = $sys_name; # Without dir trailing slash
 
     # Validate site
-    if( my $site = $file->site )
+    if ( my $site = $file->site )
     {
-	# Check that url is part of the site
-	my $home = $site->home_url_path;
-	unless( $url_name =~ /^$home/ )
-	{
-	    confess sprintf "URL '%s' is out of bound for site %s: %s", $url_in, $site->name, datadump($args,1);
-	}
+        # Check that url is part of the site
+        my $home = $site->home_url_path;
+        unless( $url_name =~ /^$home/ )
+        {
+            confess sprintf "URL '%s' is out of bound for site %s: %s", $url_in, $site->name, datadump($args,1);
+        }
 
-	$file->{'url_norm'} = $url_norm;  # With dir trailing slash
-	$file->{'url_name'} = $url_name;  # Without dir trailing slash
+        $file->{'url_norm'} = $url_norm; # With dir trailing slash
+        $file->{'url_name'} = $url_name; # Without dir trailing slash
     }
     else
     {
-	# Place in site based on sys_path
-	debug "Try to place in site" if $DEBUG;
+        # Place in site based on sys_path
+        debug "Try to place in site" if $DEBUG;
 
-	# If we are going to check all the registred sites, we must be
-	# sure that those sites realy are handled by this paraframe
-	# server and that they are set up correctly. If not; we will
-	# get dangling subrequests and this request will freeze.
+        # If we are going to check all the registred sites, we must be
+        # sure that those sites realy are handled by this paraframe
+        # server and that they are set up correctly. If not; we will
+        # get dangling subrequests and this request will freeze.
 
-	# TODO: Check all registred sites at startup to make sure that
-	# they are functional.
+        # TODO: Check all registred sites at startup to make sure that
+        # they are functional.
 
-	my @check_sites = ();
-	if( $Para::Frame::CFG->{'site_autodetect'} )
-	{
-	    @check_sites = values %Para::Frame::Site::DATA;
-	}
+        my @check_sites = ();
+        if ( $Para::Frame::CFG->{'site_autodetect'} )
+        {
+            @check_sites = values %Para::Frame::Site::DATA;
+        }
 
-	if( my $req_site = $req->site )
-	{
-	    # Check current site first
-	    unshift @check_sites, $req_site;
-	}
+        if ( my $req_site = $req->site )
+        {
+            # Check current site first
+            unshift @check_sites, $req_site;
+        }
 
-	foreach my $site_maby ( @check_sites )
-	{
-	    my $sys_home = $site_maby->home->sys_path_slash;
-	    debug "Checking $sys_home" if $DEBUG;
-	    if( $file->{'sys_norm'} =~ /^$sys_home(.*)/ )
-	    {
-		# May not be a correct translation
-		my $url_norm = $site_maby->home->url_path_slash.$1;
-		debug "Translating $url_norm" if $DEBUG;
-		my $sys_name = $site_maby->uri2file($url_norm, undef, $may_not_exist);
-		$sys_name =~ s/\/$//;
+        foreach my $site_maby ( @check_sites )
+        {
+            my $sys_home = $site_maby->home->sys_path_slash;
+            debug "Checking $sys_home" if $DEBUG;
+            if ( $file->{'sys_norm'} =~ /^$sys_home(.*)/ )
+            {
+                # May not be a correct translation
+                my $url_norm = $site_maby->home->url_path_slash.$1;
+                debug "Translating $url_norm" if $DEBUG;
+                my $sys_name = $site_maby->uri2file($url_norm, undef, $may_not_exist);
+                $sys_name =~ s/\/$//;
 
-		unless( $sys_name eq $file->{'sys_name'} )
-		{
-		    debug "Path translation mismatch: $sys_name != $file->{sys_name}! Skipping this site";
-		    next;
-		}
+                unless ( $sys_name eq $file->{'sys_name'} )
+                {
+                    debug "Path translation mismatch: $sys_name != $file->{sys_name}! Skipping this site";
+                    next;
+                }
 
-		my $url_name = $url_norm;
-		$url_name =~ s/\/$//; # No trailing slash
+                my $url_name = $url_norm;
+                $url_name =~ s/\/$//; # No trailing slash
 
-		$file->{'url_norm'} = $url_norm;  # With dir trailing slash
-		$file->{'url_name'} = $url_name;  # Without dir trailing slash
-		$file->{'site'}     = $site_maby;
+                $file->{'url_norm'} = $url_norm; # With dir trailing slash
+                $file->{'url_name'} = $url_name; # Without dir trailing slash
+                $file->{'site'}     = $site_maby;
 
-		last;
-	    }
-	}
+                last;
+            }
+        }
     }
 
     # Bless into Para::Frame::Template if it is a template
-    if( $class eq 'Para::Frame::File' )
+    if ( $class eq 'Para::Frame::File' )
     {
-	if( my $ext = $file->suffix )
-	{
-	    if( my $burner = Para::Frame::Burner->get_by_ext($ext) )
-	    {
-		bless $file, "Para::Frame::Template";
-		$args->{'burner'} = $burner;
-	    }
-	    else
-	    {
-		my $mtype_base = $file->mimetype_base;
-		if( $mtype_base eq 'image' )
-		{
-		    bless $file, "Para::Frame::Image";
-		}
-	    }
-	}
+        if ( my $ext = $file->suffix )
+        {
+            if ( my $burner = Para::Frame::Burner->get_by_ext($ext) )
+            {
+                bless $file, "Para::Frame::Template";
+                $args->{'burner'} = $burner;
+            }
+            else
+            {
+                my $mtype_base = $file->mimetype_base;
+                if ( $mtype_base eq 'image' )
+                {
+                    bless $file, "Para::Frame::Image";
+                }
+            }
+        }
     }
 
 
@@ -500,7 +500,7 @@ sub new
 	# We can't lookup object by sys_file, since the URL given may
 	# not match the url for other objects with the same sys_name
 #	$Para::Frame::File::Cache{$file->{'sys_name'}} =
-	  $Para::Frame::File::Cache{ $key } = $file;
+    $Para::Frame::File::Cache{ $key } = $file;
 #    }
 
     $file->initialize( $args );
@@ -595,17 +595,17 @@ sub initiate
 
     unless( $st )
     {
-	debug 2, "Couldn't find $name!";
-	$f->{initiated} = 0;
-	$f->{'exist'} = 0;
-	return 0;
+        debug 2, "Couldn't find $name!";
+        $f->{initiated} = 0;
+        $f->{'exist'} = 0;
+        return 0;
     }
 
     my $mtime = $st->mtime;
 
-    if( $f->{initiated} )
+    if ( $f->{initiated} )
     {
-	return 1 unless $mtime > $f->{mtime};
+        return 1 unless $mtime > $f->{mtime};
     }
 
 #    debug "Initiating $name";
@@ -631,9 +631,9 @@ sub initiate
     $f->{binary} = -B _;
 
     $st = lstat($name);
-    if( -l _ )
+    if ( -l _ )
     {
-	$f->{symbolic_link} = readlink($name);
+        $f->{symbolic_link} = readlink($name);
     }
 
     return $f->{initiated} = 1;
@@ -652,7 +652,7 @@ sub set_depends_on
 
     unless( ref $depends eq 'ARRAY' )
     {
-	confess "Wrong input: ".datadump( $depends );
+        confess "Wrong input: ".datadump( $depends );
     }
 
     $tmpl->{'depends_on'} = $depends;
@@ -674,26 +674,26 @@ sub is_updated
 {
     my( $tmpl ) = @_;
 
-    if( $tmpl->exist )
+    if ( $tmpl->exist )
     {
-	$tmpl->initiate;
-	my $raw_mtime = $tmpl->{'mtime'};
-	if( $tmpl->mtime_as_epoch > $raw_mtime )
-	{
-	    return 1;
-	}
+        $tmpl->initiate;
+        my $raw_mtime = $tmpl->{'mtime'};
+        if ( $tmpl->mtime_as_epoch > $raw_mtime )
+        {
+            return 1;
+        }
 
-	$tmpl->{'depends_on'} ||= [];
+        $tmpl->{'depends_on'} ||= [];
       SRC:
-	foreach my $src (@{$tmpl->{'depends_on'}})
-	{
-	    if( $tmpl->mtime_as_epoch >= $src->mtime_as_epoch )
-	    {
-		next SRC;
-	    }
-	    return 1;
-	}
-	return 0;
+        foreach my $src (@{$tmpl->{'depends_on'}})
+        {
+            if ( $tmpl->mtime_as_epoch >= $src->mtime_as_epoch )
+            {
+                next SRC;
+            }
+            return 1;
+        }
+        return 0;
     }
     return 1;
 }
@@ -744,15 +744,15 @@ sub parent
 
     my $site = $f->site or confess "Not implemented";
 
-    if( $f->{'url_norm'} =~ /\/$/ )
+    if ( $f->{'url_norm'} =~ /\/$/ )
     {
-	debug 2, "Getting parent for page index";
-	return $f->dir->parent;
+        debug 2, "Getting parent for page index";
+        return $f->dir->parent;
     }
     else
     {
-	debug 2, "Getting dir for page";
-	return $f->dir;
+        debug 2, "Getting dir for page";
+        return $f->dir;
     }
 }
 
@@ -791,51 +791,51 @@ sub dir
 
     $args ||= {};
 
-    unless( $f->{'dir'} )
+    unless ( $f->{'dir'} )
     {
 #	debug "Finding dir for file ".$f->sysdesig;
-	unless( $f->exist )
-	{
-	    $args->{'file_may_not_exist'} = 1;
+        unless( $f->exist )
+        {
+            $args->{'file_may_not_exist'} = 1;
 #	    debug "  may not exist";
-	}
+        }
 
-	if( $f->site )
-	{
-	    my $url_path_slash = $f->url_path_slash;
-	    $url_path_slash =~ /^(.*\/)[^\/]*$/
-	      or confess "Strange path $url_path_slash";
+        if ( $f->site )
+        {
+            my $url_path_slash = $f->url_path_slash;
+            $url_path_slash =~ /^(.*\/)[^\/]*$/
+              or confess "Strange path $url_path_slash";
 
-	    if( $url_path_slash eq $1 )
-	    {
-		return $f;
-	    }
-	    else
-	    {
+            if ( $url_path_slash eq $1 )
+            {
+                return $f;
+            }
+            else
+            {
 #		debug "  Dir part of path is $1";
-		$f->{'dir'} = Para::Frame::Dir->new({site => $f->site,
-						     url  => $1,
-						     %$args,
-						    });
-	    }
-	}
-	else
-	{
-	    my $sys_path_slash = $f->sys_path_slash;
-	    $sys_path_slash =~ /^(.*\/)[^\/]*$/
-	      or confess "Strange path $sys_path_slash";
+                $f->{'dir'} = Para::Frame::Dir->new({site => $f->site,
+                                                     url  => $1,
+                                                     %$args,
+                                                    });
+            }
+        }
+        else
+        {
+            my $sys_path_slash = $f->sys_path_slash;
+            $sys_path_slash =~ /^(.*\/)[^\/]*$/
+              or confess "Strange path $sys_path_slash";
 
-	    if( $sys_path_slash eq $1 )
-	    {
-		return $f;
-	    }
-	    else
-	    {
-		$f->{'dir'} = Para::Frame::Dir->new({'filename' => $1,
-						     %$args,
-						    });
-	    }
-	}
+            if ( $sys_path_slash eq $1 )
+            {
+                return $f;
+            }
+            else
+            {
+                $f->{'dir'} = Para::Frame::Dir->new({'filename' => $1,
+                                                     %$args,
+                                                    });
+            }
+        }
     }
 
     return $f->{'dir'};
@@ -873,7 +873,7 @@ For dirs, the dir name without the path and without trailing slash.
 sub name
 {
     $_[0]->sys_path =~ /\/([^\/]+)\/?$/
-	or die "Couldn't get filename from ".$_[0]->sys_path;
+      or die "Couldn't get filename from ".$_[0]->sys_path;
     return $1;
 }
 
@@ -891,7 +891,7 @@ For dirs, the dir name without the path but with the trailing slash.
 sub name_slash
 {
     $_[0]->sys_path_slash =~ /\/([^\/]+\/?)$/
-	or die "Couldn't get filename from ".$_[0]->sys_path;
+      or die "Couldn't get filename from ".$_[0]->sys_path;
     return $1;
 }
 
@@ -912,7 +912,7 @@ sub path
     my( $f, $def_site ) = @_;
 
 #    debug "Path for ".$f->sysdesig;
-    my $site = $f->site;# || $def_site;
+    my $site = $f->site;        # || $def_site;
     confess "No site given" unless $site;
     my $home = $site->home_url_path;
     my $url_path = $f->url_path;
@@ -973,23 +973,23 @@ sub set_site
 
     # Check that site matches the client
     #
-    if( my $req = $f->req )
+    if ( my $req = $f->req )
     {
-	unless( $req->client =~ /^background/ )
-	{
-	    if( my $orig = $req->original )
-	    {
-		unless( $orig->site->host eq $site->host )
-		{
-		    my $site_name = $site->name;
-		    my $orig_name = $orig->site->name;
-		    debug "Host mismatch";
-		    debug "orig site: $orig_name";
-		    debug "New name : $site_name";
+        unless( $req->client =~ /^background/ )
+        {
+            if ( my $orig = $req->original )
+            {
+                unless( $orig->site->host eq $site->host )
+                {
+                    my $site_name = $site->name;
+                    my $orig_name = $orig->site->name;
+                    debug "Host mismatch";
+                    debug "orig site: $orig_name";
+                    debug "New name : $site_name";
 #		    confess "set_site called";
-		}
-	    }
-	}
+                }
+            }
+        }
     }
 
     return $f->{'site'} = $site;
@@ -1059,9 +1059,9 @@ sub url
 
     my $site = $page->site or confess "No site given";
     my $url_string = sprintf("%s://%s%s",
-			     $site->scheme,
-			     $site->host,
-			     $page->{url_norm});
+                             $site->scheme,
+                             $site->host,
+                             $page->{url_norm});
 
     return Para::Frame::URI->new($url_string);
 }
@@ -1081,11 +1081,11 @@ sub url_with_query
 
     my $site = $page->site or confess "No site given";
     my $url_string = sprintf("%s://%s%s",
-			     $site->scheme,
-			     $site->host,
-			     $page->{url_norm});
+                             $site->scheme,
+                             $site->host,
+                             $page->{url_norm});
 
-    if( my $query = $Para::Frame::REQ->original_url_params )
+    if ( my $query = $Para::Frame::REQ->original_url_params )
     {
         $url_string .= "?".$query;
     }
@@ -1160,26 +1160,26 @@ sub base
     my $site = $f->site or confess "No site given";
     my $home = $site->home_url_path;
     my $target;
-    if( $f->is_dir )
+    if ( $f->is_dir )
     {
-	$target = $f->target->url_path;
+        $target = $f->target->url_path;
     }
     else
     {
-	$target = $f->url_path;
+        $target = $f->url_path;
     }
 
-    if( $target =~ /^$home(.*?)(\.\w\w)?\.\w{2,4}$/ )
+    if ( $target =~ /^$home(.*?)(\.\w\w)?\.\w{2,4}$/ )
     {
-	return $1;
+        return $1;
     }
-    elsif( $target =~ /^$home(.*)$/ )
+    elsif ( $target =~ /^$home(.*)$/ )
     {
-	return $1;
+        return $1;
     }
     else
     {
-	confess "Couldn't get base from $target under $home";
+        confess "Couldn't get base from $target under $home";
     }
 }
 
@@ -1202,13 +1202,13 @@ sub base_name
     my( $f ) = @_;
 
     my $template = $f->name;
-    if( $template =~ /^(.*?)(\.\w\w)?\.[^\.\/]+$/ )
+    if ( $template =~ /^(.*?)(\.\w\w)?\.[^\.\/]+$/ )
     {
-	return $1;
+        return $1;
     }
     else
     {
-	return $template;
+        return $template;
     }
 }
 
@@ -1289,30 +1289,30 @@ Returns: the scalar string
 
 sub vcs_version
 {
-   my( $file ) = @_;
+    my( $file ) = @_;
 
-   my $dir = $file->dir;
-   my $name = $file->name;
+    my $dir = $file->dir;
+    my $name = $file->name;
 
-   if( $dir->has_dir('CVS') )
-   {
-       my $cvsdir = $dir->get('CVS');
-       my $fh = new IO::File;
-       my $filename = $cvsdir->sys_path.'/Entries';
+    if ( $dir->has_dir('CVS') )
+    {
+        my $cvsdir = $dir->get('CVS');
+        my $fh = new IO::File;
+        my $filename = $cvsdir->sys_path.'/Entries';
 #       debug "Checking $filename";
-       $fh->open( $filename ) or die "Failed to open '$filename': $!\n";
-       while(<$fh>)
-       {
-	   if( m(^\/(.+?)\/(.+?)\/) )
-	   {
-	       next unless $1 eq $name;
+        $fh->open( $filename ) or die "Failed to open '$filename': $!\n";
+        while (<$fh>)
+        {
+            if ( m(^\/(.+?)\/(.+?)\/) )
+            {
+                next unless $1 eq $name;
 #	       debug "  Returning $2";
-	       return $2;
-	   }
-       }
+                return $2;
+            }
+        }
 #       debug "  No version found";
-   }
-   return undef;
+    }
+    return undef;
 }
 
 
@@ -1328,11 +1328,11 @@ Returns: the filesize in human readable format
 
 sub filesize
 {
-   my( $file ) = @_;
+    my( $file ) = @_;
 
-   $file->initiate;
+    $file->initiate;
 
-   return format_bytes($file->{'size'});
+    return format_bytes($file->{'size'});
 }
 
 
@@ -1395,20 +1395,20 @@ sub target
 
     my $target = $file->{'url_norm'} || $file->{'sys_norm'};
 
-    if( $target =~ /\/$/ )
+    if ( $target =~ /\/$/ )
     {
-	# Target indicates a dir. Make it so
-	$target .= "index.tt";
+        # Target indicates a dir. Make it so
+        $target .= "index.tt";
     }
 
-    if( my $site = $file->site )
+    if ( my $site = $file->site )
     {
-	$args->{'site'} = $site;
-	$args->{'url'} = $target;
+        $args->{'site'} = $site;
+        $args->{'url'} = $target;
     }
     else
     {
-	$args->{'filename'} = $target;
+        $args->{'filename'} = $target;
     }
 
     $args->{'file_may_not_exist'} = 1;
@@ -1435,44 +1435,44 @@ sub target_with_lang
 
     my $target = $file->{'url_norm'} || $file->{'sys_norm'};
 
-    if( $target =~ /\/$/ )
+    if ( $target =~ /\/$/ )
     {
-	# Target indicates a dir. Make it so
-	$target .= "index.$ext";
+        # Target indicates a dir. Make it so
+        $target .= "index.$ext";
     }
 
     # The language
     my $code = $args->{'lang_code'};
     unless( $code )
     {
-	my $language = $args->{'language'} || $Para::Frame::REQ->language;
-	$code = $language->code;
+        my $language = $args->{'language'} || $Para::Frame::REQ->language;
+        $code = $language->code;
 #	debug datadump $language;
     }
 
-    if( $target =~ /\/([^\/]+)(\.\w\w)\.$ext$/ )
+    if ( $target =~ /\/([^\/]+)(\.\w\w)\.$ext$/ )
     {
-	unless( $2 eq $code )
-	{
-	    confess "Language mismatch ($target != $code)";
-	}
+        unless( $2 eq $code )
+        {
+            confess "Language mismatch ($target != $code)";
+        }
     }
     else
     {
 #	debug "Setting language to $code";
-	$target =~ s/ \/([^\/]+)\.$ext$ /\/$1.$code.$ext/x;
+        $target =~ s/ \/([^\/]+)\.$ext$ /\/$1.$code.$ext/x;
     }
 
-    if( my $site = $file->site )
+    if ( my $site = $file->site )
     {
 #	debug "------> SITE";
-	$args->{'site'} = $site;
-	$args->{'url'} = $target;
+        $args->{'site'} = $site;
+        $args->{'url'} = $target;
     }
     else
     {
 #	debug "------> FILE";
-	$args->{'filename'} = $target;
+        $args->{'filename'} = $target;
     }
 
 #    debug "TARGET $target";
@@ -1501,23 +1501,23 @@ sub target_without_lang
 
     my $target = $file->{'url_norm'} || $file->{'sys_norm'};
 
-    if( $target =~ /\/$/ )
+    if ( $target =~ /\/$/ )
     {
-	# Target indicates a dir. Make it so
-	$target .= "index.$ext";
+        # Target indicates a dir. Make it so
+        $target .= "index.$ext";
     }
 
     $target =~ s/\.\w\w\.$ext$/.$ext/;
 
 
-    if( my $site = $file->site )
+    if ( my $site = $file->site )
     {
-	$args->{'site'} = $site;
-	$args->{'url'} = $target;
+        $args->{'site'} = $site;
+        $args->{'url'} = $target;
     }
     else
     {
-	$args->{'filename'} = $target;
+        $args->{'filename'} = $target;
     }
 
     $args->{'file_may_not_exist'} = 1;
@@ -1551,22 +1551,22 @@ sub template
     #Cache within a req
 
     my $f2t = $Para::Frame::REQ->{'file2template'} ||= {};
-    unless( $f2t->{$f} )
+    unless ( $f2t->{$f} )
     {
-	my $finder = $Para::Frame::REQ->dirconfig->{'find'} ||
-	  $Para::Frame::REQ->site->find_class;
+        my $finder = $Para::Frame::REQ->dirconfig->{'find'} ||
+          $Para::Frame::REQ->site->find_class;
 
-	if( $finder )
-	{
+        if ( $finder )
+        {
 #	    debug sprintf "%s->find(%s)", $finder, $f->sysdesig;
-	    return $f2t->{$f} = $finder->find($f) ||
-	      Para::Frame::Template->find($f);
-	}
-	else
-	{
+            return $f2t->{$f} = $finder->find($f) ||
+              Para::Frame::Template->find($f);
+        }
+        else
+        {
 #	    debug sprintf "Para::Frame::Template->find(%s)", $f->sysdesig;
-	    return $f2t->{$f} = Para::Frame::Template->find($f);
-	}
+            return $f2t->{$f} = Para::Frame::Template->find($f);
+        }
     }
     return $f2t->{$f};
 }
@@ -1593,25 +1593,25 @@ sub normalize
 
     my $ext = $args->{'ext'} || 'tt';
 
-    if( my $url = $f->{'url_norm'} )
+    if ( my $url = $f->{'url_norm'} )
     {
 #	debug "normalizing $url";
 
-	$url =~ s/\.\w\w\.$ext$/.$ext/;
-	$url =~ s/\/index.$ext$/\//;
+        $url =~ s/\.\w\w\.$ext$/.$ext/;
+        $url =~ s/\/index.$ext$/\//;
 
-	# Cleanup any remaining double slashes
-	$url =~ s(//+)(/)g;
+        # Cleanup any remaining double slashes
+        $url =~ s(//+)(/)g;
 
-	if( $url ne $f->{'url_norm'} )
-	{
+        if ( $url ne $f->{'url_norm'} )
+        {
 #	    debug "   ... $f->{'url_norm'} != $url";
-	    my $args = {};
-	    $args->{'url'} = $url;
-	    $args->{'site'} = $f->site;
-	    $args->{'file_may_not_exist'} = 1;
-	    return Para::Frame::File->new($args);
-	}
+            my $args = {};
+            $args->{'url'} = $url;
+            $args->{'site'} = $f->site;
+            $args->{'file_may_not_exist'} = 1;
+            return Para::Frame::File->new($args);
+        }
     }
     else
     {
@@ -1636,7 +1636,7 @@ sub contentref
 
     unless( $f->exist )
     {
-	confess "File ".$f->sysdesig." doesn't exist";
+        confess "File ".$f->sysdesig." doesn't exist";
     }
     return scalar slurp( $f->sys_path_slash, scalar_ref => 1 ) ;
 }
@@ -1656,7 +1656,7 @@ sub content
 
     unless( $f->exist )
     {
-	confess "File ".$f->sysdesig." doesn't exist";
+        confess "File ".$f->sysdesig." doesn't exist";
     }
     return scalar slurp( $f->sys_path_slash, scalar_ref => 0 ) ;
 }
@@ -1678,7 +1678,7 @@ sub contentref_as_text
 
     unless( $f->exist )
     {
-	confess "File ".$f->sysdesig." doesn't exist";
+        confess "File ".$f->sysdesig." doesn't exist";
     }
 
     require Encode::Detect::Detector;
@@ -1737,7 +1737,7 @@ sub content_as_text
 
     unless( $f->exist )
     {
-	confess "File ".$f->sysdesig." doesn't exist";
+        confess "File ".$f->sysdesig." doesn't exist";
     }
     require Encode::Detect;
     return decode("Detect", scalar(slurp( $f->sys_path_slash, scalar_ref => 0 )));
@@ -1761,7 +1761,7 @@ sub content_as_html
 
     unless( $f->exist )
     {
-	confess "File ".$f->sysdesig." doesn't exist";
+        confess "File ".$f->sysdesig." doesn't exist";
     }
 
     require Encode::Detect;
@@ -1798,14 +1798,14 @@ sub copy
 
     unless( UNIVERSAL::isa( $f2, 'Para::Frame::File' ) )
     {
-	confess "Invalid param: ".datadump( $f2 );
+        confess "Invalid param: ".datadump( $f2 );
     }
 
     my $f1_name = $f1->sys_path;
     my $f2_name = $f2->sys_path;
 
     File::Copy::copy( $f1_name, $f2_name ) or
-      die "Could not copy $f1_name to $f2_name: $!";
+        die "Could not copy $f1_name to $f2_name: $!";
     $f2->chmod;
     $f2->reset;
     return $f2;
@@ -1827,30 +1827,30 @@ sub exist
     my( $f ) = @_;
 
     my $st = stat($f->sys_path);
-    if( $f->{'exist'} )
+    if ( $f->{'exist'} )
     {
-	unless( $st )
-	{
-	    my $name = $f->sys_path;
-	    debug "File $name removed from the outside!";
-	    $f->{initiated} = 0;
-	    $f->{'exist'} = 0;
-	    return 0;
-	}
+        unless( $st )
+        {
+            my $name = $f->sys_path;
+            debug "File $name removed from the outside!";
+            $f->{initiated} = 0;
+            $f->{'exist'} = 0;
+            return 0;
+        }
 
-	return 1;
+        return 1;
     }
     else
     {
-	if( $st )
-	{
-	    my $name = $f->sys_path;
-	    debug "File $name created from the outside!";
-	    $f->{initiated} = 0;
-	    $f->{'exist'} = 1;
-	    return 1;
-	}
-	return 0;
+        if ( $st )
+        {
+            my $name = $f->sys_path;
+            debug "File $name created from the outside!";
+            $f->{initiated} = 0;
+            $f->{'exist'} = 1;
+            return 1;
+        }
+        return 0;
     }
 }
 
@@ -1948,7 +1948,7 @@ sub is_compiled
     # Quickfix for pf and rb. We will eventually remove precompileding
     # completely...
 #    return 0 unless $f->url_path;
-    if( $f->url_path )
+    if ( $f->url_path )
     {
         return 0 if $f->path($site) =~ /\/(pf|rb)\//;
     }
@@ -2032,9 +2032,9 @@ sub load_compiled
     # want 1 returned by require() to say it's in memory)
     delete $INC{ $filename };
     eval { $compiled = require $filename; };
-    if( $@ )
+    if ( $@ )
     {
-	throw('compile', "compiled template $compiled: $@");
+        throw('compile', "compiled template $compiled: $@");
     }
     return $compiled;
 }
@@ -2098,19 +2098,19 @@ Returns: the current dirsteps as a ref to a list of strings.
 
 sub dirsteps
 {
-    unless( $_[0]->{'dirsteps'} )
+    unless ( $_[0]->{'dirsteps'} )
     {
-	my( $f ) = @_;
+        my( $f ) = @_;
 
-	# I'ts possible ->dir returns an ordinary file. In that case,
-	# fake it;
-	my $path_full = $f->dir->sys_path_slash;
-	$path_full =~ s/\/?$/\//; # Just in case...
+        # I'ts possible ->dir returns an ordinary file. In that case,
+        # fake it;
+        my $path_full = $f->dir->sys_path_slash;
+        $path_full =~ s/\/?$/\//; # Just in case...
 
-	my $path_home = $f->site->home->sys_path;
-	debug 3, "Setting dirsteps for $path_full";
+        my $path_home = $f->site->home->sys_path;
+        debug 3, "Setting dirsteps for $path_full";
 
-	$f->{'dirsteps'} = [ Para::Frame::Utils::dirsteps( $path_full, $path_home ) ];
+        $f->{'dirsteps'} = [ Para::Frame::Utils::dirsteps( $path_full, $path_home ) ];
     }
     return $_[0]->{'dirsteps'};
 }
@@ -2132,10 +2132,10 @@ sub remove
     debug "Removing file $filename";
     $f->{'exist'} = 0;
     $f->{initiated} = 0;
-    if( $f->exist )
+    if ( $f->exist )
     {
-	File::Remove::remove( $filename )
-	    or die "Failed to remove $filename: $!";
+        File::Remove::remove( $filename )
+            or die "Failed to remove $filename: $!";
     }
     return 1;
 }
@@ -2158,40 +2158,40 @@ sub as_dir
     my( $f ) = @_;
 
     my $desig = $f->desig;
-    if( ref($f) ne 'Para::Frame::File' )
+    if ( ref($f) ne 'Para::Frame::File' )
     {
-	confess "$desig dosen't seem to be a dir";
+        confess "$desig dosen't seem to be a dir";
     }
 
     debug 2, "Converting $desig to a dir";
 
     unless( $f->exist )
     {
-	$f->{'initiated'} = 0;
-	my $sys_name = $f->sys_path;
-	if( -r $sys_name )
-	{
-	    unless( -d $sys_name )
-	    {
-		confess "File $desig is not a dir";
-	    }
-	}
+        $f->{'initiated'} = 0;
+        my $sys_name = $f->sys_path;
+        if ( -r $sys_name )
+        {
+            unless( -d $sys_name )
+            {
+                confess "File $desig is not a dir";
+            }
+        }
 
-	$f->{'url_norm'} .= '/';
-	$f->{'sys_norm'} .= '/';
+        $f->{'url_norm'} .= '/';
+        $f->{'sys_norm'} .= '/';
 
-	bless( $f, "Para::Frame::Dir");
-	$f->initialize;
-	return $f;
+        bless( $f, "Para::Frame::Dir");
+        $f->initialize;
+        return $f;
     }
 
     my $parent = $f->dir;
-    my $name = $f->name . '/'; # A dir
+    my $name = $f->name . '/';  # A dir
     $f->remove;
     $f = $parent->get_virtual($name)->create();
     unless( $f->is_dir )
     {
-	confess "Failed to make a dir out of $desig";
+        confess "Failed to make a dir out of $desig";
     }
 
     return $f;
@@ -2213,23 +2213,23 @@ sub as_template
     my( $f ) = @_;
 
     my $desig = $f->sysdesig;
-    if( ref($f) ne 'Para::Frame::File' )
+    if ( ref($f) ne 'Para::Frame::File' )
     {
-	confess "$desig dosen't seem to be a template";
+        confess "$desig dosen't seem to be a template";
     }
 
     debug 2, "Converting $desig to a template";
 
     unless( $f->exist )
     {
-	my $sys_name = $f->sys_path;
-	if( -r $sys_name )
-	{
-	    if( -d $sys_name )
-	    {
-		confess "File $desig is a dir";
-	    }
-	}
+        my $sys_name = $f->sys_path;
+        if ( -r $sys_name )
+        {
+            if ( -d $sys_name )
+            {
+                confess "File $desig is a dir";
+            }
+        }
     }
 
     $f->{'initiated'} = 0;
@@ -2265,7 +2265,7 @@ sub mimetype_base
 {
     my( $f ) = @_;
     $f->mimetype =~ m/(.*?)\// or
-	die "No mimetype base found for ".$f->sysdesig;
+      die "No mimetype base found for ".$f->sysdesig;
     return $1;
 }
 
@@ -2292,15 +2292,15 @@ sub set_content_as_text
 {
     my( $f, $dataref ) = @_;
 
-    if( $f->is_dir )
+    if ( $f->is_dir )
     {
-	my $fname = $f->desig;
-	throw('validation', "$fname is a dir");
+        my $fname = $f->desig;
+        throw('validation', "$fname is a dir");
     }
 
     unless( ref($dataref) and (ref $dataref eq 'SCALAR') )
     {
-	throw('validation', "content not a scalar ref");
+        throw('validation', "content not a scalar ref");
     }
 
 
@@ -2321,8 +2321,8 @@ sub set_content_as_text
 
     unless( bytes::substr( $$dataref, 0, 3) eq $bom )
     {
-	debug 2, "  adding a BOM";
-	print FH $bom;
+        debug 2, "  adding a BOM";
+        print FH $bom;
     }
 
     binmode( FH, ':utf8' );
@@ -2352,15 +2352,15 @@ sub set_content
 {
     my( $f, $dataref ) = @_;
 
-    if( $f->is_dir )
+    if ( $f->is_dir )
     {
-	my $fname = $f->desig;
-	throw('validation', "$fname is a dir");
+        my $fname = $f->desig;
+        throw('validation', "$fname is a dir");
     }
 
     unless( ref($dataref) and (ref $dataref eq 'SCALAR') )
     {
-	throw('validation', "content not a scalar ref");
+        throw('validation', "content not a scalar ref");
     }
 
 
@@ -2422,7 +2422,7 @@ sub precompile
     $args ||= {};
     $args->{'umask'} ||= 02;
 
-    if( $def_propargs )
+    if ( $def_propargs )
     {
         $req->user->set_default_propargs($def_propargs);
     }
@@ -2430,8 +2430,8 @@ sub precompile
     my $tmpl = $args->{'template'};
     unless($tmpl)
     {
-	debug "CHECK THIS: ".datadump($tmpl,2);
-	$tmpl = $dest->template;
+        debug "CHECK THIS: ".datadump($tmpl,2);
+        $tmpl = $dest->template;
     }
 
     my $dir = $dest->dir->create($args); # With umask
@@ -2452,9 +2452,9 @@ sub precompile
      template => $tmpl,
     };
 
-    if( my $htmlsrc = $args->{'template_root'} )
+    if ( my $htmlsrc = $args->{'template_root'} )
     {
-	$renderargs->{'template_root'} = $htmlsrc;
+        $renderargs->{'template_root'} = $htmlsrc;
     }
 
     my $rend = $page->renderer($renderargs );
@@ -2462,14 +2462,14 @@ sub precompile
     $rend->set_burner_by_type($args->{'type'} || 'html_pre');
 
     $rend->add_params({
-		       pf_source_file => $srcfile,
-		       pf_compiled_date => now->iso8601,
+                       pf_source_file => $srcfile,
+                       pf_compiled_date => now->iso8601,
 #		       pf_source_version => $tmpl->vcs_version(),
-		      });
+                      });
 
-    if( my $params = $args->{'params'} )
+    if ( my $params = $args->{'params'} )
     {
-	$rend->add_params($params);
+        $rend->add_params($params);
     }
 
     $rend->set_tt_params;
@@ -2482,10 +2482,10 @@ sub precompile
 #    debug $ctype->sysdesig;
 
 
-    if( $DEBUG )
+    if ( $DEBUG )
     {
-	my $destfile = $dest->sys_path;
-	debug "BURNING TO $destfile";
+        my $destfile = $dest->sys_path;
+        debug "BURNING TO $destfile";
     }
 
     my $out = "";
@@ -2499,13 +2499,13 @@ sub precompile
     $fh->close;
     die $@ if $@;
 
-    if( $ctype->charset eq 'UTF-8' )
+    if ( $ctype->charset eq 'UTF-8' )
     {
-	$dest->set_content_as_text(\$out);
+        $dest->set_content_as_text(\$out);
     }
     else
     {
-	$dest->set_content(\$out);
+        $dest->set_content(\$out);
     }
 
     my $error = $rend->burner->error unless $res;
@@ -2514,25 +2514,25 @@ sub precompile
     $dest->reset();
     $req->{'page'} = undef;
 
-    if( $def_propargs )
+    if ( $def_propargs )
     {
         $req->user->set_default_propargs(undef);
     }
 
-    if( $error )
+    if ( $error )
     {
-	debug "ERROR WHILE PRECOMPILING PAGE";
-	debug 0, $error;
-	my $part = $req->result->exception($error);
-	if( ref $error and $error->info =~ /not found/ )
-	{
-	    debug "Subtemplate for precompile not found";
-	    my $incpathstring = join "", map "- $_\n",
-		@{$rend->paths};
-	    $part->add_message("Include path is\n$incpathstring");
-	}
+        debug "ERROR WHILE PRECOMPILING PAGE";
+        debug 0, $error;
+        my $part = $req->result->exception($error);
+        if ( ref $error and $error->info =~ /not found/ )
+        {
+            debug "Subtemplate for precompile not found";
+            my $incpathstring = join "", map "- $_\n",
+              @{$rend->paths};
+            $part->add_message("Include path is\n$incpathstring");
+        }
 
-	die $part;
+        die $part;
     }
 
     return $dest;
