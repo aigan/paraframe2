@@ -5,7 +5,7 @@ package Para::Frame::Session;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2011 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2014 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -457,6 +457,44 @@ sub wj_logout
 
 #    return jump($label, $req->site->logout_page, {run=>'user_logout'});
 }
+
+
+##############################################################################
+
+=head2 var_update
+
+=cut
+
+sub var_update
+{
+    my( $s, $key, $val ) = @_;
+
+    state $BLACKLIST =
+    { map {$_=>1}
+      qw(
+            sid
+            active
+            created
+            latest
+            user
+            debug
+            template_error
+            list
+            listid
+            route
+            referer
+            page_result
+       )
+    };
+
+    if ( $BLACKLIST->{$key} )
+    {
+        die "You should not update session $key in this way";
+    }
+
+    $s->{$key} = $val;
+}
+
 
 ##############################################################################
 

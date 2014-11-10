@@ -5,7 +5,7 @@ package Para::Frame::Action::session_vars_update;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2014 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -31,33 +31,9 @@ sub handler
 
     my @varlist = split /\s*,\s*/, $q->param('session_vars_update');
 
-    our %BLACKLIST;
-    unless( %BLACKLIST )
-    {
-        %BLACKLIST = map {$_=>1}
-          qw(
-                sid
-                active
-                created
-                latest
-                user
-                debug
-                template_error
-                list
-                listid
-                route
-                referer
-                page_result
-           );
-    }
-
     foreach my $key ( @varlist )
     {
-        if ( $BLACKLIST{$key} )
-        {
-            die "You should not update session $key in this way";
-        }
-        $session->{$key} = $q->param($key);
+        $session->var_update( $key, $q->param($key) );
     }
 
     return "";
