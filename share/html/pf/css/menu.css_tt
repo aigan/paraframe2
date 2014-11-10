@@ -35,7 +35,20 @@
     display: none;
 }
 
-.menu_row > div > ul > li > a
+#compact_menu ul ul {
+    display: none;
+}
+
+#compact_menu ul ul ul {
+    display: block;
+    overflow: hidden;
+}
+
+#compact_menu ul ul li {
+    display: block;
+}
+
+.menu_row  li a
 {
     padding: 0.5em 1em;
 }
@@ -49,8 +62,12 @@
 	list-style: none;
 	padding: 0;
 	width: 10em;
+}
+
+.menu_row > div > ul {
 	float: left;
 }
+
 .menu_row a {
 	display: block;
 	margin: 0;
@@ -68,19 +85,23 @@
 } 
 .menu_row .sub li {
 	position: relative;
-	transition: opacity 0.5s 0 ease;
 }
 .menu_row .sub li:hover {
-	transition: opacity 0.5s 5s ease;
 	background: [% main_bg %];
 }
 .menu_row ul.sub ul,
-#compact_menu ul ul
+#compact_menu > ul > li >  ul
  {
 	position: absolute;
+}
+
+.menu_row ul.sub ul,
+#compact_menu ul ul
+ {
 	z-index: 500;
 	width: 18em;
 }
+
 .menu_row ul.sub li ul li {
 	border-bottom: 1px solid [% medium_low %];
 	border-top: 1px solid [% medium_high %];
@@ -126,4 +147,26 @@
 	right: 100%;
 	left: -15em !important;
 	color: [% medium_txt %];
+}
+
+li .folding i {
+  cursor: pointer;
+  transition: all 0.2s linear;
+  padding: 0 1em;
+  margin-left: -1em;
+}
+li .expanded i {
+    transform: rotate(90deg);
+}
+
+li .folding {
+	color: [% agenda_txt %];
+	text-transform: uppercase;
+	background-color: [% agenda_mid %];
+	background-image: -webkit-linear-gradient(top, [% agenda_high %], [% agenda_mid %]);
+	background-image:    -moz-linear-gradient(top, [% agenda_high %], [% agenda_mid %]);
+	background-image:     -ms-linear-gradient(top, [% agenda_high %], [% agenda_mid %]);
+	background-image:      -o-linear-gradient(top, [% agenda_high %], [% agenda_mid %]);
+	background-image:         linear-gradient(top, [% agenda_high %], [% agenda_mid %]);	
+
 }
