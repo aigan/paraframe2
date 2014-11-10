@@ -66,35 +66,12 @@ var waitForFinalEvent = (function () {
     };
 })();
 
-function pf_tree_toggle_init()
-{
-    $('li .folding').each(function(){
-        $li = $(this).parents('li:first');
-        $path = getDomPath($li[0]);
-        $expand = $.totalStorage($path);
-        //        log("Found: "+getDomPath($li[0]));
-        //        log("  val: "+$expand);
-        if( $expand )
-        {
-            $(this).addClass('expanded');
-        }
-        else
-        {
-            $li.children('ul').hide();
-        }
-    });
-
-    $('li .folding').off('click.pf_tree_toggle').on('click.pf_tree_toggle',function(){pf_tree_toggle(this)});
-
-    log('PF tree_toggle_init');
-}
-
 function pf_toggle_init()
 {
     $('.toggle').off('click.pf_toggle')
         .on('click.pf_toggle',function(e){
-            log("Click in toggle");
-            log(e.target);
+//            log("Click in toggle");
+//            log(e.target);
             
             $ul = $(this).children('ul');
 
@@ -104,21 +81,21 @@ function pf_toggle_init()
 
                 if( $show )
                 {
-                    log("toggle show");
+//                    log("toggle show");
                     $ul.show();
                     $(document).off('mouseup.pf_toggle_hide')
                         .on('mouseup.pf_toggle_hide',function(e){
-                            log("in pf_toggle mouseup");
-                            log( $.contains($toggle_element, e.target) );
+//                            log("in pf_toggle mouseup");
+//                            log( $.contains($toggle_element, e.target) );
                             if(! $.contains($toggle_element, e.target)){
-                                log("Call toggle_hide");
+//                                log("Call toggle_hide");
                                 pf_toggle_hide();
                             }
                         });
                 }
                 else
                 {
-                    log("toggle hide");
+//                    log("toggle hide");
                     $ul.hide();
                 }
             }
@@ -129,7 +106,7 @@ function pf_toggle_init()
 
     function pf_toggle_hide()
     {
-        log("pf_toggle_hide");
+//        log("pf_toggle_hide");
         $(document).off('mouseup.pf_toggle_hide');
         $('.toggle').each(function(){
             $(this).children('ul').hide();
@@ -137,6 +114,34 @@ function pf_toggle_init()
     }
 
     log('PF toggle_init');
+}
+
+function pf_tree_toggle_init()
+{
+    $('li .folding').each(function(){
+        $li = $(this).parents('li:first');
+        $path = getDomPath($li[0]);
+        $expand = $.totalStorage($path);
+        $ul = $li.children('ul');
+
+//        log("Found: "+getDomPath($li[0]));
+//        log("  val: "+$expand);
+
+        if( $expand )
+        {
+            $(this).addClass('expanded');
+        }
+        else
+        {
+//            $li.children('ul').hide();
+
+            $ul.css('height','0px');
+        }
+    });
+
+    $('li .folding').off('click.pf_tree_toggle').on('click.pf_tree_toggle',function(){pf_tree_toggle(this)});
+
+    log('PF tree_toggle_init');
 }
 
 function pf_tree_toggle(t,expand)
@@ -147,8 +152,8 @@ function pf_tree_toggle(t,expand)
     
     if( typeof expand == 'undefined' )
     {
-        $expand = ($ul.css('display') == 'none') ? 1 : 0;
-        
+//        $expand = ($ul.css('display') == 'none') ? 1 : 0;
+        $expand = ($ul.height() == 0) ? 1 : 0;
     }
     
     $path = getDomPath($li[0]);
@@ -157,15 +162,37 @@ function pf_tree_toggle(t,expand)
     
     if( $expand )
     {
-        $ul.show(200);
+
+        var $oheight = $ul.attr('orig-height');
+//        log('oheight: ' + $oheight);
+        if( !$oheight ) {
+            $oheight = $ul.css('height', 'auto').height();
+//            log("Set oheight to "+$oheight);
+            $ul.css('height','0px');
+            $ul.attr('orig-height',$oheight);
+        }
+//        log('oheight2: ' + $oheight);
+
+        $ul.animate({'height': $oheight}, 200);
+
+
+
+//        $ul.css('height', $(window).height());
+
+
+//        $ul.show(200);
+//        $ul.css('height','auto');
         $(t).addClass('expanded');
-        //        log('Show '+getDomPath($li[0]));
+//        log('Show '+getDomPath($li[0]));
     }
     else
     {
-        $ul.hide(200);
+//        $ul.hide(200);
+//        $ul.css('height','0px');
+        $ul.animate({'height': '0px'}, 200);
+
         $(t).removeClass('expanded');
-        //        log('Hide');
+//        log('Hide');
     }
 }
 
@@ -191,9 +218,7 @@ function pf_menu_height_adjust()
     }
 }
 
-
-
-function pf_document_ready()
+function pf_toggle_highlight_init()
 {
 	$('table.markrow input[type="checkbox"]').change(function(){
 	    log('Checkbox highlight toggle');
@@ -205,10 +230,25 @@ function pf_document_ready()
 		    $(this).parent().siblings().removeClass('highlighted');
         }
 	});
+}
+
+function pf_set_canonical_url()
+{
+    // Will only work in the same domain
+    var title = $('title').text();
+    var url = $('link[rel="canonical"]').attr('href');
+    history.replaceState({},title, url);
+}
+
+
+function pf_document_ready()
+{
+    pf_set_canonical_url();
     
     $("tr.oddeven:odd").addClass("odd");
     $("tr.oddeven:even").addClass("even");
 
+    pf_toggle_highlight_init();
     pf_tree_toggle_init();
     pf_toggle_init();
 
@@ -219,10 +259,5 @@ function pf_document_ready()
 };
 
 jQuery(document).ready(pf_document_ready);
-
-/*
-(function($) {
-})(jQuery);
-*/
 
 log('PF js loaded');
