@@ -5,7 +5,7 @@ package Para::Frame::Route;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2011 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2014 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -97,7 +97,7 @@ bottom of the route stack, rather than on top.
 =head1 METHODS
 
 =cut
-    ;
+
 
 
 ##############################################################################
@@ -120,12 +120,12 @@ sub plan_backtrack
 {
     my( $route ) = @_;
 
-    if( my $step = $route->{'route'}[-1] )
+    if ( my $step = $route->{'route'}[-1] )
     {
-	$step = Para::Frame::URI->new($step) unless UNIVERSAL::isa($step, 'URI');
+        $step = Para::Frame::URI->new($step) unless UNIVERSAL::isa($step, 'URI');
 #	my $url = URI->new($step);
-	debug(1,"!!Plan backtrack to ".$step->path);
-	return $step->path . '?backtrack=1';
+        debug(1,"!!Plan backtrack to ".$step->path);
+        return $step->path . '?backtrack=1';
     }
 
     return undef;
@@ -159,35 +159,35 @@ sub plan_next
 
     foreach my $url_in ( @$urls )
     {
-	my $url_norm = $Para::Frame::REQ->normalized_url( $url_in );
-	my $url = Para::Frame::URI->new($url_norm);
-	$url->query_param_delete('reqnum');
-	$url->query_param_delete('pfport');
+        my $url_norm = $Para::Frame::REQ->normalized_url( $url_in );
+        my $url = Para::Frame::URI->new($url_norm);
+        $url->query_param_delete('reqnum');
+        $url->query_param_delete('pfport');
 
 
-	# Used in skip_step...
-	my $url_clean = $url->clone;
-	if( $url->query_param('caller_page') )
-	{
-	    $url_clean->query_param_delete('caller_page');
-	}
-	else
-	{
-	    $url->query_param_append('caller_page' => $caller_url );
-	}
+        # Used in skip_step...
+        my $url_clean = $url->clone;
+        if ( $url->query_param('caller_page') )
+        {
+            $url_clean->query_param_delete('caller_page');
+        }
+        else
+        {
+            $url->query_param_append('caller_page' => $caller_url );
+        }
 
-	debug(1,"!!New step in route: $url");
-	debug(1,"!!  with caller_url ".$caller_url);
+        debug(1,"!!New step in route: $url");
+        debug(1,"!!  with caller_url ".$caller_url);
 
-	if( my $prev_url_clean = $route->{'route_clean'}[-1] )
-	{
-	    if( $prev_url_clean->eq( $url_clean ) )
-	    {
-		next;
-	    }
-	}
-	push @{$route->{'route'}}, $url;
-	push @{$route->{'route_clean'}}, $url_clean;
+        if ( my $prev_url_clean = $route->{'route_clean'}[-1] )
+        {
+            if ( $prev_url_clean->eq( $url_clean ) )
+            {
+                next;
+            }
+        }
+        push @{$route->{'route'}}, $url;
+        push @{$route->{'route_clean'}}, $url_clean;
     }
 }
 
@@ -214,34 +214,34 @@ sub plan_after
 
     foreach my $url_in ( @$urls )
     {
-	my $url_norm = $Para::Frame::REQ->normalized_url( $url_in );
-	my $url = Para::Frame::URI->new($url_norm);
-	$url->query_param_delete('reqnum');
-	$url->query_param_delete('pfport');
+        my $url_norm = $Para::Frame::REQ->normalized_url( $url_in );
+        my $url = Para::Frame::URI->new($url_norm);
+        $url->query_param_delete('reqnum');
+        $url->query_param_delete('pfport');
 
 
-	# Used in skip_step...
-	my $url_clean = $url->clone;
-	if( $url->query_param('caller_page') )
-	{
-	    $url_clean->query_param_delete('caller_page');
-	}
-	else
-	{
-	    $url->query_param_append('caller_page' => $caller_url );
-	}
+        # Used in skip_step...
+        my $url_clean = $url->clone;
+        if ( $url->query_param('caller_page') )
+        {
+            $url_clean->query_param_delete('caller_page');
+        }
+        else
+        {
+            $url->query_param_append('caller_page' => $caller_url );
+        }
 
-	debug(1,"!!New step last in route: $url");
+        debug(1,"!!New step last in route: $url");
 
-	if( my $prev_url_clean = $route->{'route_clean'}[-1] )
-	{
-	    if( $prev_url_clean->eq( $url_clean ) )
-	    {
-		next;
-	    }
-	}
-	unshift @{$route->{'route'}}, $url;
-	unshift @{$route->{'route_clean'}}, $url_clean;
+        if ( my $prev_url_clean = $route->{'route_clean'}[-1] )
+        {
+            if ( $prev_url_clean->eq( $url_clean ) )
+            {
+                next;
+            }
+        }
+        unshift @{$route->{'route'}}, $url;
+        unshift @{$route->{'route_clean'}}, $url_clean;
     }
 }
 
@@ -269,8 +269,8 @@ sub caller_url
 
     unless( $caller_url->query )
     {
-	# Get the query fron CGI
-	$caller_url->query_form_hash(store_params);
+        # Get the query fron CGI
+        $caller_url->query_form_hash(store_params);
     }
 
     ### See also clear_special_params()
@@ -355,16 +355,16 @@ sub check_add
     my $req = $Para::Frame::REQ;
     my $q = $req->q;
 
-    if( my @plan_url = $q->param('plan_next') )
+    if ( my @plan_url = $q->param('plan_next') )
     {
-	$q->delete('plan_next');
-	$route->plan_next(\@plan_url);
+        $q->delete('plan_next');
+        $route->plan_next(\@plan_url);
     }
 
-    if( my @plan_url = $q->param('plan_after') )
+    if ( my @plan_url = $q->param('plan_after') )
     {
-	$q->delete('plan_after');
-	$route->plan_after(\@plan_url);
+        $q->delete('plan_after');
+        $route->plan_after(\@plan_url);
     }
 
     debug(1,"Route has ".$route->steps." steps") if $route->steps;
@@ -397,33 +397,33 @@ sub check_backtrack
 
     # The CGI module doesn't handle query data in URL after a form POST
 #    debug "-- check for backtrack";
-    if( $req->q->url_param('backtrack') )
+    if ( $req->q->url_param('backtrack') )
     {
-	debug(1,"!!Backtracking (because of url param backtrack)");
-	$route->get_next;
+        debug(1,"!!Backtracking (because of url param backtrack)");
+        $route->get_next;
     }
     else
     {
 #	debug "-- no backtracking!";
 
-	### TODO: Not needed anymore?!?
+        ### TODO: Not needed anymore?!?
 
       CHECK:
-	{
-	    # Remove last step if it's equal to curent place, including params
-	    my $last_step = $route->{'route'}[-1] or return;
-	    $last_step = Para::Frame::URI->new($last_step) unless UNIVERSAL::isa($last_step, 'URI');
+        {
+            # Remove last step if it's equal to curent place, including params
+            my $last_step = $route->{'route'}[-1] or return;
+            $last_step = Para::Frame::URI->new($last_step) unless UNIVERSAL::isa($last_step, 'URI');
 
-	    if( $last_step->path eq $page->url_path_slash )
-	    {
-		if( $last_step->query eq $req->q->query_string )
-		{
-		    debug(1,"--Removing a step, since it's equal to this one");
-		    pop @{$route->{'route'}};
-		    redo CHECK; # More steps to remove?
-		}
-	    }
-	}
+            if ( $last_step->path eq $page->url_path_slash )
+            {
+                if ( $last_step->query eq $req->q->query_string )
+                {
+                    debug(1,"--Removing a step, since it's equal to this one");
+                    pop @{$route->{'route'}};
+                    redo CHECK; # More steps to remove?
+                }
+            }
+        }
 
     }
 }
@@ -514,84 +514,84 @@ sub get_next
 
     my $default = $route->default || $page->site->home->url_path_slash;
 
-    if( my $step = pop @{$route->{'route'}} )
+    if ( my $step = pop @{$route->{'route'}} )
     {
-	pop @{$route->{'route_clean'}};
+        pop @{$route->{'route_clean'}};
 
-	debug 2, "  Next step is $step";
-	$step = Para::Frame::URI->new($step) unless UNIVERSAL::isa($step, 'URI');
-	my $query = $step->query || '';
-	debug 3, "    step query is $query";
+        debug 2, "  Next step is $step";
+        $step = Para::Frame::URI->new($step) unless UNIVERSAL::isa($step, 'URI');
+        my $query = $step->query || '';
+        debug 3, "    step query is $query";
 
-	# Modify step withe these params
-	my %args_replace;
-	foreach my $key ( $q->param('step_replace_params') )
-	{
-	    $args_replace{$key} = [ $q->param($key) ];
-	}
+        # Modify step withe these params
+        my %args_replace;
+        foreach my $key ( $q->param('step_replace_params') )
+        {
+            $args_replace{$key} = [ $q->param($key) ];
+        }
 
-	# Modify step withe these params
-	my %args_add;
-	foreach my $key ( $q->param('step_add_params') )
-	{
-	    $args_add{$key} = [ $q->param($key) ];
-	}
+        # Modify step withe these params
+        my %args_add;
+        foreach my $key ( $q->param('step_add_params') )
+        {
+            $args_add{$key} = [ $q->param($key) ];
+        }
 
-	$route->replace_query( $q, $query );
+        $route->replace_query( $q, $query );
 
-	foreach my $key ( keys %args_replace )
-	{
-	    if( @{ $args_replace{$key} } )
-	    {
-		debug 1, "replacing param $key with @{$args_replace{$key}}";
-		$q->param( $key, @{ $args_replace{$key} } );
-	    }
-	    else
-	    {
-		$q->delete($key);
-	    }
-	}
+        foreach my $key ( keys %args_replace )
+        {
+            if ( @{ $args_replace{$key} } )
+            {
+                debug 1, "replacing param $key with @{$args_replace{$key}}";
+                $q->param( $key, @{ $args_replace{$key} } );
+            }
+            else
+            {
+                $q->delete($key);
+            }
+        }
 
-	foreach my $key ( keys %args_add )
-	{
-	    if( @{ $args_add{$key} } )
-	    {
-		my( @vals ) = $q->param( $key );
-		debug 1, "adding to param $key with @vals";
-		$q->param( $key, @{ $args_add{$key} }, @vals );
-	    }
-	}
+        foreach my $key ( keys %args_add )
+        {
+            if ( @{ $args_add{$key} } )
+            {
+                my( @vals ) = $q->param( $key );
+                debug 1, "adding to param $key with @vals";
+                $q->param( $key, @{ $args_add{$key} }, @vals );
+            }
+        }
 
 #	debug_query("AFTER");
 
-	$req->set_response( $step->path );
-	$req->setup_jobs; # Takes care of any run keys in query string
-	$req->add_job('after_jobs');
+        $req->set_response( $step->path );
+        $req->setup_jobs; # Takes care of any run keys in query string
+        $req->add_job('after_jobs');
 
-	debug(1,"!!  Initiated new query");
+        debug(1,"!!  Initiated new query");
     }
-    elsif( $break_path )
+    elsif ( $break_path )
     {
-	debug(1,"!!  No more steps in route");
-	debug 1, "!!    Using default step, breaking path";
-	$q->delete_all;
-	$req->set_response($default);
+        debug(1,"!!  No more steps in route");
+        debug 1, "!!    Using default step, breaking path";
+        $q->delete_all;
+        $req->set_response($default);
     }
     else
     {
-	$q->delete_all;
-	debug(1,"!!  No more steps in route");
-	if( $page->url_path_slash ne $req->referer_path )
-	{
-	    debug 1, "!!    Using selected template";
-	    debug 2, "!!    referer: ".$req->referer_path;
-	    debug 2, "!!       this: ".$page->url_path_slash;
-	}
-	else
-	{
-	    debug 1, "!!    Using default step";
-	    $req->set_response($default);
-	}
+        $q->delete_all;
+        debug(1,"!!  No more steps in route");
+        if ( $page->url_path_slash ne $req->referer_path )
+        {
+            debug 1, "!!    Using selected template";
+            debug 2, "!!    referer: ".$req->referer_path;
+            debug 2, "!!       this: ".$page->url_path_slash;
+        }
+        else
+        {
+            debug 1, "!!    Using default step";
+            $req->set_response($default);
+        }
 
     }
 }
@@ -627,34 +627,34 @@ sub skip_step
     debug(1,"!!  called skip_step");
     debug 1, "  for route ".join("'",@{$route->{'route'}});
 
-    if( my $step = pop @{$route->{'route'}} )
+    if ( my $step = pop @{$route->{'route'}} )
     {
-	pop @{$route->{'route_clean'}};
+        pop @{$route->{'route_clean'}};
 
-	debug(1,"!!    back step one");
+        debug(1,"!!    back step one");
 
-	$step = Para::Frame::URI->new($step) unless UNIVERSAL::isa($step, 'URI');
+        $step = Para::Frame::URI->new($step) unless UNIVERSAL::isa($step, 'URI');
 
-	my $caller_page = Para::Frame::URI->new($step->query_param('caller_page'))
-	    or die "caller_page missing from $step";
+        my $caller_page = Para::Frame::URI->new($step->query_param('caller_page'))
+          or die "caller_page missing from $step";
 
 
-	# Now setup the params for the caller
+        # Now setup the params for the caller
 
-	debug "Got $caller_page";
+        debug "Got $caller_page";
 
-	$route->replace_query( $q, $caller_page->query );
+        $route->replace_query( $q, $caller_page->query );
 
-	$dest = $caller_page->path;
-	debug(1,"!!  Destination set to $dest");
+        $dest = $caller_page->path;
+        debug(1,"!!  Destination set to $dest");
 
-	$route->clear_special_params;
+        $route->clear_special_params;
     }
     else
     {
-	$route->clear_special_params;
+        $route->clear_special_params;
 
-	debug(1,"!!  No more steps in route");
+        debug(1,"!!  No more steps in route");
     }
 
     $dest ||= $route->default || $page->site->home->url_path_slash;
@@ -677,10 +677,10 @@ sub remove_step
 {
     my( $route ) = @_;
 
-    if( my $step = pop @{$route->{'route'}} )
+    if ( my $step = pop @{$route->{'route'}} )
     {
-	pop @{$route->{'route_clean'}};
-	debug(1,"!!removed next step");
+        pop @{$route->{'route_clean'}};
+        debug(1,"!!removed next step");
     }
 }
 
@@ -699,18 +699,18 @@ sub caller_is_next_step
 {
     my( $route ) = @_;
 
-    if( my $step = $route->{'route'}[-1] )
+    if ( my $step = $route->{'route'}[-1] )
     {
-	$step = Para::Frame::URI->new($step) unless UNIVERSAL::isa($step, 'URI');
-	my $caller_page = Para::Frame::URI->new($step->query_param('caller_page'))
-	    or die "caller_page missing from $step";
-	my $next = $step->path;
-	my $caller = $caller_page->path;
-	debug "Comparing $caller with $next";
-	if( $next eq $caller )
-	{
-	    return 1;
-	}
+        $step = Para::Frame::URI->new($step) unless UNIVERSAL::isa($step, 'URI');
+        my $caller_page = Para::Frame::URI->new($step->query_param('caller_page'))
+          or die "caller_page missing from $step";
+        my $next = $step->path;
+        my $caller = $caller_page->path;
+        debug "Comparing $caller with $next";
+        if ( $next eq $caller )
+        {
+            return 1;
+        }
     }
     return 0;
 }
@@ -820,11 +820,11 @@ sub debug_query
     debug(1,"url_param is ".$q->url_param('keywords'));
     foreach my $key ( $q->param )
     {
-	debug(1,"  $key");
-	foreach my $val ( $q->param($key) )
-	{
-	    debug(1,"    $val");
-	}
+        debug(1,"  $key");
+        foreach my $val ( $q->param($key) )
+        {
+            debug(1,"    $val");
+        }
     }
 }
 
@@ -850,14 +850,15 @@ sub on_configure
 {
     # Called during compilation
 
-    Para::Frame->add_global_tt_params({
-	'plan_backtrack'  => sub{ $Para::Frame::REQ->s->route->plan_backtrack(@_) },
-	'plan'            => sub{ $Para::Frame::REQ->s->route->plan_next(@_) },
-	'plan_next'       => sub{ $Para::Frame::REQ->s->route->plan_next(@_) },
-	'plan_after'      => sub{ $Para::Frame::REQ->s->route->plan_after(@_) },
-	'default_step'    => sub{ $Para::Frame::REQ->s->route->default },
-	'route'           => sub{ $Para::Frame::REQ->s->route },
-    });
+    Para::Frame->add_global_tt_params
+        ({
+          'plan_backtrack'  => sub{ $Para::Frame::REQ->s->route->plan_backtrack(@_) },
+          'plan'            => sub{ $Para::Frame::REQ->s->route->plan_next(@_) },
+          'plan_next'       => sub{ $Para::Frame::REQ->s->route->plan_next(@_) },
+          'plan_after'      => sub{ $Para::Frame::REQ->s->route->plan_after(@_) },
+          'default_step'    => sub{ $Para::Frame::REQ->s->route->default },
+          'route'           => sub{ $Para::Frame::REQ->s->route },
+         });
 }
 
 ##############################################################################
