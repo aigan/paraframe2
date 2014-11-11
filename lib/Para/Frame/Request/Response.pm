@@ -136,6 +136,7 @@ sub new
      'time'           => time,  ## Start time
      'time_done'      => undef, ## Rendering finished
      'status'         => 200,
+     'query'          => undef,
     }, $class;
 
     if ( my $req = $args->{req} )
@@ -154,10 +155,13 @@ sub new
         $resp->{'is_error_response'} = 1;
     }
 
+    $resp->{query_string} = $args->{query_string};
+
+
     # NOTE: We set the normalized page
 
     $args->{'file_may_not_exist'} = 1;
-    my $page = $resp->{'page'} = Para::Frame::File->new($args)->normalize;
+    $resp->{'page'} = Para::Frame::File->new($args)->normalize;
 
     if ( $args->{'always_move'} || 0 )
     {
@@ -284,7 +288,7 @@ sub page
 
 ##############################################################################
 
-=head2 page_url_with_query
+=head2 page_url_path_with_query
 
 =cut
 
@@ -294,14 +298,21 @@ sub page_url_path_with_query
 
     my $path = $resp->page->url_path_slash;
 
+    my $query = $resp->query_string;
+    debug "query in $query";
+
     my $req = $Para::Frame::REQ;
     if ( $path eq $req->original_url_string )
     {
-        if ( my $query = $req->original_url_params )
-        {
-            $path .= "?".$query;
-        }
+        $query ||= $req->original_url_params;
     }
+
+    if( $query )
+    {
+        $path .= "?".$query;
+    }
+
+#    debug "Response page_url_path_with_query: ".$path;
 
     return $path;
 }
@@ -317,27 +328,31 @@ sub page_url_path_with_query_and_reqnum
 {
     my( $resp ) = @_;
 
-    my $path = $resp->page->url_path_slash . '?';
+    my $path = $resp->page->url_path_slash;
     my $req = $Para::Frame::REQ;
 
 #    debug "CALLER query string is ".$req->original_url_params;
 #    debug datadump \%ENV;
 
-    if ( $path eq $req->original_url_string.'?' )
-    {
-        if ( my $query = $req->original_url_params )
-        {
-            $query =~ s/reqnum=[^&]+&?//g;
-            $query =~ s/pfport=[^&]+&?//g;
+    my $query = $resp->query_string || '';
 
-            if ( length $query )
-            {
-                $path .= $query . '&';
-            }
+    if ( $path eq $req->original_url_string )
+    {
+        $query ||= $req->original_url_params;
+    }
+
+    if ( $query )
+    {
+        $query =~ s/reqnum=[^&]+&?//g;
+        $query =~ s/pfport=[^&]+&?//g;
+
+        if ( length $query )
+        {
+            $query .= '&';
         }
     }
 
-    return $path . 'reqnum='.$req->id.'&pfport='.$Para::Frame::CFG->{'port'};
+    return $path . '?' . $query . 'reqnum='.$req->id.'&pfport='.$Para::Frame::CFG->{'port'};
 }
 
 
@@ -699,12 +714,14 @@ sub send_output
 
     if ( $url_in ne $url_out )
     {
-#	debug "!!! $url_in ne $url_out";
+        debug "!!! $url_in ne $url_out";
 
-#	# Keep query string
+        # Keep query string
 #	$url_out = $resp->page_url_path_with_query_and_reqnum;
+        $url_out = $resp->page_url_path_with_query;
+#        debug "Will forward to $url_out";
 
-        $url_out = $resp->page_url_path_with_reqnum;
+#        $url_out = $resp->page_url_path_with_reqnum;
         return if $resp->forward($url_out);
     }
 
@@ -1459,6 +1476,18 @@ sub last_modified
     }
 
     return undef;
+}
+
+
+##############################################################################
+
+=head2 query_string
+
+=cut
+
+sub query_string
+{
+    return $_[0]->{query_string};
 }
 
 

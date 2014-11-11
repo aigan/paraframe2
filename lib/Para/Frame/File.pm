@@ -5,7 +5,7 @@ package Para::Frame::File;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2011 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2014 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -20,6 +20,11 @@ Para::Frame::File - Represents a file in the site
 
 See also L<Para::Frame::Dir> and L<Para::Frame::Template>.
 
+The same file used in two sites will be represented two times.
+
+TODO: Separate out sysfile from sitefile.
+
+
 =cut
 
 use 5.010;
@@ -28,7 +33,7 @@ use warnings;
 use utf8;                       # Ã not used in file
 
 use Encode;
-use Carp qw( croak confess cluck );
+use Carp qw( carp croak confess cluck );
 use File::stat;                 # exports stat
 use Scalar::Util qw(weaken);
 use Number::Bytes::Human qw(format_bytes);
@@ -81,6 +86,7 @@ sub new
     my $sys_in = $args->{'filename'};
     my $url_in = $args->{'url'};
     my $site_in = $args->{'site'};
+
 
     my $key = $sys_in;
     if ( $key )
@@ -1063,7 +1069,9 @@ sub url
                              $site->host,
                              $page->{url_norm});
 
-    return Para::Frame::URI->new($url_string);
+    my $url = Para::Frame::URI->new($url_string);
+
+    return $url;
 }
 
 
@@ -1089,6 +1097,8 @@ sub url_with_query
     {
         $url_string .= "?".$query;
     }
+
+    carp"DEPRECATED";
 
     return Para::Frame::URI->new($url_string);
 }

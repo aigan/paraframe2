@@ -19,8 +19,14 @@ IF form_enctype;
    form_extra = "$form_extra enctype='$form_enctype'";
 END;
 
+### Special consideration for id param
+### as to give canonical urls on post
+IF q.param('id');
+   idpart = "?id=" _ q.param('id');
+END;
+
 %]
-<form id="f" name="f" action="[% form_action %]" method="[% form_method %]" [% form_extra %]>
+<form id="f" name="f" action="[% form_action; idpart %]" method="[% form_method %]" [% form_extra %]>
 <input type="hidden" name="run" value="[% next_action %]">
 [% UNLESS next_template %]
 <input type="hidden" name="destination" value="dynamic">

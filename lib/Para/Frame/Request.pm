@@ -3348,6 +3348,7 @@ sub set_response
         if ( UNIVERSAL::isa($url_in, 'URI') )
         {
             $args->{'url'} = $url_in->path;
+            $args->{'query_string'} = $url_in->query;
             if ( my $hostname = $url_in->host )
             {
                 my $site = $Para::Frame::CFG->{'site_class'}->get_by_url($url_in);
@@ -3365,6 +3366,7 @@ sub set_response
             confess "URL $url_in not recognized";
         }
     }
+#    debug "URL set to ".$url_in;
 
     eval
     {
