@@ -1313,13 +1313,19 @@ sub checkbox
     }
 
     my $extra = "";
+    my $tdextra = "";
     my $prefix = "";
     my $suffix = "";
     my $separator = delete $params->{'separator'} || '';
 
     if ( my $tdlabel = delete $params->{'tdlabel'} )
     {
-        $separator = "</td><td>";
+        if ( my $tdtag_attr = delete ${$params}{'tdtag_attr'} )
+        {
+            $tdextra .= tag_extra_from_params( $tdtag_attr );
+        }
+
+        $separator = "</td><td$tdextra>";
         $params->{'prefix_label'} = $tdlabel;
     }
 
@@ -1671,6 +1677,7 @@ sub selector
     my $tagkey = delete $params->{'tagkey'} || $valkey;
     my $relkey = delete $params->{'relkey'};
     my $header = delete $params->{'header'};
+    my $tdextra = "";
     my $out = '';
 
 #    debug(datadump(\@_));
@@ -1690,7 +1697,12 @@ sub selector
     my $separator = delete($params->{'separator'}) || '';
     if ( my $tdlabel = delete $params->{'tdlabel'} )
     {
-        $separator = "</td><td>";
+        if ( my $tdtag_attr = delete ${$params}{'tdtag_attr'} )
+        {
+            $tdextra .= tag_extra_from_params( $tdtag_attr );
+        }
+
+        $separator = "</td><td$tdextra>";
         $params->{'label'} = $tdlabel;
     }
     if ( my $label = delete $params->{'label'} )
@@ -1805,12 +1817,18 @@ sub label_from_params
     my( $params ) = @_;
 
     my $out = '';
+    my $tdextra = "";
 
 
     my $separator = delete($params->{'separator'}) || '';
     if ( my $tdlabel = delete $params->{'tdlabel'} )
     {
-        $separator = "</td><td>";
+        if ( my $tdtag_attr = delete ${$params}{'tdtag_attr'} )
+        {
+            $tdextra .= tag_extra_from_params( $tdtag_attr );
+        }
+
+        $separator = "</td><td$tdextra>";
         $params->{'label'} = $tdlabel;
     }
 
@@ -2194,6 +2212,7 @@ sub calendar
     my $class = $args->{'class'} || '';
     my $maxlength = $args->{'maxlength'};
     my $size = $args->{'size'};
+    my $tdextra = "";
 
 #    debug "CALENDAR";
 #    debug datadump($args);
@@ -2201,6 +2220,11 @@ sub calendar
 
     if ( $tdlabel )
     {
+        if ( my $tdtag_attr = delete ${$args}{'tdtag_attr'} )
+        {
+            $tdextra .= tag_extra_from_params( $tdtag_attr );
+        }
+
         $label = $tdlabel;
         $separator ||= "</td><td>";
     }

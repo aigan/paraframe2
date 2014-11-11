@@ -299,7 +299,7 @@ sub page_url_path_with_query
     my $path = $resp->page->url_path_slash;
 
     my $query = $resp->query_string;
-    debug "query in $query";
+#    debug "query in $query";
 
     my $req = $Para::Frame::REQ;
     if ( $path eq $req->original_url_string )
