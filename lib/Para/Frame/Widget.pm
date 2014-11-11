@@ -974,6 +974,13 @@ sub input
 
     if ( my $tag_attr = $params->{'tag_attr'} )
     {
+        if( ($#previous == 0) and length $value )
+        {
+            $tag_attr->{'class'} ||= "";
+            $tag_attr->{'class'} .= " value_from_query";
+            $tag_attr->{'title'} ||= loc("Not saved");
+        }
+
         $extra .= tag_extra_from_params( $tag_attr );
     }
 
