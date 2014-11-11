@@ -87,7 +87,7 @@ sub new
      'template'       => undef,
      'incpath'        => undef,
      'params'         => undef,
-     'burner'         => undef,          ## burner used for page
+     'burner'         => undef, ## burner used for page
      'template_root'  => undef,
     };
 
@@ -104,27 +104,27 @@ sub new
 
     # Cache template -- May throw an exception -- may return undef
     my $tmpl = $rend->{'template'} = $args->{'template'} || $page->template;
-    if( $tmpl and debug)
+    if ( $tmpl and debug)
     {
-	debug 2, "Template initialy set to ".$tmpl->sysdesig;
+        debug 2, "Template initialy set to ".$tmpl->sysdesig;
     }
 
     unless( ref $tmpl )
     {
-	if( $tmpl )
-	{
-	    confess "Template $tmpl not an object";
-	}
+        if ( $tmpl )
+        {
+            confess "Template $tmpl not an object";
+        }
 
         ### FIXME
         my $url_path = $page->url_path;
         my $tried_to_find = $Para::Frame::REQ->{'tried_to_find'} ||= {};
 #	    debug datadump($tried_to_find);
-        unless( $tried_to_find->{ $url_path } ++ )
+        unless ( $tried_to_find->{ $url_path } ++ )
         {
             my $orig_url_path = $Para::Frame::REQ->original_url_string;
 #		debug "Comparing $url_path with $orig_url_path";
-            if( $url_path eq $Para::Frame::REQ->original_url_string )
+            if ( $url_path eq $Para::Frame::REQ->original_url_string )
             {
                 # Try to find the page
                 $Para::Frame::REQ->prepend_action('find_page');
@@ -132,8 +132,8 @@ sub new
             }
         }
 
-	### Must return renderer even if template not found
-	# Error will be handled during the actual rendering
+        ### Must return renderer even if template not found
+        # Error will be handled during the actual rendering
 #        throw('notfound', "No template found for $url_path");
     }
 
@@ -179,7 +179,7 @@ sub render_output
     my $page = $rend->page;
     unless( $page )
     {
-	confess "No page ".datadump($rend,2);
+        confess "No page ".datadump($rend,2);
     }
 
     my $site = $page->site;
@@ -190,29 +190,29 @@ sub render_output
     my $tmpl = $rend->template;
     unless( $tmpl )
     {
-	cluck "template not found";
-	throw('notfound', "Couldn't find a template for ".$rend->page->url_path);
+        cluck "template not found";
+        throw('notfound', "Couldn't find a template for ".$rend->page->url_path);
     }
 
 
-    if( ref $tmpl eq 'Para::Frame::Template' )
+    if ( ref $tmpl eq 'Para::Frame::Template' )
     {
-	my $in = $tmpl->document;
-	my $burner = $rend->burner;
-	if( $burner )
-	{
-	    $rend->set_tt_params;
-	    $rend->burn($in, $outref) or return 0;
-	}
-	else
-	{
-	    debug "Getting '$in' as a static page";
-	    $rend->get_static( $in, $outref ) or return 0;
-	}
+        my $in = $tmpl->document;
+        my $burner = $rend->burner;
+        if ( $burner )
+        {
+            $rend->set_tt_params;
+            $rend->burn($in, $outref) or return 0;
+        }
+        else
+        {
+            debug "Getting '$in' as a static page";
+            $rend->get_static( $in, $outref ) or return 0;
+        }
     }
-    elsif( UNIVERSAL::isa $tmpl, 'Para::Frame::File' )
+    elsif ( UNIVERSAL::isa $tmpl, 'Para::Frame::File' )
     {
-	$outref = $tmpl->contentref_as_text;
+        $outref = $tmpl->contentref_as_text;
 
 #	my $in = $tmpl->sys_path;
 #	debug "Getting '$in' as a static page";
@@ -221,15 +221,15 @@ sub render_output
     }
     else
     {
-	debug datadump($rend,2);
-	confess "$tmpl is not a template";
+        debug datadump($rend,2);
+        confess "$tmpl is not a template";
     }
 
 
-    if( utf8::is_utf8($$outref) )
+    if ( utf8::is_utf8($$outref) )
     {
-	if( utf8::valid($$outref) )
-	{
+        if ( utf8::valid($$outref) )
+        {
 #	    debug "Render result Marked as valid utf8";
 
 #	    if( $$outref =~ /(V.+?lkommen)/ )
@@ -239,15 +239,15 @@ sub render_output
 #		my $len2 = bytes::length($str);
 #		debug "  >>$str ($len2/$len1)";
 #	    }
-	}
-	else
-	{
-	    debug "Render result Marked as INVALID utf8";
-	}
+        }
+        else
+        {
+            debug "Render result Marked as INVALID utf8";
+        }
     }
     else
     {
-	debug "Render result NOT Marked as utf8";
+        debug "Render result NOT Marked as utf8";
     }
 
 
@@ -269,11 +269,11 @@ Returns: the L<Para::Frame::Burner> selected for this page
 
 sub burner
 {
-    unless( $_[0]->{'burner'} )
+    unless ( $_[0]->{'burner'} )
     {
-	my( $rend ) = @_;
-	my $ext = $rend->template->suffix;
-	$rend->set_burner_by_ext( $ext );
+        my( $rend ) = @_;
+        my $ext = $rend->template->suffix;
+        $rend->set_burner_by_ext( $ext );
     }
 
     return $_[0]->{'burner'};
@@ -296,7 +296,7 @@ sub set_burner_by_type
 {
     return $_[0]->{'burner'} =
       Para::Frame::Burner->get_by_type($_[1])
-	  or die "Burner type $_[1] not found";
+          or die "Burner type $_[1] not found";
 }
 
 ##############################################################################
@@ -316,7 +316,7 @@ sub set_burner_by_ext
 {
     return $_[0]->{'burner'} =
       Para::Frame::Burner->get_by_ext($_[1])
-	  or die "Burner ext $_[1] not found";
+          or die "Burner ext $_[1] not found";
 }
 
 ##############################################################################
@@ -405,38 +405,38 @@ sub set_tt_params
     my $site = $page->site or confess "no site: ".$page->sysdesig;
     my $me = $page->url_path_slash;
 
-    if( $req->is_from_client )
+    if ( $req->is_from_client )
     {
-	if( $req->error_page_selected )
-	{
-	    $me = $req->original_response->page->url_path;
-	}
+        if ( $req->error_page_selected )
+        {
+            $me = $req->original_response->page->url_path;
+        }
 
-	$rend->add_params({
-			   'q'               => $req->{'q'},
-			   'ENV'             => $req->env,
-			  });
+        $rend->add_params({
+                           'q'               => $req->{'q'},
+                           'ENV'             => $req->env,
+                          });
     }
 
     # Keep alredy defined params  # Static within a request
     $rend->add_params({
-	'page'            => $page,
+                       'page'            => $page,
 
-	'me'              => $me,
+                       'me'              => $me,
 
-	'u'               => $Para::Frame::U,
-	'lang'            => $req->language->preferred, # calculate once
-	'req'             => $req,
+                       'u'               => $Para::Frame::U,
+                       'lang'            => $req->language->preferred, # calculate once
+                       'req'             => $req,
 
-	# Is allowed to change between requests
-	'site'            => $site,
-	'home'            => $site->home_url_path,
-    });
+                       # Is allowed to change between requests
+                       'site'            => $site,
+                       'home'            => $site->home_url_path,
+                      });
 
     # Add local site params
-    if( $site->params )
+    if ( $site->params )
     {
-	$rend->add_params($site->params);
+        $rend->add_params($site->params);
     }
 }
 
@@ -462,33 +462,33 @@ sub add_params
 
     my $param = $resp->{'params'} ||= {};
 
-    if( $keep_old )
+    if ( $keep_old )
     {
-	while( my($key, $val) = each %$extra )
-	{
-	    next if $param->{$key};
-	    unless( defined $val )
-	    {
-		debug "The TT param $key has no defined value";
-		next;
-	    }
-	    $param->{$key} = $val;
-	    debug(4,"Add TT param $key: $val") if $val;
-	}
+        while ( my($key, $val) = each %$extra )
+        {
+            next if $param->{$key};
+            unless( defined $val )
+            {
+                debug "The TT param $key has no defined value";
+                next;
+            }
+            $param->{$key} = $val;
+            debug(4,"Add TT param $key: $val") if $val;
+        }
     }
     else
     {
-	while( my($key, $val) = each %$extra )
-	{
-	    unless( defined $val )
-	    {
-		debug "The TT param $key has no defined value";
-		next;
-	    }
-	    $param->{$key} = $val;
-	    debug(3, "Add TT param $key: $val");
-	}
-     }
+        while ( my($key, $val) = each %$extra )
+        {
+            unless( defined $val )
+            {
+                debug "The TT param $key has no defined value";
+                next;
+            }
+            $param->{$key} = $val;
+            debug(3, "Add TT param $key: $val");
+        }
+    }
 }
 
 
@@ -518,18 +518,18 @@ sub get_static
 
     unless( ref $in )
     {
-	$in = IO::File->new( $in );
+        $in = IO::File->new( $in );
     }
 
 
-    if( ref $in eq 'IO::File' )
+    if ( ref $in eq 'IO::File' )
     {
-	$out .= $_ while <$in>;
+        $out .= $_ while <$in>;
     }
     else
     {
-	warn "in: $in\n";
-	die "What can I do";
+        warn "in: $in\n";
+        die "What can I do";
     }
 
     my $length = length($out);
@@ -598,39 +598,39 @@ sub paths
 {
     my( $rend ) = @_;
 
-    unless( $rend->{'incpath'} )
+    unless ( $rend->{'incpath'} )
     {
-	my $burner = $rend->burner
-	  or confess "Page burner not set";
-	my $type = $burner->{'type'};
+        my $burner = $rend->burner
+          or confess "Page burner not set";
+        my $type = $burner->{'type'};
 
-	my $page = $rend->page;
-	my $site = $page->site;
+        my $page = $rend->page;
+        my $site = $page->site;
 
 
-	my $path_full = $page->dirsteps->[0];
-	my $destroot = $site->home->sys_path;
-	my $dir = $path_full;
-	unless( $dir =~ s/^$destroot// )
-	{
-	    warn "destroot $destroot not part of $dir";
-	    warn datadump($page->dirsteps);
-	    warn datadump($page,2);
-	    die;
-	}
-	my $paraframedir = $Para::Frame::CFG->{'paraframe'};
+        my $path_full = $page->dirsteps->[0];
+        my $destroot = $site->home->sys_path;
+        my $dir = $path_full;
+        unless( $dir =~ s/^$destroot// )
+        {
+            warn "destroot $destroot not part of $dir";
+            warn datadump($page->dirsteps);
+            warn datadump($page,2);
+            die;
+        }
+        my $paraframedir = $Para::Frame::CFG->{'paraframe'};
 
-	my @htmlsrc = $site->htmlsrc( $page->is_compiled );
+        my @htmlsrc = $site->htmlsrc( $page->is_compiled );
 
-	my $template_root = $rend->{'template_root'};
-	if( ref $template_root )
-	{
-	    $template_root = $template_root->sys_path;
-	}
+        my $template_root = $rend->{'template_root'};
+        if ( ref $template_root )
+        {
+            $template_root = $template_root->sys_path;
+        }
 
 #	my $subdir = 'inc' . $burner->subdir_suffix;
 
-	my @places;
+        my @places;
 #	if( $site->is_compiled )
 #	{
 #	    @places =
@@ -656,85 +656,85 @@ sub paths
 #	      );
 #	}
 
-	my $subdir;
-	if( $rend->template->is_compiled($site) )
+        my $subdir;
+        if ( $rend->template->is_compiled($site) )
 #	if( $page->is_compiled($site) )
-	{
-	    push @places,
-	    {
-	     subdir => $burner->pre_dir,
-	     backdir => '/dev',
-	    };
+        {
+            push @places,
+            {
+             subdir => $burner->pre_dir,
+             backdir => '/dev',
+            };
 
-	    $subdir = $burner->pre_dir;
-	}
-	else
-	{
-	    $subdir = $burner->inc_dir;
-	}
+            $subdir = $burner->pre_dir;
+        }
+        else
+        {
+            $subdir = $burner->inc_dir;
+        }
 
-	push @places,
-	{
-	 subdir => $burner->inc_dir,
-	 backdir => '/html',
-	};
+        push @places,
+        {
+         subdir => $burner->inc_dir,
+         backdir => '/html',
+        };
 
 
-	debug 3, "Creating incpath for $dir under $destroot ($type)";
+        debug 3, "Creating incpath for $dir under $destroot ($type)";
 
-	my @searchpath;
+        my @searchpath;
 
-	if( $template_root )
-	{
-	    my $tmpl_path = $rend->template->dir->sys_path_slash;
-	    my $path = $tmpl_path;
-	    unless( $path =~ s/^$template_root// )
-	    {
-		warn "template root $template_root not part of $path";
-		die;
-	    }
+        if ( $template_root )
+        {
+            my $tmpl_path = $rend->template->dir->sys_path_slash;
+            my $path = $tmpl_path;
+            unless( $path =~ s/^$template_root// )
+            {
+                warn "template root $template_root not part of $path";
+                die;
+            }
 
-	    foreach my $step ( Para::Frame::Utils::dirsteps($path), '/' )
-	    {
-		push @searchpath, $template_root.$step.$subdir.'/';
-	    }
-	}
+            foreach my $step ( Para::Frame::Utils::dirsteps($path), '/' )
+            {
+                push @searchpath, $template_root.$step.$subdir.'/';
+            }
+        }
 
         my @appbacks = ( $site->approot, @{$site->appback} );
 
-	foreach my $step ( Para::Frame::Utils::dirsteps($dir), '/' )
-	{
-	    push @searchpath, map $_.$step.$subdir.'/', @htmlsrc;
+        foreach my $step ( Para::Frame::Utils::dirsteps($dir), '/' )
+        {
+            push @searchpath, map $_.$step.$subdir.'/', @htmlsrc;
 
-	    foreach my $appback ( @appbacks )
-	    {
-		foreach my $place (@places)
-		{
-		    push @searchpath, ( $appback.$place->{'backdir'}.
-					$step.$place->{'subdir'}.'/'
-				      );
-		}
-	    }
+            foreach my $appback ( @appbacks )
+            {
+                foreach my $place (@places)
+                {
+                    push @searchpath, ( $appback.$place->{'backdir'}.
+                                        $step.$place->{'subdir'}.'/'
+                                      );
+                }
+            }
 
-	    foreach my $place (@places)
-	    {
-		push @searchpath, ($paraframedir.$place->{'backdir'}.
-				   $step.$place->{'subdir'}.'/'
-				  );
-	    }
-	}
-
-
-	$rend->{'incpath'} = [ @searchpath ];
+            foreach my $place (@places)
+            {
+                push @searchpath, ($paraframedir.$place->{'backdir'}.
+                                   $step.$place->{'subdir'}.'/'
+                                  );
+            }
+        }
 
 
-	if( debug > 2 )
+        $rend->{'incpath'} = [ @searchpath ];
+
+
+        if ( debug > 2 )
 #	if( debug )
-	{
-	    my $incpathstring = join "", map "- $_\n", @searchpath;
-	    debug "Include path:";
-	    debug $incpathstring;
-	}
+        {
+            my $incpathstring = join "", map "- $_\n", @searchpath;
+            debug "Include path:";
+            debug $incpathstring;
+        }
 
     }
 
@@ -754,29 +754,29 @@ sub set_ctype
 
     my $tmpl = $rend->template;
 #    debug "Setting ctype for ".$tmpl->sysdesig;
-    if( my $ext = $tmpl->suffix )
+    if ( my $ext = $tmpl->suffix )
     {
-	$ext =~ s/_tt$//; # Use the destination ext
+        $ext =~ s/_tt$//;       # Use the destination ext
 
 #	debug "  ext $ext";
-	my( $type, $charset );
-	if( my $def = $TYPEMAP{ $ext } )
-	{
-	    $type = $def->{'type'};
-	    $charset = $def->{'charset'};
+        my( $type, $charset );
+        if ( my $def = $TYPEMAP{ $ext } )
+        {
+            $type = $def->{'type'};
+            $charset = $def->{'charset'};
 #	    debug "  type $type";
 #	    debug "  charset $charset";
-	}
+        }
 
-	$charset ||= $ctype->charset || 'UTF-8';
+        $charset ||= $ctype->charset || 'UTF-8';
 
-	# Will keep previous value if non given here
-	if( $type )
-	{
-	    $ctype->set_type($type);
-	}
+        # Will keep previous value if non given here
+        if ( $type )
+        {
+            $ctype->set_type($type);
+        }
 
-	$ctype->set_charset($charset);
+        $ctype->set_charset($charset);
     }
 
     return $ctype;
