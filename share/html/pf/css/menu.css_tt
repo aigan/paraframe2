@@ -91,7 +91,7 @@
 }
 .menu_row ul.sub ul,
 #compact_menu > ul > li >  ul
- {
+{
 	position: absolute;
 }
 
@@ -101,6 +101,20 @@
 	z-index: 500;
 	width: 18em;
 }
+
+.menu_row ul.sub ul.wide,
+#compact_menu>ul>li>ul.wide
+{
+    position: fixed;
+    left: 0 !important;
+    width: 100%;
+}
+
+#compact_menu ul ul.wide ul
+{
+    width: 100%;
+}
+
 
 .menu_row ul.sub li ul li {
 	border-bottom: 1px solid [% medium_low %];
@@ -144,8 +158,8 @@
 	background: [% light %];
 }
 .menu_row .float_right ul.sub ul {
-	right: 100%;
-	left: -15em !important;
+/*	right: 100%;*/
+	left: -15em;
 	color: [% medium_txt %];
 }
 

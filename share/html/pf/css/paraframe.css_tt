@@ -1,6 +1,24 @@
 /*** Some standard paraframe styles ***/
 [% import(site.css.params) %]
 
+
+
+/* Eric Meyer's Reset CSS v2.0 - http://cssreset.com ================ */
+
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,embed,figure,figcaption,footer,header,hgroup,menu,nav,output,ruby,section,summary,time,mark,audio,video{border:0;margin:0;padding:0}article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section{display:block}ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:none}table{border-spacing:0}hr{margin:0}tr{vertical-align:top}
+
+/* Additional CSS reset */
+
+button,input[type="reset"],input[type="button"],input[type="submit"] {
+    padding: 0;
+}
+
+input, textarea {
+    box-sizing : border-box;
+}
+
+
+
 /************ GENERAL FORMATTING *******************/
 
 label:hover+input,
@@ -171,7 +189,16 @@ tr.odd
   padding:0;
   opacity:0.2;
   filter:alpha(opacity=20);
+  transition: opacity 0.6s, text-shadow 3s;
   }
+
+#pi:hover
+{
+	text-shadow: 0px -1px 2px white, 0px -1px 4px yellow, 0px -3px 6px #ff8000, 0px -6px 14px red;
+    opacity:1;
+}
+
+
 
 #pf_reload img { border:0 }
 
@@ -216,4 +243,46 @@ table.admin .selected img
 {
     background: yellow;
 }
+
+.notransition {
+  -webkit-transition: none !important;
+  -moz-transition: none !important;
+  -o-transition: none !important;
+  -ms-transition: none !important;
+  transition: none !important;
+}
+
+
+.clearfix {
+    clear: both;
+}
+
+/*
+.clearfix:after {
+    clear: both;
+    content: ".";
+    display: block;
+    font-size: 0;
+    height: 0;
+    line-height: 0;
+    visibility: hidden;
+}
+*/
+
+/*  Quick Styles  ============================================================================= */
+
+.wide {width: 100% }
+.narrow {width: 1%}
+.valign {vertical-align: middle;}
+.right {text-align: right} 
+.left {text-align: left}
+.center {text-align: center}
+.float_right {float: right !important }
+.float_left {float:left !important }
+.float_center {margin-left:auto;margin-right:auto}
+.clear {clear: both;}
+.small {font-size: 80%;}
+.hidden {display: none;}
+.bold {font-weight: bold;}
+.pad_right {padding-right:.4em}
 

@@ -68,6 +68,8 @@ var waitForFinalEvent = (function () {
 
 function pf_toggle_init()
 {
+    var $em = $("body").css("font-size");
+
     $('.toggle').off('click.pf_toggle')
         .on('click.pf_toggle',function(e){
 //            log("Click in toggle");
@@ -81,8 +83,24 @@ function pf_toggle_init()
 
                 if( $show )
                 {
-//                    log("toggle show");
+/*
+                    if( $(window).width() < $ul.width()*1.2 ){
+                        $ul.addClass('wide');
+                    } else if( $(this).offset().left +
+                               parseFloat($ul.css('left')) < 0 ) {
+                        $ul.addClass('wide');
+                    } else {
+                        $ul.removeClass('wide');
+                    }
+*/
+
+                    log("toggle show");
                     $ul.show();
+/*
+                    if( $ul.offset().left < 0 ){
+                        $ul.css('left',0);
+                    }
+*/
                     $(document).off('mouseup.pf_toggle_hide')
                         .on('mouseup.pf_toggle_hide',function(e){
 //                            log("in pf_toggle mouseup");
@@ -95,7 +113,7 @@ function pf_toggle_init()
                 }
                 else
                 {
-//                    log("toggle hide");
+                    log("toggle hide");
                     $ul.hide();
                 }
             }
