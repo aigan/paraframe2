@@ -186,15 +186,15 @@ sub new
     my( $this, $data_in, $args ) = @_;
     my $class = ref($this) || $this;
 
-    if( blessed $data_in and $data_in->isa("Para::Frame::List") )
+    if ( blessed $data_in and $data_in->isa("Para::Frame::List") )
     {
-	if( ref $data_in eq $class )
-	{
-	    return $data_in;
-	}
+        if ( ref $data_in eq $class )
+        {
+            return $data_in;
+        }
 
-	# Creating new arrayref
-	$data_in = [$data_in->as_array];
+        # Creating new arrayref
+        $data_in = [$data_in->as_array];
     }
 
 #    debug "New list created with args ".datadump($args);
@@ -202,83 +202,83 @@ sub new
     my $data;
     my $l = bless
     {
-     'INDEX'         => -1,    # Before first element
-     'materialized'  => 0,     # 1 for partly and 2 for fully materialized
+     'INDEX'         => -1,     # Before first element
+     'materialized'  => 0, # 1 for partly and 2 for fully materialized
      'materializer'  => undef,
      '_DATA'         => undef,
-     'populated'     => 0,     # 1 for partly and 2 for fully populated
+     'populated'     => 0,    # 1 for partly and 2 for fully populated
      '_OBJ'          => undef, # the corresponding list of materalized elements
     }, $class;
 
-    if( $args )
+    if ( $args )
     {
-	$l->{'allow_undef'} = $args->{'allow_undef'};
-	$l->{'limit'} = $args->{'limit'};
-	$l->{'limit_display'} = $args->{'limit_display'};
-	$l->{'page_size'} = $args->{'page_size'};
-	$l->{'display_pages'} = $args->{'display_pages'};
-	$l->{'limit_pages'} = $args->{'limit_pages'};
-	$l->{'sorted_on'} = $args->{'sorted_on'};
-	$l->{'sorted_on_key'} = $args->{'sorted_on_key'};
+        $l->{'allow_undef'} = $args->{'allow_undef'};
+        $l->{'limit'} = $args->{'limit'};
+        $l->{'limit_display'} = $args->{'limit_display'};
+        $l->{'page_size'} = $args->{'page_size'};
+        $l->{'display_pages'} = $args->{'display_pages'};
+        $l->{'limit_pages'} = $args->{'limit_pages'};
+        $l->{'sorted_on'} = $args->{'sorted_on'};
+        $l->{'sorted_on_key'} = $args->{'sorted_on_key'};
     }
 
 
-    if( $data_in )
+    if ( $data_in )
     {
-	my $limit = $l->{'limit'};
-	my $size = scalar(@$data_in);
+        my $limit = $l->{'limit'};
+        my $size = scalar(@$data_in);
 
-	# Removes other things like overload
-	if( ref $data_in eq 'ARRAY' )
-	{
+        # Removes other things like overload
+        if ( ref $data_in eq 'ARRAY' )
+        {
 
-	    if( $limit and ($limit < $size) )
-	    {
-		$l->{'original_size'} = $size;
-		# TODO: Is this effective for large lists?
-		$data = [ @{$data_in}[0..($limit-1)] ];
-	    }
-	    else
-	    {
-		$data = $data_in;
-	    }
-	}
-	else
-	{
-	    unless( eval{ $data_in->isa("ARRAY") } )
-	    {
-		my $type = ref $data_in;
-		die "$type is not an array ref";
-	    }
+            if ( $limit and ($limit < $size) )
+            {
+                $l->{'original_size'} = $size;
+                # TODO: Is this effective for large lists?
+                $data = [ @{$data_in}[0..($limit-1)] ];
+            }
+            else
+            {
+                $data = $data_in;
+            }
+        }
+        else
+        {
+            unless ( eval{ $data_in->isa("ARRAY") } )
+            {
+                my $type = ref $data_in;
+                die "$type is not an array ref";
+            }
 
-	    if( $limit and ($limit < $size) )
-	    {
-		$l->{'original_size'} = $size;
-		$data = [ @{$data_in}[0..($limit-1)] ];
-	    }
-	    else
-	    {
-		$data = [ @{$data_in} ];
-	    }
-	}
+            if ( $limit and ($limit < $size) )
+            {
+                $l->{'original_size'} = $size;
+                $data = [ @{$data_in}[0..($limit-1)] ];
+            }
+            else
+            {
+                $data = [ @{$data_in} ];
+            }
+        }
 #	debug "Placing DATA in listobj ".datadump($data);
 
-	$l->{'_DATA'} = $data;
+        $l->{'_DATA'} = $data;
     }
 
     $args ||= {};
     $l->init( $args );
 
-    if( my $mat_in =  $args->{'materializer'} )
+    if ( my $mat_in =  $args->{'materializer'} )
     {
-	# After the init
-	$l->set_materializer( $mat_in );
+        # After the init
+        $l->set_materializer( $mat_in );
     }
 
-    if( $l->{'_DATA'} )
+    if ( $l->{'_DATA'} )
     {
-	# After the init
-	$l->on_populate_all;
+        # After the init
+        $l->on_populate_all;
     }
 
     return $l;
@@ -309,25 +309,25 @@ sub new_any
     my( $this, $data_in, $args ) = @_;
     my $class = ref($this) || $this;
 
-   if( defined $data_in )
-   {
-       if( blessed $data_in )
-       {
-	   if( $data_in->isa("Para::Frame::List") )
-	   {
-	       return $class->new( $data_in, $args );
-	   }
-       }
-       elsif( reftype $data_in )
-       {
-	   if( reftype $data_in eq "ARRAY")
-	   {
-	       return $class->new( $data_in, $args );
-	   }
-       }
+    if ( defined $data_in )
+    {
+        if ( blessed $data_in )
+        {
+            if ( $data_in->isa("Para::Frame::List") )
+            {
+                return $class->new( $data_in, $args );
+            }
+        }
+        elsif ( reftype $data_in )
+        {
+            if ( reftype $data_in eq "ARRAY")
+            {
+                return $class->new( $data_in, $args );
+            }
+        }
 
-       return $class->new( [$data_in], $args );
-   }
+        return $class->new( [$data_in], $args );
+    }
 
     return $class->new_empty();
 }
@@ -351,11 +351,11 @@ sub new_empty
 
     my $l = bless
     {
-     'INDEX'         => -1,    # Before first element
-     'materialized'  => 2,     # 1 for partly and 2 for fully materialized
+     'INDEX'         => -1,     # Before first element
+     'materialized'  => 2, # 1 for partly and 2 for fully materialized
      'materializer'  => undef,
      '_DATA'         => [],
-     'populated'     => 2,     # 1 for partly and 2 for fully populated
+     'populated'     => 2,    # 1 for partly and 2 for fully populated
 #     '_OBJ'          => [], # the corresponding list of materalized elements
 #     'limit'         => 0,
 #     'limit_display' => 0,
@@ -445,9 +445,9 @@ L</materialize_all>.
 
 sub as_arrayref
 {
-    unless( $_[0]->{'materialized'} > 1 )
+    unless ( $_[0]->{'materialized'} > 1 )
     {
-	return $_[0]->materialize_all;
+        return $_[0]->materialize_all;
     }
     return $_[0]->{'_OBJ'};
 }
@@ -456,12 +456,12 @@ sub as_arrayref_by_overload
 {
     unless( UNIVERSAL::isa($_[0],'HASH') ) ### DEBUG
     {
-	confess "Wrong type ".datadump($_[0]);
+        confess "Wrong type ".datadump($_[0]);
     }
 
-    unless( $_[0]->{'materialized'} > 1 )
+    unless ( $_[0]->{'materialized'} > 1 )
     {
-	return $_[0]->materialize_all;
+        return $_[0]->materialize_all;
     }
 #    carp "* OVERLOAD arrayref for list obj used";
     return $_[0]->{'_OBJ'};
@@ -482,13 +482,13 @@ sub concatenate_by_overload
     carp "* OVERLOAD concatenate for list obj used";
 
     my $lstr = $l->stringify_by_overload();
-    if( $is_rev )
+    if ( $is_rev )
     {
-	return $str.$lstr;
+        return $str.$lstr;
     }
     else
     {
-	return $lstr.$str;
+        return $lstr.$str;
     }
 }
 
@@ -517,9 +517,9 @@ Returns the internal arrayref to the unmaterialized elements.
 
 sub as_raw_arrayref
 {
-    unless( $_[0]->{'populated'} > 1 )
+    unless ( $_[0]->{'populated'} > 1 )
     {
-	return $_[0]->populate_all;
+        return $_[0]->populate_all;
     }
     return $_[0]->{'_DATA'};
 }
@@ -545,9 +545,9 @@ L</materialize_all>.
 
 sub as_list
 {
-    unless( $_[0]->{'materialized'} > 1 )
+    unless ( $_[0]->{'materialized'} > 1 )
     {
-	return $_[0]->materialize_all;
+        return $_[0]->materialize_all;
     }
     return $_[0]->{'_OBJ'};
 }
@@ -586,9 +586,9 @@ The list as a list. (Not a ref) (And not realy an array either...)
 
 sub as_array
 {
-    unless( $_[0]->{'materialized'} > 1 )
+    unless ( $_[0]->{'materialized'} > 1 )
     {
-	$_[0]->materialize_all;
+        $_[0]->materialize_all;
     }
     return @{$_[0]->{'_OBJ'}};
 }
@@ -606,9 +606,9 @@ Returns the unmaterialized list as a list of elements (not ref).
 
 sub as_raw_array
 {
-    unless( $_[0]->{'populated'} > 1 )
+    unless ( $_[0]->{'populated'} > 1 )
     {
-	$_[0]->populate_all;
+        $_[0]->populate_all;
     }
     return @{$_[0]->{'_DATA'}};
 }
@@ -630,10 +630,10 @@ The raw data listref of unmateralized elements.
 
 sub populate_all
 {
-    unless( $_[0]->{'populated'} > 1 )
+    unless ( $_[0]->{'populated'} > 1 )
     {
-	$_[0]->{'_DATA'} = [];
-	$_[0]->on_populate_all;
+        $_[0]->{'_DATA'} = [];
+        $_[0]->on_populate_all;
     }
 
     return $_[0]->{'_DATA'};
@@ -651,23 +651,23 @@ sub on_populate_all
 {
     my( $l ) = @_;
 
-    $l->{'_DATA'} ||= [];  # Should have been defined
-    $l->{'populated'} = 2; # Mark as fully populated
+    $l->{'_DATA'} ||= [];       # Should have been defined
+    $l->{'populated'} = 2;      # Mark as fully populated
 
-    if( my $lim = $l->{'limit'} )
+    if ( my $lim = $l->{'limit'} )
     {
-	if( $lim < scalar(@{$l->{'_DATA'}}) )
-	{
-	    debug "LIMITING DATA SIZE TO $lim";
-	    CORE::splice @{$l->{'_DATA'}}, $lim;
-	}
+        if ( $lim < scalar(@{$l->{'_DATA'}}) )
+        {
+            debug "LIMITING DATA SIZE TO $lim";
+            CORE::splice @{$l->{'_DATA'}}, $lim;
+        }
     }
 
-    unless( $l->{'materializer'} and $l->size )
+    unless ( $l->{'materializer'} and $l->size )
     {
 #	debug "**** OBJ=DATA for ".datadump($l); ### DEBUG
-	$l->{'materialized'} = 2;
-	return $l->{'_OBJ'} = $l->{'_DATA'} ||= []; # Should have been defined
+        $l->{'materialized'} = 2;
+        return $l->{'_OBJ'} = $l->{'_DATA'} ||= []; # Should have been defined
     }
     return  $l->{'_DATA'};
 }
@@ -688,57 +688,57 @@ array ref.
 
 sub materialize_all
 {
-    if( my $level = $_[0]->{'materialized'} < 2 )
+    if ( my $level = $_[0]->{'materialized'} < 2 )
     {
-	my( $l ) = @_;
-	$l->populate_all;
-	if( my $mat = $l->{'materializer'} )
-	{
-	    my $max = $l->max();
+        my( $l ) = @_;
+        $l->populate_all;
+        if ( my $mat = $l->{'materializer'} )
+        {
+            my $max = $l->max();
 
-            if( $max >= 1000 )
+            if ( $max >= 1000 )
             {
                 $Para::Frame::REQ->note(sprintf "Materializing %d nodes", $max+1);
             }
 
-	    if( $level < 1 ) # Nothing initialized
-	    {
-		my @objs;
-		for( my $i=0; $i<=$max; $i++ )
-		{
-		    CORE::push @objs, &{$mat}( $l, $i );
+            if ( $level < 1 )   # Nothing initialized
+            {
+                my @objs;
+                for ( my $i=0; $i<=$max; $i++ )
+                {
+                    CORE::push @objs, &{$mat}( $l, $i );
                     unless( ($i+1) % 1000 )
                     {
                         $Para::Frame::REQ->note(sprintf "%5d", $i+1);
                         $Para::Frame::REQ->may_yield;
                     }
-		}
-		$l->{'_OBJ'} = \@objs;
-	    }
-	    else # partly initialized
-	    {
-		my $objs = $l->{'_OBJ'};
-		for( my $i=0; $i<=$max; $i++ )
-		{
+                }
+                $l->{'_OBJ'} = \@objs;
+            }
+            else                # partly initialized
+            {
+                my $objs = $l->{'_OBJ'};
+                for ( my $i=0; $i<=$max; $i++ )
+                {
                     unless( ($i+1) % 1000 )
                     {
                         $Para::Frame::REQ->note(sprintf "%5d", $i+1);
                         $Para::Frame::REQ->may_yield;
                     }
 
-		    next if defined $objs->[$i];
-		    $objs->[$i] = &{$mat}( $l, $i );
-		}
-	    }
+                    next if defined $objs->[$i];
+                    $objs->[$i] = &{$mat}( $l, $i );
+                }
+            }
 
-	    $l->{'materialized'} = 2;
-	}
-	else
-	{
+            $l->{'materialized'} = 2;
+        }
+        else
+        {
 #	    debug "****2 OBJ=DATA for ".datadump($l); ### DEBUG
-	    $l->{'materialized'} = 2;
-	    $l->{'_OBJ'} = $l->{'_DATA'} ||= []; # Should be defined beforee this
-	}
+            $l->{'materialized'} = 2;
+            $l->{'_OBJ'} = $l->{'_DATA'} ||= []; # Should be defined beforee this
+        }
     }
     return $_[0]->{'_OBJ'};
 }
@@ -767,29 +767,29 @@ sub from_page
 #    @pagelist = ();
 
     my $page_size = $l->page_size;
-    if( $page_size < 1 )
+    if ( $page_size < 1 )
     {
-	return $l;
+        return $l;
     }
 
     my $start = $page_size * ($page-1);
     my $end = List::Util::max( $start,
-			       List::Util::min(
-					       $start + $page_size,
-					       $l->size_limited,
-					      ) -1,
-			     );
+                               List::Util::min(
+                                               $start + $page_size,
+                                               $l->size_limited,
+                                              ) -1,
+                             );
 
     debug 2, "From $start to $end";
 
     my $res;
-    if( $end - $start >= 0 )
+    if ( $end - $start >= 0 )
     {
-	$res = $l->slice($start, $end);
+        $res = $l->slice($start, $end);
     }
     else
     {
-	$res = $l->new_empty();
+        $res = $l->new_empty();
     }
 
     return $res;
@@ -825,55 +825,55 @@ sub slice
     $args ||= $l->clone_props;
 
 #    carp "Slicing $l at $start with ".datadump($args);
-    unless( $args->{'materializer'} )
+    unless ( $args->{'materializer'} )
     {
 #	debug "Coming from ".datadump( $l ); ### DEBUG
     }
 
-    if( $l->{'populated'} > 1 )
+    if ( $l->{'populated'} > 1 )
     {
-	$end ||= $l->max;
-	if( $l->{'materialized'} > 1 )
-	{
-	    undef $args->{'materializer'}; # Already done
-	    my $data = [@{$l->{'_OBJ'}}[$start..$end]];
-	    return  $class->new($data, $args);
-	}
+        $end ||= $l->max;
+        if ( $l->{'materialized'} > 1 )
+        {
+            undef $args->{'materializer'}; # Already done
+            my $data = [@{$l->{'_OBJ'}}[$start..$end]];
+            return  $class->new($data, $args);
+        }
 
-	my $data = [@{$l->{'_DATA'}}[$start..$end]];
-	my $slize =  $class->new($data, $args);
+        my $data = [@{$l->{'_DATA'}}[$start..$end]];
+        my $slize =  $class->new($data, $args);
 
-	if( $l->{'materialized'} == 1 ) # partly
-	{
-	    $slize->{'_OBJ'} = [@{$l->{'_OBJ'}}[$start..$end]];
-	    $slize->{'materialized'} = 1;
-	}
+        if ( $l->{'materialized'} == 1 ) # partly
+        {
+            $slize->{'_OBJ'} = [@{$l->{'_OBJ'}}[$start..$end]];
+            $slize->{'materialized'} = 1;
+        }
 
-	return $slize;
+        return $slize;
     }
     else
     {
-	my @data;
-	$l->set_index( $start - 1 );
+        my @data;
+        $l->set_index( $start - 1 );
 
-	$end ||= $l->{'limit'};
-	if( $end )
-	{
-	    while( my $raw = $l->get_next_raw() )
-	    {
-		CORE::push @data, $raw;
-		last if $l->index >= $end;
-	    }
-	}
-	else
-	{
-	    while( my $raw = $l->get_next_raw() )
-	    {
-		CORE::push @data, $raw;
-	    }
-	}
+        $end ||= $l->{'limit'};
+        if ( $end )
+        {
+            while ( my $raw = $l->get_next_raw() )
+            {
+                CORE::push @data, $raw;
+                last if $l->index >= $end;
+            }
+        }
+        else
+        {
+            while ( my $raw = $l->get_next_raw() )
+            {
+                CORE::push @data, $raw;
+            }
+        }
 
-	return $class->new(\@data, $args);
+        return $class->new(\@data, $args);
     }
 }
 
@@ -897,22 +897,22 @@ sub set_index
 {
     my( $l, $pos ) = @_;
 
-    if( $pos < -1 )
+    if ( $pos < -1 )
     {
-	throw('out_of_range', "Position $pos invalid");
+        throw('out_of_range', "Position $pos invalid");
     }
 
     my $max = $l->max;
 
-    if( $pos > $max + 1 )
+    if ( $pos > $max + 1 )
     {
-	throw('out_of_range', "Position $pos invalid");
+        throw('out_of_range', "Position $pos invalid");
     }
 
-    if( $pos == -1 )
+    if ( $pos == -1 )
     {
-	$l->reset;
-	return -1;
+        $l->reset;
+        return -1;
     }
 
     return $l->{'INDEX'} = $pos;
@@ -934,10 +934,10 @@ sub store
 {
     my( $l ) = @_;
 
-    unless( $l->{'stored_id'} )
+    unless ( $l->{'stored_id'} )
     {
-	my $session =  $Para::Frame::REQ->user->session;
-	my $id = $session->{'listid'} ++;
+        my $session =  $Para::Frame::REQ->user->session;
+        my $id = $session->{'listid'} ++;
 
 #	# Remove previous from cache
 #	if( my $prev = delete $session->{list}{$id - 1} )
@@ -945,10 +945,10 @@ sub store
 #	    debug "Removed $prev (".($id-1).")";
 #	}
 
-	$l->{'stored_id'} = $id;
-	$l->{stored_time} = time;
+        $l->{'stored_id'} = $id;
+        $l->{stored_time} = time;
 
-	$session->{'list'}{$id} = $l;
+        $session->{'list'}{$id} = $l;
 
 #	debug "storing list $id";
     }
@@ -1011,9 +1011,9 @@ sub pages
     my( $l ) = @_;
 
     my $page_size = $l->page_size;
-    if( $page_size < 1 )
+    if ( $page_size < 1 )
     {
-	return 1;
+        return 1;
     }
 
     my $pages = int( $l->max_limited / $page_size ) + 1;
@@ -1022,9 +1022,9 @@ sub pages
 #    debug "max_limited = ".$l->max_limited;
 #    debug "pages = ".$pages;
 
-    if( my $lim = $l->limit_pages )
+    if ( my $lim = $l->limit_pages )
     {
-	return List::Util::min( $lim, $pages );
+        return List::Util::min( $lim, $pages );
     }
 
     return $pages;
@@ -1093,9 +1093,9 @@ sub pagelist
     my $dpages = $l->display_pages;
     my $pages = $l->pages;
 
-    if( $pages <= 1 )
+    if ( $pages <= 1 )
     {
-	return "";
+        return "";
     }
 
     my $startpage = List::Util::max( $pagenum - $dpages/2, 1);
@@ -1111,50 +1111,50 @@ sub pagelist
 
     my $out = "<span class=\"paraframe_pagelist\">";
 
-    if( $pagenum == 1 )
+    if ( $pagenum == 1 )
     {
 #	$out .= "First";
     }
     else
     {
-	$out .= forward("<", $me, {use_cached=>$id, table_page => ($pagenum-1), tag_attr=>{class=>"paraframe_previous"}});
+        $out .= forward("<", $me, {use_cached=>$id, table_page => ($pagenum-1), tag_attr=>{class=>"paraframe_previous"}});
 #	$out .= forward("First", $me, {use_cached=>$id, page => 1});
-	$out .= " ";
+        $out .= " ";
     }
-    if( $startpage != 1 )
+    if ( $startpage != 1 )
     {
-	$out .= forward(1, $me, {use_cached=>$id, table_page => 1});
-	$out .= " ...";
+        $out .= forward(1, $me, {use_cached=>$id, table_page => 1});
+        $out .= " ...";
     }
 
     foreach my $p ( $startpage .. $endpage )
     {
-	if( $p == $pagenum )
-	{
-	    $out .= " <span class=\"selected\">$p</span>";
-	}
-	else
-	{
-	    $out .= " ";
-	    $out .= forward($p, $me, {use_cached=>$id, table_page => $p});
-	}
+        if ( $p == $pagenum )
+        {
+            $out .= " <span class=\"selected\">$p</span>";
+        }
+        else
+        {
+            $out .= " ";
+            $out .= forward($p, $me, {use_cached=>$id, table_page => $p});
+        }
     }
 
-    if( $endpage != $pages )
+    if ( $endpage != $pages )
     {
-	$out .= " ... ";
-	$out .= forward($pages, $me, {use_cached=>$id, table_page => $pages});
+        $out .= " ... ";
+        $out .= forward($pages, $me, {use_cached=>$id, table_page => $pages});
     }
 
-    if( $pagenum == $pages )
+    if ( $pagenum == $pages )
     {
 #	$out .= "  Sist";
     }
     else
     {
-	$out .= " ";
+        $out .= " ";
 #	$out .= forward("Sist", $me, {use_cached=>$id, page => $pages});
-	$out .= forward(">", $me, {use_cached=>$id, table_page => ($pagenum+1), tag_attr=>{class=>"paraframe_next"}});
+        $out .= forward(">", $me, {use_cached=>$id, table_page => ($pagenum+1), tag_attr=>{class=>"paraframe_next"}});
     }
 
     return $out . "</span>";
@@ -1304,39 +1304,39 @@ sub as_string
     unless( ref $l )
     {
 #	warn "  returning $l\n";
-	return $l;
+        return $l;
     }
 
     my $list = $l->as_arrayref;
 
     my $val = "";
 
-    if( $#$list ) # More than one element
+    if ( $#$list )              # More than one element
     {
-	for( my $i = 0; $i<= $#$list; $i++)
-	{
-	    $val .= "* ";
-	    if( ref $list->[$i] )
-	    {
-		$val .= $list->[$i]->as_string;
-	    }
-	    else
-	    {
-		$val .= $list->[$i];
-	    }
-	    $val .= "\n";
-	}
+        for ( my $i = 0; $i<= $#$list; $i++)
+        {
+            $val .= "* ";
+            if ( ref $list->[$i] )
+            {
+                $val .= $list->[$i]->as_string;
+            }
+            else
+            {
+                $val .= $list->[$i];
+            }
+            $val .= "\n";
+        }
     }
     else
     {
-	if( ref $list->[0] )
-	{
-	    $val .= $list->[0]->as_string;
-	}
-	else
-	{
-	    $val .= $list->[0];
-	}
+        if ( ref $list->[0] )
+        {
+            $val .= $list->[0]->as_string;
+        }
+        else
+        {
+            $val .= $list->[0];
+        }
     }
 
     return $val;
@@ -1380,21 +1380,21 @@ sub set_limit
 {
     my( $l, $limit ) = @_;
 
-    if( $limit )
+    if ( $limit )
     {
-	if( $limit < $l->size )
-	{
-	    if( $l->{'populated'} > 1 )
-	    {
-		# Changes the array size
-		$#{$l->{'_DATA'}} = ($limit-1);
+        if ( $limit < $l->size )
+        {
+            if ( $l->{'populated'} > 1 )
+            {
+                # Changes the array size
+                $#{$l->{'_DATA'}} = ($limit-1);
 
-		if( $l->{'materialized'} )
-		{
-		    $#{$l->{'_OBJ'}} = ($limit-1);
-		}
-	    }
-	}
+                if ( $l->{'materialized'} )
+                {
+                    $#{$l->{'_OBJ'}} = ($limit-1);
+                }
+            }
+        }
     }
 
     return $l->{'limit'} = $limit || 0;
@@ -1446,9 +1446,9 @@ sub get_first
 
 #    debug "GETTING first element of list";
 
-    if( $l->{'INDEX'} > -1 )
+    if ( $l->{'INDEX'} > -1 )
     {
-	$l->reset;
+        $l->reset;
     }
 
     # Should only return all values from get_next
@@ -1574,22 +1574,22 @@ sub get_next
 
     my( $elem, $status ) = $l->get_next_raw;
 
-    if( $status )
+    if ( $status )
     {
 #	debug "GET_NEXT got a status $status";
-	return( $elem, $status );
+        return( $elem, $status );
     }
 
     my $i = $l->{'INDEX'};
 
-    if( my $mat = $l->{'materializer'} )
+    if ( my $mat = $l->{'materializer'} )
     {
-	$l->{'materialized'} ||= 1;
-	return $l->{'_OBJ'}[ $i ] ||= &{$mat}( $l, $i );
+        $l->{'materialized'} ||= 1;
+        return $l->{'_OBJ'}[ $i ] ||= &{$mat}( $l, $i );
     }
     else
     {
-	return $elem;
+        return $elem;
     }
 }
 
@@ -1634,18 +1634,18 @@ sub get_next_raw
 #    debug "MAX is $max";
 #    debug "INDEX is $i";
 
-    if( $i > $max )
+    if ( $i > $max )
     {
-	# Compatible with Template::Iterator
-	return(undef, Template::Constants::STATUS_DONE);   ## RETURN ##
+        # Compatible with Template::Iterator
+        return(undef, Template::Constants::STATUS_DONE); ## RETURN ##
     }
 
-    unless( $l->{'populated'} > 1 )
+    unless ( $l->{'populated'} > 1 )
     {
-	$l->populate_all;
+        $l->populate_all;
     }
 
-    return $l->{'_DATA'}[$i]; # Error val undef = no error
+    return $l->{'_DATA'}[$i];   # Error val undef = no error
 }
 
 
@@ -1676,20 +1676,20 @@ sub get_prev
 
     my( $elem, $status ) = $l->get_prev_raw;
 
-    if( $status )
+    if ( $status )
     {
-	return( $elem, $status );
+        return( $elem, $status );
     }
 
     my $i = $l->{'INDEX'};
-    if( my $mat = $l->{'materializer'} )
+    if ( my $mat = $l->{'materializer'} )
     {
-	$l->{'materialized'} ||= 1;
-	return $l->{'_OBJ'}[ $i ] ||= &{$mat}( $l, $i );
+        $l->{'materialized'} ||= 1;
+        return $l->{'_OBJ'}[ $i ] ||= &{$mat}( $l, $i );
     }
     else
     {
-	return $elem;
+        return $elem;
     }
 }
 
@@ -1729,15 +1729,15 @@ sub get_prev_raw
 
     my $i = -- $l->{'INDEX'};
 
-    if( $i < 0 )
+    if ( $i < 0 )
     {
-	# Compatible with Template::Iterator
-	return(undef, Template::Constants::STATUS_DONE);   ## RETURN ##
+        # Compatible with Template::Iterator
+        return(undef, Template::Constants::STATUS_DONE); ## RETURN ##
     }
 
-    unless( $l->{'populated'} > 1 )
+    unless ( $l->{'populated'} > 1 )
     {
-	$l->populate_all;
+        $l->populate_all;
     }
 
     return $l->{'_DATA'}[$i];
@@ -1779,20 +1779,20 @@ sub get_all
     debug "get_all - index $index max $#{$l->{_DATA}}";
 
     # if there's still some data to go...
-    if( $index < $max )
+    if ( $index < $max )
     {
-	$l->materialize_all;
+        $l->materialize_all;
 
         $index++;
         my @data = @{ $l->{'_OBJ'} }[ $index .. $max ];
-	$l->{'INDEX'} = $max;
+        $l->{'INDEX'} = $max;
 
-        return \@data;                                      ## RETURN ##
+        return \@data;          ## RETURN ##
     }
     else
     {
-	# Compatible with Template::Iterator
-        return (undef, Template::Constants::STATUS_DONE);   ## RETURN ##
+        # Compatible with Template::Iterator
+        return (undef, Template::Constants::STATUS_DONE); ## RETURN ##
     }
 }
 
@@ -1818,9 +1818,9 @@ The number of elements in this list
 sub size
 {
 #    carp "* Fetching size of List";
-    unless( $_[0]->{'populated'} > 1 )
+    unless ( $_[0]->{'populated'} > 1 )
     {
-	$_[0]->populate_all;
+        $_[0]->populate_all;
     }
 
     return scalar @{$_[0]->{'_DATA'}};
@@ -1839,14 +1839,14 @@ Returns: the L</size>, constraining to given L</limit_display>
 
 sub size_limited
 {
-    unless( $_[0]->{'populated'} > 1 )
+    unless ( $_[0]->{'populated'} > 1 )
     {
-	$_[0]->populate_all;
+        $_[0]->populate_all;
     }
 
-    if( my $lim = $_[0]->{'limit_display'} )
+    if ( my $lim = $_[0]->{'limit_display'} )
     {
-	return List::Util::min( $lim, scalar(@{$_[0]->{'_DATA'}}));
+        return List::Util::min( $lim, scalar(@{$_[0]->{'_DATA'}}));
     }
 
     return scalar(@{$_[0]->{'_DATA'}});
@@ -1881,9 +1881,9 @@ L<Template::Manual::VMethods/List Virtual Methods>
 
 sub max
 {
-    unless( $_[0]->{'populated'} > 1 )
+    unless ( $_[0]->{'populated'} > 1 )
     {
-	$_[0]->populate_all;
+        $_[0]->populate_all;
     }
 
     return $#{$_[0]->{'_DATA'}};
@@ -1902,14 +1902,14 @@ Returns: the L</max>, constraining to given L</limit_display>
 
 sub max_limited
 {
-    unless( $_[0]->{'populated'} > 1 )
+    unless ( $_[0]->{'populated'} > 1 )
     {
-	$_[0]->populate_all;
+        $_[0]->populate_all;
     }
 
-    if( my $lim = $_[0]->{'limit_display'} )
+    if ( my $lim = $_[0]->{'limit_display'} )
     {
-	return List::Util::min( ($lim-1), $#{$_[0]->{'_DATA'}});
+        return List::Util::min( ($lim-1), $#{$_[0]->{'_DATA'}});
     }
 
     return $#{$_[0]->{'_DATA'}};
@@ -2209,28 +2209,28 @@ sub randomized
     my( $l ) = @_;
 
     my $apply_limit;
-    unless( $l->{'populated'} > 1 )
+    unless ( $l->{'populated'} > 1 )
     {
-	# Apply limit AFTER randomization
-	debug "    populating";
-	$apply_limit = $l->{'limit'};
-	$l->{'limit'} = 0;
-	$l->populate_all;
+        # Apply limit AFTER randomization
+        debug "    populating";
+        $apply_limit = $l->{'limit'};
+        $l->{'limit'} = 0;
+        $l->populate_all;
     }
 
     my $args = $l->clone_props;
     my $data = $l->{'_DATA'};
 
-    if( $l->{'materialized'} > 1 )
+    if ( $l->{'materialized'} > 1 )
     {
 #	debug "    using materialized list";
-	undef $args->{'materializer'}; # Already done
-	$data = $l->{'_OBJ'};
+        undef $args->{'materializer'}; # Already done
+        $data = $l->{'_OBJ'};
     }
 
-    if( $apply_limit )
+    if ( $apply_limit )
     {
-	$l->set_limit( $apply_limit );
+        $l->set_limit( $apply_limit );
     }
 
 #    debug "Returning randomized list";
@@ -2305,9 +2305,9 @@ sub shift
     my $element = $l->get_first;
 
     CORE::shift( @{$l->{'_OBJ'}} );
-    if( $l->{'_OBJ'} ne $l->{'_DATA'} )
+    if ( $l->{'_OBJ'} ne $l->{'_DATA'} )
     {
-	CORE::shift( @{$l->{'_DATA'}} );
+        CORE::shift( @{$l->{'_DATA'}} );
     }
 
     return $element;
@@ -2327,9 +2327,9 @@ sub pop
     my $element = $l->get_last;
 
     CORE::pop( @{$l->{'_OBJ'}} );
-    if( $l->{'_OBJ'} ne $l->{'_DATA'} )
+    if ( $l->{'_OBJ'} ne $l->{'_DATA'} )
     {
-	CORE::pop( @{$l->{'_DATA'}} );
+        CORE::pop( @{$l->{'_DATA'}} );
     }
 
     return $element;
@@ -2348,22 +2348,22 @@ sub unshift
 
     $l->reset;
     CORE::unshift( @{$l->{'_DATA'}}, @_ );
-    if( $l->{'_OBJ'} ne $l->{'_DATA'} )
+    if ( $l->{'_OBJ'} ne $l->{'_DATA'} )
     {
-	if( my $mat = $l->{'materializer'} )
-	{
-	    if( $l->{'materialized'} > 0 )
-	    {
-		# Insert undef values
-		CORE::unshift( @{$l->{'_OBJ'}}, map{undef} @_ );
+        if ( my $mat = $l->{'materializer'} )
+        {
+            if ( $l->{'materialized'} > 0 )
+            {
+                # Insert undef values
+                CORE::unshift( @{$l->{'_OBJ'}}, map{undef} @_ );
 
-		my $objs = $l->{'_OBJ'};
-		for( my $i=0; $i<=$#_; $i++ )
-		{
-		    $objs->[$i] = &{$mat}( $l, $i );
-		}
-	    }
-	}
+                my $objs = $l->{'_OBJ'};
+                for ( my $i=0; $i<=$#_; $i++ )
+                {
+                    $objs->[$i] = &{$mat}( $l, $i );
+                }
+            }
+        }
     }
 
     return scalar(@_);
@@ -2388,24 +2388,24 @@ sub push
     my $pos = $l->max + 1;
 
     CORE::push( @{$l->{'_DATA'}}, @_ );
-    if( $l->{'_OBJ'} ne $l->{'_DATA'} )
+    if ( $l->{'_OBJ'} ne $l->{'_DATA'} )
     {
-	if( my $mat = $l->{'materializer'} )
-	{
-	    if( $l->{'materialized'} > 0 )
-	    {
-		my $objs = $l->{'_OBJ'};
-		my $max = $l->max;
-		for( my $i=$pos; $i<=$max; $i++ )
-		{
-		    $objs->[$i] = &{$mat}( $l, $i );
-		}
-	    }
-	}
-	else
-	{
-	    CORE::push( @{$l->{'_OBJ'}}, @_ );
-	}
+        if ( my $mat = $l->{'materializer'} )
+        {
+            if ( $l->{'materialized'} > 0 )
+            {
+                my $objs = $l->{'_OBJ'};
+                my $max = $l->max;
+                for ( my $i=$pos; $i<=$max; $i++ )
+                {
+                    $objs->[$i] = &{$mat}( $l, $i );
+                }
+            }
+        }
+        else
+        {
+            CORE::push( @{$l->{'_OBJ'}}, @_ );
+        }
     }
 
     return scalar(@_);
@@ -2431,32 +2431,33 @@ sub push_uniq
     $l->materialize_all;
     my @new;
 
-    while( my $target = CORE::shift )
+    while ( my $target = CORE::shift )
     {
-	my $found=0;
-	my( $value, $error ) = $l->get_first;
-	while(! $error )
-	{
-	    if( $value eq $target )
-	    {
-		$found++;
-		last;
-	    }
-	}
-	continue
-	{
-	    ( $value, $error ) = $l->get_next;
-	};
+        my $found=0;
+        my( $value, $error ) = $l->get_first;
+        while (! $error )
+        {
+            if ( $value eq $target )
+            {
+                $found++;
+                last;
+            }
+        }
+        continue
+        {
+            ( $value, $error ) = $l->get_next;
+        }
+        ;
 
-	unless( $found )
-	{
-	    CORE::push @new, $target;
-	}
+        unless( $found )
+        {
+            CORE::push @new, $target;
+        }
     }
 
-    if( @new )
+    if ( @new )
     {
-	$l->push( @new );
+        $l->push( @new );
     }
 
     return scalar( @new );
@@ -2482,32 +2483,33 @@ sub unshift_uniq
     $l->materialize_all;
     my @new;
 
-    while( my $target = CORE::shift )
+    while ( my $target = CORE::shift )
     {
-	my $found=0;
-	my( $value, $error ) = $l->get_first;
-	while(! $error )
-	{
-	    if( $value eq $target )
-	    {
-		$found++;
-		last;
-	    }
-	}
-	continue
-	{
-	    ( $value, $error ) = $l->get_next;
-	};
+        my $found=0;
+        my( $value, $error ) = $l->get_first;
+        while (! $error )
+        {
+            if ( $value eq $target )
+            {
+                $found++;
+                last;
+            }
+        }
+        continue
+        {
+            ( $value, $error ) = $l->get_next;
+        }
+        ;
 
-	unless( $found )
-	{
-	    CORE::push @new, $target;
-	}
+        unless( $found )
+        {
+            CORE::push @new, $target;
+        }
     }
 
-    if( @new )
+    if ( @new )
     {
-	$l->unshift( @new );
+        $l->unshift( @new );
     }
 
     return scalar( @new );
@@ -2561,13 +2563,13 @@ sub complement
 
     my %keys;
     my( $val2, $err2 ) = $l2->get_first;
-    while(! $err2 )
+    while (! $err2 )
     {
-	$keys{$val2}++;
+        $keys{$val2}++;
     }
     continue
     {
-	( $val2, $err2 ) = $l2->get_next;
+        ( $val2, $err2 ) = $l2->get_next;
     }
     $l2->reset;
 
@@ -2575,16 +2577,16 @@ sub complement
 
     my @new;
     my( $val, $err ) = $l->get_first;
-    while(! $err )
+    while (! $err )
     {
 #	debug "  looking at $val";
-	next if $keys{$val};
+        next if $keys{$val};
 #	debug "    added";
-	CORE::push @new, $val;
+        CORE::push @new, $val;
     }
     continue
     {
-	( $val, $err ) = $l->get_next;
+        ( $val, $err ) = $l->get_next;
     }
     $l->reset;
 
@@ -2610,32 +2612,33 @@ sub uniq
     my %seen;
     my @new;
 
-    if( $l->{'INDEX'} > -1 )
+    if ( $l->{'INDEX'} > -1 )
     {
-	$l->reset;
+        $l->reset;
     }
 
     my( $value, $error ) = $l->get_next_raw;
-    while(! $error )
+    while (! $error )
     {
-	next if $seen{$value};
-	$seen{$value} ++;
-	CORE::push @new, $value;
+        next if $seen{$value};
+        $seen{$value} ++;
+        CORE::push @new, $value;
     }
     continue
     {
-	( $value, $error ) = $l->get_next_raw;
-    };
+        ( $value, $error ) = $l->get_next_raw;
+    }
+    ;
 
-    if( $#new < $l->max )
+    if ( $#new < $l->max )
     {
-	my $args = $l->clone_props;
-	return $l->new(\@new, $args);
+        my $args = $l->clone_props;
+        return $l->new(\@new, $args);
     }
     else
     {
-	$l->reset;
-	return $l;
+        $l->reset;
+        return $l;
     }
 }
 
@@ -2672,75 +2675,77 @@ sub merge
 
     foreach my $l2 ( $l, @_ )
     {
-	# First iteration compares args with itself
-	unless( $materialize )
-	{
-	    # If there are different materializers, materialize the
-	    # list we got so far and materialize the rest as we go
-	    # along.
-	    # TODO: test with lists with different materializers
+        # First iteration compares args with itself
+        unless( $materialize )
+        {
+            # If there are different materializers, materialize the
+            # list we got so far and materialize the rest as we go
+            # along.
+            # TODO: test with lists with different materializers
 
-	    if( my $mat2 = $l2->{'materializer'} )
-	    {
-		if( my $mat1 = $args->{'materializer'} )
-		{
-		    if( $mat1 ne $mat2 )
-		    {
-			$materialize = 1;
-			my $n = $l->new(\@new, $args);
-			my @objs = ();
-			for( my $i=0; $i<=$#new; $i++ )
-			{
-			    CORE::push @objs, &{$mat1}( $n, $i );
-			}
-			@new = @objs;
-			$args->{'materializer'} = undef;
-		    }
-		}
-		else
-		{
-		    $args->{'materializer'} = $mat2;
-		}
-	    }
-	}
+            if ( my $mat2 = $l2->{'materializer'} )
+            {
+                if ( my $mat1 = $args->{'materializer'} )
+                {
+                    if ( $mat1 ne $mat2 )
+                    {
+                        $materialize = 1;
+                        my $n = $l->new(\@new, $args);
+                        my @objs = ();
+                        for ( my $i=0; $i<=$#new; $i++ )
+                        {
+                            CORE::push @objs, &{$mat1}( $n, $i );
+                        }
+                        @new = @objs;
+                        $args->{'materializer'} = undef;
+                    }
+                }
+                else
+                {
+                    $args->{'materializer'} = $mat2;
+                }
+            }
+        }
 
-	if( UNIVERSAL::isa($l2, 'Para::Frame::List' ) )
-	{
-	    if( $l2->{'INDEX'} > -1 )
-	    {
-		$l2->reset;
-	    }
+        if ( UNIVERSAL::isa($l2, 'Para::Frame::List' ) )
+        {
+            if ( $l2->{'INDEX'} > -1 )
+            {
+                $l2->reset;
+            }
 
-	    if( $materialize )
-	    {
-		my( $value, $error ) = $l2->get_next;
-		while(! $error )
-		{
-		    CORE::push @new, $value;
-		}
-		continue
-		{
-		    ( $value, $error ) = $l2->get_next;
-		};
-	    }
-	    else
-	    {
-		my( $value, $error ) = $l2->get_next_raw;
-		while(! $error )
-		{
-		    CORE::push @new, $value;
-		}
-		continue
-		{
-		    ( $value, $error ) = $l2->get_next_raw;
-		};
-	    }
-	}
-	elsif( UNIVERSAL::isa($l2, 'ARRAY' ) )
-	{
-	    CORE::push @new, @$l2;
-	}
-	# else ignore...
+            if ( $materialize )
+            {
+                my( $value, $error ) = $l2->get_next;
+                while (! $error )
+                {
+                    CORE::push @new, $value;
+                }
+                continue
+                {
+                    ( $value, $error ) = $l2->get_next;
+                }
+                ;
+            }
+            else
+            {
+                my( $value, $error ) = $l2->get_next_raw;
+                while (! $error )
+                {
+                    CORE::push @new, $value;
+                }
+                continue
+                {
+                    ( $value, $error ) = $l2->get_next_raw;
+                }
+                ;
+            }
+        }
+        elsif ( UNIVERSAL::isa($l2, 'ARRAY' ) )
+        {
+            CORE::push @new, @$l2;
+        }
+        # else ignore...
     }
 
     return $l->new(\@new, $args);
@@ -2772,31 +2777,31 @@ sub reverse
 
     $l->populate_all;
 
-    if( $l->{'_OBJ'} eq $l->{'_DATA'} )
+    if ( $l->{'_OBJ'} eq $l->{'_DATA'} )
     {
-	return $l->new([CORE::reverse @{$l->{'_OBJ'}}], $args);
+        return $l->new([CORE::reverse @{$l->{'_OBJ'}}], $args);
     }
-    elsif( $l->{'materialized'} )
+    elsif ( $l->{'materialized'} )
     {
-	my $oidx = $#{$l->{'_OBJ'}};
-	my $didx = $#{$l->{'_DATA'}};
+        my $oidx = $#{$l->{'_OBJ'}};
+        my $didx = $#{$l->{'_DATA'}};
 
-	if( $oidx != $didx )
-	{
-	    for( my $i=$oidx+1; $i <= $didx; $i++ )
-	    {
-		$l->{'_OBJ'}[$i] = undef;
-	    }
-	}
+        if ( $oidx != $didx )
+        {
+            for ( my $i=$oidx+1; $i <= $didx; $i++ )
+            {
+                $l->{'_OBJ'}[$i] = undef;
+            }
+        }
 
-	my $new = $l->new([CORE::reverse @{$l->{'_DATA'}}], $args);
-	$new->{'_OBJ'} = [ CORE::reverse @{$l->{'_OBJ'}} ];
-	$new->{'materialized'} = $l->{'materialized'};
-	return $new;
+        my $new = $l->new([CORE::reverse @{$l->{'_DATA'}}], $args);
+        $new->{'_OBJ'} = [ CORE::reverse @{$l->{'_OBJ'}} ];
+        $new->{'materialized'} = $l->{'materialized'};
+        return $new;
     }
     else
     {
-	return $l->new([CORE::reverse @{$l->{'_DATA'}}], $args);
+        return $l->new([CORE::reverse @{$l->{'_DATA'}}], $args);
     }
 }
 
@@ -2826,25 +2831,25 @@ sub flatten
 
     foreach my $elem ( @$list_in )
     {
-	if( ref $elem )
-	{
-	    if( UNIVERSAL::isa $elem, 'Para::Frame::List' )
-	    {
-		CORE::push @list_out, $elem->flatten()->as_array;
-	    }
-	    elsif( ref $elem eq 'ARRAY' )
-	    {
-		CORE::push @list_out, @$elem;
-	    }
-	    else
-	    {
-		CORE::push @list_out, $elem;
-	    }
-	}
-	else
-	{
-	    CORE::push @list_out, $elem;
-	}
+        if ( ref $elem )
+        {
+            if ( UNIVERSAL::isa $elem, 'Para::Frame::List' )
+            {
+                CORE::push @list_out, $elem->flatten()->as_array;
+            }
+            elsif ( ref $elem eq 'ARRAY' )
+            {
+                CORE::push @list_out, @$elem;
+            }
+            else
+            {
+                CORE::push @list_out, $elem;
+            }
+        }
+        else
+        {
+            CORE::push @list_out, $elem;
+        }
     }
 
     return $list_in->new( \@list_out, $list_in->clone_props );
@@ -2893,13 +2898,13 @@ sub resort
         return $list->new_empty();
     }
 
-    if( my $q = $Para::Frame::REQ->q )
+    if ( my $q = $Para::Frame::REQ->q )
     {
-	$sortargs ||= $q->param('order');
-	unless( ref $sortargs )
-	{
-	    $dir ||= $q->param('direction');
-	}
+        $sortargs ||= $q->param('order');
+        unless( ref $sortargs )
+        {
+            $dir ||= $q->param('direction');
+        }
     }
 
     my( $sort_str, $sort_key );
@@ -2910,18 +2915,18 @@ sub resort
 #    debug "sort_key: $sort_key";
 #    debug "prev key: ".($list->{'sorted_on_key'}||'');
 
-    if( $sort_key eq ($list->{'sorted_on_key'}||'') )
+    if ( $sort_key eq ($list->{'sorted_on_key'}||'') )
     {
-	debug "SAME SORT";
-	return $list;
+        debug "SAME SORT";
+        return $list;
     }
 
     my $new = $list->sorted($sortargs,
-			    {
-			     sort_str => $sort_str,
-			     sort_key => $sort_key,
-			     dir => $dir,
-			    });
+                            {
+                             sort_str => $sort_str,
+                             sort_key => $sort_key,
+                             dir => $dir,
+                            });
 
     $list->{'index'} = -1;
     $list->{'materialized'} = $new->{'materialized'};
@@ -2952,9 +2957,9 @@ sub sysdesig
 #    warn "Stringifies object ".ref($_[0])."\n"; ### DEBUG
     return CORE::join ' / ', map
     {
-	UNIVERSAL::can($_, 'sysdesig') ?
-	    $_->sysdesig($_[1]) :
-	      $_;
+        UNIVERSAL::can($_, 'sysdesig') ?
+            $_->sysdesig($_[1]) :
+              $_;
     } $_[0]->as_array;
 }
 
@@ -2972,7 +2977,7 @@ sub sum
     my( $l ) = @_;
     my $sum = 0;
     my( $val, $err ) = $l->get_first;
-    while(! $err )
+    while (! $err )
     {
         unless( looks_like_number $val )
         {
@@ -2982,7 +2987,7 @@ sub sum
     }
     continue
     {
-	( $val, $err ) = $l->get_next;
+        ( $val, $err ) = $l->get_next;
     }
 
     return $sum;
@@ -3240,16 +3245,16 @@ AUTOLOAD
     my @templist = ();
     foreach my $elem ( @{$l->{'_OBJ'}} )
     {
-	next unless $elem;
-	my $res = $elem->$method(@_);
-	if( UNIVERSAL::isa( $res, 'Para::Frame::List' ) )
-	{
-	    CORE::push @templist, $res->as_array;
-	}
-	else
-	{
-	    CORE::push @templist, $res;
-	}
+        next unless $elem;
+        my $res = $elem->$method(@_);
+        if ( UNIVERSAL::isa( $res, 'Para::Frame::List' ) )
+        {
+            CORE::push @templist, $res->as_array;
+        }
+        else
+        {
+            CORE::push @templist, $res;
+        }
     }
 
     return $l->new(\@templist);
@@ -3258,7 +3263,7 @@ AUTOLOAD
 
 ##############################################################################
 
-1;
+  1;
 
 =head1 SEE ALSO
 
