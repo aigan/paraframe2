@@ -26,20 +26,20 @@ use IO::Socket 1.18;
 use IO::Select;
 use Socket;
 use POSIX qw( locale_h WNOHANG BUFSIZ );
-use Text::Autoformat; #exports autoformat()
+use Text::Autoformat;           #exports autoformat()
 use Time::HiRes qw( time usleep );
 use Carp qw( cluck confess carp croak longmess );
 use Sys::CpuLoad;
 use DateTime::TimeZone;
 use DateTime::Format::Strptime;
 use Cwd qw( abs_path );
-use File::Basename; # dirname
+use File::Basename;             # dirname
 #use Template::Stash::ForceUTF8;
 #use FreezeThaw qw( thaw );
 use Storable qw( thaw );
 use Number::Format;
 
-our $VERSION = "1.31"; # Paraframe version
+our $VERSION = "1.31";          # Paraframe version
 
 
 use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir client_str );
@@ -69,11 +69,11 @@ use constant BGJOB_CPU      =>   2.0;
 our $SERVER     ;
 our $DEBUG      ;
 our $INDENT     ;
-our @JOBS       ;  ##not used...
-our %REQUEST    ;  # key is $client or 'background-...'
-our %RESPONSE   ;  # Holds client response for req and subreq
+our @JOBS       ;           ##not used...
+our %REQUEST    ;           # key is $client or 'background-...'
+our %RESPONSE   ;           # Holds client response for req and subreq
 our $REQ        ;
-our $REQ_LAST   ;  # Remeber last $REQ beyond a undef $REQ
+our $REQ_LAST   ;              # Remeber last $REQ beyond a undef $REQ
 our $U          ;
 our $REQNUM     ;
 our %SESSION    ;
@@ -87,12 +87,12 @@ our %CHILD      ;
 our $LEVEL      ;
 our $BGJOBDATE  ;
 our $BGJOBNR    ;
-our @BGJOBS_PENDING;       # New jobs to be added in background
+our @BGJOBS_PENDING;            # New jobs to be added in background
 our $TERMINATE  ;
 our $MEMORY     ;
-our $IN_STARTUP ;          # True until we reach the watchdog loop
-our $ACTIVE_PIDFILE;       # The PID indicated by existing pidfile
-our $LAST       ;          # The last entering of the main loop
+our $IN_STARTUP ;              # True until we reach the watchdog loop
+our $ACTIVE_PIDFILE;           # The PID indicated by existing pidfile
+our $LAST       ;              # The last entering of the main loop
 our %WORKER     ;
 our @WORKER_IDLE;
 
@@ -167,28 +167,28 @@ BEGIN
 {
     # Initializing hooks. For determining that they exists
     foreach my $hook (qw( on_startup
-			  on_memory
-			  on_error_detect
-			  on_fork
-			  done
+                          on_memory
+                          on_error_detect
+                          on_fork
+                          done
                           before_user_login
-			  user_login
-			  before_user_logout
-			  after_user_logout
-			  after_db_connect
-			  before_db_commit
-			  after_db_rollback
-			  before_switch_req
-			  before_render_output
-			  busy_background_job
-			  add_background_jobs
-			  after_bookmark
-			  after_action_success
-			  on_first_response
+                          user_login
+                          before_user_logout
+                          after_user_logout
+                          after_db_connect
+                          before_db_commit
+                          after_db_rollback
+                          before_switch_req
+                          before_render_output
+                          busy_background_job
+                          add_background_jobs
+                          after_bookmark
+                          after_action_success
+                          on_first_response
                           on_reload
-                        ))
+                       ))
     {
-	$HOOK{$hook} ||= [];
+        $HOOK{$hook} ||= [];
     }
 }
 
@@ -204,9 +204,9 @@ sub startup
 
     # Site pages
     #
-    unless( $Para::Frame::CFG->{'site_class'}->get('default') )
+    unless ( $Para::Frame::CFG->{'site_class'}->get('default') )
     {
-	croak "No default site registred";
+        croak "No default site registred";
     }
 
 
@@ -214,12 +214,12 @@ sub startup
 
     # Set up the tcp server. Must do this before chroot.
     $SERVER= IO::Socket::INET->new(
-				   LocalPort  => $port,
-				   Proto      => 'tcp',
-				   Listen     => 10,    # max 5? max 128?
-				   ReuseAddr  => 1,
-				   )
-	or (die "Cannot connect to socket $port: $@\n");
+                                   LocalPort  => $port,
+                                   Proto      => 'tcp',
+                                   Listen     => 10, # max 5? max 128?
+                                   ReuseAddr  => 1,
+                                  )
+      or (die "Cannot connect to socket $port: $@\n");
 
     warn "Connected to port $port\n";
 
@@ -240,9 +240,9 @@ sub startup
     $Template::BINMODE = ':utf8';
 
     # Start up workers early in order to get a small memory footprint
-    if( $CFG->{'worker_startup'} )
+    if ( $CFG->{'worker_startup'} )
     {
-	Para::Frame::Worker->create_idle_worker( $CFG->{'worker_startup'} );
+        Para::Frame::Worker->create_idle_worker( $CFG->{'worker_startup'} );
     }
 
     warn "Setup complete, accepting connections\n";
@@ -284,12 +284,12 @@ sub main_loop
     # the yielding party is. Espacially, if it's waiting for something
     # and realy want to give that something some time
 
-    if( $child )
+    if ( $child )
     {
-	$LEVEL ++;
+        $LEVEL ++;
     }
 
-    $LAST = time; # To give info about if it's time to yield
+    $LAST = time;           # To give info about if it's time to yield
 
     debug(3,"Entering main_loop at level $LEVEL",1) if $LEVEL;
     print "MAINLOOP $LEVEL\n" unless $Para::Frame::FORK or not $Para::Frame::WATCHDOG_ACTIVE;
@@ -299,13 +299,13 @@ sub main_loop
 
     while (1)
     {
-	# The algorithm was adopted from perlmoo by Joey Hess
-	# <joey@kitenet.net>.
+        # The algorithm was adopted from perlmoo by Joey Hess
+        # <joey@kitenet.net>.
 
-	my $exit_action = eval
-	{
+        my $exit_action = eval
+        {
 
-	    my $client;
+            my $client;
 
 #	    if( $timeout == TIMEOUT_LONG )
 #	    {
@@ -319,331 +319,331 @@ sub main_loop
 #            }
 
 
-	    while( my( $client ) = $SELECT->can_read( $timeout ) )
-	    {
-		if( $client == $SERVER )
-		{
-		    # Accept connection even if we should $TERMINATE since
-		    # it could be communication for finishing existing
-		    # requests
+            while ( my( $client ) = $SELECT->can_read( $timeout ) )
+            {
+                if ( $client == $SERVER )
+                {
+                    # Accept connection even if we should $TERMINATE since
+                    # it could be communication for finishing existing
+                    # requests
 
-		    add_client( $client );
-		}
-		else
-		{
-		    # TODO: Fixme
+                    add_client( $client );
+                }
+                else
+                {
+                    # TODO: Fixme
 
-		    # I get strange loops then I'm not setting
-		    # switch_req(undef() here. But We should not need
-		    # to to this here. Investigate how to eliminate
-		    # the need for it. switch_req() should be called
-		    # in the specific sections later, where needed.
+                    # I get strange loops then I'm not setting
+                    # switch_req(undef() here. But We should not need
+                    # to to this here. Investigate how to eliminate
+                    # the need for it. switch_req() should be called
+                    # in the specific sections later, where needed.
 
-		    # The problem with switching reqs is that it will
-		    # trigger DB commit which will commit data that
-		    # should be rolled back in case of an error later
-		    # in the request. Arc creations should be made in
-		    # coherent (atomic) groups. Method calls that may
-		    # call yield should not be used in the middle of
-		    # DB work.
+                    # The problem with switching reqs is that it will
+                    # trigger DB commit which will commit data that
+                    # should be rolled back in case of an error later
+                    # in the request. Arc creations should be made in
+                    # coherent (atomic) groups. Method calls that may
+                    # call yield should not be used in the middle of
+                    # DB work.
 
-		    switch_req(undef);
-		    get_value( $client );
-		    $timeout = TIMEOUT_SHORT; # Get next thing
-		}
-	    }
+                    switch_req(undef);
+                    get_value( $client );
+                    $timeout = TIMEOUT_SHORT; # Get next thing
+                }
+            }
 
-	    ### Do the jobs piled up
-	    #
-	    $timeout = TIMEOUT_LONG; # We change this if there are jobs to do
-	    # List may change during iteration by close_callback...
-	    my @requests = values %REQUEST;
-	    foreach my $req ( @requests )
-	    {
-		next unless $req; # If closed down
+            ### Do the jobs piled up
+            #
+            $timeout = TIMEOUT_LONG; # We change this if there are jobs to do
+            # List may change during iteration by close_callback...
+            my @requests = values %REQUEST;
+            foreach my $req ( @requests )
+            {
+                next unless $req; # If closed down
 
-		if( $req->{'cancel'} )
-		{
-		    switch_req( $req );
-		    debug "cancelled by request";
+                if ( $req->{'cancel'} )
+                {
+                    switch_req( $req );
+                    debug "cancelled by request";
 
-		    # If this was an active request for a master
-		    # request, it's disconnected state will be
-		    # detected and another active request will be
-		    # created.
+                    # If this was an active request for a master
+                    # request, it's disconnected state will be
+                    # detected and another active request will be
+                    # created.
 
-		    # TODO: May be polite to tell the master that this
-		    # request no longer is of service.
+                    # TODO: May be polite to tell the master that this
+                    # request no longer is of service.
 
-		    $req->run_hook('done');
-		    close_callback($req->{'client'});
-		}
-		elsif( $req->{'in_yield'} )
-		{
-		    # Do not do jobs for a request that waits for a child
-		    debug 3, "In_yield: $req->{reqnum}";
-		}
-		elsif( $req->{'wait'} )
-		{
-		    # Waiting for something else to finish...
-		    debug 3, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
-		}
-		elsif( @{$req->{'jobs'}} )
-		{
+                    $req->run_hook('done');
+                    close_callback($req->{'client'});
+                }
+                elsif ( $req->{'in_yield'} )
+                {
+                    # Do not do jobs for a request that waits for a child
+                    debug 3, "In_yield: $req->{reqnum}";
+                }
+                elsif ( $req->{'wait'} )
+                {
+                    # Waiting for something else to finish...
+                    debug 3, "$req->{reqnum} stays open, was asked to wait for $req->{'wait'} things";
+                }
+                elsif ( @{$req->{'jobs'}} )
+                {
 #		    if( ($LEVEL > 3) and ($req->id == $REQNUM ) )
 #		    {
 #			debug "Not doing queued job for req ".$req->id;
 #		    }
 #		    else
 #		    {
-			my $job = shift @{$req->{'jobs'}};
-			my( $cmd, @args ) = @$job;
-			switch_req( $req );
-			debug(2, sprintf "Found a job %s(%s) in %d", $cmd, join(', ', map {defined $_ ? $_ : '<undef>'} @args ), $req->{reqnum});
-			$req->$cmd( @args );
+                    my $job = shift @{$req->{'jobs'}};
+                    my( $cmd, @args ) = @$job;
+                    switch_req( $req );
+                    debug(2, sprintf "Found a job %s(%s) in %d", $cmd, join(', ', map {defined $_ ? $_ : '<undef>'} @args ), $req->{reqnum});
+                    $req->$cmd( @args );
 #		    }
-		}
-		elsif( $req->{'childs'} )
-		{
-		    # Stay open while waiting for child
-		    if( debug >= 4 )
-		    {
-			debug "$req->{reqnum} stays open, waiting for $req->{'childs'} childs";
-			foreach my $child ( values %CHILD )
-			{
-			    my $creq = $child->req;
-			    my $creqnum = $creq->{'reqnum'};
-			    my $cclient = client_str($creq->client);
-			    my $cpid = $child->pid;
-			    debug "  Req $creqnum $cclient has a child with pid $cpid";
-			}
-		    }
-		}
-		else
-		{
-		    # All jobs done for now
-		    confess "req not a req ".datadump($req) unless ref $req eq 'Para::Frame::Request'; ### DEBUG
-		    $req->run_hook('done');
-		    close_callback($req->{'client'});
-		}
+                }
+                elsif ( $req->{'childs'} )
+                {
+                    # Stay open while waiting for child
+                    if ( debug >= 4 )
+                    {
+                        debug "$req->{reqnum} stays open, waiting for $req->{'childs'} childs";
+                        foreach my $child ( values %CHILD )
+                        {
+                            my $creq = $child->req;
+                            my $creqnum = $creq->{'reqnum'};
+                            my $cclient = client_str($creq->client);
+                            my $cpid = $child->pid;
+                            debug "  Req $creqnum $cclient has a child with pid $cpid";
+                        }
+                    }
+                }
+                else
+                {
+                    # All jobs done for now
+                    confess "req not a req ".datadump($req) unless ref $req eq 'Para::Frame::Request'; ### DEBUG
+                    $req->run_hook('done');
+                    close_callback($req->{'client'});
+                }
 
-		$timeout = TIMEOUT_SHORT; ### Get the jobs done quick
-	    }
-
-
-
-	    ### Do background jobs
-	    #
-	    if( add_background_jobs_conditional() )
-	    {
-		$timeout = TIMEOUT_SHORT; # Get next thing
-	    }
+                $timeout = TIMEOUT_SHORT; ### Get the jobs done quick
+            }
 
 
-	    ### Waiting for a child? (*inside* a nested request)
-	    #
-	    if( $child )
-	    {
-		# We will iterate fast in order to catch data from
-		# child before the buffer gets full
 
-		# This could be a simple yield and not a child, then just
-		# exit now
-		return "last" unless ref $child;
+            ### Do background jobs
+            #
+            if ( add_background_jobs_conditional() )
+            {
+                $timeout = TIMEOUT_SHORT; # Get next thing
+            }
 
-		# exit loop if INVOKING child is done
-		return "last" if $child->{'done'};
+
+            ### Waiting for a child? (*inside* a nested request)
+            #
+            if ( $child )
+            {
+                # We will iterate fast in order to catch data from
+                # child before the buffer gets full
+
+                # This could be a simple yield and not a child, then just
+                # exit now
+                return "last" unless ref $child;
+
+                # exit loop if INVOKING child is done
+                return "last" if $child->{'done'};
 #		return "last" unless $child->{'req'}{'childs'};
-	    }
-	    else
-	    {
-		if( $TERMINATE or $MEMORY )
-		{
-		  TERMINATE_CHECK:
-		    {
-			# Exit asked to and nothing is in flux
-			last if keys %REQUEST;
-			last if keys %CHILD;
-			last if @BGJOBS_PENDING;
+            }
+            else
+            {
+                if ( $TERMINATE or $MEMORY )
+                {
+                  TERMINATE_CHECK:
+                    {
+                        # Exit asked to and nothing is in flux
+                        last if keys %REQUEST;
+                        last if keys %CHILD;
+                        last if @BGJOBS_PENDING;
 
-			foreach my $s (values %SESSION)
-			{
-			    my $sid = $s->id;
-			    foreach my $key ( keys %{$s->{'page_result'}} )
-			    {
-				my $result_time =
-				  $s->{'page_result'}{$key}{'time_done'};
-				if( $result_time and
-                                    (time - $result_time > 120) )
-				{
-				    debug "Ignoring stale page result ".
-				      "from $sid";
-				    next;
-				}
+                        foreach my $s (values %SESSION)
+                        {
+                            my $sid = $s->id;
+                            foreach my $key ( keys %{$s->{'page_result'}} )
+                            {
+                                my $result_time =
+                                  $s->{'page_result'}{$key}{'time_done'};
+                                if ( $result_time and
+                                     (time - $result_time > 120) )
+                                {
+                                    debug "Ignoring stale page result ".
+                                      "from $sid";
+                                    next;
+                                }
 
-				debug "PAGE RESULT WAITING for $sid";
-				last TERMINATE_CHECK;
-			    }
-			}
+                                debug "PAGE RESULT WAITING for $sid";
+                                last TERMINATE_CHECK;
+                            }
+                        }
 
-			if( $MEMORY and not $TERMINATE )
-			{
-			    debug "MEMORY-initiated HUP";
-			    $TERMINATE = 'HUP';
-			}
+                        if ( $MEMORY and not $TERMINATE )
+                        {
+                            debug "MEMORY-initiated HUP";
+                            $TERMINATE = 'HUP';
+                        }
 
-			if( $TERMINATE eq 'HUP' )
-			{
-			    # Make watchdog restart us
-			    debug "Executing HUP now";
-			    Para::Frame->go_down;
-			    exit 1;
-			}
-			elsif( $TERMINATE eq 'TERM' )
-			{
-			    # No restart
-			    debug "Executing TERM now";
-			    Para::Frame->go_down;
-			    exit 0;
-			}
-			elsif( $TERMINATE eq 'RESTART' )
-			{
-			    debug "Executing RESTART now";
-			    Para::Frame->restart;
-			    debug "RESTART FAILED!!!";
-			}
-			else
-			{
-			    debug "Termination code $TERMINATE not recognized";
-			    $TERMINATE = 0;
-			}
-		    }
-		}
-	    }
+                        if ( $TERMINATE eq 'HUP' )
+                        {
+                            # Make watchdog restart us
+                            debug "Executing HUP now";
+                            Para::Frame->go_down;
+                            exit 1;
+                        }
+                        elsif ( $TERMINATE eq 'TERM' )
+                        {
+                            # No restart
+                            debug "Executing TERM now";
+                            Para::Frame->go_down;
+                            exit 0;
+                        }
+                        elsif ( $TERMINATE eq 'RESTART' )
+                        {
+                            debug "Executing RESTART now";
+                            Para::Frame->restart;
+                            debug "RESTART FAILED!!!";
+                        }
+                        else
+                        {
+                            debug "Termination code $TERMINATE not recognized";
+                            $TERMINATE = 0;
+                        }
+                    }
+                }
+            }
 
-	    ### Are there any data to be read from childs?  This is
-	    # only used for childs that will exit after the result are
-	    # recieved. Worker childs will transmit their result to
-	    # the server port.
-	    #
-	    if( keys %CHILD )
-	    {
-		# Avoid double deregister
-		$SIG{CHLD} = 'IGNORE';
-		# TODO: Let the REAPER mark up childs for later processing
-		#
-		foreach my $child ( values %CHILD )
-		{
-		    my $child_data = ''; # We must init for each child!
+            ### Are there any data to be read from childs?  This is
+            # only used for childs that will exit after the result are
+            # recieved. Worker childs will transmit their result to
+            # the server port.
+            #
+            if ( keys %CHILD )
+            {
+                # Avoid double deregister
+                $SIG{CHLD} = 'IGNORE';
+                # TODO: Let the REAPER mark up childs for later processing
+                #
+                foreach my $child ( values %CHILD )
+                {
+                    my $child_data = ''; # We must init for each child!
 
-		    # Do a nonblocking read to get data. We try to read often
-		    # so that the buffer will not get full.
+                    # Do a nonblocking read to get data. We try to read often
+                    # so that the buffer will not get full.
 
-		    $child->{'fh'}->read($child_data, POSIX::BUFSIZ);
-		    $child->{'data'} .= $child_data;
+                    $child->{'fh'}->read($child_data, POSIX::BUFSIZ);
+                    $child->{'data'} .= $child_data;
 
-		    if( $child_data )
-		    {
-			my $cpid = $child->pid;
-			my $length = length( $child_data );
+                    if ( $child_data )
+                    {
+                        my $cpid = $child->pid;
+                        my $length = length( $child_data );
 
-			my $tlength = length( $child->{'data'} );
+                        my $tlength = length( $child->{'data'} );
 
-			if( $child->{'data'} =~ /^(\d{1,8})\0/ )
-			{
-			    # Expected length
-			    my $elength = length($1)+$1+2;
-			    if( $tlength == $elength )
-			    {
-				# Whole string recieved!
-				unless( $child->{'done'} ++ )
-				{
-				    $child->deregister(undef,$1);
-				    debug "Removing child $cpid";
-				    kill 9, $cpid;
-				    delete $CHILD{$cpid};
-				}
-			    }
-			}
-			else
-			{
-			    debug "Got '$child->{data}'";
-			}
-		    }
-		}
+                        if ( $child->{'data'} =~ /^(\d{1,8})\0/ )
+                        {
+                            # Expected length
+                            my $elength = length($1)+$1+2;
+                            if ( $tlength == $elength )
+                            {
+                                # Whole string recieved!
+                                unless ( $child->{'done'} ++ )
+                                {
+                                    $child->deregister(undef,$1);
+                                    debug "Removing child $cpid";
+                                    kill 9, $cpid;
+                                    delete $CHILD{$cpid};
+                                }
+                            }
+                        }
+                        else
+                        {
+                            debug "Got '$child->{data}'";
+                        }
+                    }
+                }
 
-		# Now we can turn the signal handling back on
-		$SIG{CHLD} = \&Para::Frame::REAPER;
+                # Now we can turn the signal handling back on
+                $SIG{CHLD} = \&Para::Frame::REAPER;
 
-		# See if we got any more signals
-		&Para::Frame::REAPER;
-	    }
+                # See if we got any more signals
+                &Para::Frame::REAPER;
+            }
 
-        } || 'next'; #default
-	if( $@ )
-	{
-	    my $err = run_error_hooks(catch($@));
+        } || 'next';            #default
+        if ( $@ )
+        {
+            my $err = run_error_hooks(catch($@));
 
-	    if( $err->type eq 'cancel' )
-	    {
-		debug "REQUEST CANCELLED\n";
-		debug $err->info;
-		if( $REQ and $REQ->{'client'} )
-		{
-		    close_callback($REQ->client);
-		}
-		undef $REQ; # In case of contamination
-	    }
-	    elsif( $err->type eq 'action' and
-		   $err->info =~ /^send: Cannot determine peer address/ )
-	    {
-		debug "LOST CONNECTION";
-		if( $REQ and $REQ->{'client'} )
-		{
-		    $REQ->cancel;
-		    close_callback($REQ->client,'lost connection');
-		}
-		undef $REQ; # In case of contamination
-	    }
-	    else
-	    {
-		warn "# FATAL REQUEST ERROR!!!\n";
-		warn "# Unexpected exception:\n";
-		warn "#>>\n";
-		warn map "#>> $_\n", split /\n/, $err->as_string;
-		warn "#>>\n";
+            if ( $err->type eq 'cancel' )
+            {
+                debug "REQUEST CANCELLED\n";
+                debug $err->info;
+                if ( $REQ and $REQ->{'client'} )
+                {
+                    close_callback($REQ->client);
+                }
+                undef $REQ;     # In case of contamination
+            }
+            elsif ( $err->type eq 'action' and
+                    $err->info =~ /^send: Cannot determine peer address/ )
+            {
+                debug "LOST CONNECTION";
+                if ( $REQ and $REQ->{'client'} )
+                {
+                    $REQ->cancel;
+                    close_callback($REQ->client,'lost connection');
+                }
+                undef $REQ;     # In case of contamination
+            }
+            else
+            {
+                warn "# FATAL REQUEST ERROR!!!\n";
+                warn "# Unexpected exception:\n";
+                warn "#>>\n";
+                warn map "#>> $_\n", split /\n/, $err->as_string;
+                warn "#>>\n";
 
-		my $emergency_level =
-		  $Para::Frame::Watchdog::EMERGENCY_DEBUG_LEVEL;
-		if( $Para::Frame::DEBUG < $emergency_level )
-		{
-		    $Para::Frame::DEBUG =
-			$Para::Frame::CFG->{'debug'} =
-			$emergency_level;
-		    warn "#Raising global debug to level $Para::Frame::DEBUG\n";
-		}
-		else
-		{
-		    debug "Make watchdog restart us";
-		    debug "Executing HUP now";
-		    Para::Frame->go_down;
-		    exit 1;
-		}
+                my $emergency_level =
+                  $Para::Frame::Watchdog::EMERGENCY_DEBUG_LEVEL;
+                if ( $Para::Frame::DEBUG < $emergency_level )
+                {
+                    $Para::Frame::DEBUG =
+                      $Para::Frame::CFG->{'debug'} =
+                        $emergency_level;
+                    warn "#Raising global debug to level $Para::Frame::DEBUG\n";
+                }
+                else
+                {
+                    debug "Make watchdog restart us";
+                    debug "Executing HUP now";
+                    Para::Frame->go_down;
+                    exit 1;
+                }
 
-		$timeout = TIMEOUT_SHORT;
-	    }
-	}
+                $timeout = TIMEOUT_SHORT;
+            }
+        }
 
-	if( $exit_action eq 'last' )
-	{
-	    last;
-	}
+        if ( $exit_action eq 'last' )
+        {
+            last;
+        }
     }
     debug(3,"Exiting  main_loop at level $LEVEL",-1);
 
-    if( $LEVEL )
+    if ( $LEVEL )
     {
-	$LEVEL --;
+        $LEVEL --;
     }
 
     return;
@@ -663,49 +663,49 @@ sub switch_req
 
     no warnings 'uninitialized';
 
-    if( $_[0] ne $REQ )
+    if ( $_[0] ne $REQ )
     {
-	if( $REQ )
-	{
-	    # Detatch %ENV
-	    $REQ->{'env'} = {%ENV};
-	}
+        if ( $REQ )
+        {
+            # Detatch %ENV
+            $REQ->{'env'} = {%ENV};
+        }
 
-	Para::Frame->run_hook($REQ, 'before_switch_req', @_);
+        Para::Frame->run_hook($REQ, 'before_switch_req', @_);
 
-	if( $_[0] and not $_[1] )
-	{
-	    if( $REQ )
-	    {
-		warn sprintf "\n$_[0]->{reqnum} Switching to req (from $REQ->{reqnum})\n", ;
-	    }
-	    elsif( $_[0] ne $REQ_LAST )
-	    {
-		warn sprintf "\n$_[0]->{reqnum} Switching to req\n", ;
-	    }
-	}
+        if ( $_[0] and not $_[1] )
+        {
+            if ( $REQ )
+            {
+                warn sprintf "\n$_[0]->{reqnum} Switching to req (from $REQ->{reqnum})\n", ;
+            }
+            elsif ( $_[0] ne $REQ_LAST )
+            {
+                warn sprintf "\n$_[0]->{reqnum} Switching to req\n", ;
+            }
+        }
 
-	$U = undef;
-	if( $REQ = $_[0] )
-	{
-	    if( my $s = $REQ->{'s'} )
-	    {
-		$U   = $s->u;
-		$DEBUG  = $s->{'debug'};
-	    }
+        $U = undef;
+        if ( $REQ = $_[0] )
+        {
+            if ( my $s = $REQ->{'s'} )
+            {
+                $U   = $s->u;
+                $DEBUG  = $s->{'debug'};
+            }
 
-	    # Attach %ENV
-	    %ENV = %{$REQ->{'env'}};
-	    $REQ->{'env'} = \%ENV;
+            # Attach %ENV
+            %ENV = %{$REQ->{'env'}};
+            $REQ->{'env'} = \%ENV;
 
-	    $INDENT = $REQ->{'indent'};
+            $INDENT = $REQ->{'indent'};
 
-	    $REQ_LAST = $REQ; # To remember even then $REQ is undef
-	}
-	else
-	{
-	    undef %ENV;
-	}
+            $REQ_LAST = $REQ;   # To remember even then $REQ is undef
+        }
+        else
+        {
+            undef %ENV;
+        }
     }
 }
 
@@ -722,10 +722,10 @@ sub add_client
 
     # New connection.
     $client = $SERVER->accept;
-    if(!$client)
+    if (!$client)
     {
-	debug(0,"Problem with accept(): $!");
-	return;
+        debug(0,"Problem with accept(): $!");
+        return;
     }
 
     $SELECT->add($client);
@@ -762,85 +762,85 @@ sub get_value
 {
     my( $client ) = @_;
 
-    if( $Para::Frame::FORK )
+    if ( $Para::Frame::FORK )
     {
-	debug(2,"Getting value inside a fork");
+        debug(2,"Getting value inside a fork");
 
         unless( $Para::Frame::Sender::SOCK )
         {
             confess "get_value in FORK with no socket";
         }
 
-	while( $_ = <$Para::Frame::Sender::SOCK> )
-	{
-	    if( s/^([\w\-]{3,20})\0// )
-	    {
-		my $code = $1;
-		debug(1,"Code $code");
-		chomp;
-		if( $code eq 'RESP' )
-		{
-		    my $val = $_;
-		    my $aclient = $client;
-		    if( ref $client eq 'Para::Frame::Request' )
-		    {
-			$aclient = $client->client;
+        while ( $_ = <$Para::Frame::Sender::SOCK> )
+        {
+            if ( s/^([\w\-]{3,20})\0// )
+            {
+                my $code = $1;
+                debug(1,"Code $code");
+                chomp;
+                if ( $code eq 'RESP' )
+                {
+                    my $val = $_;
+                    my $aclient = $client;
+                    if ( ref $client eq 'Para::Frame::Request' )
+                    {
+                        $aclient = $client->client;
 
-			debug(5,"RESP $val ($client->{reqnum}/ $aclient)");
-		    }
-		    else
-		    {
-			my $req = $REQUEST{ $client };
-			debug(5,"RESP $val ($req->{reqnum}/$client)");
-		    }
+                        debug(5,"RESP $val ($client->{reqnum}/ $aclient)");
+                    }
+                    else
+                    {
+                        my $req = $REQUEST{ $client };
+                        debug(5,"RESP $val ($req->{reqnum}/$client)");
+                    }
 
-		    push @{$RESPONSE{ $aclient }}, $val;
-		    return 1;
-		}
-		else
-		{
-		    die "Unrecognized code: $code\n";
-		}
-	    }
-	    else
-	    {
-		die "Unrecognized response: $_\n";
-	    }
-	}
+                    push @{$RESPONSE{ $aclient }}, $val;
+                    return 1;
+                }
+                else
+                {
+                    die "Unrecognized code: $code\n";
+                }
+            }
+            else
+            {
+                die "Unrecognized response: $_\n";
+            }
+        }
 
-	undef $Para::Frame::Sender::SOCK;
-	return 0;
+        undef $Para::Frame::Sender::SOCK;
+        return 0;
     }
 
 
-    if( ref $client eq 'Para::Frame::Request' )
+    if ( ref $client eq 'Para::Frame::Request' )
     {
-	# Probably caled from $req->get_cmd_val()
-	my $req = $client;
-	return undef if $req->{'cancel'}; ## Let caller handle it
+        # Probably caled from $req->get_cmd_val()
+        my $req = $client;
+        return undef if $req->{'cancel'}; ## Let caller handle it
 
-	$client = $req->client;
-	if( $client =~ /^background/ )
-	{
-	    if( my $areq = $req->{'active_reqest'} )
-	    {
-		debug 4, "  Getting value from active_request for $client";
-		$client = $areq->client;
-		debug 4, "    $client";
-	    }
-	    else
-	    {
-		die "We cant get a value without an active request ($client)\n";
-		# Unless it's a fork... (handled above)
-	    }
-	}
+        $client = $req->client;
+        if ( $client =~ /^background/ )
+        {
+            if ( my $areq = $req->{'active_reqest'} )
+            {
+                debug 4, "  Getting value from active_request for $client";
+                $client = $areq->client;
+                debug 4, "    $client";
+            }
+            else
+            {
+                die "We cant get a value without an active request ($client)\n";
+                # Unless it's a fork... (handled above)
+            }
+        }
     }
 
 
   HANDLE:
     {
-	fill_buffer($client) or last;
-	handle_code($client) and redo; # Read more if availible
+        fill_buffer($client) or last;
+        handle_code($client) and redo; # Read more if availible
     }
 
     return 0;
@@ -864,140 +864,140 @@ sub fill_buffer
   PROCESS:
     {
 
-	if( 0 ) # DEBUG
-	{
-	    #### STATUS
-	    debug "\nCurrent buffers";
-	    foreach my $oclient ( keys %INBUFFER )
-	    {
-		my $msg = "  client ";
-		if( my $oreq = $REQUEST{ $oclient } )
-		{
-		    $msg .= $oreq->{reqnum};
-		}
-		debug "$msg $oclient: $INBUFFER{$oclient}";
-	    }
-	    debug "\n";
-	    sleep 1;
-	}
+        if ( 0 )                # DEBUG
+        {
+            #### STATUS
+            debug "\nCurrent buffers";
+            foreach my $oclient ( keys %INBUFFER )
+            {
+                my $msg = "  client ";
+                if ( my $oreq = $REQUEST{ $oclient } )
+                {
+                    $msg .= $oreq->{reqnum};
+                }
+                debug "$msg $oclient: $INBUFFER{$oclient}";
+            }
+            debug "\n";
+            sleep 1;
+        }
 
-	my $length_buffer = length( $INBUFFER{$client}||='' );
+        my $length_buffer = length( $INBUFFER{$client}||='' );
 
-	debug 4, "Length is $length_buffer of ".($DATALENGTH{$client}||'?');
+        debug 4, "Length is $length_buffer of ".($DATALENGTH{$client}||'?');
 
-	unless( $DATALENGTH{$client} and
-		$length_buffer >= $DATALENGTH{$client} )
-	{
-	    my $data='';
-	    my $rv = $client->recv($data,POSIX::BUFSIZ, 0);
+        unless ( $DATALENGTH{$client} and
+                 $length_buffer >= $DATALENGTH{$client} )
+        {
+            my $data='';
+            my $rv = $client->recv($data,POSIX::BUFSIZ, 0);
 
-	    if( defined $rv and length $data )
-	    {
-		$INBUFFER{$client} .= $data;
-		debug 5, "Adding more data to inbuffer";
-	    }
-	    elsif( not length $INBUFFER{$client} )
-	    {
-		if( defined $rv ) # Empty string
-		{
-		    state $last_lost ||= '';
+            if ( defined $rv and length $data )
+            {
+                $INBUFFER{$client} .= $data;
+                debug 5, "Adding more data to inbuffer";
+            }
+            elsif ( not length $INBUFFER{$client} )
+            {
+                if ( defined $rv ) # Empty string
+                {
+                    state $last_lost ||= '';
 
-		    debug "Lost connection to ".client_str($client);
-		    if( my $req = $REQUEST{ $client } )
-		    {
-			$req->cancel;
-		    }
+                    debug "Lost connection to ".client_str($client);
+                    if ( my $req = $REQUEST{ $client } )
+                    {
+                        $req->cancel;
+                    }
 
-		    close_callback($client,'eof');
+                    close_callback($client,'eof');
 
-		    if( $last_lost eq $client )
-		    {
+                    if ( $last_lost eq $client )
+                    {
 #			confess "Double lost connection $client";
-			cluck "Double lost connection ".client_str($client);
-			debug "Trying to restart";
-			$TERMINATE = 'HUP';
-			die "Lost connection to ".client_str($client);
-		    }
+                        cluck "Double lost connection ".client_str($client);
+                        debug "Trying to restart";
+                        $TERMINATE = 'HUP';
+                        die "Lost connection to ".client_str($client);
+                    }
 
-		    $last_lost = $client;
+                    $last_lost = $client;
 
-		    return 0; # Is this right?
-		}
+                    return 0;   # Is this right?
+                }
 
-		# Nothing to read yet. Get something else...
+                # Nothing to read yet. Get something else...
 
-		if( my( $ready ) = $SELECT->can_read( $timeout ) )
-		{
-		    redo if $ready == $client; # Ready now
+                if ( my( $ready ) = $SELECT->can_read( $timeout ) )
+                {
+                    redo if $ready == $client; # Ready now
 
-		    if( $ready == $SERVER )
-		    {
-			add_client( $ready );
-			redo; # try again
-		    }
-		    else
-		    {
-			my $orig_req = $REQ;
-			my $req = $REQUEST{$ready};
-			debug 2, "Switching req to client ".client_str($ready);
-			switch_req($req);
-			eval
-			{
-			    get_value( $ready );
-			};
-			switch_req($orig_req);
-			die $@ if $@;
+                    if ( $ready == $SERVER )
+                    {
+                        add_client( $ready );
+                        redo;   # try again
+                    }
+                    else
+                    {
+                        my $orig_req = $REQ;
+                        my $req = $REQUEST{$ready};
+                        debug 2, "Switching req to client ".client_str($ready);
+                        switch_req($req);
+                        eval
+                        {
+                            get_value( $ready );
+                        };
+                        switch_req($orig_req);
+                        die $@ if $@;
 
-			### Caller will have to call this method again
-			### if necessary. This nested request may in
-			### turn call the original request, reading
-			### the value we wait for here.
+                        ### Caller will have to call this method again
+                        ### if necessary. This nested request may in
+                        ### turn call the original request, reading
+                        ### the value we wait for here.
 
-			return 0;
-		    }
-		}
-		else
-		{
-		    # No data waiting
+                        return 0;
+                    }
+                }
+                else
+                {
+                    # No data waiting
 
-		    warn "Data timeout!!!";
+                    warn "Data timeout!!!";
 
-		    if( my $req = $REQUEST{$client} )
-		    {
+                    if ( my $req = $REQUEST{$client} )
+                    {
                         $req->{'timeout_cnt'} ++;
-			debug 1, $req->logging->debug_data;
-		    }
+                        debug 1, $req->logging->debug_data;
+                    }
 
-		    cluck "trace for ".client_str($client);
+                    cluck "trace for ".client_str($client);
 
-		    # The caller will have to do the giving up
+                    # The caller will have to do the giving up
 
-		    # I have seen that the actual response CAN take
-		    # longer than 5 secs. I don't know why but we
-		    # should let go now and come back in another
-		    # round, if necessary
+                    # I have seen that the actual response CAN take
+                    # longer than 5 secs. I don't know why but we
+                    # should let go now and come back in another
+                    # round, if necessary
 
-		    return 0;
+                    return 0;
 
 #		    throw('action', "Data timeout while talking to client\n");
-		}
-	    }
-	    else
-	    {
-		# TODO: Vulnerability. Drop connection after a given time
-	    }
+                }
+            }
+            else
+            {
+                # TODO: Vulnerability. Drop connection after a given time
+            }
 
 
-	    unless( $DATALENGTH{$client} )
-	    {
-		debug(4,"Length of record?");
-		# Read the length of the data string
-		if( $INBUFFER{$client} =~ s/^(\d+)\x00// )
-		{
-		    debug(4,"Setting length to $1");
-		    $DATALENGTH{$client} = $1;
-		}
-                elsif( $INBUFFER{$client} =~ s/^(GET .+\r\n\r\n)/HTTP\x00$1/s )
+            unless ( $DATALENGTH{$client} )
+            {
+                debug(4,"Length of record?");
+                # Read the length of the data string
+                if ( $INBUFFER{$client} =~ s/^(\d+)\x00// )
+                {
+                    debug(4,"Setting length to $1");
+                    $DATALENGTH{$client} = $1;
+                }
+                elsif ( $INBUFFER{$client} =~ s/^(GET .+\r\n\r\n)/HTTP\x00$1/s )
                 {
                     ### Got an HTTP request
                     #
@@ -1006,17 +1006,17 @@ sub fill_buffer
                     $DATALENGTH{$client} = length( $1 ) +5;
 #                    debug 1, "HTTP in INBUFFER";
                 }
-		else
-		{
-		    debug 1, "Strange INBUFFER content: $INBUFFER{$client}\n.";
-		    close_callback($client, "Faulty inbuffer");
-		    return 0;
-		}
-	    }
+                else
+                {
+                    debug 1, "Strange INBUFFER content: $INBUFFER{$client}\n.";
+                    close_callback($client, "Faulty inbuffer");
+                    return 0;
+                }
+            }
 
-	    # Check if we got a whole record
-	    redo;
-	}
+            # Check if we got a whole record
+            redo;
+        }
     }
 
     return 1;
@@ -1039,21 +1039,21 @@ sub handle_code
     my $length_buffer = length( $INBUFFER{$client}||='' );
     my $rest = '';
 
-    if( $length_buffer > $length_target )
+    if ( $length_buffer > $length_target )
     {
-	$rest = substr( $INBUFFER{$client},
-			$length_target,
-			($length_buffer - $length_target),
-			'' );
+        $rest = substr( $INBUFFER{$client},
+                        $length_target,
+                        ($length_buffer - $length_target),
+                        '' );
     }
 
 #    debug "Buffer: $INBUFFER{$client}";
 
-    unless( $INBUFFER{$client} =~ s/^(\w+)\x00// )
+    unless ( $INBUFFER{$client} =~ s/^(\w+)\x00// )
     {
-	debug(0,"No code given: $INBUFFER{$client}");
-	close_callback($client,'faulty input');
-	return 0;
+        debug(0,"No code given: $INBUFFER{$client}");
+        close_callback($client,'faulty input');
+        return 0;
     }
 
 
@@ -1061,226 +1061,226 @@ sub handle_code
 #    debug 1, "GOT code $code: $INBUFFER{$client}";
     debug 5, "GOT code $code: $INBUFFER{$client}";
 
-    if( $code eq 'REQ' )
+    if ( $code eq 'REQ' )
     {
-	my $record = $INBUFFER{$client};
+        my $record = $INBUFFER{$client};
 
-	# Clear BUFFER so that we can recieve more from
-	# same place.
+        # Clear BUFFER so that we can recieve more from
+        # same place.
 
-	$INBUFFER{$client} = $rest;
-	$DATALENGTH{$client} = 0;
+        $INBUFFER{$client} = $rest;
+        $DATALENGTH{$client} = 0;
 
-	# Skip the req if it's cancelled
-	#   As an optimization; Just check the buffer
-	#
+        # Skip the req if it's cancelled
+        #   As an optimization; Just check the buffer
+        #
       CHECK:
-	{
-	    if( length $rest )
-	    {
-		fill_buffer($client) or last;
+        {
+            if ( length $rest )
+            {
+                fill_buffer($client) or last;
 
-		# Peek in the buffer
-		if( $INBUFFER{$client} =~ m/^CANCEL\x00/ )
-		{
-		    # Drop the connection now
-		    warn "SKIPS CANCELLED REQ\n";
-		    close_callback($client);
-		    return 0;
-		}
-		# Something else is waitning
-	    }
-	}
+                # Peek in the buffer
+                if ( $INBUFFER{$client} =~ m/^CANCEL\x00/ )
+                {
+                    # Drop the connection now
+                    warn "SKIPS CANCELLED REQ\n";
+                    close_callback($client);
+                    return 0;
+                }
+                # Something else is waitning
+            }
+        }
 
-	handle_request( $client, \$record );
-	return 0; ### SPECIAL CASE
+        handle_request( $client, \$record );
+        return 0;               ### SPECIAL CASE
     }
-    elsif( $code eq 'HTTP' )
+    elsif ( $code eq 'HTTP' )
     {
-	my $record = $INBUFFER{$client};
+        my $record = $INBUFFER{$client};
 
-	# Clear BUFFER so that we can recieve more from
-	# same place.
-	$INBUFFER{$client} = $rest;
-	$DATALENGTH{$client} = 0;
+        # Clear BUFFER so that we can recieve more from
+        # same place.
+        $INBUFFER{$client} = $rest;
+        $DATALENGTH{$client} = 0;
 
-	handle_http( $client, \$record );
+        handle_http( $client, \$record );
     }
-    elsif( $code eq 'CANCEL' )
+    elsif ( $code eq 'CANCEL' )
     {
-	my $req = $REQUEST{ $client };
-	unless( $req )
-	{
-	    debug "CANCEL from Req not registred: ".client_str($client);
-	    return 0;
-	}
+        my $req = $REQUEST{ $client };
+        unless( $req )
+        {
+            debug "CANCEL from Req not registred: ".client_str($client);
+            return 0;
+        }
 
-	$req->cancel;
+        $req->cancel;
 
-	# Continue until it's safe to drop the connectio
+        # Continue until it's safe to drop the connectio
 
-	# There may be a message sent to client
+        # There may be a message sent to client
     }
-    elsif( $code eq 'RESP' )
+    elsif ( $code eq 'RESP' )
     {
-	my $val = $INBUFFER{$client};
-	my $req = $REQUEST{ $client };
-	debug(5,"RESP $val ($req->{reqnum})");
-	push @{$RESPONSE{ $client }}, $val;
+        my $val = $INBUFFER{$client};
+        my $req = $REQUEST{ $client };
+        debug(5,"RESP $val ($req->{reqnum})");
+        push @{$RESPONSE{ $client }}, $val;
     }
-    elsif( $code eq 'RUN_ACTION' ) # Not interactive
+    elsif ( $code eq 'RUN_ACTION' ) # Not interactive
     {
-	# Starts action and drops connection.
-	# No wait on result
+        # Starts action and drops connection.
+        # No wait on result
 
-	my $req =
-	  Para::Frame::Request->
-	      new_bgrequest("Handling RUN_ACTION (in background)");
+        my $req =
+          Para::Frame::Request->
+              new_bgrequest("Handling RUN_ACTION (in background)");
 
-	my $val = $INBUFFER{$client};
+        my $val = $INBUFFER{$client};
 
-	debug 2, "Got val: $val";
+        debug 2, "Got val: $val";
 
-	$val =~ s/^(.+?)\?//;
-	my $action = $1;
-	debug "Action $action";
+        $val =~ s/^(.+?)\?//;
+        my $action = $1;
+        debug "Action $action";
 
-	my %params;
-	foreach my $param ( split '&', $val )
-	{
-	    $param =~ m/^(.*?)=(.*?)$/;
-	    $params{$1} = $2;
-	    debug "  $1 = $2";
-	}
+        my %params;
+        foreach my $param ( split '&', $val )
+        {
+            $param =~ m/^(.*?)=(.*?)$/;
+            $params{$1} = $2;
+            debug "  $1 = $2";
+        }
 #	debug "Running action: $action with params: ". datadump( \%params );
-	$req->add_job('run_action', $action, \%params);
+        $req->add_job('run_action', $action, \%params);
 
 #	client_send($client, "9\x00RESP\x00Done");
-	close_callback($client); # That's all
+        close_callback($client); # That's all
     }
-    elsif( $code eq 'URI2FILE' ) # CHILD msg
+    elsif ( $code eq 'URI2FILE' ) # CHILD msg
     {
-	# redirect request from child to client (via this parent)
-	#
-	my $val = $INBUFFER{$client};
-	$val =~ s/^(.+?)\x00// or die "Faulty val: $val";
-	my $caller_clientaddr = $1;
+        # redirect request from child to client (via this parent)
+        #
+        my $val = $INBUFFER{$client};
+        $val =~ s/^(.+?)\x00// or die "Faulty val: $val";
+        my $caller_clientaddr = $1;
 
-	debug(2,"URI2FILE($val) recieved");
+        debug(2,"URI2FILE($val) recieved");
 
-	# Calling uri2file in the right $REQ
-	# Do we need to switch_req() ???
+        # Calling uri2file in the right $REQ
+        # Do we need to switch_req() ???
 
-	my $current_req = $REQ;
-	my $req = $REQUEST{ $caller_clientaddr } or
-	  die "Client ".client_str($caller_clientaddr)." not registred";
-	my $file = $req->uri2file($val);
+        my $current_req = $REQ;
+        my $req = $REQUEST{ $caller_clientaddr } or
+          die "Client ".client_str($caller_clientaddr)." not registred";
+        my $file = $req->uri2file($val);
 
-	# Send response in calling $REQ
-	debug(2,"Returning answer $file");
+        # Send response in calling $REQ
+        debug(2,"Returning answer $file");
 
 #	debug "Sending  RESP $file";
-	client_send($client, join( "\0", 'RESP', $file ) . "\n" );
+        client_send($client, join( "\0", 'RESP', $file ) . "\n" );
     }
-    elsif( $code eq 'NOTE' ) # CHILD msg
+    elsif ( $code eq 'NOTE' )   # CHILD msg
     {
-	# redirect request from child to client (via this parent)
-	#
-	my $val = $INBUFFER{$client};
-	$val =~ s/^(.+?)\x00// or die "Faulty val: $val";
-	my $caller_clientaddr = $1;
+        # redirect request from child to client (via this parent)
+        #
+        my $val = $INBUFFER{$client};
+        $val =~ s/^(.+?)\x00// or die "Faulty val: $val";
+        my $caller_clientaddr = $1;
 
-	debug(2,"NOTE($val) recieved");
+        debug(2,"NOTE($val) recieved");
 
-	# Calling uri2file in the right $REQ
-	my $current_req = $REQ;
+        # Calling uri2file in the right $REQ
+        my $current_req = $REQ;
 
-	if( my $req = $REQUEST{ $caller_clientaddr } )
-	{
-	    $req->note($val);
-	}
-	else
-	{
-	    # The note may have come from a background request
-	    debug 0, $val;
-	}
+        if ( my $req = $REQUEST{ $caller_clientaddr } )
+        {
+            $req->note($val);
+        }
+        else
+        {
+            # The note may have come from a background request
+            debug 0, $val;
+        }
     }
-    elsif( $code eq 'LOADPAGE' )
+    elsif ( $code eq 'LOADPAGE' )
     {
-	debug(0,"LOADPAGE");
-	my $req = $REQUEST{ $client };
-	$req->{'in_loadpage'} = 1;
+        debug(0,"LOADPAGE");
+        my $req = $REQUEST{ $client };
+        $req->{'in_loadpage'} = 1;
     }
-    elsif( $code eq 'PING' )
+    elsif ( $code eq 'PING' )
     {
-	debug(4,"PING recieved");
+        debug(4,"PING recieved");
 #	debug "Sending  PONG";
-	client_send($client, "5\x00PONG\x00");
-	close_callback($client); # That's all
+        client_send($client, "5\x00PONG\x00");
+        close_callback($client); # That's all
     }
-    elsif( $code eq 'MEMORY' )
+    elsif ( $code eq 'MEMORY' )
     {
-	debug(2,"MEMORY recieved");
-	my $size = $INBUFFER{$client};
-	$MEMORY = $size;
-	Para::Frame->run_hook(undef, 'on_memory', $size);
+        debug(2,"MEMORY recieved");
+        my $size = $INBUFFER{$client};
+        $MEMORY = $size;
+        Para::Frame->run_hook(undef, 'on_memory', $size);
     }
-    elsif( $code eq 'HUP' )
+    elsif ( $code eq 'HUP' )
     {
-	debug(0,"HUP recieved");
-	$TERMINATE = 'HUP';
+        debug(0,"HUP recieved");
+        $TERMINATE = 'HUP';
     }
-    elsif( $code eq 'TERM' )
+    elsif ( $code eq 'TERM' )
     {
-	debug(0,"TERM recieved");
-	$TERMINATE = 'TERM';
+        debug(0,"TERM recieved");
+        $TERMINATE = 'TERM';
     }
-    elsif( $code eq 'WORKERRESP' )
+    elsif ( $code eq 'WORKERRESP' )
     {
-	local $Storable::Eval = 1;
-	my( $caller_id, $result ) = @{thaw($INBUFFER{$client})};
-	my $req;
-	if( $REQ and ($REQ->{reqnum} == $caller_id) )
-	{
-	    $req = $REQ;
-	}
-	else
-	{
-	    $req = Para::Frame::Request->get_by_id( $caller_id );
-	}
+        local $Storable::Eval = 1;
+        my( $caller_id, $result ) = @{thaw($INBUFFER{$client})};
+        my $req;
+        if ( $REQ and ($REQ->{reqnum} == $caller_id) )
+        {
+            $req = $REQ;
+        }
+        else
+        {
+            $req = Para::Frame::Request->get_by_id( $caller_id );
+        }
 
-	if( $req )
-	{
-	    unless( ($req->{'wait'}||0) > 0 )
-	    {
-		die "Req $caller_id not waiting for a result";
-	    }
+        if ( $req )
+        {
+            unless ( ($req->{'wait'}||0) > 0 )
+            {
+                die "Req $caller_id not waiting for a result";
+            }
 
-	    $req->{'workerresp'} = $result;
-	    $req->{'wait'} --;
-	    my $worker = delete $req->{'worker'};
-	    unless( $worker and $WORKER{ $worker->pid } )
-	    {
-		# See REAPER. Worker may have died
-		debug sprintf "Req %d lost a worker", $req->id;
-	    }
-	    else
-	    {
-		push @WORKER_IDLE, $worker;
-	    }
-	}
-	else
-	{
-	    debug "Req $caller_id no longer exist";
-	}
+            $req->{'workerresp'} = $result;
+            $req->{'wait'} --;
+            my $worker = delete $req->{'worker'};
+            unless ( $worker and $WORKER{ $worker->pid } )
+            {
+                # See REAPER. Worker may have died
+                debug sprintf "Req %d lost a worker", $req->id;
+            }
+            else
+            {
+                push @WORKER_IDLE, $worker;
+            }
+        }
+        else
+        {
+            debug "Req $caller_id no longer exist";
+        }
 
-	close_callback($client); # That's all
+        close_callback($client); # That's all
     }
     else
     {
-	debug(0,"(Para::Frame) Strange CODE: $code");
-	close_callback($client, "Faulty code");
-	return 0;
+        debug(0,"(Para::Frame) Strange CODE: $code");
+        close_callback($client, "Faulty code");
+        return 0;
     }
 
     $DATALENGTH{$client} = 0;
@@ -1305,9 +1305,9 @@ sub nonblock
 
     use Fcntl;
     my $flags= fcntl($socket, F_GETFL, 0)
-	or die "Can't get flags for socket: $!\n";
+      or die "Can't get flags for socket: $!\n";
     fcntl($socket, F_SETFL, $flags | O_NONBLOCK)
-	or die "Can't make socket nonblocking: $!\n";
+      or die "Can't make socket nonblocking: $!\n";
 }
 
 
@@ -1323,69 +1323,69 @@ sub close_callback
 
     # Someone disconnected or we want to close the i/o channel.
 
-    if( my $req = $REQUEST{$client} )
+    if ( my $req = $REQUEST{$client} )
     {
-	if( $reason )
-	{
-	    warn sprintf "%d Done in %6.2f secs (%s)\n",
-	      $req->{reqnum},
-		(time - $req->{started}),
-		  $reason;
-	}
-	else
-	{
-	    warn sprintf "%d Done in %6.2f secs\n",
-	      $req->{reqnum},
-		(time - $req->{started});
-	}
+        if ( $reason )
+        {
+            warn sprintf "%d Done in %6.2f secs (%s)\n",
+              $req->{reqnum},
+                (time - $req->{started}),
+                  $reason;
+        }
+        else
+        {
+            warn sprintf "%d Done in %6.2f secs\n",
+              $req->{reqnum},
+                (time - $req->{started});
+        }
 
-	if( my $oreq = delete $req->{'original_request'} )
-	{
-	    $oreq->release_subreq($req);
-	}
+        if ( my $oreq = delete $req->{'original_request'} )
+        {
+            $oreq->release_subreq($req);
+        }
 
-	if( my $sreqs = $req->{'subrequest'} )
-	{
-	    # Trying to breake reference loops for garbage collecting
-	    delete $req->{'subrequest'};
-	    foreach my $sreq ( @{$sreqs} )
-	    {
-		delete $sreq->{'original_request'};
-	    }
-	}
+        if ( my $sreqs = $req->{'subrequest'} )
+        {
+            # Trying to breake reference loops for garbage collecting
+            delete $req->{'subrequest'};
+            foreach my $sreq ( @{$sreqs} )
+            {
+                delete $sreq->{'original_request'};
+            }
+        }
 
-	if( $client =~ /^background/ )
-	{
-	    #(May be a subrequst, but decoupled)
+        if ( $client =~ /^background/ )
+        {
+            #(May be a subrequst, but decoupled)
 
-	    # Releasing active request
-	    delete $req->{'active_reqest'};
-	    delete $REQUEST{$client};
-	    delete $RESPONSE{$client};
-	    switch_req(undef);
-	    return;
-	}
-	else
-	{
-	    # Trying to breake reference loops for garbage collecting
-	    delete $req->{'subrequest'};
+            # Releasing active request
+            delete $req->{'active_reqest'};
+            delete $REQUEST{$client};
+            delete $RESPONSE{$client};
+            switch_req(undef);
+            return;
+        }
+        else
+        {
+            # Trying to breake reference loops for garbage collecting
+            delete $req->{'subrequest'};
 
-	}
+        }
     }
-    elsif( debug > 3 )
+    elsif ( debug > 3 )
     {
-	if( $reason )
-	{
-	    # Will be cleand up soon
-	    $req->{reqnum} ||= '-';
-	    warn "$req->{reqnum} Done ($reason)\n";
-	}
-	else
-	{
-	    # Will be cleand up soon
-	    $req->{reqnum} ||= '-';
-	    warn "$req->{reqnum} Done\n";
-	}
+        if ( $reason )
+        {
+            # Will be cleand up soon
+            $req->{reqnum} ||= '-';
+            warn "$req->{reqnum} Done ($reason)\n";
+        }
+        else
+        {
+            # Will be cleand up soon
+            $req->{reqnum} ||= '-';
+            warn "$req->{reqnum} Done\n";
+        }
     }
 
     delete $REQUEST{$client};
@@ -1396,16 +1396,16 @@ sub close_callback
     switch_req(undef);
 
     # if not a background request
-    if( ref $client and
-	( $client != $SERVER )
-      )
+    if ( ref $client and
+         ( $client != $SERVER )
+       )
     {
-        if( $SELECT->exists( $client ) )
+        if ( $SELECT->exists( $client ) )
         {
             $SELECT->remove($client);
         }
 
-        if( $client->connected )
+        if ( $client->connected )
         {
             # I have stopped using this socket
             $client->shutdown(2);
@@ -1435,27 +1435,27 @@ sub REAPER
 
     while (($child_pid = waitpid(-1, POSIX::WNOHANG)) > 0)
     {
-	if( my $child = delete $CHILD{$child_pid} )
-	{
-	    unless( $child->{'done'} )
-	    {
-		warn sprintf "| Child %d exited with status %s\n",
-		  $child_pid, defined $? ? $? : '<undef>';
-		$child->deregister( $? );
-	    }
-	}
-	elsif( my $worker = delete $WORKER{$child_pid} )
-	{
-	    warn "| Worker $child_pid exited with status $?\n";
-	    $worker->deregister( $? );
-	}
-	else
-	{
-	    warn "| Child $child_pid exited with status $?\n";
-	    warn "|   No object registerd with PID $child_pid\n";
-	}
+        if ( my $child = delete $CHILD{$child_pid} )
+        {
+            unless ( $child->{'done'} )
+            {
+                warn sprintf "| Child %d exited with status %s\n",
+                  $child_pid, defined $? ? $? : '<undef>';
+                $child->deregister( $? );
+            }
+        }
+        elsif ( my $worker = delete $WORKER{$child_pid} )
+        {
+            warn "| Worker $child_pid exited with status $?\n";
+            $worker->deregister( $? );
+        }
+        else
+        {
+            warn "| Child $child_pid exited with status $?\n";
+            warn "|   No object registerd with PID $child_pid\n";
+        }
     }
-    $SIG{CHLD} = \&REAPER;  # still loathe sysV
+    $SIG{CHLD} = \&REAPER;      # still loathe sysV
 }
 
 
@@ -1482,17 +1482,17 @@ sub daemonize
 
     $SIG{CHLD} = sub
     {
-	warn "--- Error during daemonize\n";
-	Para::Frame->go_down;
-	exit 1;
+        warn "--- Error during daemonize\n";
+        Para::Frame->go_down;
+        exit 1;
     };
     $SIG{USR1} = sub
     {
 #	warn "Running in background\n" if $DEBUG > 3;
-	warn "--- Running in background\n";
+        warn "--- Running in background\n";
 
 #	Para::Frame->go_down;
-	exit 0;
+        exit 0;
     };
 
     my $orig_name = $0;
@@ -1501,20 +1501,20 @@ sub daemonize
 
     chdir '/'                 or die "Can't chdir to /: $!";
     defined(my $pid = fork)   or die "Can't fork: $!";
-    if( $pid ) # In parent
+    if ( $pid )                 # In parent
     {
 #	open STDIN, '/dev/null'   or die "Can't read /dev/null: $!";
 #	open STDOUT, '>/dev/null' or die "Can't write to /dev/null: $!";
-	while(1)
-	{
-	    # Waiting for signal from child
-	    sleep 2;
-	    warn "--- Waiting for ready signal\n" if $DEBUG > 0;
-	}
+        while (1)
+        {
+            # Waiting for signal from child
+            sleep 2;
+            warn "--- Waiting for ready signal\n" if $DEBUG > 0;
+        }
 
-	warn "--- We should never come here\n";
-	Para::Frame->go_down;
-	exit;
+        warn "--- We should never come here\n";
+        Para::Frame->go_down;
+        exit;
     }
 
     # Reset signal handlers for the child
@@ -1523,26 +1523,26 @@ sub daemonize
 
     warn "--- In child\n";
 
-    if( $run_watchdog )
+    if ( $run_watchdog )
     {
-	Para::Frame::Watchdog->startup(1);
+        Para::Frame::Watchdog->startup(1);
 #	open_logfile(); # done in watchdog startup
-	POSIX::setsid             or die "Can't start a new session: $!";
-	write_pidfile();
+        POSIX::setsid             or die "Can't start a new session: $!";
+        write_pidfile();
 #	debug "Signal ready to parent";
-	kill 'USR1', $parent_pid; # Signal parent
-	Para::Frame::Watchdog->watch_loop();
+        kill 'USR1', $parent_pid; # Signal parent
+        Para::Frame::Watchdog->watch_loop();
     }
     else
     {
-	warn "\n\nStarted process $$ on ".now()."\n\n";
-	open_logfile();
-	Para::Frame->startup();
-	POSIX::setsid             or die "Can't start a new session: $!";
-	write_pidfile();
-	kill 'USR1', $parent_pid; # Signal parent
-	warn "\n\nStarted process $$ on ".now()."\n\n";
-	Para::Frame::main_loop();
+        warn "\n\nStarted process $$ on ".now()."\n\n";
+        open_logfile();
+        Para::Frame->startup();
+        POSIX::setsid             or die "Can't start a new session: $!";
+        write_pidfile();
+        kill 'USR1', $parent_pid; # Signal parent
+        warn "\n\nStarted process $$ on ".now()."\n\n";
+        Para::Frame::main_loop();
     }
 }
 
@@ -1590,21 +1590,21 @@ sub kill_children
 {
     my( $class ) = @_;
 
-    $SIG{CHLD} = 'IGNORE'; # Not turing it back on!!!
+    $SIG{CHLD} = 'IGNORE';      # Not turing it back on!!!
     $SIG{USR1} = 'DEFAULT';
 
     foreach my $child ( values %CHILD )
     {
-	my $cpid = $child->pid;
-	debug "  killing child $cpid";
-	kill 9, $cpid;
+        my $cpid = $child->pid;
+        debug "  killing child $cpid";
+        kill 9, $cpid;
     }
 
     foreach my $child ( values %WORKER )
     {
-	my $cpid = $child->pid;
-	debug "  killing worker $cpid";
-	kill 9, $cpid;
+        my $cpid = $child->pid;
+        debug "  killing worker $cpid";
+        kill 9, $cpid;
     }
 
 }
@@ -1651,21 +1651,21 @@ sub add_background_jobs_conditional
     # Add background jobs to do unless the load is too high, unless we
     # waited too long anyway
 
-    return if $LEVEL; # No bgjob if nested in req
+    return if $LEVEL;           # No bgjob if nested in req
 
 
     # Return it hasn't passed BGJOB_MAX secs since last time
     my $last_time = $BGJOBDATE ||= time;
     my $delta = time - $last_time;
 
-    if( $MEMORY or $TERMINATE )
+    if ( $MEMORY or $TERMINATE )
     {
-	# Clear out existing jobs if we want to reload
+        # Clear out existing jobs if we want to reload
     }
-    elsif( $delta < BGJOB_MAX )
+    elsif ( $delta < BGJOB_MAX )
     {
-	debug(4,"Too few seconds for MAX: $delta < ". BGJOB_MAX);
-	return;
+        debug(4,"Too few seconds for MAX: $delta < ". BGJOB_MAX);
+        return;
     }
 
     # Cache cleanup could safely be done here
@@ -1680,64 +1680,64 @@ sub add_background_jobs_conditional
     #
     foreach my $s (values %SESSION)
     {
-	my $sid = $s->id;
-	if( time - $s->latest->epoch > 2*60*60 )
-	{
-	    debug "Expired old session $sid";
-	    delete $SESSION{$sid};
-	    next;
-	}
+        my $sid = $s->id;
+        if ( time - $s->latest->epoch > 2*60*60 )
+        {
+            debug "Expired old session $sid";
+            delete $SESSION{$sid};
+            next;
+        }
 
-	foreach my $key ( keys %{$s->{'page_result'}} )
-	{
-	    my $result_time =
-	      $s->{'page_result'}{$key}{'time_done'};
+        foreach my $key ( keys %{$s->{'page_result'}} )
+        {
+            my $result_time =
+              $s->{'page_result'}{$key}{'time_done'};
 
-	    if( $result_time and (time - $result_time > 240) )
-	    {
-		debug "Expired page result from $sid: $key";
-		delete $s->{'page_result'}{$key};
-	    }
-	}
+            if ( $result_time and (time - $result_time > 240) )
+            {
+                debug "Expired page result from $sid: $key";
+                delete $s->{'page_result'}{$key};
+            }
+        }
     }
 
 
-    if( not $CFG->{'do_bgjob'} )
+    if ( not $CFG->{'do_bgjob'} )
     {
-	debug(3,"Not configged to do bgjobs");
-	while( my $job = shift @BGJOBS_PENDING )
-	{
-	    my( $oreq, $label, $coderef, @args ) = @$job;
-	    debug "Clearing out job $label from req $oreq->{reqnum}".
-	      (@args?" with args @args":'');
-	}
-	return;
+        debug(3,"Not configged to do bgjobs");
+        while ( my $job = shift @BGJOBS_PENDING )
+        {
+            my( $oreq, $label, $coderef, @args ) = @$job;
+            debug "Clearing out job $label from req $oreq->{reqnum}".
+              (@args?" with args @args":'');
+        }
+        return;
     }
 
     my $sysload;
 
     # Clear out existing jobs if we want to reload
-    if( @BGJOBS_PENDING and ( $MEMORY or $TERMINATE ) )
+    if ( @BGJOBS_PENDING and ( $MEMORY or $TERMINATE ) )
     {
-	return add_background_jobs($delta, $sysload);
+        return add_background_jobs($delta, $sysload);
     }
 
     # Return if CPU load is over BGJOB_CPU
-    if( $delta < BGJOB_MIN ) # unless a long time has passed
+    if ( $delta < BGJOB_MIN )   # unless a long time has passed
     {
-	$sysload = (Sys::CpuLoad::load)[1];
-	debug(3,"Sysload too high. $sysload > ". BGJOB_CPU)
-	  if $sysload > BGJOB_CPU;
-	return if $sysload > BGJOB_CPU;
+        $sysload = (Sys::CpuLoad::load)[1];
+        debug(3,"Sysload too high. $sysload > ". BGJOB_CPU)
+          if $sysload > BGJOB_CPU;
+        return if $sysload > BGJOB_CPU;
     }
 
     # Return if we had no visitors unless BGJOB_MED secs passed
     $BGJOBNR ||= -1;
-    if( $BGJOBNR == $REQNUM )
+    if ( $BGJOBNR == $REQNUM )
     {
-	debug(4,"Not enough seconds passed. $delta < ". BGJOB_MED)
-	  if $delta < BGJOB_MED;
-	return if $delta < BGJOB_MED;
+        debug(4,"Not enough seconds passed. $delta < ". BGJOB_MED)
+          if $delta < BGJOB_MED;
+        return if $delta < BGJOB_MED;
     }
 
     ### Reload updated modules
@@ -1770,52 +1770,52 @@ sub add_background_jobs
 
     # Add pending jobs set up with $req->add_background_job
     #
-    if( @BGJOBS_PENDING )
+    if ( @BGJOBS_PENDING )
     {
-	debug(3,"There are BGJOBS_PENDING");
-	my $job = shift @BGJOBS_PENDING;
-	my $original_request = shift @$job;
-	my $reqnum = $original_request->{'reqnum'};
-	$bg_user = $original_request->session->u;
-	$user_class->change_current_user($bg_user);
+        debug(3,"There are BGJOBS_PENDING");
+        my $job = shift @BGJOBS_PENDING;
+        my $original_request = shift @$job;
+        my $reqnum = $original_request->{'reqnum'};
+        $bg_user = $original_request->session->u;
+        $user_class->change_current_user($bg_user);
 
-	# Make sure the original request is the same for all jobs in
-	# each background request
+        # Make sure the original request is the same for all jobs in
+        # each background request
 
-	$req->{'original_request'} = $original_request;
-	$req->set_site($original_request->site);
-	$req->add_job('run_code', @$job);
+        $req->{'original_request'} = $original_request;
+        $req->set_site($original_request->site);
+        $req->add_job('run_code', @$job);
 
-	for( my $i=0; $i<=$#BGJOBS_PENDING; $i++ )
-	{
-	    if( $BGJOBS_PENDING[$i][0]{'reqnum'} == $reqnum )
-	    {
-		my $job = splice @BGJOBS_PENDING, $i, 1;
-		shift @$job;
-		$req->add_job('run_code', @$job);
+        for ( my $i=0; $i<=$#BGJOBS_PENDING; $i++ )
+        {
+            if ( $BGJOBS_PENDING[$i][0]{'reqnum'} == $reqnum )
+            {
+                my $job = splice @BGJOBS_PENDING, $i, 1;
+                shift @$job;
+                $req->add_job('run_code', @$job);
 
-		# This may have been the last item in the list
-		$i--;
-	    }
-	}
+                # This may have been the last item in the list
+                $i--;
+            }
+        }
     }
-    elsif( not $TERMINATE and not $MEMORY )
+    elsif ( not $TERMINATE and not $MEMORY )
     {
-	### Debug info
-	if( debug > 2 )
-	{
-	    my $t = now();
-	    my $s = $req->s;
-	    warn sprintf("# %s %s - localhost\n# Sid %s - Uid %d - debug %d\n",
-			 $t->ymd,
-			 $t->hms('.'),
-			 $s->id,
-			 $s->u->id,
-			 $s->{'debug'},
-			 );
-	}
+        ### Debug info
+        if ( debug > 2 )
+        {
+            my $t = now();
+            my $s = $req->s;
+            warn sprintf("# %s %s - localhost\n# Sid %s - Uid %d - debug %d\n",
+                         $t->ymd,
+                         $t->hms('.'),
+                         $s->id,
+                         $s->u->id,
+                         $s->{'debug'},
+                        );
+        }
 
-	Para::Frame->run_hook($req, 'add_background_jobs', $delta, $sysload);
+        Para::Frame->run_hook($req, 'add_background_jobs', $delta, $sysload);
     }
 
     $BGJOBDATE = time;
@@ -1846,111 +1846,111 @@ sub handle_request
     my $req = Para::Frame::Request->new( $REQNUM, $client, $recordref );
     ### Register the request
     $REQUEST{ $client } = $req;
-    $RESPONSE{ $client } = []; ### Client response queue
+    $RESPONSE{ $client } = [];  ### Client response queue
     switch_req( $req, 1 );
 
     #################
 
     $req->init or do
     {
-	debug "Ignoring this request";
-	close_callback($req->{'client'});
-	return;
+        debug "Ignoring this request";
+        close_callback($req->{'client'});
+        return;
     };
 
     my $session = $req->session;
 
 
- RESPONSE:
+  RESPONSE:
     {
-	### Redirected from another page?
+        ### Redirected from another page?
 #	my $key = $req->original_url_string;
-	my $key = $req->{'env'}{'REQUEST_URI'}
-	  || $req->original_url_string;
+        my $key = $req->{'env'}{'REQUEST_URI'}
+          || $req->original_url_string;
 #warn "req key is $key\n";
-	if( $session->{'page_result'}{ $key } )
-	{
-	    $req->send_stored_result( $key );
-	}
-	else
-	{
+        if ( $session->{'page_result'}{ $key } )
+        {
+            $req->send_stored_result( $key );
+        }
+        else
+        {
 
-	    # Authenticate user identity
-	    my $user_class = $Para::Frame::CFG->{'user_class'};
-	    $user_class->identify_user;     # Will set $s->{user}
-	    $user_class->authenticate_user;
+            # Authenticate user identity
+            my $user_class = $Para::Frame::CFG->{'user_class'};
+            $user_class->identify_user; # Will set $s->{user}
+            $user_class->authenticate_user;
 
-	    ### Debug info
-	    my $t = now();
-	    warn sprintf("# %s %s - %s\n# Sid %s - %d - Uid %d - debug %d\n",
-			 $t->ymd,
-			 $t->hms('.'),
-			 $req->client_ip,
-			 $session->id,
-			 $session->count,
-			 $session->u->id,
-			 $session->{'debug'},
-			);
-	    warn "# ".client_str($client)."\n" if debug() > 4;
+            ### Debug info
+            my $t = now();
+            warn sprintf("# %s %s - %s\n# Sid %s - %d - Uid %d - debug %d\n",
+                         $t->ymd,
+                         $t->hms('.'),
+                         $req->client_ip,
+                         $session->id,
+                         $session->count,
+                         $session->u->id,
+                         $session->{'debug'},
+                        );
+            warn "# ".client_str($client)."\n" if debug() > 4;
 
-	    $req->setup_jobs;
-	    $req->reset_response; # Needs lang and jobs
-	    my $resp = $req->response;
-	    $req->run_hook('on_first_response', $resp);
-	    $session->route->init;
+            $req->setup_jobs;
+            $req->reset_response; # Needs lang and jobs
+            my $resp = $req->response;
+            $req->run_hook('on_first_response', $resp);
+            $session->route->init;
 
-	    if( my $client_time = $req->http_if_modified_since )
-	    {
-		if( my $mtime = $resp->last_modified )
-		{
-		    if( $mtime <= $client_time )
-		    {
-			$resp->send_not_modified;
-			last RESPONSE;
-		    }
-		}
-	    }
-
-
-	    # TODO: Do not use loadpage for non-html mimetypes
-	    #       ... Client side will only use it for text/html
-
-	    # Do not send loadpage if we didn't got a session object
-
-	    # Do not send loadpage if $TERMINATE active
-
-	    my $loadpage = $req->dirconfig->{'loadpage'} ||
-	      $req->site->loadpage;
-	    if( $session->count )
-	    {
-		if( ($loadpage ne 'no') and not $TERMINATE )
-		{
-		    $req->send_code('USE_LOADPAGE', $loadpage, 3, $REQNUM,
-				    loc("Processing"));
-		}
-	    }
-	    else
-	    {
-		# We must deliver the session cookie. It is needed by
-		# future loadpages!
-
-		debug "This is the first request in this session";
-	    }
+            if ( my $client_time = $req->http_if_modified_since )
+            {
+                if ( my $mtime = $resp->last_modified )
+                {
+                    if ( $mtime <= $client_time )
+                    {
+                        $resp->send_not_modified;
+                        last RESPONSE;
+                    }
+                }
+            }
 
 
+            # TODO: Do not use loadpage for non-html mimetypes
+            #       ... Client side will only use it for text/html
 
-	    ### queue request if we are nested in yield
-	    if( $LEVEL )
-	    {
-		debug "Queueing job for ".$req->id;
-		$req->add_job('nop');
-		$req->add_job('after_jobs');
-	    }
-	    else
-	    {
-		$req->after_jobs;
-	    }
-	}
+            # Do not send loadpage if we didn't got a session object
+
+            # Do not send loadpage if $TERMINATE active
+
+            my $loadpage = $req->dirconfig->{'loadpage'} ||
+              $req->site->loadpage;
+            if ( $session->count )
+            {
+                if ( ($loadpage ne 'no') and not $TERMINATE )
+                {
+                    $req->send_code('USE_LOADPAGE', $loadpage, 3, $REQNUM,
+                                    loc("Processing"));
+                }
+            }
+            else
+            {
+                # We must deliver the session cookie. It is needed by
+                # future loadpages!
+
+                debug "This is the first request in this session";
+            }
+
+
+
+            ### queue request if we are nested in yield
+            if ( $LEVEL )
+            {
+                debug "Queueing job for ".$req->id;
+                $req->add_job('nop');
+                $req->add_job('after_jobs');
+            }
+            else
+            {
+                $req->after_jobs;
+            }
+        }
     }
 
     ### Clean up used globals
@@ -1978,7 +1978,7 @@ sub handle_http
 
     ### Register the request
     $REQUEST{ $client } = $req;
-    $RESPONSE{ $client } = []; ### Client response queue
+    $RESPONSE{ $client } = [];  ### Client response queue
     switch_req( $req, 1 );
 
     #################
@@ -2005,7 +2005,7 @@ sub handle_http
 #	    $session->route->init;
 
     my $resp = $req->response;
-    if( $resp->render_output() )
+    if ( $resp->render_output() )
     {
         $resp->send_http_output();
     }
@@ -2101,9 +2101,9 @@ sub add_hook
     debug(4,"add_hook $label from ".(caller));
 
     # Validate hook label
-    unless( ref $HOOK{$label} )
+    unless ( ref $HOOK{$label} )
     {
-	die "No such hook: $label\n";
+        die "No such hook: $label\n";
     }
 
     push @{$HOOK{$label}}, $code;
@@ -2123,52 +2123,52 @@ Runs hooks with label $label.
 sub run_hook
 {
     my( $class, $req, $label ) = (shift, shift, shift);
-    if( debug > 3 )
+    if ( debug > 3 )
 #    if( debug )
     {
-	unless( $label )
-	{
-	    carp "Hook label missing";
-	}
+        unless( $label )
+        {
+            carp "Hook label missing";
+        }
 
-	if( $req and $req->{reqnum} )
-	{
-	    debug(0,"run_hook $label for $req->{reqnum}");
-	}
-	else
-	{
-	    debug(0,"run_hook $label");
-	}
+        if ( $req and $req->{reqnum} )
+        {
+            debug(0,"run_hook $label for $req->{reqnum}");
+        }
+        else
+        {
+            debug(0,"run_hook $label");
+        }
     }
 
     return unless $HOOK{$label};
 
-    my %running = (); # Stop on recursive running
+    my %running = ();           # Stop on recursive running
 
     my $hooks = $HOOK{$label};
     $hooks = [$hooks] unless ref $hooks eq 'ARRAY';
     foreach my $hook (@$hooks)
     {
-	if( $Para::Frame::hooks_running{"$hook"} )
-	{
-	    warn "Avoided running $label hook $hook again\n";
-	}
-	else
-	{
-	    $Para::Frame::hooks_running{"$hook"} ++;
-	    switch_req( $req ) if $req;
+        if ( $Para::Frame::hooks_running{"$hook"} )
+        {
+            warn "Avoided running $label hook $hook again\n";
+        }
+        else
+        {
+            $Para::Frame::hooks_running{"$hook"} ++;
+            switch_req( $req ) if $req;
 #	    warn "about to run coderef $hook with params @_"; ## DEBUG
-	    eval
-	    {
-		my $val = &{$hook}(@_);
-	    };
-	    $Para::Frame::hooks_running{"$hook"} --;
-	    if( $@ )
-	    {
-		debug(3, "hook $label throw an exception".datadump($@));
-		die $@;
-	    }
-	}
+            eval
+            {
+                my $val = &{$hook}(@_);
+            };
+            $Para::Frame::hooks_running{"$hook"} --;
+            if ( $@ )
+            {
+                debug(3, "hook $label throw an exception".datadump($@));
+                die $@;
+            }
+        }
     }
 
     debug(4,"run_hook $label - done");
@@ -2191,9 +2191,9 @@ sub add_global_tt_params
 {
     my( $class, $params ) = @_;
 
-    while( my($key, $val) = each %$params )
+    while ( my($key, $val) = each %$params )
     {
-	$PARAMS->{$key} = $val;
+        $PARAMS->{$key} = $val;
 #	cluck("Add global TT param $key from ");
     }
 }
@@ -2226,9 +2226,9 @@ sub write_pidfile
     my $pidfile = $Para::Frame::CFG->{'pidfile'};
 #    warn "Writing pidfile: $pidfile\n";
     create_file( $pidfile, "$pid\n",
-		 {
-		     do_not_chmod_dir => 1,
-		 });
+                 {
+                  do_not_chmod_dir => 1,
+                 });
     $ACTIVE_PIDFILE = $pid;
 }
 
@@ -2254,10 +2254,10 @@ sub remove_pidfile
 
 END
 {
-    if( $ACTIVE_PIDFILE and $ACTIVE_PIDFILE == $$ )
+    if ( $ACTIVE_PIDFILE and $ACTIVE_PIDFILE == $$ )
     {
-	remove_pidfile();
-	undef $ACTIVE_PIDFILE;
+        remove_pidfile();
+        undef $ACTIVE_PIDFILE;
     }
 }
 
@@ -2548,7 +2548,7 @@ sub configure
     $PARAMS     = {};
     $INDENT     = 0;
 
-    $CFG = $cfg_in; # Assign to global var
+    $CFG = $cfg_in;             # Assign to global var
 #    debug( datadump( $Para::Frame::CFG ) ); ### DEBUG
 
     $ENV{PATH} = "/usr/bin:/bin";
@@ -2569,7 +2569,7 @@ sub configure
 
     $CFG->{'paraframe_group'} ||= 'staff';
     getgrnam( $CFG->{'paraframe_group'} )
-	or die "paraframe_group $CFG->{paraframe_group} doesn't exist\n";
+      or die "paraframe_group $CFG->{paraframe_group} doesn't exist\n";
 
     $CFG->{'approot'} || $CFG->{'appback'}
       or die "appback or approot missing in config\n";
@@ -2585,10 +2585,10 @@ sub configure
     $CFG->{'time_format'} ||= "%Y-%m-%d %H.%M";
     $Para::Frame::Time::FORMAT = DateTime::Format::Strptime->
       new(
-	  pattern => $CFG->{'time_format'},
-	  time_zone => $Para::Frame::Time::TZ,
-	  locale => $CFG->{'locale'},
-	 );
+          pattern => $CFG->{'time_format'},
+          time_zone => $Para::Frame::Time::TZ,
+          locale => $CFG->{'locale'},
+         );
 
     $CFG->{'time_stringify'} ||= 0;
     Para::Frame::Time->set_stringify($CFG->{'time_stringify'});
@@ -2600,20 +2600,20 @@ sub configure
     # Make appfmly and appback listrefs if they are not
     foreach my $key ('appfmly', 'appback')
     {
-	unless( ref $CFG->{$key} )
-	{
-	    my @content = $CFG->{$key} ? $CFG->{$key} : ();
-	    $CFG->{$key} = [ @content ];
-	}
+        unless ( ref $CFG->{$key} )
+        {
+            my @content = $CFG->{$key} ? $CFG->{$key} : ();
+            $CFG->{$key} = [ @content ];
+        }
 
-	if( $DEBUG > 3 )
-	{
-	    warn "$key set to ".datadump($CFG->{$key});
-	}
+        if ( $DEBUG > 3 )
+        {
+            warn "$key set to ".datadump($CFG->{$key});
+        }
     }
 
     my $ttcbase = $CFG->{'dir_var'} || ($CFG->{'appback'}[0]?$CFG->{'appback'}[0] .'/var':
-      $CFG->{'approot'} .'/var');
+                                        $CFG->{'approot'} .'/var');
     $CFG->{'ttcdir'} ||= $ttcbase . "/ttc";
     debug 2, "ttcdir set to ".$CFG->{'ttcdir'};
 
@@ -2624,7 +2624,7 @@ sub configure
     my $tt_plugin_loaders = $CFG->{'tt_plugin_loaders'} || [];
     unless( UNIVERSAL::isa $tt_plugin_loaders, 'ARRAY' )
     {
-	$tt_plugin_loaders = [$tt_plugin_loaders];
+        $tt_plugin_loaders = [$tt_plugin_loaders];
     }
     use Template::Plugins;
     push @$tt_plugin_loaders,
@@ -2643,75 +2643,75 @@ sub configure
 
 
     my %th_default =
-	(
-	 ENCODING => 'utf8',
-	 PRE_PROCESS => 'header_prepare.tt',
-	 POST_PROCESS => 'footer_prepare.tt',
+      (
+       ENCODING => 'utf8',
+       PRE_PROCESS => 'header_prepare.tt',
+       POST_PROCESS => 'footer_prepare.tt',
 #	 STASH => Para::Frame::Template::Stash::CheckUTF8->new,
-	 TRIM => 1,
-	 PRE_CHOMP => 1,
-	 POST_CHOMP => 1,
-	 RECURSION => 1,
-	 LOAD_PLUGINS => $tt_plugin_loaders,
+       TRIM => 1,
+       PRE_CHOMP => 1,
+       POST_CHOMP => 1,
+       RECURSION => 1,
+       LOAD_PLUGINS => $tt_plugin_loaders,
 #	 PLUGIN_BASE => $tt_plugins,
-	 ABSOLUTE => 1,
+       ABSOLUTE => 1,
 #         DEBUG_ALL => 1,  # DEBUG
-	 FILTERS =>
-	 {
+       FILTERS =>
+       {
 #	     loc => \&Para::Frame::L10N::loc,
-	  'esc_apostrophe' => sub { $_[0] =~ s/'/\\'/g; $_[0] },
-	 },
-	);
+        'esc_apostrophe' => sub { $_[0] =~ s/'/\\'/g; $_[0] },
+       },
+      );
 
 
     Para::Frame::Burner->add({
-			      %th_default,
-			      INTERPOLATE => 1,
-			      COMPILE_DIR =>  $CFG->{'ttcdir'}.'/html',
-			      type => 'html',
-			      subdir_suffix => '',
-			      pre_dir => 'inc',
-			      inc_dir => 'inc',
-			      handles => ['tt', 'html_tt', 'xtt'],
-			     });
+                              %th_default,
+                              INTERPOLATE => 1,
+                              COMPILE_DIR =>  $CFG->{'ttcdir'}.'/html',
+                              type => 'html',
+                              subdir_suffix => '',
+                              pre_dir => 'inc',
+                              inc_dir => 'inc',
+                              handles => ['tt', 'html_tt', 'xtt'],
+                             });
 
 
 
     Para::Frame::Burner->add({
-			      %th_default,
-			      COMPILE_DIR =>  $CFG->{'ttcdir'}.'/html_pre',
-			      TAG_STYLE => 'star',
-			      type => 'html_pre',
-			      subdir_suffix => '_pre',
-			      pre_dir => 'inc_pre',
-			      inc_dir => 'inc',
-			     });
+                              %th_default,
+                              COMPILE_DIR =>  $CFG->{'ttcdir'}.'/html_pre',
+                              TAG_STYLE => 'star',
+                              type => 'html_pre',
+                              subdir_suffix => '_pre',
+                              pre_dir => 'inc_pre',
+                              inc_dir => 'inc',
+                             });
 
     Para::Frame::Burner->add({
 #			      STASH => Para::Frame::Template::Stash::CheckUTF8->new,
-			      COMPILE_DIR => $CFG->{'ttcdir'}.'/plain',
-			      FILTERS =>
-			      {
-			       'uri' => sub { CGI::escape($_[0]) },
-			       'lf'  => sub { $_[0] =~ s/\r\n/\n/g; $_[0] },
-			       'autoformat' => sub { autoformat($_[0]) },
-			       'esc_apostrophe' => sub { $_[0] =~ s/'/\\'/g; $_[0] },
-			      },
-			      type => 'plain',
-			      subdir_suffix => '_plain',
-			      pre_dir => 'inc_plain',
-			      inc_dir => 'inc_plain',
-			      handles => ['css_tt','js_tt','css_dtt','js_dtt'],
-			      ABSOLUTE => 1,
-			      TRIM => 1,
-			     });
+                              COMPILE_DIR => $CFG->{'ttcdir'}.'/plain',
+                              FILTERS =>
+                              {
+                               'uri' => sub { CGI::escape($_[0]) },
+                               'lf'  => sub { $_[0] =~ s/\r\n/\n/g; $_[0] },
+                               'autoformat' => sub { autoformat($_[0]) },
+                               'esc_apostrophe' => sub { $_[0] =~ s/'/\\'/g; $_[0] },
+                              },
+                              type => 'plain',
+                              subdir_suffix => '_plain',
+                              pre_dir => 'inc_plain',
+                              inc_dir => 'inc_plain',
+                              handles => ['css_tt','js_tt','css_dtt','js_dtt'],
+                              ABSOLUTE => 1,
+                              TRIM => 1,
+                             });
 
     $CFG->{'port'} ||= 7788;
 
     $CFG->{'pidfile'} ||= $CFG->{'dir_run'} .
-	"/parframe_" . $CFG->{'port'} . ".pid";
+      "/parframe_" . $CFG->{'port'} . ".pid";
     $CFG->{'logfile'} ||= $CFG->{'dir_log'} .
-	"/paraframe_" . $CFG->{'port'} . ".log";
+      "/paraframe_" . $CFG->{'port'} . ".log";
 
     $CFG->{'user_class'} ||= 'Para::Frame::User';
     $CFG->{'site_class'} ||= 'Para::Frame::Site';
@@ -2805,74 +2805,74 @@ sub report
 
     foreach my $reqkey (keys %REQUEST)
     {
-	my $req = $REQUEST{$reqkey};
-	my $reqnum = $req->{'reqnum'};
-	$out .= "Req $reqnum\n";
+        my $req = $REQUEST{$reqkey};
+        my $reqnum = $req->{'reqnum'};
+        $out .= "Req $reqnum\n";
 
-	if( $req->{'in_yield'} )
-	{
-	    $out .= "  In_yield\n";
-	}
+        if ( $req->{'in_yield'} )
+        {
+            $out .= "  In_yield\n";
+        }
 
-	if( $req->{'cancel'} )
-	{
-	    $out .=  "  cancelled by request\n";
-	}
+        if ( $req->{'cancel'} )
+        {
+            $out .=  "  cancelled by request\n";
+        }
 
-	if( $req->{'wait'} )
-	{
-	    $out .= "  stays open, was asked to wait for $req->{'wait'} things\n";
-	}
+        if ( $req->{'wait'} )
+        {
+            $out .= "  stays open, was asked to wait for $req->{'wait'} things\n";
+        }
 
-	if( my $numjobs = @{$req->{'jobs'}} )
-	{
-	    $out .= "  $numjobs jobs:\n";
-	    foreach my $job (@{$req->{'jobs'}})
-	    {
-		my( $cmd, @args ) = @$job;
-		$out .= "    job $cmd with args @args\n";
-	    }
-	}
+        if ( my $numjobs = @{$req->{'jobs'}} )
+        {
+            $out .= "  $numjobs jobs:\n";
+            foreach my $job (@{$req->{'jobs'}})
+            {
+                my( $cmd, @args ) = @$job;
+                $out .= "    job $cmd with args @args\n";
+            }
+        }
 
-	if( $req->{'childs'} )
-	{
-	    $out .= "  stays open, waiting for $req->{'childs'} childs\n";
-	}
+        if ( $req->{'childs'} )
+        {
+            $out .= "  stays open, waiting for $req->{'childs'} childs\n";
+        }
     }
 
     $out .= "\nChilds:\n";
     foreach my $child ( values %CHILD )
     {
-	my $creq = $child->req;
-	my $creqnum = $creq->{'reqnum'};
-	my $cclient = client_str($creq->client);
-	my $cpid = $child->pid;
-	$out .= "  Req $creqnum $cclient has a child with pid $cpid\n";
+        my $creq = $child->req;
+        my $creqnum = $creq->{'reqnum'};
+        my $cclient = client_str($creq->client);
+        my $cpid = $child->pid;
+        $out .= "  Req $creqnum $cclient has a child with pid $cpid\n";
     }
     unless( keys %CHILD )
     {
-	$out .= "none\n";
+        $out .= "none\n";
     }
 
     $out .= "\n";
 
-    if( $BGJOBDATE )
+    if ( $BGJOBDATE )
     {
-	$out .= sprintf "Last background job (#%d) was done %s\n",
-	  $BGJOBNR, Para::Frame::Time->get($BGJOBDATE)->
-	    strftime("%F %H.%M.%S");
+        $out .= sprintf "Last background job (#%d) was done %s\n",
+          $BGJOBNR, Para::Frame::Time->get($BGJOBDATE)->
+            strftime("%F %H.%M.%S");
     }
 
     $out .= "\nActive background jobs:\n";
     foreach my $job ( @BGJOBS_PENDING )
     {
-	my( $oreq, $label, $coderef, @args ) = @$job;
-	$out .= "Original req $oreq->{reqnum}\n";
-	$out .= "  Code $label with args @args\n"
+        my( $oreq, $label, $coderef, @args ) = @$job;
+        $out .= "Original req $oreq->{reqnum}\n";
+        $out .= "  Code $label with args @args\n"
     }
     unless( @BGJOBS_PENDING )
     {
-	$out .= "none\n";
+        $out .= "none\n";
     }
 
     $out .= "\n";
@@ -2979,21 +2979,21 @@ sub set_global_tt_params
 
     my $params =
     {
-	'cfg'             => $Para::Frame::CFG,
-	'debug'           => sub{ debug(@_);"" },
-        'debug_level'     => sub{ $Para::Frame::DEBUG },
-	'dump'            => \&Para::Frame::Utils::datadump,
-	'emergency_mode'  => sub{ $Para::Frame::Watchdog::EMERGENCY_MODE },
-        'file'            => sub{Para::Frame::File->new(@_)},
-        'loc'             => \&Para::Frame::L10N::loc,
-        'locescape'       => \&Para::Frame::L10N::locescape,
-        'mt'              => \&Para::Frame::L10N::mt,
-        'note'            => sub{ $Para::Frame::REQ->note(@_); "" },
-	'rand'            => sub{ int rand($_[0]) },
-        'timediff'        => \&Para::Frame::Utils::timediff,
-	'uri'             => \&Para::Frame::Utils::uri,
-	'uri_path'        => \&Para::Frame::Utils::uri_path,
-	'warn'            => sub{ warn($_[0],"\n");"" },
+     'cfg'             => $Para::Frame::CFG,
+     'debug'           => sub{ debug(@_);"" },
+     'debug_level'     => sub{ $Para::Frame::DEBUG },
+     'dump'            => \&Para::Frame::Utils::datadump,
+     'emergency_mode'  => sub{ $Para::Frame::Watchdog::EMERGENCY_MODE },
+     'file'            => sub{Para::Frame::File->new(@_)},
+     'loc'             => \&Para::Frame::L10N::loc,
+     'locescape'       => \&Para::Frame::L10N::locescape,
+     'mt'              => \&Para::Frame::L10N::mt,
+     'note'            => sub{ $Para::Frame::REQ->note(@_); "" },
+     'rand'            => sub{ int rand($_[0]) },
+     'timediff'        => \&Para::Frame::Utils::timediff,
+     'uri'             => \&Para::Frame::Utils::uri,
+     'uri_path'        => \&Para::Frame::Utils::uri_path,
+     'warn'            => sub{ warn($_[0],"\n");"" },
     };
 
     $class->add_global_tt_params( $params );
