@@ -137,7 +137,7 @@ sub register_module
 
     warn "REGISTER MODULE $package\n";
 
-    if( $file )
+    if ( $file )
     {
         $INCS{$module} = $file;
     }
@@ -151,17 +151,17 @@ sub register_module
 
     unless( $package eq __PACKAGE__ )
     {
-	warn "  ******  $package registred as $module -> $file\n" if $DEBUG;
-	if( my $coderef = $package->can('import') )
-	{
-	    warn "          $package has an import() function defined ($coderef)\n" if $DEBUG;
-	    unless( $COMPILED{$module} )
-	    {
-	      $IMPORTS{ $module } = $coderef;
-		no strict 'refs';
+        warn "  ******  $package registred as $module -> $file\n" if $DEBUG;
+        if ( my $coderef = $package->can('import') )
+        {
+            warn "          $package has an import() function defined ($coderef)\n" if $DEBUG;
+            unless ( $COMPILED{$module} )
+            {
+                $IMPORTS{ $module } = $coderef;
+                no strict 'refs';
 #		warn "  --> Should do wrapping up\n";
 #		*{"$package\::import"} = sub
-		my $subdef = '
+                my $subdef = '
                 sub import
 	        {
 		    my $class = shift;
@@ -186,16 +186,16 @@ sub register_module
 		    return $res;
 		}
 ';
-		warn "Evaluating:\npackage $package; $subdef\n" if $DEBUG > 1;
-		no warnings;
-		eval "package $package; $subdef";
+                warn "Evaluating:\npackage $package; $subdef\n" if $DEBUG > 1;
+                no warnings;
+                eval "package $package; $subdef";
 
-	    }
-	    else
-	    {
-		warn "  ------> But we already know that!\n" if $DEBUG;
-	    }
-	}
+            }
+            else
+            {
+                warn "  ------> But we already know that!\n" if $DEBUG;
+            }
+        }
     }
 
     $COMPILED{$module} = (stat $file)[9];
@@ -213,17 +213,17 @@ sub check_for_updates
 {
 #    $Exporter::Verbose = 1; # DEBUG
 
-    while( my($filename, $realfilename) = each %INCS )
+    while ( my($filename, $realfilename) = each %INCS )
     {
-	my $mtime = (stat $realfilename)[9]
-	  or die "Lost contact with $realfilename";
+        my $mtime = (stat $realfilename)[9]
+          or die "Lost contact with $realfilename";
 
-	if( $mtime > $COMPILED{$filename} )
-	{
-	    warn "  New version of $filename detected !!!\n";
+        if ( $mtime > $COMPILED{$filename} )
+        {
+            warn "  New version of $filename detected !!!\n";
 
-	    Para::Frame::Reload->reload( $filename, $mtime );
-	}
+            Para::Frame::Reload->reload( $filename, $mtime );
+        }
     }
 }
 
@@ -242,14 +242,14 @@ sub reload
 {
     my( $class, $module, $mtime ) = @_;
 
-    unless( $INCS{$module} )
+    unless ( $INCS{$module} )
     {
-	warn "Skipping unregistred module $module during reload\n";
-	return 0;
+        warn "Skipping unregistred module $module during reload\n";
+        return 0;
     }
 
     $mtime ||= (stat $INCS{$module})[9]
-	or die "Lost contact with $module: $INCS{$module}";
+      or die "Lost contact with $module: $INCS{$module}";
 
     my $pkgname = module_to_package( $module );
 
@@ -257,69 +257,69 @@ sub reload
     my $errors = "";
     eval
     {
-	# Get rid of warnings...
-	open OLDERR, ">&", \*STDERR  or die "Can't dup STDERR: $!";
-	close STDERR;
-	open STDERR, '>', \$errors   or die "Can't redirect STDERR: $!";
+        # Get rid of warnings...
+        open OLDERR, ">&", \*STDERR  or die "Can't dup STDERR: $!";
+        close STDERR;
+        open STDERR, '>', \$errors   or die "Can't redirect STDERR: $!";
         binmode(STDERR, ":utf8");
 
-	require $module;
+        require $module;
     };
 
     open STDERR, ">&OLDERR"    or die "Can't dup OLDERR: $!";
     close OLDERR;
     binmode(STDERR, ":utf8");
 
-    if( $@ )
+    if ( $@ )
     {
-	my $error_out = "";
-	foreach my $row ( split /\n/, $errors )
-	{
-	    # Filters also Constant subroutine...
-	    next if $row =~ /^subroutine .{1,50} redefined at/i;
-	    $error_out .= "* $row\n";
-	}
+        my $error_out = "";
+        foreach my $row ( split /\n/, $errors )
+        {
+            # Filters also Constant subroutine...
+            next if $row =~ /^subroutine .{1,50} redefined at/i;
+            $error_out .= "* $row\n";
+        }
 
-	if( $error_out )
-	{
-	    $error_out .= "* -----------------------\n";
-	}
+        if ( $error_out )
+        {
+            $error_out .= "* -----------------------\n";
+        }
 
-	foreach my $row ( split /\n/, $@ )
-	{
-	    next if $row =~ /^Compilation failed/;
-	    $error_out .= "* $row\n";
-	}
+        foreach my $row ( split /\n/, $@ )
+        {
+            next if $row =~ /^Compilation failed/;
+            $error_out .= "* $row\n";
+        }
 
-	warn "*************************\n";
-	warn "****  COMPILATION FAILED: $module\n";
-	warn $error_out;
-	warn "*************************\n";
+        warn "*************************\n";
+        warn "****  COMPILATION FAILED: $module\n";
+        warn $error_out;
+        warn "*************************\n";
 
-	# Set a global error state
-	$Para::Frame::Result::COMPILE_ERROR{$module} = $@;
+        # Set a global error state
+        $Para::Frame::Result::COMPILE_ERROR{$module} = $@;
 
-	$COMPILED{$module} = $mtime; # Do not try again
-	return 0;
+        $COMPILED{$module} = $mtime; # Do not try again
+        return 0;
     }
-    elsif( length $errors )
+    elsif ( length $errors )
     {
-	foreach my $row ( split /\n/, $errors )
-	{
-	    # Filters also Constant subroutine...
-	    next if $row =~ /subroutine .{1,50} redefined at/i;
-	    warn "$row\n";
-	}
+        foreach my $row ( split /\n/, $errors )
+        {
+            # Filters also Constant subroutine...
+            next if $row =~ /subroutine .{1,50} redefined at/i;
+            warn "$row\n";
+        }
     }
 
-    if( $pkgname->can('on_reload') )
+    if ( $pkgname->can('on_reload') )
     {
-	$pkgname->on_reload;
+        $pkgname->on_reload;
     }
-    elsif( $pkgname->can('import') )
+    elsif ( $pkgname->can('import') )
     {
 #	warn "============ call_import\n";
-	Para::Frame::Reload->call_import($pkgname);
+        Para::Frame::Reload->call_import($pkgname);
 #	warn "============ call_import done\n";
     }
 
@@ -346,13 +346,13 @@ sub call_import
 
     $pkgname ||= caller(0);
 
-		warn "    $pkgname can import\n" if $DEBUG;
-		my $module = package_to_module( $pkgname );
-		if( my $called = $CALLER{ $pkgname } )
-		{
-		    warn "      has been called\n" if $DEBUG;
-		    foreach my $callerpkg ( keys %$called )
-		    {
+    warn "    $pkgname can import\n" if $DEBUG;
+    my $module = package_to_module( $pkgname );
+    if ( my $called = $CALLER{ $pkgname } )
+    {
+        warn "      has been called\n" if $DEBUG;
+        foreach my $callerpkg ( keys %$called )
+        {
 			warn "        by $callerpkg\n" if $DEBUG;
 			my $importsubname = $pkgname;
 			$importsubname =~ s/::/__/g;
@@ -367,7 +367,7 @@ sub call_import
 			    warn "          Creating a callback sub\n" if $DEBUG;
 			    no strict 'refs';
 
-                            my $callbacksub =  "
+                my $callbacksub =  "
                             package $callerpkg;
                             sub on_reload__$importsubname
 			    {
@@ -384,12 +384,12 @@ sub call_import
 			my $args = $called->{$callerpkg};
 			warn "          Calling the callback sub with @$args\n" if $DEBUG;
 			no strict 'refs';
-                        local ($^W) = 0 ; # Disable redefine warnings
+            local ($^W) = 0 ;   # Disable redefine warnings
 			&{$coderef}( $callerpkg, @$args );
 #			$callerpkg->"on_reload__$importsubname"(@$args);
 			warn "          DONE\n" if $DEBUG;
-		    }
-		}
+        }
+    }
 
 }
 
@@ -410,14 +410,14 @@ sub modules_importing_from_us
 
     warn "    $pkgname...\n" if $DEBUG;
     my $module = package_to_module( $pkgname );
-    if( my $called = $CALLER{ $pkgname } )
+    if ( my $called = $CALLER{ $pkgname } )
     {
-	warn "      has been called\n" if $DEBUG;
-	foreach my $callerpkg ( keys %$called )
-	{
-	    warn "        by $callerpkg\n" if $DEBUG;
-	    $class->reload( $callerpkg );
-	}
+        warn "      has been called\n" if $DEBUG;
+        foreach my $callerpkg ( keys %$called )
+        {
+            warn "        by $callerpkg\n" if $DEBUG;
+            $class->reload( $callerpkg );
+        }
     }
 }
 
