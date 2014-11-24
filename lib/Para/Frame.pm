@@ -39,11 +39,11 @@ use File::Basename; # dirname
 use Storable qw( thaw );
 use Number::Format;
 
-our $VERSION = "1.30"; # Paraframe version
+our $VERSION = "1.31"; # Paraframe version
 
 
 use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir client_str );
-use Para::Frame::Template::Stash::CheckUTF8;
+#use Para::Frame::Template::Stash::CheckUTF8;
 use Para::Frame::Unicode;
 use Para::Frame::Watchdog;
 use Para::Frame::Request;
@@ -2647,7 +2647,7 @@ sub configure
 	 ENCODING => 'utf8',
 	 PRE_PROCESS => 'header_prepare.tt',
 	 POST_PROCESS => 'footer_prepare.tt',
-	 STASH => Para::Frame::Template::Stash::CheckUTF8->new,
+#	 STASH => Para::Frame::Template::Stash::CheckUTF8->new,
 	 TRIM => 1,
 	 PRE_CHOMP => 1,
 	 POST_CHOMP => 1,
@@ -2688,7 +2688,7 @@ sub configure
 			     });
 
     Para::Frame::Burner->add({
-			      STASH => Para::Frame::Template::Stash::CheckUTF8->new,
+#			      STASH => Para::Frame::Template::Stash::CheckUTF8->new,
 			      COMPILE_DIR => $CFG->{'ttcdir'}.'/plain',
 			      FILTERS =>
 			      {

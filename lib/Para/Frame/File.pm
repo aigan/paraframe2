@@ -1098,7 +1098,7 @@ sub url_with_query
         $url_string .= "?".$query;
     }
 
-    carp"DEPRECATED";
+    cluck "DEPRECATED";
 
     return Para::Frame::URI->new($url_string);
 }
