@@ -2021,9 +2021,15 @@ sub handle_http
 
   Para::Frame->add_hook( $label, \&code )
 
-Adds code to be run on special occations
+Adds code to be run on special occations. This adds the code to the
+hook. The actual hook is added (created) by adding the hook label to
+%HOOK and then run the hook using L</run_hook>.
 
 Availible hooks are:
+
+=head3 on_configure
+
+Runs just after the main PF configure. Before DB connection. Before startup.
 
 =head3 on_startup
 
@@ -2044,6 +2050,8 @@ Runs in the child just after the fork.
 
 =head3 on_reload
 
+Called with filepath as argument on each reload of a module. Will also
+be called on first load of module if loaded by compile() method.
 
 =head3 done
 

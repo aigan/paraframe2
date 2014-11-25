@@ -1560,6 +1560,8 @@ sub template
     #
     #Cache within a req
 
+    confess "No req" unless $Para::Frame::REQ;
+
     my $f2t = $Para::Frame::REQ->{'file2template'} ||= {};
     unless ( $f2t->{$f} )
     {

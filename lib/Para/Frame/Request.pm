@@ -3447,6 +3447,7 @@ sub reset_response
     my $url;
 
     # Clear out page2template cache
+    confess "No req" unless $Para::Frame::REQ;
     $Para::Frame::REQ->{'file2template'} = {};
 
     if ( my $resp = $req->{'resp'} )

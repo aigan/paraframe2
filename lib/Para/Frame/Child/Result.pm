@@ -148,7 +148,8 @@ sub return
 {
     my( $result, $message ) = @_;
 
-    debug(1,"Returning child result for $Para::Frame::REQ->{reqnum}");
+    debug(1,"Returning child result for $Para::Frame::REQ->{reqnum}")
+      if $Para::Frame::REQ;
 
     $result->message( $message ) if $message;
     my $data = freeze( $result );

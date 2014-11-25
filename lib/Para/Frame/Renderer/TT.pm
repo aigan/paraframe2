@@ -118,6 +118,7 @@ sub new
 
         ### FIXME
         my $url_path = $page->url_path;
+        confess "No req" unless $Para::Frame::REQ;
         my $tried_to_find = $Para::Frame::REQ->{'tried_to_find'} ||= {};
 #	    debug datadump($tried_to_find);
         unless ( $tried_to_find->{ $url_path } ++ )

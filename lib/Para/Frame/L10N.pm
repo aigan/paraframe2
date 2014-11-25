@@ -61,6 +61,7 @@ This is an exportable function.
 sub loc (@)
 {
 #    debug "Translating @_";
+    confess "No req" unless $Para::Frame::REQ;
     my $res = $Para::Frame::REQ->{'lang'}->maketext(@_);
 #    if( utf8::is_utf8($res) )
 #    {
