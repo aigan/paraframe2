@@ -2266,7 +2266,7 @@ sub calendar
       (
        "</div>".
        "<div valign=\"middle\" style=\"text-align: center;vertical-align: middle;float:left;\">".
-       "<i class=\"fa fa-calendar fa-lg\" id=\"${id}-button\" style=\"line-height: 1.7;margin-left: -14px;font-size: 12px;\"></i>".
+       "<i class=\"fa fa-calendar fa-lg\" id=\"${id}-button\" style=\"margin-left: -2em;font-size: 14px;vertical-align: -55%;\"></i>".
        "</div>"
       );
 

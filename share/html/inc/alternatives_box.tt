@@ -3,10 +3,10 @@
 %]
 
 <table class="admin emphasise_link">
-	<tr>
-		<td class="header">
-			<h2>[% a.title | html %]</h2>
-		</td>
+	<tr class="header">
+		<th>
+			<span>[% a.title | html %]</span>
+		</th>
 	</tr>
 	<tr>
 		<td>
