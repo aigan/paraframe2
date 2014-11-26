@@ -1,11 +1,18 @@
 ﻿[% FOREACH part IN req.result.error_parts;
+      IF loop.first; '<dialog class="error">'; END;
       IF part.prefix_message;
 %]       <pre class="paraframe_error_prefix">[% part.prefix_message | html %]</pre>
 [%    END;
       box(part);
-   END
+      IF loop.last; '</dialog>'; END;
+   END;
 %]
 
-[%  FOREACH part IN req.result.info_parts; %]
-      <pre class="paraframe_info">[% part.message | html %]</pre>
-[% END %]
+[%
+FOREACH part IN req.result.info_parts;
+   IF loop.first; '<dialog class="info">'; END; %]
+   <pre class="paraframe_info">[% part.message | html %]</pre>
+   [%
+   IF loop.last; '</dialog>'; END;
+END;
+%]

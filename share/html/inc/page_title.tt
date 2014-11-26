@@ -1,0 +1,1 @@
+[% IF title %]<h1 class="page_title">[% title | html %]</h1>[% END %]
