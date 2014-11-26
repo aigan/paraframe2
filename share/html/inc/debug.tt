@@ -2,7 +2,7 @@
   [% IF emergency_mode %]
   <h1 class="important">Crashed $emergency_mode times</h1>
   [% END %]
-<div class="float-left">
+<div class="float_left">
   <h2>
     Debug at level [% debug_level %]:
     [% IF req.result.errcnt %]
@@ -50,7 +50,7 @@
 <p>Use <code>SetHandler perl-script</code> for all post destinations.</p>
 [% END %]
 </div>
-<div class="float-right" style="margin-right: 20px;">	
+<div class="float_right" style="margin-right: 20px;">	
 	<p>Request [% req.id %] :[% cfg.port %]<a href="[% forward_url %]"> <i class="fa fa-refresh fa-2x"></i></a></p>
 </div>
 <br clear="both">

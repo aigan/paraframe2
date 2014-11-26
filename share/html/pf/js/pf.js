@@ -191,7 +191,7 @@ function pf_tree_toggle(t,expand)
         }
 //        log('oheight2: ' + $oheight);
 
-        $ul.animate({'height': $oheight}, 200);
+        $ul.animate({'height': $oheight}, 200, function(){$(this).css('height',"")});
 
 
 
