@@ -212,6 +212,8 @@ function pf_tree_toggle(t,expand)
         $(t).removeClass('expanded');
 //        log('Hide');
     }
+
+    $ul.parents('ul').removeAttr('orig-height');
 }
 
 function pf_menu_height_adjust()
