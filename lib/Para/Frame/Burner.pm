@@ -71,8 +71,8 @@ sub new
 
     foreach my $key ( keys %$config_in )
     {
-	next if $key eq 'type';
-	$config->{$key} = $config_in->{$key};
+        next if $key eq 'type';
+        $config->{$key} = $config_in->{$key};
     }
 
 # To be set dynamicly
@@ -94,34 +94,34 @@ sub new
 
 
     Para::Frame->add_hook('on_error_detect', sub {
-	my( $typeref, $inforef, $contextref ) = @_;
+                              my( $typeref, $inforef, $contextref ) = @_;
 
-	$typeref ||= \ "";
-	$contextref ||= \ "";
-	$inforef ||= \ "";
+                              $typeref ||= \ "";
+                              $contextref ||= \ "";
+                              $inforef ||= \ "";
 
-	if( my $error = $burner->error() )
-	{
-	    return unless $error;
-	    if( not UNIVERSAL::isa($error, 'Template::Exception') )
-	    {
-		$$inforef .= "\n". $error;
-	    }
-	    else
-	    {
-		# It may already have been noted
-		return if $error->type eq $$typeref;
+                              if ( my $error = $burner->error() )
+                              {
+                                  return unless $error;
+                                  if ( not UNIVERSAL::isa($error, 'Template::Exception') )
+                                  {
+                                      $$inforef .= "\n". $error;
+                                  }
+                                  else
+                                  {
+                                      # It may already have been noted
+                                      return if $error->type eq $$typeref;
 
-		$$typeref ||= $error->type;
-		$$inforef .= "\n". $error->info;
-		$$contextref ||= $error->text;
-	    }
-	}
-    });
+                                      $$typeref ||= $error->type;
+                                      $$inforef .= "\n". $error->info;
+                                      $$contextref ||= $error->text;
+                                  }
+                              }
+                          });
 
     Para::Frame->add_hook('done', sub {
-	$burner->free_th;
-    });
+                              $burner->free_th;
+                          });
 
     return $burner;
 }
@@ -143,7 +143,7 @@ sub add
     my( $this, $config_in ) = @_;
     my $class = ref($this) || $this;
 
- #   debug "Creating a TT obj with params\n".datadump($config_in);
+    #   debug "Creating a TT obj with params\n".datadump($config_in);
 
     my $burner = $class->new( $config_in );
 
@@ -154,8 +154,8 @@ sub add
 
     foreach my $ext ( @$handles )
     {
-	$EXT{$ext} = $burner;
-	debug "Registring ext $ext to burner $type";
+        $EXT{$ext} = $burner;
+        debug "Registring ext $ext to burner $type";
     }
 
     $TYPE{ $type } = $burner;
@@ -182,16 +182,16 @@ sub get_by_ext
 
     $ext or confess "ext missing";
 
-    if( my $burner = $EXT{$ext} )
+    if ( my $burner = $EXT{$ext} )
     {
-	my $type = $burner->{'type'};
-	debug 5, "Looked up burner for $ext: $type";
-	return $burner;
+        my $type = $burner->{'type'};
+        debug 5, "Looked up burner for $ext: $type";
+        return $burner;
     }
     else
     {
 #	debug "No burner found for ext '$ext'";
-	return undef;
+        return undef;
     }
 }
 
@@ -213,23 +213,23 @@ sub add_ext
 
     $ext or confess "ext missing";
 
-    if( my $burner_old = $EXT{$ext} )
+    if ( my $burner_old = $EXT{$ext} )
     {
-	if( $burner eq $burner_old )
-	{
-	    return 0;
-	}
-	else
-	{
-	    confess "Ext $ext already assigned to burner ".
-	      $burner_old->type;
-	}
+        if ( $burner eq $burner_old )
+        {
+            return 0;
+        }
+        else
+        {
+            confess "Ext $ext already assigned to burner ".
+              $burner_old->type;
+        }
     }
     else
     {
-	$EXT{$ext} = $burner;
-	debug "Registring ext $ext to burner ".$burner->type;
-	return 1;
+        $EXT{$ext} = $burner;
+        debug "Registring ext $ext to burner ".$burner->type;
+        return 1;
     }
 }
 
@@ -268,19 +268,19 @@ sub th
 sub new_th
 {
     my( $th );
-    if( $th = pop(@{$_[0]->{'free'}}) )
+    if ( $th = pop(@{$_[0]->{'free'}}) )
     {
-	debug 2, "TH retrieved from stack";
+        debug 2, "TH retrieved from stack";
     }
     else
     {
-	debug 2, "TH created from config";
-	$th = Template->new($_[0]->{config});
+        debug 2, "TH created from config";
+        $th = Template->new($_[0]->{config});
 
-	# Set up shortcut to modify include path
-	$th->{'pf_include_path'} = [];
-	$th->context->load_templates->[0]->
-	  include_path($th->{'pf_include_path'});
+        # Set up shortcut to modify include path
+        $th->{'pf_include_path'} = [];
+        $th->context->load_templates->[0]->
+          include_path($th->{'pf_include_path'});
     }
 
     return $th;
@@ -297,11 +297,11 @@ sub free_th
 {
     my( $burner ) = @_;
     my( $th ) = delete $burner->{'used'}{$Para::Frame::REQ};
-    if( $th )
+    if ( $th )
     {
-	debug 2, "TH released to stack";
-	$th->{ _ERROR } = '';
-	push @{$burner->{'free'}}, $th;
+        debug 2, "TH released to stack";
+        $th->{ _ERROR } = '';
+        push @{$burner->{'free'}}, $th;
     }
 }
 
@@ -339,7 +339,7 @@ sub add_filters
 
     foreach my $name ( keys %$params )
     {
-	$filters->{$name} = [$params->{$name}, $dynamic];
+        $filters->{$name} = [$params->{$name}, $dynamic];
     }
 }
 
@@ -395,7 +395,7 @@ sub providers
 
 ##############################################################################
 
-sub error_hash #not used
+sub error_hash                  #not used
 {
     return $_[0]->th->{ _ERROR };
 }
@@ -425,16 +425,16 @@ sub burn
 
     $th->{'pf_include_path'}[0] = $renderer;
     my $res = $th->process($in, $params, $out, {binmode=>':utf8'});
-    if( $res )
+    if ( $res )
     {
 #	debug "Burning successful";
-	return $res;
+        return $res;
     }
     else
     {
-	my $err = $th->error();
+        my $err = $th->error();
 #	debug "Checking out error: ".datadump($err);
-	die( $err );
+        die( $err );
     }
 
 }
@@ -470,7 +470,7 @@ sub error
 
 sub subdir_suffix
 {
-     return $_[0]->{'subdir_suffix'} || '';
+    return $_[0]->{'subdir_suffix'} || '';
 }
 
 
@@ -482,7 +482,7 @@ sub subdir_suffix
 
 sub pre_dir
 {
-     return $_[0]->{'pre_dir'};
+    return $_[0]->{'pre_dir'};
 }
 
 
@@ -494,7 +494,7 @@ sub pre_dir
 
 sub inc_dir
 {
-     return $_[0]->{'inc_dir'};
+    return $_[0]->{'inc_dir'};
 }
 
 
@@ -506,7 +506,7 @@ sub inc_dir
 
 sub type
 {
-     return $_[0]->{'type'};
+    return $_[0]->{'type'};
 }
 
 
