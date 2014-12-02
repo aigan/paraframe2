@@ -423,6 +423,9 @@ sub burn
 #    $Template::Context::DEBUG = 1;
 #    $th->{ DEBUG } = 1;
 
+    # Clean out previous variables from stash
+    $th->{ SERVICE }{ CONTEXT }{ STASH } = Template::Stash::XS->new();
+
     $th->{'pf_include_path'}[0] = $renderer;
     my $res = $th->process($in, $params, $out, {binmode=>':utf8'});
     if ( $res )
