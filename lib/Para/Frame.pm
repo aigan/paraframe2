@@ -1893,6 +1893,8 @@ sub handle_request
                         );
             warn "# ".client_str($client)."\n" if debug() > 4;
 
+            warn "# ".$req->{'env'}{'QUERY_STRING'}."\n"; ### Verbose
+
             $req->setup_jobs;
             $req->reset_response; # Needs lang and jobs
             my $resp = $req->response;
