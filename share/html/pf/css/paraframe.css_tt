@@ -274,8 +274,8 @@ table.admin .selected img
 .wide {width: 100% }
 .narrow {width: 1%}
 .valign {vertical-align: middle;}
-.right {text-align: right} 
-.left {text-align: left}
+.right {text-align: right !important} 
+.left {text-align: left !important}
 .center {text-align: center}
 .float_right {float: right !important }
 .float_left {float:left !important }

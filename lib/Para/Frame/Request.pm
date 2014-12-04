@@ -674,6 +674,8 @@ sub id
 
 Returns the L<CGI> object.
 
+TODO: Replace CGI module with URI::QueryParam
+
 =cut
 
 sub q { shift->{'q'} }
