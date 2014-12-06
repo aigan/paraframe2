@@ -2375,6 +2375,9 @@ sub set_content
         throw('validation', "content not a scalar ref");
     }
 
+    # Create dir if missing
+    $f->dir->create;
+
 
     my $syspath = $f->sys_path;
 

@@ -136,7 +136,7 @@ sub new
      'time'           => time,  ## Start time
      'time_done'      => undef, ## Rendering finished
      'status'         => 200,
-     'query'          => undef,
+     'query_string'   => undef,
     }, $class;
 
     if ( my $req = $args->{req} )

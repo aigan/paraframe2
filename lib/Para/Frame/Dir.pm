@@ -5,7 +5,7 @@ package Para::Frame::Dir;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2014 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -588,6 +588,8 @@ sub remove
   $dir->create()
 
   $dir->create(\%args )
+
+Called from the dir object.
 
 Creates the directory, including parent directories.
 
