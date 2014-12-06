@@ -25,7 +25,7 @@ use base qw( Para::Frame::File );
 
 use Carp qw( croak confess cluck longmess );
 use IO::Dir;
-use File::stat; # exports stat
+use File::stat;                 # exports stat
 use File::Remove;
 use Scalar::Util qw(weaken);
 use User::grent;
@@ -64,16 +64,16 @@ sub initiate
     unless( $dir_st )
     {
 #	debug "Couldn't find dir $sys_path!";
-	$dir->{'initiated'} = 0;
-	$dir->{'exist'} = 0;
-	return 0;
+        $dir->{'initiated'} = 0;
+        $dir->{'exist'} = 0;
+        return 0;
     }
 
     my $mtime = $dir_st->mtime;
 
-    if( $dir->{'initiated'} )
+    if ( $dir->{'initiated'} )
     {
-	return 1 unless $mtime > $dir->{'mtime'};
+        return 1 unless $mtime > $dir->{'mtime'};
     }
 
     $dir->{'mtime'} = $mtime;
@@ -84,35 +84,35 @@ sub initiate
 
     debug 2, "Reading ".$sys_path;
 
-    while(defined( my $name = $d->read ))
+    while (defined( my $name = $d->read ))
     {
-	next if $name =~ m/^\.\.?$/;
+        next if $name =~ m/^\.\.?$/;
 
-	my $f = {};
-	my $path = $sys_path.'/'.$name;
+        my $f = {};
+        my $path = $sys_path.'/'.$name;
 
 #	debug "Statting $path";
-	my $st = lstat($path);
-	if( -l _ )
-	{
-	    $f->{symbolic_link} = readlink($path);
-	    $st = stat($path);
-	    # Ignore file if symlink is broken
-	    next unless $st;
-	}
+        my $st = lstat($path);
+        if ( -l _ )
+        {
+            $f->{symbolic_link} = readlink($path);
+            $st = stat($path);
+            # Ignore file if symlink is broken
+            next unless $st;
+        }
 
-	if( $name =~ $dir->{'hide'} )
-	{
-	    $f->{'hidden'} = 1;
-	}
+        if ( $name =~ $dir->{'hide'} )
+        {
+            $f->{'hidden'} = 1;
+        }
 
-	$f->{'readable'} = -r _;
-	$f->{'writable'} = -w _;
-	$f->{'executable'} = -x _;
-	$f->{'owned'} = -o _;
-	$f->{'size'} = -s _;
-	$f->{'plain_file'} = -f _;
-	$f->{'directory'} = -d _;
+        $f->{'readable'} = -r _;
+        $f->{'writable'} = -w _;
+        $f->{'executable'} = -x _;
+        $f->{'owned'} = -o _;
+        $f->{'size'} = -s _;
+        $f->{'plain_file'} = -f _;
+        $f->{'directory'} = -d _;
 #	$f->{'named_pipe'} = -p _;
 #	$f->{'socket'} = -S _;
 #	$f->{'block_special_file'} = -b _;
@@ -121,38 +121,38 @@ sub initiate
 #	$f->{'setuid'} = -u _;
 #	$f->{'setgid'} = -g _;
 #	$f->{'sticky'} = -k _;
-	$f->{'ascii'} = -T _;
-	$f->{'binary'} = -B _;
+        $f->{'ascii'} = -T _;
+        $f->{'binary'} = -B _;
 
-	unless( $f->{'readable'} )
-	{
-	    my $msg = "File '$path' is not readable\n";
+        unless ( $f->{'readable'} )
+        {
+            my $msg = "File '$path' is not readable\n";
 
-	    my $fu = User::pwent::getpwuid( $st->uid )
-	      or die "Could not get owner of $path";
-	    my $fg = User::grent::getgrgid( $st->gid )
-	      or die "Could not get group of $path";
-	    my $fun = $fu->name;              # file user  name
-	    my $fgn = $fg->name;              # file group name
-	    my $fmode = $st->mode & 07777;    # mask of filetype
+            my $fu = User::pwent::getpwuid( $st->uid )
+              or die "Could not get owner of $path";
+            my $fg = User::grent::getgrgid( $st->gid )
+              or die "Could not get group of $path";
+            my $fun = $fu->name;       # file user  name
+            my $fgn = $fg->name;       # file group name
+            my $fmode = $st->mode & 07777; # mask of filetype
 
-	    $msg .= "  The file is owned by $fun\n";
-	    $msg .= "  The file is in group $fgn\n";
-	    $msg .= sprintf("  The file has mode 0%.4o\n", $fmode);
+            $msg .= "  The file is owned by $fun\n";
+            $msg .= "  The file is in group $fgn\n";
+            $msg .= sprintf("  The file has mode 0%.4o\n", $fmode);
 
-	    my $approot = $Para::Frame::CFG->{'approot'};
-	    if( $approot =~ /^$sys_path\// ) # OVER approot
-	    {
-		debug $msg;
-	    }
-	    else
-	    {
-		$msg .= "\n".datadump([$f, $st]);
-		die $msg . "\n";
-	    }
-	}
+            my $approot = $Para::Frame::CFG->{'approot'};
+            if ( $approot =~ /^$sys_path\// ) # OVER approot
+            {
+                debug $msg;
+            }
+            else
+            {
+                $msg .= "\n".datadump([$f, $st]);
+                die $msg . "\n";
+            }
+        }
 
-	$files{$name} = $f;
+        $files{$name} = $f;
     }
 
     $dir->{'file'} = \%files;
@@ -193,17 +193,17 @@ sub dirs
     my @list;
     foreach my $name ( keys %{$dir->{file}} )
     {
-	next unless $dir->{file}{$name}{directory};
+        next unless $dir->{file}{$name}{directory};
 
-	unless( $include_hidden )
-	{
-	    next if $dir->{file}{$name}{'hidden'};
-	}
+        unless( $include_hidden )
+        {
+            next if $dir->{file}{$name}{'hidden'};
+        }
 
-	my $url = $dir->{url_name}.'/'.$name;
-	push @list, $dir->new({ site => $dir->site,
-				url  => $url,
-			      });
+        my $url = $dir->{url_name}.'/'.$name;
+        push @list, $dir->new({ site => $dir->site,
+                                url  => $url,
+                              });
     }
 
     return Para::Frame::List->new(\@list);
@@ -241,52 +241,52 @@ sub files
     my $include_hidden = $args->{'include_hidden'} || 0;
 
     my( $base, $argname );
-    if( my $site = $dir->site )
+    if ( my $site = $dir->site )
     {
-	$args->{'site'} = $dir->site;
-	$base = $dir->url_path_slash;
-	$argname = 'url';
+        $args->{'site'} = $dir->site;
+        $base = $dir->url_path_slash;
+        $argname = 'url';
     }
     else
     {
-	$base = $dir->sys_path_slash;
-	$argname = 'filename';
+        $base = $dir->sys_path_slash;
+        $argname = 'filename';
     }
 
     my @list;
     foreach my $name ( sort keys %{$dir->{'file'}} )
     {
-	my $f = $dir->{'file'}{$name};
-	unless( $f->{'readable'} )
-	{
-	    debug "File $name not readable";
-	    next;
-	}
+        my $f = $dir->{'file'}{$name};
+        unless ( $f->{'readable'} )
+        {
+            debug "File $name not readable";
+            next;
+        }
 
-	unless( $include_hidden )
-	{
-	    next if $f->{'hidden'};
-	}
+        unless( $include_hidden )
+        {
+            next if $f->{'hidden'};
+        }
 
-	$args->{$argname} = $base . $name;
+        $args->{$argname} = $base . $name;
 #	debug "Adding $name";
-	if( $f->{'directory'} )
-	{
+        if ( $f->{'directory'} )
+        {
 #	    debug "  As a Dir";
-	    push @list, $dir->new($args);
-	}
-	elsif( $name =~ /\.tt$/ )
-	{
+            push @list, $dir->new($args);
+        }
+        elsif ( $name =~ /\.tt$/ )
+        {
 #	    debug "  As a Page";
-	    push @list, Para::Frame::Template->new($args);
-	}
-	else
-	{
+            push @list, Para::Frame::Template->new($args);
+        }
+        else
+        {
 #	    debug "  As a File";
-	    push @list, Para::Frame::File->new($args);
-	}
+            push @list, Para::Frame::File->new($args);
+        }
 
-	$dir->req->may_yield;
+        $dir->req->may_yield;
     }
 
     return Para::Frame::List->new(\@list);
@@ -316,29 +316,29 @@ sub parent
 
     $args ||= {};
 
-    unless( $dir->{'parent'}  )
+    unless ( $dir->{'parent'}  )
     {
-	unless( $dir->exist )
-	{
-	    $args->{'file_may_not_exist'} = 1;
-	}
+        unless( $dir->exist )
+        {
+            $args->{'file_may_not_exist'} = 1;
+        }
 
-	if( my $site = $dir->site )
-	{
-	    my $home = $site->home_url_path;
-	    my( $pdir_path ) = $dir->url_path =~ /^($home.*)\/./
-	      or return undef;
-	    $args->{'site'} = $site;
-	    $args->{'url'} = $pdir_path.'/';
-	}
-	else
-	{
-	    my( $pdir_path ) = $dir->sys_path =~ /^(.*)\/./
-	      or return undef;
-	    $args->{'filename'} = $pdir_path.'/';
-	}
+        if ( my $site = $dir->site )
+        {
+            my $home = $site->home_url_path;
+            my( $pdir_path ) = $dir->url_path =~ /^($home.*)\/./
+              or return undef;
+            $args->{'site'} = $site;
+            $args->{'url'} = $pdir_path.'/';
+        }
+        else
+        {
+            my( $pdir_path ) = $dir->sys_path =~ /^(.*)\/./
+              or return undef;
+            $args->{'filename'} = $pdir_path.'/';
+        }
 
-	$dir->{'parent'} = $dir->new($args);
+        $dir->{'parent'} = $dir->new($args);
     }
 
     return $dir->{'parent'};
@@ -365,25 +365,25 @@ sub parent_sys
 
     $args ||= {};
 
-    unless( $dir->{'parent_sys'}  )
+    unless ( $dir->{'parent_sys'}  )
     {
-	unless( $dir->exist )
-	{
-	    $args->{'file_may_not_exist'} = 1;
-	}
+        unless( $dir->exist )
+        {
+            $args->{'file_may_not_exist'} = 1;
+        }
 
-	my $parent = $dir->parent;
+        my $parent = $dir->parent;
 
-	my( $pdir_path ) = $dir->sys_path =~ /^(.*)\/./
-	  or return undef;
-	$args->{'filename'} = $pdir_path.'/';
-	$dir->{'parent_sys'} = $dir->new($args);
+        my( $pdir_path ) = $dir->sys_path =~ /^(.*)\/./
+          or return undef;
+        $args->{'filename'} = $pdir_path.'/';
+        $dir->{'parent_sys'} = $dir->new($args);
 
-	if( $dir->{'parent_sys'}->sys_path_slash eq
-	    $parent->sys_path_slash )
-	{
-	    $dir->{'parent_sys'} = $parent;
-	}
+        if ( $dir->{'parent_sys'}->sys_path_slash eq
+             $parent->sys_path_slash )
+        {
+            $dir->{'parent_sys'} = $parent;
+        }
     }
 
     return $dir->{'parent_sys'};
@@ -411,8 +411,8 @@ sub has_index
     my $language = $dir->req->language->alternatives || ['en'];
     foreach my $lang ( @$language)
     {
-	my $filename = $path.'index.'.$lang.'.tt';
-	return 1 if -r $filename;
+        my $filename = $path.'index.'.$lang.'.tt';
+        return 1 if -r $filename;
     }
     return 0;
 }
@@ -438,9 +438,9 @@ sub has_dir
 {
     my( $dir, $dir2 ) = @_;
 
-    if( -d $dir->sys_path_slash.$dir2 )
+    if ( -d $dir->sys_path_slash.$dir2 )
     {
-	return 1;
+        return 1;
     }
 
     return 0;
@@ -456,9 +456,9 @@ sub has_file
 {
     my( $dir, $file ) = @_;
 
-    if( -f $dir->sys_path_slash.$file)
+    if ( -f $dir->sys_path_slash.$file)
     {
-	return 1;
+        return 1;
     }
 
     debug "Not found: ".$dir->sys_path_slash.$file;
@@ -521,25 +521,25 @@ sub get
     # Validate $file
     unless( $file_in =~ /^\// )
     {
-	$file_in = '/'.$file_in;
+        $file_in = '/'.$file_in;
     }
 
     unless( $dir->exist )
     {
-	$args->{'file_may_not_exist'} = 1;
+        $args->{'file_may_not_exist'} = 1;
     }
 
-    if( my $site = $dir->site )
+    if ( my $site = $dir->site )
     {
 #	debug "  on site ".$site->sysdesig;
-	my $url_str = $dir->url_path.$file_in;
-	$args->{'site'} = $site;
-	$args->{'url'} = $url_str;
+        my $url_str = $dir->url_path.$file_in;
+        $args->{'site'} = $site;
+        $args->{'url'} = $url_str;
     }
     else
     {
-	my $filename = $dir->sys_path.$file_in;
-	$args->{'filename'} = $filename;
+        my $filename = $dir->sys_path.$file_in;
+        $args->{'filename'} = $filename;
     }
 
     return Para::Frame::File->new($args);
@@ -565,17 +565,17 @@ sub remove
 
     foreach my $f ( $dir->all_files->as_array )
     {
-	$cnt += $f->remove;
+        $cnt += $f->remove;
     }
 
     $dir->{'exist'} = 0;
     $dir->{initiated} = 0;
 
-    if( $dir->exist )
+    if ( $dir->exist )
     {
-	# In case not all files where readable
-	File::Remove::remove( \1, $dirname )
-	    or die "Failed to remove $dirname: $!";
+        # In case not all files where readable
+        File::Remove::remove( \1, $dirname )
+            or die "Failed to remove $dirname: $!";
     }
 
     return $cnt;
@@ -602,16 +602,16 @@ sub create
     my( $dir, $args ) = @_;
 
     $dir->initiate;
-    if( $dir->exist )
+    if ( $dir->exist )
     {
 #	debug sprintf "Dir %s exist. Chmodding", $dir->desig;
 
-	if( $dir->is_owned )
-	{
-	    # Dirs like /var chould not be chmodded
-	    $dir->chmod(undef,$args);
-	}
-	return $dir;
+        if ( $dir->is_owned )
+        {
+            # Dirs like /var chould not be chmodded
+            $dir->chmod(undef,$args);
+        }
+        return $dir;
     }
 
     $args ||= {};
