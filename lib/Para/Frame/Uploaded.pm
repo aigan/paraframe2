@@ -22,7 +22,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use File::Copy; # copy, move
+use File::Copy;                 # copy, move
 use Net::SCP;
 use IO::File;
 use Carp qw( cluck );
@@ -122,39 +122,39 @@ sub save_as
     $args ||= {};
     my $fromfile = $uploaded->{tempfile};
 
-    if( UNIVERSAL::isa $destfile, 'Para::Frame::File' )
+    if ( UNIVERSAL::isa $destfile, 'Para::Frame::File' )
     {
-	$destfile = $destfile->sys_path;
+        $destfile = $destfile->sys_path;
     }
 
     debug "Should save $fromfile as $destfile";
 
-    if( $destfile =~ m{^//([^/]+)(.+)} )
+    if ( $destfile =~ m{^//([^/]+)(.+)} )
     {
-	my $host = $1;
-	$destfile = $2;
-	my $username;
-	if( $host =~ /^([^@]+)@(.+)/ )
-	{
-	    $username = $1;
-	    $host = $2;
-	}
+        my $host = $1;
+        $destfile = $2;
+        my $username;
+        if ( $host =~ /^([^@]+)@(.+)/ )
+        {
+            $username = $1;
+            $host = $2;
+        }
 
-	if( $args->{'username'} )
-	{
-	    $username = $args->{'username'};
-	}
+        if ( $args->{'username'} )
+        {
+            $username = $args->{'username'};
+        }
 
-	local $SIG{CHLD} = 'DEFAULT';
-	my $scp = Net::SCP->new({host=>$host, user=>$username});
-	debug "Connected to $host as $username";
-	$scp->put($fromfile, $destfile)
-	  or die "Failed to copy $fromfile to $destfile with scp: $scp->{errstr}";
+        local $SIG{CHLD} = 'DEFAULT';
+        my $scp = Net::SCP->new({host=>$host, user=>$username});
+        debug "Connected to $host as $username";
+        $scp->put($fromfile, $destfile)
+          or die "Failed to copy $fromfile to $destfile with scp: $scp->{errstr}";
     }
     else
     {
-	copy( $fromfile, $destfile ) or
-	  die "Failed to copy $fromfile to $destfile: $!";
+        copy( $fromfile, $destfile ) or
+          die "Failed to copy $fromfile to $destfile: $!";
     }
 
     return $uploaded;
@@ -184,11 +184,11 @@ sub fh
 
     my $fh = IO::File->new( $uploaded->{'tempfile'}, $mode );
 
-    if( debug )
+    if ( debug )
     {
-	my( $mode, $uid, $gid) = (stat($uploaded->{'tempfile'}))[2,4,5];
-	debug sprintf("Permissions are %04o uid%d gid%d\n",
-		      $mode & 07777, $uid, $gid);
+        my( $mode, $uid, $gid) = (stat($uploaded->{'tempfile'}))[2,4,5];
+        debug sprintf("Permissions are %04o uid%d gid%d\n",
+                      $mode & 07777, $uid, $gid);
     }
 
     return $fh;
@@ -224,13 +224,13 @@ sub info
 {
     my( $uploaded, $item ) = @_;
 
-    if( $item )
+    if ( $item )
     {
-	return $uploaded->{'info'}{$item};
+        return $uploaded->{'info'}{$item};
     }
     else
     {
-	return $uploaded->{'info'};
+        return $uploaded->{'info'};
     }
 }
 
@@ -300,10 +300,10 @@ sub tempfilename
 
 =head1 AUTHOR
 
-Jonas Liljegren E<lt>jonas@paranormal.seE<gt>
+  Jonas Liljegren E<lt>jonas@paranormal.seE<gt>
 
 =head1 SEE ALSO
 
-L<Para::Frame>
+  L<Para::Frame>
 
 =cut
