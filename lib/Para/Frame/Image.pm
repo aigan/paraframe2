@@ -44,11 +44,11 @@ sub magick
 {
     my( $img ) = @_;
 
-    unless( $img->{'magick'} )
+    unless ( $img->{'magick'} )
     {
-	my $im = new Image::Magick;
-	$im->Read($img->sys_path);
-	$img->{'magick'} = $im;
+        my $im = new Image::Magick;
+        $im->Read($img->sys_path);
+        $img->{'magick'} = $im;
     }
     return $img->{'magick'};
 }
@@ -113,11 +113,11 @@ sub height
 sub resize_normal
 {
     return $_[0]->resize({
-			  x => 700,
-			  y => 525,
-			  q => 75,
-			  t => 'n',
-			 });
+                          x => 700,
+                          y => 525,
+                          q => 75,
+                          t => 'n',
+                         });
 }
 
 
@@ -142,10 +142,10 @@ sub resize_thumb
 sub resize_thumb_y
 {
     return $_[0]->resize({
-			  y => 150,
-			  q => 30,
-			  t => 't',
-			 });
+                          y => 150,
+                          q => 30,
+                          t => 't',
+                         });
 }
 
 
@@ -158,10 +158,10 @@ sub resize_thumb_y
 sub resize_thumb_x
 {
     return $_[0]->resize({
-			  x => 200,
-			  q => 30,
-			  t => 'tx',
-			 });
+                          x => 200,
+                          q => 30,
+                          t => 'tx',
+                         });
 }
 
 
@@ -185,29 +185,29 @@ sub resize
 
     my( $xn, $yn );
 
-    if( $xm )
+    if ( $xm )
     {
-	$xn = $xm;
-	$yn = int( $xn * $y / $x );
-	if( $ym and ($yn > $ym) )
-	{
-	    $yn = $ym;
-	    $xn = int( $yn * $x / $y );
-	}
+        $xn = $xm;
+        $yn = int( $xn * $y / $x );
+        if ( $ym and ($yn > $ym) )
+        {
+            $yn = $ym;
+            $xn = int( $yn * $x / $y );
+        }
     }
-    elsif( $ym )
+    elsif ( $ym )
     {
-	$yn = $ym;
-	$xn = int( $yn * $x / $y );
-	if( $xm and ($xn > $xm) )
-	{
-	    $xn = $xm;
-	    $yn = int( $xn * $y / $x );
-	}
+        $yn = $ym;
+        $xn = int( $yn * $x / $y );
+        if ( $xm and ($xn > $xm) )
+        {
+            $xn = $xm;
+            $yn = int( $xn * $y / $x );
+        }
     }
     else
     {
-	die "Neither x nor y specified: ".datadump($arg);
+        die "Neither x nor y specified: ".datadump($arg);
     }
 
     $im->Thumbnail(width=>$xn, height=>$yn);
