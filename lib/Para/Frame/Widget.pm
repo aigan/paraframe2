@@ -5,7 +5,7 @@ package Para::Frame::Widget;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2010 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2014 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -946,6 +946,7 @@ sub input
     }
     my $extra = '';
     my $value = $value_in //= '';
+    my $tag_attr = $params->{'tag_attr'};
 
     my @previous;
     if ( my $q = $Para::Frame::REQ->q )
@@ -970,24 +971,17 @@ sub input
         $value = '';
     }
 
-    $params->{id} ||= $key;
+    $params->{id} ||= $tag_attr->{id} ||= $params->{id} ||= $key;;
     my $prefix = label_from_params($params);
 
-    if ( my $tag_attr = $params->{'tag_attr'} )
+    if( length $value and $value ne $value_in )
     {
-        if( length $value and $value ne $value_in )
-        {
-#            debug "value changed? ".$key .'='. $value_in .'/'. $value;
-
-            $tag_attr->{'class'} ||= "";
-            $tag_attr->{'class'} .= " value_from_query";
-            $tag_attr->{'title'} ||= loc("Not saved");
-        }
-
-        $extra .= tag_extra_from_params( $tag_attr );
+        $tag_attr->{'class'} ||= "";
+        $tag_attr->{'class'} .= " value_from_query";
+        $tag_attr->{'title'} ||= loc("Not saved");
     }
 
-#    debug "$key extra: $extra";
+    $extra .= tag_extra_from_params( $tag_attr );
 
     # Stringify all params, in case they was objects
     return sprintf('%s<input type="text" name="%s" value="%s"%s />',
@@ -2229,7 +2223,7 @@ sub calendar
     $args ||= {};
     $value ||= $q->param($field);
 
-    my $id = $args->{'id'} || $field;
+    my $id = $args->{'id'} ||= $field;
 
     my $tdlabel = $args->{'tdlabel'};
     my $label = $args->{'label'} || '';
@@ -2244,7 +2238,6 @@ sub calendar
 #    debug "CALENDAR";
 #    debug datadump($args);
 
-
     if ( $tdlabel )
     {
         if ( my $tdtag_attr = delete ${$args}{'tdtag_attr'} )
@@ -2258,9 +2251,7 @@ sub calendar
 
     if ( $label )
     {
-        my $label_out = CGI->escapeHTML( $label );
-
-        $out .= "<label class=\"$label_class\" for=\"$field\">$label_out</label>";
+        $out .= label_from_params($args);
         $out .= $separator;
     }
 
@@ -2271,6 +2262,7 @@ sub calendar
 
     $out .= input( $field, $value,
                    {
+                    id => $id,
                     tag_attr =>
                     {
                      size => $size,
