@@ -937,7 +937,7 @@ Example:
 
 sub input
 {
-    my( $key, $value, $params ) = @_;
+    my( $key, $value_in, $params ) = @_;
 
     $params ||= {};
     if ( $params->{'size'} )
@@ -945,6 +945,7 @@ sub input
         $params->{'maxlength'} ||= $params->{'size'}*3;
     }
     my $extra = '';
+    my $value = $value_in //= '';
 
     my @previous;
     if ( my $q = $Para::Frame::REQ->q )
@@ -974,8 +975,10 @@ sub input
 
     if ( my $tag_attr = $params->{'tag_attr'} )
     {
-        if( ($#previous == 0) and length $value )
+        if( length $value and $value ne $value_in )
         {
+#            debug "value changed? ".$key .'='. $value_in .'/'. $value;
+
             $tag_attr->{'class'} ||= "";
             $tag_attr->{'class'} .= " value_from_query";
             $tag_attr->{'title'} ||= loc("Not saved");
@@ -984,7 +987,7 @@ sub input
         $extra .= tag_extra_from_params( $tag_attr );
     }
 
-#    $extra .= tag_extra_from_params($params);
+#    debug "$key extra: $extra";
 
     # Stringify all params, in case they was objects
     return sprintf('%s<input type="text" name="%s" value="%s"%s />',
@@ -1124,13 +1127,15 @@ The default wrap attribute is 'virtual'.
 
 sub textarea
 {
-    my( $key, $value, $params ) = @_;
+    my( $key, $value_in, $params ) = @_;
 
     my $tag_attr = $params->{tag_attr} || {};
 
     my $rows = $tag_attr->{'rows'} || 20;
     my $cols = $tag_attr->{'cols'} || $tag_attr->{'size'};
     my @previous;
+
+    my $value = $value_in //= '';
 
     if ( my $q = $Para::Frame::REQ->q )
     {
@@ -1149,6 +1154,16 @@ sub textarea
     $tag_attr->{id} ||= $key;
     my $prefix = label_from_params($params);
     $params->{'wrap'} ||= "virtual";
+
+    if( length $value and $value ne $value_in )
+        {
+#            debug "value changed? ".$key .'='. $value_in .'/'. $value;
+
+            $tag_attr->{'class'} ||= "";
+            $tag_attr->{'class'} .= " value_from_query";
+            $tag_attr->{'title'} ||= loc("Not saved");
+        }
+
     my $extra = tag_extra_from_params($tag_attr);
 
     return sprintf('%s<textarea name="%s"%s>%s</textarea>',
@@ -1280,6 +1295,11 @@ sub checkbox
 {
     my( $field, $value, $checked, $params ) = @_;
 
+
+#    cluck "wrong params" if $params->{res};
+#    debug "checkbox ".datadump(\@_,2);
+
+
     # Detecting how many params are given to the checkbox
     #
     if ( ref $checked and
@@ -1340,7 +1360,7 @@ sub checkbox
     my $label_class = delete $params->{'label_class'};
     my $id = $params->{id} || ( $field.'-'.$IDCOUNTER++);
 
-    my $suffix_label = $params->{'label'};
+    my $suffix_label;# = $params->{'label'};
     if ( $suffix_label ||= delete $params->{'suffix_label'} )
     {
         my $label_out;
@@ -1400,11 +1420,11 @@ sub checkbox
     }
 
     ### DEPRECATED
-    foreach my $key ( keys %$params )
-    {
-        $extra .= sprintf " $key=\"%s\"",
-          CGI->escapeHTML( $params->{$key} );
-    }
+#    foreach my $key ( keys %$params )
+#    {
+#        $extra .= sprintf " $key=\"%s\"",
+#          CGI->escapeHTML( $params->{$key} );
+#    }
 
     if ( ref $checked )
     {
