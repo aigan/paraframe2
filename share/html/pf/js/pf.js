@@ -260,6 +260,17 @@ function pf_set_canonical_url()
     history.replaceState({},title, url);
 }
 
+function pf_expandable_input_expand()
+{
+    $(this).height( $(this)[0].scrollHeight );
+}
+
+function pf_expandable_input_init()
+{
+    $('textarea.expandable').off('input.pf_expandable_input')
+        .on('input.pf_expandable_input',pf_expandable_input_expand);
+}
+
 
 function pf_document_ready()
 {
@@ -271,6 +282,7 @@ function pf_document_ready()
     pf_toggle_highlight_init();
     pf_tree_toggle_init();
     pf_toggle_init();
+    pf_expandable_input_init();
 
     $('.notifications').click(pf_menu_height_adjust);
 
