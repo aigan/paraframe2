@@ -262,7 +262,14 @@ function pf_set_canonical_url()
 
 function pf_expandable_input_expand()
 {
-    $(this).height( $(this)[0].scrollHeight );
+    /*
+    log("Height = " + $(this).height());
+    log("Inner = " + $(this).innerHeight());
+    log("Outer = " + $(this).outerHeight());
+    log("Scroll = " + $(this)[0].scrollHeight);
+    */
+    
+    $(this).innerHeight( $(this)[0].scrollHeight );
 }
 
 function pf_expandable_input_init()
