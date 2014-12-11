@@ -1354,7 +1354,7 @@ sub checkbox
     my $label_class = delete $params->{'label_class'};
     my $id = $params->{id} || ( $field.'-'.$IDCOUNTER++);
 
-    my $suffix_label;# = $params->{'label'};
+    my $suffix_label = $params->{'label'};
     if ( $suffix_label ||= delete $params->{'suffix_label'} )
     {
         my $label_out;
@@ -1408,10 +1408,10 @@ sub checkbox
     }
 
 
-    if ( my $tag_attr = delete ${$params}{'tag_attr'} )
-    {
-        $extra .= tag_extra_from_params( $tag_attr );
-    }
+    my $tag_attr = ${$params}{'tag_attr'} || {};
+    $tag_attr->{id} ||= $params->{id};
+
+    $extra .= tag_extra_from_params( $tag_attr );
 
     ### DEPRECATED
 #    foreach my $key ( keys %$params )
