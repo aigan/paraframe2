@@ -1656,7 +1656,7 @@ sub run_action
           # TODO: Use handle_error()
 
           debug(0,"ACTION FAILED!");
-          debug(1,$@,-1);
+          debug(0,$@,-1);
           my $part = $req->result->exception;
           if ( my $error = $part->error )
           {
