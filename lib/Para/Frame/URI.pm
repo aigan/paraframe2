@@ -23,8 +23,8 @@ use strict;
 use warnings;
 use overload ('""'     => sub { $_[0]->{'value'}->as_string },
               '=='     => sub { overload::StrVal($_[0]) CORE::eq
-		                overload::StrVal($_[1])
-                              },
+                  overload::StrVal($_[1])
+                },
               fallback => 1,
              );
 
@@ -92,9 +92,9 @@ sub as_html
 
 #    debug "Getting host for ".datadump($url->{'value'});
     my $label = $attrs->{'label'};
-    if( not $label and $url->{'value'}->can('host') )
+    if ( not $label and $url->{'value'}->can('host') )
     {
-	$label = $url->{'value'}->host;
+        $label = $url->{'value'}->host;
     }
 
     $label ||= $url->{'value'}->as_string;
@@ -116,13 +116,13 @@ debugging.
 
 sub sysdesig
 {
-    if( my $str = $_[0]->{'value'}->as_string )
+    if ( my $str = $_[0]->{'value'}->as_string )
     {
-	return "URL $str";
+        return "URL $str";
     }
     else
     {
-	return "URL undef";
+        return "URL undef";
     }
 }
 
@@ -159,7 +159,7 @@ sub eq
     my( $class ) = ref $self;
     unless( UNIVERSAL::isa $class, "Para::Frame::URI" )
     {
-	$class = ref $other;
+        $class = ref $other;
     }
 
     # taken from URI::eq
@@ -168,8 +168,8 @@ sub eq
     $other = $class->new($other, $self) unless ref $other;
 
     return( (ref($self) CORE::eq ref($other)) and
-	    ( $self->canonical->as_string CORE::eq
-	      $other->canonical->as_string ) );
+            ( $self->canonical->as_string CORE::eq
+              $other->canonical->as_string ) );
 }
 
 
@@ -242,9 +242,9 @@ Used by most get/set wrapper methods
 sub getset
 {
     my( $u, $method ) = (shift, shift);
-    if( my $uri = $u->{'value'} )
+    if ( my $uri = $u->{'value'} )
     {
-	return $uri->$method(@_);
+        return $uri->$method(@_);
     }
 
     return "";
@@ -320,9 +320,9 @@ sub canonical
     my $val = $_[0]->{'value'};
     my $uri = $val->canonical;
 
-    if( $uri->as_string CORE::eq $val->as_string )
+    if ( $uri->as_string CORE::eq $val->as_string )
     {
-	return $_[0];
+        return $_[0];
     }
 
     my $class = ref $_[0];
@@ -345,9 +345,9 @@ sub abs
 {
     my $uri = $_[0]->{'value'}->abs($_[1]);
 
-    if( $_[0]->eq( $uri ) )
+    if ( $_[0]->eq( $uri ) )
     {
-	return $_[0];
+        return $_[0];
     }
 
     my $class = ref $_[0];
@@ -370,9 +370,9 @@ sub rel
 {
     my $uri = $_[0]->{'value'}->rel($_[1]);
 
-    if( $_[0]->eq( $uri ) )
+    if ( $_[0]->eq( $uri ) )
     {
-	return $_[0];
+        return $_[0];
     }
 
     my $class = ref $_[0];
@@ -548,9 +548,9 @@ Used by query get/set wrapper methods
 sub getset_query
 {
     my( $u, $method ) = (shift, shift);
-    if( my $uri = $u->{'value'} )
+    if ( my $uri = $u->{'value'} )
     {
-	return $uri->$method(@_);
+        return $uri->$method(@_);
     }
 
     return "";
@@ -646,7 +646,7 @@ sub retrieve
     my $lwpreq = HTTP::Request->new(GET => $uri->{'value'});
 
     my $res = $ua->request($lwpreq);
-    delete $res->{'handlers'}; # Can't transfer code refs
+    delete $res->{'handlers'};  # Can't transfer code refs
 
 #    debug "Returning $res";
 
