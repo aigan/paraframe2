@@ -2934,8 +2934,6 @@ sub create_fork
     my $pid;
     my $fh = new IO::File;
 
-    $fh->binmode();
-
 #    $fh->autoflush(1);
 #    my $af = $fh->autoflush;
 #    warn "--> Autoflush is $af\n";
@@ -2971,6 +2969,7 @@ sub create_fork
         # data are sent, so that the buffer will not get full
         #
         $fh->blocking(0);
+        $fh->binmode();
 
         my $child = $req->register_child( $pid, $fh );
 

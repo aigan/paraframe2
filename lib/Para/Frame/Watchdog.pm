@@ -105,7 +105,6 @@ sub startup
 
     debug 1, "\n\nStarted process $$ on ".now()."\n\n";
 
-
     startup_in_fork();
     sig_enable();
     return;
@@ -699,6 +698,7 @@ sub startup_in_fork
     select STDOUT; $|=1;
 
     open_logfile() if $USE_LOGFILE; # in CHILD
+    binmode(STDERR, ":utf8"); # Always
 
     do
     {
@@ -978,6 +978,8 @@ sub send_to_server
 ##############################################################################
 
 =head2 open_logfile
+
+See also L<Para::Frame/open_logfile>
 
 =cut
 

@@ -2276,6 +2276,8 @@ END
 
 =head2 open_logfile
 
+See also L<Para::Frame::Watchdog/open_logfile>
+
 =cut
 
 sub open_logfile

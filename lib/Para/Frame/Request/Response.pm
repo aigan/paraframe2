@@ -288,7 +288,34 @@ sub page
 
 ##############################################################################
 
+=head2 page_url_with_query
+
+Returns a l<Para::Frame::URI> object.
+
+=cut
+
+sub page_url_with_query
+{
+    my( $resp ) = @_;
+
+    my $page = $resp->page;
+    my $site = $page->site or confess "No site given";
+    my $path = $resp->page_url_path_with_query;
+
+    my $url_string = sprintf("%s://%s%s",
+                             $site->scheme,
+                             $site->host,
+                             $path);
+
+    return Para::Frame::URI->new($url_string);
+}
+
+
+##############################################################################
+
 =head2 page_url_path_with_query
+
+Returns the full URL path as a string
 
 =cut
 
@@ -320,7 +347,9 @@ sub page_url_path_with_query
 
 ##############################################################################
 
-=head2 page_url_with_query_and_reqnum
+=head2 page_url_path_with_query_and_reqnum
+
+Returns the full URL path as a string
 
 =cut
 
@@ -358,7 +387,9 @@ sub page_url_path_with_query_and_reqnum
 
 ##############################################################################
 
-=head2 page_url_with_reqnum
+=head2 page_url_path_with_reqnum
+
+Returns the full URL path as a string
 
 =cut
 
