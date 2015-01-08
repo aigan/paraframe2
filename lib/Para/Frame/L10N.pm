@@ -128,14 +128,14 @@ sub set
 
     $args ||= {};
     my( $site, $req );
-    if( my $page = $args->{'page'} )
+    if ( my $page = $args->{'page'} )
     {
-	$site = $page->site;
+        $site = $page->site;
     }
     else
     {
-	$req = $args->{'req'} || $Para::Frame::REQ;
-	$site = $req->site;
+        $req = $args->{'req'} || $Para::Frame::REQ;
+        $site = $req->site;
     }
 
     # Get site languages
@@ -144,29 +144,29 @@ sub set
 
     unless( @$site_languages )
     {
-	debug 2, "  No site language specified";
-	my @alternatives = 'en';
-	my $lh = $this->get_handle( @alternatives );
-	$lh->{'alternatives'} = \@alternatives;
-	unless( UNIVERSAL::isa $lh,'Para::Frame::L10N')
-	{
-	    croak "Lanugage obj of wrong type: ".datadump($lh);
-	}
-	return $lh;
+        debug 2, "  No site language specified";
+        my @alternatives = 'en';
+        my $lh = $this->get_handle( @alternatives );
+        $lh->{'alternatives'} = \@alternatives;
+        unless( UNIVERSAL::isa $lh,'Para::Frame::L10N')
+        {
+            croak "Lanugage obj of wrong type: ".datadump($lh);
+        }
+        return $lh;
     }
 
     # get input language
     #
-    if( $req and $req->is_from_client )
+    if ( $req and $req->is_from_client )
     {
-	$language_in ||= $req->q->param('lang')
-	             ||  $req->q->cookie('lang')
-                     ||  $req->env->{HTTP_ACCEPT_LANGUAGE}
-                     ||  '';
+        $language_in ||= $req->q->param('lang')
+          ||  $req->q->cookie('lang')
+          ||  $req->env->{HTTP_ACCEPT_LANGUAGE}
+          ||  '';
     }
     else
     {
-	$language_in ||= '';
+        $language_in ||= '';
     }
     debug 3, "  Lang prefs are $language_in";
 
@@ -174,29 +174,29 @@ sub set
     # Parse input languages
     #
     my @alts;
-    if( UNIVERSAL::isa($language_in, "ARRAY") )
+    if ( UNIVERSAL::isa($language_in, "ARRAY") )
     {
-	@alts = @$language_in;
+        @alts = @$language_in;
     }
     else
     {
-	@alts = split /,\s*/, $language_in;
+        @alts = split /,\s*/, $language_in;
     }
 
     my %priority;
 
     foreach my $alt ( @alts )
     {
-	my( $code, @info ) = split /\s*;\s*/, $alt;
-	my $q;
-	foreach my $pair ( @info )
-	{
-	    my( $key, $value ) = split /\s*=\s*/, $pair;
-	    $q = $value if $key eq 'q';
-	}
-	$q ||= 1;
+        my( $code, @info ) = split /\s*;\s*/, $alt;
+        my $q;
+        foreach my $pair ( @info )
+        {
+            my( $key, $value ) = split /\s*=\s*/, $pair;
+            $q = $value if $key eq 'q';
+        }
+        $q ||= 1;
 
-	push @{$priority{$q}}, $code;
+        push @{$priority{$q}}, $code;
     }
 
     my %accept = map { $_, 1 } @$site_languages;
@@ -204,10 +204,10 @@ sub set
     my @alternatives;
     foreach my $prio ( sort {$b <=> $a} keys %priority )
     {
-	foreach my $lang ( @{$priority{$prio}} )
-	{
-	    push @alternatives, $lang if $accept{$lang};
-	}
+        foreach my $lang ( @{$priority{$prio}} )
+        {
+            push @alternatives, $lang if $accept{$lang};
+        }
     }
 
     ## Add default lang, if not already there
@@ -219,10 +219,10 @@ sub set
     #
     foreach my $lang ( @$site_languages )
     {
-	unless( grep {$_ eq $lang} @alternatives )
-	{
-	    push @alternatives, $lang;
-	}
+        unless ( grep {$_ eq $lang} @alternatives )
+        {
+            push @alternatives, $lang;
+        }
     }
 
 
@@ -233,7 +233,7 @@ sub set
 
     unless( UNIVERSAL::isa $lh,'Para::Frame::L10N')
     {
-	croak "Lanugage obj of wrong type: ".datadump($lh);
+        croak "Lanugage obj of wrong type: ".datadump($lh);
     }
 
     debug 2, "Lang priority is: @alternatives";
@@ -268,10 +268,10 @@ sub get_handle
 {
     my $class = shift;
 
-    if( $class eq "Para::Frame::L10N" )
+    if ( $class eq "Para::Frame::L10N" )
     {
-	return Para::Frame::L10N->SUPER::get_handle(@_)
-	  or die "Failed to get language handler";
+        return Para::Frame::L10N->SUPER::get_handle(@_)
+          or die "Failed to get language handler";
     }
 
     my $lh = $class->SUPER::get_handle(@_)
@@ -370,65 +370,65 @@ sub compute
 
     unless( ref $phrase )
     {
-	die("The prase should be a scalar ref");
+        die("The prase should be a scalar ref");
     }
 
     unless(defined($value))
     {
-	if($lh->{'fail'})
-	{
-	    my $res;
-	    eval
-	    {
-		my $fail;
-		if(ref($fail = $lh->{'fail'}) eq 'CODE')
-		{
-		    $res = &{$fail}($lh, $$phrase, @_);
-		}
-		else
-		{
-		    $res = $lh->$fail($$phrase, @_);
-		}
-	    };
-	    if( $@ )
-	    {
-		my $class = ref $lh;
-		Carp::croak "Error in $class maketexting:\n$@";
-	    }
-	    else
-	    {
-		return $res;
-	    }
-	}
-	else
-	{
-	    die shortmess("maketext doesn't know how to say:\n$phrase\nas needed");
-	}
+        if ($lh->{'fail'})
+        {
+            my $res;
+            eval
+            {
+                my $fail;
+                if (ref($fail = $lh->{'fail'}) eq 'CODE')
+                {
+                    $res = &{$fail}($lh, $$phrase, @_);
+                }
+                else
+                {
+                    $res = $lh->$fail($$phrase, @_);
+                }
+            };
+            if ( $@ )
+            {
+                my $class = ref $lh;
+                Carp::croak "Error in $class maketexting:\n$@";
+            }
+            else
+            {
+                return $res;
+            }
+        }
+        else
+        {
+            die shortmess("maketext doesn't know how to say:\n$phrase\nas needed");
+        }
     }
 
-    if( ref($value) eq 'SCALAR' )
+    if ( ref($value) eq 'SCALAR' )
     {
-	utf8::upgrade($$value );
-	return $$value;
+        utf8::upgrade($$value );
+        return $$value;
     }
 
     unless( ref($value) eq 'CODE' )
     {
-	utf8::upgrade( $value );
-	return $value;
+        utf8::upgrade( $value );
+        return $value;
     }
 
     {
-	local $SIG{'__DIE__'};
-	eval { $value = &$value($lh, @_) };
+        local $SIG{'__DIE__'};
+        eval { $value = &$value($lh, @_) };
     }
-    if($@)
+    if ($@)
     {
-	my $err = $@;
-	my $class = ref $lh;
-	$err =~ s<\s+at\s+\(eval\s+\d+\)\s+line\s+(\d+)\.?\n?>
-	  <\n in bracket code [compiled line $1],>s;
-	Carp::croak "Error in $class maketexting \"$phrase\":\n$err as used";
+        my $err = $@;
+        my $class = ref $lh;
+        $err =~ s<\s+at\s+\(eval\s+\d+\)\s+line\s+(\d+)\.?\n?>
+                 <\n in bracket code [compiled line $1],>s;
+        Carp::croak "Error in $class maketexting \"$phrase\":\n$err as used";
     }
 
     utf8::upgrade( $value );
@@ -473,53 +473,53 @@ sub preferred
 
     my $req = $Para::Frame::REQ;
     my $site;
-    if( my $resp = $req->response_if_existing )
+    if ( my $resp = $req->response_if_existing )
     {
-	$site = $resp->page->site;
+        $site = $resp->page->site;
     }
     else
     {
-	$site = $req->site;
+        $site = $req->site;
     }
 
     my @langs;
-    if( @lim_langs )
+    if ( @lim_langs )
     {
       LANG:
-	foreach my $lang (@{$site->languages})
-	{
-	    foreach( @lim_langs )
-	    {
-		if( $lang eq $_ )
-		{
-		    push @langs, $lang;
-		    next LANG;
-		}
-	    }
-	}
+        foreach my $lang (@{$site->languages})
+        {
+            foreach ( @lim_langs )
+            {
+                if ( $lang eq $_ )
+                {
+                    push @langs, $lang;
+                    next LANG;
+                }
+            }
+        }
     }
     else
     {
-	@langs = @{$site->languages};
+        @langs = @{$site->languages};
     }
 
-    if( $req->is_from_client )
+    if ( $req->is_from_client )
     {
-	if( my $clang = $req->q->cookie('lang') )
-	{
-	    unshift @langs, $clang;
-	}
+        if ( my $clang = $req->q->cookie('lang') )
+        {
+            unshift @langs, $clang;
+        }
     }
 
     foreach my $lang ($lh->alternatives)
     {
-	foreach( @langs )
-	{
-	    if( $lang eq $_ )
-	    {
-		return $lang;
-	    }
-	}
+        foreach ( @langs )
+        {
+            if ( $lang eq $_ )
+            {
+                return $lang;
+            }
+        }
     }
 
     return $site->languages->[0] || 'en';
@@ -579,18 +579,18 @@ sub set_headers
 
     # Set resp header
     #
-    if( $req->is_from_client )
+    if ( $req->is_from_client )
     {
-	unless( $req->response->ctype->is("text/css") )
-	{
-	    # TODO: Use Page->set_header
-	    my $alts = $lh->alternatives;
-	    if( $alts->[1] ) # More than one language
-	    {
-		$req->send_code( 'AT-PUT', 'set', 'Vary', 'negotiate,accept-language' );
-	    }
-	    $req->send_code( 'AT-PUT', 'set', 'Content-Language', $alts->[0] );
-	}
+        unless( $req->response->ctype->is("text/css") )
+        {
+            # TODO: Use Page->set_header
+            my $alts = $lh->alternatives;
+            if ( $alts->[1] )   # More than one language
+            {
+                $req->send_code( 'AT-PUT', 'set', 'Vary', 'negotiate,accept-language' );
+            }
+            $req->send_code( 'AT-PUT', 'set', 'Content-Language', $alts->[0] );
+        }
     }
 }
 
