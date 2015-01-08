@@ -3,91 +3,91 @@ abstract: 'Web application framework'
 author:
   - 'Jonas Liljegren <jonas@paranormal.se>'
 build_requires:
-  ExtUtils::MakeMaker: 0
+  ExtUtils::MakeMaker: '0'
 configure_requires:
-  ExtUtils::MakeMaker: 0
+  ExtUtils::MakeMaker: '0'
 dynamic_config: 0
-generated_by: 'ExtUtils::MakeMaker version 7.04, CPAN::Meta::Converter version 2.120351'
+generated_by: 'ExtUtils::MakeMaker version 6.98, CPAN::Meta::Converter version 2.142690'
 license: unknown
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
-  version: 1.4
+  version: '1.4'
 name: Para-Frame
 no_index:
   directory:
     - t
     - inc
 requires:
-  BerkeleyDB: 0.26
-  CGI: 3.46
-  CGI::Cookie: 1.25
-  Captcha::reCAPTCHA: 0.92
-  Carp: 1.04
-  DBI: 1.48
-  Data::Dump: 1.08
-  Data::GUID: 0.046
-  Data::Validate::Domain: 0.08
-  Date::Manip: 6.3
-  DateTime: 0.2901
-  DateTime::Format::HTTP: 0
-  DateTime::Format::MySQL: 0
-  DateTime::Format::Pg: 0.16003
-  DateTime::Format::Strptime: 0
-  DateTime::Incomplete: 0.02
-  DateTime::Set: 0.22
-  DateTime::TimeZone: 0.37
-  Digest::MD5: 2.33
-  Email::MIME: 1.902
-  Email::MIME::CreateHTML: 1.03
-  Encode: 2.1
-  Encode::Detect::Detector: 1
-  Encode::InCharset: 0.03
-  File::Basename: 2.73
-  File::MimeInfo: 0.13
-  File::Remove: 0.31
-  File::Slurp: 9999.09
-  File::Spec: 3.05
-  File::stat: 1
-  FreezeThaw: 0.43
-  HTML::FormatText::WithLinks: 0.14
-  HTTP::BrowserDetect: 1.25
-  HTTP::Parser::XS: 0.14
-  HTTP::Request: 1.4
-  IDNA::Punycode: 0.02
-  IO: 1.21
-  IO::Socket: 1.29
-  Image::Magick: 6.002004
-  JSON: 2.17
-  LWP::UserAgent: 2.03
-  Linux::SysInfo: 0.1
-  List::Uniq: 0.1
-  MIME::Lite: 3.01
-  MIME::Words: 5.41
-  Mail::Address: 1.62
-  Net::DNS: 0.48
-  Net::Domain::TLD: 1.67
-  Net::SCP: 0.07
-  Net::SMTP: 2.29
-  Number::Bytes::Human: 0.04
-  Number::Format: 1.73
-  Proc::ProcessTable: 0.39
-  Socket: 1.77
-  Spreadsheet::ParseExcel: 0.32
-  Sys::CpuLoad: 0.02
-  Template: 2.15
-  Test::Distribution: 2
-  Test::More: 0.61
-  Test::Perl::Critic: 1.01
-  Test::Pod: 1.26
-  Test::Pod::Coverage: 1.08
-  Test::Strict: 0.09
-  Test::Warn: 0.08
-  Text::Autoformat: 1.12
-  Time::HiRes: 1.66
-  Time::Piece: 1.08
-  URI: 1.59
-  URI::QueryParam: 0
-  Unicode::MapUTF8: 1.09
-  XML::Simple: 2.18
-  jQuery::File::Upload: 0.16
-version: 1.31
+  BerkeleyDB: '0.26'
+  CGI: '3.46'
+  CGI::Cookie: '1.25'
+  Captcha::reCAPTCHA: '0.92'
+  Carp: '1.04'
+  DBI: '1.48'
+  Data::Dump: '1.08'
+  Data::GUID: '0.046'
+  Data::Validate::Domain: '0.08'
+  Date::Manip: '6.3'
+  DateTime: '0.2901'
+  DateTime::Format::HTTP: '0'
+  DateTime::Format::MySQL: '0'
+  DateTime::Format::Pg: '0.16003'
+  DateTime::Format::Strptime: '0'
+  DateTime::Incomplete: '0.02'
+  DateTime::Set: '0.22'
+  DateTime::TimeZone: '0.37'
+  Digest::MD5: '2.33'
+  Email::MIME: '1.902'
+  Email::MIME::CreateHTML: '1.03'
+  Encode: '2.1'
+  Encode::Detect::Detector: '1'
+  Encode::InCharset: '0.03'
+  File::Basename: '2.73'
+  File::MimeInfo: '0.13'
+  File::Remove: '0.31'
+  File::Slurp: '9999.09'
+  File::Spec: '3.05'
+  File::stat: '1'
+  FreezeThaw: '0.43'
+  HTML::FormatText::WithLinks: '0.14'
+  HTTP::BrowserDetect: '1.25'
+  HTTP::Parser::XS: '0.14'
+  HTTP::Request: '1.4'
+  IDNA::Punycode: '0.02'
+  IO: '1.21'
+  IO::Socket: '1.29'
+  Image::Magick: '6.002004'
+  JSON: '2.17'
+  LWP::UserAgent: '2.03'
+  Linux::SysInfo: '0.1'
+  List::Uniq: '0.1'
+  MIME::Lite: '3.01'
+  MIME::Words: '5.41'
+  Mail::Address: '1.62'
+  Net::DNS: '0.48'
+  Net::Domain::TLD: '1.67'
+  Net::SCP: '0.07'
+  Net::SMTP: '2.29'
+  Number::Bytes::Human: '0.04'
+  Number::Format: '1.73'
+  Proc::ProcessTable: '0.39'
+  Socket: '1.77'
+  Spreadsheet::ParseExcel: '0.32'
+  Sys::CpuLoad: '0.02'
+  Template: '2.15'
+  Test::Distribution: '2'
+  Test::More: '0.61'
+  Test::Perl::Critic: '1.01'
+  Test::Pod: '1.26'
+  Test::Pod::Coverage: '1.08'
+  Test::Strict: '0.09'
+  Test::Warn: '0.08'
+  Text::Autoformat: '1.12'
+  Time::HiRes: '1.66'
+  Time::Piece: '1.08'
+  URI: '1.59'
+  URI::QueryParam: '0'
+  Unicode::MapUTF8: '1.09'
+  XML::Simple: '2.18'
+  jQuery::File::Upload: '0.16'
+version: '1.32'

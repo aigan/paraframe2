@@ -816,7 +816,7 @@ sub get_lastval
     $sth->execute( $seq ) or croak "Faild to get current from $seq\n";
     my( $id ) = $sth->fetchrow_array;
     $sth->finish;
-    return $id or throw ('sql', "Failed to get currval\n");
+    return $id || throw ('sql', "Failed to get currval\n");
 }
 
 

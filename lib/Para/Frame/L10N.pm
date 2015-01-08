@@ -271,7 +271,7 @@ sub get_handle
     if ( $class eq "Para::Frame::L10N" )
     {
         return Para::Frame::L10N->SUPER::get_handle(@_)
-          or die "Failed to get language handler";
+          || die "Failed to get language handler";
     }
 
     my $lh = $class->SUPER::get_handle(@_)

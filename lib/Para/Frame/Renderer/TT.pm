@@ -297,7 +297,7 @@ sub set_burner_by_type
 {
     return $_[0]->{'burner'} =
       Para::Frame::Burner->get_by_type($_[1])
-          or die "Burner type $_[1] not found";
+        || die "Burner type $_[1] not found";
 }
 
 ##############################################################################
@@ -317,7 +317,7 @@ sub set_burner_by_ext
 {
     return $_[0]->{'burner'} =
       Para::Frame::Burner->get_by_ext($_[1])
-          or die "Burner ext $_[1] not found";
+        || die "Burner ext $_[1] not found";
 }
 
 ##############################################################################

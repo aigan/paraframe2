@@ -1116,7 +1116,7 @@ slash.
 
 sub url_path
 {
-    return $_[0]->{'url_name'} or confess "No site given";
+    return $_[0]->{'url_name'} || confess "No site given";
 }
 
 
@@ -1131,7 +1131,7 @@ including trailing slash.
 
 sub url_path_slash
 {
-    return $_[0]->{'url_norm'} or confess "No site given";
+    return $_[0]->{'url_norm'} || confess "No site given";
 }
 
 

@@ -5,7 +5,7 @@ package Para::Frame::Request;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2014 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2015 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -57,6 +57,12 @@ use Para::Frame::Utils qw( compile throw debug catch idn_decode
                            datadump create_dir client_send client_str );
 
 our %URI2FILE;
+
+# Changes introduced 2014-10-08 in CGI 4.08. Disable until that
+# version is more common.
+#
+$CGI::LIST_CONTEXT_WARN = 0;
+
 
 ##############################################################################
 
@@ -795,7 +801,7 @@ Returns the L10N language handler object.
 sub lang { return $_[0]->language }
 sub language
 {
-    return $_[0]->{'lang'} or croak "Language not initialized";
+    return $_[0]->{'lang'} || croak "Language not initialized";
 }
 
 
