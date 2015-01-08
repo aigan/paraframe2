@@ -5,7 +5,7 @@ package Para::Frame::URI;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2005-2011 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2005-2015 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -630,6 +630,7 @@ have been created in another process.)
 
 Returns: A L<HTTP::Response> object
 
+Consider using L<Para::Frame::Utils/retrieve_from_url> instead.
 
 =cut
 
