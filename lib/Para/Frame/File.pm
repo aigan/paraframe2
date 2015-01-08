@@ -1116,7 +1116,7 @@ slash.
 
 sub url_path
 {
-    return $_[0]->{'url_name'} || confess "No site given";
+    return $_[0]->{'url_name'} // confess "No site given";
 }
 
 
