@@ -1960,9 +1960,9 @@ sub is_compiled
     # Quickfix for pf and rb. We will eventually remove precompileding
     # completely...
 #    return 0 unless $f->url_path;
-    if ( $f->url_path )
+    if ( $f->site )
     {
-        return 0 if $f->path($site) =~ /\/(pf|rb)\//;
+        return 0 if $f->path =~ /\/(pf|rb)\//;
     }
 
     return $f->site($site)->is_compiled;

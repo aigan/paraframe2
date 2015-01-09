@@ -12,13 +12,11 @@ use warnings;
 use utf8;
 
 use XML::Simple;
-
+use Exporter qw( import );
+our @EXPORT_OK = qw( bar_chart_svg pie_chart_svg curve_chart_svg );
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( debug datadump );
-
-use Exporter qw( import );
-our @EXPORT_OK = qw( bar_chart_svg pie_chart_svg curve_chart_svg );
 
 use constant PI => 4 * atan2(1, 1);
 
