@@ -632,6 +632,9 @@ Returns: A L<HTTP::Response> object
 
 Consider using L<Para::Frame::Utils/retrieve_from_url> instead.
 
+Or call this with the code:
+  my( $res ) = Para::Frame::Worker->method($uri, 'retrieve');
+
 =cut
 
 sub retrieve

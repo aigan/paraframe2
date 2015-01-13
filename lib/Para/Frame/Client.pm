@@ -945,7 +945,7 @@ sub send_reload
     # More compatible..?
     # self.location.replace('$url');
 
-    rprint("<script type=\"text/javascript\">window.location.href='$url';</script>");
+    rprint("<script>window.location.href='$url';</script>");
 #    $r->print("<a href=\"$url\">go</a>");
     $r->rflush;
 }
@@ -1037,7 +1037,7 @@ sub send_message
     $msg =~ s/\n/\\n/g;
 
     $s->log_error("$$: Sending message to browser: $msg") if $DEBUG > 1;
-    rprint("<script type=\"text/javascript\">document.forms['f'].messages.value += \"$msg\\n\";bottom();</script>\n");
+    rprint("<script>document.forms['f'].messages.value += \"$msg\\n\";bottom();</script>\n");
     $r->rflush;
 }
 
@@ -1051,7 +1051,7 @@ sub send_message_waiting
     my $msg = "$WAITMSG \n";
     if ( $msg eq $LAST_MESSAGE )
     {
-        rprint("<script type=\"text/javascript\">e=document.forms['f'].messages;e.value = e.value.substring(0,e.value.length-2)+\"..\\n\";bottom();</script>\n");
+        rprint("<script>e=document.forms['f'].messages;e.value = e.value.substring(0,e.value.length-2)+\"..\\n\";bottom();</script>\n");
         $r->rflush;
     }
     else

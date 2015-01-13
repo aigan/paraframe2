@@ -2327,7 +2327,7 @@ sub calendar
 #    debug "CALENDER JSON ".$setup_json;
 
     $out .= qq[
-    <script type="text/javascript">
+    <script>
       Calendar.setup($setup_json);
     </script>
 ];

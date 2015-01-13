@@ -1,5 +1,5 @@
 
-<script type="text/javascript">
+<script>
 function go(template, run) {
     f = document.forms['f'];
     f.run.value=run || f.run.value;

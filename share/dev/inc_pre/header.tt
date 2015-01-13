@@ -10,7 +10,7 @@
 
     [* PROCESS header_extra.tt *]
 
-    <script type="text/javascript" src="[% home %]/pf/js/pf.js"></script>
+    <script src="[% home %]/pf/js/pf.js"></script>
     [% PROCESS js_extra.tt # use for loading external scripts! %]
     [% IF header_extra; INCLUDE $header_extra; END %]
   </head>

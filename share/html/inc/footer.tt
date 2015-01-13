@@ -1,6 +1,6 @@
 ﻿[% PROCESS border_bottom.tt %]
 [% IF q.param('file_download_url') %]
-     <script type="text/javascript">
+     <script>
         window.location.href='[% q.param('file_download_url') %]';
      </script>
 [% END %]
