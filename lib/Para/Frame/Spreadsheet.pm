@@ -21,6 +21,7 @@ Para::Frame::Spreadsheet - Access data in diffrent source formats in a uniform w
 use 5.010;
 use strict;
 use warnings;
+no if $] >= 5.018, warnings => "experimental";
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( throw datadump debug );
