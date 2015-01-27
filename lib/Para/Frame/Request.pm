@@ -546,7 +546,7 @@ sub http_init
 
     my $resp = $req->{'resp'} = Para::Frame::Request::Response->
       new_minimal($args);
-    $resp->set_renderer('RDF::Base::Renderer::AJAX');
+    $resp->set_renderer($Para::Frame::CFG->{ajax_renderer_class});
 
 #    debug "HTTP REQUEST\n".$$headerref;
 
