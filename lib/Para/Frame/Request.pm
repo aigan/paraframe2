@@ -518,20 +518,36 @@ Initializes the L</http_init> request for http requests
 
 sub http_init
 {
-    my( $req, $headerref ) = @_;
+    my( $req, $message ) = @_;
 
     $req->set_site( 'default' );
     $req->set_language( );
 
     my $env = {};
+    my $q;
 
-    my $ret = parse_http_request($$headerref, $env );
+    my $ret = parse_http_request($message, $env );
     die "header corrupt " if  $ret < 1;
+
+#    debug datadump($env);
 
     $req->{'env'} = $env;
     %ENV = %$env;               # To make CGI happy
     $env = \%ENV;
-    my $q = $req->{'q'} = CGI->new($env->{QUERY_STRING});
+
+    if( $env->{REQUEST_METHOD} eq 'POST' )
+    {
+        if( $message =~ /\r\n\r\n(.*)/ )
+        {
+#            debug "Parsing POST data $1";
+            $q = $req->{'q'} = CGI->new($1);
+#            debug datadump([$q->param]);
+        }
+    }
+    else
+    {
+        $q = $req->{'q'} = CGI->new($env->{QUERY_STRING});
+    }
 
     my $args =
     {
@@ -548,7 +564,7 @@ sub http_init
       new_minimal($args);
     $resp->set_renderer($Para::Frame::CFG->{ajax_renderer_class});
 
-#    debug "HTTP REQUEST\n".$$headerref;
+#    debug "HTTP REQUEST\n".$message;
 
     # Authenticate user identity
     my $user_class = $Para::Frame::CFG->{'user_class'};

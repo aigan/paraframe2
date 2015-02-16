@@ -5,7 +5,7 @@ package Para::Frame;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2014 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2015 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -997,7 +997,7 @@ sub fill_buffer
                     debug(4,"Setting length to $1");
                     $DATALENGTH{$client} = $1;
                 }
-                elsif ( $INBUFFER{$client} =~ s/^(GET .+\r\n\r\n)/HTTP\x00$1/s )
+                elsif ( $INBUFFER{$client} =~ s/^((?:GET|POST) .+\r\n\r\n.*)/HTTP\x00$1/s )
                 {
                     ### Got an HTTP request
                     #
@@ -1005,6 +1005,7 @@ sub fill_buffer
 
                     $DATALENGTH{$client} = length( $1 ) +5;
 #                    debug 1, "HTTP in INBUFFER";
+#                    debug 1, "HTTP INBUFFER content: $INBUFFER{$client}\n.";
                 }
                 else
                 {
@@ -1058,8 +1059,7 @@ sub handle_code
 
 
     my( $code ) = $1;
-#    debug 1, "GOT code $code: $INBUFFER{$client}";
-    debug 5, "GOT code $code: $INBUFFER{$client}";
+#    debug 5, "GOT code $code: $INBUFFER{$client}";
 
     if ( $code eq 'REQ' )
     {
@@ -1097,14 +1097,14 @@ sub handle_code
     }
     elsif ( $code eq 'HTTP' )
     {
-        my $record = $INBUFFER{$client};
+        my $message = $INBUFFER{$client};
 
         # Clear BUFFER so that we can recieve more from
         # same place.
         $INBUFFER{$client} = $rest;
         $DATALENGTH{$client} = 0;
 
-        handle_http( $client, \$record );
+        handle_http( $client, $message );
     }
     elsif ( $code eq 'CANCEL' )
     {
@@ -1967,7 +1967,7 @@ sub handle_request
 
 sub handle_http
 {
-    my( $client, $headerref ) = @_;
+    my( $client, $message ) = @_;
 
     $REQNUM ++;
     warn "\n\n$REQNUM Handling new HTTP request\n";
@@ -1985,7 +1985,7 @@ sub handle_http
 
     #################
 
-    $req->http_init( $headerref );
+    $req->http_init( $message );
     my $session = $req->session;
 
     ### Debug info
