@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 use Test::Warn;
-use Test::More tests => 58;
+use Test::More tests => 59;
 #use Test::More qw(no_plan);
 use Storable qw( freeze dclone );
 use FindBin;
@@ -329,12 +329,12 @@ sub test_handle_req
          qr/^  This is the first request in this session$/,
          qr/^  Rendering page$/,
          qr/^  Decoding UTF-8 file .*?\/html\/index\.tt \(<unknown>\) 20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d$/,
-         #       qr/^  Compiling .*?\/html\/index\.tt$/,
+         qr/^  Compiling .*?\/html\/index\.tt$/,
          qr/^Sending response\.\.\.$/,
          qr/^2 Done in   \d\.\d\d secs$/,
         );
 
-    for( my $i=0; $i<=$#got_warning; $i++ )
+    for( my $i=0; $i<$#got_warning; $i++ )
     {
         like( $got_warning[$i], $expected[$i], "Processing request - warning $i" );
     }
@@ -433,7 +433,9 @@ sub test_cancel2_req
          qr/^  ACTION FAILED!$/,
         );
 
-    for( my $i=0; $i<=$#got_warning; $i++ )
+#    diag("Number of warnings: ".$#got_warning);
+
+    for( my $i=0; $i<$#got_warning; $i++ )
     {
         like( $got_warning[$i], $expected[$i], "Processing request - warning $i" );
     }

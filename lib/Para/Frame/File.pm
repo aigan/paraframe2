@@ -5,7 +5,7 @@ package Para::Frame::File;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2014 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2015 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -1131,7 +1131,7 @@ including trailing slash.
 
 sub url_path_slash
 {
-    return $_[0]->{'url_norm'} || confess "No site given";
+    return $_[0]->{'url_norm'} // confess "No site given";
 }
 
 

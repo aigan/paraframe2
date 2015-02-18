@@ -5,7 +5,7 @@ package Para::Frame::Template;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2015 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -198,7 +198,7 @@ sub document
 	    }
 
 #	    debug("Parsing with ($parser): ".$burner->type);
-	    $req->note(loc("Compiling [_1]",$tmpl->url_path_slash||$tmpl->sys_path_slash));
+	    $req->note(loc("Compiling [_1]",($tmpl->site ? $tmpl->url_path_slash : $tmpl->sys_path_slash)));
 	    my $metadata =
 	    {
 	     name => $tmplname,
