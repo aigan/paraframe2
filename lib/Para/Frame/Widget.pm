@@ -150,7 +150,7 @@ sub slider
             $checked[$i] = 'checked="checked"';
         }
 
-        $widget .= "<input type=\"radio\" name=\"$field\" value=\"$val[$i]\" $checked[$i]/>\n";
+        $widget .= "<input type=\"radio\" name=\"$field\" value=\"$val[$i]\" $checked[$i]>\n";
     }
     return $widget;
 }
@@ -218,11 +218,11 @@ sub jump
     # DEPRECATED
     if ( my $src =  delete ${$attr}{'href_image'} )
     {
-        $content = "<img alt=\"$label_out\" src=\"$src\" />";
+        $content = "<img alt=\"$label_out\" src=\"$src\">";
     }
     if ( my $src =  delete ${$attr}{'tag_image'} )
     {
-        $content = "<img alt=\"$label_out\" src=\"$src\" />";
+        $content = "<img alt=\"$label_out\" src=\"$src\">";
     }
 
     my $extra = jump_extra( $template, $attr );
@@ -413,7 +413,7 @@ sub submit
     my $name = '';
     $name = "name=\"$setval\"" if $setval;
 
-    return "<input type=\"submit\" $name value=\"$label_out\"$extra/>";
+    return "<input type=\"submit\" $name value=\"$label_out\"$extra>";
 }
 
 ##############################################################################
@@ -517,7 +517,7 @@ sub go
     my $extra = tag_extra_from_params( $tag_attr );
 
     my $query = join '', map sprintf("document.forms['f'].$_.value='%s';", $attr->{$_}), keys %$attr;
-    return "<input type=\"button\" value=\"$label\" onclick=\"${query}go('$template', '$run')\" $extra />";
+    return "<input type=\"button\" value=\"$label\" onclick=\"${query}go('$template', '$run')\" $extra>";
 }
 
 sub go_js
@@ -693,7 +693,7 @@ sub preserve_data
         foreach my $val ( @vals )
         {
             $val = $q->escapeHTML($val);
-            $text .= "<input type=\"hidden\" name=\"$key\" value=\"$val\" />\n";
+            $text .= "<input type=\"hidden\" name=\"$key\" value=\"$val\">\n";
         }
     }
     return $text;
@@ -883,7 +883,7 @@ sub hidden
 
     $value ||= '';
 
-    return sprintf('<input type="hidden" id="%s" name="%s" value="%s" />',
+    return sprintf('<input type="hidden" id="%s" name="%s" value="%s">',
                    CGI->escapeHTML( $key ),
                    CGI->escapeHTML( $key ),
                    CGI->escapeHTML( $value ),
@@ -984,7 +984,7 @@ sub input
     $extra .= tag_extra_from_params( $tag_attr );
 
     # Stringify all params, in case they was objects
-    return sprintf('%s<input type="text" name="%s" value="%s"%s />',
+    return sprintf('%s<input type="text" name="%s" value="%s"%s>',
                    $prefix,
                    CGI->escapeHTML( "$key" ),
                    CGI->escapeHTML( "$value" ),
@@ -1076,7 +1076,7 @@ sub password
     $extra .= tag_extra_from_params($params);
 
     # Stringify all params, in case they was objects
-    return sprintf('%s<input type="password" name="%s" value="%s"%s />',
+    return sprintf('%s<input type="password" name="%s" value="%s"%s>',
                    $prefix,
                    CGI->escapeHTML( "$key" ),
                    CGI->escapeHTML( "$value" ),
@@ -1240,7 +1240,7 @@ sub htmlarea
 
 
     return $prefix .
-      '<input type="hidden" name="'. $params->{'id'} .'" style="display:none" value="" '. $extra .' />'.
+      '<input type="hidden" name="'. $params->{'id'} .'" style="display:none" value="" '. $extra .'>'.
         '<script>document.getElementById(\''. $params->{'id'} . '\').value="'. $value .'"</script>'.
           '<iframe id="'. $params->{'id'} .'___Frame" src="'. $home .'/pf/cms/fckeditor/editor/fckeditor.html?InstanceName='. $params->{'id'} .'&amp;Toolbar=ParaFrame" width="'. $w .'" height="'. $h .'" frameborder="0" scrolling="no"></iframe>';
 }
@@ -1442,7 +1442,7 @@ sub checkbox
         $suffix = $separator . $suffix;
     }
 
-    return sprintf('%s<input type="checkbox" name="%s" value="%s"%s/>%s',
+    return sprintf('%s<input type="checkbox" name="%s" value="%s"%s>%s',
                    $prefix,
                    CGI->escapeHTML( $field ),
                    CGI->escapeHTML( $value ),
@@ -1571,7 +1571,7 @@ sub radio
         $suffix = $separator . $suffix;
     }
 
-    return sprintf('%s<input type="radio" name="%s" value="%s"%s/>%s',
+    return sprintf('%s<input type="radio" name="%s" value="%s"%s>%s',
                    $prefix,
                    CGI->escapeHTML( $field ),
                    CGI->escapeHTML( $value ),
@@ -1601,7 +1601,7 @@ sub filefield
     my $cols = $params->{'cols'} || 60;
     my $value = $params->{'value'} || $Para::Frame::REQ->q->param($key) || "";
 
-    return sprintf('<input type="file" class="btn btn-primary" name="%s" value="%s" size="%s" />',
+    return sprintf('<input type="file" class="btn btn-primary" name="%s" value="%s" size="%s">',
                    CGI->escapeHTML( $key ),
                    CGI->escapeHTML( $value ),
                    CGI->escapeHTML( $cols ),
@@ -1985,7 +1985,7 @@ sub favicon_header
     }
 
 
-    return "<link rel=\"shortcut icon\" href=\"$url\" type=\"$type\" />";
+    return "<link rel=\"shortcut icon\" href=\"$url\" type=\"$type\">";
 }
 
 
@@ -2379,7 +2379,7 @@ sub input_image
             $out .= checkbox($key, $value, 1);
         }
 
-        $out .= "<img alt=\"\" src=\"$image_url/$value\"/>";
+        $out .= "<img alt=\"\" src=\"$image_url/$value\">";
     }
     else
     {
