@@ -1324,9 +1324,11 @@ sub checkbox
         @previous = $q->param($field);
     }
 
+#    debug "val: ".datadump($value,1);
     foreach my $prev ( @previous )
     {
-        if ( $prev eq $value )
+#        debug "prev: ".datadump($prev,2);
+        if ( $prev eq "$value" ) # stringify
         {
             $checked = 1;
             last;
