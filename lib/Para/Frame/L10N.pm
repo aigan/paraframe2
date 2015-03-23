@@ -475,9 +475,13 @@ sub preferred
     my $site;
     if ( my $resp = $req->response_if_existing )
     {
-        $site = $resp->page->site;
+        if( my $page = $resp->page )
+        {
+            $site = $page->site;
+        }
     }
-    else
+
+    unless( $site )
     {
         $site = $req->site;
     }

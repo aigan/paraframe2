@@ -39,7 +39,7 @@ use File::Basename;             # dirname
 use Storable qw( thaw );
 use Number::Format;
 
-our $VERSION = "1.32";          # Paraframe version
+our $VERSION = "1.33";          # Paraframe version
 
 
 use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir client_str );
@@ -2449,6 +2449,11 @@ Defaults to C<Para::Frame::Session>
 If true, accepts hosts in request even if no matching site has been
 created.  See L<Para::Frame::Site/get_by_req>. C<site_auto> can also
 be the name of a site to use for the template site.
+
+
+=head3 site_autodetect
+
+... document this
 
 
 =head3 site_class

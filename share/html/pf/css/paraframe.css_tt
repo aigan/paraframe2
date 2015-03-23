@@ -285,4 +285,5 @@ table.admin .selected img
 .hidden {display: none;}
 .bold {font-weight: bold;}
 .pad_right {padding-right:.4em}
-
+.ontop { position:relative;z-index:10 }
+.strike { text-decoration: line-through }
