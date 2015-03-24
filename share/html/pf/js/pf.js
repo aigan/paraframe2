@@ -94,7 +94,7 @@ function pf_toggle_init()
                     }
 */
 
-                    log("toggle show");
+//                    log("toggle show");
                     $ul.show();
 /*
                     if( $ul.offset().left < 0 ){
@@ -110,16 +110,27 @@ function pf_toggle_init()
                                 pf_toggle_hide();
                             }
                         });
+
+                    
+                    $(this).parents('.menu_group').find('.toggle')
+                        .off('mouseenter.pf_toggle')
+                        .on('mouseenter.pf_toggle',function(e){
+//                            log("Hover on menu");
+                            if( this != $toggle_element )
+                            {
+                                $ul.hide();
+                                $(this).click();
+                            }
+                        });
                 }
                 else
                 {
-                    log("toggle hide");
+//                    log("toggle hide");
                     $ul.hide();
+                    $(this).parents('.menu_group')
+                        .find('.toggle').off('mouseenter.pf_toggle');
                 }
             }
-
-            //            $(this).children('ul').toggle();
-
         });
 
     function pf_toggle_hide()
@@ -129,6 +140,8 @@ function pf_toggle_init()
         $('.toggle').each(function(){
             $(this).children('ul').hide();
         });
+        
+        $('.toggle').off('mouseenter.pf_toggle');
     }
 
     log('PF toggle_init');
