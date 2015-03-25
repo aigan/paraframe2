@@ -90,4 +90,4 @@ requires:
   Unicode::MapUTF8: '1.09'
   XML::Simple: '2.18'
   jQuery::File::Upload: '0.16'
-version: '1.32'
+version: '1.33'
