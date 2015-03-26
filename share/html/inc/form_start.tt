@@ -21,9 +21,10 @@ END;
 
 ### Special consideration for id param
 ### as to give canonical urls on post
-IF q.param('id');
-   idpart = "?id=" _ q.param('id');
-END;
+####### NO. Would only be useful if posting to the same page
+#IF q.param('id');
+#   idpart = "?id=" _ q.param('id');
+#END;
 
 %]
 <form id="f" name="f" action="[% form_action; idpart %]" method="[% form_method %]" [% form_extra %]>
