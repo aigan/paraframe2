@@ -1009,7 +1009,7 @@ sub fill_buffer
                 }
                 else
                 {
-                    debug 1, "Strange INBUFFER content: $INBUFFER{$client}\n.";
+                    debug 0, "Strange INBUFFER content: $INBUFFER{$client}\n.";
                     close_callback($client, "Faulty inbuffer");
                     return 0;
                 }
