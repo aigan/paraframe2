@@ -144,6 +144,8 @@ function pf_toggle_init()
         $('.toggle').off('mouseenter.pf_toggle');
     }
 
+    pf_toggle_hide();
+    
     log('PF toggle_init');
 }
 
