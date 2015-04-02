@@ -1004,8 +1004,9 @@ sub fill_buffer
                     # converting to legacy format
 
                     $DATALENGTH{$client} = length( $1 ) +5;
-#                    debug 1, "HTTP in INBUFFER";
-#                    debug 1, "HTTP INBUFFER content: $INBUFFER{$client}\n.";
+                    debug 1, "HTTP in INBUFFER";
+                    debug 1, "HTTP INBUFFER content: $INBUFFER{$client}\n.";
+                    debug(1,"Setting length to ".$DATALENGTH{$client});
                 }
                 else
                 {
