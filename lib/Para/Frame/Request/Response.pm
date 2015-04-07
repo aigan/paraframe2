@@ -872,6 +872,7 @@ sub send_http_output
       new(
           'Content-Type' => 'application/json; charset=UTF-8',
           'Server' => 'Para::Frame',
+          'Connection' => 'close',
           'Access-Control-Allow-Origin' => '*',
          );
     $h->date(time);

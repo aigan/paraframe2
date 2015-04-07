@@ -537,6 +537,8 @@ sub http_init
 
     if( $env->{REQUEST_METHOD} eq 'POST' )
     {
+#        debug "Extracting post data from:\n$message\n---";
+
         if( $message =~ /\r\n\r\n(.*)/ )
         {
 #            debug "Parsing POST data $1";

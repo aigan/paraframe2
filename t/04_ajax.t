@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 use Test::Warn;
-use Test::More tests => 59;
+use Test::More tests => 10;
 #use Test::More qw(no_plan);
 use Storable qw( freeze dclone );
 use FindBin;
@@ -157,7 +157,11 @@ clear_stdout();
 
 #remove_files_with_bg_req(); # REQ 1
 
-test_fill_buffer();
+eval
+{
+    test_fill_buffer();
+};
+#diag( "Warnings:\n".join("",@got_warning ) );
 
 #test_cancel_req();          # REQ cancelled
 
@@ -209,7 +213,7 @@ sub test_fill_buffer
     my $bigdata = $testdata3 . $testdata4;
 
     my $chunk1 = $testdata1;              # exact
-    my $chunk2 = $testdata2 . $testdata3; # double
+    my $chunk2 = $testdata2 . "\r\n\r\n" . $testdata3; # double
     my $chunk3 = substr $bigdata, 0, 256; # less
     my $chunk4 = substr $bigdata, 256;    # rest
 
@@ -227,33 +231,77 @@ sub test_fill_buffer
     @got_warning = ();
     wd_send_data( $sock, \$chunk1 );
     ( $client ) = $Para::Frame::SELECT->can_read( 1 );
+#    diag "Client connected" if $client->connected;
 #    isnt( $client, $Para::Frame::SERVER, 'new data' );
 #    Para::Frame::switch_req(undef); # TODO: remove me
     Para::Frame::fill_buffer($client);
     Para::Frame::handle_code( $client );
 #    Para::Frame::close_callback( $client );
     $data = get_response( $sock );
-    $expect = '["{\"id\":\"1\"}"]';
-    like( $data, qr/$expect/, "Chunk 1");
+    like( $data, qr/\\"1\\"/, "Chunk 1");
 #    diag "Response: ".$data;
 #    diag( "Warnings:\n".join("",@got_warning ) );
- 
+#    diag "Client connected" if $client->connected;
 
+
+    
     # Chunk 2
     #
-    diag "Sending chunk 2";
+#    diag "Sending chunk 2";
     @got_warning = ();
-    wd_send_data( $sock, \$chunk2 );
+    $sock = wd_open_socket();
     ( $client ) = $Para::Frame::SELECT->can_read( 1 );
-    diag "Reading chunk 2";
+    Para::Frame::add_client( $client );
+    wd_send_data( $sock, \$chunk2 );
+#    diag "Reading chunk 2";
+#    diag "Client connected" if $client->connected;
     Para::Frame::fill_buffer($client);
-    diag "Parsing chunk 2";
+#    diag "Parsing chunk 2";
     Para::Frame::handle_code( $client );
-    diag "Returning chunk 2";
+#    diag "Returning chunk 2";
     $data = get_response( $sock );
-    $expect = '["{\"id\":\"12\"}"]';
-    like( $data, qr/$expect/, "Chunk 2");
-    diag( "Warnings:\n".join("",@got_warning ) );
+#    diag "Response: ".$data;
+    like( $data, qr/\\"12\\"/, "Chunk 2");
+
+    diag("Incomplete. More tests to come");
+
+
+#
+#
+#    # Chunk 3
+#    #
+#    diag "Sending 1 and later 2";
+#    @got_warning = ();
+#    $sock = wd_open_socket();
+#    ( $client ) = $Para::Frame::SELECT->can_read( 1 );
+#    Para::Frame::add_client( $client );
+#    wd_send_data( $sock, \$testdata1 );
+#    diag "Reading 1";
+#    Para::Frame::fill_buffer($client);
+#    diag "adding 2";
+#    wd_send_data( $sock, \$testdata2 );
+#    diag "Reading 2";
+#    Para::Frame::fill_buffer($client);
+#    diag "Handling code";
+#    Para::Frame::handle_code( $client );
+#    diag "Returning data";
+#    $data = get_response( $sock );
+#    diag "Response: ".$data;
+##    like( $data, qr/\\"12\\"/, "Chunk 2");
+#
+#
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -296,7 +344,7 @@ sub test_fill_buffer
 
 sub wd_open_socket
 {
-    my $DEBUG = 4;
+    my $DEBUG = 0;
 
     my @cfg =
         (
@@ -347,7 +395,6 @@ sub wd_open_socket
 sub wd_format_data
 {
     my( $code, $valref ) = @_;
-    my $DEBUG = 1;
 
     $valref ||= \ "1";
     my $length_code = length($$valref) + length($code) + 1;

@@ -895,6 +895,7 @@ sub fill_buffer
             {
                 $INBUFFER{$client} .= $data;
                 debug 5, "Adding more data to inbuffer";
+#                debug 0, "Adding: '$data'";
             }
             elsif ( not length $INBUFFER{$client} )
             {
