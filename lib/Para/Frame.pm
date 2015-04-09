@@ -39,7 +39,7 @@ use File::Basename;             # dirname
 use Storable qw( thaw );
 use Number::Format;
 
-our $VERSION = "1.33";          # Paraframe version
+our $VERSION = "1.40";          # Paraframe version
 
 
 use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir client_str );
@@ -864,7 +864,7 @@ sub fill_buffer
   PROCESS:
     {
 
-        if ( 0 )                # DEBUG
+        if ( debug >= 6 )                # DEBUG
         {
             #### STATUS
             debug "\nCurrent buffers";
@@ -899,8 +899,15 @@ sub fill_buffer
             }
             elsif ( not length $INBUFFER{$client} )
             {
-                if ( defined $rv ) # Empty string
+                if ( not defined $rv ) # Error during read
                 {
+                    if( $! == 11 ) # Try again (EAGAIN)
+                    {
+                        redo;
+                    }
+
+                    debug "Error while reading from $client: ".int($!);
+
                     state $last_lost ||= '';
 
                     debug "Lost connection to ".client_str($client);
@@ -983,11 +990,13 @@ sub fill_buffer
 #		    throw('action', "Data timeout while talking to client\n");
                 }
             }
-            else
+            elsif(  $DATALENGTH{$client} )
             {
-                # TODO: Vulnerability. Drop connection after a given time
+                debug "============= Waiting for more data?";
+                debug "  Buffer length: ".length($INBUFFER{$client});
+                debug "  Datalength: ".$DATALENGTH{$client};
+                return 0;
             }
-
 
             unless ( $DATALENGTH{$client} )
             {
@@ -998,20 +1007,46 @@ sub fill_buffer
                     debug(4,"Setting length to $1");
                     $DATALENGTH{$client} = $1;
                 }
-                elsif ( $INBUFFER{$client} =~ s/^((?:GET|POST) .+\r\n\r\n.*)/HTTP\x00$1/s )
+                elsif ( $INBUFFER{$client} =~ s/^(GET .+\r\n\r\n)/HTTP\x00$1/s )
                 {
-                    ### Got an HTTP request
+                    ### Got an HTTP GET request
                     #
                     # converting to legacy format
 
                     $DATALENGTH{$client} = length( $1 ) +5;
-                    debug 1, "HTTP in INBUFFER";
-                    debug 1, "HTTP INBUFFER content: $INBUFFER{$client}\n.";
-                    debug(1,"Setting length to ".$DATALENGTH{$client});
+                    debug 1, "HTTP GET in INBUFFER";
+                    debug 1, "$INBUFFER{$client}\n.";
+                    debug 1,"Setting length to ".$DATALENGTH{$client};
+                }
+                elsif ( $INBUFFER{$client} =~ m/^(POST .+?\r\n\r\n)/s )
+                {
+                    ### Got an HTTP POST request
+
+                    my $header_length = length( $1 ); # Assume 8-bit
+
+                    unless( $INBUFFER{$client} =~ /^Content-Length: (\d+)/im )
+                    {
+                        debug 0, "HTTP POST without content-length: $INBUFFER{$client}\n.";
+                        close_callback($client, "Faulty HTTP POST inbuffer");
+                        return 0;
+                    }
+
+                    my $body_length = $1;
+
+                    $INBUFFER{$client} = "HTTP\x00".$INBUFFER{$client};
+                    $DATALENGTH{$client} = $header_length + $body_length + 5;
+
+                    debug 1, "HTTP POST in INBUFFER";
+                    debug 1, "$INBUFFER{$client}\n.";
+                    debug 1, "Buffer length is ".length($INBUFFER{$client});
+                    debug 1,"Setting length to ".$DATALENGTH{$client};
                 }
                 else
                 {
                     debug 0, "Strange INBUFFER content: $INBUFFER{$client}\n.";
+
+                    debug datadump($REQUEST{ $client },1); ### DEBUG
+
                     close_callback($client, "Faulty inbuffer");
                     return 0;
                 }
@@ -1035,6 +1070,20 @@ sub fill_buffer
 sub handle_code
 {
     my( $client ) = @_;
+
+
+    # Client still open?
+    unless( $client->connected )
+    {
+        debug "Connection closed";
+        if( my $req = $REQUEST{ $client } )
+        {
+            $req->cancel;
+        }
+
+        return 0;
+    }
+
 
     # Parse record
     #
@@ -1410,8 +1459,9 @@ sub close_callback
         if ( $client->connected )
         {
             # I have stopped using this socket
-            $client->shutdown(2);
-            $client->close;
+#            debug "Closing connection";
+            $client->shutdown(2) or debug("Failed shutdown: $!");
+            $client->close or debug("Failed close: $!");
         }
     }
 }

@@ -176,28 +176,10 @@ eval
 
 sub test_fill_buffer
 {
-
-#    my $testdata1 = generate_http(1);
-#    my $testdata2 = generate_http(12);
-#    my $testdata3 = generate_http(123);
-#    my $testdata4 = generate_http(1234);
-#
-#    my $bigdata = $testdata3 . $testdata4;
-#
-#    my $chunk1 = $testdata1;              # exact
-#    my $chunk2 = $testdata2 . "\r\n\r\n" . $testdata3; # double
-#    my $chunk3 = substr $bigdata, 0, 256; # less
-#    my $chunk4 = substr $bigdata, 256;    # rest
-
-     
     my( $sock, $client, $data, $expect, $chunk1, $chunk2, $res );
 
-    # New connection
-#    $sock = wd_open_socket();
-#    ( $client ) = $Para::Frame::SELECT->can_read( 1 );
-#    is( $client, $Para::Frame::SERVER, 'new connection' );
 
-
+    
     # Buffertest - GET
     #
     @got_warning = ();
@@ -237,9 +219,7 @@ sub test_fill_buffer
 #    diag "Chunk 1:\n$chunk1\n.";
 #    diag "Chunk 2:\n$chunk2\n.";
     wd_send_data( $sock, \$chunk1 );
-#    wd_send_data( $sock, \$chunk2 );
     $client = new_connection();
-#    Para::Frame::get_value($client);
     Para::Frame::fill_buffer($client);
 #    diag "INBUFFER 1 ".$Para::Frame::INBUFFER{$client};
     wd_send_data( $sock, \$chunk2 );
@@ -247,9 +227,7 @@ sub test_fill_buffer
     Para::Frame::get_value($client);
     $data = get_response( $sock );
 #    diag "Response: ".$data;
-#    like( $data, qr/\\"123\\"/, "Buffertest - POST divided");
     check_data($data,"123", "Buffertest - POST divided");
-
 
     
 
@@ -363,60 +341,10 @@ sub test_fill_buffer
 #    check_data($data,"1234", "Buffertest - GET pipelining spaced");
 
 
+#    diag("Incomplete. More tests to come");
 
 
-
-
-    
-    
-    diag("Incomplete. More tests to come");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   
-#
-#    # Chunk 1
-#    my( $code, $data ) = pf_extract_code( $client );
-#    ok( ($code eq 'TESTa'), "TESTa" );
-#    ok( ($data eq $testdata1), "TESTa data" );
-#
-#
-#    # Chunk 2
-#    wd_send_data( $sock, \$chunk2 );
-#    Para::Frame::fill_buffer($client);
-#    #    warn "inbuffer: ".$Para::Frame::INBUFFER{$client};
-#    #    warn "datalength: ".$Para::Frame::DATALENGTH{$client};
-#    ( $code, $data ) = pf_extract_code( $client );
-#    ok( ($code eq 'TESTb'), "TESTb" );
-#    ok( ($data eq $testdata2), "TESTb data" );
-#
-#
-#    # Chunk 3
-#    wd_send_data( $sock, \$chunk3 );
-#    Para::Frame::fill_buffer($client);
-#    #    warn "inbuffer: ".$Para::Frame::INBUFFER{$client};
-#    #    warn "datalength: ".$Para::Frame::DATALENGTH{$client};
-#    ( $code, $data ) = pf_extract_code( $client );
-#    ok( ($code eq 'TESTc'), "TESTc" );
-#    ok( ($data eq $testdata3), "TESTc data" );
-#
-#    Para::Frame::close_callback( $client );
-
+    return 1;
 }
 
 

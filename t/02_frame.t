@@ -336,6 +336,7 @@ sub test_handle_req
 
     for( my $i=0; $i<$#got_warning; $i++ )
     {
+        last unless $expected[$i];
         like( $got_warning[$i], $expected[$i], "Processing request - warning $i" );
     }
 
@@ -369,7 +370,7 @@ sub test_cancel_req
     warning_like
     {
         Para::Frame::get_value( $client );
-    } qr/^SKIPS CANCELLED REQ$/, "Skips cancelled req";
+    } qr/^SKIPS CANCELLED REQ$/m, "Skips cancelled req";
 
     is( $stdout, "", "no stdout" );
 }
@@ -437,6 +438,7 @@ sub test_cancel2_req
 
     for( my $i=0; $i<$#got_warning; $i++ )
     {
+        last unless $expected[$i];
         like( $got_warning[$i], $expected[$i], "Processing request - warning $i" );
     }
 }

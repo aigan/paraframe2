@@ -29,7 +29,7 @@ use FreezeThaw;                 ####### LEGACY
 use Storable;                   # qw( thaw );
 use HTTP::BrowserDetect;
 use IO::File;
-use Carp qw(cluck croak carp confess longmess );
+use Carp qw(cluck croak carp confess longmess shortmess );
 use LWP::UserAgent;
 use HTTP::Request;
 use HTTP::Parser::XS qw(parse_http_request);
@@ -526,6 +526,7 @@ sub http_init
     my $env = {};
     my $q;
 
+    debug "Parsing HTTP request:\n$message\n.";
     my $ret = parse_http_request($message, $env );
     die "header corrupt " if  $ret < 1;
 
