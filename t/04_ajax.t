@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 use Test::Warn;
-use Test::More tests => 10;
+use Test::More tests => 26;
 #use Test::More qw(no_plan);
 use Storable qw( freeze dclone );
 use FindBin;
@@ -13,11 +13,17 @@ use Cwd 'abs_path';
 
 our $stdout;
 our @got_warning;
+our $DEBUG;
 
 
 BEGIN
 {
-    $SIG{__WARN__} = sub{ push @got_warning, shift() };
+    $DEBUG = 0;
+
+    unless( $DEBUG )
+    {
+        $SIG{__WARN__} = sub{ push @got_warning, shift() };
+    }
 
     open(SAVEOUT, ">&STDOUT");
     #    open(SAVEERR, ">&STDERR");
@@ -40,7 +46,7 @@ my $cfg_in =
     'approot'  => $approot,
     'port'     => 9999,
     'dir_var'  => $pfdir.'/tmp/var',
-    'debug'    => 0,
+    'debug'    => $DEBUG,
     'ajax_renderer_class' => 'Para::Frame::Renderer::Test_AJAX',
 };
 
@@ -160,7 +166,7 @@ clear_stdout();
 eval
 {
     test_fill_buffer();
-};
+} or diag $@;
 #diag( "Warnings:\n".join("",@got_warning ) );
 
 #test_cancel_req();          # REQ cancelled
@@ -168,128 +174,202 @@ eval
 
 #############################################
 
-sub test_cancel_req
-{
-    my $value = freeze $client_data;
-
-    Para::Frame::Sender::connect_to_server( $Para::Frame::CFG->{'port'} );
-    Para::Frame::Sender::send_to_server('REQ', \$value );
-
-    Para::Frame::Sender::send_to_server('CANCEL', \1 );
-
-    # New connection
-    my( $client ) = $Para::Frame::SELECT->can_read( 1 );
-    is( $client, $Para::Frame::SERVER, 'new connection' );
-    Para::Frame::add_client( $client );
-
-    # New data
-    ( $client ) = $Para::Frame::SELECT->can_read( 1 );
-    isnt( $client, $Para::Frame::SERVER, 'new data' );
-
-    Para::Frame::switch_req(undef); # TODO: remove me
-
-
-    warning_like
-    {
-        Para::Frame::get_value( $client );
-    } qr/^SKIPS CANCELLED REQ$/, "Skips cancelled req";
-
-    is( $stdout, "", "no stdout" );
-}
-
-
-#############################################
-
 sub test_fill_buffer
 {
-    my $sock = wd_open_socket();
 
-
-    my $testdata1 = generate_http(1);
-    my $testdata2 = generate_http(12);
-    my $testdata3 = generate_http(123);
-    my $testdata4 = generate_http(1234);
-
-    my $bigdata = $testdata3 . $testdata4;
-
-    my $chunk1 = $testdata1;              # exact
-    my $chunk2 = $testdata2 . "\r\n\r\n" . $testdata3; # double
-    my $chunk3 = substr $bigdata, 0, 256; # less
-    my $chunk4 = substr $bigdata, 256;    # rest
+#    my $testdata1 = generate_http(1);
+#    my $testdata2 = generate_http(12);
+#    my $testdata3 = generate_http(123);
+#    my $testdata4 = generate_http(1234);
+#
+#    my $bigdata = $testdata3 . $testdata4;
+#
+#    my $chunk1 = $testdata1;              # exact
+#    my $chunk2 = $testdata2 . "\r\n\r\n" . $testdata3; # double
+#    my $chunk3 = substr $bigdata, 0, 256; # less
+#    my $chunk4 = substr $bigdata, 256;    # rest
 
      
-    my( $client, $data, $expect );
+    my( $sock, $client, $data, $expect, $chunk1, $chunk2, $res );
 
     # New connection
-    ( $client ) = $Para::Frame::SELECT->can_read( 1 );
-    is( $client, $Para::Frame::SERVER, 'new connection' );
-    Para::Frame::add_client( $client );
+#    $sock = wd_open_socket();
+#    ( $client ) = $Para::Frame::SELECT->can_read( 1 );
+#    is( $client, $Para::Frame::SERVER, 'new connection' );
 
 
-    # Chunk 1
+    # Buffertest - GET
     #
     @got_warning = ();
+    $sock = wd_open_socket();
+    $chunk1 = generate_http(1, 'get');
     wd_send_data( $sock, \$chunk1 );
-    ( $client ) = $Para::Frame::SELECT->can_read( 1 );
-#    diag "Client connected" if $client->connected;
-#    isnt( $client, $Para::Frame::SERVER, 'new data' );
-#    Para::Frame::switch_req(undef); # TODO: remove me
-    Para::Frame::fill_buffer($client);
-    Para::Frame::handle_code( $client );
-#    Para::Frame::close_callback( $client );
+    $client = new_connection();
+    Para::Frame::get_value($client);
     $data = get_response( $sock );
-    like( $data, qr/\\"1\\"/, "Chunk 1");
-#    diag "Response: ".$data;
-#    diag( "Warnings:\n".join("",@got_warning ) );
-#    diag "Client connected" if $client->connected;
+    $sock->close;
+    check_data($data,"1", "Buffertest - GET");
+    
+
+
+    # Buffertest - POST
+    #
+    @got_warning = ();
+    $sock = wd_open_socket();
+    $chunk1 = generate_http(12, 'post');
+    wd_send_data( $sock, \$chunk1 );
+    $client = new_connection();
+    Para::Frame::get_value($client);
+    $data = get_response( $sock );
+    $sock->close;
+    check_data($data,"12", "Buffertest - POST");
 
 
     
-    # Chunk 2
+
+    # Buffertest - POST divided
     #
-#    diag "Sending chunk 2";
+#    diag "************************************ Buffertest";
+    $TEST::DIE = 0;
     @got_warning = ();
     $sock = wd_open_socket();
-    ( $client ) = $Para::Frame::SELECT->can_read( 1 );
-    Para::Frame::add_client( $client );
-    wd_send_data( $sock, \$chunk2 );
-#    diag "Reading chunk 2";
-#    diag "Client connected" if $client->connected;
+        ($chunk1, $chunk2) = generate_http(123, 'post') =~ m/(.*\r\n\r\n)(.*)/s;
+#    diag "Chunk 1:\n$chunk1\n.";
+#    diag "Chunk 2:\n$chunk2\n.";
+    wd_send_data( $sock, \$chunk1 );
+#    wd_send_data( $sock, \$chunk2 );
+    $client = new_connection();
+#    Para::Frame::get_value($client);
     Para::Frame::fill_buffer($client);
-#    diag "Parsing chunk 2";
-    Para::Frame::handle_code( $client );
-#    diag "Returning chunk 2";
+#    diag "INBUFFER 1 ".$Para::Frame::INBUFFER{$client};
+    wd_send_data( $sock, \$chunk2 );
+#    diag "***** Reading chunk2";
+    Para::Frame::get_value($client);
     $data = get_response( $sock );
 #    diag "Response: ".$data;
-    like( $data, qr/\\"12\\"/, "Chunk 2");
+#    like( $data, qr/\\"123\\"/, "Buffertest - POST divided");
+    check_data($data,"123", "Buffertest - POST divided");
 
+
+    
+
+    # Buffertest - GET pipelining spaced
+    #
+    @got_warning = ();
+    $sock = wd_open_socket();
+    $chunk1 = generate_http(1234,'get');
+    $chunk2 = generate_http(12345,'get');
+    wd_send_data( $sock, \$chunk1 );
+    $client = new_connection();
+    Para::Frame::fill_buffer($client);
+    wd_send_data( $sock, \$chunk2 );
+    Para::Frame::get_value($client);
+    $data = get_response( $sock );
+    check_data($data,"1234", "Buffertest - GET pipelining spaced");
+
+
+
+    # Buffertest - POST pipelining spaced
+    #
+    @got_warning = ();
+    $sock = wd_open_socket();
+    $chunk1 = generate_http(1234,'post');
+    $chunk2 = generate_http(12345,'post');
+    wd_send_data( $sock, \$chunk1 );
+    $client = new_connection();
+    Para::Frame::fill_buffer($client);
+    wd_send_data( $sock, \$chunk2 );
+    Para::Frame::get_value($client);
+    $data = get_response( $sock );
+    check_data($data,"1234", "Buffertest - POST pipelining spaced");
+
+
+    
+    # Buffertest - GET pipelining nonspaced
+    #
+    @got_warning = ();
+    $sock = wd_open_socket();
+    $chunk1 = generate_http(1234,'get');
+    $chunk2 = generate_http(12345,'get');
+    wd_send_data( $sock, \$chunk1 );
+    wd_send_data( $sock, \$chunk2 );
+    $client = new_connection();
+    Para::Frame::get_value($client);
+    $data = get_response( $sock );
+    check_data($data,"1234", "Buffertest - GET pipelining nonspaced");
+
+
+    
+    # Buffertest - POST pipelining nonspaced
+    #
+    @got_warning = ();
+    $sock = wd_open_socket();
+    $chunk1 = generate_http(1234,'post');
+    $chunk2 = generate_http(12345,'post');
+    wd_send_data( $sock, \$chunk1 );
+    wd_send_data( $sock, \$chunk2 );
+    $client = new_connection();
+    Para::Frame::get_value($client);
+    $data = get_response( $sock );
+    check_data($data,"1234", "Buffertest - POST pipelining nonspaced");
+
+
+
+    # Buffertest - GET+POST pipelining nonspaced
+    #
+    @got_warning = ();
+    $sock = wd_open_socket();
+    $chunk1 = generate_http(1234,'get');
+    $chunk2 = generate_http(12345,'post');
+    wd_send_data( $sock, \$chunk1 );
+    wd_send_data( $sock, \$chunk2 );
+    $client = new_connection();
+    Para::Frame::get_value($client);
+    $data = get_response( $sock );
+    check_data($data,"1234", "Buffertest - GET+POST pipelining nonspaced");
+
+
+    # Buffertest - POST+GET pipelining nonspaced
+    #
+    @got_warning = ();
+    $sock = wd_open_socket();
+    $chunk1 = generate_http(1234,'post');
+    $chunk2 = generate_http(12345,'get');
+    wd_send_data( $sock, \$chunk1 );
+    wd_send_data( $sock, \$chunk2 );
+    $client = new_connection();
+    Para::Frame::get_value($client);
+    $data = get_response( $sock );
+    check_data($data,"1234", "Buffertest - POST+GET pipelining nonspaced");
+
+
+
+
+    # Buffertest - GET keepalive
+    #
+    @got_warning = ();
+    $sock = wd_open_socket();
+    $chunk1 = generate_http(1234,'get');
+    $chunk2 = generate_http(12345,'get');
+    wd_send_data( $sock, \$chunk1 );
+    $client = new_connection();
+    Para::Frame::get_value($client);
+    $data = get_response( $sock );
+    wd_send_data( $sock, \$chunk2 );
+#    diag "*********************";
+    $res = Para::Frame::fill_buffer($client);
+    is( $res, '0', "Buffertest - GET keepalive (connection closed)");
+#    diag "Second res: $res";
+#    check_data($data,"1234", "Buffertest - GET pipelining spaced");
+
+
+
+
+
+
+    
+    
     diag("Incomplete. More tests to come");
-
-
-#
-#
-#    # Chunk 3
-#    #
-#    diag "Sending 1 and later 2";
-#    @got_warning = ();
-#    $sock = wd_open_socket();
-#    ( $client ) = $Para::Frame::SELECT->can_read( 1 );
-#    Para::Frame::add_client( $client );
-#    wd_send_data( $sock, \$testdata1 );
-#    diag "Reading 1";
-#    Para::Frame::fill_buffer($client);
-#    diag "adding 2";
-#    wd_send_data( $sock, \$testdata2 );
-#    diag "Reading 2";
-#    Para::Frame::fill_buffer($client);
-#    diag "Handling code";
-#    Para::Frame::handle_code( $client );
-#    diag "Returning data";
-#    $data = get_response( $sock );
-#    diag "Response: ".$data;
-##    like( $data, qr/\\"12\\"/, "Chunk 2");
-#
-#
 
 
 
@@ -344,8 +424,6 @@ sub test_fill_buffer
 
 sub wd_open_socket
 {
-    my $DEBUG = 0;
-
     my @cfg =
         (
          PeerAddr => 'localhost',
@@ -409,7 +487,6 @@ sub wd_format_data
 sub wd_send_data
 {
     my( $sock, $dataref ) = @_;
-    my $DEBUG = 0;
 
     my $data = $$dataref;
 
@@ -521,7 +598,7 @@ sub get_response
 
 sub generate_http
 {
-    my( $id ) = @_;
+    my( $id, $type ) = @_;
 
     my $http_header = "POST /ajax/1/app/testing HTTP/1.1
 Host: frame.para.se:9999
@@ -532,22 +609,62 @@ User-Agent: Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko)
 Content-Type: application/x-www-form-urlencoded; charset=UTF-8
 Accept-Encoding: gzip, deflate
 Accept-Language: sv-SE,sv;q=0.8,en-US;q=0.6,en;q=0.4
+
 ";
 
-    my $http_body = "cred%5Busername%5D=kala&cred%5Bpassword%5D=mycryptedpassword&data=%7B%22id%22%3A%22myid%22%7D";
+    my $http_body = "cred%5Busername%5D=tester&cred%5Bpassword%5D=mycryptedpassword&data=%7B%22id%22%3A%22myid%22%7D";
 
     $id //= 1;
     $http_body =~ s/myid/$id/;
     
-    # Body only uses 8 bit characters
-    my $length = length($http_body);
+    if( $type eq 'get' )
+    {
+        $http_header =~ s/^Content-Length: 0\n//;
+        $http_header =~ s/^POST (.*) HTTP/GET $1?$http_body HTTP/;
+    }
+    else
+    {
+        # Body only uses 8 bit characters
+        my $length = length($http_body);
+        $http_header =~ s/Content-Length: 0/Content-Length: $length/;
+        $http_header .= $http_body;
+    }
 
-    $http_header =~ s/Content-Length: 0/Content-Length: $length/;
-#    diag("header length 1: ".length($http_header));
     $http_header =~ s/\n/\r\n/g;
-#    diag("header length 2: ".length($http_header));
     
-    return $http_header . "\r\n" . $http_body;
+    return $http_header;
+}
+
+
+#############################################
+
+sub new_connection
+{
+    my( $client ) = $Para::Frame::SELECT->can_read( 1 );
+
+    if( $client == $Para::Frame::SERVER )
+    {
+        # diag "New connection $client";
+        Para::Frame::add_client( $client );
+        return new_connection();
+    }
+
+    unless( $client )
+    {
+        diag "No connection found";
+    }
+    
+    return $client;
+}
+
+
+#############################################
+
+sub check_data
+{
+    my( $data, $test, $message ) = @_;
+    like( $data, qr/\Q"data":["{\"id\":\"$test\"}"]/, $message." data");
+    like( $data, qr/"user":"tester"/, $message." user");
 }
 
 
@@ -633,12 +750,57 @@ sub chmod_file
 
 #############################################
 
-package Para::Frame;
+package Para::Frame::User;
 
-#sub handle_http
-#{
-#    die "HANDELING HTTP";
-#}
+sub get
+{
+    my( $class, $username ) = @_;
+
+    my $u = bless {}, $class;
+
+    $u->{'uid'} = 0;
+    $u->{'level'} = 0;
+
+    if( $username eq "tester" )
+    {
+        $u->{'name'} = 'Tester';
+        $u->{'username'} = 'tester';
+        $u->{'uid'} = 1;
+        $u->{'level'} = 5;
+    }
+    else
+    {
+        $u->{'name'} = 'Guest';
+        $u->{'username'} = 'guest';
+    }
+
+    return $u;
+}
+
+sub verify_password
+{
+    my( $u, $password_encrypted ) = @_;
+
+    return 1 if $u->{'level'} == 0;
+    
+    my $pwtable =
+    {
+        'tester' => 'mycryptedpassword',
+    };
+
+    my $username = $u->{'username'};
+
+    if( my $pw = $pwtable->{$username} )
+    {
+        return 1 if $pw eq $password_encrypted;
+        debug "Password mismatch";
+    }
+
+    debug "Got $username with ".$password_encrypted;
+
+    return 0;
+}
+
 
 
 1;

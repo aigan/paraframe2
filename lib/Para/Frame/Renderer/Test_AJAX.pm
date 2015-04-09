@@ -11,7 +11,9 @@ sub render_output
     my( $rend ) = @_;
 
     my $file = $rend->url_path;
-    my $q = $rend->req->q;
+    my $req =  $rend->req;
+    my $q = $req->q;
+    my $u = $req->user;
     my $params = {};
 
     foreach my $key ( $q->param )
@@ -23,7 +25,11 @@ sub render_output
         }
     }
 
-    my $out = to_json( { path => $file, params => $params } );
+    my $out = to_json( {
+                        path => $file,
+                        params => $params,
+                        user => $u->{username},
+                       } );
 
     return \ $out;
 }
