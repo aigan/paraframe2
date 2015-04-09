@@ -142,17 +142,17 @@ sub identify_user
     my $u = $class->get( $username, $args );
     unless( $u )
     {
-	if( $username eq 'guest' )
-	{
-	    die "Couldn't find user guest";
-	}
+        if ( $username eq 'guest' )
+        {
+            die "Couldn't find user guest";
+        }
 
-	my $errmsg = $this->user_not_found_msg( $username, $args );
-	$req->result->message($errmsg);
+        my $errmsg = $this->user_not_found_msg( $username, $args );
+        $req->result->message($errmsg);
 
-	cluck "USER $username NOT FOUND";
-	$class->clear_cookies;
-	$u = $class->identify_user( 'guest' );
+        cluck "USER $username NOT FOUND";
+        $class->clear_cookies;
+        $u = $class->identify_user( 'guest' );
     }
 
     $class->change_current_user( $u );
@@ -194,39 +194,39 @@ sub authenticate_user
 
     unless( $username )
     {
-	debug "No username for $u->{id} ($u)";
-	my $ucl = ref $u;
-	debug "  class $ucl";
-	no strict "refs";
-	foreach my $isa (@{"${ucl}::ISA"})
-	{
-	    debug " - $isa";
-	}
-	confess "no username";
+        debug "No username for $u->{id} ($u)";
+        my $ucl = ref $u;
+        debug "  class $ucl";
+        no strict "refs";
+        foreach my $isa (@{"${ucl}::ISA"})
+        {
+            debug " - $isa";
+        }
+        confess "no username";
     }
     debug(3,"authenticating $username");
     debug(3,"  with password $password_encrypted");
 
-    if( $username eq 'guest' )
+    if ( $username eq 'guest' )
     {
-	return 1;
+        return 1;
     }
 
-    if( $u->cas_session )
+    if ( $u->cas_session )
     {
-	unless( $u->cas_verified )
-	{
-	    $req->result->message('Session expired');
-	    $class->logout;
-	    return undef;
-	}
+        unless( $u->cas_verified )
+        {
+            $req->result->message('Session expired');
+            $class->logout;
+            return undef;
+        }
     }
-    elsif( not $u->verify_password( $password_encrypted ) )
+    elsif ( not $u->verify_password( $password_encrypted ) )
     {
-	$req->result->exception('validation', "Wrong password for $username");
+        $req->result->exception('validation', "Wrong password for $username");
 
-	$class->logout;
-	return undef;
+        $class->logout;
+        return undef;
     }
 
     # could be changed by a reset
@@ -235,7 +235,7 @@ sub authenticate_user
     # Sanitycheck
     unless( $username )
     {
-	throw('action', "User object has invalid username ($username)\n");
+        throw('action', "User object has invalid username ($username)\n");
     }
 
 
@@ -265,7 +265,7 @@ Do not throw any exceptions in this code.
 
 =cut
 
-sub get # Reimplement this method
+sub get                         # Reimplement this method
 {
     my( $class, $username ) = @_;
 
@@ -294,7 +294,7 @@ restrictions.
 
 =cut
 
-sub verify_password # Reimplement this method
+sub verify_password             # Reimplement this method
 {
     my( $u, $password_encrypted ) = @_;
 
@@ -349,7 +349,7 @@ sub logout
     # Set the user of the session to guest
     debug(2,"Logging out user");
     Para::Frame->run_hook($req, 'before_user_logout', $Para::Frame::U)
-	unless $Para::Frame::U->level == 0;
+        unless $Para::Frame::U->level == 0;
     $class->change_current_user( $class->get( 'guest' ) );
     debug(3,"User are now ".$Para::Frame::U->name);
 
@@ -359,7 +359,7 @@ sub logout
 
     # Do not run hook if we are on guest level
     Para::Frame->run_hook($req, 'after_user_logout')
-	unless $Para::Frame::U->level == 0;
+        unless $Para::Frame::U->level == 0;
 }
 
 
@@ -394,8 +394,8 @@ sub change_current_user
 {
     unless( UNIVERSAL::isa $_[1], 'Para::Frame::User' )
     {
-	cluck "Tried to set user to $_[1]";
-	throw('validation', sprintf "%s is not a valid user", $_[1]->sysdesig );
+        cluck "Tried to set user to $_[1]";
+        throw('validation', sprintf "%s is not a valid user", $_[1]->sysdesig );
     }
 
     $Para::Frame::U = $_[1];
@@ -448,9 +448,9 @@ L</become_temporary_user>.
 
 sub revert_from_temporary_user
 {
-    if( my $ru = delete $Para::Frame::REQ->{'real_user'} )
+    if ( my $ru = delete $Para::Frame::REQ->{'real_user'} )
     {
-	return $_[0]->change_current_user( $ru );
+        return $_[0]->change_current_user( $ru );
     }
     return $Para::Frame::U;
 }
@@ -562,12 +562,12 @@ sub has_page_update_access
 {
     my( $u, $file ) = @_;
 
-    if( $file )
+    if ( $file )
     {
-	unless( UNIVERSAL::isa( $file, 'Para::Frame::File' ) )
-	{
-	    throw('action', "File param not a Para::Frame::File object");
-	}
+        unless( UNIVERSAL::isa( $file, 'Para::Frame::File' ) )
+        {
+            throw('action', "File param not a Para::Frame::File object");
+        }
     }
 
     return 0;
