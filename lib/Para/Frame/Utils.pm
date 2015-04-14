@@ -2175,6 +2175,14 @@ sub client_send
         my $chrsent = 0;
         while ( $chrpos < $chrlength )
         {
+            # Client still open?
+            unless( $client->connected )
+            {
+                debug "Connection closed";
+                $req->cancel if $req;
+                return $chrpos;
+            }
+
             $chrsent = 0;
             $chrsent = $client->send( substr $$dataref, $chrpos, $chunk );
 
@@ -2240,6 +2248,14 @@ sub client_send
 
         for ( $srcpos=0; $srcpos<$srclength; $srcpos+= $srcsent )
         {
+            # Client still open?
+            unless( $client->connected )
+            {
+                debug "Connection closed";
+                $req->cancel if $req;
+                return $srcpos;
+            }
+
             $srcsent = 0;
             $srcsent = $client->send( substr $$dataref, $srcpos, $chunk );
 
@@ -2306,6 +2322,14 @@ sub client_send
         my $enclength = length($encbuffer); # grow after each read
         while ( $encpos < $enclength )
         {
+            # Client still open?
+            unless( $client->connected )
+            {
+                debug "Connection closed";
+                $req->cancel if $req;
+                return $chrpos;
+            }
+
             # put a substitution character in place of a malformed
             # character
             $encsent = $client->send($encbuffer);
