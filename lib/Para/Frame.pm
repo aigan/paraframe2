@@ -899,13 +899,23 @@ sub fill_buffer
             }
             elsif ( not length $INBUFFER{$client} )
             {
-                if ( not defined $rv ) # Error during read
+                # Client still open?
+                unless( $client->connected )
                 {
-                    if( $! == 11 ) # Try again (EAGAIN)
+                    debug "Connection closed";
+                    if( my $req = $REQUEST{ $client } )
                     {
-                        redo;
+                        $req->cancel;
                     }
+                    return 0;
+                }
 
+                if( $! == 11 ) # Try again (EAGAIN)
+                {
+                    # Try again after trying getting something else
+                }
+                elsif ( not defined $rv ) # Error during read
+                {
                     debug "Error while reading from $client: ".int($!);
 
                     state $last_lost ||= '';
@@ -960,9 +970,15 @@ sub fill_buffer
                         ### if necessary. This nested request may in
                         ### turn call the original request, reading
                         ### the value we wait for here.
+                        #
+                        # return 0;
 
-                        return 0;
+                        redo;   # try again
                     }
+                }
+                elsif( $! == 11 ) # Try again (EAGAIN)
+                {
+                    redo; # Now trying again
                 }
                 else
                 {
@@ -989,6 +1005,7 @@ sub fill_buffer
 
 #		    throw('action', "Data timeout while talking to client\n");
                 }
+
             }
             elsif(  $DATALENGTH{$client} )
             {
@@ -1264,7 +1281,7 @@ sub handle_code
     }
     elsif ( $code eq 'PING' )
     {
-        debug(4,"PING recieved");
+        debug(1,"PING recieved");
 #	debug "Sending  PONG";
         client_send($client, "5\x00PONG\x00");
         close_callback($client); # That's all
