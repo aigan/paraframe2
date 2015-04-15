@@ -970,10 +970,10 @@ sub fill_buffer
                         ### if necessary. This nested request may in
                         ### turn call the original request, reading
                         ### the value we wait for here.
-                        #
-                        # return 0;
 
-                        redo;   # try again
+                        return 0;
+
+                        #redo;   # try again
                     }
                 }
                 elsif( $! == 11 ) # Try again (EAGAIN)
