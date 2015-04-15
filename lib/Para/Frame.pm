@@ -600,8 +600,7 @@ sub main_loop
                 debug "LOST CONNECTION";
                 if ( $REQ and $REQ->{'client'} )
                 {
-                    $REQ->cancel;
-                    close_callback($REQ->client,'lost connection');
+                    cancel_and_close( $REQ, undef, 'lost connection');
                 }
                 undef $REQ;     # In case of contamination
             }
@@ -870,17 +869,31 @@ sub fill_buffer
             debug "\nCurrent buffers";
             foreach my $oclient ( keys %INBUFFER )
             {
-                my $msg = "  client ";
+                my $msg = "";
                 if ( my $oreq = $REQUEST{ $oclient } )
                 {
-                    $msg .= $oreq->{reqnum};
+                    $msg .= sprintf "req %3d ", $oreq->{reqnum};
                 }
-                debug "$msg $oclient: $INBUFFER{$oclient}";
+
+                if ( $RESPONSE{ $oclient } )
+                {
+                    $msg .= "RESP ";
+                }
+
+                $msg .= length($INBUFFER{$oclient});
+
+                if ( my $l = $DATALENGTH{ $oclient } )
+                {
+                    $msg .= "/".$l;
+                }
+
+                debug "$oclient: $msg";
             }
             debug "\n";
             sleep 1;
         }
 
+#        debug "Adding to $client" unless exists $INBUFFER{$client}; ### DEBUG
         my $length_buffer = length( $INBUFFER{$client}||='' );
 
         debug 4, "Length is $length_buffer of ".($DATALENGTH{$client}||'?');
@@ -902,11 +915,7 @@ sub fill_buffer
                 # Client still open?
                 unless( $client->connected )
                 {
-                    debug "Connection closed";
-                    if( my $req = $REQUEST{ $client } )
-                    {
-                        $req->cancel;
-                    }
+                    cancel_and_close( undef, $client, 'lost connection');
                     return 0;
                 }
 
@@ -921,12 +930,7 @@ sub fill_buffer
                     state $last_lost ||= '';
 
                     debug "Lost connection to ".client_str($client);
-                    if ( my $req = $REQUEST{ $client } )
-                    {
-                        $req->cancel;
-                    }
-
-                    close_callback($client,'eof');
+                    cancel_and_close( undef, $client, 'eof');
 
                     if ( $last_lost eq $client )
                     {
@@ -1092,18 +1096,14 @@ sub handle_code
     # Client still open?
     unless( $client->connected )
     {
-        debug "Connection closed";
-        if( my $req = $REQUEST{ $client } )
-        {
-            $req->cancel;
-        }
-
+        cancel_and_close( undef, $client, 'lost connection');
         return 0;
     }
 
 
     # Parse record
     #
+#    die unless exists $INBUFFER{$client}; ### DEBUG
     my $length_target = $DATALENGTH{$client};
     my $length_buffer = length( $INBUFFER{$client}||='' );
     my $rest = '';
@@ -1186,8 +1186,10 @@ sub handle_code
         $req->cancel;
 
         # Continue until it's safe to drop the connectio
-
         # There may be a message sent to client
+
+        # Trying to drop now and let other places handle it
+        close_callback( $client, "Cancelled" );
     }
     elsif ( $code eq 'RESP' )
     {
@@ -1343,6 +1345,7 @@ sub handle_code
         }
 
         close_callback($client); # That's all
+        return 0;
     }
     else
     {
@@ -1352,6 +1355,7 @@ sub handle_code
     }
 
     $DATALENGTH{$client} = 0;
+#    debug "Assigning to $client";
     $INBUFFER{$client} = $rest;
 
     return length( $rest );
@@ -1381,6 +1385,28 @@ sub nonblock
 
 ##############################################################################
 
+=head2 cancel_and_close
+
+  cancel_and_close( $req, $client, $reason )
+
+$req may be undef
+
+=cut
+
+sub cancel_and_close
+{
+    my( $req, $client, $reason ) = @_;
+
+    $req ||= $REQUEST{$client};
+    $client ||= $req->{client};
+
+    $req->cancel if $req;
+    close_callback( $client, $reason ) if $client;
+}
+
+
+##############################################################################
+
 =head2 close_callback
 
 =cut
@@ -1390,6 +1416,12 @@ sub close_callback
     my( $client, $reason ) = @_;
 
     # Someone disconnected or we want to close the i/o channel.
+
+#    debug "Closing connection $client";
+#    unless( ref $client )
+#    {
+#        debug "  not an object";
+#    }
 
     if ( my $req = $REQUEST{$client} )
     {
@@ -1460,6 +1492,9 @@ sub close_callback
     delete $RESPONSE{$client};
     delete $INBUFFER{$client};
     delete $DATALENGTH{$client};
+
+#    debug "INBUFFER removed";
+#    debug "Client list now ".join(" / ", keys(%INBUFFER));
 
     switch_req(undef);
 

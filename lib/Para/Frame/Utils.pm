@@ -2178,8 +2178,7 @@ sub client_send
             # Client still open?
             unless( $client->connected )
             {
-                debug "Connection closed";
-                $req->cancel if $req;
+                Para::Frame::cancel_and_close( $req, $client, "Connection closed");
                 return $chrpos;
             }
 
@@ -2213,8 +2212,7 @@ sub client_send
                 }
                 else
                 {
-                    $req->cancel if $req;
-                    debug("Request was cancelled. Giving up");
+                    Para::Frame::cancel_and_close( $req, $client, "Giving up");
                     return $chrpos;
                 }
 
@@ -2251,8 +2249,7 @@ sub client_send
             # Client still open?
             unless( $client->connected )
             {
-                debug "Connection closed";
-                $req->cancel if $req;
+                Para::Frame::cancel_and_close( $req, $client, "Connection closed");
                 return $srcpos;
             }
 
@@ -2285,8 +2282,7 @@ sub client_send
                 }
                 else
                 {
-                    $req->cancel if $req;
-                    debug("Request was cancelled. Giving up");
+                    Para::Frame::cancel_and_close( $req, $client, "Giving up");
                     return $srcpos;
                 }
 
@@ -2325,8 +2321,7 @@ sub client_send
             # Client still open?
             unless( $client->connected )
             {
-                debug "Connection closed";
-                $req->cancel if $req;
+                Para::Frame::cancel_and_close( $req, $client, "Connection closed");
                 return $chrpos;
             }
 
@@ -2360,8 +2355,7 @@ sub client_send
                 }
                 else
                 {
-                    $req->cancel if $req;
-                    debug("Request was cancelled. Giving up");
+                    Para::Frame::cancel_and_close( $req, $client, "Giving up");
                     return $chrpos;
                 }
 
