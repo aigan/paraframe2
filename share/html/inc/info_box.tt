@@ -10,7 +10,7 @@
 
 [%
 FOREACH part IN req.result.info_parts;
-   IF loop.first; '<section class="info">'; END; %]
+   IF loop.first; '<section>'; END; %]
    <pre class="paraframe_info">[% part.message | html %]</pre>
    [%
    IF loop.last; '</section>'; END;
