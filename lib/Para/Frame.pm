@@ -808,6 +808,7 @@ sub get_value
         }
 
         undef $Para::Frame::Sender::SOCK;
+        debug "get_value return 0";
         return 0;
     }
 
@@ -816,6 +817,7 @@ sub get_value
     {
         # Probably caled from $req->get_cmd_val()
         my $req = $client;
+        debug "get_value return undef";
         return undef if $req->{'cancel'}; ## Let caller handle it
 
         $client = $req->client;
@@ -842,6 +844,7 @@ sub get_value
         handle_code($client) and redo; # Read more if availible
     }
 
+    debug "get_value return 0";
     return 0;
 }
 
@@ -955,6 +958,7 @@ sub fill_buffer
                     if ( $ready == $SERVER )
                     {
                         add_client( $ready );
+                        debug "fill_buffer redo (new connection)";
                         redo;   # try again
                     }
                     else
@@ -976,6 +980,7 @@ sub fill_buffer
                         ### turn call the original request, reading
                         ### the value we wait for here.
 
+                        debug "fill_buffer return 0";
                         return 0;
 
                         #redo;   # try again
@@ -983,6 +988,7 @@ sub fill_buffer
                 }
                 elsif( $! == 11 ) # Try again (EAGAIN)
                 {
+                    debug "fill_buffer redo (EAGAIN)";
                     redo; # Now trying again
                 }
                 else
@@ -1006,6 +1012,7 @@ sub fill_buffer
                     # should let go now and come back in another
                     # round, if necessary
 
+                    debug "fill_buffer return 0";
                     return 0;
 
 #		    throw('action', "Data timeout while talking to client\n");
@@ -1018,6 +1025,8 @@ sub fill_buffer
                 debug "  Buffer length: ".length($INBUFFER{$client});
                 debug "  Datalength: ".$DATALENGTH{$client};
                 cluck "trace for ".client_str($client);
+
+                debug "fill_buffer redo";
                 redo;
 #                return 0;
             }
@@ -1052,6 +1061,7 @@ sub fill_buffer
                     {
                         debug 0, "HTTP POST without content-length: $INBUFFER{$client}\n.";
                         close_callback($client, "Faulty HTTP POST inbuffer");
+                        debug "fill_buffer return 0";
                         return 0;
                     }
 
@@ -1072,11 +1082,13 @@ sub fill_buffer
                     debug datadump($REQUEST{ $client },1); ### DEBUG
 
                     close_callback($client, "Faulty inbuffer");
+                    debug "fill_buffer return 0";
                     return 0;
                 }
             }
 
             # Check if we got a whole record
+            debug "fill_buffer redo (loop)";
             redo;
         }
     }
