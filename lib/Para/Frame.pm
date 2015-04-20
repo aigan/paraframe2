@@ -961,6 +961,7 @@ sub fill_buffer
                     {
                         my $orig_req = $REQ;
                         my $req = $REQUEST{$ready};
+                        debug 1, "Get new data on level $LEVEL";
                         debug 2, "Switching req to client ".client_str($ready);
                         switch_req($req);
                         eval
