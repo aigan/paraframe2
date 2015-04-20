@@ -1016,7 +1016,9 @@ sub fill_buffer
                 debug "============= Waiting for more data?";
                 debug "  Buffer length: ".length($INBUFFER{$client});
                 debug "  Datalength: ".$DATALENGTH{$client};
-                return 0;
+                cluck "trace for ".client_str($client);
+                redo;
+#                return 0;
             }
 
             unless ( $DATALENGTH{$client} )
