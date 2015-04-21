@@ -1694,7 +1694,7 @@ sub run_action
 
                       if ( $s->can('go_login') )
                       {
-                          return if $s->go_login();
+                          return 0 if $s->go_login();
                       }
 
                       my $error_tt = "/login.tt";
