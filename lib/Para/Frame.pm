@@ -808,7 +808,7 @@ sub get_value
         }
 
         undef $Para::Frame::Sender::SOCK;
-        debug "get_value return 0";
+        debug "get_value return 0 (FORK)";
         return 0;
     }
 
@@ -844,7 +844,7 @@ sub get_value
         handle_code($client) and redo; # Read more if availible
     }
 
-    debug "get_value return 0";
+    debug "get_value return 0 (end)";
     return 0;
 }
 
@@ -866,7 +866,7 @@ sub fill_buffer
   PROCESS:
     {
 
-        if ( debug >= 6 )                # DEBUG
+        if ( debug >= 1 )                # DEBUG
         {
             #### STATUS
             debug "\nCurrent buffers";
@@ -893,10 +893,10 @@ sub fill_buffer
                 debug "$oclient: $msg";
             }
             debug "\n";
-            sleep 1;
+#            sleep 1;
         }
 
-#        debug "Adding to $client" unless exists $INBUFFER{$client}; ### DEBUG
+        debug "Adding to $client" unless exists $INBUFFER{$client}; ### DEBUG
         my $length_buffer = length( $INBUFFER{$client}||='' );
 
         debug 4, "Length is $length_buffer of ".($DATALENGTH{$client}||'?');
@@ -910,7 +910,7 @@ sub fill_buffer
             if ( defined $rv and length $data )
             {
                 $INBUFFER{$client} .= $data;
-                debug 5, "Adding more data to inbuffer";
+                debug 1, "Adding more data to inbuffer $client";
 #                debug 0, "Adding: '$data'";
             }
             elsif ( not length $INBUFFER{$client} )
@@ -951,15 +951,19 @@ sub fill_buffer
 
                 # Nothing to read yet. Get something else...
 
-                if ( my( $ready ) = $SELECT->can_read( $timeout ) )
+                foreach my $ready ($SELECT->can_read( $timeout ) )
                 {
-                    redo if $ready == $client; # Ready now
+                    if( $ready == $client )
+                    {
+                        debug "fill_buffer next (Client ready now)";
+                        next;
+                    }
 
                     if ( $ready == $SERVER )
                     {
                         add_client( $ready );
-                        debug "fill_buffer redo (new connection)";
-                        redo;   # try again
+                        debug "fill_buffer next (new connection)";
+                        next;   # try again
                     }
                     else
                     {
@@ -980,13 +984,14 @@ sub fill_buffer
                         ### turn call the original request, reading
                         ### the value we wait for here.
 
-                        debug "fill_buffer return 0";
+                        debug "fill_buffer return 0 (switching)";
                         return 0;
 
                         #redo;   # try again
                     }
                 }
-                elsif( $! == 11 ) # Try again (EAGAIN)
+
+                if( $! == 11 ) # Try again (EAGAIN)
                 {
                     debug "fill_buffer redo (EAGAIN)";
                     redo; # Now trying again
@@ -1026,14 +1031,14 @@ sub fill_buffer
                 debug "  Datalength: ".$DATALENGTH{$client};
                 cluck "trace for ".client_str($client);
 
-                debug "fill_buffer redo";
-                redo;
-#                return 0;
+                debug "fill_buffer return 0 (more data)";
+#                redo;
+                return 0;
             }
 
             unless ( $DATALENGTH{$client} )
             {
-                debug(4,"Length of record?");
+                debug(1,"Length of record for $client?");
                 # Read the length of the data string
                 if ( $INBUFFER{$client} =~ s/^(\d+)\x00// )
                 {
@@ -1093,6 +1098,7 @@ sub fill_buffer
         }
     }
 
+    debug "fill_buffer return 1 (done)";
     return 1;
 }
 
@@ -1118,7 +1124,7 @@ sub handle_code
 
     # Parse record
     #
-#    die unless exists $INBUFFER{$client}; ### DEBUG
+    die unless exists $INBUFFER{$client}; ### DEBUG
     my $length_target = $DATALENGTH{$client};
     my $length_buffer = length( $INBUFFER{$client}||='' );
     my $rest = '';
@@ -1188,6 +1194,7 @@ sub handle_code
         $DATALENGTH{$client} = 0;
 
         handle_http( $client, $message );
+        return length($rest);
     }
     elsif ( $code eq 'CANCEL' )
     {
@@ -1205,6 +1212,7 @@ sub handle_code
 
         # Trying to drop now and let other places handle it
         close_callback( $client, "Cancelled" );
+        return 0;
     }
     elsif ( $code eq 'RESP' )
     {
@@ -1223,7 +1231,6 @@ sub handle_code
               new_bgrequest("Handling RUN_ACTION (in background)");
 
         my $val = $INBUFFER{$client};
-
         debug 2, "Got val: $val";
 
         $val =~ s/^(.+?)\?//;
@@ -1242,6 +1249,7 @@ sub handle_code
 
 #	client_send($client, "9\x00RESP\x00Done");
         close_callback($client); # That's all
+        return 0;
     }
     elsif ( $code eq 'URI2FILE' ) # CHILD msg
     {
@@ -1302,6 +1310,7 @@ sub handle_code
 #	debug "Sending  PONG";
         client_send($client, "5\x00PONG\x00");
         close_callback($client); # That's all
+        return 0;
     }
     elsif ( $code eq 'MEMORY' )
     {
@@ -1369,8 +1378,9 @@ sub handle_code
         return 0;
     }
 
+    # Comes here if connection is not closed
+    #
     $DATALENGTH{$client} = 0;
-#    debug "Assigning to $client";
     $INBUFFER{$client} = $rest;
 
     return length( $rest );
@@ -1432,7 +1442,7 @@ sub close_callback
 
     # Someone disconnected or we want to close the i/o channel.
 
-#    debug "Closing connection $client";
+    debug "Closing connection $client";
 #    unless( ref $client )
 #    {
 #        debug "  not an object";
@@ -1508,7 +1518,7 @@ sub close_callback
     delete $INBUFFER{$client};
     delete $DATALENGTH{$client};
 
-#    debug "INBUFFER removed";
+    debug "INBUFFER removed";
 #    debug "Client list now ".join(" / ", keys(%INBUFFER));
 
     switch_req(undef);

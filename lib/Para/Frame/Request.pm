@@ -2305,7 +2305,7 @@ sub send_code
         my $ar_cluck = 0;
         while ( not $req->{'active_reqest'} )
         {
-            debug 3, "Got an active_reqest yet?";
+            debug 1, "Got an active_reqest yet?";
             $req->yield(1);     # Give it some time to connect
             if ( time - $ar_start > 5 )
             {
@@ -2424,24 +2424,8 @@ sub get_cmd_val
 
         # Something besides the answer may be waiting before the answer
 
-        if ( my $areq = $req->{'active_reqest'} )
-        {
-            # We expects response in the active_request
-            $queue = $Para::Frame::RESPONSE{ $areq->client };
-            unless( $queue )
-            {
-                throw('cancel', "request $areq->{reqnum} decomposed");
-            }
-        }
-        else
-        {
-            $queue = $Para::Frame::RESPONSE{ $req->client };
-            unless( $queue )
-            {
-                throw('cancel', "request $req->{reqnum} decomposed");
-            }
-        }
-
+        my $areq = $req->{'active_reqest'} || $req;
+        $queue = $Para::Frame::RESPONSE{ $areq->client };
 
         my $cnt = 1;
         while ( not @$queue )
@@ -2450,7 +2434,7 @@ sub get_cmd_val
             {
                 debug "We can't seem to get that answer to our code";
                 debug "code: @_";
-                $req->cancel;
+                throw('cancel', "request $areq->{reqnum} decomposed");
             }
             elsif ( $req->{'timeout_cnt'} )
             {
@@ -2464,6 +2448,8 @@ sub get_cmd_val
             }
 
             Para::Frame::get_value( $req );
+            $queue = $Para::Frame::RESPONSE{ $areq->client };
+
             $cnt ++;
         }
     };
