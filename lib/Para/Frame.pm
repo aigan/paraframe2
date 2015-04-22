@@ -951,8 +951,10 @@ sub fill_buffer
 
                 # Nothing to read yet. Get something else...
 
+                my $got_other = 0;
                 foreach my $ready ($SELECT->can_read( $timeout ) )
                 {
+                    $got_other ++;
                     if( $ready == $client )
                     {
 #                        debug "fill_buffer next (Client ready now)";
@@ -989,10 +991,12 @@ sub fill_buffer
                     }
                 }
 
+                return 0 if $got_other; # Unwind and read again
+
                 if( $! == 11 ) # Try again (EAGAIN)
                 {
 #                    debug "fill_buffer redo (EAGAIN)";
-                    redo; # Now trying again
+                    return 0; # Now trying again
                 }
                 else
                 {
