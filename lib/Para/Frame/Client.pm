@@ -349,7 +349,9 @@ sub send_to_server
 
     if ( $DEBUG > 3 )
     {
-        $s->log_error("$$: Sending string $data");
+        my $data_debug = $data;
+        $data_debug =~ s/\x00/<NUL>/g;
+        $s->log_error("$$: Sending string $data_debug");
 #	$s->log_error(sprintf "$$:   at %.2f"), Time::HiRes::time;
     }
 

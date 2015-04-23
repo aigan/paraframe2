@@ -53,10 +53,8 @@ sub handler
     $req->{'wait'} ++;
     debug "Req $req->{reqnum} waits for $req->{'wait'} things";
 
-    # Give a short quick response
-    #
-    my $page = "Done";
-    $req->response->set_content( \$page );
+    $req->response->set_renderer('Para::Frame::Renderer::Null');
+    my $page = "Done"; $req->response->set_content( \$page );
 
     debug "Now waiting for release";
 

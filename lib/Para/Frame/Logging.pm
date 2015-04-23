@@ -149,6 +149,19 @@ sub debug_data
         $out .= "This request is in yield now\n";
     }
 
+    if( my $client = $req->{client} )
+    {
+        $out .= "Client $client\n";
+        if( $client->connected )
+        {
+            $out .= "  Client connected\n";
+        }
+        else
+        {
+            $out .= "  Client NOT connected\n";
+        }
+    }
+
     if ( $req->{'wait'} )
     {
         $out .= "This request waits for something\n";

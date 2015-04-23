@@ -2198,7 +2198,7 @@ sub client_send
                 debug sprintf( "GOT ERROR IN SOCKET SEND: %d - %s", $err_code, $err_msg );
 #		$Para::Frame::DEBUG = 3;
 
-                if ( $err_code == 11 ) # Temporary unavailible
+                if ( $Para::Frame::IOAGAIN{int $err_code} ) # Temporary unavailible
                 {
                     if ( $allow_yield )
                     {
@@ -2268,7 +2268,7 @@ sub client_send
                 debug sprintf( "GOT ERROR IN SOCKET SEND: %d - %s", $err_code, $err_msg );
 #		$Para::Frame::DEBUG = 3;
 
-                if ( $err_code == 11 ) # Temporary unavailible
+                if ( $Para::Fram::IOAGAIN{int $err_code} ) # Temporary unavailible
                 {
                     if ( $allow_yield )
                     {
@@ -2341,7 +2341,7 @@ sub client_send
                 debug sprintf( "GOT ERROR IN SOCKET SEND: %d - %s", $err_code, $err_msg );
 #                $Para::Frame::DEBUG = 3;
 
-                if ( $err_code == 11 ) # Temporary unavailible
+                if ( $Para::Frame::IOAGAIN{int $err_code} ) # Temporary unavailible
                 {
                     if ( $allow_yield )
                     {

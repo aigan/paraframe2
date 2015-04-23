@@ -95,6 +95,7 @@ our $ACTIVE_PIDFILE;           # The PID indicated by existing pidfile
 our $LAST       ;              # The last entering of the main loop
 our %WORKER     ;
 our @WORKER_IDLE;
+our %IOAGAIN    ;
 
 # More globals:
 # $WATCHDOG_ACTIVE
@@ -190,6 +191,14 @@ BEGIN
     {
         $HOOK{$hook} ||= [];
     }
+
+    # Errors to regard as temporary failures during socket IO
+    %IOAGAIN =
+      (
+       4 => 1,  # Interrupted system call
+       11 => 1, # Try again
+      );
+
 }
 
 ##############################################################################
@@ -922,7 +931,7 @@ sub fill_buffer
                     return 0;
                 }
 
-                if( $! == 11 ) # Try again (EAGAIN)
+                if( $IOAGAIN{int $!} ) # Try again (EAGAIN)
                 {
                     # Try again after trying getting something else
                 }
@@ -993,7 +1002,7 @@ sub fill_buffer
 
                 return 0 if $got_other; # Unwind and read again
 
-                if( $! == 11 ) # Try again (EAGAIN)
+                if( $IOAGAIN{int $!} ) # Try again (EAGAIN)
                 {
 #                    debug "fill_buffer redo (EAGAIN)";
                     return 0; # Now trying again
@@ -1002,7 +1011,7 @@ sub fill_buffer
                 {
                     # No data waiting
 
-                    warn "Data timeout!!!";
+                    warn sprintf "Data timeout!!! (%d)", $!;
 
                     if ( my $req = $REQUEST{$client} )
                     {

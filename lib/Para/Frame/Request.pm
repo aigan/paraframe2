@@ -2025,7 +2025,7 @@ sub referer_path
 #	return $req->session->referer->path if $req->session->referer;
     }
 
-    debug 1, "Referer from default value";
+    debug 2, "Referer from default value";
     return $site->last_step if $site->last_step;
 
     # Last try. Should always be defined
