@@ -2182,7 +2182,7 @@ sub send_code
 
     # To get a response, use get_cmd_val()
 
-#    Para::Frame::Logging->this_level(5);
+    Para::Frame::Logging->this_level(5);
     $_[1] ||= 1;                # Must be at least one param
     debug( 5, "Sending  ".join("-", @_)." ($req->{reqnum}) ".$req->client);
 #    debug sprintf "  at %.2f\n", Time::HiRes::time;

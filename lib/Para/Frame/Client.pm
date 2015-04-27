@@ -185,7 +185,7 @@ sub handler
     }
 
     my $reqline = $r->the_request;
-    warn substr(sprintf("[%s] %d: %s", scalar(localtime), $$, $reqline), 0, 79)."\n";
+    warn substr(sprintf("[%s] %d: %s", scalar(localtime), $$, $reqline), 0, 1023)."\n";
 
     ### Optimize for the common case.
     #

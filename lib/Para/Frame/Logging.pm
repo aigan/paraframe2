@@ -74,6 +74,12 @@ sub debug_data
     my( $log ) = @_;
 
     my $req = $Para::Frame::REQ;
+
+    unless( ref $req )
+    {
+        return "No active request present";
+    }
+
     my $resp = $req->response_if_existing;
 
     my $out = "";
