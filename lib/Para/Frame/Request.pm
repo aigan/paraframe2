@@ -85,6 +85,11 @@ sub new
     my( $class, $reqnum, $client, $recordref ) = @_;
 
 
+    confess "No record" unless length($$recordref);
+
+#    debug "Thawing '$$recordref'";
+#    debug "Length ".length($$recordref);
+
     # For backward compatibility, we accept both FreezeThaw and
     # Storable
 
@@ -414,7 +419,7 @@ sub new_subrequest
     }
 
 
-    $Para::Frame::RESPONSE{$client} ||= [];
+    $Para::Frame::CONN{$client}{RESPONSE} ||= [];
 
     $req->minimal_init( $args ); ### <<--- INIT
 
@@ -499,7 +504,7 @@ sub new_bgrequest
 
 #    $Para::Frame::REQUEST{$client} = $req;
 
-    $Para::Frame::RESPONSE{$client} ||= [];
+    $Para::Frame::CONN{$client}{RESPONSE} ||= [];
     Para::Frame::switch_req( $req, 1 );
     warn "\n\n$Para::Frame::REQNUM $msg\n";
     $req->minimal_init;
@@ -2420,12 +2425,12 @@ sub get_cmd_val
     eval
     {
         $req->send_code( @_ );
-        Para::Frame::get_value( $req );
+#       Para::Frame::get_value( $req );
 
         # Something besides the answer may be waiting before the answer
 
         my $areq = $req->{'active_reqest'} || $req;
-        $queue = $Para::Frame::RESPONSE{ $areq->client };
+        $queue = $Para::Frame::CONN{ $areq->client }{RESPONSE};
 
         my $cnt = 1;
         while ( not @$queue )
@@ -2447,14 +2452,16 @@ sub get_cmd_val
                 throw('cancel', "request cancelled");
             }
 
-            Para::Frame::get_value( $req );
-            $queue = $Para::Frame::RESPONSE{ $areq->client };
+            Para::Frame::main_loop( 1, 1, $req->{'reqnum'} );
+#            Para::Frame::get_value( $req );
+            $queue = $Para::Frame::CONN{ $areq->client }{RESPONSE};
 
             $cnt ++;
         }
     };
 
     $req->{'in_yield'} --;
+    Para::Frame::switch_req( $req );
 
     die $@ if $@;
     return shift @$queue;
