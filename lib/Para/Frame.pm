@@ -39,7 +39,7 @@ use File::Basename;             # dirname
 use Storable qw( thaw );
 use Number::Format;
 
-our $VERSION = "1.41";          # Paraframe version
+our $VERSION = "2.00";          # Paraframe version
 
 
 use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir client_str );
@@ -70,16 +70,17 @@ our $SERVER     ;
 our $DEBUG      ;
 our $INDENT     ;
 our @JOBS       ;           ##not used...
+our %CONN       ;           # Connection data
 our %REQUEST    ;           # key is $client or 'background-...'
-our %RESPONSE   ;           # Holds client response for req and subreq
+#our %RESPONSE   ;           # Holds client response for req and subreq
+#our %INBUFFER   ;
+#our %DATALENGTH ;
 our $REQ        ;
 our $REQ_LAST   ;              # Remeber last $REQ beyond a undef $REQ
 our $U          ;
 our $REQNUM     ;
 our %SESSION    ;
 our $SELECT     ;
-our %INBUFFER   ;
-our %DATALENGTH ;
 our $CFG        ;
 our %HOOK       ;
 our $PARAMS     ;
@@ -300,7 +301,7 @@ sub main_loop
 
     $LAST = time;           # To give info about if it's time to yield
 
-    Para::Frame::Logging->this_level(5);
+#    Para::Frame::Logging->this_level(5);
    debug(3,"Entering main_loop at level $LEVEL",1) if $LEVEL;
     print "MAINLOOP $LEVEL\n" unless $Para::Frame::FORK or not $Para::Frame::WATCHDOG_ACTIVE;
 #    print "FH ".$Para::Frame::Watchdog::FH;
@@ -314,13 +315,10 @@ sub main_loop
 
         my $exit_action = eval
         {
-
-            my $client;
-
-#	    if( $timeout == TIMEOUT_LONG )
-#	    {
-#		debug "waiting for read on socket..."; ### DEBUG
-#	    }
+#            if( $timeout == TIMEOUT_LONG )
+#            {
+#                debug "waiting for read on socket..."; ### DEBUG
+#            }
 #            debug "can_read $SELECT with timeout $timeout for ".
 #              $SELECT->count()." handles";
 #            foreach my $cl ( $SELECT->handles )
@@ -329,39 +327,45 @@ sub main_loop
 #            }
 
 
-            while ( my( $client ) = $SELECT->can_read( $timeout ) )
-            {
-                if ( $client == $SERVER )
-                {
-                    # Accept connection even if we should $TERMINATE since
-                    # it could be communication for finishing existing
-                    # requests
+            ### Recieve from clients
+            #
+            recieve_from_clients( $timeout );
+            handle_recieved_data();
 
-                    add_client( $client );
-                }
-                else
-                {
-                    # TODO: Fixme
 
-                    # I get strange loops then I'm not setting
-                    # switch_req(undef() here. But We should not need
-                    # to to this here. Investigate how to eliminate
-                    # the need for it. switch_req() should be called
-                    # in the specific sections later, where needed.
-
-                    # The problem with switching reqs is that it will
-                    # trigger DB commit which will commit data that
-                    # should be rolled back in case of an error later
-                    # in the request. Arc creations should be made in
-                    # coherent (atomic) groups. Method calls that may
-                    # call yield should not be used in the middle of
-                    # DB work.
-
-                    switch_req(undef);
-                    get_value( $client );
-                    $timeout = TIMEOUT_SHORT; # Get next thing
-                }
-            }
+#            while ( my( $client ) = $SELECT->can_read( $timeout ) )
+#            {
+#                if ( $client == $SERVER )
+#                {
+#                    # Accept connection even if we should $TERMINATE since
+#                    # it could be communication for finishing existing
+#                    # requests
+#
+#                    add_client( $client );
+#                }
+#                else
+#                {
+#                    # TODO: Fixme
+#
+#                    # I get strange loops then I'm not setting
+#                    # switch_req(undef() here. But We should not need
+#                    # to to this here. Investigate how to eliminate
+#                    # the need for it. switch_req() should be called
+#                    # in the specific sections later, where needed.
+#
+#                    # The problem with switching reqs is that it will
+#                    # trigger DB commit which will commit data that
+#                    # should be rolled back in case of an error later
+#                    # in the request. Arc creations should be made in
+#                    # coherent (atomic) groups. Method calls that may
+#                    # call yield should not be used in the middle of
+#                    # DB work.
+#
+#                    switch_req(undef);
+#                    get_value( $client );
+#                    $timeout = TIMEOUT_SHORT; # Get next thing
+#                }
+#            }
 
             ### Do the jobs piled up
             #
@@ -694,6 +698,11 @@ sub switch_req
             }
         }
 
+#        unless( ref $_[0] )
+#        {
+#            cluck "REQ nulled";
+#        }
+
         $U = undef;
         if ( $REQ = $_[0] )
         {
@@ -773,6 +782,7 @@ sub get_value
 
     if ( $Para::Frame::FORK )
     {
+        confess "FIXME";
         debug(2,"Getting value inside a fork");
 
         unless( $Para::Frame::Sender::SOCK )
@@ -803,7 +813,7 @@ sub get_value
                         debug(5,"RESP $val ($req->{reqnum}/$client)");
                     }
 
-                    push @{$RESPONSE{ $aclient }}, $val;
+                    push @{$CONN{ $aclient }{RESPONSE}}, $val;
                     return 1;
                 }
                 else
@@ -825,6 +835,8 @@ sub get_value
 
     if ( ref $client eq 'Para::Frame::Request' )
     {
+        confess "FIXME";
+
         # Probably caled from $req->get_cmd_val()
         my $req = $client;
         if( $req->{'cancel'} )
@@ -851,6 +863,7 @@ sub get_value
         }
     }
 
+    confess "FIXME";
 
   HANDLE:
     {
@@ -865,319 +878,573 @@ sub get_value
 
 ##############################################################################
 
-=head2 fill_buffer
+=head2 recieve_from_clients
 
 =cut
 
-sub fill_buffer
+sub recieve_from_clients
 {
-    my( $client, $level ) = @_;
+    my( $timeout ) = @_;
 
-    debug 1, "Get value from $client";
+#    my $DEBUG = Para::Frame::Logging->at_level(5);
+    my $DEBUG = 0;
 
-    my $timeout = 5;
-    $level ||= 0;
-
-  PROCESS:
+    if ( $DEBUG )
     {
-
-        if ( debug >= 1 )                # DEBUG
+        #### STATUS
+        debug "\nCurrent buffers";
+        foreach my $oclient ( keys %CONN )
         {
-            #### STATUS
-            debug "\nCurrent buffers";
-            foreach my $oclient ( keys %INBUFFER )
+            my $msg = "";
+            if ( my $oreq = $REQUEST{ $oclient } )
             {
-                my $msg = "";
-                if ( my $oreq = $REQUEST{ $oclient } )
-                {
-                    $msg .= sprintf "req %3d ", $oreq->{reqnum};
-                }
+                $msg .= sprintf "req %3d ", $oreq->{reqnum};
+            }
 
-                if ( $RESPONSE{ $oclient } )
-                {
-                    $msg .= "RESP ";
-                }
+            if ( $CONN{ $oclient }{RESPONSE} )
+            {
+                $msg .= "RESP ";
+            }
 
-                $msg .= length($INBUFFER{$oclient});
-
-                if ( my $l = $DATALENGTH{ $oclient } )
+            if( $CONN{$oclient}{INBUFFER} )
+            {
+                $msg .= length($CONN{$oclient}{INBUFFER});
+                if ( my $l = $CONN{ $oclient }{DATALENGTH} )
                 {
                     $msg .= "/".$l;
                 }
-
-                debug "$oclient: $msg";
             }
-            debug "\n";
-#            sleep 1;
+
+            debug "$oclient: $msg";
         }
+        debug "\n";
+    }
 
-        debug "Adding to $client" unless exists $INBUFFER{$client}; ### DEBUG
-        my $length_buffer = length( $INBUFFER{$client}||='' );
+    foreach my $ready ($SELECT->has_exception(0) )
+    {
+        die "Client $ready has exception (out of bound)";
+    }
 
-        debug 1, "Length is $length_buffer of ".($DATALENGTH{$client}||'?');
+    my $got_something;
 
-        unless ( $DATALENGTH{$client} and
-                 $length_buffer >= $DATALENGTH{$client} )
+  PROCESS:
+    {
+        $got_something = 0;
+
+        foreach my $client ($SELECT->can_read( $timeout ) )
         {
+            debug "Reading from client $client " if $DEBUG;
+
+            if ( $client == $SERVER )
+            {
+                # Accept connection even if we should $TERMINATE since
+                # it could be communication for finishing existing
+                # requests
+
+                debug 1, "New client connected: ".client_str($client) if $DEBUG;
+                add_client( $client );
+                $got_something ++;
+                next;
+            }
+
+            unless( $client->connected )
+            {
+                cancel_and_close( undef, $client, 'lost connection');
+                next;
+            }
+
             my $data='';
+            undef $!; # reset error status
             my $rv = $client->recv($data,POSIX::BUFSIZ, 0);
 
-            if ( defined $rv and length $data )
+            unless( defined $rv )
             {
-                $INBUFFER{$client} .= $data;
-                debug 1, "Adding more data to inbuffer $client";
-#                debug 0, "Adding: '$data'";
-            }
-            elsif ( not length $INBUFFER{$client} )
-            {
-                # Client still open?
-                unless( $client->connected )
-                {
-                    cancel_and_close( undef, $client, 'lost connection');
-                    return 0;
-                }
-
-                if( $! )
-                {
-                    debug "Error while reading from $client: ".int($!);
-                }
-
+                debug sprintf "Error %d while reading from %s: %s", int($!), $client, $! if $DEBUG;
                 if( $IOAGAIN{int $!} ) # Try again (EAGAIN)
                 {
                     # Try again after trying getting something else
-                }
-                elsif ( not defined $rv ) # Error during read
-                {
-                    state $last_lost ||= '';
-
-                    debug "Lost connection to ".client_str($client);
-                    cancel_and_close( undef, $client, 'eof');
-
-                    if ( $last_lost eq $client )
-                    {
-#			confess "Double lost connection $client";
-                        cluck "Double lost connection ".client_str($client);
-                        debug "Trying to restart";
-                        $TERMINATE = 'HUP';
-                        die "Lost connection to ".client_str($client);
-                    }
-
-                    $last_lost = $client;
-
-                    return 0;   # Is this right?
+                    $got_something++;
+                    next;
                 }
 
-                # Nothing to read yet. Get something else...
-                return 0 if $level; # unwind
-
-                my $got_other = 0;
-#                my $client_ready = 0;
-                my $got_data = 0;
-
-                foreach my $ready ($SELECT->has_exception(0) )
-                {
-                    debug "Client $ready has exception (out of bound)";
-                }
-
-                foreach my $ready ($SELECT->can_read( $timeout ) )
-                {
-                    unless( $ready->connected )
-                    {
-                        debug "Client $ready not connected";
-                    }
-
-                    if( $ready == $client )
-                    {
-                        debug "fill_buffer (Client ready now)";
-
-                        $rv = $client->recv($data,POSIX::BUFSIZ, 0);
-                        if ( defined $rv and length $data )
-                        {
-                            $INBUFFER{$client} .= $data;
-                            debug 1, "Finally adding more data to inbuffer $client";
-                            $got_data ++;
-                            last;
-                        }
-
-#                        $client_ready ++;
-                        debug sprintf "  ready or not? (%d / %d / %s) %s", $!, length($data), ($rv?1:0), $!;
-                        next;
-                    }
-
-                    $got_other ++;
-
-
-                    if ( $ready == $SERVER )
-                    {
-                        add_client( $ready );
-                        debug "fill_buffer next (new connection)";
-                    }
-                    else
-                    {
-#                        $data='';
-#                        $rv = $ready->recv($data,POSIX::BUFSIZ, 0);
-#                        if ( defined $rv and length $data )
-#                        {
-#                            $INBUFFER{$ready}||='';
-#                            $INBUFFER{$ready} .= $data;
-#                            debug 1, "Adding more data to other inbuffer $ready";
-#                            $data = '';
-#                            undef $rv;
-#
-#                            $got_other ++;
-#                        }
-#                        else
-#                        {
-#                            debug "Other client could not read: $!";
-#                        }
-
-                        my $orig_req = $REQ;
-#                        my $req = $REQUEST{$ready};
-                        debug 1, "Get new data on level $LEVEL ($level)";
-#                        debug 2, "Switching req to client ".client_str($ready);
-#                        switch_req($req);
-                        eval
-                        {
-                            get_value( $ready, $level ++ );
-                        };
-                        switch_req($orig_req);
-                        die $@ if $@;
-
-                        ### Caller will have to call this method again
-                        ### if necessary. This nested request may in
-                        ### turn call the original request, reading
-                        ### the value we wait for here.
-
-                        debug "fill_buffer next (switching)";
-                    }
-                }
-
-
-#                if( $client_ready )
-#                {
-#                    debug "fill_buffer return 0 (client ready)";
-#                    return 0;
-##                    redo;
-#                }
-
-                if( $got_data )
-                {
-                    # all good
-                }
-                elsif( $got_other )
-                {
-                    debug "fill_buffer return 0 (got other)";
-                    return 0;
-                }
-                elsif( $IOAGAIN{int $!} ) # Try again (EAGAIN)
-                {
-                    debug "fill_buffer redo (EAGAIN)";
-                    return 0; # Now trying again
-                }
-                else
-                {
-                    # No data waiting
-
-                    warn sprintf "Data timeout!!! (%d)", $!;
-
-                    if ( my $req = $REQUEST{$client} )
-                    {
-                        $req->{'timeout_cnt'} ++;
-                        debug 1, $req->logging->debug_data;
-                    }
-
-                    cluck "trace for ".client_str($client);
-
-                    # The caller will have to do the giving up
-
-                    # I have seen that the actual response CAN take
-                    # longer than 5 secs. I don't know why but we
-                    # should let go now and come back in another
-                    # round, if necessary
-
-                    debug "fill_buffer return 0";
-                    return 0;
-
-#		    throw('action', "Data timeout while talking to client\n");
-                }
-
+                die "What are we going to do now?";
             }
-            elsif(  $DATALENGTH{$client} )
+
+            unless( length $data )
             {
-                debug "============= Waiting for more data?";
-                debug "  Buffer length: ".length($INBUFFER{$client});
-                debug "  Datalength: ".$DATALENGTH{$client};
-                cluck "trace for ".client_str($client);
-
-                debug "fill_buffer return 0 (more data)";
-#                redo;
-                return 0;
+                die "No data from client $client";
             }
 
-            unless ( $DATALENGTH{$client} )
+            $CONN{$client}{INBUFFER} .= $data;
+            $CONN{$client}{CLIENT} = $client;
+            $got_something ++;
+            debug 1, "Adding more data to inbuffer $client" if $DEBUG;
+        }
+
+        $timeout = 0;
+        last unless $got_something;
+    }
+
+    return $got_something;
+}
+
+##############################################################################
+
+=head2 handle_recieved_data
+
+=cut
+
+sub handle_recieved_data
+{
+    my $DEBUG = 0;
+
+    foreach my $client_key ( keys %CONN )
+    {
+        my $conn = $CONN{$client_key};
+        my $client = $conn->{CLIENT};
+
+        next if $conn->{DATALENGTH};
+        next unless length $conn->{INBUFFER};
+
+#        debug(1,"DATALENGTH for $client");
+        # Read the length of the data string
+        if ( $conn->{INBUFFER} =~ s/^(\d+)\x00// )
+        {
+            debug(4,"Setting length to $1");
+            $conn->{DATALENGTH} = $1;
+            next;
+        }
+
+        if ( $conn->{INBUFFER} =~ s/^(GET .+\r\n\r\n)/HTTP\x00$1/s )
+        {
+            ### Got an HTTP GET request
+            #
+            # converting to legacy format
+
+            $conn->{DATALENGTH} = length( $1 ) +5;
+            if( $DEBUG )
             {
-                debug(1,"Length of record for $client?");
-                # Read the length of the data string
-                if ( $INBUFFER{$client} =~ s/^(\d+)\x00// )
-                {
-                    debug(4,"Setting length to $1");
-                    $DATALENGTH{$client} = $1;
-                }
-                elsif ( $INBUFFER{$client} =~ s/^(GET .+\r\n\r\n)/HTTP\x00$1/s )
-                {
-                    ### Got an HTTP GET request
-                    #
-                    # converting to legacy format
-
-                    $DATALENGTH{$client} = length( $1 ) +5;
-                    debug 1, "HTTP GET in INBUFFER";
-                    debug 1, "$INBUFFER{$client}\n.";
-                    debug 1,"Setting length to ".$DATALENGTH{$client};
-                }
-                elsif ( $INBUFFER{$client} =~ m/^(POST .+?\r\n\r\n)/s )
-                {
-                    ### Got an HTTP POST request
-
-                    my $header_length = length( $1 ); # Assume 8-bit
-
-                    unless( $INBUFFER{$client} =~ /^Content-Length: (\d+)/im )
-                    {
-                        debug 0, "HTTP POST without content-length: $INBUFFER{$client}\n.";
-                        close_callback($client, "Faulty HTTP POST inbuffer");
-                        debug "fill_buffer return 0";
-                        return 0;
-                    }
-
-                    my $body_length = $1;
-
-                    $INBUFFER{$client} = "HTTP\x00".$INBUFFER{$client};
-                    $DATALENGTH{$client} = $header_length + $body_length + 5;
-
-                    debug 1, "HTTP POST in INBUFFER";
-                    debug 1, "$INBUFFER{$client}\n.";
-                    debug 1, "Buffer length is ".length($INBUFFER{$client});
-                    debug 1,"Setting length to ".$DATALENGTH{$client};
-                }
-                else
-                {
-                    debug 0, "Strange INBUFFER content: $INBUFFER{$client}\n.";
-
-                    debug datadump($REQUEST{ $client },1); ### DEBUG
-
-                    close_callback($client, "Faulty inbuffer");
-                    debug "fill_buffer return 0";
-                    return 0;
-                }
+                debug 1, "HTTP GET in INBUFFER";
+                debug 1, $conn->{INBUFFER}."\n.";
+                debug 1, "Setting length to ".$conn->{DATALENGTH};
             }
 
-            # Check if we got a whole record
-            debug "fill_buffer redo (loop)";
-            redo;
+            next;
+        }
+
+        if ( $conn->{INBUFFER} =~ m/^(POST .+?\r\n\r\n)/s )
+        {
+            ### Got an HTTP POST request
+            #
+            # converting to legacy format
+
+            my $header_length = length( $1 ); # Assume 8-bit
+
+            unless( $conn->{INBUFFER} =~ /^Content-Length: (\d+)/im )
+            {
+                debug 0, sprintf "HTTP POST without content-length: %s\n.", $conn->{INBUFFER};
+                close_callback($client, "Faulty HTTP POST inbuffer");
+                debug "fill_buffer return 0";
+                next;
+            }
+
+            my $body_length = $1;
+
+            $conn->{INBUFFER} = "HTTP\x00".$conn->{INBUFFER};
+            $conn->{DATALENGTH} = $header_length + $body_length + 5;
+
+            if( $DEBUG )
+            {
+                debug 1, "HTTP POST in INBUFFER";
+                debug 1, $conn->{INBUFFER}."\n.";
+                debug 1, "Buffer length is ".length($conn->{INBUFFER});
+                debug 1,"Setting length to ".$conn->{DATALENGTH};
+            }
+
+            next;
+        }
+
+        ### UNRECOGNIZED content
+
+        debug 0, sprintf "Strange INBUFFER content: %s\n.", $conn->{INBUFFER};
+
+        debug datadump($REQUEST{ $client },1); ### DEBUG
+
+        close_callback($client, "Faulty inbuffer");
+        debug "fill_buffer return 0";
+    }
+
+
+    ### EXTRACT MESSAGES
+    #
+    foreach my $client_key ( keys %CONN )
+    {
+        my $conn = $CONN{$client_key};
+        $conn->{MESSAGE} ||= [];
+        next unless $conn->{DATALENGTH};
+
+        my $length_buffer = length( $conn->{INBUFFER}||='' );
+
+        if( $DEBUG )
+        {
+            debug "Extract message from client $client_key";
+            debug sprintf "  got %d/%d", $length_buffer, $conn->{DATALENGTH};
+        }
+
+        if( $length_buffer >= $conn->{DATALENGTH} )
+        {
+            push @{$conn->{MESSAGE}},
+              substr( $conn->{INBUFFER}, 0, $conn->{DATALENGTH}, '');
+            $conn->{DATALENGTH} = 0;
+
+            if( $DEBUG )
+            {
+                debug "  message length: ".length( $conn->{MESSAGE}[-1] );
+                debug "  inbuffer length: ".length($conn->{INBUFFER});
+            }
         }
     }
 
-    debug "fill_buffer return 1 (done)";
-    return 1;
+
+    ###  PROCESS MESSAGES
+    #
+    foreach my $client_key ( keys %CONN )
+    {
+        my $conn = $CONN{$client_key};
+        my $client = $conn->{CLIENT} or next;
+
+        # Client still open?
+        unless( $client->connected )
+        {
+            cancel_and_close( undef, $client, 'lost connection');
+            next;
+        }
+
+        ### Assume copy on write... could be a large chunk of data
+        while( my $msg = shift @{$conn->{MESSAGE}} )
+        {
+            handle_code( $client, \ $msg );
+        }
+    }
+}
+
+
+##############################################################################
+
+=head2 fill_buffer DEPRECATED
+
+=cut
+
+sub fill_buffer # DEPRECATED
+{
+    confess "DEPRECATED";
+#    my( $client, $level ) = @_;
+#
+#    debug 1, "Get value from $client";
+#
+#    my $timeout = 5;
+#    $level ||= 0;
+#
+#  PROCESS:
+#    {
+#
+#        if ( debug >= 1 )                # DEBUG
+#        {
+#            #### STATUS
+#            debug "\nCurrent buffers";
+#            foreach my $oclient ( keys %INBUFFER )
+#            {
+#                my $msg = "";
+#                if ( my $oreq = $REQUEST{ $oclient } )
+#                {
+#                    $msg .= sprintf "req %3d ", $oreq->{reqnum};
+#                }
+#
+#                if ( $CONN{ $oclient }{RESPONSE} )
+#                {
+#                    $msg .= "RESP ";
+#                }
+#
+#                $msg .= length($INBUFFER{$oclient});
+#
+#                if ( my $l = $DATALENGTH{ $oclient } )
+#                {
+#                    $msg .= "/".$l;
+#                }
+#
+#                debug "$oclient: $msg";
+#            }
+#            debug "\n";
+##            sleep 1;
+#        }
+#
+#        debug "Adding to $client" unless exists $INBUFFER{$client}; ### DEBUG
+#        my $length_buffer = length( $INBUFFER{$client}||='' );
+#
+#        debug 1, "Length is $length_buffer of ".($DATALENGTH{$client}||'?');
+#
+#        unless ( $DATALENGTH{$client} and
+#                 $length_buffer >= $DATALENGTH{$client} )
+#        {
+#            my $data='';
+#            my $rv = $client->recv($data,POSIX::BUFSIZ, 0);
+#
+#            if ( defined $rv and length $data )
+#            {
+#                $INBUFFER{$client} .= $data;
+#                debug 1, "Adding more data to inbuffer $client";
+##                debug 0, "Adding: '$data'";
+#            }
+#            elsif ( not length $INBUFFER{$client} )
+#            {
+#                # Client still open?
+#                unless( $client->connected )
+#                {
+#                    cancel_and_close( undef, $client, 'lost connection');
+#                    return 0;
+#                }
+#
+#                if( $! )
+#                {
+#                    debug "Error while reading from $client: ".int($!);
+#                }
+#
+#                if( $IOAGAIN{int $!} ) # Try again (EAGAIN)
+#                {
+#                    # Try again after trying getting something else
+#                }
+#                elsif ( not defined $rv ) # Error during read
+#                {
+#                    state $last_lost ||= '';
+#
+#                    debug "Lost connection to ".client_str($client);
+#                    cancel_and_close( undef, $client, 'eof');
+#
+#                    if ( $last_lost eq $client )
+#                    {
+##			confess "Double lost connection $client";
+#                        cluck "Double lost connection ".client_str($client);
+#                        debug "Trying to restart";
+#                        $TERMINATE = 'HUP';
+#                        die "Lost connection to ".client_str($client);
+#                    }
+#
+#                    $last_lost = $client;
+#
+#                    return 0;   # Is this right?
+#                }
+#
+#                # Nothing to read yet. Get something else...
+#                return 0 if $level; # unwind
+#
+#                my $got_other = 0;
+##                my $client_ready = 0;
+#                my $got_data = 0;
+#
+#                foreach my $ready ($SELECT->has_exception(0) )
+#                {
+#                    debug "Client $ready has exception (out of bound)";
+#                }
+#
+#                foreach my $ready ($SELECT->can_read( $timeout ) )
+#                {
+#                    unless( $ready->connected )
+#                    {
+#                        debug "Client $ready not connected";
+#                    }
+#
+#                    if( $ready == $client )
+#                    {
+#                        debug "fill_buffer (Client ready now)";
+#
+#                        $rv = $client->recv($data,POSIX::BUFSIZ, 0);
+#                        if ( defined $rv and length $data )
+#                        {
+#                            $INBUFFER{$client} .= $data;
+#                            debug 1, "Finally adding more data to inbuffer $client";
+#                            $got_data ++;
+#                            last;
+#                        }
+#
+##                        $client_ready ++;
+#                        debug sprintf "  ready or not? (%d / %d / %s) %s", $!, length($data), ($rv?1:0), $!;
+#                        next;
+#                    }
+#
+#                    $got_other ++;
+#
+#
+#                    if ( $ready == $SERVER )
+#                    {
+#                        add_client( $ready );
+#                        debug "fill_buffer next (new connection)";
+#                    }
+#                    else
+#                    {
+##                        $data='';
+##                        $rv = $ready->recv($data,POSIX::BUFSIZ, 0);
+##                        if ( defined $rv and length $data )
+##                        {
+##                            $INBUFFER{$ready}||='';
+##                            $INBUFFER{$ready} .= $data;
+##                            debug 1, "Adding more data to other inbuffer $ready";
+##                            $data = '';
+##                            undef $rv;
+##
+##                            $got_other ++;
+##                        }
+##                        else
+##                        {
+##                            debug "Other client could not read: $!";
+##                        }
+#
+#                        my $orig_req = $REQ;
+##                        my $req = $REQUEST{$ready};
+#                        debug 1, "Get new data on level $LEVEL ($level)";
+##                        debug 2, "Switching req to client ".client_str($ready);
+##                        switch_req($req);
+#                        eval
+#                        {
+#                            get_value( $ready, $level ++ );
+#                        };
+#                        switch_req($orig_req);
+#                        die $@ if $@;
+#
+#                        ### Caller will have to call this method again
+#                        ### if necessary. This nested request may in
+#                        ### turn call the original request, reading
+#                        ### the value we wait for here.
+#
+#                        debug "fill_buffer next (switching)";
+#                    }
+#                }
+#
+#
+##                if( $client_ready )
+##                {
+##                    debug "fill_buffer return 0 (client ready)";
+##                    return 0;
+###                    redo;
+##                }
+#
+#                if( $got_data )
+#                {
+#                    # all good
+#                }
+#                elsif( $got_other )
+#                {
+#                    debug "fill_buffer return 0 (got other)";
+#                    return 0;
+#                }
+#                elsif( $IOAGAIN{int $!} ) # Try again (EAGAIN)
+#                {
+#                    debug "fill_buffer redo (EAGAIN)";
+#                    return 0; # Now trying again
+#                }
+#                else
+#                {
+#                    # No data waiting
+#
+#                    warn sprintf "Data timeout!!! (%d)", $!;
+#
+#                    if ( my $req = $REQUEST{$client} )
+#                    {
+#                        $req->{'timeout_cnt'} ++;
+#                        debug 1, $req->logging->debug_data;
+#                    }
+#
+#                    cluck "trace for ".client_str($client);
+#
+#                    # The caller will have to do the giving up
+#
+#                    # I have seen that the actual response CAN take
+#                    # longer than 5 secs. I don't know why but we
+#                    # should let go now and come back in another
+#                    # round, if necessary
+#
+#                    debug "fill_buffer return 0";
+#                    return 0;
+#
+##		    throw('action', "Data timeout while talking to client\n");
+#                }
+#
+#            }
+#            elsif(  $DATALENGTH{$client} )
+#            {
+#                debug "============= Waiting for more data?";
+#                debug "  Buffer length: ".length($INBUFFER{$client});
+#                debug "  Datalength: ".$DATALENGTH{$client};
+#                cluck "trace for ".client_str($client);
+#
+#                debug "fill_buffer return 0 (more data)";
+##                redo;
+#                return 0;
+#            }
+#
+#            unless ( $DATALENGTH{$client} )
+#            {
+#                debug(1,"Length of record for $client?");
+#                # Read the length of the data string
+#                if ( $INBUFFER{$client} =~ s/^(\d+)\x00// )
+#                {
+#                    debug(4,"Setting length to $1");
+#                    $DATALENGTH{$client} = $1;
+#                }
+#                elsif ( $INBUFFER{$client} =~ s/^(GET .+\r\n\r\n)/HTTP\x00$1/s )
+#                {
+#                    ### Got an HTTP GET request
+#                    #
+#                    # converting to legacy format
+#
+#                    $DATALENGTH{$client} = length( $1 ) +5;
+#                    debug 1, "HTTP GET in INBUFFER";
+#                    debug 1, "$INBUFFER{$client}\n.";
+#                    debug 1,"Setting length to ".$DATALENGTH{$client};
+#                }
+#                elsif ( $INBUFFER{$client} =~ m/^(POST .+?\r\n\r\n)/s )
+#                {
+#                    ### Got an HTTP POST request
+#
+#                    my $header_length = length( $1 ); # Assume 8-bit
+#
+#                    unless( $INBUFFER{$client} =~ /^Content-Length: (\d+)/im )
+#                    {
+#                        debug 0, "HTTP POST without content-length: $INBUFFER{$client}\n.";
+#                        close_callback($client, "Faulty HTTP POST inbuffer");
+#                        debug "fill_buffer return 0";
+#                        return 0;
+#                    }
+#
+#                    my $body_length = $1;
+#
+#                    $INBUFFER{$client} = "HTTP\x00".$INBUFFER{$client};
+#                    $DATALENGTH{$client} = $header_length + $body_length + 5;
+#
+#                    debug 1, "HTTP POST in INBUFFER";
+#                    debug 1, "$INBUFFER{$client}\n.";
+#                    debug 1, "Buffer length is ".length($INBUFFER{$client});
+#                    debug 1,"Setting length to ".$DATALENGTH{$client};
+#                }
+#                else
+#                {
+#                    debug 0, "Strange INBUFFER content: $INBUFFER{$client}\n.";
+#
+#                    debug datadump($REQUEST{ $client },1); ### DEBUG
+#
+#                    close_callback($client, "Faulty inbuffer");
+#                    debug "fill_buffer return 0";
+#                    return 0;
+#                }
+#            }
+#
+#            # Check if we got a whole record
+#            debug "fill_buffer redo (loop)";
+#            redo;
+#        }
+#    }
+#
+#    debug "fill_buffer return 1 (done)";
+#    return 1;
 }
 
 
@@ -1189,99 +1456,60 @@ sub fill_buffer
 
 sub handle_code
 {
-    my( $client ) = @_;
+    my( $client, $msg_ref ) = @_;
 
+    my( $code, $data ) = $$msg_ref =~ m/(\w+)\x00(.*)/s;
 
-    # Client still open?
-    unless( $client->connected )
+    unless ( $code )
     {
-        cancel_and_close( undef, $client, 'lost connection');
-        return 0;
-    }
-
-
-    # Parse record
-    #
-    die unless exists $INBUFFER{$client}; ### DEBUG
-    my $length_target = $DATALENGTH{$client};
-    my $length_buffer = length( $INBUFFER{$client}||='' );
-    my $rest = '';
-
-    if ( $length_buffer > $length_target )
-    {
-        $rest = substr( $INBUFFER{$client},
-                        $length_target,
-                        ($length_buffer - $length_target),
-                        '' );
-    }
-
-#    debug "Buffer: $INBUFFER{$client}";
-
-    unless ( $INBUFFER{$client} =~ s/^(\w+)\x00// )
-    {
-        debug(0,"No code given: $INBUFFER{$client}");
+        debug(0,"No code given: $$msg_ref");
         close_callback($client,'faulty input');
         return 0;
     }
 
-
-    my( $code ) = $1;
-#    debug 1, "GOT code $code: $INBUFFER{$client}";
-    debug 1, "GOT code $code";
+#    debug 1, sprintf "GOT code %s (%s)", $code, length($data);
+#    debug 1, "data:\n$data\n.";
 
     if ( $code eq 'REQ' )
     {
-        my $record = $INBUFFER{$client};
+#        # Skip the req if it's cancelled
+#        #   As an optimization; Just check the buffer
+#        #
+#      CHECK:
+#        {
+#            if ( length $rest )
+#            {
+#                fill_buffer($client) or last;
+#
+#                # Peek in the buffer
+#                if ( $CONN{$client}{INBUFFER} =~ m/^CANCEL\x00/ )
+#                {
+#                    # Drop the connection now
+#                    warn "SKIPS CANCELLED REQ\n";
+#                    close_callback($client);
+#                    return 0;
+#                }
+#                # Something else is waitning
+#            }
+#        }
 
-        # Clear BUFFER so that we can recieve more from
-        # same place.
-
-        $INBUFFER{$client} = $rest;
-        $DATALENGTH{$client} = 0;
-
-        # Skip the req if it's cancelled
-        #   As an optimization; Just check the buffer
-        #
-      CHECK:
-        {
-            if ( length $rest )
-            {
-                fill_buffer($client) or last;
-
-                # Peek in the buffer
-                if ( $INBUFFER{$client} =~ m/^CANCEL\x00/ )
-                {
-                    # Drop the connection now
-                    warn "SKIPS CANCELLED REQ\n";
-                    close_callback($client);
-                    return 0;
-                }
-                # Something else is waitning
-            }
-        }
-
-        handle_request( $client, \$record );
-        return 0;               ### SPECIAL CASE
+        handle_request( $client, \$data );
+        return;
     }
-    elsif ( $code eq 'HTTP' )
+
+    if ( $code eq 'HTTP' )
     {
-        my $message = $INBUFFER{$client};
-
-        # Clear BUFFER so that we can recieve more from
-        # same place.
-        $INBUFFER{$client} = $rest;
-        $DATALENGTH{$client} = 0;
-
-        handle_http( $client, $message );
-        return length($rest);
+        handle_http( $client, $data );
+        return;
     }
-    elsif ( $code eq 'CANCEL' )
+
+    if ( $code eq 'CANCEL' )
     {
         my $req = $REQUEST{ $client };
         unless( $req )
         {
             debug "CANCEL from Req not registred: ".client_str($client);
-            return 0;
+            return;
         }
 
         $req->cancel;
@@ -1291,16 +1519,18 @@ sub handle_code
 
         # Trying to drop now and let other places handle it
         close_callback( $client, "Cancelled" );
-        return 0;
+        return;
     }
-    elsif ( $code eq 'RESP' )
+
+    if ( $code eq 'RESP' )
     {
-        my $val = $INBUFFER{$client};
         my $req = $REQUEST{ $client };
-        debug(5,"RESP $val ($req->{reqnum})");
-        push @{$RESPONSE{ $client }}, $val;
+        debug(5,"RESP $data ($req->{reqnum})");
+        push @{$CONN{ $client }{RESPONSE}}, $data;
+        return;
     }
-    elsif ( $code eq 'RUN_ACTION' ) # Not interactive
+
+    if ( $code eq 'RUN_ACTION' ) # Not interactive
     {
         # Starts action and drops connection.
         # No wait on result
@@ -1309,15 +1539,14 @@ sub handle_code
           Para::Frame::Request->
               new_bgrequest("Handling RUN_ACTION (in background)");
 
-        my $val = $INBUFFER{$client};
-        debug 2, "Got val: $val";
+        debug 2, "Got val: $data";
 
-        $val =~ s/^(.+?)\?//;
+        $data =~ s/^(.+?)\?//;
         my $action = $1;
         debug "Action $action";
 
         my %params;
-        foreach my $param ( split '&', $val )
+        foreach my $param ( split '&', $data )
         {
             $param =~ m/^(.*?)=(.*?)$/;
             $params{$1} = $2;
@@ -1328,17 +1557,17 @@ sub handle_code
 
 #	client_send($client, "9\x00RESP\x00Done");
         close_callback($client); # That's all
-        return 0;
+        return;
     }
-    elsif ( $code eq 'URI2FILE' ) # CHILD msg
+
+    if ( $code eq 'URI2FILE' ) # CHILD msg
     {
         # redirect request from child to client (via this parent)
         #
-        my $val = $INBUFFER{$client};
-        $val =~ s/^(.+?)\x00// or die "Faulty val: $val";
+        $data =~ s/^(.+?)\x00// or die "Faulty val: $data";
         my $caller_clientaddr = $1;
 
-        debug(2,"URI2FILE($val) recieved");
+        debug(2,"URI2FILE($data) recieved");
 
         # Calling uri2file in the right $REQ
         # Do we need to switch_req() ???
@@ -1346,72 +1575,84 @@ sub handle_code
         my $current_req = $REQ;
         my $req = $REQUEST{ $caller_clientaddr } or
           die "Client ".client_str($caller_clientaddr)." not registred";
-        my $file = $req->uri2file($val);
+        my $file = $req->uri2file($data);
 
         # Send response in calling $REQ
         debug(2,"Returning answer $file");
 
 #	debug "Sending  RESP $file";
         client_send($client, join( "\0", 'RESP', $file ) . "\n" );
+        return;
     }
-    elsif ( $code eq 'NOTE' )   # CHILD msg
+
+    if ( $code eq 'NOTE' )   # CHILD msg
     {
         # redirect request from child to client (via this parent)
         #
-        my $val = $INBUFFER{$client};
-        $val =~ s/^(.+?)\x00// or die "Faulty val: $val";
+        $data =~ s/^(.+?)\x00// or die "Faulty val: $data";
         my $caller_clientaddr = $1;
 
-        debug(2,"NOTE($val) recieved");
+        debug(2,"NOTE($data) recieved");
 
         # Calling uri2file in the right $REQ
         my $current_req = $REQ;
 
         if ( my $req = $REQUEST{ $caller_clientaddr } )
         {
-            $req->note($val);
+            $req->note($data);
         }
         else
         {
             # The note may have come from a background request
-            debug 0, $val;
+            debug 0, $data;
         }
+        return;
     }
-    elsif ( $code eq 'LOADPAGE' )
+
+    if ( $code eq 'LOADPAGE' )
     {
         debug(0,"LOADPAGE");
         my $req = $REQUEST{ $client };
         $req->{'in_loadpage'} = 1;
+        return;
     }
-    elsif ( $code eq 'PING' )
+
+    if ( $code eq 'PING' )
     {
 #        debug(1,"PING recieved");
 #	debug "Sending  PONG";
         client_send($client, "5\x00PONG\x00");
         close_callback($client); # That's all
-        return 0;
+        return;
     }
-    elsif ( $code eq 'MEMORY' )
+
+    if ( $code eq 'MEMORY' )
     {
         debug(2,"MEMORY recieved");
-        my $size = $INBUFFER{$client};
+        my $size = $data;
         $MEMORY = $size;
         Para::Frame->run_hook(undef, 'on_memory', $size);
+        return;
     }
-    elsif ( $code eq 'HUP' )
+
+    if ( $code eq 'HUP' )
     {
         debug(0,"HUP recieved");
         $TERMINATE = 'HUP';
+        return;
     }
-    elsif ( $code eq 'TERM' )
+
+    if ( $code eq 'TERM' )
     {
         debug(0,"TERM recieved");
         $TERMINATE = 'TERM';
+        return;
     }
-    elsif ( $code eq 'WORKERRESP' )
+
+    if ( $code eq 'WORKERRESP' )
     {
         local $Storable::Eval = 1;
-        my( $caller_id, $result ) = @{thaw($INBUFFER{$client})};
+        my( $caller_id, $result ) = @{thaw($data)};
         my $req;
         if ( $REQ and ($REQ->{reqnum} == $caller_id) )
         {
@@ -1448,21 +1689,13 @@ sub handle_code
         }
 
         close_callback($client); # That's all
-        return 0;
-    }
-    else
-    {
-        debug(0,"(Para::Frame) Strange CODE: $code");
-        close_callback($client, "Faulty code");
-        return 0;
+        return;
     }
 
-    # Comes here if connection is not closed
+    #### UNKNOWN CODE
     #
-    $DATALENGTH{$client} = 0;
-    $INBUFFER{$client} = $rest;
-
-    return length( $rest );
+    debug(0,"(Para::Frame) Strange CODE: $code");
+    close_callback($client, "Faulty code");
 }
 
 
@@ -1521,7 +1754,7 @@ sub close_callback
 
     # Someone disconnected or we want to close the i/o channel.
 
-    debug 1, "Closing connection $client";
+#    cluck "Closing connection $client";
 #    unless( ref $client )
 #    {
 #        debug "  not an object";
@@ -1565,7 +1798,7 @@ sub close_callback
             # Releasing active request
             delete $req->{'active_reqest'};
             delete $REQUEST{$client};
-            delete $RESPONSE{$client};
+            delete $CONN{$client};
             switch_req(undef);
             return;
         }
@@ -1593,12 +1826,10 @@ sub close_callback
     }
 
     delete $REQUEST{$client};
-    delete $RESPONSE{$client};
-    delete $INBUFFER{$client};
-    delete $DATALENGTH{$client};
+    delete $CONN{$client};
 
 #    debug "INBUFFER removed";
-#    debug "Client list now ".join(" / ", keys(%INBUFFER));
+#    debug "Client list now ".join(" / ", keys(%{$CONN{INBUFFER}}));
 
     switch_req(undef);
 
@@ -2054,7 +2285,7 @@ sub handle_request
     my $req = Para::Frame::Request->new( $REQNUM, $client, $recordref );
     ### Register the request
     $REQUEST{ $client } = $req;
-    $RESPONSE{ $client } = [];  ### Client response queue
+    $CONN{ $client }{RESPONSE} = [];  ### Client response queue
     switch_req( $req, 1 );
 
     #################
@@ -2188,7 +2419,7 @@ sub handle_http
 
     ### Register the request
     $REQUEST{ $client } = $req;
-    $RESPONSE{ $client } = [];  ### Client response queue
+    $CONN{ $client }{RESPONSE} = [];  ### Client response queue
     switch_req( $req, 1 );
 
     #################
