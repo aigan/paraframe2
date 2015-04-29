@@ -238,10 +238,20 @@ sub yield
 
     my $req = $child->req;
     $req->{'in_yield'} ++;
-    Para::Frame::main_loop( $child, undef, $req->{'reqnum'} );
-    $req->{'in_yield'} --;
 
+    # In case there is an exception in main_loop()...
+    eval
+    {
+        Para::Frame::main_loop( $child, undef, $req->{'reqnum'} );
+    };
+
+    $req->{'in_yield'} --;
     Para::Frame::switch_req( $req );
+
+    if ( $@ )
+    {
+        debug "ERROR IN YIELD: $@";
+    }
 
     if ( $req->{'cancel'} )
     {
