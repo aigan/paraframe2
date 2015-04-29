@@ -778,101 +778,102 @@ TODO: Cleanup return code...
 
 sub get_value
 {
-    my( $client, $level ) = @_;
-
-    if ( $Para::Frame::FORK )
-    {
-        confess "FIXME";
-        debug(2,"Getting value inside a fork");
-
-        unless( $Para::Frame::Sender::SOCK )
-        {
-            confess "get_value in FORK with no socket";
-        }
-
-        while ( $_ = <$Para::Frame::Sender::SOCK> )
-        {
-            if ( s/^([\w\-]{3,20})\0// )
-            {
-                my $code = $1;
-                debug(1,"Code $code");
-                chomp;
-                if ( $code eq 'RESP' )
-                {
-                    my $val = $_;
-                    my $aclient = $client;
-                    if ( ref $client eq 'Para::Frame::Request' )
-                    {
-                        $aclient = $client->client;
-
-                        debug(5,"RESP $val ($client->{reqnum}/ $aclient)");
-                    }
-                    else
-                    {
-                        my $req = $REQUEST{ $client };
-                        debug(5,"RESP $val ($req->{reqnum}/$client)");
-                    }
-
-                    push @{$CONN{ $aclient }{RESPONSE}}, $val;
-                    return 1;
-                }
-                else
-                {
-                    die "Unrecognized code: $code\n";
-                }
-            }
-            else
-            {
-                die "Unrecognized response: $_\n";
-            }
-        }
-
-        undef $Para::Frame::Sender::SOCK;
-        debug "get_value return 0 (FORK)";
-        return 0;
-    }
-
-
-    if ( ref $client eq 'Para::Frame::Request' )
-    {
-        confess "FIXME";
-
-        # Probably caled from $req->get_cmd_val()
-        my $req = $client;
-        if( $req->{'cancel'} )
-        {
-            ## Let caller handle it
-            debug "get_value return undef";
-            return undef;
-        }
-
-        $client = $req->client;
-        if ( $client =~ /^background/ )
-        {
-            if ( my $areq = $req->{'active_reqest'} )
-            {
-                debug 4, "  Getting value from active_request for $client";
-                $client = $areq->client;
-                debug 4, "    $client";
-            }
-            else
-            {
-                die "We cant get a value without an active request ($client)\n";
-                # Unless it's a fork... (handled above)
-            }
-        }
-    }
-
-    confess "FIXME";
-
-  HANDLE:
-    {
-        fill_buffer($client, $level) or last;
-        handle_code($client) and redo; # Read more if availible
-    }
-
-    debug "get_value return 0 (end)";
-    return 0;
+    confess "DEPRECATED";
+#    my( $client, $level ) = @_;
+#
+#    if ( $Para::Frame::FORK )
+#    {
+#        confess "FIXME";
+#        debug(2,"Getting value inside a fork");
+#
+#        unless( $Para::Frame::Sender::SOCK )
+#        {
+#            confess "get_value in FORK with no socket";
+#        }
+#
+#        while ( $_ = <$Para::Frame::Sender::SOCK> )
+#        {
+#            if ( s/^([\w\-]{3,20})\0// )
+#            {
+#                my $code = $1;
+#                debug(1,"Code $code");
+#                chomp;
+#                if ( $code eq 'RESP' )
+#                {
+#                    my $val = $_;
+#                    my $aclient = $client;
+#                    if ( ref $client eq 'Para::Frame::Request' )
+#                    {
+#                        $aclient = $client->client;
+#
+#                        debug(5,"RESP $val ($client->{reqnum}/ $aclient)");
+#                    }
+#                    else
+#                    {
+#                        my $req = $REQUEST{ $client };
+#                        debug(5,"RESP $val ($req->{reqnum}/$client)");
+#                    }
+#
+#                    push @{$CONN{ $aclient }{RESPONSE}}, $val;
+#                    return 1;
+#                }
+#                else
+#                {
+#                    die "Unrecognized code: $code\n";
+#                }
+#            }
+#            else
+#            {
+#                die "Unrecognized response: $_\n";
+#            }
+#        }
+#
+#        undef $Para::Frame::Sender::SOCK;
+#        debug "get_value return 0 (FORK)";
+#        return 0;
+#    }
+#
+#
+#    if ( ref $client eq 'Para::Frame::Request' )
+#    {
+#        confess "FIXME";
+#
+#        # Probably caled from $req->get_cmd_val()
+#        my $req = $client;
+#        if( $req->{'cancel'} )
+#        {
+#            ## Let caller handle it
+#            debug "get_value return undef";
+#            return undef;
+#        }
+#
+#        $client = $req->client;
+#        if ( $client =~ /^background/ )
+#        {
+#            if ( my $areq = $req->{'active_reqest'} )
+#            {
+#                debug 4, "  Getting value from active_request for $client";
+#                $client = $areq->client;
+#                debug 4, "    $client";
+#            }
+#            else
+#            {
+#                die "We cant get a value without an active request ($client)\n";
+#                # Unless it's a fork... (handled above)
+#            }
+#        }
+#    }
+#
+#    confess "FIXME";
+#
+#  HANDLE:
+#    {
+#        fill_buffer($client, $level) or last;
+#        handle_code($client) and redo; # Read more if availible
+#    }
+#
+#    debug "get_value return 0 (end)";
+#    return 0;
 }
 
 
@@ -887,7 +888,7 @@ sub recieve_from_clients
     my( $timeout ) = @_;
 
 #    my $DEBUG = Para::Frame::Logging->at_level(5);
-    my $DEBUG = 0;
+    my $DEBUG = 1;
 
     if ( $DEBUG )
     {
@@ -972,7 +973,9 @@ sub recieve_from_clients
 
             unless( length $data )
             {
-                die "No data from client $client";
+                debug "No data from client $client";
+                cancel_and_close( undef, $client, 'no data from client');
+                next
             }
 
             $CONN{$client}{INBUFFER} .= $data;
@@ -996,7 +999,7 @@ sub recieve_from_clients
 
 sub handle_recieved_data
 {
-    my $DEBUG = 0;
+    my $DEBUG = 1;
 
     foreach my $client_key ( keys %CONN )
     {
@@ -1124,6 +1127,15 @@ sub handle_recieved_data
         while( my $msg = shift @{$conn->{MESSAGE}} )
         {
             handle_code( $client, \ $msg );
+
+            ### Prefere to unwind
+            if( $LEVEL )
+            {
+                debug "UNWINDING At level $LEVEL";
+#                cluck "UNWINDING";
+                return;
+            }
+
         }
     }
 }
