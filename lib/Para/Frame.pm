@@ -1129,7 +1129,7 @@ sub handle_recieved_data
             handle_code( $client, \ $msg );
 
             ### Prefere to unwind
-            if( $LEVEL )
+            if( $LEVEL > 5 )
             {
                 debug "UNWINDING At level $LEVEL";
 #                cluck "UNWINDING";
