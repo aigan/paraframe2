@@ -302,7 +302,7 @@ sub main_loop
     $LAST = time;           # To give info about if it's time to yield
 
 #    Para::Frame::Logging->this_level(5);
-   debug(3,"Entering main_loop at level $LEVEL",1) if $LEVEL;
+   debug(1,"Entering main_loop at level $LEVEL",1) if $LEVEL;
     print "MAINLOOP $LEVEL\n" unless $Para::Frame::FORK or not $Para::Frame::WATCHDOG_ACTIVE;
 #    print "FH ".$Para::Frame::Watchdog::FH;
 
@@ -678,11 +678,15 @@ sub switch_req
 
     if ( $_[0] ne $REQ )
     {
-        if ( $REQ )
-        {
-            # Detatch %ENV
-            $REQ->{'env'} = {%ENV};
-        }
+        # Disabled: ENV is read only. No need to store in both directions. Also,
+        # ENV caould have been set before switching REQ...
+        #
+#        if ( $REQ )
+#        {
+#            debug "ENVa ".$REQ->{reqnum}." COOKIE: ".$ENV{HTTP_COOKIE};
+#            # Detatch %ENV
+#            $REQ->{'env'} = {%ENV};
+#        }
 
         Para::Frame->run_hook($REQ, 'before_switch_req', @_);
 
@@ -714,7 +718,8 @@ sub switch_req
 
             # Attach %ENV
             %ENV = %{$REQ->{'env'}};
-            $REQ->{'env'} = \%ENV;
+#            $REQ->{'env'} = \%ENV;
+#            debug "ENVb ".$REQ->{reqnum}." COOKIE: ".$ENV{HTTP_COOKIE};
 
             $INDENT = $REQ->{'indent'};
 
@@ -974,7 +979,7 @@ sub recieve_from_clients
             unless( length $data )
             {
                 debug "No data from client $client";
-                cancel_and_close( undef, $client, 'no data from client');
+                #cancel_and_close( undef, $client, 'no data from client');
                 next
             }
 
@@ -2359,6 +2364,7 @@ sub handle_request
                     if ( $mtime <= $client_time )
                     {
                         $resp->send_not_modified;
+                        $req->done;
                         last RESPONSE;
                     }
                 }

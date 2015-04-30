@@ -829,6 +829,10 @@ sub send_output
                                    encoding => $encoding,
                                   });
         }
+        elsif( $req->cancelled )
+        {
+            # Moving on...
+        }
         else
         {
             debug "Strange response '$result'";

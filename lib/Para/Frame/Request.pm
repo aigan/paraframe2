@@ -110,18 +110,19 @@ sub new
     $env->{'REQUEST_METHOD'} = 'GET';
     delete $env->{'MOD_PERL'};
 
-    if ( $Para::Frame::REQ )
-    {
-        # Detatch previous %ENV
-        $Para::Frame::REQ->{'env'} = {%ENV};
-    }
+#    if ( $Para::Frame::REQ )
+#    {
+#        # Detatch previous %ENV
+#        $Para::Frame::REQ->{'env'} = {%ENV};
+#    }
 
     %ENV = %$env;               # To make CGI happy
 
-    # Turn back and make $env a ref to the actual %ENV symbol table
-    # entry. This keeps them in sync
-    #
-    $env = \%ENV;
+#    # Turn back and make $env a ref to the actual %ENV symbol table
+#    # entry. This keeps them in sync
+#    #
+#    $env = \%ENV;
+#    debug "ENV $reqnum COOKIE: ".$env->{HTTP_COOKIE};
 
     my $q = CGI->new($params);
     $q->cookie('password');     # Should cache all cookies
