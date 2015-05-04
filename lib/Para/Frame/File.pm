@@ -2110,6 +2110,8 @@ Returns: the current dirsteps as a ref to a list of strings.
 
 sub dirsteps
 {
+    undef  $_[0]->{'dirsteps'};
+
     unless ( $_[0]->{'dirsteps'} )
     {
         my( $f ) = @_;

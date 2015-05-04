@@ -302,7 +302,7 @@ sub main_loop
     $LAST = time;           # To give info about if it's time to yield
 
 #    Para::Frame::Logging->this_level(5);
-   debug(1,"Entering main_loop at level $LEVEL",1) if $LEVEL;
+   debug(5,"Entering main_loop at level $LEVEL",1) if $LEVEL;
     print "MAINLOOP $LEVEL\n" unless $Para::Frame::FORK or not $Para::Frame::WATCHDOG_ACTIVE;
 #    print "FH ".$Para::Frame::Watchdog::FH;
 
@@ -892,8 +892,8 @@ sub recieve_from_clients
 {
     my( $timeout ) = @_;
 
-#    my $DEBUG = Para::Frame::Logging->at_level(5);
-    my $DEBUG = 1;
+    my $DEBUG = Para::Frame::Logging->at_level(5);
+#    my $DEBUG = 1;
 
     if ( $DEBUG )
     {
@@ -1004,7 +1004,7 @@ sub recieve_from_clients
 
 sub handle_recieved_data
 {
-    my $DEBUG = 1;
+    my $DEBUG = 0;
 
     foreach my $client_key ( keys %CONN )
     {

@@ -10,19 +10,28 @@
 [% END;
 
 
-MACRO step(label, template, run) BLOCK %]
-   [% IF template %]
-      [% go(label, template, run) %]
-      [%# backstep %]
-      [% IF route.size %]
-         [%+ regret %]
-      [% END %]
-   [% ELSIF next_action or next_template %]
-      [% actionstep(label) %]
-   [% ELSE %]
-      [% nostep(label) %]
-   [% END %]
-[% END;
+MACRO step(label, template, run, args) BLOCK;
+      IF template.keys;
+         args = template;
+         template = '';
+      END;
+      IF run.keys;
+         args = run;
+         run = '';
+      END;
+      IF template;
+         go(label, template, run, args);
+         # backstep;
+         IF route.size;
+            ' ';
+            regret;
+         END;
+      ELSIF next_action or next_template;
+         actionstep(label, args);
+      ELSE;
+         nostep(label);
+      END;
+END;
 
 
 MACRO searchstep(label) BLOCK;
@@ -39,7 +48,7 @@ MACRO searchstep(label) BLOCK;
 END;
 
 
-MACRO actionstep(label) BLOCK;
+MACRO actionstep(label, args) BLOCK;
       UNLESS label;
          IF uri_path(form_action) == me;
             label = "Spara";
@@ -47,7 +56,7 @@ MACRO actionstep(label) BLOCK;
             label = "Spara och fortsätt";
          END;
       END;
-      submit(label, "",tag_attr={class='btn btn-default'});
+      submit(label, "",args);
       IF route.caller_is_next_step;
          regret;
       ELSE;
