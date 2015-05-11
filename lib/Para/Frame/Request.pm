@@ -1999,6 +1999,10 @@ sub referer_path
         if ( my $url = $req->q->referer )
         {
             $url = Para::Frame::URI->new($url);
+            unless( $url->scheme )
+            {
+                $url->scheme('http');
+            }
 #	    debug "May use referer ".$url->as_string;
             last if $url->host_port ne $req->host_with_port;
 
