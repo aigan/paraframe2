@@ -244,6 +244,10 @@ sub getset
     my( $u, $method ) = (shift, shift);
     if ( my $uri = $u->{'value'} )
     {
+        unless( $uri->can($method) )
+        {
+            confess sprintf "%s can't %s", $u->sysdesig, $method
+        }
         return $uri->$method(@_);
     }
 
