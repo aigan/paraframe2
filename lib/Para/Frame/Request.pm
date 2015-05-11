@@ -1884,7 +1884,8 @@ sub done
 #
 #	warn "childs\n" if $req->{'childs'};
 
-        $req->run_hook('done');
+        $req->run_hook('done') unless $req->{'done'};
+        $req->{'done'} = 1;
         Para::Frame::close_callback($req->{'client'});
     }
     return;

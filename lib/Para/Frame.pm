@@ -389,7 +389,8 @@ sub main_loop
                     # TODO: May be polite to tell the master that this
                     # request no longer is of service.
 
-                    $req->run_hook('done');
+                    $req->run_hook('done') unless $req->{'done'};
+                    $req->{'done'} = 1;
                     close_callback($req->{'client'});
                 }
                 elsif ( $req->{'in_yield'} )
@@ -437,8 +438,9 @@ sub main_loop
                 {
                     # All jobs done for now
                     confess "req not a req ".datadump($req) unless ref $req eq 'Para::Frame::Request'; ### DEBUG
-                    $req->run_hook('done');
-                    close_callback($req->{'client'});
+                    $req->run_hook('done') unless $req->{'done'};
+                    $req->{'done'} = 1;
+                    close_callback($req->{'client'}, sprintf "req %s all done", $req->{'reqnum'});
                 }
 
                 $timeout = TIMEOUT_SHORT; ### Get the jobs done quick
@@ -892,8 +894,8 @@ sub recieve_from_clients
 {
     my( $timeout ) = @_;
 
-    my $DEBUG = Para::Frame::Logging->at_level(5);
-#    my $DEBUG = 1;
+#    my $DEBUG = Para::Frame::Logging->at_level(5);
+    my $DEBUG = 1;
 
     if ( $DEBUG )
     {
@@ -1573,7 +1575,7 @@ sub handle_code
         $req->add_job('run_action', $action, \%params);
 
 #	client_send($client, "9\x00RESP\x00Done");
-        close_callback($client); # That's all
+        close_callback($client, $code); # That's all
         return;
     }
 
@@ -1639,7 +1641,7 @@ sub handle_code
 #        debug(1,"PING recieved");
 #	debug "Sending  PONG";
         client_send($client, "5\x00PONG\x00");
-        close_callback($client); # That's all
+        close_callback($client, $code); # That's all
         return;
     }
 
@@ -1705,7 +1707,7 @@ sub handle_code
             debug "Req $caller_id no longer exist";
         }
 
-        close_callback($client); # That's all
+        close_callback($client, $code); # That's all
         return;
     }
 
@@ -1826,19 +1828,15 @@ sub close_callback
 
         }
     }
-    elsif ( debug > 3 )
+    else
     {
         if ( $reason )
         {
-            # Will be cleand up soon
-            $req->{reqnum} ||= '-';
-            warn "$req->{reqnum} Done ($reason)\n";
+            warn "Client $client done ($reason)";
         }
         else
         {
-            # Will be cleand up soon
-            $req->{reqnum} ||= '-';
-            warn "$req->{reqnum} Done\n";
+            cluck "Client $client done";
         }
     }
 
