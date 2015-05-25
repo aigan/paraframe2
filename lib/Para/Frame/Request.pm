@@ -1213,6 +1213,17 @@ sub uri2file
 #    warn "    From client\n";
     $file = $req->get_cmd_val( 'URI2FILE', $url );
 
+    unless( $file )
+    {
+        if( $req->cancelled )
+        {
+            throw('cancel', "Request cancelled. Stopping jobs");
+        }
+        else
+        {
+            die "Failed to get retult from URI2FILE";
+        }
+    }
 
 #    # To be backward compatible, remove the last slash from client
 #    # response
@@ -3697,7 +3708,7 @@ sub handle_error
     }
 
     # May not be defined yet...
-    my $new_resp = $req->{'resp'}; # May have change
+    my $new_resp = $req->{'resp'} or die "no response object"; # May have change
 
 #    debug "Old resp rend: ".$resp->renderer;
 #    debug "New resp: ".$new_resp->renderer;
