@@ -975,7 +975,8 @@ sub id
 
     cluck "DEPRECATED CALL to list->id()";
 
-    return $l->{'stored_id'};
+    return undef;
+#    return $l->{'stored_id'};
 }
 
 ######################################################################
