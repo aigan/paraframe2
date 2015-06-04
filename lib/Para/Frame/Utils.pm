@@ -1588,7 +1588,9 @@ Returns a hash with all the CGI query params.
 
 sub store_params
 {
-    my $q = $Para::Frame::REQ->q;
+    my( $q ) = @_;
+
+    $q ||= $Para::Frame::REQ->q;
 
     my $state = {};
     foreach my $key ( $q->param() )

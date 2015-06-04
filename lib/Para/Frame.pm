@@ -895,7 +895,7 @@ sub recieve_from_clients
     my( $timeout ) = @_;
 
 #    my $DEBUG = Para::Frame::Logging->at_level(5);
-    my $DEBUG = 1;
+    my $DEBUG = 0;
 
     if ( $DEBUG )
     {
@@ -980,8 +980,8 @@ sub recieve_from_clients
 
             unless( length $data )
             {
-                debug "No data from client $client";
-                #cancel_and_close( undef, $client, 'no data from client');
+                #debug "No data from client $client";
+                cancel_and_close( undef, $client, 'no data from client');
                 next
             }
 
@@ -1832,11 +1832,11 @@ sub close_callback
     {
         if ( $reason )
         {
-            warn "Client $client done ($reason)";
+#            warn "Client $client done ($reason)";
         }
         else
         {
-            cluck "Client $client done";
+#            cluck "Client $client done";
         }
     }
 

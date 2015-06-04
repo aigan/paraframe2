@@ -188,7 +188,7 @@ sub after_request
     # referer of the next request.
 
     $s->{'referer'} = Para::Frame::URI->new($req->page->url_path_slash);
-    $s->{'referer'}->query_form(store_params());
+    $s->{'referer'}->query_form(store_params($req->q));
 }
 
 
