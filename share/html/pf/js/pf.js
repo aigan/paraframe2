@@ -68,7 +68,7 @@ var waitForFinalEvent = (function () {
 
 function pf_toggle_init()
 {
-    var $em = $("body").css("font-size");
+//    var $em = $("body").css("font-size");
 
     $('.toggle').off('click.pf_toggle')
         .on('click.pf_toggle',function(e){
@@ -144,7 +144,8 @@ function pf_toggle_init()
         $('.toggle').off('mouseenter.pf_toggle');
     }
 
-    pf_toggle_hide();
+//    pf_toggle_hide();
+    $( '.menu_row .toggle a' ).click(pf_toggle_hide);
     
     log('PF toggle_init');
 }

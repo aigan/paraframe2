@@ -5,7 +5,7 @@ package Para::Frame::Worker;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2008-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2008-2015 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -67,7 +67,7 @@ sub method
 
 #    my @callargs = ( $req->client.'', $obj, $method, @args );
 #    debug datadump(\@callargs);
-#    debug 3, "Freezing $obj -> $method ( @args )";
+#    debug 3, "Freezing $obj -> $method ( ".datadump(\@args)." )";
 
 #    my $val  = safeFreeze( $req->id, $obj, $method, @args );
     $Storable::Deparse = 1;

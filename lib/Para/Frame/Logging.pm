@@ -74,6 +74,12 @@ sub debug_data
     my( $log ) = @_;
 
     my $req = $Para::Frame::REQ;
+
+    unless( ref $req )
+    {
+        return "No active request present";
+    }
+
     my $resp = $req->response_if_existing;
 
     my $out = "";
@@ -82,100 +88,113 @@ sub debug_data
 
     $out .= $req->session->debug_data;
 
-    if( $req->is_from_client )
+    if ( $req->is_from_client )
     {
-	if( my $orig_resp = $req->original_response )
-	{
-	    my $orig_url_path = $orig_resp->page->url_path_slash;
-	    $out .= "Orig url: $orig_url_path\n";
-	}
-	else
-	{
-	    $out .= "No orig url found\n";
-	}
+        if ( my $orig_resp = $req->original_response )
+        {
+            my $orig_url_path = $orig_resp->page->url_path_slash;
+            $out .= "Orig url: $orig_url_path\n";
+        }
+        else
+        {
+            $out .= "No orig url found\n";
+        }
 
-	if( my $browser = $req->env->{'HTTP_USER_AGENT'} )
-	{
-	    $out .= "Browser is $browser\n";
-	}
+        if ( my $browser = $req->env->{'HTTP_USER_AGENT'} )
+        {
+            $out .= "Browser is $browser\n";
+        }
 
-	if( $resp )
-	{
-	    my $page = $resp->page;
+        if ( $resp )
+        {
+            my $page = $resp->page;
 
-	    if( my $referer = $req->referer_path )
-	    {
-		$out .= "Referer is $referer\n"
-	    }
+            if ( my $referer = $req->referer_path )
+            {
+                $out .= "Referer is $referer\n"
+            }
 
-	    if( my $redirect = $page->{'redirect'} )
-	    {
-		$out .= "Redirect is set to $redirect\n";
-	    }
+            if ( my $redirect = $page->{'redirect'} )
+            {
+                $out .= "Redirect is set to $redirect\n";
+            }
 
-	    if( my $errtmpl = $page->{'error_template'} )
-	    {
-		$out .= "Error template is set to $errtmpl\n";
-	    }
+            if ( my $errtmpl = $page->{'error_template'} )
+            {
+                $out .= "Error template is set to $errtmpl\n";
+            }
 
-	    if( $page->{'in_body'} )
-	    {
-		$out .= "We have already sent the http header\n"
-	    }
-	}
-	else
-	{
-	    $out .= "The request has no response set\n";
-	}
+            if ( $page->{'in_body'} )
+            {
+                $out .= "We have already sent the http header\n"
+            }
+        }
+        else
+        {
+            $out .= "The request has no response set\n";
+        }
 
     }
 
-    if( my $chldnum = $req->{'childs'} )
+    if ( my $chldnum = $req->{'childs'} )
     {
-	$out .= "This request waits for $chldnum children\n";
+        $out .= "This request waits for $chldnum children\n";
 
-	foreach my $child ( values %Para::Frame::CHILD )
-	{
-	    my $creq = $child->req;
-	    my $creqnum = $creq->{'reqnum'};
-	    my $cclient = $creq->client;
-	    my $cpid = $child->pid;
-	    $out .= "  Req $creqnum $cclient has a child with pid $cpid\n";
-	}
+        foreach my $child ( values %Para::Frame::CHILD )
+        {
+            my $creq = $child->req;
+            my $creqnum = $creq->{'reqnum'};
+            my $cclient = $creq->client;
+            my $cpid = $child->pid;
+            $out .= "  Req $creqnum $cclient has a child with pid $cpid\n";
+        }
     }
 
-    if( $req->{'in_yield'} )
+    if ( $req->{'in_yield'} )
     {
-	$out .= "This request is in yield now\n";
+        $out .= "This request is in yield now\n";
     }
 
-    if( $req->{'wait'} )
+    if( my $client = $req->{client} )
     {
-	$out .= "This request waits for something\n";
+        $out .= "Client $client\n";
+        if( $client->connected )
+        {
+            $out .= "  Client connected\n";
+        }
+        else
+        {
+            $out .= "  Client NOT connected\n";
+        }
     }
 
-    if( my $jobcnt = @{ $req->{'jobs'} } )
+    if ( $req->{'wait'} )
     {
-	$out .= "Has $jobcnt jobs\n";
-	foreach my $job ( @{ $req->{'jobs'} } )
-	{
-	    my( $cmd, @args ) = @$job;
-	    $out .= "  $cmd with args @args\n";
-	}
+        $out .= "This request waits for something\n";
     }
 
-    if( my $acnt = @{ $req->{'actions'} } )
+    if ( my $jobcnt = @{ $req->{'jobs'} } )
     {
-	$out .= "Has $acnt a\n";
-	foreach my $action ( @{ $req->{'actions'} } )
-	{
-	    $out .= "  $action\n";
-	}
+        $out .= "Has $jobcnt jobs\n";
+        foreach my $job ( @{ $req->{'jobs'} } )
+        {
+            my( $cmd, @args ) = @$job;
+            $out .= "  $cmd with args @args\n";
+        }
     }
 
-    if( $req->result )
+    if ( my $acnt = @{ $req->{'actions'} } )
     {
-	$out .= "Result:\n".$req->result->as_string;
+        $out .= "Has $acnt a\n";
+        foreach my $action ( @{ $req->{'actions'} } )
+        {
+            $out .= "  $action\n";
+        }
+    }
+
+    if ( $req->result )
+    {
+        $out .= "Result:\n".$req->result->as_string;
     }
 
     return $out;
@@ -201,8 +220,8 @@ sub at_level
 
     unless( $debug )
     {
-	$debug = $Para::Frame::DEBUG  || 0;
-	$debug -= $level;
+        $debug = $Para::Frame::DEBUG  || 0;
+        $debug -= $level;
     }
 
     return max($debug,0);
@@ -223,13 +242,13 @@ sub this_level
 {
     my( $this, $level ) = @_;
 
-    if( $level )
+    if ( $level )
     {
-	return $Para::Frame::Logging::WATCH{(caller(1))[3]} = $level;
+        return $Para::Frame::Logging::WATCH{(caller(1))[3]} = $level;
     }
     else
     {
-	return $Para::Frame::Logging::WATCH{(caller(1))[3]};
+        return $Para::Frame::Logging::WATCH{(caller(1))[3]};
     }
 }
 

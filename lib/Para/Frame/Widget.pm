@@ -1125,8 +1125,9 @@ sub textarea
 
     my $tag_attr = $params->{tag_attr} || {};
 
-    my $rows = $tag_attr->{'rows'} || 20;
-    my $cols = $tag_attr->{'cols'} || $tag_attr->{'size'};
+    $tag_attr->{'rows'} ||= 20;
+    $tag_attr->{'cols'} ||= $tag_attr->{'size'};
+
     my @previous;
 
     my $value = $value_in //= '';
@@ -1141,9 +1142,6 @@ sub textarea
         $value = $previous[0];
     }
     $value ||= '';
-
-    $tag_attr->{'cols'} = $cols;
-
 
     $tag_attr->{id} ||= $key;
     my $prefix = label_from_params($params);

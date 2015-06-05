@@ -68,13 +68,13 @@ sub register
 
     my $child = bless
     {
-	req      => $req,
-	pid      => $pid,
-	fh       => $fh,
-	status   => undef,
-	data     => "",
-	result   => undef,
-	done     => undef,
+     req      => $req,
+     pid      => $pid,
+     fh       => $fh,
+     status   => undef,
+     data     => "",
+     result   => undef,
+     done     => undef,
     }, $class;
 
     $req->{'childs'} ++;
@@ -98,14 +98,14 @@ sub register_worker
 
     my $child = bless
     {
-	pid      => $pid,
-        port     => undef,
-	fh       => $fh,
-	status   => undef,
-	data     => "",
-	result   => undef,
-        id       => $SERID++,
-        is_worker=> 1,
+     pid      => $pid,
+     port     => undef,
+     fh       => $fh,
+     status   => undef,
+     data     => "",
+     result   => undef,
+     id       => $SERID++,
+     is_worker=> 1,
     }, $class;
 
     $Para::Frame::WORKER{ $pid } = $child;
@@ -137,78 +137,78 @@ sub deregister
 {
     my( $child, $status, $length ) = @_;
 
-    if( $child->{'is_worker'} )
+    if ( $child->{'is_worker'} )
     {
-	my $wid = $child->id;
-	my @idles;
-	foreach my $idle ( @Para::Frame::WORKER_IDLE )
-	{
-	    if( $wid != $idle->id )
-	    {
-		push @idles, $idle;
-	    }
-	}
-	@Para::Frame::WORKER_IDLE = @idles;
+        my $wid = $child->id;
+        my @idles;
+        foreach my $idle ( @Para::Frame::WORKER_IDLE )
+        {
+            if ( $wid != $idle->id )
+            {
+                push @idles, $idle;
+            }
+        }
+        @Para::Frame::WORKER_IDLE = @idles;
 
-	return;
+        return;
     }
 
 
 
-    $child->{'done'} = 1; # Taken care of now
+    $child->{'done'} = 1;       # Taken care of now
     $child->status( $status ) if defined $status;
     my $req = $child->req;
 
     return if $req->cancelled;
 
-    if( $req->in_yield )
+    if ( $req->in_yield )
     {
-	# Used yield. Let main_loop return control to the request
+        # Used yield. Let main_loop return control to the request
 
-	my $old_req = $Para::Frame::REQ;
-	Para::Frame::switch_req( $req );
-	eval
-	{
-	    $child->get_results($length);
-	} or do
-	{
-	    unless( $child->{'result'} )
-	    {
-		# The thawing of the result failed
-		$child->{'result'} = Para::Frame::Child::Result->new();
-		$req->result->message("Failed to thaw result from child");
-	    }
+        my $old_req = $Para::Frame::REQ;
+        Para::Frame::switch_req( $req );
+        eval
+        {
+            $child->get_results($length);
+        } or do
+        {
+            unless ( $child->{'result'} )
+            {
+                # The thawing of the result failed
+                $child->{'result'} = Para::Frame::Child::Result->new();
+                $req->result->message("Failed to thaw result from child");
+            }
 
-	    $req->result->exception;
-	};
-	Para::Frame::switch_req( $old_req ) if $old_req;
+            $req->result->exception;
+        };
+        Para::Frame::switch_req( $old_req ) if $old_req;
     }
     else
     {
-	# Using stacked jobs
+        # Using stacked jobs
 
-	# The add_job method is called wihtout switching to the
-	# request. Things are set up for the job to be done later, in
-	# order and in context.
+        # The add_job method is called wihtout switching to the
+        # request. Things are set up for the job to be done later, in
+        # order and in context.
 
-	$req->add_job('get_child_result', $child, $length);
+        $req->add_job('get_child_result', $child, $length);
     }
 
     $req->{'childs'} --;
 
-    if( $req->{'childs'} <= 0 )
+    if ( $req->{'childs'} <= 0 )
     {
-	# Only if set from after_jobs().
-	# If we got here AFTER after_jobs, add it
-	#
-	my $on_last_child_done = $req->{'on_last_child_done'} || 0;
-	if( $on_last_child_done eq "after_jobs" )
-	{
-	    $req->add_job('after_jobs');
+        # Only if set from after_jobs().
+        # If we got here AFTER after_jobs, add it
+        #
+        my $on_last_child_done = $req->{'on_last_child_done'} || 0;
+        if ( $on_last_child_done eq "after_jobs" )
+        {
+            $req->add_job('after_jobs');
 
-	    # Reset. Other forks may be done later
-	    $req->{'on_last_child_done'} = 0;
-	}
+            # Reset. Other forks may be done later
+            $req->{'on_last_child_done'} = 0;
+        }
     }
 
 }
@@ -238,14 +238,24 @@ sub yield
 
     my $req = $child->req;
     $req->{'in_yield'} ++;
-    Para::Frame::main_loop( $child, undef, $req->{'reqnum'} );
-    $req->{'in_yield'} --;
 
+    # In case there is an exception in main_loop()...
+    eval
+    {
+        Para::Frame::main_loop( $child, undef, $req->{'reqnum'} );
+    };
+
+    $req->{'in_yield'} --;
     Para::Frame::switch_req( $req );
 
-    if( $req->{'cancel'} )
+    if ( $@ )
     {
-	throw('cancel', "request cancelled");
+        debug "ERROR IN YIELD: $@";
+    }
+
+    if ( $req->{'cancel'} )
+    {
+        throw('cancel', "request cancelled");
     }
 
     return $child->{'result'};
@@ -263,40 +273,41 @@ sub get_results
     my( $child, $length ) = @_;
 
     # If not all read
-    if( $length )
+    if ( $length )
     {
-	debug 2, "Part of data already retrieved";
-	debug 2, "Data length is $length";
+        debug 2, "Part of data already retrieved";
+        debug 2, "Data length is $length";
     }
     else
     {
-	debug 2, "Whole of data not yet read.";
+        debug 2, "Whole of data not yet read.";
 
-	my $fh = $child->{'fh'};
+        my $fh = $child->{'fh'};
 
-	# Some data may already be here, since IO may get stuck otherwise
-	#
-	$child->{'data'} .= read_file( $fh,
-				       { binmode => ':raw' }
-				       ); # Undocumented flag
-	close($fh); # Should already be closed then kid exited
+        # Some data may already be here, since IO may get stuck otherwise
+        #
+        $child->{'data'} .= read_file( $fh,
+                                       {
+                                        binmode => ':raw' }
+                                     ); # Undocumented flag
+        close($fh);         # Should already be closed then kid exited
     }
 
-    chomp $child->{'data'}; # Remove last \n
+    chomp $child->{'data'};     # Remove last \n
     my $tlength = length $child->{'data'};
     debug(2,"Got $tlength bytes of data");
 
-    unless( $child->{'data'} )
+    unless ( $child->{'data'} )
     {
-	my $pid = $child->pid;
-	my $status = $child->status;
-	die "Child $pid didn't return the result (status $status)\n";
+        my $pid = $child->pid;
+        my $status = $child->status;
+        die "Child $pid didn't return the result (status $status)\n";
     }
 
     unless( $length )
     {
-	$child->{'data'} =~ /^(\d{1,7})\0/ or die;
-	$length = $1;
+        $child->{'data'} =~ /^(\d{1,7})\0/ or die;
+        $length = $1;
     }
     # Length of prefix
     my $plength = length( $length ) + 1;
@@ -313,12 +324,12 @@ sub get_results
     debug 2, "Data result stored for ".$child->req->id;
 
 
-    delete $child->{'data'}; # We are finished with the raw data
+    delete $child->{'data'};    # We are finished with the raw data
 
-    if( $@ = $result->exception )
+    if ( $@ = $result->exception )
     {
         debug "Got an exception from child";
-	die $@;
+        die $@;
     }
 
     # Transfer some info about the child
@@ -326,11 +337,11 @@ sub get_results
     $result->pid( $child->{'pid'} );
     $result->status( $child->{'status'} );
 
-    if( my( $coderef, @args ) = $result->on_return )
+    if ( my( $coderef, @args ) = $result->on_return )
     {
 #	warn "coderef is '$coderef'\n";
-	no strict 'refs';
-	$result->message( &{$coderef}( $result, @args ) );
+        no strict 'refs';
+        $result->message( &{$coderef}( $result, @args ) );
     }
 
     return $result;
@@ -397,9 +408,9 @@ sub status
 {
     my( $child, $status ) = @_;
 
-    if( defined $status )
+    if ( defined $status )
     {
-	$child->{'status'} = $status;
+        $child->{'status'} = $status;
     }
 
     return $child->{'status'};
@@ -469,13 +480,13 @@ sub failed
 {
     my( $child ) = @_;
 
-    if( $child->result->exception )
+    if ( $child->result->exception )
     {
-	return 1;
+        return 1;
     }
     else
     {
-	return 0;
+        return 0;
     }
 }
 
@@ -494,13 +505,13 @@ sub succeeded
 {
     my( $child ) = @_;
 
-    if( $child->result->exception )
+    if ( $child->result->exception )
     {
-	return 0;
+        return 0;
     }
     else
     {
-	return 1;
+        return 1;
     }
 }
 

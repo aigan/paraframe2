@@ -248,7 +248,7 @@ sub new
         confess "sys_name $sys_name is not a system path";
     }
 
-    if ( -r $sys_name )
+    if ( $sys_name and -r $sys_name )
     {
         $exist = 1;
 
@@ -2110,6 +2110,8 @@ Returns: the current dirsteps as a ref to a list of strings.
 
 sub dirsteps
 {
+    undef  $_[0]->{'dirsteps'};
+
     unless ( $_[0]->{'dirsteps'} )
     {
         my( $f ) = @_;
@@ -2118,6 +2120,12 @@ sub dirsteps
         # fake it;
         my $path_full = $f->dir->sys_path_slash;
         $path_full =~ s/\/?$/\//; # Just in case...
+
+        if( $path_full eq '/' )
+        {
+            debug "STRANGE PATH";
+            debug datadump($f->dir,2);
+        }
 
         my $path_home = $f->site->home->sys_path;
         debug 3, "Setting dirsteps for $path_full";

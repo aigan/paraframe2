@@ -546,7 +546,7 @@ sub uri2file
 {
     my( $site ) = shift;
 
-    my $req = $Para::Frame::REQ;
+    my $req = $Para::Frame::REQ or confess "No active request";
     my $req_site = $req->site;
 
     if( $site->webhost eq $req_site->webhost )

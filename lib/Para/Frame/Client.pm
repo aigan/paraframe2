@@ -185,7 +185,7 @@ sub handler
     }
 
     my $reqline = $r->the_request;
-    warn substr(sprintf("[%s] %d: %s", scalar(localtime), $$, $reqline), 0, 79)."\n";
+    warn substr(sprintf("[%s] %d: %s", scalar(localtime), $$, $reqline), 0, 1023)."\n";
 
     ### Optimize for the common case.
     #
@@ -349,7 +349,9 @@ sub send_to_server
 
     if ( $DEBUG > 3 )
     {
-        $s->log_error("$$: Sending string $data");
+        my $data_debug = $data;
+        $data_debug =~ s/\x00/<NUL>/g;
+        $s->log_error("$$: Sending string $data_debug");
 #	$s->log_error(sprintf "$$:   at %.2f"), Time::HiRes::time;
     }
 

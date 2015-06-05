@@ -1588,7 +1588,9 @@ Returns a hash with all the CGI query params.
 
 sub store_params
 {
-    my $q = $Para::Frame::REQ->q;
+    my( $q ) = @_;
+
+    $q ||= $Para::Frame::REQ->q;
 
     my $state = {};
     foreach my $key ( $q->param() )
@@ -2175,6 +2177,13 @@ sub client_send
         my $chrsent = 0;
         while ( $chrpos < $chrlength )
         {
+            # Client still open?
+            unless( $client->connected )
+            {
+                Para::Frame::cancel_and_close( $req, $client, "Connection closed");
+                return $chrpos;
+            }
+
             $chrsent = 0;
             $chrsent = $client->send( substr $$dataref, $chrpos, $chunk );
 
@@ -2191,7 +2200,7 @@ sub client_send
                 debug sprintf( "GOT ERROR IN SOCKET SEND: %d - %s", $err_code, $err_msg );
 #		$Para::Frame::DEBUG = 3;
 
-                if ( $err_code == 11 ) # Temporary unavailible
+                if ( $Para::Frame::IOAGAIN{int $err_code} ) # Temporary unavailible
                 {
                     if ( $allow_yield )
                     {
@@ -2205,8 +2214,7 @@ sub client_send
                 }
                 else
                 {
-                    $req->cancel if $req;
-                    debug("Request was cancelled. Giving up");
+                    Para::Frame::cancel_and_close( $req, $client, "Giving up");
                     return $chrpos;
                 }
 
@@ -2240,6 +2248,13 @@ sub client_send
 
         for ( $srcpos=0; $srcpos<$srclength; $srcpos+= $srcsent )
         {
+            # Client still open?
+            unless( $client->connected )
+            {
+                Para::Frame::cancel_and_close( $req, $client, "Connection closed");
+                return $srcpos;
+            }
+
             $srcsent = 0;
             $srcsent = $client->send( substr $$dataref, $srcpos, $chunk );
 
@@ -2255,7 +2270,7 @@ sub client_send
                 debug sprintf( "GOT ERROR IN SOCKET SEND: %d - %s", $err_code, $err_msg );
 #		$Para::Frame::DEBUG = 3;
 
-                if ( $err_code == 11 ) # Temporary unavailible
+                if ( $Para::Fram::IOAGAIN{int $err_code} ) # Temporary unavailible
                 {
                     if ( $allow_yield )
                     {
@@ -2269,8 +2284,7 @@ sub client_send
                 }
                 else
                 {
-                    $req->cancel if $req;
-                    debug("Request was cancelled. Giving up");
+                    Para::Frame::cancel_and_close( $req, $client, "Giving up");
                     return $srcpos;
                 }
 
@@ -2306,6 +2320,13 @@ sub client_send
         my $enclength = length($encbuffer); # grow after each read
         while ( $encpos < $enclength )
         {
+            # Client still open?
+            unless( $client->connected )
+            {
+                Para::Frame::cancel_and_close( $req, $client, "Connection closed");
+                return $chrpos;
+            }
+
             # put a substitution character in place of a malformed
             # character
             $encsent = $client->send($encbuffer);
@@ -2322,7 +2343,7 @@ sub client_send
                 debug sprintf( "GOT ERROR IN SOCKET SEND: %d - %s", $err_code, $err_msg );
 #                $Para::Frame::DEBUG = 3;
 
-                if ( $err_code == 11 ) # Temporary unavailible
+                if ( $Para::Frame::IOAGAIN{int $err_code} ) # Temporary unavailible
                 {
                     if ( $allow_yield )
                     {
@@ -2336,8 +2357,7 @@ sub client_send
                 }
                 else
                 {
-                    $req->cancel if $req;
-                    debug("Request was cancelled. Giving up");
+                    Para::Frame::cancel_and_close( $req, $client, "Giving up");
                     return $chrpos;
                 }
 

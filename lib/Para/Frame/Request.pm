@@ -29,7 +29,7 @@ use FreezeThaw;                 ####### LEGACY
 use Storable;                   # qw( thaw );
 use HTTP::BrowserDetect;
 use IO::File;
-use Carp qw(cluck croak carp confess longmess );
+use Carp qw(cluck croak carp confess longmess shortmess );
 use LWP::UserAgent;
 use HTTP::Request;
 use HTTP::Parser::XS qw(parse_http_request);
@@ -85,6 +85,11 @@ sub new
     my( $class, $reqnum, $client, $recordref ) = @_;
 
 
+    confess "No record" unless length($$recordref);
+
+#    debug "Thawing '$$recordref'";
+#    debug "Length ".length($$recordref);
+
     # For backward compatibility, we accept both FreezeThaw and
     # Storable
 
@@ -105,18 +110,19 @@ sub new
     $env->{'REQUEST_METHOD'} = 'GET';
     delete $env->{'MOD_PERL'};
 
-    if ( $Para::Frame::REQ )
-    {
-        # Detatch previous %ENV
-        $Para::Frame::REQ->{'env'} = {%ENV};
-    }
+#    if ( $Para::Frame::REQ )
+#    {
+#        # Detatch previous %ENV
+#        $Para::Frame::REQ->{'env'} = {%ENV};
+#    }
 
     %ENV = %$env;               # To make CGI happy
 
-    # Turn back and make $env a ref to the actual %ENV symbol table
-    # entry. This keeps them in sync
-    #
-    $env = \%ENV;
+#    # Turn back and make $env a ref to the actual %ENV symbol table
+#    # entry. This keeps them in sync
+#    #
+#    $env = \%ENV;
+#    debug "ENV $reqnum COOKIE: ".$env->{HTTP_COOKIE};
 
     my $q = CGI->new($params);
     $q->cookie('password');     # Should cache all cookies
@@ -414,7 +420,7 @@ sub new_subrequest
     }
 
 
-    $Para::Frame::RESPONSE{$client} ||= [];
+    $Para::Frame::CONN{$client}{RESPONSE} ||= [];
 
     $req->minimal_init( $args ); ### <<--- INIT
 
@@ -499,7 +505,7 @@ sub new_bgrequest
 
 #    $Para::Frame::REQUEST{$client} = $req;
 
-    $Para::Frame::RESPONSE{$client} ||= [];
+    $Para::Frame::CONN{$client}{RESPONSE} ||= [];
     Para::Frame::switch_req( $req, 1 );
     warn "\n\n$Para::Frame::REQNUM $msg\n";
     $req->minimal_init;
@@ -526,6 +532,7 @@ sub http_init
     my $env = {};
     my $q;
 
+    debug "Parsing HTTP request:\n$message\n.";
     my $ret = parse_http_request($message, $env );
     die "header corrupt " if  $ret < 1;
 
@@ -1206,6 +1213,17 @@ sub uri2file
 #    warn "    From client\n";
     $file = $req->get_cmd_val( 'URI2FILE', $url );
 
+    unless( $file )
+    {
+        if( $req->cancelled )
+        {
+            throw('cancel', "Request cancelled. Stopping jobs");
+        }
+        else
+        {
+            die "Failed to get retult from URI2FILE";
+        }
+    }
 
 #    # To be backward compatible, remove the last slash from client
 #    # response
@@ -1693,7 +1711,7 @@ sub run_action
 
                       if ( $s->can('go_login') )
                       {
-                          return if $s->go_login();
+                          return 0 if $s->go_login();
                       }
 
                       my $error_tt = "/login.tt";
@@ -1877,7 +1895,8 @@ sub done
 #
 #	warn "childs\n" if $req->{'childs'};
 
-        $req->run_hook('done');
+        $req->run_hook('done') unless $req->{'done'};
+        $req->{'done'} = 1;
         Para::Frame::close_callback($req->{'client'});
     }
     return;
@@ -2028,7 +2047,7 @@ sub referer_path
 #	return $req->session->referer->path if $req->session->referer;
     }
 
-    debug 1, "Referer from default value";
+    debug 2, "Referer from default value";
     return $site->last_step if $site->last_step;
 
     # Last try. Should always be defined
@@ -2308,7 +2327,7 @@ sub send_code
         my $ar_cluck = 0;
         while ( not $req->{'active_reqest'} )
         {
-            debug 3, "Got an active_reqest yet?";
+            debug 1, "Got an active_reqest yet?";
             $req->yield(1);     # Give it some time to connect
             if ( time - $ar_start > 5 )
             {
@@ -2423,28 +2442,12 @@ sub get_cmd_val
     eval
     {
         $req->send_code( @_ );
-        Para::Frame::get_value( $req );
+#       Para::Frame::get_value( $req );
 
         # Something besides the answer may be waiting before the answer
 
-        if ( my $areq = $req->{'active_reqest'} )
-        {
-            # We expects response in the active_request
-            $queue = $Para::Frame::RESPONSE{ $areq->client };
-            unless( $queue )
-            {
-                throw('cancel', "request $areq->{reqnum} decomposed");
-            }
-        }
-        else
-        {
-            $queue = $Para::Frame::RESPONSE{ $req->client };
-            unless( $queue )
-            {
-                throw('cancel', "request $req->{reqnum} decomposed");
-            }
-        }
-
+        my $areq = $req->{'active_reqest'} || $req;
+        $queue = $Para::Frame::CONN{ $areq->client }{RESPONSE};
 
         my $cnt = 1;
         while ( not @$queue )
@@ -2453,7 +2456,7 @@ sub get_cmd_val
             {
                 debug "We can't seem to get that answer to our code";
                 debug "code: @_";
-                $req->cancel;
+                throw('cancel', "request $areq->{reqnum} decomposed");
             }
             elsif ( $req->{'timeout_cnt'} )
             {
@@ -2466,12 +2469,16 @@ sub get_cmd_val
                 throw('cancel', "request cancelled");
             }
 
-            Para::Frame::get_value( $req );
+            Para::Frame::main_loop( 1, 1, $req->{'reqnum'} );
+#            Para::Frame::get_value( $req );
+            $queue = $Para::Frame::CONN{ $areq->client }{RESPONSE};
+
             $cnt ++;
         }
     };
 
     $req->{'in_yield'} --;
+    Para::Frame::switch_req( $req );
 
     die $@ if $@;
     return shift @$queue;
@@ -3705,7 +3712,7 @@ sub handle_error
     }
 
     # May not be defined yet...
-    my $new_resp = $req->{'resp'}; # May have change
+    my $new_resp = $req->{'resp'} or die "no response object"; # May have change
 
 #    debug "Old resp rend: ".$resp->renderer;
 #    debug "New resp: ".$new_resp->renderer;

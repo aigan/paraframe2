@@ -62,6 +62,7 @@ sub loc (@)
 {
 #    debug "Translating @_";
     confess "No req" unless $Para::Frame::REQ;
+    return($_[0]) if $Para::Frame::REQ->cancelled;
     my $res = $Para::Frame::REQ->{'lang'}->maketext(@_);
 #    if( utf8::is_utf8($res) )
 #    {
