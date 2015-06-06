@@ -1832,11 +1832,11 @@ sub close_callback
     {
         if ( $reason )
         {
-#            warn "Client $client done ($reason)";
+            warn "Client $client done ($reason)\n";
         }
         else
         {
-#            cluck "Client $client done";
+            cluck "Client $client done\n";
         }
     }
 

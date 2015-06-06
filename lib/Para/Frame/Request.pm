@@ -437,6 +437,7 @@ sub new_subrequest
     Para::Frame::switch_req( $original_req );
 
     # Merge the subrequest result with our result
+    debug "Merging result from $req->{reqnum} into $original_req->{reqnum}";
     $original_req->result->incorporate($req->result);
 
     # The subreq may still have som jobs to do. Usually a job was
@@ -1221,7 +1222,7 @@ sub uri2file
         }
         else
         {
-            die "Failed to get retult from URI2FILE";
+            die "Failed to get result from URI2FILE $url. Is it an external redirect?";
         }
     }
 
@@ -2206,7 +2207,7 @@ sub send_code
 
 #    Para::Frame::Logging->this_level(5);
     $_[1] ||= 1;                # Must be at least one param
-    debug( 5, "Sending  ".join("-", @_)." ($req->{reqnum}) ".$req->client);
+#    debug( 5, "Sending  ".join("-", @_)." ($req->{reqnum}) ".$req->client);
 #    debug sprintf "  at %.2f\n", Time::HiRes::time;
 
     if ( $Para::Frame::FORK )

@@ -1073,6 +1073,17 @@ sub uri2file
     # it's index.*
 #    $s->log_error("Looking up $_[0]");
     my $filename = $sr->filename . ($sr->path_info||'');
+
+    unless( $filename )
+    {
+        if( $sr->status != 200 )
+        {
+            my $s = Apache2::ServerUtil->server;
+            $s->log_error("uri2file $_[0] resulted in ".$sr->status);
+            return '';
+        }
+    }
+
 #    $s->log_error("       Got $filename");
     if ( $filename =~ /\bindex.(\w+)(.*?)$/ )
     {
