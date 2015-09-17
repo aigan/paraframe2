@@ -2270,7 +2270,7 @@ sub client_send
                 debug sprintf( "GOT ERROR IN SOCKET SEND: %d - %s", $err_code, $err_msg );
 #		$Para::Frame::DEBUG = 3;
 
-                if ( $Para::Fram::IOAGAIN{int $err_code} ) # Temporary unavailible
+                if ( $Para::Frame::IOAGAIN{int $err_code} ) # Temporary unavailible
                 {
                     if ( $allow_yield )
                     {
