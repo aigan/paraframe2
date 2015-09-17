@@ -1184,13 +1184,14 @@ sub pagenum
 
   $l->set_page_size( $page_size )
 
-Sets and returns the given C<$page_size>
+Sets the given C<$page_size>. Returns the same list.
 
 =cut
 
 sub set_page_size
 {
-    return $_[0]->{'page_size'} = int($_[1]);
+    $_[0]->{'page_size'} = int($_[1]);
+    return $_[0];
 }
 
 

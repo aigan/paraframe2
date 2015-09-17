@@ -568,7 +568,8 @@ sub http_init
 
     my $username = $q->param('cred[username]');
     my $password = $q->param('cred[password]');
-    $q->delete('cred[username]','cred[password]');
+    my $access_token = $q->param('access_token');
+    $q->delete('cred[username]','cred[password]','access_token');
 
     my $resp = $req->{'resp'} = Para::Frame::Request::Response->
       new_minimal($args);
@@ -578,8 +579,16 @@ sub http_init
 
     # Authenticate user identity
     my $user_class = $Para::Frame::CFG->{'user_class'};
-    $user_class->identify_user($username); # Will set $s->{user}
-    $user_class->authenticate_user($password);
+
+    if( $access_token )
+    {
+        $user_class->apply_access_token( $access_token );
+    }
+    else
+    {
+        $user_class->identify_user($username); # Will set $s->{user}
+        $user_class->authenticate_user($password);
+    }
 
     return $req;
 }

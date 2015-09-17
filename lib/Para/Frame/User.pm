@@ -575,6 +575,41 @@ sub has_page_update_access
 
 ##############################################################################
 
+=head2 apply_access_token
+
+=cut
+
+sub apply_access_token
+{
+    my( $u, $access_token ) = @_;
+
+    my( $username, $info ) = $u->validate_access_token( $access_token );
+
+    $u->identify_user($username); # Will set $s->{user}
+    return;
+
+}
+
+##############################################################################
+
+=head2 validate_access_token
+
+=cut
+
+sub validate_access_token
+{
+    my( $u, $access_token ) = @_;
+
+    if( my $record = $Para::Frame::CFG->{'access_tokens'}{$access_token} )
+    {
+        return( $record->{user} );
+    }
+
+    return undef;
+}
+
+##############################################################################
+
 1;
 
 =head1 SEE ALSO
