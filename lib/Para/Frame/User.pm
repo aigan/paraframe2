@@ -600,8 +600,10 @@ sub validate_access_token
 {
     my( $u, $access_token ) = @_;
 
+#    debug "Validating access_token $access_token";
     if( my $record = $Para::Frame::CFG->{'access_tokens'}{$access_token} )
     {
+#        debug "  token for user ".$record->{user};
         return( $record->{user} );
     }
 
