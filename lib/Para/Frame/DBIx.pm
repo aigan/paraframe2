@@ -33,7 +33,7 @@ use Para::Frame::DBIx::Table;
 use Para::Frame::DBIx::State;
 
 
-our $STATE_RECONNECTING; # Special temporary dbix state
+our $STATE_RECONNECTING;        # Special temporary dbix state
 
 
 =head1 DESCRIPTION
@@ -142,72 +142,72 @@ sub new
 
     my $dbix = bless {}, $class;
 
-    if( my $connect = $params->{'connect'} )
+    if ( my $connect = $params->{'connect'} )
     {
-	$connect = [$connect] unless ref $connect eq 'ARRAY';
+        $connect = [$connect] unless ref $connect eq 'ARRAY';
 
-	# Default DBI options
-	$connect->[3] ||=
-	{
-	    RaiseError => 1,
-	    ShowErrorStatement => 1,
-	    PrintError => 0,
-	    AutoCommit => 0,
-	    pg_enable_utf8 => 1,
-	};
+        # Default DBI options
+        $connect->[3] ||=
+        {
+         RaiseError => 1,
+         ShowErrorStatement => 1,
+         PrintError => 0,
+         AutoCommit => 0,
+         pg_enable_utf8 => 1,
+        };
 
-	$dbix->{'connect'} = $connect;
+        $dbix->{'connect'} = $connect;
     }
 
     $dbix->rebless;
 
 
-    if( $params->{'import_tt_params'} )
+    if ( $params->{'import_tt_params'} )
     {
 #	debug "Adding global params for dbix $dbix->{connect}[0]";
-	Para::Frame->add_global_tt_params({
-	    'cached_select_list'       => sub{ $dbix->cached_select_list(@_) },
-	    'select_list'              => sub{ $dbix->select_list(@_) },
-	    'select_record'            => sub{ $dbix->select_record(@_) },
-	    'select_key'               => sub{ $dbix->select_key(@_) },
-	    'select_possible_record'   => sub{ $dbix->select_possible_record(@_) },
-	});
+        Para::Frame->add_global_tt_params({
+                                           'cached_select_list'       => sub{ $dbix->cached_select_list(@_) },
+                                           'select_list'              => sub{ $dbix->select_list(@_) },
+                                           'select_record'            => sub{ $dbix->select_record(@_) },
+                                           'select_key'               => sub{ $dbix->select_key(@_) },
+                                           'select_possible_record'   => sub{ $dbix->select_possible_record(@_) },
+                                          });
     }
 
     $dbix->{'bind_dbh'} = $params->{'bind_dbh'};
 
 
     Para::Frame->add_hook('done', sub
-			  {
-			      $dbix->commit;
-			  });
+                          {
+                              $dbix->commit;
+                          });
 
     Para::Frame->add_hook('after_action_success', sub
-			  {
-			      $dbix->commit;
-			  });
+                          {
+                              $dbix->commit;
+                          });
 
     Para::Frame->add_hook('before_switch_req', sub
-			  {
+                          {
 #			      debug 1, sprintf "From %s to %s\n%s", ($Para::Frame::REQ ? $Para::Frame::REQ->id : '-'), ($_[0] ? $_[0]->id : '-'), "";
-			      $dbix->commit;
-			  });
+                              $dbix->commit;
+                          });
 
     # Since the templare may look up things from DB and some things
     # may only be written after on_commit has been triggered.
     #
     Para::Frame->add_hook('before_render_output', sub
-			  {
-			      $dbix->commit;
-			  });
+                          {
+                              $dbix->commit;
+                          });
 
     # Since a bookmarking usually will be followed by an exception, we
     # will save changes before the actual exception.
     #
     Para::Frame->add_hook('after_bookmark', sub
-			  {
-			      $dbix->commit;
-			  });
+                          {
+                              $dbix->commit;
+                          });
 
     # I tried to just setting InactiveDestroy. But several processes
     # can't share a dbh. Multiple requests/multiple forks may/will
@@ -217,49 +217,49 @@ sub new
     # demand instead of always
 
     Para::Frame->add_hook('on_fork', sub
-			  {
-			      debug(2,"Do not destroy DBH in child");
-			      $dbix->dbh->{'InactiveDestroy'} = 1;
-			      $dbix->connect();
-			  });
+                          {
+                              debug(2,"Do not destroy DBH in child");
+                              $dbix->dbh->{'InactiveDestroy'} = 1;
+                              $dbix->connect();
+                          });
 
     Para::Frame->add_hook('on_error_detect', sub
-			  {
-			      my( $typeref, $inforef ) = @_;
+                          {
+                              my( $typeref, $inforef ) = @_;
 
-			      if( $Para::Frame::FORK )
-			      {
-				  debug "In DBIx error hook during FORK\n";
-				  return;
-			      }
+                              if ( $Para::Frame::FORK )
+                              {
+                                  debug "In DBIx error hook during FORK\n";
+                                  return;
+                              }
 
-			      $typeref ||= \ "";
+                              $typeref ||= \ "";
 
 #				      confess("-- rollback...");
 
-			      if( $dbix->dbh and $dbix->dbh->err() )
-			      {
-				  $$inforef .= "\n". $dbix->dbh->errstr();
-				  $$typeref ||= 'dbi';
-			      }
-			      elsif( DBI->err() )
-			      {
-				  $$inforef .= "\n". DBI->errstr();
-				  $$typeref ||= 'dbi';
-			      }
+                              if ( $dbix->dbh and $dbix->dbh->err() )
+                              {
+                                  $$inforef .= "\n". $dbix->dbh->errstr();
+                                  $$typeref ||= 'dbi';
+                              }
+                              elsif ( DBI->err() )
+                              {
+                                  $$inforef .= "\n". DBI->errstr();
+                                  $$typeref ||= 'dbi';
+                              }
 
-			      debug(0,"ROLLBACK DB");
+                              debug(0,"ROLLBACK DB");
 
-			      eval
-			      {
-				  $dbix->rollback();
-			      } or do
-			      {
-				  debug(0,"FAILED ROLLBACK!");
-				  debug $@;
-				  debug $dbix->dbh->errstr;
-			      };
-			  });
+                              eval
+                              {
+                                  $dbix->rollback();
+                              } or do
+                              {
+                                  debug(0,"FAILED ROLLBACK!");
+                                  debug $@;
+                                  debug $dbix->dbh->errstr;
+                              };
+                          });
 
 
     # Use the on_startup hook
@@ -297,7 +297,7 @@ sub init
 
     $dbix->{'datetime_formatter'} =
       $args->{'datetime_formatter'} ||
-	'DateTime::Format::Pg';
+      'DateTime::Format::Pg';
     my $formatter_module = package_to_module($dbix->{'datetime_formatter'});
     require $formatter_module;
 
@@ -320,9 +320,9 @@ sub cached_select_list
     my $dbix = shift;
 
     my $req = $Para::Frame::REQ;
-    if( my $id = $req->q->param('use_cached') )
+    if ( my $id = $req->q->param('use_cached') )
     {
-	return $req->user->session->list($id);
+        return $req->user->session->list($id);
     }
 
     my $list = $dbix->select_list( @_ );
@@ -350,12 +350,12 @@ sub cached_forked_select_list
     my $dbix = shift;
 
     my $req = $Para::Frame::REQ;
-    if( my $id = $req->q->param('use_cached') )
+    if ( my $id = $req->q->param('use_cached') )
     {
-	return $req->user->session->list($id);
+        return $req->user->session->list($id);
     }
 
-    my @data = @_; # Copies before virtual sub
+    my @data = @_;              # Copies before virtual sub
     my $list = Para::Frame::List->new(get_from_fork(sub{$dbix->select_list(@data)}));
 
     $list->store;
@@ -403,9 +403,9 @@ sub select_list
     #
     # Return list or records
 
-    if( ref $vals[0] eq 'ARRAY' )
+    if ( ref $vals[0] eq 'ARRAY' )
     {
-	@vals = @{$vals[0]};
+        @vals = @{$vals[0]};
     }
 
     my $ref;
@@ -414,10 +414,10 @@ sub select_list
 
     eval
     {
-	my $sth = $dbix->dbh->prepare( $st );
-	$sth->execute($dbix->format_value_list(@vals));
-	$ref =  $sth->fetchall_arrayref({});
-	$sth->finish;
+        my $sth = $dbix->dbh->prepare( $st );
+        $sth->execute($dbix->format_value_list(@vals));
+        $ref =  $sth->fetchall_arrayref({});
+        $sth->finish;
     } or return $dbix->report_error(\@vals, $st,@vals);
     return Para::Frame::List->new($ref);
 }
@@ -457,9 +457,9 @@ sub select_record
     #
     # Return list or records
 
-    if( ref $vals[0] eq 'ARRAY' )
+    if ( ref $vals[0] eq 'ARRAY' )
     {
-	@vals = @{$vals[0]};
+        @vals = @{$vals[0]};
     }
 
     my $ref;
@@ -468,11 +468,11 @@ sub select_record
 
     eval
     {
-	my $sth = $dbix->dbh->prepare( $st );
-	$sth->execute( $dbix->format_value_list(@vals) ) or croak "$st (@vals)\n";
-	$ref =  $sth->fetchrow_hashref
-	    or die "Found ".$sth->rows()." rows\nSQL: $st";
-	$sth->finish;
+        my $sth = $dbix->dbh->prepare( $st );
+        $sth->execute( $dbix->format_value_list(@vals) ) or croak "$st (@vals)\n";
+        $ref =  $sth->fetchrow_hashref
+          or die "Found ".$sth->rows()." rows\nSQL: $st";
+        $sth->finish;
     } or return $dbix->report_error(\@vals, $st, @vals);
     return $ref;
 }
@@ -511,9 +511,9 @@ sub select_possible_record
     #
     # Return list or records
 
-    if( ref $vals[0] eq 'ARRAY' )
+    if ( ref $vals[0] eq 'ARRAY' )
     {
-	@vals = @{$vals[0]};
+        @vals = @{$vals[0]};
     }
 
     my $ref;
@@ -522,10 +522,10 @@ sub select_possible_record
 
     eval
     {
-	my $sth = $dbix->dbh->prepare( $st );
-	$sth->execute( $dbix->format_value_list(@vals) );
-	$ref =  $sth->fetchrow_hashref;
-	$sth->finish;
+        my $sth = $dbix->dbh->prepare( $st );
+        $sth->execute( $dbix->format_value_list(@vals) );
+        $ref =  $sth->fetchrow_hashref;
+        $sth->finish;
     } or return $dbix->report_error(\@vals, $st,@vals);
     return $ref;
 }
@@ -569,9 +569,9 @@ sub select_key
     #
     # Return ref to hash of records
 
-    if( ref $vals[0] eq 'ARRAY' )
+    if ( ref $vals[0] eq 'ARRAY' )
     {
-	@vals = @{$vals[0]};
+        @vals = @{$vals[0]};
     }
 
     $st = "select * ".$st if $st !~/^\s*select\s/i;
@@ -579,13 +579,13 @@ sub select_key
 
     eval
     {
-	my $sth = $dbix->dbh->prepare( $st );
-	$sth->execute( $dbix->format_value_list(@vals) );
-	while( my $r = $sth->fetchrow_hashref )
-	{
-	    $rh->{$r->{$keyf}} = $r;
-	}
-	$sth->finish;
+        my $sth = $dbix->dbh->prepare( $st );
+        $sth->execute( $dbix->format_value_list(@vals) );
+        while ( my $r = $sth->fetchrow_hashref )
+        {
+            $rh->{$r->{$keyf}} = $r;
+        }
+        $sth->finish;
     } or return $dbix->report_error(\@vals, $keyf, $st, @vals);
     return $rh;
 }
@@ -616,7 +616,7 @@ sub delete
 
     eval
     {
-	$dbix->dbh->do($st,{},@vals);
+        $dbix->dbh->do($st,{},@vals);
     } or return $dbix->report_error(\@vals, $st, @vals);
     return 1;
 }
@@ -644,23 +644,23 @@ sub connect
 
     eval
     {
-	$dbix->{'dbh'} = DBI->connect(@$connect);
-	debug(2,"Connected to DB $connect->[0]");
+        $dbix->{'dbh'} = DBI->connect(@$connect);
+        debug(2,"Connected to DB $connect->[0]");
     };
-    if( $@ )
+    if ( $@ )
     {
-	debug(0,"Problem connecting to DB using @$connect[0..1]");
-	throw 'dbi', $DBI::errstr;
+        debug(0,"Problem connecting to DB using @$connect[0..1]");
+        throw 'dbi', $DBI::errstr;
 #	throw( $@ );
     }
 
-    if( $dbix->{'bind_dbh'} )
+    if ( $dbix->{'bind_dbh'} )
     {
-	${ $dbix->{'bind_dbh'} } = $dbix->{'dbh'};
-	debug(2,"  Bound dbh");
+        ${ $dbix->{'bind_dbh'} } = $dbix->{'dbh'};
+        debug(2,"  Bound dbh");
     }
 
-    $dbix->on_connect; # Implemented by Pg/mysql
+    $dbix->on_connect;          # Implemented by Pg/mysql
     Para::Frame->run_hook( $Para::Frame::REQ, 'after_db_connect', $dbix);
 
     return 1;
@@ -730,9 +730,9 @@ sub rollback
     return 1 unless $dbix->{'dbh'};
     $dbix->{'dbh'}->rollback;
     Para::Frame->run_hook( $Para::Frame::REQ, 'after_db_rollback', $dbix);
-    if( my $req = $Para::Frame::REQ )
+    if ( my $req = $Para::Frame::REQ )
     {
-	$req->change->rollback;
+        $req->change->rollback;
     }
     return 1;
 }
@@ -894,7 +894,7 @@ sub format_datetime
     my( $dbix, $time ) = @_;
     return undef unless $time;
     return $dbix->{'datetime_formatter'}->
-	format_datetime(Para::Frame::Time->get( $time ));
+      format_datetime(Para::Frame::Time->get( $time ));
 }
 
 
@@ -935,14 +935,14 @@ sub update
 
     foreach my $key ( keys %$set )
     {
-	push @set_fields, $key;
-	push @values, $dbix->format_value( undef, $set->{$key} );
+        push @set_fields, $key;
+        push @values, $dbix->format_value( undef, $set->{$key} );
     }
 
     foreach my $key ( keys %$where )
     {
-	push @where_fields, $key;
-	push @values, $dbix->format_value( undef, $where->{$key} );
+        push @where_fields, $key;
+        push @values, $dbix->format_value( undef, $where->{$key} );
     }
 
     my $setstr   = join ",", map "$_=?", @set_fields;
@@ -952,11 +952,11 @@ sub update
 
     eval
     {
-	$sth = $dbix->dbh->prepare($st);
-	$sth->execute( @values );
-	debug "SQL: $st\nValues: ".join ", ",map defined($_)?"'$_'":'<undef>', @values;
-	$sth->finish;
-	die "Nothing updated" unless $sth->rows;
+        $sth = $dbix->dbh->prepare($st);
+        $sth->execute( @values );
+        debug "SQL: $st\nValues: ".join ", ",map defined($_)?"'$_'":'<undef>', @values;
+        $sth->finish;
+        die "Nothing updated" unless $sth->rows;
     } or return $dbix->report_error(\@values, $table, $set, $where);
     return $sth->rows;
 }
@@ -1013,11 +1013,11 @@ sub insert
 
     unless($rec)
     {
-	my $p = $table;
+        my $p = $table;
 
-	$table = $p->{'table'};
-	$rec   = $p->{'rec'};
-	$types = $p->{'types'};
+        $table = $p->{'table'};
+        $rec   = $p->{'rec'};
+        $types = $p->{'types'};
     }
 
     $types ||= {};
@@ -1028,9 +1028,9 @@ sub insert
 
     foreach my $key ( keys %$rec )
     {
-	push @fields, $key;
-	push @places, '?';
-	push @values, $dbix->format_value( $types->{$key}, $rec->{$key} );
+        push @fields, $key;
+        push @places, '?';
+        push @values, $dbix->format_value( $types->{$key}, $rec->{$key} );
     }
 
     my $fieldstr = join ",", @fields;
@@ -1040,9 +1040,9 @@ sub insert
 
     eval
     {
-	$sth = $dbix->dbh->prepare($st);
-	$sth->execute( @values );
-	$sth->finish;
+        $sth = $dbix->dbh->prepare($st);
+        $sth->execute( @values );
+        $sth->finish;
     } or return $dbix->report_error(\@values, $table, $rec);
     return $sth->rows;
 }
@@ -1170,59 +1170,59 @@ sub insert_wrapper
     my $rec = {};
     foreach my $key ( keys %$rec_in )
     {
-	my $field = $map->{$key} || $key;
-	my $value = $rec_in->{$key};
-	if( my $parser = $parser->{ $field } )
-	{
-	    debug "Value for $field is $value";
-	    $value = &$parser( $value );
-	}
-	if( my $type = $types->{$field} )
-	{
+        my $field = $map->{$key} || $key;
+        my $value = $rec_in->{$key};
+        if ( my $parser = $parser->{ $field } )
+        {
+            debug "Value for $field is $value";
+            $value = &$parser( $value );
+        }
+        if ( my $type = $types->{$field} )
+        {
 #	    unless( validate($value, $type) )
 #	    {
 #		throw 'validation', "Param $param doesn't match $type";
 #	    }
-	}
+        }
 
-	# Be careful of multiple settings due to mapping
+        # Be careful of multiple settings due to mapping
 
-	$rec->{$field} = $value;
+        $rec->{$field} = $value;
     }
 
-    if( $uexists )
+    if ( $uexists )
     {
-	my( @fields, @values );
-	$uexists = [$uexists] unless ref $uexists;
-	foreach my $key (@$uexists)
-	{
-	    my $field = $map->{$key} || $key;
-	    push @fields, $field;
-	    push @values, $rec->{$field};
-	}
-	my $where_str = join " and ",map "$_=?",@fields;
-	my $st = "from $table where $where_str";
-	if( my $orec = $dbix->select_possible_record($st,@values) )
-	{
-	    if( $rfield )
-	    {
-		debug 3, "Returning field $rfield: $orec->{$rfield}";
-		return $orec->{$rfield};
-	    }
-	    return 0;
-	}
+        my( @fields, @values );
+        $uexists = [$uexists] unless ref $uexists;
+        foreach my $key (@$uexists)
+        {
+            my $field = $map->{$key} || $key;
+            push @fields, $field;
+            push @values, $rec->{$field};
+        }
+        my $where_str = join " and ",map "$_=?",@fields;
+        my $st = "from $table where $where_str";
+        if ( my $orec = $dbix->select_possible_record($st,@values) )
+        {
+            if ( $rfield )
+            {
+                debug 3, "Returning field $rfield: $orec->{$rfield}";
+                return $orec->{$rfield};
+            }
+            return 0;
+        }
     }
 
     $dbix->insert({
-	table => $table,
-	rec   => $rec,
-	types => $types,
-    });
+                   table => $table,
+                   rec   => $rec,
+                   types => $types,
+                  });
 
-    if( $rfield )
+    if ( $rfield )
     {
-	debug 3, "Returning field $rfield: $rec->{$rfield}";
-	return $rec->{$rfield};
+        debug 3, "Returning field $rfield: $rec->{$rfield}";
+        return $rec->{$rfield};
     }
     return 1;
 }
@@ -1285,10 +1285,10 @@ sub update_wrapper
     my( $dbix, $params ) = @_;
 
     my $rec_in    =
-	$params->{'rec'} ||
-	$params->{'rec_new'} or croak "rec_new missing";
+      $params->{'rec'} ||
+      $params->{'rec_new'} or croak "rec_new missing";
     my $rec_old   =
-	$params->{'rec_old'} or croak "rec_old missing";
+      $params->{'rec_old'} or croak "rec_old missing";
     my $map       = $params->{'map'} || {};
     my $parser    = $params->{'parser'} || {};
     my $types     = $params->{'types'} || {};
@@ -1300,42 +1300,42 @@ sub update_wrapper
     my $rec_new = {};
     foreach my $key ( keys %$rec_in )
     {
-	my $field = $map->{$key} || $key;
-	my $value = $rec_in->{$key};
-	if( my $parser = $parser->{ $field } )
-	{
-	    debug "Value for $field is $value";
-	    $value = &$parser( $value );
-	}
-	if( my $type = $types->{$field} )
-	{
+        my $field = $map->{$key} || $key;
+        my $value = $rec_in->{$key};
+        if ( my $parser = $parser->{ $field } )
+        {
+            debug "Value for $field is $value";
+            $value = &$parser( $value );
+        }
+        if ( my $type = $types->{$field} )
+        {
 #	    unless( validate($value, $type) )
 #	    {
 #		throw 'validation', "Param $param doesn't match $type";
 #	    }
-	}
+        }
 
-	# Be careful of multiple settings due to mapping
+        # Be careful of multiple settings due to mapping
 
-	$rec_new->{$field} = $value;
+        $rec_new->{$field} = $value;
     }
 
     my $res = $dbix->save_record({
-	rec_new => $rec_new,
-	rec_old => $rec_old,
-	table => $table,
-	key => $key,
-	types => $types,
-	on_update => $on_update,
-    });
+                                  rec_new => $rec_new,
+                                  rec_old => $rec_old,
+                                  table => $table,
+                                  key => $key,
+                                  types => $types,
+                                  on_update => $on_update,
+                                 });
 
-    if( $res and $copy_data )
+    if ( $res and $copy_data )
     {
-	foreach my $field ( keys %$rec_new )
-	{
-	    $copy_data->{$field} = $rec_new->{$field};
-	    debug 4, "Setting $field to $rec_new->{$field}";
-	}
+        foreach my $field ( keys %$rec_new )
+        {
+            $copy_data->{$field} = $rec_new->{$field};
+            debug 4, "Setting $field to $rec_new->{$field}";
+        }
     }
 
     return $res;
@@ -1365,25 +1365,25 @@ sub format_value_list
     my( $dbix ) = shift;
 
     my @res;
-    foreach(@_)
+    foreach (@_)
     {
-	debug 4, "Formatting ".(defined($_)?$_:'<undef>');
-	if( not ref $_ )
-	{
-	    push @res, $_;
-	}
-	elsif( $_->isa('DateTime') )
-	{
-	    push @res, $dbix->format_datetime( $_ );
-	}
-	elsif( $_->can('id') )
-	{
-	    push @res, $_->id;
-	}
-	else
-	{
-	    push @res, "$_"; # Stringify
-	}
+        debug 4, "Formatting ".(defined($_)?$_:'<undef>');
+        if ( not ref $_ )
+        {
+            push @res, $_;
+        }
+        elsif ( $_->isa('DateTime') )
+        {
+            push @res, $dbix->format_datetime( $_ );
+        }
+        elsif ( $_->can('id') )
+        {
+            push @res, $_->id;
+        }
+        else
+        {
+            push @res, "$_";    # Stringify
+        }
     }
     return @res;
 }
@@ -1417,36 +1417,36 @@ sub format_value
 
     my $valstr = defined $val?$val:'<undef>';
 
-    if( $type )
+    if ( $type )
     {
-	debug 2, "Formatting $type $valstr";
+        debug 2, "Formatting $type $valstr";
 
-	if( $type eq 'string' )
-	{
-	    if( not ref $val )
-	    {
-		return $val;
-	    }
-	}
-	elsif( $type eq 'boolean' )
-	{
-	    return $dbix->bool( $val );
-	}
-	elsif( $type eq 'date' )
-	{
-	    return $dbix->format_datetime( $val );
-	}
-	else
-	{
-	    throw 'validation', "Type $type not handled";
-	}
-	throw 'validation', "Value $valstr not a $type";
+        if ( $type eq 'string' )
+        {
+            if ( not ref $val )
+            {
+                return $val;
+            }
+        }
+        elsif ( $type eq 'boolean' )
+        {
+            return $dbix->bool( $val );
+        }
+        elsif ( $type eq 'date' )
+        {
+            return $dbix->format_datetime( $val );
+        }
+        else
+        {
+            throw 'validation', "Type $type not handled";
+        }
+        throw 'validation', "Value $valstr not a $type";
     }
     else
     {
-	debug 3, "Formatting $valstr";
+        debug 3, "Formatting $valstr";
 
-	return $dbix->format_value_list( $val );
+        return $dbix->format_value_list( $val );
     }
 }
 
@@ -1498,23 +1498,23 @@ sub save_record
 
     my $req = $Para::Frame::REQ;
 
-    if( ref $key eq 'HASH' )
+    if ( ref $key eq 'HASH' )
     {
-	my $keyhash = $key;
-	$key = [];
-	$keyval = [];
-	foreach my $f ( keys %$keyhash )
-	{
-	    push @$key, $f;
-	    push @$keyval, $keyhash->{$f};
-	}
+        my $keyhash = $key;
+        $key = [];
+        $keyval = [];
+        foreach my $f ( keys %$keyhash )
+        {
+            push @$key, $f;
+            push @$keyval, $keyhash->{$f};
+        }
     }
     else
     {
-	$keyval or croak "keyval missing";
+        $keyval or croak "keyval missing";
 
-	$key = [$key] unless ref $key;
-	$keyval = [$keyval] unless ref $keyval;
+        $key = [$key] unless ref $key;
+        $keyval = [$keyval] unless ref $keyval;
     }
 
     my( @fields, @values );
@@ -1522,162 +1522,162 @@ sub save_record
 
     foreach my $field ( @$fields_to_check )
     {
-	my $type = $types->{$field} || 'string';
-	my $new = $rec_new->{ $field };
-	my $old = $rec_old->{ $field };
-	next if not $new and not $old;
+        my $type = $types->{$field} || 'string';
+        my $new = $rec_new->{ $field };
+        my $old = $rec_old->{ $field };
+        next if not $new and not $old;
 
-	debug(3, "Checking field $field ($type)");
+        debug(3, "Checking field $field ($type)");
 
-	if( $type eq 'string' )
-	{
+        if ( $type eq 'string' )
+        {
 #	    my $new = $dbix->format_value( undef, $rec_new->{ $field } );
 #	    my $old = $dbix->format_value( undef, $rec_old->{ $field } );
 
-	    if( (defined $new and not defined $old) or
-		(defined $old and not defined $new) or
-		( $new ne $old ) )
-	    {
+            if ( (defined $new and not defined $old) or
+                 (defined $old and not defined $new) or
+                 ( $new ne $old ) )
+            {
 
-		$fields_added{ $field } ++;
-		push @fields, $field;
-		push @values, $new;
-		$new = '<undef>' unless defined $new;
-		$old = '<undef>' unless defined $old;
-		debug(1,"  field $field differ: '$new' != '$old'");
-	    }
-	}
-	elsif( $type eq 'integer' )
-	{
-	    # We can usually use type string for integers
-	    $new = int($new) if $new;
+                $fields_added{ $field } ++;
+                push @fields, $field;
+                push @values, $new;
+                $new = '<undef>' unless defined $new;
+                $old = '<undef>' unless defined $old;
+                debug(1,"  field $field differ: '$new' != '$old'");
+            }
+        }
+        elsif ( $type eq 'integer' )
+        {
+            # We can usually use type string for integers
+            $new = int($new) if $new;
 
-	    if( (defined $new and not defined $old) or
-		(defined $old and not defined $new) or
-		( $new != $old )
-		)
-	    {
-		$fields_added{ $field } ++;
-		push @fields, $field;
-		push @values, $new;
-		$new = '<undef>' unless defined $new;
-		$old = '<undef>' unless defined $old;
-		debug(1,"  field $field differ: '$new' != '$old'");
-	    }
-	}
-	elsif( $type eq 'float' )
-	{
-	    # We can usually use type string for floats
+            if ( (defined $new and not defined $old) or
+                 (defined $old and not defined $new) or
+                 ( $new != $old )
+               )
+            {
+                $fields_added{ $field } ++;
+                push @fields, $field;
+                push @values, $new;
+                $new = '<undef>' unless defined $new;
+                $old = '<undef>' unless defined $old;
+                debug(1,"  field $field differ: '$new' != '$old'");
+            }
+        }
+        elsif ( $type eq 'float' )
+        {
+            # We can usually use type string for floats
 
-	    if( (defined $new and not defined $old) or
-		(defined $old and not defined $new) or
-		( $new != $old ) )
-	    {
-		$fields_added{ $field } ++;
-		push @fields, $field;
-		push @values, + $new;
-		debug(1,"  field $field differ");
-	    }
-	}
-	elsif( $type eq 'boolean' )
-	{
-	    if( $dbix->bool($new) ne $dbix->bool($old) )
-	    {
-		$fields_added{ $field } ++;
-		push @fields, $field;
-		push @values, $dbix->bool( $new );
-		$new = '<undef>' unless defined $new;
-		$old = '<undef>' unless defined $old;
-		debug(1,"  field $field differ: '$new' != '$old'");
-	    }
-	}
-	elsif( $type eq 'date' )
-	{
-	    $new = date( $new ) if $new;
-	    $old = date( $old ) if $old;
+            if ( (defined $new and not defined $old) or
+                 (defined $old and not defined $new) or
+                 ( $new != $old ) )
+            {
+                $fields_added{ $field } ++;
+                push @fields, $field;
+                push @values, + $new;
+                debug(1,"  field $field differ");
+            }
+        }
+        elsif ( $type eq 'boolean' )
+        {
+            if ( $dbix->bool($new) ne $dbix->bool($old) )
+            {
+                $fields_added{ $field } ++;
+                push @fields, $field;
+                push @values, $dbix->bool( $new );
+                $new = '<undef>' unless defined $new;
+                $old = '<undef>' unless defined $old;
+                debug(1,"  field $field differ: '$new' != '$old'");
+            }
+        }
+        elsif ( $type eq 'date' )
+        {
+            $new = date( $new ) if $new;
+            $old = date( $old ) if $old;
 	    
-	    if( (defined $new and not defined $old) or
-		(defined $old and not defined $new) or
-		( not $new->equals( $old ) )
-		)
-	    {
-		$fields_added{ $field } ++;
-		my $val = $dbix->format_datetime( $rec_new->{ $field } );
-		push @fields, $field;
-		push @values, $val;
-		debug(1,"  field $field differ. New is $val");
-	    }
-	}
-	elsif( $type eq 'email' )
-	{
-	    eval
-	    {
-		$new ||= '';
-		if( $new and not ref $new )
-		{
-		    $new = Para::Frame::Email::Address->parse( $new );
-		}
+            if ( (defined $new and not defined $old) or
+                 (defined $old and not defined $new) or
+                 ( not $new->equals( $old ) )
+               )
+            {
+                $fields_added{ $field } ++;
+                my $val = $dbix->format_datetime( $rec_new->{ $field } );
+                push @fields, $field;
+                push @values, $val;
+                debug(1,"  field $field differ. New is $val");
+            }
+        }
+        elsif ( $type eq 'email' )
+        {
+            eval
+            {
+                $new ||= '';
+                if ( $new and not ref $new )
+                {
+                    $new = Para::Frame::Email::Address->parse( $new );
+                }
 		
-		$old ||= '';
-		if( $old and not ref $old )
-		{
-		    $old = Para::Frame::Email::Address->parse( $old );
-		}
+                $old ||= '';
+                if ( $old and not ref $old )
+                {
+                    $old = Para::Frame::Email::Address->parse( $old );
+                }
 		
-		if( $new ne $old )
-		{
-		    $fields_added{ $field } ++;
-		    push @fields, $field;
-		    push @values, $new->as_string;
-		    debug(1,"  field $field differ");
-		}
-	    };
-	    if( $@ )
-	    {
-		if( $req->is_from_client )
-		{
-		    die $@;
-		}
-		else
-		{
-		    debug $@;
-		}
-	    }
-	}
-	else
-	{
-	    throw('action', "Type $type not recoginzed");
-	}
+                if ( $new ne $old )
+                {
+                    $fields_added{ $field } ++;
+                    push @fields, $field;
+                    push @values, $new->as_string;
+                    debug(1,"  field $field differ");
+                }
+            };
+            if ( $@ )
+            {
+                if ( $req->is_from_client )
+                {
+                    die $@;
+                }
+                else
+                {
+                    debug $@;
+                }
+            }
+        }
+        else
+        {
+            throw('action', "Type $type not recoginzed");
+        }
     }
 
-    if( @fields )
+    if ( @fields )
     {
-	if( $on_update )
-	{
-	    foreach my $field ( keys %$on_update )
-	    {
-		next if $fields_added{ $field };
-		my $type = $types->{$field};
-		my $value = $dbix->format_value($type, $on_update->{$field});
-		push @fields, $field;
-		push @values, $value;
-	    }
-	}
+        if ( $on_update )
+        {
+            foreach my $field ( keys %$on_update )
+            {
+                next if $fields_added{ $field };
+                my $type = $types->{$field};
+                my $value = $dbix->format_value($type, $on_update->{$field});
+                push @fields, $field;
+                push @values, $value;
+            }
+        }
 
-	my $where = join ' and ', map "$_=?", @$key;
+        my $where = join ' and ', map "$_=?", @$key;
 
-	my $statement = "update $table set ".
-	    join( ', ', map("$_=?", @fields)) .
-	    " where $where";
-	debug(4,"Executing statement $statement");
-	eval
-	{
-	    my $sth = $dbix->dbh->prepare( $statement );
-	    $sth->execute( @values, @$keyval );
-	} or return $dbix->report_error([@values, @$keyval], $param);
+        my $statement = "update $table set ".
+          join( ', ', map("$_=?", @fields)) .
+          " where $where";
+        debug(4,"Executing statement $statement");
+        eval
+        {
+            my $sth = $dbix->dbh->prepare( $statement );
+            $sth->execute( @values, @$keyval );
+        } or return $dbix->report_error([@values, @$keyval], $param);
     }
 
-    return scalar @fields; # The number of changes
+    return scalar @fields;      # The number of changes
 }
 
 
@@ -1699,75 +1699,75 @@ recalls the method with statement and values.
 sub report_error
 {
     my( $dbix, $valref ) = (shift, shift);
-    if( $@ )
+    if ( $@ )
     {
-	my( $subroutine ) = (caller(1))[3];
-	$subroutine =~ s/.*:://;
+        my( $subroutine ) = (caller(1))[3];
+        $subroutine =~ s/.*:://;
 
-	my $state = $dbix->state;
+        my $state = $dbix->state;
 
-	debug(0,"DBIx $subroutine error");
-	$@ =~ s/ at \/.*//;
-	my $error = catch($@);
-	my $info = $error->info;
-	chomp $info;
+        debug(0,"DBIx $subroutine error");
+        $@ =~ s/ at \/.*//;
+        my $error = catch($@);
+        my $info = $error->info;
+        chomp $info;
 
-	my $state_desc = $state->desc;
+        my $state_desc = $state->desc;
 
-	debug "Error number: $DBI::err" if $DBI::err;
-	debug "Status: $DBI::state";
+        debug "Error number: $DBI::err" if $DBI::err;
+        debug "Status: $DBI::state";
 
-	# Should be redundant, but may not be
-	if( $DBI::state eq '26000' )
-	{
-	    debug(0,"ROLLBACK DB");
-	    eval
-	    {
-		$dbix->rollback();
-	    } or do
-	    {
-		debug(0,"FAILED ROLLBACK!");
-		debug $@;
-		debug $dbix->dbh->errstr;
-	    };
-	}
+        # Should be redundant, but may not be
+        if ( $DBI::state eq '26000' )
+        {
+            debug(0,"ROLLBACK DB");
+            eval
+            {
+                $dbix->rollback();
+            } or do
+            {
+                debug(0,"FAILED ROLLBACK!");
+                debug $@;
+                debug $dbix->dbh->errstr;
+            };
+        }
 
 
-	unless( $STATE_RECONNECTING or $dbix->dbh->ping )
-	{
-	    $STATE_RECONNECTING = 1;
-	    debug "Ping failed. Should reconnect";
-	    debug "Called from $subroutine";
+        unless( $STATE_RECONNECTING or $dbix->dbh->ping )
+        {
+            $STATE_RECONNECTING = 1;
+            debug "Ping failed. Should reconnect";
+            debug "Called from $subroutine";
 
-	    debug "Reconnecting to DB";
-	    eval
-	    {
-		$dbix->connect;
-	    } or do
-	    {
-		debug "Still no connection!";
-		debug "I'll try to restart the server";
-		Para::Frame->do_hup;
-		die $@;
-	    };
+            debug "Reconnecting to DB";
+            eval
+            {
+                $dbix->connect;
+            } or do
+            {
+                debug "Still no connection!";
+                debug "I'll try to restart the server";
+                Para::Frame->do_hup;
+                die $@;
+            };
 
-	    if( @_ )
-	    {
-		debug "REPEATING COMMAND \$dbix->$subroutine(@_)";
-		my $res = $dbix->$subroutine(@_);
-		$STATE_RECONNECTING = 0;
-		return $res;
-	    }
-	}
+            if ( @_ )
+            {
+                debug "REPEATING COMMAND \$dbix->$subroutine(@_)";
+                my $res = $dbix->$subroutine(@_);
+                $STATE_RECONNECTING = 0;
+                return $res;
+            }
+        }
 
-	my $msg = "$state_desc\n$info\n";
-	if( @$valref )
-	{
-	    my $values = join ", ",map defined($_)?"'$_'":'<undef>', @$valref;
-	    $msg .= "Values: $values\n";
-	}
-	$msg .= "...".longmess();
-	throw('dbi', $msg);
+        my $msg = "$state_desc\n$info\n";
+        if ( @$valref )
+        {
+            my $values = join ", ",map defined($_)?"'$_'":'<undef>', @$valref;
+            $msg .= "Values: $values\n";
+        }
+        $msg .= "...".longmess();
+        throw('dbi', $msg);
     }
 }
 
@@ -1793,10 +1793,10 @@ sub rebless
     my $module = package_to_module($package);
 #    debug "DBIx uses package $package";
 
-    if( eval{ require $module } )
+    if ( eval{ require $module } )
     {
 #	debug "Reblessing dbix into $package";
-	bless $_[0], $package;
+        bless $_[0], $package;
     }
 
     return $_[0];
