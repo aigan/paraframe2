@@ -5,7 +5,7 @@ package Para::Frame::Uploaded;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2016 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -179,7 +179,7 @@ sub fh
 
     $mode //= $uploaded->{'filemode'} || 0;
 
-    cluck "No mode - ".datadump($uploaded) unless $mode;
+#    cluck "No mode - ".datadump($uploaded) unless $mode;
     debug "Using mode $mode";
 
     my $fh = IO::File->new( $uploaded->{'tempfile'}, $mode );

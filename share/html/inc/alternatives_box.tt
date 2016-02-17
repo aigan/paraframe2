@@ -34,7 +34,7 @@
 [%# go('Hoppa över', undef, 'skip_step&skip_step', tag_attr=tag_attr) %]
 
 [% IF a.trace %]
-<pre>
+<pre style="clear:both;overflow-x:auto">
 [% a.trace %]
 </pre>
 [% END %]

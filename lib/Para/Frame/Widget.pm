@@ -5,7 +5,7 @@ package Para::Frame::Widget;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2014 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2016 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -459,6 +459,11 @@ sub go
     die "Too many args for go()" if $attr and not ref $attr;
 
 #    debug "go ".datadump(\@_); ### DEBUG
+
+    if( eval{$template->can('as_string')} )
+    {
+        $template = $template->as_string;
+    }
 
     if( UNIVERSAL::isa $run, 'HASH' )
     {

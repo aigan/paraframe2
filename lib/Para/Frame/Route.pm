@@ -5,7 +5,7 @@ package Para::Frame::Route;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2015 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2016 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -579,6 +579,7 @@ sub get_next
     }
     else
     {
+        debug_query("NO MORE STEPS");
         $q->delete_all;
         debug(1,"!!  No more steps in route");
         if ( $page->url_path_slash ne $req->referer_path )

@@ -5,7 +5,7 @@ package Para::Frame::Request;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2015 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2016 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -533,7 +533,7 @@ sub http_init
     my $env = {};
     my $q;
 
-    debug "Parsing HTTP request:\n$message\n.";
+#    debug "Parsing HTTP request:\n$message\n.";
     my $ret = parse_http_request($message, $env );
     die "header corrupt " if  $ret < 1;
 
