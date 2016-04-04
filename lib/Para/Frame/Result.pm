@@ -92,8 +92,8 @@ sub new
     # Add info about compilation errors
     foreach my $module ( keys %Para::Frame::Result::COMPILE_ERROR )
     {
-	my $errmsg = $Para::Frame::Result::COMPILE_ERROR{$module};
-	$result->error('compilation', "$module\n\n$errmsg");
+        my $errmsg = $Para::Frame::Result::COMPILE_ERROR{$module};
+        $result->error('compilation', "$module\n\n$errmsg");
     }
 
 #    # Do not count these compile errors, since that would halt
@@ -115,16 +115,16 @@ sub message
 
     foreach my $msg ( @messages )
     {
-	$msg ||= "";
-	$msg =~ s/(\n\r?)+$//;
-	next unless length $msg;
+        $msg ||= "";
+        $msg =~ s/(\n\r?)+$//;
+        next unless length $msg;
 
-	debug(3, "Adding result message '$msg'");
+        debug(3, "Adding result message '$msg'");
 
-	push @{$result->{'part'}}, Para::Frame::Result::Part->new({
-	    'message' => $msg,
-	});
-	$Para::Frame::REQ->note($msg);
+        push @{$result->{'part'}}, Para::Frame::Result::Part->new({
+                                                                   'message' => $msg,
+                                                                  });
+        $Para::Frame::REQ->note($msg);
     }
 }
 
@@ -159,12 +159,12 @@ sub exception
     $textref ||= "";
     unless( ref $textref )
     {
-	$textref = \ "$textref";
+        $textref = \ "$textref";
     }
 
-    if( $info_in )
+    if ( $info_in )
     {
-	$explicit = Template::Exception->new($explicit, $info_in, $textref);
+        $explicit = Template::Exception->new($explicit, $info_in, $textref);
     }
 
     $@ = $explicit if $explicit;
@@ -174,13 +174,13 @@ sub exception
 
     unless( $error )
     {
-	confess "Exception without a cause ($@) for Result ".datadump($result);
+        confess "Exception without a cause ($@) for Result ".datadump($result);
     }
 
-    if( UNIVERSAL::isa($error, 'Para::Frame::Result::Part') )
+    if ( UNIVERSAL::isa($error, 'Para::Frame::Result::Part') )
     {
-	debug "!!!!! THIS ERROR ALREADY PROCESSED !!!!!!";
-	return $error;
+        debug "!!!!! THIS ERROR ALREADY PROCESSED !!!!!!";
+        return $error;
     }
 
     run_error_hooks($error);
@@ -218,37 +218,37 @@ sub error
     my( $result, $type, $message, $contextref ) = @_;
 
     my $error;
-    if( ref $type )
+    if ( ref $type )
     {
-	$error = $type;
+        $error = $type;
     }
     else
     {
-	unless( $message )
-	{
-	    confess "Exception without a cause";
-	}
+        unless( $message )
+        {
+            confess "Exception without a cause";
+        }
 
-	$message =~ s/(\n\r?)+$//;
-	if( $contextref and not ref $contextref )
-	{
-	    $contextref = \ "$contextref";
-	}
+        $message =~ s/(\n\r?)+$//;
+        if ( $contextref and not ref $contextref )
+        {
+            $contextref = \ "$contextref";
+        }
 
-	$error = Template::Exception->new( $type, $message, $contextref );
+        $error = Template::Exception->new( $type, $message, $contextref );
     }
 
 #    warn "Clearing our error info\n";
-    $@ = undef; # Clear out error info
+    $@ = undef;                 # Clear out error info
 
     my $part = Para::Frame::Result::Part->new($error);
 
     $type = $part->type;
 
-    if( $result->{'hide_part'}{'hide_all'} or
-	$result->{'hide_part'}{$type} )
+    if ( $result->{'hide_part'}{'hide_all'} or
+         $result->{'hide_part'}{$type} )
     {
-	$part->hide(1);
+        $part->hide(1);
     }
 
     push @{$result->{'part'}}, $part;
@@ -295,9 +295,9 @@ Returns:
 
 sub backtrack
 {
-    if( defined $_[1] )
+    if ( defined $_[1] )
     {
-	$_[0]->{'backtrack'} = $_[1];
+        $_[0]->{'backtrack'} = $_[1];
     }
 
     return $_[0]->{'backtrack'};
@@ -335,11 +335,11 @@ sub error_parts
 
     foreach my $part ( @{$result->{'part'}} )
     {
-	next if $part->hide;
+        next if $part->hide;
 
-	next unless $part->error;
+        next unless $part->error;
 
-	push @res, $part;
+        push @res, $part;
     }
 
     return \@res;
@@ -362,11 +362,11 @@ sub info_parts
 
     foreach my $part ( @{$result->{'part'}} )
     {
-	next if $part->hide;
+        next if $part->hide;
 
-	next if $part->error;
+        next if $part->error;
 
-	push @res, $part;
+        push @res, $part;
     }
 
     return \@res;
@@ -392,9 +392,9 @@ sub find
     debug "Finding part of type $type";
     foreach my $part ( @{$result->parts} )
     {
-	debug "  checking part ".$part->as_string;
-	next unless $part->type;
-	return $part if $part->type eq $type;
+        debug "  checking part ".$part->as_string;
+        next unless $part->type;
+        return $part if $part->type eq $type;
     }
     debug "  No such part";
     return undef;
@@ -432,16 +432,16 @@ sub hide_part
 
     foreach my $part ( @{$result->{'part'}} )
     {
- 	next unless $part->type;
- 	if( $type eq 'hide_all' )
- 	{
- 	    $part->hide(1);
- 	}
- 	elsif( $part->type eq $type )
-	{
-	    $part->hide(1);
- 	}
-     }
+        next unless $part->type;
+        if ( $type eq 'hide_all' )
+        {
+            $part->hide(1);
+        }
+        elsif ( $part->type eq $type )
+        {
+            $part->hide(1);
+        }
+    }
 
     return undef;
 }
@@ -462,10 +462,10 @@ sub as_string
     my $out = "";
     my @parts = @{ $result->parts };
 
-    for( my $i=0; $i<=$#parts; $i++ )
+    for ( my $i=0; $i<=$#parts; $i++ )
     {
-	$out .= "--- Part $i ---\n";
-	$out .= $parts[$i]->as_string . "\n";
+        $out .= "--- Part $i ---\n";
+        $out .= $parts[$i]->as_string . "\n";
     }
     $out .= "---\n";
     return $out;
@@ -495,13 +495,13 @@ sub incorporate
 
     foreach my $key (keys %{$res2->{'hide_part'}})
     {
-	$result->{'hide_part'}{$key} = $res2->{'hide_part'}{$key};
+        $result->{'hide_part'}{$key} = $res2->{'hide_part'}{$key};
     }
 
     foreach my $key (keys %{$res2->{'info'}})
     {
-	debug "  Copying info.$key to result";
-	$result->{'info'}{$key} = $res2->{'info'}{$key};
+        debug "  Copying info.$key to result";
+        $result->{'info'}{$key} = $res2->{'info'}{$key};
     }
 
     return 1;
