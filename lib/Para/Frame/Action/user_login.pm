@@ -59,27 +59,33 @@ sub handler
     $req->{'login_password'} = $password;
 
     my @extra = ();
-    if( $remember )
+    if ( $remember )
     {
-	push @extra, -expires => '+10y';
+        push @extra, -expires => '+10y';
     }
 
     my $u = $user_class->get( $username,
-			      {
-			       password => $password,
-			      }
-			    );
+                              {
+                               password => $password,
+                              }
+                            );
     $u or throw('validation', loc('The user [_1] doesn\'t exist', $username));
 
     debug "User is $u";
 
     $user_class->change_current_user( $u );
 
+    # DEPRECATED (2016). Use server_salt instead
+    #
     # If md5-salt is set, the password is encrypted in db, and double
     # encrypted for cookie
-    my $md5_salt = $Para::Frame::CFG->{'md5_salt'};
-    $password = md5_hex($password, $md5_salt)
-      if( $md5_salt );
+    if ( my $md5_salt = $Para::Frame::CFG->{'md5_salt'} )
+    {
+        $password = md5_hex($password, $md5_salt);
+    }
+
+
+
 
     # Encrypt password with IP (for cookie)
     my $password_encrypted = passwd_crypt( $password );
@@ -87,33 +93,33 @@ sub handler
     #Also catch exceptions
     my $msg = eval
     {
-	if( $user_class->authenticate_user( $password_encrypted ) )
-	{
-	    $req->cookies->add({
-				'username' => $username,
-				'password' => $password_encrypted,
-			       },{
-				  @extra,
-				 });
+        if ( $user_class->authenticate_user( $password_encrypted ) )
+        {
+            $req->cookies->add({
+                                'username' => $username,
+                                'password' => $password_encrypted,
+                               },{
+                                  @extra,
+                                 });
 
-	    $q->delete('username');
-	    $q->delete('password');
+            $q->delete('username');
+            $q->delete('password');
 
-	    $req->run_hook('user_login', $u);
+            $req->run_hook('user_login', $u);
 
-	    debug "Login sucessful";
-	    return "$username loggar in";
-	}
+            debug "Login sucessful";
+            return "$username loggar in";
+        }
 
-	debug "Login failed gracefully";
+        debug "Login failed gracefully";
     };
-    if( my $err = $@ )
+    if ( my $err = $@ )
     {
-	debug "Got exception during login";
-	debug "Error: $err";
-	$u = $user_class->get('guest');
-	$user_class->change_current_user( $u );
-	die $err; # Since user change may reset $@
+        debug "Got exception during login";
+        debug "Error: $err";
+        $u = $user_class->get('guest');
+        $user_class->change_current_user( $u );
+        die $err;               # Since user change may reset $@
     }
 
     $msg ||= loc("Login failed");
