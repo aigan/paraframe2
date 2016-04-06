@@ -5,7 +5,7 @@ package Para::Frame::User;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2011 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2016 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -608,6 +608,22 @@ sub validate_access_token
     }
 
     return undef;
+}
+
+##############################################################################
+
+=head2 password_token
+
+The representation of a password to use as input for cookie
+generation. (before iphash)
+
+Reimplement to introduce secure password storage.
+
+=cut
+
+sub password_token
+{
+    return $_[1];
 }
 
 ##############################################################################
