@@ -541,6 +541,19 @@ sub has_root_access
 
 ##############################################################################
 
+=head2 has_cm_access
+
+Content management access
+
+=cut
+
+sub has_cm_access
+{
+    return $_[0]->level > 19 ? 1 : 0;
+}
+
+##############################################################################
+
 =head2 has_page_update_access
 
   $u->has_page_update_access()

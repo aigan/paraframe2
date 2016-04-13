@@ -994,6 +994,27 @@ sub require_root_access
 
 ##############################################################################
 
+=head2 require_cm_access
+
+  $req->require_cm_access
+
+Throws a C<denied> exception if the current user hasn't content management access
+
+=cut
+
+sub require_cm_access
+{
+    my $user = $_[0]->user;
+    unless( $user->has_cm_access )
+    {
+        throw( 'denied', loc("Permission denied") );
+    }
+    return 1;
+}
+
+
+##############################################################################
+
 =head2 change
 
   $req->change
