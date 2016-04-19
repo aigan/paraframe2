@@ -986,6 +986,7 @@ sub require_root_access
     my $user = $_[0]->user;
     unless( $user->has_root_access )
     {
+        cluck "no root access";
         throw( 'denied', loc("Permission denied") );
     }
     return 1;

@@ -5,7 +5,7 @@ package Para::Frame::Utils;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2014 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2016 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -59,7 +59,7 @@ our @EXPORT_OK
         idn_encode idn_decode debug reset_hashref timediff
         extract_query_params fqdn retrieve_from_url get_from_fork
         datadump client_send validate_utf8 repair_utf8 escape_js
-        parse_perlstruct client_str );
+        parse_perlstruct client_str suggest_words );
 
 use Para::Frame::Reload;
 #use Para::Frame::URI;
@@ -2550,6 +2550,44 @@ sub parse_perlstruct
 #    }
 
     return @data_out;
+}
+
+
+##############################################################################
+
+=head2 suggest_words
+
+=cut
+
+sub suggest_words
+{
+    my( $file, $amount ) = @_;
+
+    $file or die "Filename missing";
+    $amount ||= 1;
+    die if $amount < 1;
+    my( @words_raw, @words );
+
+    srand;
+    open FILE, '<', $file or die "Could not open filename: $!";
+    while(<FILE>)
+    {
+        for my $i (0 .. $amount-1)
+        {
+            rand($.) < 1 and ($words_raw[$i]=$_);
+        }
+    }
+    close FILE;
+
+    foreach( @words_raw )
+    {
+        chomp;
+        push @words, lc $_;
+    }
+
+    debug "Words: @words";
+
+    return \@words;
 }
 
 
