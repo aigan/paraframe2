@@ -987,7 +987,8 @@ sub require_root_access
     unless( $user->has_root_access )
     {
         cluck "no root access";
-        throw( 'denied', loc("Permission denied") );
+        ### No DB lookup allowed before a throw! (Messes up rollback)
+        throw( 'denied', "Permission denied" );
     }
     return 1;
 }
