@@ -39,7 +39,7 @@ use File::Basename;             # dirname
 use Storable qw( thaw );
 use Number::Format;
 
-our $VERSION = "2.02";          # Paraframe version
+our $VERSION = "2.03";          # Paraframe version
 
 
 use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir client_str );
@@ -2347,7 +2347,9 @@ sub handle_request
                         );
             warn "# ".client_str($client)."\n" if debug() > 4;
 
-            warn "# ".$req->q->query_string()."\n"; ### Verbose
+            my $query_string = $req->q->query_string();
+            $query_string =~ s/(passw(or)?d[^=;]*)=[^;]+/$1=*****/g;
+            warn "# $query_string\n"; ### Verbose
 
             $req->setup_jobs;
             $req->reset_response; # Needs lang and jobs
