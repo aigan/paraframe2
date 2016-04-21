@@ -2585,7 +2585,7 @@ sub suggest_words
         push @words, lc $_;
     }
 
-    debug "Words: @words";
+#    debug "Words: @words";
 
     return \@words;
 }
