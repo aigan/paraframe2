@@ -63,20 +63,20 @@ sub addequal(@)
     if( $char !~ /\p{InISO_8859_1}/ and
 	$val =~ /^\p{InISO_8859_1}+$/ )
     {
-	$EQLATIN1{$key} = $val;
+        $EQLATIN1{$key} = $val;
     }
 
     if( $char !~ /\p{InASCII}/ and
 	$val =~ /^\p{InASCII}+$/ )
     {
-	$EQASCII{$key} = $val;
+        $EQASCII{$key} = $val;
     }
 
     # cp1250 cp1252 cp-1252 (for finding code with searches)
     if( $char !~ /\p{InCP1252}/ and
 	$val =~ /^\p{InCP1252}+$/ )
     {
-	$EQCP{$key} = $val;
+        $EQCP{$key} = $val;
     }
 }
 
