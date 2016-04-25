@@ -85,6 +85,11 @@ sub map_to_latin1
     return $EQLATIN1{$_[0]} ? $EQLATIN1{$_[0]} : '?';
 }
 
+sub map_to_ascii
+{
+    return $EQASCII{$_[0]} ? $EQASCII{$_[0]} : '?';
+}
+
 
 1;
 
@@ -100,13 +105,88 @@ L<Para::Frame>
 __DATA__
 
 # LATIN 1
-00C4 41+65 # A"    Ae
-00D6 4F+65 # O"    Oe
-00DC 55+65 # U"    Ue
-00E4 61+65 # a"    ae
-00F6 6F+65 # o"    oe
-00FC 75+65 # u"    ue
-00DF 73+73 # szet  ss
+00A0 20    # NBSP  SP
+00A1 21    # ¡     !
+00A2 63+65+6E+74 # ¢ cent
+00A3 70+6F+75+6E+64 # £ pound
+00A4 63+75+72+72+65+6E+63+79 # ¤ currency
+00A5 79+65+6E # ¥  yen
+00A6 7C    # ¦     |
+00A7 73+65+63+74+69+6F+6E # § section
+00AA 61    # ª     a
+00AC 2D    # ¬     -
+00AD 2D    # SHY   -
+00B1 2B+2F+2D # ±  +/-
+00B4 27    # ´     '
+00B5 6D+69+63+72+6F # µ micro
+00B6 70+61+72+61+67+72+61+70+68 # ¶ paragraph
+00B8 2C    # ¸     ,
+00BA 6F    # º     o
+00C0 41    # À     A
+00C1 41    # Á     A
+00C2 41    # Â     A
+00C3 41    # Ã     A
+00C4 41    # Ä     A
+00C5 41    # Å     A
+00C6 41+45 # Æ     AE
+00C7 43    # Ç     C
+00C8 45    # È     E
+00C9 45    # É     E
+00CA 45    # Ê     E
+00CB 45    # Ë     E
+00CC 49    # Ì     I
+00CD 49    # Í     I
+00CE 49    # Î     I
+00CF 49    # Ï     I
+00D0 44    # Ð     D
+00D1 4E    # Ñ     N
+00D2 4F    # Ò     O
+00D3 4F    # Ó     O
+00D4 4F    # Ô     O
+00D5 4F    # Õ     O
+00D6 4F    # Ö     O
+00D7 2A    # ×     *
+00D8 4F    # Ø     O
+00D9 55    # Ù     U
+00DA 55    # Ú     U
+00DB 55    # Û     U
+00DC 55    # Ü     U
+00DD 59    # Ý     Y
+00DE 50    # Þ     P
+00DF 73+73 # ß     ss
+00E0 61    # à     a
+00E1 61    # á     a
+00E2 61    # â     a
+00E3 61    # ã     a
+00E4 61    # ä     a
+00E5 61    # å     a
+00E6 61+65 # æ     ae
+00E7 63    # ç     c
+00E8 65    # è     e
+00E9 65    # é     e
+00EA 65    # ê     e
+00EB 65    # ë     e
+00EC 69    # ì     i
+00ED 69    # í     i
+00EE 69    # î     i
+00EF 69    # ï     i
+00F0 64    # ð     d
+00F1 6E    # ñ     n
+00F2 6F    # ò     o
+00F3 6F    # ó     o
+00F4 6F    # ô     o
+00F5 6F    # õ     o
+00F6 6F    # ö     o
+00F7 2F    # ÷     /
+00F8 6F    # ø     o
+00F9 75    # ù     u
+00FA 75    # ú     u
+00FB 75    # û     u
+00FC 75    # ü     u
+00FD 79    # ý     y
+00FE 70    # þ     p
+00FF 79    # ÿ     y
+
 
 # CYRILLIC
 0410 41    # A     A

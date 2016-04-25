@@ -2582,6 +2582,7 @@ sub suggest_words
     foreach( @words_raw )
     {
         chomp;
+        utf8::upgrade($_);
         push @words, lc $_;
     }
 
