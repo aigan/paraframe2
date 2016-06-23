@@ -2401,10 +2401,13 @@ sub send_code
                 throw 'cancel', "REQ is cancelled";
             }
 
-            my $oreq = $req->original;
-            if ( $oreq and $oreq->cancelled )
+            if( $req->is_from_client )
             {
-                throw 'cancel', "Original REQ is cancelled";
+                my $oreq = $req->original;
+                if ( $oreq and $oreq->cancelled )
+                {
+                    throw 'cancel', "Original REQ is cancelled";
+                }
             }
         }
 
@@ -3316,7 +3319,7 @@ sub note
     debug(0, $note);
 
     my $creq = $req->original || $req; # client req
-    if ( $creq->is_from_client )
+    if ( $creq->is_from_client and $creq->client->connected )
     {
         $note =~ s/\n/\\n/g;
         utf8::encode($note);

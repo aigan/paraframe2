@@ -414,7 +414,7 @@ sub main_loop
                     my $job = shift @{$req->{'jobs'}};
                     my( $cmd, @args ) = @$job;
                     switch_req( $req );
-                    debug(2, sprintf "Found a job %s(%s) in %d", $cmd, join(', ', map {defined $_ ? $_ : '<undef>'} @args ), $req->{reqnum});
+#                    debug(2, sprintf "Found a job %s(%s) in %d", $cmd, join(', ', map {defined $_ ? $_ : '<undef>'} @args ), $req->{reqnum}); ## HEAVY
                     $req->$cmd( @args );
 #		    }
                 }
