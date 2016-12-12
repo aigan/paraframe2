@@ -5,7 +5,7 @@ package Para::Frame::Request::Response;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2014 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2016 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -767,7 +767,7 @@ sub send_output
         {
             $req->cookies->add_to_header;
             $resp->send_headers;
-            $result = $req->get_cmd_val( 'HEADER' );
+            $result = $req->get_cmd_val( 'HEADER' ) || '';
         }
 
         if ( $result eq 'LOADPAGE' )
