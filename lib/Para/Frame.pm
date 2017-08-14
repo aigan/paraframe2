@@ -3024,7 +3024,7 @@ sub configure
 	$ENV{PATH} = "/usr/bin:/bin";
 
 	# Init locale
-	$CFG->{'locale'} ||= "sv_SE";
+	$CFG->{'locale'} ||= "sv_SE.UTF8";
 	setlocale(LC_ALL, $CFG->{'locale'});
 	setlocale(LC_NUMERIC, "C");
 

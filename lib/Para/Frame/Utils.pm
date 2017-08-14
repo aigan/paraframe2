@@ -21,7 +21,7 @@ Para::Frame::Utils - Utility functions for ParaFrame and applications
 use 5.012;
 no if $] >= 5.018, warnings => "experimental";
 use locale;
-use utf8;                       # (not) Using 'Ã' in deunicode()
+#use utf8;                       # (not) Using 'Ã' in deunicode()
 
 use Encode;                     # encode decode
 use Carp qw(carp croak cluck confess shortmess longmess );
