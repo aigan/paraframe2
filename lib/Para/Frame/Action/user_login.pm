@@ -5,15 +5,14 @@ package Para::Frame::Action::user_login;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2016 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2017 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
 #=============================================================================
 
-use 5.010;
-use strict;
+use 5.012;
 use warnings;
 
 use Digest::MD5  qw(md5_hex);

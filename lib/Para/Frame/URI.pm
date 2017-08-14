@@ -5,7 +5,7 @@ package Para::Frame::URI;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2005-2015 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2005-2017 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -18,8 +18,7 @@ Para::Frame::URI - Represent an URI
 
 =cut
 
-use 5.010;
-use strict;
+use 5.012;
 use warnings;
 use overload ('""'     => sub { $_[0]->{'value'}->as_string },
               '=='     => sub { overload::StrVal($_[0]) CORE::eq

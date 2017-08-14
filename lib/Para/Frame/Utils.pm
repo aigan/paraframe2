@@ -5,7 +5,7 @@ package Para::Frame::Utils;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2016 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2017 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -18,7 +18,7 @@ Para::Frame::Utils - Utility functions for ParaFrame and applications
 
 =cut
 
-use 5.014;
+use 5.012;
 no if $] >= 5.018, warnings => "experimental";
 use locale;
 use utf8;                       # (not) Using 'Ã' in deunicode()

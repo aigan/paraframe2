@@ -5,7 +5,7 @@ package Para::Frame::Unicode;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2007-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2007-2017 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -18,8 +18,7 @@ Para::Frame::Unicode - Handling conversions
 
 =cut
 
-use 5.010;
-use strict;
+use 5.012;
 use warnings;
 use utf8; # Used in DATA part
 

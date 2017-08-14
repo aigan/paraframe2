@@ -5,7 +5,7 @@ package Para::Frame::File;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2015 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2017 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -27,8 +27,7 @@ TODO: Separate out sysfile from sitefile.
 
 =cut
 
-use 5.010;
-use strict;
+use 5.012;
 use warnings;
 use utf8;                       # Ã not used in file
 

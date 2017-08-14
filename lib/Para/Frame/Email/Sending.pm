@@ -5,7 +5,7 @@ package Para::Frame::Email::Sending;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2010 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2017 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -18,14 +18,12 @@ Para::Frame::Email::Sending - For sending emails
 
 =cut
 
-use 5.010;
-use strict;
+use 5.012;
 use warnings;
 
 use Carp;
 use locale;
 use IO::File;
-use vars qw( $VERSION );
 use Mail::Address;
 use MIME::Lite;
 use Net::DNS;

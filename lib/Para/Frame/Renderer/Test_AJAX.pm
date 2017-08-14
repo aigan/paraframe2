@@ -5,13 +5,15 @@ package Para::Frame::Renderer::Test_AJAX;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2015 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2015-2017 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
 #
 #=============================================================================
 
+use 5.012;
+use warnings;
 
 use base 'Para::Frame::Renderer::Custom';
 use Test::More;

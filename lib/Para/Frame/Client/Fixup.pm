@@ -1,7 +1,18 @@
 package Para::Frame::Client::Fixup;
+#=============================================================================
+#
+# AUTHOR
+#   Jonas Liljegren   <jonas@paranormal.se>
+#
+# COPYRIGHT
+#   Copyright (C) 2017 Jonas Liljegren.  All Rights Reserved.
+#
+#   This module is free software; you can redistribute it and/or
+#   modify it under the same terms as Perl itself.
+#
+#=============================================================================
 
-use 5.010;
-use strict;
+use 5.012;
 use warnings FATAL => qw(all);
 
 use Apache2::Const -compile => qw(DIR_MAGIC_TYPE OK DECLINED);

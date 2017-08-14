@@ -5,7 +5,7 @@ package Para::Frame::Code::Class;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2017 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -18,8 +18,7 @@ Para::Frame::Code::Class - Represents a perl class
 
 =cut
 
-use 5.010;
-use strict;
+use 5.012;
 use warnings;
 
 use Carp qw( croak confess cluck );

@@ -5,7 +5,7 @@ package Para::Frame::L10N::en;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2009 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2017 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -22,8 +22,7 @@ Using Locale::Maketext
 
 =cut
 
-use 5.010;
-use strict;
+use 5.012;
 use warnings;
 
 use Para::Frame::Reload;

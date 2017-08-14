@@ -1,11 +1,11 @@
-package Para::Frame;
+package Para::Frame 2.05;
 #=============================================================================
 #
 # AUTHOR
 #		Jonas Liljegren		<jonas@paranormal.se>
 #
 # COPYRIGHT
-#		Copyright (C) 2004-2016 Jonas Liljegren.	All Rights Reserved.
+#		Copyright (C) 2004-2017 Jonas Liljegren.	All Rights Reserved.
 #
 #		This module is free software; you can redistribute it and/or
 #		modify it under the same terms as Perl itself.
@@ -18,8 +18,7 @@ Para::Frame - Web application framework
 
 =cut
 
-use 5.010;
-use strict;
+use 5.012;
 use warnings;
 
 use IO::Socket 1.18;
@@ -38,9 +37,6 @@ use File::Basename;							# dirname
 #use FreezeThaw qw( thaw );
 use Storable qw( thaw );
 use Number::Format;
-
-our $VERSION = "2.04";					# Paraframe version
-
 
 use Para::Frame::Utils qw( throw catch run_error_hooks debug create_file chmod_file fqdn datadump client_send create_dir client_str );
 #use Para::Frame::Template::Stash::CheckUTF8;
@@ -3207,7 +3203,7 @@ sub configure
 	Para::Frame::Email::Address->on_configure;
 
 	# Making the version availible
-	$CFG->{'version'} = $VERSION;
+	$CFG->{'version'} = $Para::Frame::VERSION;
 }
 
 

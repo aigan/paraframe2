@@ -5,7 +5,7 @@ package Para::Frame::Worker;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2008-2015 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2008-2017 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -18,8 +18,7 @@ Para::Frame::Worker - For worker childs
 
 =cut
 
-use 5.010;
-use strict;
+use 5.012;
 use warnings;
 
 use FreezeThaw;
