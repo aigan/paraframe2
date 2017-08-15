@@ -28,7 +28,7 @@ use Digest::MD5 qw( md5_base64 );
 use Para::Frame::Reload;
 
 use Para::Frame::Utils qw( debug throw );
-use Para::Frame::Request;
+#use Para::Frame::Request;
 use Para::Frame::Child::Result;
 
 our $SERID = 1;

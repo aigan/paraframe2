@@ -22,7 +22,7 @@ use 5.012;
 use warnings;
 use strict;
 
-use CGI qw( -compile -utf8 );
+use CGI qw( -utf8 );
 use CGI::Cookie;
 use FreezeThaw;                 ####### LEGACY
 use Storable;                   # qw( thaw );

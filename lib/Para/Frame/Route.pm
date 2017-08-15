@@ -26,7 +26,7 @@ use Carp qw( cluck confess );
 
 use Para::Frame;
 use Para::Frame::Reload;
-use Para::Frame::Request;
+#use Para::Frame::Request;
 use Para::Frame::URI;
 use Para::Frame::Utils qw( throw uri debug store_params datadump );
 use Para::Frame::List;
