@@ -84,7 +84,7 @@ our $latin1_as_utf8 = qr/[\xC2\xC3][\x80-\xBF]/;
 # this info comes from page 78 of "The Unicode Standard 4.0"
 # published by the Unicode Consortium
 our $valid_utf8_regexp = qr/
-                               [\x{00}-\x{7f}]
+														 [\x{00}-\x{7f}]
                            | [\x{c2}-\x{df}][\x{80}-\x{bf}]
                            |         \x{e0} [\x{a0}-\x{bf}][\x{80}-\x{bf}]
                            | [\x{e1}-\x{ec}][\x{80}-\x{bf}][\x{80}-\x{bf}]
@@ -110,13 +110,13 @@ comparsion
 
 sub in ($@)
 {
-    my( $target ) = shift;
+	my( $target ) = shift;
 
-    for ( my $i=0; $i <= $#_; $i++ )
-    {
-        return 1 if $target eq $_[$i];
-    }
-    return 0;
+	for ( my $i=0; $i <= $#_; $i++ )
+	{
+		return 1 if $target eq $_[$i];
+	}
+	return 0;
 }
 
 
@@ -137,32 +137,32 @@ whitespace.
 
 sub trim
 {
-    my $ref = shift;
+	my $ref = shift;
 
-    if ( UNIVERSAL::can $ref, 'as_string' )
-    {
-        $ref = $ref->as_string;
-    }
+	if ( UNIVERSAL::can $ref, 'as_string' )
+	{
+		$ref = $ref->as_string;
+	}
 
-    if ( ref $ref )
-    {
+	if ( ref $ref )
+	{
 
-        confess "Expecting scalar ref ($ref) ".datadump($ref,1)
-          unless ref $ref eq 'SCALAR';
-        return undef unless defined $$ref;
-        $$ref =~ s/( ^ \s+ | \s+ $ )//gx;
-        $$ref =~ s/\s*\r?\n\s*/\n/g;
-        $$ref =~ s/\s\s+/ /g;
-        return $$ref;
-    }
-    else
-    {
-        return undef unless defined $ref;
-        $ref =~ s/( ^ \s+ | \s+ $ )//gx;
-        $ref =~ s/\s*\r?\n\s*/\n/g;
-        $ref =~ s/\s\s+/ /g;
-        return $ref;
-    }
+		confess "Expecting scalar ref ($ref) ".datadump($ref,1)
+			unless ref $ref eq 'SCALAR';
+		return undef unless defined $$ref;
+		$$ref =~ s/( ^ \s+ | \s+ $ )//gx;
+		$$ref =~ s/\s*\r?\n\s*/\n/g;
+		$$ref =~ s/\s\s+/ /g;
+		return $$ref;
+	}
+	else
+	{
+		return undef unless defined $ref;
+		$ref =~ s/( ^ \s+ | \s+ $ )//gx;
+		$ref =~ s/\s*\r?\n\s*/\n/g;
+		$ref =~ s/\s\s+/ /g;
+		return $ref;
+	}
 }
 
 
@@ -178,63 +178,63 @@ Creates and returns an excerpt
 
 sub excerpt
 {
-    my( $textref, $limit, $min, $with_point ) = @_;
+	my( $textref, $limit, $min, $with_point ) = @_;
 
-    my $text = $$textref;
+	my $text = $$textref;
 
-    $limit ||= 150;
-    $min   ||= int($limit/3);
+	$limit ||= 150;
+	$min   ||= int($limit/3);
 
-    my $point = $with_point ? '.' : '';
+	my $point = $with_point ? '.' : '';
 
-    $text =~ s/^\s|\s$//sg;
+	$text =~ s/^\s|\s$//sg;
 
 #    debug "Excerpt: $text";
 
-    if ( length($text) < $limit )
-    {
-        return $text;
-    }
+	if ( length($text) < $limit )
+	{
+		return $text;
+	}
 
-    if ( $text =~ /^(.*?)\n/ )
-    {
-        if ( length($1) > $min )
-        {
-            $text = $1;
-            if ( length($text) < $limit )
-            {
-                return $1;
-            }
-        }
-    }
+	if ( $text =~ /^(.*?)\n/ )
+	{
+		if ( length($1) > $min )
+		{
+			$text = $1;
+			if ( length($text) < $limit )
+			{
+				return $1;
+			}
+		}
+	}
 
-    my $textcent = $text;
-    while ( $textcent =~ s/(.*)\.\s.*/$1$point/s )
-    {
-        if ( length($textcent) > $min )
-        {
-            $text = $textcent;
-            if ( length($text) < $limit )
-            {
-                return $text;
-            }
-        }
-        else
-        {
-            last;
-        }
-    }
+	my $textcent = $text;
+	while ( $textcent =~ s/(.*)\.\s.*/$1$point/s )
+	{
+		if ( length($textcent) > $min )
+		{
+			$text = $textcent;
+			if ( length($text) < $limit )
+			{
+				return $text;
+			}
+		}
+		else
+		{
+			last;
+		}
+	}
 
 #    debug "Text now: $text";
 #    debug "Length: ".length($text);
-    if ( $text =~ /^(.{$min,$limit})[ \,]/s )
+	if ( $text =~ /^(.{$min,$limit})[ \,]/s )
 #    if( $text =~ /^(.{55,})/ )
-    {
+	{
 #	debug "Found a cut";
-        return $1.'…';
-    }
+		return $1.'…';
+	}
 
-    return substr($text, 0, $limit).'…';
+	return substr($text, 0, $limit).'…';
 }
 
 
@@ -255,25 +255,25 @@ Returns: The escaped string
 
 sub escape_js
 {
-    local $_ = $_[0];
+	local $_ = $_[0];
 
 #    debug( 1, "Translating string");
 #    debug( 1, "  $_");
 
-    s/\\/\\/g;                  # Backslash
-    s/\x08/\\b/g;               # BS
-    s/\f/\\f/g;                 # FF
-    s/\n/\\n/g;                 # LF
-    s/\x00/\\0/g;               # NUL <- CHECKME
-    s/\r/\\r/g;                 # CR
-    s/\t/\\t/g;                 # HT
-    s/\x0b/\\v/g;               # VT
-    s/'/\\'/g;                  # Single Quote
-    s/"/\\"/g;                  # Double Quote
-    s/(\P{IsASCII})/sprintf '\\u%.4x',ord($1)/ge;
+	s/\\/\\/g;										# Backslash
+	s/\x08/\\b/g;									# BS
+	s/\f/\\f/g;										# FF
+	s/\n/\\n/g;										# LF
+	s/\x00/\\0/g;									# NUL <- CHECKME
+	s/\r/\\r/g;										# CR
+	s/\t/\\t/g;										# HT
+	s/\x0b/\\v/g;									# VT
+	s/'/\\'/g;										# Single Quote
+	s/"/\\"/g;										# Double Quote
+	s/(\P{IsASCII})/sprintf '\\u%.4x',ord($1)/ge;
 #    debug( 1, "  $_");
 
-    return $_;
+	return $_;
 }
 
 
@@ -295,48 +295,48 @@ Returns a string meant as a password
 
 sub make_passwd
 {
-    my( $length, $type ) = @_;
-    my $password = '';
+	my( $length, $type ) = @_;
+	my $password = '';
 
-    $length ||= 8;
-    $type ||= 'easy';
+	$length ||= 8;
+	$type ||= 'easy';
 
-    # srand called in Para::Frame::Request::create_fork()
-    # Needed, since srand is called just in the parent process
+	# srand called in Para::Frame::Request::create_fork()
+	# Needed, since srand is called just in the parent process
 
-    given($type)
-    {
-        when('easy')
-        {
-            my @v = split '', "aeiouy";
-            my @c = split '', "bdfghjklmnprstv";
+	given($type)
+	{
+		when('easy')
+		{
+			my @v = split '', "aeiouy";
+			my @c = split '', "bdfghjklmnprstv";
 
-            $length = int($length/2);
+			$length = int($length/2);
 
-            for ( 1 .. $length )
-            {
-                $password .= $c[rand $#c];
-                $password .= $v[rand $#v];
-            }
-        }
+			for ( 1 .. $length )
+			{
+				$password .= $c[rand $#c];
+				$password .= $v[rand $#v];
+			}
+		}
 
-        when('hard')
-        {
-            my $possible = 'abcdefghijkmnpqrstuvwxyz23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
-            while ( length($password) < $length )
-            {
-                $password .= substr($possible, (int(rand(length($possible)))), 1);
-            }
-        }
+		when('hard')
+		{
+			my $possible = 'abcdefghijkmnpqrstuvwxyz23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+			while ( length($password) < $length )
+			{
+				$password .= substr($possible, (int(rand(length($possible)))), 1);
+			}
+		}
 
-        default
-        {
-            croak "Type $type not recognized";
-        }
-    }
+		default
+		{
+			croak "Type $type not recognized";
+		}
+	}
 
 
-    return $password;
+	return $password;
 }
 
 
@@ -353,9 +353,9 @@ Creates a integer number $x: 1 <= $x < $max
 
 sub random
 {
-    my( $top ) = @_;
+	my( $top ) = @_;
 
-    return int rand( $top ) + 1;
+	return int rand( $top ) + 1;
 }
 
 
@@ -387,41 +387,41 @@ Supported args are:
 
 sub throw
 {
-    my( $error, $info, $output ) = @_;
-    local $" = ', ';
+	my( $error, $info, $output ) = @_;
+	local $" = ', ';
 
 #    warn "Got thrown $error, $info";
-    # die! die! die!
-    if ( UNIVERSAL::isa($error, 'Para::Frame::Result::Part'))
-    {
-        die $error;
-    }
-    elsif ( UNIVERSAL::isa($error, 'Template::Exception') )
-    {
-        die $error;
-    }
-    elsif (defined $info)
-    {
-        if ( ref $info )
-        {
-            my $arg = $info;
-            $info = $arg->{'info'};
-            if ( $arg->{'output'} )
-            {
-                $output = $arg->{'output'};
-            }
-        }
+	# die! die! die!
+	if ( UNIVERSAL::isa($error, 'Para::Frame::Result::Part'))
+	{
+		die $error;
+	}
+	elsif ( UNIVERSAL::isa($error, 'Template::Exception') )
+	{
+		die $error;
+	}
+	elsif (defined $info)
+	{
+		if ( ref $info )
+		{
+			my $arg = $info;
+			$info = $arg->{'info'};
+			if ( $arg->{'output'} )
+			{
+				$output = $arg->{'output'};
+			}
+		}
 
 #	confess; ### DEBUG
 #	warn "Creating an $error exception";
-        die Template::Exception->new($error, $info, $output);
-    }
-    else
-    {
-        $error ||= 'error';
-        die Template::Exception->new('undef', $error, $output);
-    }
-    # not reached
+		die Template::Exception->new($error, $info, $output);
+	}
+	else
+	{
+		$error ||= 'error';
+		die Template::Exception->new('undef', $error, $output);
+	}
+	# not reached
 }
 
 
@@ -492,55 +492,55 @@ matches.
 
 sub catch
 {
-    my( $error, $output ) = @_;
+	my( $error, $output ) = @_;
 
-    return undef unless $error;
-    if ( UNIVERSAL::isa($error, 'Template::Exception') )
-    {
-        $error->text($output) if $output;
-        return $error;
-    }
+	return undef unless $error;
+	if ( UNIVERSAL::isa($error, 'Template::Exception') )
+	{
+		$error->text($output) if $output;
+		return $error;
+	}
 
-    my $tests;
+	my $tests;
 
-    if ( ref $error eq 'ARRAY' ) # not object
-    {
-        # Se if error object matches any of these exceptions
-        # Asume error lies in $@
-        $tests = $error;
-        $error = $@;
-    }
+	if ( ref $error eq 'ARRAY' )	# not object
+	{
+		# Se if error object matches any of these exceptions
+		# Asume error lies in $@
+		$tests = $error;
+		$error = $@;
+	}
 
-    return undef unless $error;
+	return undef unless $error;
 
-    unless( UNIVERSAL::isa($error, 'Para::Frame::Result::Part') or
-            UNIVERSAL::isa($error, 'Template::Exception') )
-    {
-        my $type = "";          # Avoid undef warnings but be false
-        my $info = $error;
+	unless( UNIVERSAL::isa($error, 'Para::Frame::Result::Part') or
+					UNIVERSAL::isa($error, 'Template::Exception') )
+	{
+		my $type = "";							# Avoid undef warnings but be false
+		my $info = $error;
 
-        if ( ref $error eq 'ARRAY' )
-        {
-            $type = $error->[0];
-            $info = $error->[1];
-        }
+		if ( ref $error eq 'ARRAY' )
+		{
+			$type = $error->[0];
+			$info = $error->[1];
+		}
 
-        $error = Template::Exception->new( $type, $info, $output );
-    }
+		$error = Template::Exception->new( $type, $info, $output );
+	}
 
-    if ( $tests )
-    {
-        foreach my $test ( @$tests )
-        {
-            if ( $error->type =~ /^$test(\.|$)/ )
-            {
-                return $error;
-            }
-        }
-        die $error;
-    }
+	if ( $tests )
+	{
+		foreach my $test ( @$tests )
+		{
+			if ( $error->type =~ /^$test(\.|$)/ )
+			{
+				return $error;
+			}
+		}
+		die $error;
+	}
 
-    return $error;
+	return $error;
 }
 
 
@@ -552,22 +552,22 @@ sub catch
 
 sub run_error_hooks
 {
-    confess "error hook expected an exception" unless $_[0];
-    my( $type, $info ) = $_[0]->type_info;
-    my $text = $_[0]->text;
-    my $textref = \ $text;
+	confess "error hook expected an exception" unless $_[0];
+	my( $type, $info ) = $_[0]->type_info;
+	my $text = $_[0]->text;
+	my $textref = \ $text;
 
-    Para::Frame->run_hook($Para::Frame::REQ, 'on_error_detect', \$type, \$info, $textref );
+	Para::Frame->run_hook($Para::Frame::REQ, 'on_error_detect', \$type, \$info, $textref );
 
-    $type ||= 'action';
+	$type ||= 'action';
 
-    # Modify by direct (private) access
-    $_[0]->[0] = $type;
-    $_[0]->[1] = $info;
-    $_[0]->[2] = $textref;
+	# Modify by direct (private) access
+	$_[0]->[0] = $type;
+	$_[0]->[1] = $info;
+	$_[0]->[2] = $textref;
 
 
-    return $_[0];
+	return $_[0];
 }
 
 
@@ -589,43 +589,43 @@ Passes C<%params> to L<create_dir> and L<chmod_dir>.
 
 sub create_dir
 {
-    my( $dir, $params ) = @_;
+	my( $dir, $params ) = @_;
 
-    confess "Dir was a ref" if ref $dir;
+	confess "Dir was a ref" if ref $dir;
 
-    $params ||= {};
+	$params ||= {};
 #    warn "Gor dir: '$dir'\n";
-    if ( -e $dir )
-    {
-        $dir = abs_path($dir);
-    }
+	if ( -e $dir )
+	{
+		$dir = abs_path($dir);
+	}
 
-    confess "Dir is now '$dir'" unless length $dir;
+	confess "Dir is now '$dir'" unless length $dir;
 
 #    warn "Creating dir '$dir'\n";
 
-    my $parent = dirname $dir;
-    unless( -d $parent )
-    {
-        if ( -e $parent )
-        {
-            die "$parent is not a directory";
-        }
-        create_dir( $parent, $params );
-    }
-    if ( -d $dir )
-    {
-        chmod_dir( $dir, $params );
-    }
-    else
-    {
-        if ( -e $dir )
-        {
-            confess "$dir is not a directory";
-        }
-        mkdir $dir, 0700 or die $!;
-        chmod_dir( $dir, $params );
-    }
+	my $parent = dirname $dir;
+	unless( -d $parent )
+	{
+		if ( -e $parent )
+		{
+			die "$parent is not a directory";
+		}
+		create_dir( $parent, $params );
+	}
+	if ( -d $dir )
+	{
+		chmod_dir( $dir, $params );
+	}
+	else
+	{
+		if ( -e $dir )
+		{
+			confess "$dir is not a directory";
+		}
+		mkdir $dir, 0700 or die $!;
+		chmod_dir( $dir, $params );
+	}
 }
 
 
@@ -644,19 +644,19 @@ All created files is chmod and chgrp to ritframe standard.
 
 sub create_file
 {
-    my( $file, $content, $params ) = @_;
+	my( $file, $content, $params ) = @_;
 
-    confess "File was a ref" if ref $file;
+	confess "File was a ref" if ref $file;
 
-    $params ||= {};
-    my $parent = dirname $file;
-    create_dir($parent, $params);
+	$params ||= {};
+	my $parent = dirname $file;
+	create_dir($parent, $params);
 
-    open( FILE, ">", $file) or die "Could not create file $file: $!\n";
-    print FILE $content;
-    close FILE;
+	open( FILE, ">", $file) or die "Could not create file $file: $!\n";
+	print FILE $content;
+	close FILE;
 
-    chmod_file( $file, $params );
+	chmod_file( $file, $params );
 }
 
 
@@ -674,33 +674,33 @@ Passes C<%params> to L</chmod_file>.
 
 sub chmod_tree
 {
-    my( $dir, $params, $skip_re, $skip_h ) = @_;
+	my( $dir, $params, $skip_re, $skip_h ) = @_;
 
-    confess "Dir was a ref" if ref $dir;
+	confess "Dir was a ref" if ref $dir;
 
-    $params ||= {};
+	$params ||= {};
 #    warn "Chmod tree $dir\n"; ### DEBUG
-    $dir = abs_path($dir);
-    $skip_h ||= {};
-    return if $skip_h->{$dir} ++;
+	$dir = abs_path($dir);
+	$skip_h ||= {};
+	return if $skip_h->{$dir} ++;
 
-    chmod_dir( $dir, $params );
+	chmod_dir( $dir, $params );
 
-    my $d = new IO::Dir $dir;
-    foreach my $entry (  File::Spec->no_upwards( $d->read ) )
-    {
-        my $file = "$dir/$entry";
+	my $d = new IO::Dir $dir;
+	foreach my $entry (  File::Spec->no_upwards( $d->read ) )
+	{
+		my $file = "$dir/$entry";
 
-        if ( -d $file )
-        {
-            chmod_tree( $file, $params, $skip_re, $skip_h );
-        }
-        else
-        {
-            chmod_file( $file, $params );
-        }
-    }
-    $d->close;
+		if ( -d $file )
+		{
+			chmod_tree( $file, $params, $skip_re, $skip_h );
+		}
+		else
+		{
+			chmod_file( $file, $params );
+		}
+	}
+	$d->close;
 }
 
 
@@ -738,181 +738,181 @@ and a suggested solution.
 
 sub chmod_file
 {
-    my( $file, $mode, $params ) = @_;
+	my( $file, $mode, $params ) = @_;
 
-    confess "File was a ref" if ref $file;
+	confess "File was a ref" if ref $file;
 
-    $params ||= {};
-    confess "Faulty params $params" unless ref $params;
+	$params ||= {};
+	confess "Faulty params $params" unless ref $params;
 
-    my $orig_umask = umask;
+	my $orig_umask = umask;
 
-    if ( ref $mode )
-    {
-        $params = $mode;
-        $mode = undef;
-    }
+	if ( ref $mode )
+	{
+		$params = $mode;
+		$mode = undef;
+	}
 
-    my $new_umask = $params->{'umask'};
-    my $umask = defined $new_umask ? $new_umask : $orig_umask;
+	my $new_umask = $params->{'umask'};
+	my $umask = defined $new_umask ? $new_umask : $orig_umask;
 
-    if ( $mode )
-    {
-        confess "Wrong mode param" unless $mode =~ /^(\d+)$/;
-    }
-    else
-    {
-        if ( -d $file )
-        {
-            $mode = $params->{'dirmode'} || $params->{'mode'} || 02777;
-        }
-        else
-        {
-            $mode = $params->{'filemode'} || $params->{'mode'} || 0666;
-        }
-    }
+	if ( $mode )
+	{
+		confess "Wrong mode param" unless $mode =~ /^(\d+)$/;
+	}
+	else
+	{
+		if ( -d $file )
+		{
+			$mode = $params->{'dirmode'} || $params->{'mode'} || 02777;
+		}
+		else
+		{
+			$mode = $params->{'filemode'} || $params->{'mode'} || 0666;
+		}
+	}
 
-    confess unless $file;
+	confess unless $file;
 #    warn "Fix file $file\n"; ### DEBUG
 
-    my $fstat = stat($file) or confess "Could not stat $file: $!";
-    # file user  obj
-    my $fu = getpwuid( $fstat->uid ) or die "Could not get owner of $file";
-    # file group obj
-    my $fg = getgrgid( $fstat->gid ) or die "Could not get group of $file";
-    # run  user  obj
-    my $ru = getpwuid( $> )          or die "Could not get process user";
-    my $fun = $fu->name;        # file user  name
-    my $fgn = $fg->name;        # file group name
-    my $run = $ru->name;        # run  user  name
-    my $pfg = getgrnam( $Para::Frame::CFG->{'paraframe_group'} );
-    my $pfgn = $pfg->name;
-    my $fmode = $fstat->mode & 07777; # mask of filetype
+	my $fstat = stat($file) or confess "Could not stat $file: $!";
+	# file user  obj
+	my $fu = getpwuid( $fstat->uid ) or die "Could not get owner of $file";
+	# file group obj
+	my $fg = getgrgid( $fstat->gid ) or die "Could not get group of $file";
+	# run  user  obj
+	my $ru = getpwuid( $> )          or die "Could not get process user";
+	my $fun = $fu->name;					# file user  name
+	my $fgn = $fg->name;					# file group name
+	my $run = $ru->name;					# run  user  name
+	my $pfg = getgrnam( $Para::Frame::CFG->{'paraframe_group'} );
+	my $pfgn = $pfg->name;
+	my $fmode = $fstat->mode & 07777; # mask of filetype
 
-    die "file '$file' not found" unless -e $file;
+	die "file '$file' not found" unless -e $file;
 
-    # Apply umask on $mode
-    #
-    $mode = $mode & ~ $umask;
+	# Apply umask on $mode
+	#
+	$mode = $mode & ~ $umask;
 
-    if ( debug() > 4 )
-    {
-        debug(sprintf     "orig umask is 0%.4o", $orig_umask);
-        if ( defined $new_umask )
-        {
-            debug(sprintf "umask set to  0%.4o", $new_umask);
-        }
-        debug(sprintf     "mode set to   0%.4o", $mode);
-    }
+	if ( debug() > 4 )
+	{
+		debug(sprintf     "orig umask is 0%.4o", $orig_umask);
+		if ( defined $new_umask )
+		{
+			debug(sprintf "umask set to  0%.4o", $new_umask);
+		}
+		debug(sprintf     "mode set to   0%.4o", $mode);
+	}
 
-    if ( $fstat->gid == $pfg->gid and
-         not $fmode ^ $mode & $mode )
-    {
-        return;                 # No change needed
-    }
+	if ( $fstat->gid == $pfg->gid and
+			 not $fmode ^ $mode & $mode )
+	{
+		return;											# No change needed
+	}
 
-    # Yes. The sub &report_error is defined here. It's meant to only
-    # be used by chmod_file, and will inherit all the variables
-    # initiated above.
+	# Yes. The sub &report_error is defined here. It's meant to only
+	# be used by chmod_file, and will inherit all the variables
+	# initiated above.
 
-    my $report_error = sub
-    {
-	    my $msg = "File '$file' can not be modified\n";
-	    $msg .= "  $!\n\n";
-	    $msg .= "  The file is owned by $fun\n";
-	    $msg .= "  The file is in group $fgn\n";
-	    $msg .= sprintf("  The file has mode 0%.4o\n", $fmode);
-	    $msg .= "  \n";
-	    $msg .= "  You are running as user $run\n";
+	my $report_error = sub
+	{
+		my $msg = "File '$file' can not be modified\n";
+		$msg .= "  $!\n\n";
+		$msg .= "  The file is owned by $fun\n";
+		$msg .= "  The file is in group $fgn\n";
+		$msg .= sprintf("  The file has mode 0%.4o\n", $fmode);
+		$msg .= "  \n";
+		$msg .= "  You are running as user $run\n";
 
-	    if ( $> == 0 )
-	    {
-            $msg .= "  Do not run as root !!!\n";
-	    }
+		if ( $> == 0 )
+		{
+			$msg .= "  Do not run as root !!!\n";
+		}
 
-	    # $f_mem = file is member in paraframe group
-	    # $r_mem = user is member in paraframe group
-	    my( $f_mem, $r_mem );   # Is either member in $pfg?
-	    foreach my $gname ( @{ $pfg->members } )
-	    {
-            $f_mem ++ if $gname eq $fun;
-            $r_mem ++ if $gname eq $run;
-	    }
-	    $f_mem ++ if $fu->gid == $pfg->gid;
-	    $r_mem ++ if $ru->gid == $pfg->gid;
+		# $f_mem = file is member in paraframe group
+		# $r_mem = user is member in paraframe group
+		my( $f_mem, $r_mem );				# Is either member in $pfg?
+		foreach my $gname ( @{ $pfg->members } )
+		{
+			$f_mem ++ if $gname eq $fun;
+			$r_mem ++ if $gname eq $run;
+		}
+		$f_mem ++ if $fu->gid == $pfg->gid;
+		$r_mem ++ if $ru->gid == $pfg->gid;
 
-	    if ( $f_mem )
-	    {
+		if ( $f_mem )
+		{
 #		$msg .= "  $fun belongs to group $pfgn\n";
-	    }
-	    else
-	    {
-            $msg .= "  $fun do NOT belong to group $pfgn\n";
-	    }
+		}
+		else
+		{
+			$msg .= "  $fun do NOT belong to group $pfgn\n";
+		}
 
-	    if ( $r_mem )
-	    {
+		if ( $r_mem )
+		{
 #		$msg .= "  $run belongs to group $pfgn\n";
-	    }
-	    else
-	    {
-            $msg .= "  $run do NOT belong to group $pfgn\n";
-	    }
+		}
+		else
+		{
+			$msg .= "  $run do NOT belong to group $pfgn\n";
+		}
 
-	    if ( not $r_mem )
-	    {
-            $msg .= "  Run as $fun or add $run to group $pfgn\n";
-	    }
+		if ( not $r_mem )
+		{
+			$msg .= "  Run as $fun or add $run to group $pfgn\n";
+		}
 
-	    if ( $fgn ne $pfgn )
-	    {
-            $msg .= "  Change group of file to $pfgn. As root:\n";
-            $msg .= "  chgrp $pfgn $file\n";
-	    }
+		if ( $fgn ne $pfgn )
+		{
+			$msg .= "  Change group of file to $pfgn. As root:\n";
+			$msg .= "  chgrp $pfgn $file\n";
+		}
 
-	    if ( $fmode ^ $mode & $mode )
-	    {
-            $msg .= sprintf "  Change mode of file to 0%.4o.  As root:\n", $mode;
-            $msg .= sprintf "  chmod 0%.4o $file\n", $mode;
-	    }
+		if ( $fmode ^ $mode & $mode )
+		{
+			$msg .= sprintf "  Change mode of file to 0%.4o.  As root:\n", $mode;
+			$msg .= sprintf "  chmod 0%.4o $file\n", $mode;
+		}
 
-	    if ( $fgn ne $pfgn or $fmode ^ $mode & $mode )
-	    {
-            $msg .= "  Or if you want us to take care of if; as root:\n";
-            my $dir = $file;
-            $dir =~ s/\/[^\/]*$/\//;
-            $msg .= "  chown -R $run $dir\n";
-            $msg .= longmess;
-	    }
+		if ( $fgn ne $pfgn or $fmode ^ $mode & $mode )
+		{
+			$msg .= "  Or if you want us to take care of if; as root:\n";
+			my $dir = $file;
+			$dir =~ s/\/[^\/]*$/\//;
+			$msg .= "  chown -R $run $dir\n";
+			$msg .= longmess;
+		}
 
 
-	    die $msg . "\n";
-    };
+		die $msg . "\n";
+	};
 
-    &$report_error if $> == 0;  # Do not run as root
+	&$report_error if $> == 0;		# Do not run as root
 
-    unless( $fstat->gid == $pfg->gid )
-    {
-        unless( chown -1, $pfg->gid, $file )
-        {
-            debug(0,"Tried to change gid");
-            &$report_error;
-        }
-    }
+	unless( $fstat->gid == $pfg->gid )
+	{
+		unless( chown -1, $pfg->gid, $file )
+		{
+			debug(0,"Tried to change gid");
+			&$report_error;
+		}
+	}
 
-    if ( $fmode ^ $mode & $mode ) # Is some of the bits missing?
-    {
+	if ( $fmode ^ $mode & $mode ) # Is some of the bits missing?
+	{
 #    debug( sprintf "Tries to chmod file %s from 0%o to 0%o because we differ by %o", $file, $fmode,  $mode,($fmode ^ $mode & $mode));
 
-        umask $new_umask if defined $new_umask;
-        unless( chmod $mode, $file )
-        {
-            umask $orig_umask if defined $new_umask;
-            debug(0,"Tried to chmod file");
-            &$report_error;
-        }
-        umask $orig_umask if defined $new_umask;
-    }
+		umask $new_umask if defined $new_umask;
+		unless( chmod $mode, $file )
+		{
+			umask $orig_umask if defined $new_umask;
+			debug(0,"Tried to chmod file");
+			&$report_error;
+		}
+		umask $orig_umask if defined $new_umask;
+	}
 }
 
 
@@ -938,24 +938,24 @@ Calls L</chmod_file> with the given C<$dir> and C<%params>.
 
 sub chmod_dir
 {
-    my( $dir, $mode, $params ) = @_;
+	my( $dir, $mode, $params ) = @_;
 
-    confess "Dir was a ref" if ref $dir;
+	confess "Dir was a ref" if ref $dir;
 
-    $params ||= {};
-    $params ||= {};
-    if ( ref $mode )
-    {
-        $params = $mode;
-        $mode = undef;
-    }
-    else
-    {
-        $params->{'dirmode'} = $mode;
-    }
+	$params ||= {};
+	$params ||= {};
+	if ( ref $mode )
+	{
+		$params = $mode;
+		$mode = undef;
+	}
+	else
+	{
+		$params->{'dirmode'} = $mode;
+	}
 
-    return if $params->{'do_not_chmod_dir'};
-    chmod_file( $dir, $params );
+	return if $params->{'do_not_chmod_dir'};
+	chmod_file( $dir, $params );
 }
 
 
@@ -971,10 +971,10 @@ Returns the correspondoing praxis filename of the module.
 
 sub package_to_module
 {
-    my $package = shift or confess;
-    $package =~ s/::/\//g;
-    $package .= ".pm";
-    return $package;
+	my $package = shift or confess;
+	$package =~ s/::/\//g;
+	$package .= ".pm";
+	return $package;
 }
 
 
@@ -990,10 +990,10 @@ Returns the corresponding praxis package name for the filename.
 
 sub module_to_package
 {
-    my $module = shift;
-    $module =~ s/\//::/g;
-    $module =~ s/\.pm$//;
-    return $module;
+	my $module = shift;
+	$module =~ s/\//::/g;
+	$module =~ s/\.pm$//;
+	return $module;
 }
 
 
@@ -1012,17 +1012,17 @@ template.
 
 sub uri_path
 {
-    my( $template ) = @_;
+	my( $template ) = @_;
 
-    my $req = $Para::Frame::REQ;
-    my $page = $req->page;
+	my $req = $Para::Frame::REQ;
+	my $page = $req->page;
 
-    $template ||= $page->url_path;
-    unless( $template =~ /^\// )
-    {
-        $template = URI->new_abs($template, $page->url_path)->path;
-    }
-    return $template;
+	$template ||= $page->url_path;
+	unless( $template =~ /^\// )
+	{
+		$template = URI->new_abs($template, $page->url_path)->path;
+	}
+	return $template;
 }
 
 
@@ -1049,60 +1049,60 @@ C<$url> defaults to L<Para::Frame::Site/home>.
 
 sub uri
 {
-    my( $template, $attr ) = @_;
+	my( $template, $attr ) = @_;
 
 
-    ### TODO: Use Para::Frame::URI all the way
+	### TODO: Use Para::Frame::URI all the way
 
-    my $req = $Para::Frame::REQ;
+	my $req = $Para::Frame::REQ;
 
-    throw('compilation', shortmess "Too many args for uri")
-      if $attr and not ref $attr;
+	throw('compilation', shortmess "Too many args for uri")
+		if $attr and not ref $attr;
 
-    $template ||= $req->site->home_url_path;
+	$template ||= $req->site->home_url_path;
 
-    if ( $template !~ m(//) and
-         $template !~ m(^/) and
-         $template !~ m(:) )
-    {
+	if ( $template !~ m(//) and
+			 $template !~ m(^/) and
+			 $template !~ m(:) )
+	{
 #        debug("Relative link $template");
-        $template = $req->page->dir->url_path_slash.$template;
+		$template = $req->page->dir->url_path_slash.$template;
 #        debug ("              $template");
-    }
+	}
 
-    my $extra = "";
-    my @parts = ();
-    foreach my $key ( keys %$attr )
-    {
-        my $value = $attr->{$key};
-        if ( UNIVERSAL::isa($value, 'ARRAY') )
-        {
-            foreach my $val (@$value)
-            {
-                push @parts, sprintf("%s=%s", $key, CGI->escape($val));
-            }
-        }
-        else
-        {
-            push @parts, sprintf("%s=%s", $key, CGI->escape($value));
-        }
-    }
+	my $extra = "";
+	my @parts = ();
+	foreach my $key ( keys %$attr )
+	{
+		my $value = $attr->{$key};
+		if ( UNIVERSAL::isa($value, 'ARRAY') )
+		{
+			foreach my $val (@$value)
+			{
+				push @parts, sprintf("%s=%s", $key, CGI->escape($val));
+			}
+		}
+		else
+		{
+			push @parts, sprintf("%s=%s", $key, CGI->escape($value));
+		}
+	}
 
-    my $query = join '&', @parts;
-    if ( $query )
-    {
-        if ( $template =~ /\?/ )
-        {
-            $query = '&'.$query;
-        }
-        else
-        {
-            $query = '?'.$query;
-        }
-    }
+	my $query = join '&', @parts;
+	if ( $query )
+	{
+		if ( $template =~ /\?/ )
+		{
+			$query = '&'.$query;
+		}
+		else
+		{
+			$query = '?'.$query;
+		}
+	}
 
-    debug(4, "Returning URI $template$query");
-    return Para::Frame::URI->new($template.$query);
+	debug(4, "Returning URI $template$query");
+	return Para::Frame::URI->new($template.$query);
 #    return $template.$query;
 }
 
@@ -1136,35 +1136,35 @@ Example: C<dirsteps('/one/two/three/', '/one/two')> returns C<('/one/two/three/'
 
 sub dirsteps
 {
-    my( $path, $base ) = @_;
+	my( $path, $base ) = @_;
 
-    unless( $path =~ /^\// and $path =~ /\/$/ )
-    {
-        confess "Invalid path: '$path'\n";
-    }
+	unless( $path =~ /^\// and $path =~ /\/$/ )
+	{
+		confess "Invalid path: '$path'\n";
+	}
 
-    $base ||= '';
-    if ( $base =~ /\/$/ )
-    {
-        die "Invalid base '$base'\n";
-    }
+	$base ||= '';
+	if ( $base =~ /\/$/ )
+	{
+		die "Invalid base '$base'\n";
+	}
 
-    my @step = ();
+	my @step = ();
 
-    my $length = length( $base ) || 1;
+	my $length = length( $base ) || 1;
 
-    while ( length( $path ) > $length )
-    {
-        push @step, $path;
-        # May possibly be a path with '//' in it!
-        $path =~ s/[^\/]*\/$//;
-    }
+	while ( length( $path ) > $length )
+	{
+		push @step, $path;
+		# May possibly be a path with '//' in it!
+		$path =~ s/[^\/]*\/$//;
+	}
 
 #    debug("Returning dirsteps\n");
 #    debug(join "",map(" - $_\n",@step));
 #    debug(" with base $base\n");
 
-    return @step;
+	return @step;
 }
 
 
@@ -1176,55 +1176,55 @@ sub dirsteps
 
 sub compile
 {
-    my( $filename ) = @_;
+	my( $filename ) = @_;
 
-    my $mtime = 0;
+	my $mtime = 0;
 #    debug(0,"Compiling $filename");
 
-    unless ( defined $Para::Frame::Reload::COMPILED{$filename} )
-    {
-        $Para::Frame::Reload::COMPILED{$filename} = $^T;
-    }
+	unless ( defined $Para::Frame::Reload::COMPILED{$filename} )
+	{
+		$Para::Frame::Reload::COMPILED{$filename} = $^T;
+	}
 
-    if ( my $realfilename = $INC{ $filename } )
-    {
-        my $stat;
-        unless( $stat = stat($realfilename) )
-        {
-            confess "Can't locate $filename";
-        }
-        $mtime = $stat->mtime or die;
-    }
+	if ( my $realfilename = $INC{ $filename } )
+	{
+		my $stat;
+		unless( $stat = stat($realfilename) )
+		{
+			confess "Can't locate $filename";
+		}
+		$mtime = $stat->mtime or die;
+	}
 
-    if ( $mtime > $Para::Frame::Reload::COMPILED{$filename} )
-    {
-        debug(0,"New version of $filename detected !!!");
-        delete $INC{$filename};
-        $Para::Frame::Reload::COMPILED{$filename} = $mtime;
-    }
-    elsif( $INC{$filename} )
-    {
+	if ( $mtime > $Para::Frame::Reload::COMPILED{$filename} )
+	{
+		debug(0,"New version of $filename detected !!!");
+		delete $INC{$filename};
+		$Para::Frame::Reload::COMPILED{$filename} = $mtime;
+	}
+	elsif ( $INC{$filename} )
+	{
 #        debug(0, "  already compiled");
-        return 1; # All good. Already compiled
-    }
+		return 1;										# All good. Already compiled
+	}
 
 
-    # Is caled by Para::Frame::Request/run_action. Let caller handle errors
+	# Is caled by Para::Frame::Request/run_action. Let caller handle errors
 
-    my $res;
-    eval
-    {
-        $res = require $filename;
-    };
-    if ( $@ )
-    {
-        delete $INC{$filename};
-        ### Keep compilation time so we know when we should try again
-        throw( 'compilation', $@ );
-    }
+	my $res;
+	eval
+	{
+		$res = require $filename;
+	};
+	if ( $@ )
+	{
+		delete $INC{$filename};
+		### Keep compilation time so we know when we should try again
+		throw( 'compilation', $@ );
+	}
 
-    Para::Frame->run_hook(undef, 'on_reload', $filename);
-    return $res;
+	Para::Frame->run_hook(undef, 'on_reload', $filename);
+	return $res;
 }
 
 
@@ -1251,15 +1251,15 @@ HTTP_CLIENT_IP should be used rather than REMOTE_ADDR, if availible.
 
 sub passwd_crypt
 {
-    my( $passwd ) = @_;
+	my( $passwd ) = @_;
 
-    my $ip = $Para::Frame::REQ->client_ip;
-    $passwd or croak "Password missing";
+	my $ip = $Para::Frame::REQ->client_ip;
+	$passwd or croak "Password missing";
 
-    $ip =~ s/\.\d{1,3}$//;      # accept changing ip within c-network
+	$ip =~ s/\.\d{1,3}$//;				# accept changing ip within c-network
 
-    debug(4,"using REMOTE_ADDR $ip");
-    return md5_hex( $passwd, $ip );
+	debug(4,"using REMOTE_ADDR $ip");
+	return md5_hex( $passwd, $ip );
 }
 
 
@@ -1281,21 +1281,21 @@ returns: a string in Latin-1
 
 sub deunicode
 {
-    unless( $_[0] )
-    {
-        cluck "undef?";
-        return $_[0];           # Not needing deunicoding
-    }
+	unless( $_[0] )
+	{
+		cluck "undef?";
+		return $_[0];								# Not needing deunicoding
+	}
 
-    repair_utf8(\ $_[0]);
+	repair_utf8(\ $_[0]);
 
-    if ( ord(substr($_[0],0,1)) == 65279 ) # BOM
-    {
-        debug("Removing BOM");
-        $_[0] = substr($_[0],1);
-    }
+	if ( ord(substr($_[0],0,1)) == 65279 ) # BOM
+	{
+		debug("Removing BOM");
+		$_[0] = substr($_[0],1);
+	}
 
-    return encode("Latin-1", $_[0], \&Para::Frame::Unicode::map_to_latin1);
+	return encode("Latin-1", $_[0], \&Para::Frame::Unicode::map_to_latin1);
 }
 
 
@@ -1309,56 +1309,56 @@ sub deunicode
 
 sub repair_utf8
 {
-    my( $tref ) = @_;
+	my( $tref ) = @_;
 
 #    debug("Repairing $$tref");
 
-    my $normal = '';
-    my $length = length($$tref);
-    while ()
-    {
-        if ( $$tref =~ m{\G($valid_utf8_regexp+)}gc)
+	my $normal = '';
+	my $length = length($$tref);
+	while ()
+	{
+		if ( $$tref =~ m{\G($valid_utf8_regexp+)}gc)
 #        if( $$tref =~ m{\G($valid_utf8_regexp+?)(?=$latin1_as_utf8)}gc)
-        {
+		{
 #            debug(sprintf "Good at %3d: %s",pos($$tref), $1);
-            if ( not length($normal) and pos($$tref) == $length )
-            {
-                # All is valid
+			if ( not length($normal) and pos($$tref) == $length )
+			{
+				# All is valid
 #                debug("All valid");
-                last;
-            }
+				last;
+			}
 
-            $normal .= $1;
-        }
+			$normal .= $1;
+		}
 
 #        if( $$tref =~ m{\G($latin1_as_utf8+)}gc)
 #        {
 #            debug(sprintf "Latin at %3d: %s",pos($$tref), $1);
 #        }
 
-        if ( $$tref =~ m{\G(.)}gc )
-        {
+		if ( $$tref =~ m{\G(.)}gc )
+		{
 #            debug( sprintf "Bad at %3d: %s",pos($$tref), $1 );
-            my $copy = $1; utf8::encode($copy);
-            $normal .= $copy;
-        }
+			my $copy = $1; utf8::encode($copy);
+			$normal .= $copy;
+		}
 
-        if ( pos($$tref) == $length )
-        {
-            $$tref = $normal;
-            last;
-        }
-    }
+		if ( pos($$tref) == $length )
+		{
+			$$tref = $normal;
+			last;
+		}
+	}
 
-    utf8::decode($$tref);
+	utf8::decode($$tref);
 
-    if ( $$tref =~ $latin1_as_utf8 ) #Potentially Double-encoded
-    {
-        debug("Double-encoding detected");
-        repair_utf8( $tref );
-    }
+	if ( $$tref =~ $latin1_as_utf8 ) #Potentially Double-encoded
+	{
+		debug("Double-encoding detected");
+		repair_utf8( $tref );
+	}
 
-    return $tref;
+	return $tref;
 }
 
 
@@ -1378,7 +1378,7 @@ Creates the file if it doesn't exist.
 
 sub paraframe_dbm_open
 {
-    my( $db_file ) = @_;
+	my( $db_file ) = @_;
 
 # #    warn "Creating BerkeleyDB::Env\n";
 #     my $env = BerkeleyDB::Env->new(
@@ -1387,16 +1387,16 @@ sub paraframe_dbm_open
 # 
 
 #    warn "Connecting to $db_file\n";
-    my %db;
-    tie( %db, 'BerkeleyDB::Hash',
-         -Filename => $db_file,
-         -Flags    => DB_CREATE,
+	my %db;
+	tie( %db, 'BerkeleyDB::Hash',
+			 -Filename => $db_file,
+			 -Flags    => DB_CREATE,
 #	 -Env      => $env,
-       )
-      or die "Cannot open file '$db_file': $! $BerkeleyDB::Error\n";
+		 )
+		or die "Cannot open file '$db_file': $! $BerkeleyDB::Error\n";
 #    warn "Returning handle\n";
 
-    return \%db;
+	return \%db;
 }
 
 
@@ -1417,80 +1417,80 @@ object.
 
 sub elapsed_time
 {
-    my( $secs ) = @_;
+	my( $secs ) = @_;
 
-    if ( UNIVERSAL::isa($secs, 'DateTime::Duration') )
-    {
-        my $deltas = $secs->deltas;
-        $secs = 0;
-        $secs += $deltas->{'months'}  * ONE_MONTH;
-        $secs += $deltas->{'days'}    * ONE_DAY;
-        $secs += $deltas->{'minutes'} * ONE_MINUTE;
-        $secs += $deltas->{'seconds'};
-    }
+	if ( UNIVERSAL::isa($secs, 'DateTime::Duration') )
+	{
+		my $deltas = $secs->deltas;
+		$secs = 0;
+		$secs += $deltas->{'months'}  * ONE_MONTH;
+		$secs += $deltas->{'days'}    * ONE_DAY;
+		$secs += $deltas->{'minutes'} * ONE_MINUTE;
+		$secs += $deltas->{'seconds'};
+	}
 
-    my $c = Time::Seconds->new($secs);
-    my $str;
-    if ( $c->days >= 1 )
-    {
-        $str .= int($c->days) . " dygn";
-        $c -= int($c->days)*ONE_DAY;
+	my $c = Time::Seconds->new($secs);
+	my $str;
+	if ( $c->days >= 1 )
+	{
+		$str .= int($c->days) . " dygn";
+		$c -= int($c->days)*ONE_DAY;
 
-        if ( $c->hours >= 2 )
-        {
-            $str .=  " och " . int($c->hours) . " timmar";
-        }
-        elsif ( $c->hours >= 1 )
-        {
-            $str .= " och en timma";
-        }
-        else
-        {
-            $str .= " precis";
-        }
-    }
-    elsif ( $c->hours >= 1 )
-    {
-        if ( $c->hours >= 2 )
-        {
-            $str .=  int($c->hours) . " timmar";
-        }
-        else
-        {
-            $str .= "1 timma";
-        }
-        $c -= int($c->hours)*ONE_HOUR;
+		if ( $c->hours >= 2 )
+		{
+			$str .=  " och " . int($c->hours) . " timmar";
+		}
+		elsif ( $c->hours >= 1 )
+		{
+			$str .= " och en timma";
+		}
+		else
+		{
+			$str .= " precis";
+		}
+	}
+	elsif ( $c->hours >= 1 )
+	{
+		if ( $c->hours >= 2 )
+		{
+			$str .=  int($c->hours) . " timmar";
+		}
+		else
+		{
+			$str .= "1 timma";
+		}
+		$c -= int($c->hours)*ONE_HOUR;
 
-        if ( $c->minutes >= 2 )
-        {
-            $str .=  " och " . int($c->minutes) . " minuter";
-        }
-        elsif ( $c->minutes >= 1 )
-        {
-            $str .= " och 1 minut";
-        }
-        else
-        {
-            $str .= " precis";
-        }
-    }
-    else
-    {
-        if ( $c->minutes >= 2 )
-        {
-            $str .= int($c->minutes) . " minuter";
-        }
-        elsif ( $c->minutes >= 1 )
-        {
-            $str .= "knappt 1 minut";
-        }
-        else
-        {
-            $str .= "mindre än 1 minut";
-        }
-    }
+		if ( $c->minutes >= 2 )
+		{
+			$str .=  " och " . int($c->minutes) . " minuter";
+		}
+		elsif ( $c->minutes >= 1 )
+		{
+			$str .= " och 1 minut";
+		}
+		else
+		{
+			$str .= " precis";
+		}
+	}
+	else
+	{
+		if ( $c->minutes >= 2 )
+		{
+			$str .= int($c->minutes) . " minuter";
+		}
+		elsif ( $c->minutes >= 1 )
+		{
+			$str .= "knappt 1 minut";
+		}
+		else
+		{
+			$str .= "mindre än 1 minut";
+		}
+	}
 
-    return $str;
+	return $str;
 }
 
 
@@ -1508,29 +1508,29 @@ Returns the decoded domain as a string.
 
 sub idn_decode
 {
-    my( $domain ) = @_;
+	my( $domain ) = @_;
 
-    cluck "Domain missing" unless $domain;
+	cluck "Domain missing" unless $domain;
 
-    if ( $Para::Frame::Utils::TRANSCODED{ $domain } )
-    {
-        return $Para::Frame::Utils::TRANSCODED{ $domain };
-    }
+	if ( $Para::Frame::Utils::TRANSCODED{ $domain } )
+	{
+		return $Para::Frame::Utils::TRANSCODED{ $domain };
+	}
 
 #    warn "  Decoding domain '$domain'\n";
 
-    my @decoded;
-    foreach my $part ( split /\./, $domain )
-    {
-        if ( $part =~ /^xn--(.*)/i )
-        {
-            $part = decode_punycode($1);
-        }
+	my @decoded;
+	foreach my $part ( split /\./, $domain )
+	{
+		if ( $part =~ /^xn--(.*)/i )
+		{
+			$part = decode_punycode($1);
+		}
 
-        push @decoded, $part;
-    }
+		push @decoded, $part;
+	}
 
-    return $Para::Frame::Utils::TRANSCODED{ $domain } = join '.', @decoded;
+	return $Para::Frame::Utils::TRANSCODED{ $domain } = join '.', @decoded;
 }
 
 
@@ -1548,31 +1548,31 @@ Returns the encoded domain as a string.
 
 sub idn_encode
 {
-    my( $domain ) = @_;
+	my( $domain ) = @_;
 
 #    warn "  Encoding domain '$domain'\n";
 
-    my $port = "";
-    if ( $domain =~ s/(:\d+)$// )
-    {
-        $port = $1;
-    }
+	my $port = "";
+	if ( $domain =~ s/(:\d+)$// )
+	{
+		$port = $1;
+	}
 
-    my @encoded;
-    foreach my $part ( split /\./, $domain )
-    {
+	my @encoded;
+	foreach my $part ( split /\./, $domain )
+	{
 #	warn "  part $part\n";
-        if ( $part =~ /[^A-Za-z0-9\-]/ )
-        {
+		if ( $part =~ /[^A-Za-z0-9\-]/ )
+		{
 #	    warn "    encoding it\n";
-            $part = "xn--".encode_punycode($part);
-        }
+			$part = "xn--".encode_punycode($part);
+		}
 
-        push @encoded, $part;
-    }
+		push @encoded, $part;
+	}
 
-    $domain = join '.', @encoded;
-    return $domain . $port;
+	$domain = join '.', @encoded;
+	return $domain . $port;
 }
 
 
@@ -1588,24 +1588,24 @@ Returns a hash with all the CGI query params.
 
 sub store_params
 {
-    my( $q ) = @_;
+	my( $q ) = @_;
 
-    $q ||= $Para::Frame::REQ->q;
+	$q ||= $Para::Frame::REQ->q;
 
-    my $state = {};
-    foreach my $key ( $q->param() )
-    {
-        # $key could have many values
+	my $state = {};
+	foreach my $key ( $q->param() )
+	{
+		# $key could have many values
 #        foreach my $val ( $q->param( $key ) )
 #        {
 #            next unless $val;
 #            debug(0, "$val: ".validate_utf8(\$val));
 #        }
 
-        $state->{ $key } = [ $q->param( $key ) ];
-    }
+		$state->{ $key } = [ $q->param( $key ) ];
+	}
 
-    return $state;
+	return $state;
 }
 
 
@@ -1624,20 +1624,20 @@ given.
 
 sub clear_params
 {
-    my $q = $Para::Frame::REQ->q;
+	my $q = $Para::Frame::REQ->q;
 
-    if ( @_ )
-    {
-        foreach ( @_ )
-        {
+	if ( @_ )
+	{
+		foreach ( @_ )
+		{
 #	    debug " - $_";
-            $q->delete( $_ );
-        }
-    }
-    else
-    {
-        $q->delete_all();
-    }
+			$q->delete( $_ );
+		}
+	}
+	else
+	{
+		$q->delete_all();
+	}
 
 #    debug "Remaining params:";
 #    foreach my $key ( $q->param() )
@@ -1660,14 +1660,14 @@ Adds to the CGI query with the params given in the hashref.
 
 sub add_params
 {
-    my( $state ) = @_;
+	my( $state ) = @_;
 
-    my $q = $Para::Frame::REQ->q;
+	my $q = $Para::Frame::REQ->q;
 
-    foreach my $key ( keys %$state )
-    {
-        $q->param( $key, @{ $state->{$key} } );
-    }
+	foreach my $key ( keys %$state )
+	{
+		$q->param( $key, @{ $state->{$key} } );
+	}
 }
 
 
@@ -1684,11 +1684,11 @@ hashref given.
 
 sub restore_params
 {
-    my( $state ) = @_;
+	my( $state ) = @_;
 
-    my $q = $Para::Frame::REQ->q;
-    $q->delete_all();
-    add_params($state);
+	my $q = $Para::Frame::REQ->q;
+	$q->delete_all();
+	add_params($state);
 }
 
 
@@ -1721,84 +1721,84 @@ positive or negative integer.
 
 sub debug
 {
-    my( $level, $message, $delta ) = @_;
+	my( $level, $message, $delta ) = @_;
 
-    # For debugging the debuggning
-    my $DEBUG = 0;
-    if ( ($Para::Frame::DEBUG||0) > 4 )
-    {
-        $DEBUG = 1;
-    }
+	# For debugging the debuggning
+	my $DEBUG = 0;
+	if ( ($Para::Frame::DEBUG||0) > 4 )
+	{
+		$DEBUG = 1;
+	}
 
 #    warn "This was called from ".(caller(1))[3];
 
-    # Initialize here since DEBUG may be called before configure
-    my $debug = $Para::Frame::Logging::WATCH{caller(1)?(caller(1))[3]:''} ||
-      $Para::Frame::DEBUG  || 0;
-    $Para::Frame::INDENT ||= 0;
+	# Initialize here since DEBUG may be called before configure
+	my $debug = $Para::Frame::Logging::WATCH{caller(1)?(caller(1))[3]:''} ||
+		$Para::Frame::DEBUG  || 0;
+	$Para::Frame::INDENT ||= 0;
 
-    # Returns $message if given
-    return "" if $Para::Frame::IN_STARTUP and $Para::Frame::QUIET_STARTUP and $level;
-    return $debug unless defined $level;
+	# Returns $message if given
+	return "" if $Para::Frame::IN_STARTUP and $Para::Frame::QUIET_STARTUP and $level;
+	return $debug unless defined $level;
 
-    $delta ||= 0;
-    $Para::Frame::INDENT += $delta if $delta < 0;
+	$delta ||= 0;
+	$Para::Frame::INDENT += $delta if $delta < 0;
 
-    unless( $message )
-    {
-        # Stupid regexp didn't take /^-?\d$/ !!!
-        if ( $level =~ /^(\d|-\d)$/ )
-        {
-            $Para::Frame::INDENT += $level;
-            if ($DEBUG)
-            {
-                carp "Indent $Para::Frame::INDENT" if $level > 0;
-            }
-            ;
-            return "";
-        }
+	unless( $message )
+	{
+		# Stupid regexp didn't take /^-?\d$/ !!!
+		if ( $level =~ /^(\d|-\d)$/ )
+		{
+			$Para::Frame::INDENT += $level;
+			if ($DEBUG)
+			{
+				carp "Indent $Para::Frame::INDENT" if $level > 0;
+			}
+			;
+			return "";
+		}
 
-        $message = $level;
-        $level = 0;
-    }
+		$message = $level;
+		$level = 0;
+	}
 
-    unless( $level =~ /^(\d|-\d)$/ )
-    {
-        cluck "Faulty debug input: ".datadump(\@_);
-    }
+	unless( $level =~ /^(\d|-\d)$/ )
+	{
+		cluck "Faulty debug input: ".datadump(\@_);
+	}
 
-    if ( $level < 0 )
-    {
-        $Para::Frame::INDENT += $level;
-        $level = 0;
-    }
+	if ( $level < 0 )
+	{
+		$Para::Frame::INDENT += $level;
+		$level = 0;
+	}
 
-    if ( $debug >= $level )
-    {
-        my $prefix =  $Para::Frame::FORK ? "| $$: " : "";
+	if ( $debug >= $level )
+	{
+		my $prefix =  $Para::Frame::FORK ? "| $$: " : "";
 
-        utf8::upgrade( $message );
-        chomp $message;
-        foreach (split /\n/, $message)
-        {
-            warn $prefix . "  "x$Para::Frame::INDENT . $_ . "\n";
-        }
-    }
+		utf8::upgrade( $message );
+		chomp $message;
+		foreach (split /\n/, $message)
+		{
+			warn $prefix . "  "x$Para::Frame::INDENT . $_ . "\n";
+		}
+	}
 
-    $Para::Frame::INDENT += $delta if $delta > 0;
-    if ( $DEBUG )
-    {
-        carp "Ident $Para::Frame::INDENT" if $delta > 0;
-    }
-    ;
-    confess "Debug indentation too high" if $Para::Frame::INDENT > 10;
+	$Para::Frame::INDENT += $delta if $delta > 0;
+	if ( $DEBUG )
+	{
+		carp "Ident $Para::Frame::INDENT" if $delta > 0;
+	}
+	;
+	confess "Debug indentation too high" if $Para::Frame::INDENT > 10;
 
 #    if( $message =~ /^arc2 (\d+)/ )
 #    {
 #	confess if $TEST{$1}++ > 10;
 #    }
 
-    return $message . "\n";
+	return $message . "\n";
 }
 
 
@@ -1818,22 +1818,22 @@ Returns the hashref.
 
 sub reset_hashref
 {
-    my( $hashref, $params ) = @_;
+	my( $hashref, $params ) = @_;
 
-    $params ||= {};
+	$params ||= {};
 
-    foreach my $key ( keys %$hashref )
-    {
-        debug(2,"  Removing $key from hash");
-        delete $hashref->{$key};
-    }
+	foreach my $key ( keys %$hashref )
+	{
+		debug(2,"  Removing $key from hash");
+		delete $hashref->{$key};
+	}
 
-    foreach my $key ( keys %$params )
-    {
-        $hashref->{$key} = $params->{$key};
-    }
+	foreach my $key ( keys %$params )
+	{
+		$hashref->{$key} = $params->{$key};
+	}
 
-    return $hashref;
+	return $hashref;
 }
 
 
@@ -1850,11 +1850,11 @@ param, as a text string.
 
 sub timediff
 {
-    my $ts = $Para::Frame::timediff_timestamp
-      || ( $Para::Frame::REQ ? $Para::Frame::REQ->{'started'} : 0)
-        || Time::HiRes::time();
-    $Para::Frame::timediff_timestamp = Time::HiRes::time();
-    return sprintf "%30s: %7.3f\n", $_[0], Time::HiRes::time() - $ts;
+	my $ts = $Para::Frame::timediff_timestamp
+		|| ( $Para::Frame::REQ ? $Para::Frame::REQ->{'started'} : 0)
+		|| Time::HiRes::time();
+	$Para::Frame::timediff_timestamp = Time::HiRes::time();
+	return sprintf "%30s: %7.3f\n", $_[0], Time::HiRes::time() - $ts;
 }
 
 
@@ -1862,15 +1862,15 @@ sub timediff
 
 sub extract_query_params
 {
-    my $q = $Para::Frame::REQ->q;
-    my $rec = {};
+	my $q = $Para::Frame::REQ->q;
+	my $rec = {};
 
-    foreach my $key (@_)
-    {
-        $rec->{$key} = $q->param($key);
-    }
+	foreach my $key (@_)
+	{
+		$rec->{$key} = $q->param($key);
+	}
 
-    return $rec;
+	return $rec;
 }
 
 
@@ -1888,16 +1888,16 @@ me. ( L<Sys::Hostname> and L<Net::Domain> )
 
 sub fqdn
 {
-    unless( $FQDN )
-    {
-        local $ENV{PATH} = '/usr/bin:/bin:/usr/sbin:/sbin'; # Paranoia.
+	unless( $FQDN )
+	{
+		local $ENV{PATH} = '/usr/bin:/bin:/usr/sbin:/sbin'; # Paranoia.
 
-        $FQDN = `(hostname  --fqdn) 2>/dev/null`;
+		$FQDN = `(hostname  --fqdn) 2>/dev/null`;
 
-        # remove garbage
-        $FQDN =~ tr/\0\r\n//d;
-    }
-    return $FQDN;
+		# remove garbage
+		$FQDN =~ tr/\0\r\n//d;
+	}
+	return $FQDN;
 }
 
 
@@ -1916,12 +1916,12 @@ an explanation.
 
 sub retrieve_from_url
 {
-    my( $url_in ) = @_;
+	my( $url_in ) = @_;
 
-    # We are doing this in the background and returns the result then
-    # done.
+	# We are doing this in the background and returns the result then
+	# done.
 
-    my $url = Para::Frame::URI->new( $url_in );
+	my $url = Para::Frame::URI->new( $url_in );
 
 #    debug "Retrieving url ".ref($url);
 #    debug"https isa: ".datadump(@URI::https::ISA);
@@ -1933,24 +1933,24 @@ sub retrieve_from_url
 ###    my( $res ) = Para::Frame::Worker->method($ua, 'request', $lwpreq);
 #    debug "url $url isa ".datadump($url);
 
-    my( $res ) = Para::Frame::Worker->method($url, 'retrieve');
+	my( $res ) = Para::Frame::Worker->method($url, 'retrieve');
 
 #    debug datadump($res);
 
 
-    if ( $res->is_success )
-    {
-        return $res->content;
-    }
-    else
-    {
+	if ( $res->is_success )
+	{
+		return $res->content;
+	}
+	else
+	{
 
-        $Para::Frame::REQ->result_message("Failed to retrieve '$url':\n".$res->status_line);
-        return undef;
+		$Para::Frame::REQ->result_message("Failed to retrieve '$url':\n".$res->status_line);
+		return undef;
 
 #	my $message = $res->message;
 #	throw('action', "Failed to retrieve '$url' content: $message");
-    }
+	}
 
 #    my $fork = $req->create_fork;
 #    if( $fork->in_child )
@@ -1990,19 +1990,19 @@ Run given coderef in a fork an retrieve the results.
 
 sub get_from_fork
 {
-    my( $coderef ) = @_;
+	my( $coderef ) = @_;
 
-    my $req = $Para::Frame::REQ;
+	my $req = $Para::Frame::REQ;
 
 #    debug "About to fork";
-    my $fork = $req->create_fork;
-    if ( $fork->in_child )
-    {
+	my $fork = $req->create_fork;
+	if ( $fork->in_child )
+	{
 #	debug "in child";
-        $fork->return(&$coderef);
-    }
+		$fork->return(&$coderef);
+	}
 #    debug "In parent: yield";
-    return $fork->yield->message; # Returns the result from fork
+	return $fork->yield->message; # Returns the result from fork
 }
 
 
@@ -2022,9 +2022,9 @@ Returns true if validate and false otherwise
 
 sub validate
 {
-    my( $value, $type ) = @_;
+	my( $value, $type ) = @_;
 
-    die "not implemented";
+	die "not implemented";
 }
 
 
@@ -2038,20 +2038,20 @@ sub validate
 
 sub datadump
 {
-    my( $ref, $maxdepth ) = @_;
+	my( $ref, $maxdepth ) = @_;
 
-    if ( $maxdepth )
-    {
-        my $old = $Data::Dumper::Maxdepth;
-        $Data::Dumper::Maxdepth = $maxdepth;
-        my $out = Dumper($ref);
-        $Data::Dumper::Maxdepth = $old;
-        return $out;
-    }
-    else
-    {
-        return Dumper($ref);
-    }
+	if ( $maxdepth )
+	{
+		my $old = $Data::Dumper::Maxdepth;
+		$Data::Dumper::Maxdepth = $maxdepth;
+		my $out = Dumper($ref);
+		$Data::Dumper::Maxdepth = $old;
+		return $out;
+	}
+	else
+	{
+		return Dumper($ref);
+	}
 }
 
 ##############################################################################
@@ -2081,323 +2081,323 @@ Returns: The number of characters sent. (That may be UTF8 characters.)
 
 sub client_send
 {
-    my( $client, $data_in, $args ) = @_;
+	my( $client, $data_in, $args ) = @_;
 
-#    Para::Frame::Logging->this_level(4);
+	Para::Frame::Logging->this_level(4);
 
-    my $dataref;
-    if ( ref $data_in )
-    {
-        if ( UNIVERSAL::isa $data_in, 'SCALAR' )
-        {
-            $dataref = $data_in
-        }
-        else
-        {
-            confess "data in wrong format: $data_in";
-        }
-    }
-    else
-    {
-        $dataref = \ $data_in;
-    }
+	my $dataref;
+	if ( ref $data_in )
+	{
+		if ( UNIVERSAL::isa $data_in, 'SCALAR' )
+		{
+			$dataref = $data_in
+		}
+		else
+		{
+			confess "data in wrong format: $data_in";
+		}
+	}
+	else
+	{
+		$dataref = \ $data_in;
+	}
 
-    unless( $client->isa('IO::Socket') )
-    {
-        confess "client not a socket: $client";
-    }
+	unless( $client->isa('IO::Socket') )
+	{
+		confess "client not a socket: $client";
+	}
 
-    $args ||= {};
+	$args ||= {};
 
-    # localized values. Visible in &client_send_on_retry
-    # req given in args means that we are allowed to yield
-    #
-    my $allow_yield = $args->{'req'};
-    my $req = $args->{'req'} || $Para::Frame::REQ;
+	# localized values. Visible in &client_send_on_retry
+	# req given in args means that we are allowed to yield
+	#
+	my $allow_yield = $args->{'req'};
+	my $req = $args->{'req'} || $Para::Frame::REQ;
 
-    my $errcnt = 0;
-    my $srclength = bytes::length( $$dataref ); # In octets
+	my $errcnt = 0;
+	my $srclength = bytes::length( $$dataref ); # In octets
 
-    unless( $srclength )
-    {
-        debug "We got nothing to send";
-        return 0;
-    }
+	unless( $srclength )
+	{
+		debug "We got nothing to send";
+		return 0;
+	}
 
-    my $enc = $args->{'encoding'} || 'raw';
-    if ( $enc !~ /^(raw|utf8|iso-8859-1)$/)
-    {
-        unless( UNIVERSAL::isa $enc, 'Encode::Encoding' )
-        {
+	my $enc = $args->{'encoding'} || 'raw';
+	if ( $enc !~ /^(raw|utf8|iso-8859-1)$/)
+	{
+		unless( UNIVERSAL::isa $enc, 'Encode::Encoding' )
+		{
 #	    debug "Parsing encoding $enc";
 
-            # Normalize encoding name
-            $enc = find_encoding($enc);
+			# Normalize encoding name
+			$enc = find_encoding($enc);
 
-            if ( $enc->name eq 'utf-8-strict' )
-            {
-                $enc = 'utf8';
-            }
-            elsif ( $enc->name eq 'utf8' )
-            {
-                $enc = 'utf8';
-            }
-            elsif ( $enc->name eq 'iso-8859-1')
-            {
-                $enc = 'iso-8859-1';
-            }
-        }
-    }
+			if ( $enc->name eq 'utf-8-strict' )
+			{
+				$enc = 'utf8';
+			}
+			elsif ( $enc->name eq 'utf8' )
+			{
+				$enc = 'utf8';
+			}
+			elsif ( $enc->name eq 'iso-8859-1')
+			{
+				$enc = 'iso-8859-1';
+			}
+		}
+	}
 
-    # TODO: Stop if request cancelled or socket closed
-    unless( $client->opened )
-    {
-        throw('cancel', longmess("Client closed"));
-    }
+	# TODO: Stop if request cancelled or socket closed
+	unless( $client->opened )
+	{
+		throw('cancel', longmess("Client closed"));
+	}
 
 
-    if ( ($enc eq 'utf8') or ($enc eq 'iso-8859-1') )
-    {
-        if ( $enc eq 'utf8' )
-        {
+	if ( ($enc eq 'utf8') or ($enc eq 'iso-8859-1') )
+	{
+		if ( $enc eq 'utf8' )
+		{
 #	    debug "Sending with utf8 method: ".validate_utf8($dataref);
 #	    debug "Sending with utf8 method";
-            binmode( $client, ':utf8' );
-        }
-        else
-        {
+			binmode( $client, ':utf8' );
+		}
+		else
+		{
 #	    debug "Sending with Latin1 method: ".validate_utf8($dataref);
-            debug "Sending with Latin1 method";
-            binmode( $client, ':raw' );
-        }
+			debug "Sending with Latin1 method";
+			binmode( $client, ':raw' );
+		}
 
-        my $chrlength = length($$dataref); # In chars
-        my $chrpos = 0;
-        my $chunk = 8192;       # POSIX::BUFSIZ * 1
-        my $chrsent = 0;
-        while ( $chrpos < $chrlength )
-        {
-            # Client still open?
-            unless( $client->connected )
-            {
-                Para::Frame::cancel_and_close( $req, $client, "Connection closed");
-                return $chrpos;
-            }
+		my $chrlength = length($$dataref); # In chars
+		my $chrpos = 0;
+		my $chunk = 8192;						# POSIX::BUFSIZ * 1
+		my $chrsent = 0;
+		while ( $chrpos < $chrlength )
+		{
+			# Client still open?
+			unless( $client->connected )
+			{
+				Para::Frame::cancel_and_close( $req, $client, "Connection closed");
+				return $chrpos;
+			}
 
-            $chrsent = 0;
-            $chrsent = $client->send( substr $$dataref, $chrpos, $chunk );
+			$chrsent = 0;
+			$chrsent = $client->send( substr $$dataref, $chrpos, $chunk );
 
-            if ( $chrsent )
-            {
-                debug(3, "  Sent $chrsent chars");
-                $chrpos += $chrsent;
-                $errcnt = 0;
-            }
-            else
-            {
-                my $err_code = 0 + $!;
-                my $err_msg = "$!";
-                debug sprintf( "GOT ERROR IN SOCKET SEND: %d - %s", $err_code, $err_msg );
+			if ( $chrsent )
+			{
+				debug(3, "  Sent $chrsent chars");
+				$chrpos += $chrsent;
+				$errcnt = 0;
+			}
+			else
+			{
+				my $err_code = 0 + $!;
+				my $err_msg = "$!";
+				debug sprintf( "GOT ERROR IN SOCKET SEND: %d - %s", $err_code, $err_msg );
 #		$Para::Frame::DEBUG = 3;
 
-                if ( $Para::Frame::IOAGAIN{int $err_code} ) # Temporary unavailible
-                {
-                    if ( $allow_yield )
-                    {
-                        $req->yield( 0.9 );
-                    }
-                    else
-                    {
-                        Time::HiRes::sleep(0.05);
-                    }
-                    debug("Resending chunk $chrpos of message");
-                }
-                else
-                {
-                    Para::Frame::cancel_and_close( $req, $client, "Giving up");
-                    return $chrpos;
-                }
+				if ( $Para::Frame::IOAGAIN{int $err_code} ) # Temporary unavailible
+				{
+					if ( $allow_yield )
+					{
+						$req->yield( 0.9 );
+					}
+					else
+					{
+						Time::HiRes::sleep(0.05);
+					}
+					debug("Resending chunk $chrpos of message");
+				}
+				else
+				{
+					Para::Frame::cancel_and_close( $req, $client, "Giving up");
+					return $chrpos;
+				}
 
 
-                $errcnt++;
+				$errcnt++;
 
-                if ( $errcnt >= 100 )
-                {
-                    debug(0,"Got over 100 failures to send chunk $chrpos");
-                    last;
-                }
+				if ( $errcnt >= 100 )
+				{
+					debug(0,"Got over 100 failures to send chunk $chrpos");
+					last;
+				}
 
-                redo;
-            }
-        }
-        debug 3, "Sent $chrpos chars";
-        return $chrpos;
-    }
-    elsif ( $enc eq 'raw' )
-    {
+				redo;
+			}
+		}
+		debug 3, "Sent $chrpos chars";
+		return $chrpos;
+	}
+	elsif ( $enc eq 'raw' )
+	{
 #	debug "Sending with raw method";
 
-        use bytes;
+		use bytes;
 
-        my $chunk = 8192;       # POSIX::BUFSIZ * 1
-        binmode( $client, ':raw' );
-        utf8::encode( $$dataref ) if utf8::is_utf8( $$dataref );
+		my $chunk = 8192;						# POSIX::BUFSIZ * 1
+		binmode( $client, ':raw' );
+		utf8::encode( $$dataref ) if utf8::is_utf8( $$dataref );
 #	debug "Sending $srclength bytes";
-        my $srcpos;
-        my $srcsent;
+		my $srcpos;
+		my $srcsent;
 
-        for ( $srcpos=0; $srcpos<$srclength; $srcpos+= $srcsent )
-        {
-            # Client still open?
-            unless( $client->connected )
-            {
-                Para::Frame::cancel_and_close( $req, $client, "Connection closed");
-                return $srcpos;
-            }
+		for ( $srcpos=0; $srcpos<$srclength; $srcpos+= $srcsent )
+		{
+			# Client still open?
+			unless( $client->connected )
+			{
+				Para::Frame::cancel_and_close( $req, $client, "Connection closed");
+				return $srcpos;
+			}
 
-            $srcsent = 0;
-            $srcsent = $client->send( substr $$dataref, $srcpos, $chunk );
+			$srcsent = 0;
+			$srcsent = $client->send( substr $$dataref, $srcpos, $chunk );
 
-            if ( $srcsent )
-            {
-                debug(3, "  Sent $srcsent bytes");
-                $errcnt = 0;
-            }
-            else
-            {
-                my $err_code = 0 + $!;
-                my $err_msg = "$!";
-                debug sprintf( "GOT ERROR IN SOCKET SEND: %d - %s", $err_code, $err_msg );
+			if ( $srcsent )
+			{
+				debug(3, "  Sent $srcsent bytes");
+				$errcnt = 0;
+			}
+			else
+			{
+				my $err_code = 0 + $!;
+				my $err_msg = "$!";
+				debug sprintf( "GOT ERROR IN SOCKET SEND: %d - %s", $err_code, $err_msg );
 #		$Para::Frame::DEBUG = 3;
 
-                if ( $Para::Frame::IOAGAIN{int $err_code} ) # Temporary unavailible
-                {
-                    if ( $allow_yield )
-                    {
-                        $req->yield( 0.9 );
-                    }
-                    else
-                    {
-                        Time::HiRes::sleep(0.05);
-                    }
-                    debug("Resending chunk $srcpos of message");
-                }
-                else
-                {
-                    Para::Frame::cancel_and_close( $req, $client, "Giving up");
-                    return $srcpos;
-                }
+				if ( $Para::Frame::IOAGAIN{int $err_code} ) # Temporary unavailible
+				{
+					if ( $allow_yield )
+					{
+						$req->yield( 0.9 );
+					}
+					else
+					{
+						Time::HiRes::sleep(0.05);
+					}
+					debug("Resending chunk $srcpos of message");
+				}
+				else
+				{
+					Para::Frame::cancel_and_close( $req, $client, "Giving up");
+					return $srcpos;
+				}
 
-                $errcnt++;
+				$errcnt++;
 
-                if ( $errcnt >= 100 )
-                {
-                    debug(0,"Got $errcnt failures to send chunk $srcpos");
-                    last;
-                }
-                redo;
-            }
-        }
-        return $srcpos;
-    }
-    else
-    {
-        debug "Sending with encoding ".$enc->name;
+				if ( $errcnt >= 100 )
+				{
+					debug(0,"Got $errcnt failures to send chunk $srcpos");
+					last;
+				}
+				redo;
+			}
+		}
+		return $srcpos;
+	}
+	else
+	{
+		debug "Sending with encoding ".$enc->name;
 
-        my $chunk = 1024;       # Same as Encode::PerlIO
+		my $chunk = 1024;						# Same as Encode::PerlIO
 
-        binmode( $client, ':raw' );
+		binmode( $client, ':raw' );
 
-        my $chrlength = length($$dataref); # In chars
+		my $chrlength = length($$dataref); # In chars
 #	debug "Sending $chrlength/$srclength: ".validate_utf8($dataref);
 
-        my $chrpos = 0;
-        my $encpos = 0;
-        my $encsent= 0;
+		my $chrpos = 0;
+		my $encpos = 0;
+		my $encsent= 0;
 
-        my $chrbuffer = substr($$dataref, $chrpos, $chunk);
-        my $encbuffer = encode($enc, $chrbuffer, 0);
-        my $enclength = length($encbuffer); # grow after each read
-        while ( $encpos < $enclength )
-        {
-            # Client still open?
-            unless( $client->connected )
-            {
-                Para::Frame::cancel_and_close( $req, $client, "Connection closed");
-                return $chrpos;
-            }
+		my $chrbuffer = substr($$dataref, $chrpos, $chunk);
+		my $encbuffer = encode($enc, $chrbuffer, 0);
+		my $enclength = length($encbuffer); # grow after each read
+		while ( $encpos < $enclength )
+		{
+			# Client still open?
+			unless( $client->connected )
+			{
+				Para::Frame::cancel_and_close( $req, $client, "Connection closed");
+				return $chrpos;
+			}
 
-            # put a substitution character in place of a malformed
-            # character
-            $encsent = $client->send($encbuffer);
-            if ( $encsent )
-            {
-                debug(3, "  Sent $encsent bytes");
-                $encpos += $encsent;
-                $errcnt = 0;
-            }
-            else
-            {
-                my $err_code = 0 + $!;
-                my $err_msg = "$!";
-                debug sprintf( "GOT ERROR IN SOCKET SEND: %d - %s", $err_code, $err_msg );
+			# put a substitution character in place of a malformed
+			# character
+			$encsent = $client->send($encbuffer);
+			if ( $encsent )
+			{
+				debug(3, "  Sent $encsent bytes");
+				$encpos += $encsent;
+				$errcnt = 0;
+			}
+			else
+			{
+				my $err_code = 0 + $!;
+				my $err_msg = "$!";
+				debug sprintf( "GOT ERROR IN SOCKET SEND: %d - %s", $err_code, $err_msg );
 #                $Para::Frame::DEBUG = 3;
 
-                if ( $Para::Frame::IOAGAIN{int $err_code} ) # Temporary unavailible
-                {
-                    if ( $allow_yield )
-                    {
-                        $req->yield( 0.9 );
-                    }
-                    else
-                    {
-                        Time::HiRes::sleep(0.05);
-                    }
-                    debug("Resending chunk $chrpos of message");
-                }
-                else
-                {
-                    Para::Frame::cancel_and_close( $req, $client, "Giving up");
-                    return $chrpos;
-                }
+				if ( $Para::Frame::IOAGAIN{int $err_code} ) # Temporary unavailible
+				{
+					if ( $allow_yield )
+					{
+						$req->yield( 0.9 );
+					}
+					else
+					{
+						Time::HiRes::sleep(0.05);
+					}
+					debug("Resending chunk $chrpos of message");
+				}
+				else
+				{
+					Para::Frame::cancel_and_close( $req, $client, "Giving up");
+					return $chrpos;
+				}
 
 
-                $errcnt++;
+				$errcnt++;
 
-                if ( $errcnt >= 100 )
-                {
-                    debug(0,"Got $errcnt failures to send chunk $chrpos");
-                    last;
-                }
-                redo;
-            }
-        }
-        continue
-        {
-            $chrpos += length($chrbuffer); # Charlength!
+				if ( $errcnt >= 100 )
+				{
+					debug(0,"Got $errcnt failures to send chunk $chrpos");
+					last;
+				}
+				redo;
+			}
+		}
+		continue
+		{
+			$chrpos += length($chrbuffer); # Charlength!
 
-            if ( $encsent < length($encbuffer) )
-            {
-                $encbuffer = substr $encbuffer, $encsent;
-                my $diff = length($encbuffer);
+			if ( $encsent < length($encbuffer) )
+			{
+				$encbuffer = substr $encbuffer, $encsent;
+				my $diff = length($encbuffer);
 
-                $chrbuffer = substr($$dataref, $chrpos, 512);
-                $encbuffer .= encode($enc, $chrbuffer, 0);
+				$chrbuffer = substr($$dataref, $chrpos, 512);
+				$encbuffer .= encode($enc, $chrbuffer, 0);
 
-                $enclength += length($encbuffer) - $diff;
-            }
-            else
-            {
-                $chrbuffer = substr($$dataref, $chrpos, $chunk);
-                $encbuffer = encode($enc, $chrbuffer, 0);
-                $enclength += length($encbuffer);
-            }
-        }
-        ;
+				$enclength += length($encbuffer) - $diff;
+			}
+			else
+			{
+				$chrbuffer = substr($$dataref, $chrpos, $chunk);
+				$encbuffer = encode($enc, $chrbuffer, 0);
+				$enclength += length($encbuffer);
+			}
+		}
+		;
 
 
-        return $chrpos;
-    }
+		return $chrpos;
+	}
 }
 
 
@@ -2409,19 +2409,19 @@ sub client_send
 
 sub client_str
 {
-    my( $client ) = @_;
-    return $client unless ref $client;
+	my( $client ) = @_;
+	return $client unless ref $client;
 #    warn "client_str $client\n";
-    my $sockaddr = getpeername($client);
-    unless( $sockaddr )
-    {
-        debug "No peer connected to socket $client";
-        return "localhost:0";
-    }
-    my($port, $iaddr) = sockaddr_in($sockaddr);
-    my $peer_host = gethostbyaddr($iaddr, AF_INET)
-      || inet_ntoa($iaddr);
-    return $peer_host.':'.$port;
+	my $sockaddr = getpeername($client);
+	unless( $sockaddr )
+	{
+		debug "No peer connected to socket $client";
+		return "localhost:0";
+	}
+	my($port, $iaddr) = sockaddr_in($sockaddr);
+	my $peer_host = gethostbyaddr($iaddr, AF_INET)
+		|| inet_ntoa($iaddr);
+	return $peer_host.':'.$port;
 }
 
 
@@ -2437,28 +2437,28 @@ Returns: a string with info about the utf8-status of the string
 
 sub validate_utf8
 {
-    if ( utf8::is_utf8(${$_[0]}) )
-    {
-        if ( ${$_[0]} =~ $latin1_as_utf8 )
-        {
-            return "DOUBLE-ENCODED utf8";
-        }
-        else
-        {
-            return "valid utf8";
-        }
-    }
-    else
-    {
-        if ( ${$_[0]} =~ $latin1_as_utf8 )
-        {
-            return "UNMARKED utf8";
-        }
-        else
-        {
-            return "NOT Marked as utf8";
-        }
-    }
+	if ( utf8::is_utf8(${$_[0]}) )
+	{
+		if ( ${$_[0]} =~ $latin1_as_utf8 )
+		{
+			return "DOUBLE-ENCODED utf8";
+		}
+		else
+		{
+			return "valid utf8";
+		}
+	}
+	else
+	{
+		if ( ${$_[0]} =~ $latin1_as_utf8 )
+		{
+			return "UNMARKED utf8";
+		}
+		else
+		{
+			return "NOT Marked as utf8";
+		}
+	}
 }
 
 ##############################################################################
@@ -2473,61 +2473,61 @@ TODO: hashrefs
 
 sub parse_perlstruct
 {
-    my( $str, $lvl ) = @_;
+	my( $str, $lvl ) = @_;
 
-    $lvl ||= 0;
-    $lvl ++;
+	$lvl ||= 0;
+	$lvl ++;
 
-    my(  @data_in, @data_out );
-    my $re = qr{
-                   \G \s*              # start
-                   (                  # paren group 1 (parens)
-                       \[
-                       (                # paren group 2 (contents of parens)
-                           (?:
-                               (?> [^\[\]]+ )  # Non-parens without backtracking
-                           |
-                               (?1)          # Recurse to start of paren group 1
-                           )*
-                       )
-                       \]
-                   |
-                       ( [^\[\],]+ )  # Non-parens
-                   )
-                   \s* ,?                # end
+	my(  @data_in, @data_out );
+	my $re = qr{
+							 \G \s*              # start
+							 (                  # paren group 1 (parens)
+								 \[
+								 (                # paren group 2 (contents of parens)
+									 (?:
+										 (?> [^\[\]]+ )  # Non-parens without backtracking
+									 |
+										 (?1)          # Recurse to start of paren group 1
+									 )*
+								 )
+								 \]
+							 |
+								 ( [^\[\],]+ )  # Non-parens
+							 )
+							 \s* ,?                # end
            }x;
 
 
-    my $cnt = 0;
-    while ( $str =~ /$re/gc )
-    {
-        $cnt++;
-        if ( defined( my $elem_a = $2) )
-        {
+	my $cnt = 0;
+	while ( $str =~ /$re/gc )
+	{
+		$cnt++;
+		if ( defined( my $elem_a = $2) )
+		{
 #            debug 0, "  "x$lvl . "elem $cnt: A $elem_a";
 #            push @data_in, 'A'.$elem_a;
-            push @data_out, [ parse_perlstruct( $elem_a, $lvl ) ];
-        }
-        elsif ( defined( my $elem_s = $3) )
-        {
+			push @data_out, [ parse_perlstruct( $elem_a, $lvl ) ];
+		}
+		elsif ( defined( my $elem_s = $3) )
+		{
 #            debug 0, "  "x$lvl . "elem $cnt: S $elem_s";
 #            push @data_in, 'S'.$elem_s;
-            $elem_s =~ s/^\s+//;
-            $elem_s =~ s/\s+$//;
-            push @data_out, $elem_s;
-        }
-        else
-        {
-            confess "empty part found";
-        }
-    }
+			$elem_s =~ s/^\s+//;
+			$elem_s =~ s/\s+$//;
+			push @data_out, $elem_s;
+		}
+		else
+		{
+			confess "empty part found";
+		}
+	}
 
-    my($pos ) = pos($str)||0;
-    if ( $pos < length($str) )
-    {
-        debug "Got to $pos of ".length($str);
-        confess "Malformed arclim string $str";
-    }
+	my($pos ) = pos($str)||0;
+	if ( $pos < length($str) )
+	{
+		debug "Got to $pos of ".length($str);
+		confess "Malformed arclim string $str";
+	}
 #
 #    foreach my $elem_in ( @data_in )
 #    {
@@ -2549,7 +2549,7 @@ sub parse_perlstruct
 #        }
 #    }
 
-    return @data_out;
+	return @data_out;
 }
 
 
@@ -2561,34 +2561,34 @@ sub parse_perlstruct
 
 sub suggest_words
 {
-    my( $file, $amount ) = @_;
+	my( $file, $amount ) = @_;
 
-    $file or die "Filename missing";
-    $amount ||= 1;
-    die if $amount < 1;
-    my( @words_raw, @words );
+	$file or die "Filename missing";
+	$amount ||= 1;
+	die if $amount < 1;
+	my( @words_raw, @words );
 
-    srand;
-    open FILE, '<', $file or die "Could not open filename: $!";
-    while(<FILE>)
-    {
-        for my $i (0 .. $amount-1)
-        {
-            rand($.) < 1 and ($words_raw[$i]=$_);
-        }
-    }
-    close FILE;
+	srand;
+	open FILE, '<', $file or die "Could not open filename: $!";
+	while (<FILE>)
+	{
+		for my $i (0 .. $amount-1)
+		{
+			rand($.) < 1 and ($words_raw[$i]=$_);
+		}
+	}
+	close FILE;
 
-    foreach( @words_raw )
-    {
-        chomp;
-        utf8::upgrade($_);
-        push @words, lc $_;
-    }
+	foreach ( @words_raw )
+	{
+		chomp;
+		utf8::upgrade($_);
+		push @words, lc $_;
+	}
 
 #    debug "Words: @words";
 
-    return \@words;
+	return \@words;
 }
 
 
