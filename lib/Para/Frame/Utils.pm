@@ -2083,7 +2083,7 @@ sub client_send
 {
 	my( $client, $data_in, $args ) = @_;
 
-	Para::Frame::Logging->this_level(4);
+	#Para::Frame::Logging->this_level(4);
 
 	my $dataref;
 	if ( ref $data_in )
@@ -2155,8 +2155,8 @@ sub client_send
 		throw('cancel', longmess("Client closed"));
 	}
 
-
-	if ( ($enc eq 'utf8') or ($enc eq 'iso-8859-1') )
+	### Moved utf8 to use :raw
+	if( ($enc eq 'iso-8859-1') )
 	{
 		if ( $enc eq 'utf8' )
 		{
@@ -2233,7 +2233,7 @@ sub client_send
 		debug 3, "Sent $chrpos chars";
 		return $chrpos;
 	}
-	elsif ( $enc eq 'raw' )
+	elsif ( ($enc eq 'utf8') or ($enc eq 'raw') )
 	{
 #	debug "Sending with raw method";
 
