@@ -146,21 +146,22 @@ sub trim
 
 	if ( ref $ref )
 	{
-
 		confess "Expecting scalar ref ($ref) ".datadump($ref,1)
 			unless ref $ref eq 'SCALAR';
 		return undef unless defined $$ref;
 		$$ref =~ s/( ^ \s+ | \s+ $ )//gx;
-		$$ref =~ s/\s*\r?\n\s*/\n/g;
-		$$ref =~ s/\s\s+/ /g;
+		$$ref =~ s/\r\n/\n/g;
+		$$ref =~ s/( \n \h+ | \h+ \n )/\n/gx;
+		$$ref =~ s/\h\h+/ /g;
 		return $$ref;
 	}
 	else
 	{
 		return undef unless defined $ref;
 		$ref =~ s/( ^ \s+ | \s+ $ )//gx;
-		$ref =~ s/\s*\r?\n\s*/\n/g;
-		$ref =~ s/\s\s+/ /g;
+		$ref =~ s/\r\n/\n/g;
+		$ref =~ s/( \n \h+ | \h+ \n )/\n/gx;
+		$ref =~ s/\h\h+/ /g;
 		return $ref;
 	}
 }

@@ -35,7 +35,7 @@ use JSON;                       # to_json
 use base qw( Exporter );
 our @EXPORT_OK
 
-  = qw( slider jump submit go go_js forward forward_url preserve_data alfanum_bar rowlist list2block selectorder param_includes hidden input password textarea htmlarea filefield css_header confirm_simple inflect radio calendar input_image selector label_from_params checkbox );
+  = qw( slider jump submit go go_js forward forward_url preserve_data alfanum_bar rowlist list2block selectorder param_includes hidden input password textarea htmlarea filefield css_header confirm_simple inflect radio calendar input_image selector label_from_params checkbox tag_extra_from_params );
 
 use Para::Frame::Reload;
 use Para::Frame::Utils qw( trim throw debug uri store_params datadump );

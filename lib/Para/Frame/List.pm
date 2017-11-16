@@ -2977,6 +2977,7 @@ sub sum
 {
     my( $l ) = @_;
     my $sum = 0;
+		my $index = $l->index;
     my( $val, $err ) = $l->get_first;
     while (! $err )
     {
@@ -2991,6 +2992,7 @@ sub sum
         ( $val, $err ) = $l->get_next;
     }
 
+		$l->set_index( $index );
     return $sum;
 }
 
