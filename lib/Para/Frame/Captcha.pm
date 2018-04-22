@@ -5,7 +5,7 @@ package Para::Frame::Captcha;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2008-2017 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2008-2018 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -82,9 +82,10 @@ sub as_html
     my $err = $c->{'error'};
 
     $opt ||= {};
-    $opt->{'theme'} ||= 'clean';
+    #$opt->{'theme'} ||= 'clean';
 
-    return $co->get_html( $public_key, $err, 0, $opt );
+    #return $co->get_html_v2( $public_key, $err, 0, $opt );
+    return $co->get_html_v2( $public_key, $opt );
 }
 
 
@@ -116,7 +117,6 @@ sub is_valid
     my $result = $co->check_answer(
 				   $private_key,
 				   $ENV{'REMOTE_ADDR'},
-				   $chal,
 				   $resp,
 				  );
 

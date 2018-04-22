@@ -15,7 +15,7 @@ WriteMakefile(
               'PREREQ_PM'      =>
               {
                'BerkeleyDB'                 => 0.26,
-               'Captcha::reCAPTCHA'         => 0.92,
+               'Captcha::reCAPTCHA'         => 0.99,
                'Carp'                       => 1.04,
                'CGI'                        => 3.46,
                'CGI::Cookie'                => 1.25,
