@@ -99,6 +99,9 @@ sub is_valid
 {
 	my( $c ) = @_;
 
+	#debug "Check if captcha is valid";
+	#debug 1, datadump( $c, 2 );
+
 	my $site = $c->{'site'} or die "No site given";
 
 	my $private_key = $site->{'recaptcha_key_private'} or
@@ -107,18 +110,19 @@ sub is_valid
 	$c->{'error'} = 'no-response';
 
 	my $q = $Para::Frame::REQ->q;
-	my $chal = $q->param( 'recaptcha_challenge_field' ) or
-		return 0;
-	my $resp = $q->param( 'recaptcha_response_field' ) or
-		return 0;
+	#debug 1, datadump( $q, 3 );
+
+	my $resp = $q->param( 'g-recaptcha-response' ) or return 0;
 
 	my $co = Captcha::reCAPTCHA->new;
 
-	my $result = $co->check_answer(
-																 $private_key,
-																 $ENV{'REMOTE_ADDR'},
-																 $resp,
-																);
+	my $result = $co->check_answer_v2(
+																		$private_key,
+																		$resp,
+																		$ENV{'REMOTE_ADDR'},
+																	 );
+
+	#debug 1, datadump( $result, 3 );
 
 	if ( $result->{'is_valid'} )
 	{
