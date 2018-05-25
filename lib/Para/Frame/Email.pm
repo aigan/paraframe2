@@ -5,7 +5,7 @@ package Para::Frame::Email;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2017 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2018 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -215,7 +215,7 @@ sub raw
 
 
 #    debug "raw 2";
-#    debug datadump($e->{parts},2);
+#    debug datadump($e,3);
 #    debug datadump($em->{parts},2);
     if( @{$e->{'parts'}} > 1 )
     {
@@ -227,7 +227,7 @@ sub raw
 #    debug "raw 4";
         return \ $_[0]->{'em'}->as_string;
     }
-    else
+    elsif( $e->{'parts'}[0] )
     {
         my $h = $em->header_obj;;
 #        debug "Header: ".datadump($h);
@@ -241,7 +241,11 @@ sub raw
 #    debug "raw 6";
         return \ $part->as_string;
     }
-}
+		else
+		{
+			return \ $em->as_string;
+		}
+ }
 
 
 ##############################################################################
