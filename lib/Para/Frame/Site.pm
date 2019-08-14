@@ -5,7 +5,7 @@ package Para::Frame::Site;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2017 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2019 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -1045,7 +1045,7 @@ sub send_email
 	}
     }
 
-    return 1;
+    return 0;
 }
 
 

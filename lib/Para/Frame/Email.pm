@@ -5,7 +5,7 @@ package Para::Frame::Email;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2018 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2019 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -294,7 +294,7 @@ sub apply_headers_from_params
     my $subject = $p->{'subject'};
     my $envelope_from_addr = $p->{'envelope_from_addr'};
 
-    debug "Rendering header from mail to $to_addr";
+    debug 2, "Rendering header from mail to $to_addr";
 
     $e->header_set('From' => $from_addr->format_mime );
     $e->header_set('To'   => $to_addr->format_mime );
@@ -359,7 +359,7 @@ sub apply_headers_from_params
     if( $p->{'bounce_to'} )
     {
         $e->header_set('X-Bounce-To' => $p->{'bounce_to'} );
-        debug "Bounce to ".$p->{'bounce_to'};
+        debug 2, "Bounce to ".$p->{'bounce_to'};
     }
 
 }

@@ -5,7 +5,7 @@ package Para::Frame::Renderer::Email;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2009-2017 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2009-2019 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -119,7 +119,7 @@ sub render_message
 
     if( $rend->{'header_rendered_to'} )
     {
-	debug "  Has a previous header for $rend->{header_rendered_to}";
+	debug 2, "  Has a previous header for $rend->{header_rendered_to}";
 	if( $to_addr eq $rend->{'header_rendered_to'} )
 	{
 	    $use_existing_header = 1;
@@ -167,13 +167,13 @@ sub render_message
 	    throw 'validation', "No content given for email";
 	}
 
- 	debug "Rendering body - done";
+ 	debug 2, "Rendering body - done";
     }
 
     unless( $use_existing_header and $rend->email )
     {
 	$rend->render_header( $to_addr );
-	debug "Rendering header - done";
+	debug 2, "Rendering header - done";
     }
 
     ### Add Attachments
@@ -590,7 +590,7 @@ sub set_tt_params
 
     $p->{'to_addr'} = $to_addr;
 
-    debug "Setting to_addr to ".$to_addr;
+    debug 1, "Setting to_addr to ".$to_addr;
 
 
 

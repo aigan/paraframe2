@@ -1,11 +1,11 @@
-package Para::Frame 2.07;
+package Para::Frame 2.08;
 #=============================================================================
 #
 # AUTHOR
 #		Jonas Liljegren		<jonas@paranormal.se>
 #
 # COPYRIGHT
-#		Copyright (C) 2004-2018 Jonas Liljegren.	All Rights Reserved.
+#		Copyright (C) 2004-2019 Jonas Liljegren.	All Rights Reserved.
 #
 #		This module is free software; you can redistribute it and/or
 #		modify it under the same terms as Perl itself.

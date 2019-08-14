@@ -5,7 +5,7 @@ package Para::Frame::Email::Sending;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2017 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2019 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -43,7 +43,7 @@ use Para::Frame::Email::Address;
 use Para::Frame::Renderer::Email;
 #use Para::Frame::Renderer::TT_noplace;
 
-our $COUNTER = 1; # For generating message-id
+our $COUNTER = 1;								# For generating message-id
 
 
 =head2 DESCRIPTION
@@ -91,24 +91,24 @@ Returns the object.
 
 sub new
 {
-    my( $class, $p ) = @_;
-    my $req = $Para::Frame::REQ;
+	my( $class, $p ) = @_;
+	my $req = $Para::Frame::REQ;
 
-    my $s = bless
-    {
-     params =>
-     {
-      'u'        => $req->session->user,
-      'q'        => $req->q,
-      'site'     => $req->site,
-      'lang'     => $req->language->preferred, # calculate once
+	my $s = bless
+	{
+	 params =>
+	 {
+		'u'        => $req->session->user,
+		'q'        => $req->q,
+		'site'     => $req->site,
+		'lang'     => $req->language->preferred, # calculate once
 #     'req'      => $req,
-     },
-     result => {},
-    }, $class;
+	 },
+	 result => {},
+	}, $class;
 
-    $s->set($p) if $p;
-    return $s;
+	$s->set($p) if $p;
+	return $s;
 }
 
 
@@ -148,16 +148,16 @@ Params with special meaning are:
 
 sub set
 {
-    my( $s, $p ) = @_;
+	my( $s, $p ) = @_;
 
-    $p ||= {};
+	$p ||= {};
 
-    foreach my $key ( keys %$p )
-    {
-	$s->{params}{$key} = $p->{$key};
-    }
+	foreach my $key ( keys %$p )
+	{
+		$s->{params}{$key} = $p->{$key};
+	}
 
-    return $s->{params};
+	return $s->{params};
 }
 
 
@@ -173,7 +173,7 @@ Returns the hashref of params.
 
 sub params
 {
-    return $_[0]->{params};
+	return $_[0]->{params};
 }
 
 
@@ -197,14 +197,14 @@ sent to.
 
 sub good
 {
-    my( $s, $email ) = @_;
+	my( $s, $email ) = @_;
 
-    if( $email )
-    {
-    	return $s->{'result'}{'good'}{$email};
-    }
+	if ( $email )
+	{
+		return $s->{'result'}{'good'}{$email};
+	}
 
-    return wantarray ? keys %{$s->{'result'}{'good'}} : $s->{'result'}{'good'};
+	return wantarray ? keys %{$s->{'result'}{'good'}} : $s->{'result'}{'good'};
 }
 
 
@@ -226,14 +226,14 @@ If given an C<$email> returns true if this address was not sent to.
 
 sub bad
 {
-    my( $s, $email ) = @_;
+	my( $s, $email ) = @_;
 
-    if( $email )
-    {
-	return $s->{'result'}{'bad'}{$email};
-    }
+	if ( $email )
+	{
+		return $s->{'result'}{'bad'}{$email};
+	}
 
-    return wantarray ? keys %{$s->{'result'}{'bad'}} : $s->{'result'}{'bad'};
+	return wantarray ? keys %{$s->{'result'}{'bad'}} : $s->{'result'}{'bad'};
 }
 
 
@@ -249,7 +249,7 @@ Returns the error messages generated or the empty string.
 
 sub error_msg
 {
-    return $_[0]->{error_msg} || "";
+	return $_[0]->{error_msg} || "";
 }
 
 
@@ -281,21 +281,21 @@ Example:
 
 sub send_in_fork
 {
-    my( $s, $p_in ) = @_;
+	my( $s, $p_in ) = @_;
 
-    $s = $s->new unless ref $s;
-    $p_in ||= {};
+	$s = $s->new unless ref $s;
+	$p_in ||= {};
 
-    my $msg = delete( $p_in->{'return_message'} ) || "Email delivered";
+	my $msg = delete( $p_in->{'return_message'} ) || "Email delivered";
 
-    my $fork = $Para::Frame::REQ->create_fork;
-    if( $fork->in_child )
-    {
-	$s->send( $p_in ) or throw('email', $s->error_msg);
-	$fork->return($msg);
-    }
+	my $fork = $Para::Frame::REQ->create_fork;
+	if ( $fork->in_child )
+	{
+		$s->send( $p_in ) or throw('email', $s->error_msg);
+		$fork->return($msg);
+	}
 
-    return $fork;
+	return $fork;
 }
 
 
@@ -322,15 +322,15 @@ Calls L</send> with the given C<params>.
 
 sub send_in_background
 {
-    my( $s, $p_in ) = @_;
-    my $req = $Para::Frame::REQ;
+	my( $s, $p_in ) = @_;
+	my $req = $Para::Frame::REQ;
 
-    $s = $s->new($p_in) unless ref $s;
+	$s = $s->new($p_in) unless ref $s;
 
-    $req->add_background_job('send_email_in_background', sub{
-	$s->send_in_fork() or throw('email', $s->error_msg);
-    });
-    return 1;
+	$req->add_background_job('send_email_in_background', sub{
+														 $s->send_in_fork() or throw('email', $s->error_msg);
+													 });
+	return 1;
 }
 
 
@@ -358,18 +358,18 @@ Calls L</send> with the given C<params>.
 
 sub send_by_proxy
 {
-    my( $s, $p_in ) = @_;
+	my( $s, $p_in ) = @_;
 
-    # Let another program do the sending. We will not know if it realy
-    # succeeded.
+	# Let another program do the sending. We will not know if it realy
+	# succeeded.
 
-    debug "Sending by proxy";
+	debug 2, "Sending by proxy";
 
-    $s = $s->new unless ref $s;
-    $p_in ||= {};
-    $p_in->{'by_proxy'} = 1;
+	$s = $s->new unless ref $s;
+	$p_in ||= {};
+	$p_in->{'by_proxy'} = 1;
 
-    return $s->send($p_in);
+	return $s->send($p_in);
 }
 
 
@@ -451,63 +451,57 @@ Example:
 
 sub send
 {
-    my($s, $p_in ) = @_;
+	my($s, $p_in ) = @_;
 
-    my $req = $Para::Frame::REQ;
-    my $site = $req->site;
-    my $home = $site->home_url_path;
-    my $fqdn = fqdn;
+	my $req = $Para::Frame::REQ;
+	my $site = $req->site;
+	my $home = $site->home_url_path;
+	my $fqdn = fqdn;
 
-    unless( $site->send_email )
-    {
-	debug "Not sending any email right now...";
-	return 0;
-    }
+	debug 2, "Creating PF message obj";
 
-    debug "Creating PF message obj";
+	$s = $s->new unless ref $s;
 
-    $s = $s->new unless ref $s;
+	my $err_msg = "";
+	my $res = $s->{'result'} ||= {};
+	my $p = $s->set( $p_in );
 
-    my $err_msg = "";
-    my $res = $s->{'result'} ||= {};
-    my $p = $s->set( $p_in );
+	$p->{'from'}     or die "No from selected\n";
+	$p->{'to'}       or die "No reciever for this email?\n";
 
-    $p->{'from'}     or die "No from selected\n";
-    $p->{'to'}       or die "No reciever for this email?\n";
+	# List of addresses to try. Quit after first success
+	my @try = ref $p->{'to'} eq 'ARRAY' ? @{$p->{'to'}} : $p->{'to'};
 
-    # List of addresses to try. Quit after first success
-    my @try = ref $p->{'to'} eq 'ARRAY' ? @{$p->{'to'}} : $p->{'to'};
+	my $from_addr = Para::Frame::Email::Address->parse( $p->{'from'} );
+	$from_addr or
+		throw('mail', "Failed to parse address $p->{'from'}\n");
 
-    my $from_addr = Para::Frame::Email::Address->parse( $p->{'from'} );
-    $from_addr or
-	throw('mail', "Failed to parse address $p->{'from'}\n");
+	$p->{'from_addr'} = $from_addr;
 
-    $p->{'from_addr'} = $from_addr;
-
-    my $envelope_from_addr = $from_addr;
-    if( $p->{'envelope_from'} )
-    {
-	$envelope_from_addr = Para::Frame::Email::Address->parse( $p->{'envelope_from'} );
-    }
-    $p->{'envelope_from_addr'} = $envelope_from_addr;
-
-    my $envelope_from_addr_str = $envelope_from_addr->address;
-    my $from_addr_str = $from_addr->address;
-
-    debug "Email from $from_addr_str";
-
-
-    my @tried = ();
-  TRY:
-    foreach my $try ( @try )
-    {
-	$try or debug(0,"Empty reciever email address") and next;
-
-	debug "Trying $try";
-
-	my( $to_addr ) = Para::Frame::Email::Address->parse( $try );
-	unless( $to_addr )
+	my $envelope_from_addr = $from_addr;
+	if ( $p->{'envelope_from'} )
 	{
+		$envelope_from_addr = Para::Frame::Email::Address->parse( $p->{'envelope_from'} );
+	}
+	$p->{'envelope_from_addr'} = $envelope_from_addr;
+
+	my $envelope_from_addr_str = $envelope_from_addr->address;
+	my $from_addr_str = $from_addr->address;
+
+	debug 2, "Email from $from_addr_str";
+
+
+	my @tried = ();
+ TRY:
+	foreach my $try ( @try )
+	{
+		$try or debug(0,"Empty reciever email address") and next;
+
+		debug 2, "Trying $try";
+
+		my( $to_addr ) = Para::Frame::Email::Address->parse( $try );
+		unless( $to_addr )
+		{
 	    # Try to stringify
 	    $try = $try->as_string if ref $try;
 
@@ -515,18 +509,26 @@ sub send
 	    push @{$res->{'bad'}{$try}}, "Failed parsing";
 	    debug(0,"Failed parsing $try");
 	    next;
-	}
-	push @tried, $to_addr->address;
+		}
+		push @tried, $to_addr->address;
 
-	debug "Rendering message";
-	my $dataref = $s->renderer->render_message($to_addr);
-	debug "Rendering message - done";
+		debug 2, "Rendering message";
+		my $dataref = $s->renderer->render_message($to_addr);
+		debug 2, "Rendering message - done";
 
+		unless( $site->send_email )
+		{
+			debug "Not sending any email right now. Emulate success";
+	    my $to_addr_str = $to_addr->address;
+			$res->{'good'}{$to_addr_str} ||= [];
+			push @{$res->{'good'}{$to_addr_str}}, "succeeded";
+			last TRY;
+		}
 
-	# Should we send this by proxy?
-	#
-	if( $p->{'by_proxy'} )
-	{
+		# Should we send this by proxy?
+		#
+		if ( $p->{'by_proxy'} )
+		{
 	    my $to_addr_str = $to_addr->address;
 
 	    my $Sendmail = "/usr/lib/sendmail";
@@ -538,75 +540,75 @@ sub send
 
 	    eval
 	    {
-		### Open the command in a taint-safe fashion:
-		debug "Opening a pipe to sendmail";
-		my $pid = open SENDMAIL, "|-";
-		defined($pid) or die "open of pipe failed: $!\n";
-		if(!$pid)    ### child
-		{
-		    debug "Executing command @cmd";
-		    exec(@cmd) or die "can't exec $Sendmail: $!\n";
-		    ### NOTREACHED
-		}
-		else         ### parent
-		{
-		    debug "Sending email to pipe";
-		    print SENDMAIL $$dataref;
-		    close SENDMAIL || die "error closing $Sendmail: $! (exit $?)\n";
-		    debug "Pipe closed";
-		}
+				### Open the command in a taint-safe fashion:
+				debug "Opening a pipe to sendmail";
+				my $pid = open SENDMAIL, "|-";
+				defined($pid) or die "open of pipe failed: $!\n";
+				if (!$pid)							### child
+				{
+					debug "Executing command @cmd";
+					exec(@cmd) or die "can't exec $Sendmail: $!\n";
+					### NOTREACHED
+				}
+				else										### parent
+				{
+					debug "Sending email to pipe";
+					print SENDMAIL $$dataref;
+					close SENDMAIL || die "error closing $Sendmail: $! (exit $?)\n";
+					debug "Pipe closed";
+				}
 	    };
 
-	    if( $@ )
+	    if ( $@ )
 	    {
-		debug "We got problems: $@";
-		$res->{'bad'}{$to_addr_str} ||= [];
-		push @{$res->{'bad'}{$to_addr_str}}, "failed";
-		$err_msg .= debug(0,"Faild to send mail to $to_addr_str");
-		next TRY;
+				debug "We got problems: $@";
+				$res->{'bad'}{$to_addr_str} ||= [];
+				push @{$res->{'bad'}{$to_addr_str}}, "failed";
+				$err_msg .= debug(0,"Faild to send mail to $to_addr_str");
+				next TRY;
 	    }
 	    else
 	    {
-		# Success!
-		debug(1,"Success");
-		$res->{'good'}{$to_addr_str} ||= [];
-		push @{$res->{'good'}{$to_addr_str}}, "succeeded";
-		last TRY;
+				# Success!
+				debug(1,"Success");
+				$res->{'good'}{$to_addr_str} ||= [];
+				push @{$res->{'good'}{$to_addr_str}}, "succeeded";
+				last TRY;
 	    }
-	}
+		}
 
 
-	debug "Getting host";
-	my( $host ) = $to_addr->host();
-	unless( $host )
-	{
+		debug "Getting host";
+		my( $host ) = $to_addr->host();
+		unless( $host )
+		{
 	    my $to_addr_str = $to_addr->address;
 	    $res->{'bad'}{$to_addr_str} ||= [];
 	    push @{$res->{'bad'}{$to_addr_str}}, "Nu such host";
 	    debug(0,"Nu such host: $to_addr_str");
 	    next;
-	}
+		}
 
-	debug "Getting MX";
-	my @mx_list = mx($host);
-	my @mailhost_list;
-	foreach my $mx ( @mx_list )
-	{
+		debug "Getting MX";
+		my @mx_list = mx($host);
+		my @mailhost_list;
+		foreach my $mx ( @mx_list )
+		{
 	    push @mailhost_list, $mx->exchange();
-	}
-	unless( @mailhost_list )
-	{
+		}
+		unless( @mailhost_list )
+		{
 	    $err_msg .= debug(0,"Domain $host do not accept email (No MX record)");
 	    unless( $host =~ /^mail\./ )
 	    {
-		push @mailhost_list, "mail.$host";
+				push @mailhost_list, "mail.$host";
 	    }
 	    push @mailhost_list, $host;
 	    $err_msg .= debug(0,"  But I'll try anyway (guessing mailserver)");
-	}
-      MX:
-	foreach my $mailhost ( @mailhost_list )
-	{
+		}
+	MX:
+		foreach my $mailhost ( @mailhost_list )
+		{
 	    $req->note("Connecting to $mailhost");
 
 	    # TODO: Specify hello string...
@@ -615,10 +617,10 @@ sub send
 	    # keep us waiting as a way to sort out spammers.
 
 	    my $smtp = Net::SMTP->new( Host    => $mailhost,
-				       Timeout => 120,
-				       Debug   => 0,
-				       Hello   => $fqdn,
-				       );
+																 Timeout => 120,
+																 Debug   => 0,
+																 Hello   => $fqdn,
+															 );
 
 #	    # DEBUG (should nog happen)
 #	    if( $smtp and $smtp->domain eq 'paranormal.se' )
@@ -630,38 +632,38 @@ sub send
 
 	  SEND:
 	    {
-		if( $smtp )
-		{
-		    $smtp->debug(1) if debug > 1;
-		    $req->note(sprintf("Connected to %s", $smtp->domain));
-		    debug(0,"Sending mail from $envelope_from_addr_str");
-		    debug(0,"Sending mail to $to_addr_str");
-		    $smtp->mail($envelope_from_addr_str) or last SEND;
-		    $smtp->to($to_addr_str) or last SEND;
-		    my $datawait = 0;
-		    while( not $smtp->data() )
-		    {
-			if( $datawait ++ > 10 )
-			{
-			    debug "timeout waiting for data ready";
-			    last SEND;
-			}
-			debug "waiting for data ready";
-			sleep 0.2 * $datawait;
-		    }
-		    $smtp->datasend($$dataref) or last SEND;
-		    $smtp->dataend() or last SEND;
-		    $smtp->quit() or last SEND;
+				if ( $smtp )
+				{
+					$smtp->debug(1) if debug > 1;
+					$req->note(sprintf("Connected to %s", $smtp->domain));
+					debug(0,"Sending mail from $envelope_from_addr_str");
+					debug(0,"Sending mail to $to_addr_str");
+					$smtp->mail($envelope_from_addr_str) or last SEND;
+					$smtp->to($to_addr_str) or last SEND;
+					my $datawait = 0;
+					while ( not $smtp->data() )
+					{
+						if ( $datawait ++ > 10 )
+						{
+							debug "timeout waiting for data ready";
+							last SEND;
+						}
+						debug "waiting for data ready";
+						sleep 0.2 * $datawait;
+					}
+					$smtp->datasend($$dataref) or last SEND;
+					$smtp->dataend() or last SEND;
+					$smtp->quit() or last SEND;
 
-		    # Success!
-		    debug(2,"Success",-1);
-		    $res->{'good'}{$to_addr_str} ||= [];
-		    push @{$res->{'good'}{$to_addr_str}}, $smtp->message();
-		    last TRY;
-		}
-		$err_msg .= "No answer from mx $mailhost";
-		$req->note("No answer from mx $mailhost");
-		next MX;
+					# Success!
+					debug(2,"Success",-1);
+					$res->{'good'}{$to_addr_str} ||= [];
+					push @{$res->{'good'}{$to_addr_str}}, $smtp->message();
+					last TRY;
+				}
+				$err_msg .= "No answer from mx $mailhost";
+				$req->note("No answer from mx $mailhost");
+				next MX;
 	    }
 
 	    $res->{'bad'}{$to_addr_str} ||= [];
@@ -670,36 +672,36 @@ sub send
 	    $err_msg .= $mailhost_err_msg;
 	    $req->note($mailhost_err_msg);
 	    debug(-1);
+		}
+		debug(0,"Address bad");
 	}
-	debug(0,"Address bad");
-    }
 
-    if( $err_msg )
-    {
-	my $cnt = @tried;
-	$err_msg .= "Tried ".Para::Frame::Widget::inflect($cnt, "1 e-mail address", "%d e-mail addresses")."\n";
-    }
+	if ( $err_msg )
+	{
+		my $cnt = @tried;
+		$err_msg .= "Tried ".Para::Frame::Widget::inflect($cnt, "1 e-mail address", "%d e-mail addresses")."\n";
+	}
 
-    unless( @tried )
-    {
-	$err_msg .= "No working e-mail found\n";
-    }
+	unless( @tried )
+	{
+		$err_msg .= "No working e-mail found\n";
+	}
 
 #    debug(1,"Returning status. Error set to: $err_msg");
 
-    $s->{error_msg} = $err_msg;
+	$s->{error_msg} = $err_msg;
 
-    if( $res->{'good'} )
-    {
-	debug(1,"Returning success");
-	return 1;
-    }
-    else
-    {
-	debug(1,"Returning failure");
-	return 0;
-	# throw('mail', $err_msg);
-    }
+	if ( $res->{'good'} )
+	{
+		debug(2,"Returning success");
+		return 1;
+	}
+	else
+	{
+		debug(1,"Returning failure");
+		return 0;
+		# throw('mail', $err_msg);
+	}
 }
 
 
@@ -727,77 +729,87 @@ action - The error given by L<Crypt::OpenPGP/sign>
 
 sub pgpsign
 {
-    my( $dataref, $cfile ) = @_;
+	my( $dataref, $cfile ) = @_;
 
-    ## Code builded from examples in manuale.  KeyID taken from
-    ## example in file pgplet.  sub get_seckey()
+	## Code builded from examples in manuale.  KeyID taken from
+	## example in file pgplet.  sub get_seckey()
 
 
-    my $conf =
-    {
-     Compat => 'PGP5',
-     ConfigFile => $cfile,
-    };
+	my $conf =
+	{
+	 Compat => 'PGP5',
+	 ConfigFile => $cfile,
+	};
 
-    require Crypt::OpenPGP;
-    Crypt::OpenPGP->import();
+	require Crypt::OpenPGP;
+	Crypt::OpenPGP->import();
 
-    my $pgp = Crypt::OpenPGP->new( %$conf );
-    my $cert = get_seckey( $pgp ) or die $pgp->errstr;
-    my $key_id = $cert->key_id_hex;
+	my $pgp = Crypt::OpenPGP->new( %$conf );
+	my $cert = get_seckey( $pgp ) or die $pgp->errstr;
+	my $key_id = $cert->key_id_hex;
 
-    my $signature = $pgp->sign(
-			       Data   => $$dataref,
-			       KeyID      => $key_id,
-			       Clearsign  => 1,
-			      ) or die $pgp->errstr;
+	my $signature = $pgp->sign(
+														 Data   => $$dataref,
+														 KeyID      => $key_id,
+														 Clearsign  => 1,
+														) or die $pgp->errstr;
 
-    debug(0,"Signing email");
-    # Substitute the original data
-    ${$_[0]} = $signature;
-    return 1;
+	debug(0,"Signing email");
+	# Substitute the original data
+	${$_[0]} = $signature;
+	return 1;
 }
 
 sub get_seckey {
-    my($pgp, $opts) = @_;
-    my $ring = Crypt::OpenPGP::KeyRing->new( Filename =>
-        $pgp->{cfg}->get('SecRing') ) or
-            return $pgp->error(Crypt::OpenPGP::KeyRing->errstr);
-    my $kb;
-    if (my $user = $opts->{'local-user'}) {
-        my($lr, @kb) = (length($user));
-        if (($lr == 8 || $lr == 16) && $user !~ /[^\da-fA-F]/) {
-            @kb = $ring->find_keyblock_by_keyid(pack 'H*', $user);
-        } else {
-            @kb = $ring->find_keyblock_by_uid($user);
-        }
-        if (@kb > 1) {
-            my $prompt = "
+	my($pgp, $opts) = @_;
+	my $ring = Crypt::OpenPGP::KeyRing->new( Filename =>
+																					 $pgp->{cfg}->get('SecRing') ) or
+																						 return $pgp->error(Crypt::OpenPGP::KeyRing->errstr);
+	my $kb;
+	if (my $user = $opts->{'local-user'})
+	{
+		my($lr, @kb) = (length($user));
+		if (($lr == 8 || $lr == 16) && $user !~ /[^\da-fA-F]/)
+		{
+			@kb = $ring->find_keyblock_by_keyid(pack 'H*', $user);
+		}
+		else
+		{
+			@kb = $ring->find_keyblock_by_uid($user);
+		}
+		if (@kb > 1)
+		{
+			my $prompt = "
 The following keys can be used to sign the message:
 ";
-            my $i = 1;
-            for my $kb (@kb) {
-                my $cert = $kb->signing_key or next;
-                $prompt .= sprintf "    [%d] %s (ID %s)\n",
-                    $i++, $kb->primary_uid,
-                    substr($cert->key_id_hex, -8, 8);
-            }
-            $prompt .= "
+			my $i = 1;
+			for my $kb (@kb)
+			{
+				my $cert = $kb->signing_key or next;
+				$prompt .= sprintf "    [%d] %s (ID %s)\n",
+					$i++, $kb->primary_uid,
+					substr($cert->key_id_hex, -8, 8);
+			}
+			$prompt .= "
 Enter the index of the signing key you wish to use: ";
-            my $n;
-            $n = prompt($prompt, $i - 1) while $n < 1 || $n > @kb;
-            $kb = $kb[$n-1];
-        } else {
-            $kb = $kb[0];
-        }
-    } else {
-        $kb = $ring->find_keyblock_by_index(-1);
-    }
-    return $pgp->error("Can't find keyblock: " . $ring->errstr)
-        unless $kb;
-    my $cert = $kb->signing_key;
-    $cert->uid($kb->primary_uid);
-    $cert;
+			my $n;
+			$n = prompt($prompt, $i - 1) while $n < 1 || $n > @kb;
+			$kb = $kb[$n-1];
+		}
+		else
+		{
+			$kb = $kb[0];
+		}
+	}
+	else
+	{
+		$kb = $ring->find_keyblock_by_index(-1);
+	}
+	return $pgp->error("Can't find keyblock: " . $ring->errstr)
+		unless $kb;
+	my $cert = $kb->signing_key;
+	$cert->uid($kb->primary_uid);
+	$cert;
 }
 
 ##############################################################################
@@ -821,23 +833,23 @@ Returns: The message id, without surrounding <>
 
 sub generate_message_id
 {
-    my( $this, $args ) = @_;
+	my( $this, $args ) = @_;
 
-    $args ||= {};
+	$args ||= {};
 
-    my $now = $args->{'time'} || now();
+	my $now = $args->{'time'} || now();
 
-    my $right = fqdn();
+	my $right = fqdn();
 
-    # Combination of time port and counter should be unique
+	# Combination of time port and counter should be unique
 
-    my $port = $Para::Frame::CFG->{'port'};
-    my $epoch = $now->epoch;
-    my $count = ++ $COUNTER;
+	my $port = $Para::Frame::CFG->{'port'};
+	my $epoch = $now->epoch;
+	my $count = ++ $COUNTER;
 
-    my $left = $count .".". $epoch .".". $port .".". "pf";
+	my $left = $count .".". $epoch .".". $port .".". "pf";
 
-    return $left .'@'. $right;
+	return $left .'@'. $right;
 }
 
 ##############################################################################
@@ -848,8 +860,8 @@ sub generate_message_id
 
 sub renderer
 {
-    return $_[0]->{renderer} ||=
-      Para::Frame::Renderer::Email->new({params=>$_[0]->{'params'}});
+	return $_[0]->{renderer} ||=
+		Para::Frame::Renderer::Email->new({params=>$_[0]->{'params'}});
 }
 
 ##############################################################################
@@ -860,7 +872,7 @@ sub renderer
 
 sub email
 {
-    return $_[0]->renderer->email;
+	return $_[0]->renderer->email;
 }
 
 ##############################################################################
