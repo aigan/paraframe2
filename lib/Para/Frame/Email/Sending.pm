@@ -541,12 +541,12 @@ sub send
 	    eval
 	    {
 				### Open the command in a taint-safe fashion:
-				debug "Opening a pipe to sendmail";
+				debug 2, "Opening a pipe to sendmail";
 				my $pid = open SENDMAIL, "|-";
 				defined($pid) or die "open of pipe failed: $!\n";
 				if (!$pid)							### child
 				{
-					debug "Executing command @cmd";
+					debug 2, "Executing command @cmd";
 					exec(@cmd) or die "can't exec $Sendmail: $!\n";
 					### NOTREACHED
 				}
@@ -555,7 +555,7 @@ sub send
 					debug "Sending email to pipe";
 					print SENDMAIL $$dataref;
 					close SENDMAIL || die "error closing $Sendmail: $! (exit $?)\n";
-					debug "Pipe closed";
+					debug 2, "Pipe closed";
 				}
 	    };
 
