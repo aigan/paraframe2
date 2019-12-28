@@ -74,8 +74,12 @@ sub as_html
 
 	my $site = $c->{'site'} or die "No site given";
 
-	my $public_key = $site->{'recaptcha_key_public'} or
-		die "No recaptcha_key_public found for site ". $site->desig;
+	my $public_key = $site->{'recaptcha_key_public'};
+	if( !$public_key )
+	{
+		warn "No recaptcha_key_public found for site ". $site->desig;
+		return "";
+	}
 
 	my $co = Captcha::reCAPTCHA->new;
 
