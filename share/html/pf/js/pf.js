@@ -294,6 +294,47 @@ function pf_expandable_input_init()
     .on('input.pf_expandable_input',pf_expandable_input_expand);
 }
 
+function pf_boxes_adjust_init()
+{
+	const el_main = document.getElementById('main');
+	const el_boxes = document.getElementById('paraframe_boxes');
+
+	if( !el_main || !el_boxes ) return;
+	
+	const main_style = window.getComputedStyle(el_main);
+	const boxes_style = window.getComputedStyle(el_boxes);
+
+	const main_pad_top = parseFloat(main_style.getPropertyValue('padding-top'));
+	const main_pad_width =
+				parseFloat(main_style.getPropertyValue('border-left')) +
+				parseFloat(main_style.getPropertyValue('padding-left')) +
+				parseFloat(main_style.getPropertyValue('padding-right')) +
+				parseFloat(main_style.getPropertyValue('border-right'));
+
+	let raf;
+
+	function do_resize(){
+		//	console.log('resizing');
+		raf = null;
+		const boxes_rect = el_boxes.getBoundingClientRect();
+		const main_rect = el_main.getBoundingClientRect();
+		el_main.style["padding-top"] = (main_pad_top + boxes_rect.height)+"px";
+		el_boxes.style.width = (main_rect.width - main_pad_width )+"px";
+	}
+
+	const obs_main = new ResizeObserver( els =>{
+		//	console.log('main resized');
+		if( !raf )  raf = window.requestAnimationFrame(do_resize);
+	});
+
+	const obs_boxes = new ResizeObserver( els =>{
+		//	console.log('pfboxes resized');
+		if( !raf )  raf = window.requestAnimationFrame(do_resize);
+	});
+
+	obs_main.observe( el_main );
+	obs_boxes.observe( el_boxes );
+}
 
 function pf_document_ready()
 {
@@ -306,7 +347,8 @@ function pf_document_ready()
   pf_tree_toggle_init();
   pf_toggle_init();
   pf_expandable_input_init();
-
+	pf_boxes_adjust_init();
+	
   $('.notifications').click(pf_menu_height_adjust);
 
 

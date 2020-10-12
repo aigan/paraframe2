@@ -108,6 +108,19 @@ tr.odd
   text-decoration: none;
 }
 
+#paraframe_boxes {
+	overflow: auto;
+	display: flex;
+	top: 10px;
+	position: absolute;
+	box-sizing: border-box;
+}
+
+#paraframe_infolist, #paraframe_errorlist {
+	flex: 1;
+}
+
+
 .paraframe_info
 {
   font-weight: bold;

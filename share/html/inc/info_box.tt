@@ -1,5 +1,6 @@
-﻿[% FOREACH part IN req.result.error_parts;
-      IF loop.first; '<section class="error">'; END;
+﻿<section id="paraframe_boxes">
+[% FOREACH part IN req.result.error_parts;
+      IF loop.first; '<section id="paraframe_errorlist" class="error">'; END;
       IF part.prefix_message;
 %]       <pre class="paraframe_error_prefix">[% part.prefix_message | html %]</pre>
 [%    END;
@@ -10,9 +11,10 @@
 
 [%
 FOREACH part IN req.result.info_parts;
-   IF loop.first; '<section>'; END; %]
+   IF loop.first; '<section id="paraframe_infolist">'; END; %]
    <pre class="paraframe_info">[% part.message | html %]</pre>
    [%
    IF loop.last; '</section>'; END;
 END;
 %]
+</section>
