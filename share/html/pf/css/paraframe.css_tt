@@ -114,6 +114,7 @@ tr.odd
 	top: 10px;
 	position: absolute;
 	box-sizing: border-box;
+	flex-direction: column;
 }
 
 #paraframe_infolist, #paraframe_errorlist {
@@ -126,6 +127,7 @@ tr.odd
   font-weight: bold;
   font-family:  verdana, Arial, helvetica, san-serif;
   font-size: 10pt;
+	display: inline-block;
 }
 
 .paraframe_box
