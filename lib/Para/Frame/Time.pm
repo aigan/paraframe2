@@ -25,7 +25,7 @@ use base qw( DateTime );
 
 use Carp qw( cluck carp );
 use Date::Manip::Date;
-use DateTime; # Should use 0.3, but not required
+use DateTime;										# Should use 0.3, but not required
 use DateTime::Duration;
 use DateTime::Span;
 use DateTime::Format::Strptime;
@@ -34,43 +34,43 @@ use DateTime::Format::HTTP;
 
 # These are set in Para::Frame->configure
 # Use timezone only for presentation. Not for date calculations
-our $TZ;           # Default Timezone
-our $FORMAT;       # Default format
-our $STRINGIFY;    # Default format used for stringification
-our $LOCAL_PARSER; # For use with Date::Manip
-our %DM;           # DateManip objects
-our $BASE_DATE;    # See set_base()
+our $TZ;										 # Default Timezone
+our $FORMAT;								 # Default format
+our $STRINGIFY;							 # Default format used for stringification
+our $LOCAL_PARSER;					 # For use with Date::Manip
+our %DM;										 # DateManip objects
+our $BASE_DATE;							 # See set_base()
 
 our @EXPORT_OK = qw(internet_date date now timespan duration ); #for docs only
 
-use Para::Frame::Reload; # This code is mingled with DateTime...
+use Para::Frame::Reload;			 # This code is mingled with DateTime...
 use Para::Frame::Utils qw( throw debug datadump );
 
 no warnings 'redefine';
 sub import
 {
-    my $class = shift;
+	my $class = shift;
 
-    # Initiate Date::Manip
-    $DM{'en'} = new Date::Manip::Date;
-    $DM{'en'}->config("Language","English","DateFormat","non-US");
-    _patch_dm_formats( $DM{'en'} );
+	# Initiate Date::Manip
+	$DM{'en'} = new Date::Manip::Date;
+	$DM{'en'}->config("Language","English","DateFormat","non-US");
+	_patch_dm_formats( $DM{'en'} );
 
 #    Date_Init("Language=English");
 #    Date_Init("Language=Swedish"); # Reset language
 
 
 
-    #Export functions like Exporter do
-    my $callpkg = caller();
-    no strict 'refs'; # Symbolic refs
-    *{"$callpkg\::$_"} = \&{"$class\::$_"} foreach @_;
+	#Export functions like Exporter do
+	my $callpkg = caller();
+	no strict 'refs';							# Symbolic refs
+	*{"$callpkg\::$_"} = \&{"$class\::$_"} foreach @_;
 
 
-    $LOCAL_PARSER =
-      DateTime::Format::Strptime->new( pattern => '%Y%m%d%H:%M:%S',
-				       time_zone => 'floating',
-                                     );
+	$LOCAL_PARSER =
+		DateTime::Format::Strptime->new( pattern => '%Y%m%d%H:%M:%S',
+																		 time_zone => 'floating',
+																	 );
 }
 
 
@@ -134,74 +134,74 @@ BEFORE you call this method.
 
 sub get
 {
-    my( $this, $time ) = @_;
+	my( $this, $time ) = @_;
 
-    return undef unless $time;
+	return undef unless $time;
 
-    my $DEBUG = 0;
+	my $DEBUG = 0;
 
 
-    my $class = ref($this) || $this;
-    if( UNIVERSAL::isa $time, "DateTime" )
-    {
-	if( UNIVERSAL::isa $time, $class )
+	my $class = ref($this) || $this;
+	if ( UNIVERSAL::isa $time, "DateTime" )
 	{
+		if ( UNIVERSAL::isa $time, $class )
+		{
 	    debug "Keeping date '$time'" if $DEBUG;
 	    return $time;
-	}
-	else
-	{
+		}
+		else
+		{
 	    # Rebless in right class. (May be subclass)
 	    debug "Reblessing date '$time'" if $DEBUG;
 	    return bless $time, $class;
+		}
 	}
-    }
 
-    # Trimming
-    $time =~ s/\s+$//;
-    $time =~ s/^\s+//;
+	# Trimming
+	$time =~ s/\s+$//;
+	$time =~ s/^\s+//;
 
-    my $tz = $TZ;
+	my $tz = $TZ;
 
-    debug "Parsing date '$time'" if $DEBUG;
+	debug "Parsing date '$time'" if $DEBUG;
 
-    my $date;
-    if( $time =~ /^(\d{7,})([,\.]\d+)?$/ )
-    {
-	# Epoch time. Maby with subsecond precision
-	debug "  as epoch" if $DEBUG;
-	$date = DateTime->from_epoch( epoch => $1 );
-    }
-    else
-    {
-	debug "Parsing with standard format" if $DEBUG;
-
-	eval{ $date = $FORMAT->parse_datetime($time) };
-    }
-
-    unless( $date ) # Handling common compact dates and times
-    {
-	# Recognized formats:
-	#
-	# 090102
-	# 20090102
-	# 09-01-02
-	# 2009-01-02
-	# date 304
-	# date 0304
-	# date 3:04
-	# date 03:04
-	# date 3.04
-	# date 03.04
-	# date 30405
-	# date 030405
-	# date 3.04.05
-	# date 03.04.05
-	# date 3:04:05
-	# date 03:04:05
-
-	if( $time =~ /^(19|20)?(\d\d)(-)?(\d\d)\3?(\d\d)(?:\s+(\d\d?)(\.|:)?(\d\d)(?:\7(\d\d))?)?\s*$/ )
+	my $date;
+	if ( $time =~ /^(\d{7,})([,\.]\d+)?$/ )
 	{
+		# Epoch time. Maby with subsecond precision
+		debug "  as epoch" if $DEBUG;
+		$date = DateTime->from_epoch( epoch => $1 );
+	}
+	else
+	{
+		debug "Parsing with standard format" if $DEBUG;
+
+		eval{ $date = $FORMAT->parse_datetime($time) };
+	}
+
+	unless( $date )						 # Handling common compact dates and times
+	{
+		# Recognized formats:
+		#
+		# 090102
+		# 20090102
+		# 09-01-02
+		# 2009-01-02
+		# date 304
+		# date 0304
+		# date 3:04
+		# date 03:04
+		# date 3.04
+		# date 03.04
+		# date 30405
+		# date 030405
+		# date 3.04.05
+		# date 03.04.05
+		# date 3:04:05
+		# date 03:04:05
+
+		if ( $time =~ /^(19|20)?(\d\d)(-)?(\d\d)\3?(\d\d)(?:\s+(\d\d?)(\.|:)?(\d\d)(?:\7(\d\d))?)?\s*$/ )
+		{
 	    debug "Parsing date in compact format" if $DEBUG;
 
 	    my $cent = $1 || 20;
@@ -214,19 +214,19 @@ sub get
 	    my $sec = $9 || 0;
 
 	    $date = DateTime->new( year => $year,
-				   month => $month,
-				   day => $day,
-				   hour => $hour,
-				   minute => $min,
-				   second => $sec,
-				 );
+														 month => $month,
+														 day => $day,
+														 hour => $hour,
+														 minute => $min,
+														 second => $sec,
+													 );
+		}
 	}
-    }
 
 
-    unless( $date )
-    {
-	debug "Parsing common formats" if $DEBUG;
+	unless( $date )
+	{
+		debug "Parsing common formats" if $DEBUG;
 
 # NOTE: Give example of good reason before activating this
 #	if( $time =~ s/([\+\-]\d\d)\s*$/${1}00/ )
@@ -234,99 +234,99 @@ sub get
 #	    debug "Reformatted date to '$time'" if $DEBUG;
 #	}
 
-	eval{ $date = DateTime::Format::HTTP->parse_datetime( $time, $tz ) };
-    }
+		eval{ $date = DateTime::Format::HTTP->parse_datetime( $time, $tz ) };
+	}
 
-    my $lang;
+	my $lang;
 
-    unless( $date )
-    {
-        $lang = $Para::Frame::REQ->lang->preferred;
-
-	# Parsing in local timezone
-	debug "Parsing universal using lang $lang" if $DEBUG;
-        unless( $DM{$lang} )
-        {
-            $DM{$lang} = new Date::Manip::Date;
-            $DM{$lang}->config("Language",$lang,"DateFormat","non-US");
-        }
-
-	if( $BASE_DATE )
+	unless( $date )
 	{
+		$lang = $Para::Frame::REQ->lang->preferred;
+
+		# Parsing in local timezone
+		debug "Parsing universal using lang $lang" if $DEBUG;
+		unless ( $DM{$lang} )
+		{
+			$DM{$lang} = new Date::Manip::Date;
+			$DM{$lang}->config("Language",$lang,"DateFormat","non-US");
+		}
+
+		if ( $BASE_DATE )
+		{
 	    debug "Using base ".$BASE_DATE->desig if $DEBUG;
 	    $DM{$lang}->config("setdate",$BASE_DATE->ymd.'-'.$BASE_DATE->hms);
-	}
+		}
 
 #        my $err = $DM{$lang}->parse($time);
 #        debug "Res of parsing is ".$DM{$lang}->value;
 #        debug "Err of parsing is $err";
 
-        unless( $DM{$lang}->parse($time) ) # Relative $BASE_DATE
-        {
-            $date = $LOCAL_PARSER->parse_datetime(scalar $DM{$lang}->value);
-        }
-        else
-        {
-            carp( $DM{$lang}->err() ) if $DEBUG;
-        }
-    }
-
-    unless( $date )
-    {
-	# Parsing historical years
-	if( $time =~ /^-?\d{1,4}$/ )
-	{
-	    debug "  as historical year" if $DEBUG;
-	    $date = DateTime->new( year => $time );
-	    return bless($date, $class)->init('floating');
-	}
-    }
-
-    unless( $date )
-    {
- 	# Try once more, in english
-#	my $cur_lang = $Date::Manip::Cnf{'Language'} || 'English';
-	if( $lang ne 'en' )
-	{
-	    debug "Trying in english...";
-#	    Date_Init("Language=English");
-
-	    if( $BASE_DATE )
-	    {
-		debug "Using base ".$BASE_DATE->desig if $DEBUG;
-		$DM{'en'}->config("setdate",$BASE_DATE->ymd.'-'.$BASE_DATE->hms);
-	    }
-
-#            debug "Using dm obj ".$DM{'en'};
-            unless( $DM{'en'}->parse($time) ) # Relative $BASE_DATE
-            {
-#		debug "Complete? ".$DM{'en'}->complete;
-#                debug( "DM res: ".$DM{'en'}->value );
-                $date = $LOCAL_PARSER->parse_datetime(scalar $DM{'en'}->value);
-#                debug "DM val ".$date;
-            }
-            else
-            {
-                carp( $DM{'en'}->err() ) if $DEBUG;
-            }
-
-#	    Date_Init("Language=$cur_lang"); # Reset language
+		unless ( $DM{$lang}->parse($time) ) # Relative $BASE_DATE
+		{
+			$date = $LOCAL_PARSER->parse_datetime(scalar $DM{$lang}->value);
+		}
+		else
+		{
+			carp( $DM{$lang}->err() ) if $DEBUG;
+		}
 	}
 
 	unless( $date )
 	{
+		# Parsing historical years
+		if ( $time =~ /^-?\d{1,4}$/ )
+		{
+	    debug "  as historical year" if $DEBUG;
+	    $date = DateTime->new( year => $time );
+	    return bless($date, $class)->init('floating');
+		}
+	}
+
+	unless( $date )
+	{
+		# Try once more, in english
+#	my $cur_lang = $Date::Manip::Cnf{'Language'} || 'English';
+		if ( $lang ne 'en' )
+		{
+	    debug "Trying in english...";
+#	    Date_Init("Language=English");
+
+	    if ( $BASE_DATE )
+	    {
+				debug "Using base ".$BASE_DATE->desig if $DEBUG;
+				$DM{'en'}->config("setdate",$BASE_DATE->ymd.'-'.$BASE_DATE->hms);
+	    }
+
+#            debug "Using dm obj ".$DM{'en'};
+			unless ( $DM{'en'}->parse($time) ) # Relative $BASE_DATE
+			{
+#		debug "Complete? ".$DM{'en'}->complete;
+#                debug( "DM res: ".$DM{'en'}->value );
+				$date = $LOCAL_PARSER->parse_datetime(scalar $DM{'en'}->value);
+#                debug "DM val ".$date;
+			}
+			else
+			{
+				carp( $DM{'en'}->err() ) if $DEBUG;
+			}
+
+#	    Date_Init("Language=$cur_lang"); # Reset language
+		}
+
+		unless( $date )
+		{
 	    cluck;
 	    throw('validation', "Time format '$time' not recognized");
+		}
 	}
-    }
 
-    if( $date->year < 1900 or $date->year > 2100 )
-    {
-	debug "Using floating time zone for historic ".$date->iso8601;
-	$tz = 'floating';
-    }
+	if ( $date->year < 1900 or $date->year > 2100 )
+	{
+		debug "Using floating time zone for historic ".$date->iso8601;
+		$tz = 'floating';
+	}
 
-    return bless($date, $class)->init($tz);
+	return bless($date, $class)->init($tz);
 }
 
 
@@ -341,19 +341,19 @@ sub get
 
 sub init
 {
-    #debug "Initiating date: $_[0]";
-    $STRINGIFY and $_[0]->set_formatter($STRINGIFY);
-    eval{ $_[0]->set_time_zone($_[1] || $TZ) };
-    if( $@ =~ /^Invalid local time for date/ )
-    {
-	debug $@;
-	debug "Setting UTC for ".$_[0]->sysdesig;
-	$_[0]->set_time_zone('UTC');
-	undef $@;
-    }
+	#debug "Initiating date: $_[0]";
+	$STRINGIFY and $_[0]->set_formatter($STRINGIFY);
+	eval{ $_[0]->set_time_zone($_[1] || $TZ) };
+	if ( $@ =~ /^Invalid local time for date/ )
+	{
+		debug $@;
+		debug "Setting UTC for ".$_[0]->sysdesig;
+		$_[0]->set_time_zone('UTC');
+		undef $@;
+	}
 
-    #debug "Finaly: $_[0]";
-    return $_[0];
+	#debug "Finaly: $_[0]";
+	return $_[0];
 }
 
 
@@ -370,8 +370,8 @@ relative to now.
 
 sub set_base
 {
-    my( $this, $base ) = @_;
-    $BASE_DATE = $base;
+	my( $this, $base ) = @_;
+	$BASE_DATE = $base;
 }
 
 
@@ -388,9 +388,9 @@ Returns a C<Para::Frame::Time> object representing current time.
 sub now
 {
 #    cluck "Para::Frame::now called with ".datadump(\@_);
-    my $now = bless(DateTime->now())->init;
+	my $now = bless(DateTime->now())->init;
 #    debug "Para::Frame::now returning '$now'";
-    return $now;
+	return $now;
 }
 
 
@@ -406,7 +406,7 @@ This function calls L</get> whit the given string.
 
 sub date
 {
-    return Para::Frame::Time->get(@_);
+	return Para::Frame::Time->get(@_);
 }
 
 
@@ -428,23 +428,23 @@ For other options, use L<DateTime::Span> directly
 
 sub timespan
 {
-    my( $from_in, $to_in ) = @_;
+	my( $from_in, $to_in ) = @_;
 
-    my @args;
+	my @args;
 
-    if( $from_in )
-    {
-	my $from = Para::Frame::Time->get($from_in);
-	push @args, ( start => $from );
-    }
+	if ( $from_in )
+	{
+		my $from = Para::Frame::Time->get($from_in);
+		push @args, ( start => $from );
+	}
 
-    if( $to_in )
-    {
-	my $to = Para::Frame::Time->get($to_in);
-	push @args, ( end => $to );
-    }
+	if ( $to_in )
+	{
+		my $to = Para::Frame::Time->get($to_in);
+		push @args, ( end => $to );
+	}
 
-    return DateTime::Span->from_datetimes( @args );
+	return DateTime::Span->from_datetimes( @args );
 }
 
 
@@ -460,7 +460,7 @@ Returns a L<DateTime::Duration> object.
 
 sub duration
 {
-    return DateTime::Duration->new( @_ );
+	return DateTime::Duration->new( @_ );
 }
 
 
@@ -482,9 +482,9 @@ sub internet_date
 {
 #    my $old = setlocale(LC_TIME);
 #    setlocale(LC_TIME, "C");
-    my $res = Para::Frame::Time->get($_[0])->strftime('%a, %d %b %Y %T %z');
+	my $res = Para::Frame::Time->get($_[0])->strftime('%a, %d %b %Y %T %z');
 #    setlocale(LC_TIME, $old);
-    return $res;
+	return $res;
 }
 
 
@@ -509,14 +509,14 @@ Returns a string representing the datetime
 
 sub format_datetime
 {
-    my( $t, $args ) = @_;
-    $args ||= {};
-    if( $args->{'format'} )
-    {
-	return $t->strftime( $args->{'format'} );
-    }
+	my( $t, $args ) = @_;
+	$args ||= {};
+	if ( $args->{'format'} )
+	{
+		return $t->strftime( $args->{'format'} );
+	}
 
-    return $FORMAT->format_datetime($t);
+	return $FORMAT->format_datetime($t);
 }
 
 
@@ -532,7 +532,7 @@ Same as L</format_datetime>
 
 sub stamp
 {
-    $_[0]->format_datetime($_[1]);
+	$_[0]->format_datetime($_[1]);
 }
 
 
@@ -548,7 +548,7 @@ Same as L</format_datetime>
 
 sub desig
 {
-    $_[0]->format_datetime($_[1]);
+	$_[0]->format_datetime($_[1]);
 }
 
 
@@ -564,7 +564,7 @@ Same as L</format_datetime>
 
 sub plain
 {
-    $_[0]->format_datetime($_[1]);
+	$_[0]->format_datetime($_[1]);
 }
 
 
@@ -582,7 +582,7 @@ TODO: Localize format
 
 sub loc($)
 {
-    return $_[0]->format_datetime(undef);
+	return $_[0]->format_datetime(undef);
 }
 
 
@@ -598,7 +598,7 @@ Returns a string representation of the object for debug purposes.
 
 sub sysdesig
 {
-    return sprintf("Date %s", $_[0]->strftime('%Y-%m-%d %H.%M.%S %z' ));
+	return sprintf("Date %s", $_[0]->strftime('%Y-%m-%d %H.%M.%S %z' ));
 }
 
 
@@ -619,7 +619,7 @@ Returns a unique predictable id representing this object
 
 sub syskey
 {
-    return "time:".$_[0]->iso8601;
+	return "time:".$_[0]->iso8601;
 }
 
 
@@ -635,15 +635,15 @@ Returns true if both objects has the same value.
 
 sub equals
 {
-    my( $val1, $val2 ) = @_;
+	my( $val1, $val2 ) = @_;
 
-    return 0 unless UNIVERSAL::isa $val2, 'DateTime';
+	return 0 unless UNIVERSAL::isa $val2, 'DateTime';
 
 #    warn "Checking equality of two dates\n";
 #    warn "  Date 1: $val1\n";
 #    warn "  Date 2: $val2\n";
 
-    return( $val1 == $val2 );
+	return( $val1 == $val2 );
 }
 
 
@@ -666,42 +666,42 @@ from L<Para::Frame/configure>.
 
 sub set_stringify
 {
-    my( $this, $format ) = @_;
+	my( $this, $format ) = @_;
 
-    my $class = ref($this) || $this;
+	my $class = ref($this) || $this;
 
-    if( $format )
-    {
-	if( $format =~ /%/ )
+	if ( $format )
 	{
+		if ( $format =~ /%/ )
+		{
 	    $STRINGIFY = DateTime::Format::Strptime->
-		new(
-		    pattern => $Para::Frame::CFG->{'time_format'},
+				new(
+						pattern => $Para::Frame::CFG->{'time_format'},
 #		    time_zone => $TZ,
-		    locale => $Para::Frame::CFG->{'locale'},
-		   );
-	}
-	elsif( ref $format )
-	{
+						locale => $Para::Frame::CFG->{'locale'},
+					 );
+		}
+		elsif ( ref $format )
+		{
 	    $STRINGIFY = $format;
-	}
-	elsif( $format == 1 )
-	{
+		}
+		elsif ( $format == 1 )
+		{
 	    $STRINGIFY = $FORMAT;
-	}
-	elsif( not $format )
-	{
+		}
+		elsif ( not $format )
+		{
 	    undef $STRINGIFY;
-	}
-	else
-	{
+		}
+		else
+		{
 	    die "Format malformed: $format";
+		}
 	}
-    }
 
 #    debug "Stringify now set";
 
-    return $STRINGIFY;
+	return $STRINGIFY;
 }
 
 
@@ -721,9 +721,9 @@ Returns the L<DateTime::TimeZone> object.
 
 sub set_timezone
 {
-    my( $this, $name ) = @_;
+	my( $this, $name ) = @_;
 
-    $TZ = DateTime::TimeZone->new( name => $name );
+	$TZ = DateTime::TimeZone->new( name => $name );
 #    debug "Timezone set to ".$TZ->name;
 
 
@@ -750,31 +750,31 @@ English or Swedish. (Sweden uses it's own variants of english dates)
 
 sub extract_date
 {
-    my( $this, $string, $base ) = @_;
+	my( $this, $string, $base ) = @_;
 #    my $class = ref($this) || $this;
 
-    my( $date ) = $this->_extract_date( $string );
-    if( $date )
-    {
+	my( $date ) = $this->_extract_date( $string );
+	if ( $date )
+	{
 #	debug sprintf "Extracted date '%s' (%d)", $date, length($date);
-	# Weekdays always referse to the future
+		# Weekdays always referse to the future
 
-	if( $date =~ /^$rx_long_weekday_en$/i )
-	{
+		if ( $date =~ /^$rx_long_weekday_en$/i )
+		{
 	    $date = "next $date";
-	}
+		}
 
-	if( $date =~ /^$rx_long_weekday_sv$/i )
-	{
+		if ( $date =~ /^$rx_long_weekday_sv$/i )
+		{
 	    $date = "nästa $date";
+		}
+
+		$this->set_base($base) if $base;
+
+		return eval{ $this->get( $date ) };
 	}
 
-	$this->set_base($base) if $base;
-
-        return eval{ $this->get( $date ) };
-    }
-
-    return undef;
+	return undef;
 }
 
 
@@ -782,47 +782,47 @@ sub extract_date
 
 sub _extract_date
 {
-    my( $this, $text ) = @_;
+	my( $this, $text ) = @_;
 
-    # Based om Date::Extract
+	# Based om Date::Extract
 
-    # 1 - 31
-    my $cardinal_monthday = "(?:[1-9]|[12][0-9]|3[01])";
-    my $monthday          = "(?:$cardinal_monthday(?:st|nd|rd|th|a|e)?)";
+	# 1 - 31
+	my $cardinal_monthday = "(?:[1-9]|[12][0-9]|3[01])";
+	my $monthday          = "(?:$cardinal_monthday(?:st|nd|rd|th|a|e)?)";
 
-    my $day_month         = "(?:$monthday\\s*(?:$rx_month_en|$rx_month_sv))";
-    my $month_day         = "(?:(?:$rx_month_en|$rx_month_sv)\\s*$monthday)";
-    my $day_month_year    = "(?:(?:$day_month|$month_day)\\s*,?\\s*\\d\\d\\d\\d)";
-    my $month_year        = "(?:(?:$rx_month_en|$rx_month_sv)\\s*,?\\s*\\d\\d\\d\\d)";
+	my $day_month         = "(?:$monthday\\s*(?:$rx_month_en|$rx_month_sv))";
+	my $month_day         = "(?:(?:$rx_month_en|$rx_month_sv)\\s*$monthday)";
+	my $day_month_year    = "(?:(?:$day_month|$month_day)\\s*,?\\s*\\d\\d\\d\\d)";
+	my $month_year        = "(?:(?:$rx_month_en|$rx_month_sv)\\s*,?\\s*\\d\\d\\d\\d)";
 
-    my $yyyymmdd          = "(?:\\d\\d\\d\\d[-/]\\d\\d[-/]\\d\\d)";
-    my $ddmm              = "(?:\\d\\d?/\\d\\d?)";
-    my $ddmmyyyy          = "(?:\\d\\d[-/]\\d\\d[-/]\\d\\d\\d\\d)";
-    my $weekday           = "(?:$rx_long_weekday_en|$rx_long_weekday_sv)";
-    my $weekday_ddmm      = "$weekday\\s$ddmm";
+	my $yyyymmdd          = "(?:\\d\\d\\d\\d[-/]\\d\\d[-/]\\d\\d)";
+	my $ddmm              = "(?:\\d\\d?/\\d\\d?)";
+	my $ddmmyyyy          = "(?:\\d\\d[-/]\\d\\d[-/]\\d\\d\\d\\d)";
+	my $weekday           = "(?:$rx_long_weekday_en|$rx_long_weekday_sv)";
+	my $weekday_ddmm      = "$weekday\\s$ddmm";
 
 
-    my $regex = qr{
-        \b(
-            $rx_relative_en         # today
-          | $rx_relative_sv         # today
-          | $rx_relative_weekday_en # last Friday
-          | $rx_relative_weekday_sv # last Friday
-          | $yyyymmdd         # 1986-11-13
-          | $day_month_year   # November 13th, 1986
-          | $day_month        # 13th of November
-          | $month_day        # Nov 13
-	  | $month_year       # Nobvember 1986
-	  | $ddmmyyyy         # 13/11/1986
-	  | $weekday_ddmm     # Friday 13/11
-	  | $ddmm             # 13/11
-          | $rx_long_weekday_en          # Monday
-          | $rx_long_weekday_sv          # Monday
-	  )\b
-    }ix;
+	my $regex = qr{
+									\b(
+										$rx_relative_en         # today
+									| $rx_relative_sv         # today
+									| $rx_relative_weekday_en # last Friday
+									| $rx_relative_weekday_sv # last Friday
+									| $yyyymmdd         # 1986-11-13
+									| $day_month_year   # November 13th, 1986
+									| $day_month        # 13th of November
+									| $month_day        # Nov 13
+									| $month_year       # Nobvember 1986
+									| $ddmmyyyy         # 13/11/1986
+									| $weekday_ddmm     # Friday 13/11
+									| $ddmm             # 13/11
+									| $rx_long_weekday_en          # Monday
+									| $rx_long_weekday_sv          # Monday
+									)\b
+							}ix;
 
-    return $$text =~ /$regex/gi if ref $text;
-    return  $text =~ /$regex/gi;
+	return $$text =~ /$regex/gi if ref $text;
+	return  $text =~ /$regex/gi;
 }
 
 ##############################################################################
@@ -841,63 +841,63 @@ Removed mmmDDYY
 
 sub _patch_dm_formats
 {
-    my( $dm ) = @_;
+	my( $dm ) = @_;
 
-    my $rx = 'common_2';
-    $dm->_other_rx($rx);
-    my $dmb = $dm->{tz}{base};
+	my $rx = 'common_2';
+	$dm->_other_rx($rx);
+	my $dmb = $dm->{tz}{base};
 
-    ### Sanitycheck in case of changed internal format of DM
-    die "rx not found in DM"
-      unless $$dmb{'data'}{'rx'}{'other'}{$rx};
+	### Sanitycheck in case of changed internal format of DM
+	die "rx not found in DM"
+		unless $$dmb{'data'}{'rx'}{'other'}{$rx};
 
 
-      my $abb = $$dmb{'data'}{'rx'}{'month_abb'}[0];
-      my $nam = $$dmb{'data'}{'rx'}{'month_name'}[0];
+	my $abb = $$dmb{'data'}{'rx'}{'month_abb'}[0];
+	my $nam = $$dmb{'data'}{'rx'}{'month_name'}[0];
 
-      my $y4  = '(?<y>\d\d\d\d)';
-      my $y2  = '(?<y>\d\d)';
-      my $m   = '(?<m>\d\d?)';
-      my $d   = '(?<d>\d\d?)';
-      my $dd  = '(?<d>\d\d)';
-      my $mmm = "(?:(?<mmm>$abb)|(?<month>$nam))";
-      my $sep = '(?<sep>[\s\.\/\-])';
+	my $y4  = '(?<y>\d\d\d\d)';
+	my $y2  = '(?<y>\d\d)';
+	my $m   = '(?<m>\d\d?)';
+	my $d   = '(?<d>\d\d?)';
+	my $dd  = '(?<d>\d\d)';
+	my $mmm = "(?:(?<mmm>$abb)|(?<month>$nam))";
+	my $sep = '(?<sep>[\s\.\/\-])';
 
-      my $daterx =
+	my $daterx =
 #        "${y4}${sep}${m}\\k<sep>$d|" .        # YYYY/M/D
-        "${d}\/${m}|" .                         # D/M
+		"${d}\/${m}|" .							# D/M
 
-        "${mmm}\\s*${dd}\\s*${y4}|" .         # mmmDDYYYY
-        "${mmm}\\s*${y4}|" .                  # mmmYYYY
+		"${mmm}\\s*${dd}\\s*${y4}|" .	# mmmDDYYYY
+		"${mmm}\\s*${y4}|" .					# mmmYYYY
 #        "${mmm}\\s*${dd}\\s*${y2}|" .         # mmmDDYY
-        "${mmm}\\s*${d}|" .                   # mmmD
-        "${d}\\s*${mmm}\\s*${y4}|" .          # DmmmYYYY
-        "${d}\\s*${mmm}\\s*${y2}|" .          # DmmmYY
-        "${d}\\s*${mmm}|" .                   # Dmmm
-        "${y4}\\s*${mmm}\\s*${d}|" .          # YYYYmmmD
+		"${mmm}\\s*${d}|" .							 # mmmD
+		"${d}\\s*${mmm}\\s*${y4}|" .		 # DmmmYYYY
+		"${d}\\s*${mmm}\\s*${y2}|" .		 # DmmmYY
+		"${d}\\s*${mmm}|" .							 # Dmmm
+		"${y4}\\s*${mmm}\\s*${d}|" .		 # YYYYmmmD
 
-        "${mmm}${sep}${d}\\k<sep>${y4}|" .    # mmm/D/YYYY
-        "${mmm}${sep}${d}\\k<sep>${y2}|" .    # mmm/D/YY
-        "${mmm}${sep}${d}|" .                 # mmm/D
-        "${d}${sep}${mmm}\\k<sep>${y4}|" .    # D/mmm/YYYY
-        "${d}${sep}${mmm}\\k<sep>${y2}|" .    # D/mmm/YY
-        "${d}${sep}${mmm}|" .                 # D/mmm
-        "${y4}${sep}${mmm}\\k<sep>${d}|" .    # YYYY/mmm/D
+		"${mmm}${sep}${d}\\k<sep>${y4}|" .		 # mmm/D/YYYY
+		"${mmm}${sep}${d}\\k<sep>${y2}|" .		 # mmm/D/YY
+		"${mmm}${sep}${d}|" .									 # mmm/D
+		"${d}${sep}${mmm}\\k<sep>${y4}|" .		 # D/mmm/YYYY
+		"${d}${sep}${mmm}\\k<sep>${y2}|" .		 # D/mmm/YY
+		"${d}${sep}${mmm}|" .									 # D/mmm
+		"${y4}${sep}${mmm}\\k<sep>${d}|" .		 # YYYY/mmm/D
 
-        "${mmm}${sep}?${d}\\s+${y2}|" .       # mmmD YY      mmm/D YY
-        "${mmm}${sep}?${d}\\s+${y4}|" .       # mmmD YYYY    mmm/D YYYY
-        "${d}${sep}?${mmm}\\s+${y2}|" .       # Dmmm YY      D/mmm YY
-        "${d}${sep}?${mmm}\\s+${y4}|" .       # Dmmm YYYY    D/mmm YYYY
+		"${mmm}${sep}?${d}\\s+${y2}|" .			# mmmD YY      mmm/D YY
+		"${mmm}${sep}?${d}\\s+${y4}|" .			# mmmD YYYY    mmm/D YYYY
+		"${d}${sep}?${mmm}\\s+${y2}|" .			# Dmmm YY      D/mmm YY
+		"${d}${sep}?${mmm}\\s+${y4}|" .			# Dmmm YYYY    D/mmm YYYY
 
-        "${y2}\\s+${mmm}${sep}?${d}|" .       # YY   mmmD    YY   mmm/D
-        "${y4}\\s+${mmm}${sep}?${d}|" .       # YYYY mmmD    YYYY mmm/D
-        "${y2}\\s+${d}${sep}?${mmm}|" .       # YY   Dmmm    YY   D/mmm
-        "${y4}\\s+${d}${sep}?${mmm}|" .       # YYYY Dmmm    YYYY D/mmm
+		"${y2}\\s+${mmm}${sep}?${d}|" .			# YY   mmmD    YY   mmm/D
+		"${y4}\\s+${mmm}${sep}?${d}|" .			# YYYY mmmD    YYYY mmm/D
+		"${y2}\\s+${d}${sep}?${mmm}|" .			# YY   Dmmm    YY   D/mmm
+		"${y4}\\s+${d}${sep}?${mmm}|" .			# YYYY Dmmm    YYYY D/mmm
 
-        "${y4}:${m}:${d}";                    # YYYY:MM:DD
+		"${y4}:${m}:${d}";					# YYYY:MM:DD
 
-      $daterx = qr/^\s*(?:$daterx)\s*$/i;
-      $$dmb{'data'}{'rx'}{'other'}{$rx} = $daterx;
+	$daterx = qr/^\s*(?:$daterx)\s*$/i;
+	$$dmb{'data'}{'rx'}{'other'}{$rx} = $daterx;
 
 }
 
@@ -909,15 +909,15 @@ sub _patch_dm_formats
 #
 # Change overload behaviour in DateTime::Duration
 {
-    no warnings;
-    package DateTime::Duration;
+	no warnings;
+	package DateTime::Duration;
 
-    sub _compare_overload
-    {
-	my( $d1, $d2, $rev ) = @_;
-	($d1, $d2) = ($d2, $d1) if $rev;
-	return DateTime::Duration->compare( $d1, $d2 );
-    }
+	sub _compare_overload
+	{
+		my( $d1, $d2, $rev ) = @_;
+		($d1, $d2) = ($d2, $d1) if $rev;
+		return DateTime::Duration->compare( $d1, $d2 );
+	}
 }
 
 ############################################################
@@ -928,53 +928,53 @@ sub _patch_dm_formats
 package DateTime::Span;
 
 use overload
-    (
-    '""' => '_stringify_overload',
-    '<=>' => '_compare_overload',
-    );
+	(
+	 '""' => '_stringify_overload',
+	 '<=>' => '_compare_overload',
+	);
 
 sub _stringify_overload
 {
-    my $start = $_[0]->start;
-    my $end   = $_[0]->end;
+	my $start = $_[0]->start;
+	my $end   = $_[0]->end;
 
-    return "$start - $end";
+	return "$start - $end";
 }
 
 sub _compare_overload
 {
-    my( $s1, $s2, $rev ) = @_;
+	my( $s1, $s2, $rev ) = @_;
 
-    if( $rev )
-    {
-	if( $s2->isa('DateTime::Span') )
+	if ( $rev )
 	{
+		if ( $s2->isa('DateTime::Span') )
+		{
 	    return DateTime::Duration->compare($s2->duration,
-					       $s1->duration,
-					       $s1->start );
-	}
-	else
-	{
+																				 $s1->duration,
+																				 $s1->start );
+		}
+		else
+		{
 	    return DateTime::Duration->compare($s2,
-					       $s1->duration,
-					       $s1->start );
-	}
-    }
-    else
-    {
-	if( $s2->isa('DateTime::Span') )
-	{
-	    return DateTime::Duration->compare($s1->duration,
-					       $s2->duration,
-					       $s1->start );
+																				 $s1->duration,
+																				 $s1->start );
+		}
 	}
 	else
 	{
+		if ( $s2->isa('DateTime::Span') )
+		{
 	    return DateTime::Duration->compare($s1->duration,
-					       $s2,
-					       $s1->start );
+																				 $s2->duration,
+																				 $s1->start );
+		}
+		else
+		{
+	    return DateTime::Duration->compare($s1->duration,
+																				 $s2,
+																				 $s1->start );
+		}
 	}
-    }
 }
 
 ############################################################
