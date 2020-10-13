@@ -306,10 +306,10 @@ function pf_boxes_adjust_init()
 
 	const main_pad_top = parseFloat(main_style.getPropertyValue('padding-top'));
 	const main_pad_width =
-				parseFloat(main_style.getPropertyValue('border-left')) +
-				parseFloat(main_style.getPropertyValue('padding-left')) +
-				parseFloat(main_style.getPropertyValue('padding-right')) +
-				parseFloat(main_style.getPropertyValue('border-right'));
+				parseFloat(main_style.getPropertyValue('border-left')  ||0) +
+				parseFloat(main_style.getPropertyValue('padding-left') ||0) +
+				parseFloat(main_style.getPropertyValue('padding-right')||0) +
+				parseFloat(main_style.getPropertyValue('border-right') ||0);
 
 	let raf;
 

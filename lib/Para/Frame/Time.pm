@@ -5,7 +5,7 @@ package Para::Frame::Time;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2017 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2020 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -599,12 +599,31 @@ Returns a string representation of the object for debug purposes.
 sub sysdesig
 {
 	return sprintf("Date %s", $_[0]->strftime('%Y-%m-%d %H.%M.%S %z' ));
+#	return sprintf("Date %s", $RDF::dbix->format_datetime($_[0]));
 }
 
 
 ##############################################################################
 
 sub defined { 1 }
+
+
+##############################################################################
+
+=head2 iso8601
+
+  $t->iso8601
+
+Implement complete iso8601 time fractional seconds and TZD
+
+=cut
+
+sub iso8601
+{
+	my $fr = $_[0]->fractional_second();
+	if( $fr == int($fr) ){ return $_[0]->strftime('%Y-%m-%dT%H:%M:%S%z') };
+	return $_[0]->strftime('%Y-%m-%dT%H:%M:%S.%N%z');
+}
 
 
 ##############################################################################
