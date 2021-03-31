@@ -35,17 +35,17 @@ use Para::Frame::Reload;
 
 sub init
 {
-    my( $sh ) = @_;
+	my( $sh ) = @_;
 
-    my $book = Spreadsheet::ParseExcel::Workbook->Parse($sh->{'fh'});
-    $sh->{'book'} = $book or die "Failed to parce excel file\n";
-    my $sheet = $book->{Worksheet}->[0];
-    $sh->{'sheet'} = $sheet;
+	my $book = Spreadsheet::ParseExcel::Workbook->Parse($sh->{'fh'});
+	$sh->{'book'} = $book or die "Failed to parce excel file\n";
+	my $sheet = $book->{Worksheet}->[0];
+	$sh->{'sheet'} = $sheet;
 
-    $sh->{'row_number'} = $sheet->{MinRow};
-    $sh->{'row_max'}    = $sheet->{MaxRow};
-    $sh->{'col_min'}    = $sheet->{MinCol};
-    $sh->{'col_max'}    = $sheet->{MaxCol};
+	$sh->{'row_number'} = $sheet->{MinRow};
+	$sh->{'row_max'}    = $sheet->{MaxRow};
+	$sh->{'col_min'}    = $sheet->{MinCol};
+	$sh->{'col_max'}    = $sheet->{MaxCol};
 }
 
 
@@ -57,42 +57,42 @@ sub init
 
 sub next_row
 {
-    my( $sh ) = @_;
+	my( $sh ) = @_;
 
-    my $sheet = $sh->{'sheet'};
-    my $col_max = $sh->{'col_max'};
-    my $col_min = $sh->{'col_min'};
-    my $row_number = $sh->{'row_number'} ++;
+	my $sheet = $sh->{'sheet'};
+	my $col_max = $sh->{'col_max'};
+	my $col_min = $sh->{'col_min'};
+	my $row_number = $sh->{'row_number'} ++;
 
 
-    if( $row_number > $sh->{'row_max'} )
-    {
-	return undef;
-    }
-
-    my @row;
-
-    my $has_content = 0;
-    for( my $i=$col_min; $i <= $col_max; $i++ )
-    {
-	my $cell = $sheet->Cell( $row_number, $i );
-	if( $cell )
+	if ( $row_number > $sh->{'row_max'} )
 	{
+		return undef;
+	}
+
+	my @row;
+
+	my $has_content = 0;
+	for ( my $i=$col_min; $i <= $col_max; $i++ )
+	{
+		my $cell = $sheet->Cell( $row_number, $i );
+		if ( $cell )
+		{
 	    my $val = $cell->Value;
 	    $val =~ s/\0//g;
 	    push @row, $val;
 	    $has_content ++ if length($val);
-	}
-	else
-	{
+		}
+		else
+		{
 	    push @row, undef;
+		}
 	}
-    }
 
-    # Find a line with content, ignoring empty lines
-    return $sh->next_row unless $has_content;
+	# Find a line with content, ignoring empty lines
+	return $sh->next_row unless $has_content;
 
-    return \@row;
+	return \@row;
 }
 
 
@@ -104,7 +104,7 @@ sub next_row
 
 sub row_number
 {
-    return shift->{'row_number'};
+	return shift->{'row_number'};
 
 }
 
