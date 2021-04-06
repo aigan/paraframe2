@@ -63,48 +63,48 @@ Handles mostly CSV and XML.
 
 sub new
 {
-    my( $class, $fh, $type, $conf ) = @_;
+	my( $class, $fh, $type, $conf ) = @_;
 
-    my $sh = bless {}, $class;
-    $sh->{'fh'} = $fh;
+	my $sh = bless {}, $class;
+	$sh->{'fh'} = $fh;
 
-    $conf ||= {};
-    $sh->{'conf'} = $conf;
+	$conf ||= {};
+	$sh->{'conf'} = $conf;
 
-    unless( $fh->isa("IO::Handle") or $fh->isa("Fh")  )
-    {
-	die datadump( $fh );
-	throw('action', "No filehandle given: $fh");
-    }
+	unless( $fh->isa("IO::Handle") or $fh->isa("Fh")  )
+	{
+		die datadump( $fh );
+		throw('action', "No filehandle given: $fh");
+	}
 
-    if( $type )
-    {
-        given( $type )
-        {
-            when(['text/comma-separated-values','text/csv'] )
-            {
-                require Para::Frame::Spreadsheet::CSV;
-                bless $sh, "Para::Frame::Spreadsheet::CSV";
-            }
-            when( 'application/vnd.ms-excel' )
-            {
-                require Para::Frame::Spreadsheet::Excel;
-                bless $sh, "Para::Frame::Spreadsheet::Excel";
-            }
-            default
-            {
-                die "Spreadsheet type $type not implemented";
-            }
-        }
+	if ( $type )
+	{
+		given( $type )
+		{
+			when(['text/comma-separated-values','text/csv'] )
+			{
+				require Para::Frame::Spreadsheet::CSV;
+				bless $sh, "Para::Frame::Spreadsheet::CSV";
+			}
+			when( 'application/vnd.ms-excel' )
+			{
+				require Para::Frame::Spreadsheet::Excel;
+				bless $sh, "Para::Frame::Spreadsheet::Excel";
+			}
+			default
+			{
+				die "Spreadsheet type $type not implemented";
+			}
+		}
 
-	$sh->init;
-    }
-    else
-    {
-	die "not implemented";
-    }
+		$sh->init;
+	}
+	else
+	{
+		die "not implemented";
+	}
 
-    return $sh;
+	return $sh;
 }
 
 
@@ -116,27 +116,27 @@ sub new
 
 sub get_headers
 {
-    my( $sh ) = @_;
+	my( $sh ) = @_;
 
-    my $row = $sh->next_row;
+	my $row = $sh->next_row;
 
-    $sh->{'cols'} = [];
-    $sh->{'colnums'} = {};
+	$sh->{'cols'} = [];
+	$sh->{'colnums'} = {};
 
-    for( my $i=0; $i <= $#$row; $i++ )
-    {
-	my $val = $row->[$i];
-	next unless $val;
-	$sh->{'cols'}[$i] = $val;
-	$sh->{'colnums'}{ $val } = $i;
-    }
+	for ( my $i=0; $i <= $#$row; $i++ )
+	{
+		my $val = $row->[$i];
+		next unless $val;
+		$sh->{'cols'}[$i] = $val;
+		$sh->{'colnums'}{ $val } = $i;
+	}
 
-    if( $sh->{'conf'}{extra_headers} )
-    {
-        return $sh->add_headers($sh->{'conf'}{extra_headers});
-    }
+	if ( $sh->{'conf'}{extra_headers} )
+	{
+		return $sh->add_headers($sh->{'conf'}{extra_headers});
+	}
 
-    return scalar @$row;
+	return scalar @$row;
 }
 
 
@@ -150,17 +150,17 @@ For adding extra headers, for fields added in row_filter
 
 sub add_headers
 {
-    my( $sh, $headers ) = @_;
+	my( $sh, $headers ) = @_;
 
-    my $i = $#{$sh->{'cols'}};
-    foreach my $header (@$headers)
-    {
-        $i++;
-	$sh->{'cols'}[$i] = $header;
-	$sh->{'colnums'}{ $header } = $i;
-    }
+	my $i = $#{$sh->{'cols'}};
+	foreach my $header (@$headers)
+	{
+		$i++;
+		$sh->{'cols'}[$i] = $header;
+		$sh->{'colnums'}{ $header } = $i;
+	}
 
-    return($i+1);
+	return($i+1);
 }
 
 
@@ -172,9 +172,9 @@ sub add_headers
 
 sub headers
 {
-    my( $sh ) = @_;
+	my( $sh ) = @_;
 
-    return $sh->{'cols'};
+	return $sh->{'cols'};
 }
 
 
@@ -186,27 +186,27 @@ sub headers
 
 sub rowhash
 {
-    my( $sh ) = @_;
+	my( $sh ) = @_;
 
-    unless( $sh->{'rowhash'} )
-    {
-	my $row = $sh->next_row or return undef;
-	my $cols = $sh->{'cols'};
-	my $rh = $sh->{'rowhash'} = {};
-	for( my $i=0; $i <= $#$row; $i++ )
+	unless ( $sh->{'rowhash'} )
 	{
+		my $row = $sh->next_row or return undef;
+		my $cols = $sh->{'cols'};
+		my $rh = $sh->{'rowhash'} = {};
+		for ( my $i=0; $i <= $#$row; $i++ )
+		{
 	    my $key = $cols->[$i];
 	    unless( $key )
 	    {
-		debug "Column $i has no label";
-		next;
+				debug "Column $i has no label";
+				next;
 	    }
 
 	    $rh->{ $key } = $row->[$i];
+		}
 	}
-    }
 
-    return $sh->{'rowhash'};
+	return $sh->{'rowhash'};
 }
 
 
@@ -218,9 +218,9 @@ sub rowhash
 
 sub next_rowhash
 {
-    my( $sh ) = @_;
-    $sh->{'rowhash'} = undef;
-    return $sh->rowhash;
+	my( $sh ) = @_;
+	$sh->{'rowhash'} = undef;
+	return $sh->rowhash;
 }
 
 
