@@ -5,7 +5,7 @@ package Para::Frame::Spreadsheet::Excel;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2017 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2021 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -20,11 +20,12 @@ Para::Frame::Spreadsheet::Excel - Access data in Excel format
 
 use 5.012;
 use warnings;
+use Carp qw( confess );
 use base 'Para::Frame::Spreadsheet';
 
-use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseExcel 0.49; # Will not work with later versions
 
-use Para::Frame::Utils qw( throw );
+use Para::Frame::Utils qw( throw debug datadump );
 use Para::Frame::Reload;
 
 ##############################################################################
@@ -37,15 +38,23 @@ sub init
 {
 	my( $sh ) = @_;
 
-	my $book = Spreadsheet::ParseExcel::Workbook->Parse($sh->{'fh'});
+	debug "Excel init";
+
+	my $parser = Spreadsheet::ParseExcel->new();
+	my $book = $parser->Parse( $sh->{'fh'} );
 	$sh->{'book'} = $book or die "Failed to parce excel file\n";
-	my $sheet = $book->{Worksheet}->[0];
+	my $sheet = $book->Worksheet(0);
 	$sh->{'sheet'} = $sheet;
 
-	$sh->{'row_number'} = $sheet->{MinRow};
-	$sh->{'row_max'}    = $sheet->{MaxRow};
-	$sh->{'col_min'}    = $sheet->{MinCol};
-	$sh->{'col_max'}    = $sheet->{MaxCol};
+	my( $row_min, $row_max ) = $sheet->row_range();
+	my( $col_min, $col_max ) = $sheet->col_range();
+	$sh->{'row_number'} = $row_min;
+	$sh->{'row_max'}    = $row_max;
+	$sh->{'col_min'}    = $col_min;
+	$sh->{'col_max'}    = $col_max;
+
+#	debug datadump( $sh, 3 );
+
 }
 
 
@@ -64,6 +73,13 @@ sub next_row
 	my $col_min = $sh->{'col_min'};
 	my $row_number = $sh->{'row_number'} ++;
 
+#	debug "Read row $row_number of " .  $sh->{'row_max'};
+
+	unless( $sheet )
+	{
+		debug datadump $sh;
+		confess "spreadsheet missing";
+	}
 
 	if ( $row_number > $sh->{'row_max'} )
 	{
@@ -90,7 +106,7 @@ sub next_row
 	}
 
 	# Find a line with content, ignoring empty lines
-	return $sh->next_row unless $has_content;
+	return [] unless $has_content;
 
 	return \@row;
 }

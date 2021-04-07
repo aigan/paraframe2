@@ -5,7 +5,7 @@ package Para::Frame::Spreadsheet;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2017 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2021 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -118,7 +118,7 @@ sub get_headers
 {
 	my( $sh ) = @_;
 
-	my $row = $sh->next_row;
+	my $row = $sh->next_nonempty_row;
 
 	$sh->{'cols'} = [];
 	$sh->{'colnums'} = {};
@@ -190,7 +190,7 @@ sub rowhash
 
 	unless ( $sh->{'rowhash'} )
 	{
-		my $row = $sh->next_row or return undef;
+		my $row = $sh->next_nonempty_row or return undef;
 		my $cols = $sh->{'cols'};
 		my $rh = $sh->{'rowhash'} = {};
 		for ( my $i=0; $i <= $#$row; $i++ )
@@ -221,6 +221,24 @@ sub next_rowhash
 	my( $sh ) = @_;
 	$sh->{'rowhash'} = undef;
 	return $sh->rowhash;
+}
+
+
+##############################################################################
+
+=head2 next_nonempty_row
+
+=cut
+
+sub next_nonempty_row
+{
+	my( $sh ) = @_;
+	while()
+	{
+		my $row = $sh->next_row;
+		return undef unless defined $row;
+		return $row if scalar @$row;
+	}
 }
 
 

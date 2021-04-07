@@ -71,7 +71,6 @@ WriteMakefile(
                'URI'                        => 1.59,
                'URI::QueryParam'            => 0.00,
                'Test::Pod::Coverage'        => 1.08,
-               'Spreadsheet::ParseExcel'    => 0.32,
                'Linux::SysInfo'             => 0.10,
                'JSON'                       => 2.17,
                'XML::Simple'                => 2.18,

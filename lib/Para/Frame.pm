@@ -1,11 +1,11 @@
-package Para::Frame 2.08;
+package Para::Frame 2.09;
 #=============================================================================
 #
 # AUTHOR
 #		Jonas Liljegren		<jonas@paranormal.se>
 #
 # COPYRIGHT
-#		Copyright (C) 2004-2019 Jonas Liljegren.	All Rights Reserved.
+#		Copyright (C) 2004-2021 Jonas Liljegren.	All Rights Reserved.
 #
 #		This module is free software; you can redistribute it and/or
 #		modify it under the same terms as Perl itself.
@@ -3035,6 +3035,7 @@ sub configure
 	$CFG->{'dir_var'} ||= '/var';
 	$CFG->{'dir_log'} ||= $CFG->{'dir_var'}."/log";
 	$CFG->{'dir_run'} ||= $CFG->{'dir_var'}."/run";
+	$CFG->{'dir_tmp'} ||= $CFG->{'dir_var'}."/tmp";
 
 	$CFG->{'paraframe'} ||= '/usr/local/paraframe';
 

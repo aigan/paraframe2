@@ -7,7 +7,7 @@ build_requires:
 configure_requires:
   ExtUtils::MakeMaker: '0'
 dynamic_config: 0
-generated_by: 'ExtUtils::MakeMaker version 7.24, CPAN::Meta::Converter version 2.150010'
+generated_by: 'ExtUtils::MakeMaker version 7.34, CPAN::Meta::Converter version 2.150010'
 license: unknown
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -21,7 +21,7 @@ requires:
   BerkeleyDB: '0.26'
   CGI: '3.46'
   CGI::Cookie: '1.25'
-  Captcha::reCAPTCHA: '0.92'
+  Captcha::reCAPTCHA: '0.99'
   Carp: '1.04'
   DBI: '1.48'
   Data::Dump: '1.08'
@@ -90,5 +90,5 @@ requires:
   Unicode::MapUTF8: '1.09'
   XML::Simple: '2.18'
   jQuery::File::Upload: '0.16'
-version: '2.05'
+version: '2.08'
 x_serialization_backend: 'CPAN::Meta::YAML version 0.018'

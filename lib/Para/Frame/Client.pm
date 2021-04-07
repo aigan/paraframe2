@@ -5,7 +5,7 @@ package Para::Frame::Client;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2004-2017 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2004-2021 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -119,7 +119,7 @@ as for L</backup_redirect>.
 
 =head2 File uploads
 
-Files will be uploaded in a non-readable directory. The file will be
+Files will be uploaded in /var/spool/paraframe. The file will be
 removed at the end of the request. The file will be readable by the
 user and group of the server.  Make sure that the paraframe server is
 a member of the main group of the webserver. (That may be
@@ -226,6 +226,9 @@ sub handler
 		{
 			$s->log_error("$$: param $key is a filehandle");
 
+			my $dir_tmp = $dirconfig->{'dir_tmp'} || "/var/spool/paraframe";
+			$dir_tmp =~ s/\/$//;
+
 			my $val = $Q->param($key);
 			my $info = $Q->uploadInfo($val);
 
@@ -233,7 +236,7 @@ sub handler
 
 			my $keyfile = $key;
 			$keyfile =~ s/[^\w_\-]//g; # Make it a normal filename
-			my $dest = "/tmp/paraframe/$$-$keyfile";
+			my $dest = "$dir_tmp/$$-$keyfile";
 			copy_to_file( $dest, $Q->upload($key) ) or return Apache2::Const::DONE;
 
 			my $uploaded =
@@ -323,6 +326,13 @@ sub handler
 	{
 		my $tempfile = $filefield->{tempfile};
 		$s->log_error("$$: Removing tempfile $tempfile");
+
+
+#		my( $mode, $links, $uid, $gid, $size) = (stat($tempfile))[2, 3, 4, 5, 7];
+#		$s->log_error(sprintf "Permissions are %04o uid%d gid%d, %d links, %d bytes",
+#									$mode & 07777, $uid, $gid, $links, $size);
+
+
 		unlink $tempfile or $s->log_error("$$:   failed: $!");;
 	}
 
@@ -518,7 +528,7 @@ sub print_error_page
 
 	unless( open OUT, ">$filename" )
 	{
-		$s->log_error("$$: Couldn't write to $filename: $!");
+		$s->log_error("$$: Couldn't write to $filename in $dir: $!");
 		print_error_page("Upload error", "Couldn't write to $filename: $!");
 		return 0;										#failed
 	}
@@ -526,14 +536,18 @@ sub print_error_page
 	my $buf;
 	my $fname;										## Temporary filenames
 	my $bufsize = 2048;
+	my $lencnt = 0;
 	while ( (my $len = sysread($fh, $buf, $bufsize)) > 0 )
 	{
+		$lencnt += $len;
 		print OUT $buf;
 	}
 	close($fh);
 	close(OUT);
 
 	umask $orig_umask;
+
+	$s->log_error("$$: Wrote $lencnt bytes to $filename");
 	return 1;
 }
 
@@ -552,10 +566,22 @@ sub create_dir
 		create_dir( $parent );
 	}
 
-	my $orig_umask = umask;
-	umask 0;
-	mkdir $dir, 02710; # Dir not listable. But files inside it accessible
-	umask $orig_umask;
+	my $s = Apache2::ServerUtil->server;
+
+	if ( mkdir $dir, 02770 )
+	{
+		$s->log_error("$$: Created dir $dir");
+	}
+	else
+	{
+		$s->log_error("$$: Failed to create dir $dir: $!");
+	}
+
+#    my $orig_umask = umask;
+#		umask 0;
+#    mkdir $dir, 02710; # Dir not listable. But files inside it accessible
+#    umask $orig_umask;
+
 }
 
 
