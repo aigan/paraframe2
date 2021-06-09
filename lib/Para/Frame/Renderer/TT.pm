@@ -5,7 +5,7 @@ package Para::Frame::Renderer::TT;
 #   Jonas Liljegren   <jonas@paranormal.se>
 #
 # COPYRIGHT
-#   Copyright (C) 2006-2017 Jonas Liljegren.  All Rights Reserved.
+#   Copyright (C) 2006-2021 Jonas Liljegren.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -753,6 +753,8 @@ sub set_ctype
     my( $rend, $ctype ) = @_;
 
     my $tmpl = $rend->template;
+		return $ctype if not $tmpl;
+		
 #    debug "Setting ctype for ".$tmpl->sysdesig;
     if ( my $ext = $tmpl->suffix )
     {
