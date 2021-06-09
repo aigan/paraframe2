@@ -486,8 +486,10 @@ sub main_loop
 							{
 								my $result_time =
 									$s->{'page_result'}{$key}{'time_done'};
+
+								# will stop trying to serve everything. lesser ambition. Shorter timeout
 								if ( $result_time and
-										 (time - $result_time > 120) )
+										 (time - $result_time > 6) )
 								{
 									debug "Ignoring stale page result ".
 										"from $sid";
@@ -2082,10 +2084,14 @@ sub go_down
 	debug "Cleaning up";
 	print "DOWN\n";
 
+
 	open STDOUT, '>/dev/null' or die "Can't write to /dev/null: $!";
 
 	Para::Frame->kill_children;
 
+	if( $ARGV[0] eq 'no_watchdog' ){
+		exit 1;
+	}
 	return 1;
 }
 
