@@ -1042,11 +1042,11 @@ sub kill_competition
 				sleep 1;
 			}
 		}
-		debug "Killtime over";
+		debug "Killtime over ".(datadump($proclist));
 		#$proclist = get_lsof({port => $port });
 		#debug datadump($proclist);
 
-		return scalar @$proclist;
+		return scalar @pids;
 	}
 	return 0;
 }
