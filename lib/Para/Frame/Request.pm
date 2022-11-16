@@ -1219,11 +1219,6 @@ sub uri2file
 {
     my( $req, $url, $file, $may_not_exist ) = @_;
 		# debug "uri2file", $req->env->REQUEST_URI;
-		if( $req->env->{'PATH_INFO'} =~ /^\/ajax\// )
-		{
-			#throw "config", longmess("Can not lookup uri2file with ajax client");
-			throw "config", "Can not lookup uri2file with ajax client";
-		}
 
     $url =~ s/\?.*//;           # Remove query part if given
     my $key = $req->host . $url;
@@ -1239,7 +1234,14 @@ sub uri2file
     {
 #	debug "Return  URI2FILE for    $key: $file";
         return $file;
-    }
+			}
+
+
+		if( $req->env->{'PATH_INFO'} =~ /^\/ajax\// )
+		{
+			#throw "config", longmess("Can not lookup uri2file with ajax client");
+			throw "config", "Can not lookup uri2file with ajax client " . $url;
+		}
 
     confess "url missing" unless defined $url;
 

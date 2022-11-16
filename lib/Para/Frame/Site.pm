@@ -582,21 +582,22 @@ Returns the L<Para::Frame::Dir> object for the L</home>.
 
 sub home
 {
-    if( defined $_[0]->{'home'} )
-    {
-	return $_[0]->{'home'};
-    }
-    else
-    {
-#	debug "Creating dir obj for home '$_[0]->{home_url_path}/' for $_[0]";
-#	debug "Looking for home";
-	$_[0]->{'home'} =
-	  Para::Frame::Dir->new({site => $_[0],
-				 url  => $_[0]->{'home_url_path'}.'/',
-				});
-#	debug "Site home: ".$_[0]->{'home'}->sys_path_slash;
-	return $_[0]->{'home'};
-    }
+	if( defined $_[0]->{'home'} )
+	{
+		return $_[0]->{'home'};
+	}
+	else
+	{
+		#	debug "Creating dir obj for home '$_[0]->{home_url_path}/' for $_[0]";
+		#	debug "Looking for home";
+		$_[0]->{'home'} =
+			Para::Frame::Dir->new({
+														 site => $_[0],
+														 url	=> $_[0]->{'home_url_path'}.'/',
+														});
+		#	debug "Site home: ".$_[0]->{'home'}->sys_path_slash;
+		return $_[0]->{'home'};
+	}
 }
 
 
@@ -624,6 +625,29 @@ B<Important> Do not end home with a C</>
 sub home_url_path
 {
     return $_[0]->{'home_url_path'};
+}
+
+
+#######################################################
+
+=head2 home_url
+
+  $site->home_url
+
+Returns the home dir of the site as URL object.
+
+=cut
+
+sub home_url
+{
+	my( $site ) = @_;
+	# Avoid creating file object if not needed
+
+	my $url_string = sprintf("%s://%s%s",
+													 $site->scheme,
+													 $site->host,
+													 $site->{home_url_path}) . "/";
+	return Para::Frame::URI->new($url_string);
 }
 
 
