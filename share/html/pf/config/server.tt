@@ -4,11 +4,19 @@
 [% PROCESS menu.tt %]
 
 <p>[% step +%]
-[%+ go("Reload server", "$home/", "server_reload") +%]
-[%+ go("Restart server", "$home/", "server_restart") +%]
-[%+ go("Terminate server", "$home/", "server_terminate") %]
+	[%+ go("Reload server", "$home/", "server_reload") +%]
+	[%+ go("Restart server", "$home/", "server_restart") +%]
+	[%+ go("Terminate server", "$home/", "server_terminate") %]
+
+	[% hidden('count') %]
+	[%+ go("Test timeout", "", "test_timeout", count=300) %]
 </p>
 
-<pre>
+
+<div style="contain:size;clear:both">
+	<pre style="overflow:auto">
 [% req.server_report %]
-</pre>
+	</pre>
+</div>
+
+

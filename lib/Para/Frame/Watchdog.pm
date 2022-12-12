@@ -57,7 +57,7 @@ our $SOCK;											# Socket for sending
 our @MESSAGE;										# Messages pipe
 
 
-our $INTERVAL_CONNECTION_CHECK =	60;
+our $INTERVAL_CONNECTION_CHECK =	15;
 our $INTERVAL_MAIN_LOOP				 =	10;
 our $LIMIT_MEMORY							 ;
 our $LIMIT_MEMORY_NOTICE			 ;
@@ -66,7 +66,7 @@ our $LIMIT_MEMORY_NOTICE_BASE	 =14000;
 our $LIMIT_MEMORY_MIN					 = 150;
 our $LIMIT_SYSTOTAL						 =	 1;
 our $TIMEOUT_SERVER_STARTUP		 =	45;
-our $TIMEOUT_CONNECTION_CHECK	 =	60;
+our $TIMEOUT_CONNECTION_CHECK	 = 120;
 our $LIMIT_CONNECTION_TRIES		 =	 5;
 our $TIMEOUT_CREATE_FORK			 =	 5;
 our $EMERGENCY_DEBUG_LEVEL		 =	 2;
@@ -129,8 +129,9 @@ sub watch_loop
 			sig_enable();
 			while ()
 			{
-#		debug "--in watch_loop";
+				#debug "--in watch_loop " . $SHUTDOWN;
 				exit 0 if $SHUTDOWN;
+
 				check_server_report();
 				if ( $DO_CONNECTION_CHECK )
 				{
@@ -153,7 +154,7 @@ sub watch_loop
 
 		if ( $@ )
 		{
-			warn "CRASH: ".$@;
+			warn "#### $$ WATCHDOG restarting: ".$@;
 		}
 
 		on_crash();									# Handling exception
@@ -372,6 +373,9 @@ sub restart_server
 	send_to_server('HUP');
 	debug 1,"	 Sent soft HUP to $PID";
 
+	### Should rather kill tree like
+	### https://gitlab.com/pslist/pslist/blob/master/pslist
+
 	# Waiting for server to HUP
 	my $signal_time = time;
 	my $grace_time = $hard ? 0 : $TIMEOUT_CONNECTION_CHECK;
@@ -382,7 +386,7 @@ sub restart_server
 		unless( kill 0, $PID )
 		{
 			sig_disable();
-			die "#### Watchdog restart\n";
+			die "watchdog restart_server by killing $PID\n";
 		}
 
 		sleep 2;
@@ -631,7 +635,10 @@ sub on_crash
 sub watchdog_crash
 {
 	# Bail out if this was under startup
-	exit 1 if $Para::Frame::IN_STARTUP;
+	if( $Para::Frame::IN_STARTUP ){
+		debug "Exit during startup";
+		exit 1;
+ }
 
 
 	$EMERGENCY_MODE++;
@@ -701,6 +708,7 @@ sub startup_in_fork
 
 	do
 	{
+		debug "FORKING $$";
 		$PID = open($fh, "-|");
 #	pipe( $fh, $write_fh );
 #	$PID = fork;
@@ -723,6 +731,7 @@ sub startup_in_fork
 		sig_disable();
 		while(){
 			my $killed = kill_competition();
+			debug "Killed $killed processes";
 			if( !$killed ){ last }
 		}
 		Para::Frame->startup();
@@ -731,7 +740,9 @@ sub startup_in_fork
 		exit 1;
 	}
 
-	# Better setting global $FH after the forking
+debug "Started child $PID";
+
+# Better setting global $FH after the forking
 	$fh->blocking(0);							# No blocking
 	$FH = $fh;
 
@@ -766,35 +777,44 @@ sub REAPER
 
 	while (($child_pid = waitpid(-1, WNOHANG)) > 0)
 	{
-		debug "Child $child_pid exited with status $?";
+		my $exit = $? >> 8;
+		my $signal = $? & 127;
+
+		debug "Child $child_pid exited with status $?, exit $exit, signal $signal";
 
 		if ( $child_pid == $PID )
 		{
-			if ( $? == 0 )
+			if ( $signal == 1 )
 			{
-				debug "Server shut down whithout problems";
-				$SHUTDOWN = 1;
+				debug "Child HUP during shutdown" if $SHUTDOWN;
+				debug "Child HUP during hard restart" if $HARD_RESTART;
+				debug "Server child responded to hup with $?";
 			}
-			elsif ( $? == 15 and not $HARD_RESTART )
+			elsif ( $signal == 15 and not $HARD_RESTART )
 			{
 				debug "Server got a TERM signal. I will not restart it";
 				$SHUTDOWN = 1;
 			}
-			elsif ( $? == 9 and not $HARD_RESTART )
+			elsif ( $signal == 9 and not $HARD_RESTART )
 			{
 				debug "Server got a KILL signal. I will not restart it";
 				$SHUTDOWN = 1;
 			}
-			elsif ( $? == 25088 )
+			elsif ( $? == 25088 ) # exit 98?
 			{
 				debug "Another process is using this port";
 				exit $?;
+			}
+			elsif ( $exit == 0 )
+			{
+				debug "Server shut down whithout problems";
+				$SHUTDOWN = 1;
 			}
 			else
 			{
 				$DOWN = 0;
 				sig_disable();
-				die "#### Watchdog restart\n";
+				die "watchdog reaper detected that child $PID died with $?, trigger restart\n";
 			}
 		}
 		else
@@ -885,7 +905,10 @@ sub send_to_server
 
 	my $DEBUG = 1;
 
-	exit 0 if $SHUTDOWN;					# Bail out if requested to...
+	if( $SHUTDOWN ){
+		# Bail out if requested to...
+		exit 0;
+	}
 
 	my @cfg =
 		(
@@ -1042,7 +1065,9 @@ sub kill_competition
 				sleep 1;
 			}
 		}
-		debug "Killtime over ".(datadump($proclist));
+
+		#debug "Killtime over ".(datadump($proclist));
+
 		#$proclist = get_lsof({port => $port });
 		#debug datadump($proclist);
 
@@ -1088,6 +1113,7 @@ sub get_lsof
 		 c => qr/.*/,
 		 u => qr/^\d+$/,
 		 T => qr/^(ST|QR|QS)=/,
+		 f => qr/^\d+$/,
 		);
 
 	my %fields =
@@ -1096,6 +1122,7 @@ sub get_lsof
 		 R => 'ppid',
 		 c => 'command',
 		 u => 'uid',
+		 f => 'fd',
 		 T =>
 		 {
 			QR => 'read_queue_size',
@@ -1214,12 +1241,12 @@ sub get_lsof_parse_message
 	if ( $msg =~ /Internet address not located/ )
 	{
 		# All good!
-		debug 2, $msg;
+		debug 2, "Our port is availible. " . $msg;
 	}
 	else
 	{
 		# Could be bad!
-		debug $msg;
+		debug "unknown lsof field: " . $msg;
 	}
 }
 
