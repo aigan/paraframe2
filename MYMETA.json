@@ -4,7 +4,7 @@
       "Jonas Liljegren <jonas@paranormal.se>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "ExtUtils::MakeMaker version 7.34, CPAN::Meta::Converter version 2.150010",
+   "generated_by" : "ExtUtils::MakeMaker version 7.44, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "unknown"
    ],
@@ -86,7 +86,6 @@
             "Number::Format" : "1.73",
             "Proc::ProcessTable" : "0.39",
             "Socket" : "1.77",
-            "Spreadsheet::ParseExcel" : "0.32",
             "Sys::CpuLoad" : "0.02",
             "Template" : "2.15",
             "Test::Distribution" : "2",
@@ -108,6 +107,6 @@
       }
    },
    "release_status" : "stable",
-   "version" : "2.08",
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "version" : "2.10",
+   "x_serialization_backend" : "JSON::PP version 4.06"
 }

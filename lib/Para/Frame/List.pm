@@ -1262,7 +1262,7 @@ sub limit_pages
 
   $l->limit_display
 
-Returns how many results that will be shown then listed as pages
+Returns how many results that will be shown when listed as pages
 
 =cut
 
