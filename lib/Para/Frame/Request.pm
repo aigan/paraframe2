@@ -1237,7 +1237,7 @@ sub uri2file
 			}
 
 
-		if( $req->env->{'PATH_INFO'} =~ /^\/ajax\// )
+		if( ($req->env->{'PATH_INFO'}||"") =~ /^\/ajax\// )
 		{
 			#throw "config", longmess("Can not lookup uri2file with ajax client");
 			throw "config", "Can not lookup uri2file with ajax client " . $url;
