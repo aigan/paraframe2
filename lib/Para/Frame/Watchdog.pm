@@ -800,6 +800,12 @@ sub REAPER
 				debug "Server got a KILL signal. I will not restart it";
 				$SHUTDOWN = 1;
 			}
+			elsif ( $signal == 11 )
+			{
+				$DOWN = 0;
+				sig_disable();
+				die "Server got Memory segmentation error with $?, trigger restart";
+			}
 			elsif ( $? == 25088 ) # exit 98?
 			{
 				debug "Another process is using this port";

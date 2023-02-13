@@ -7,7 +7,7 @@ build_requires:
 configure_requires:
   ExtUtils::MakeMaker: '0'
 dynamic_config: 0
-generated_by: 'ExtUtils::MakeMaker version 7.34, CPAN::Meta::Converter version 2.150010'
+generated_by: 'ExtUtils::MakeMaker version 7.44, CPAN::Meta::Converter version 2.150010'
 license: unknown
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -72,7 +72,6 @@ requires:
   Number::Format: '1.73'
   Proc::ProcessTable: '0.39'
   Socket: '1.77'
-  Spreadsheet::ParseExcel: '0.32'
   Sys::CpuLoad: '0.02'
   Template: '2.15'
   Test::Distribution: '2'
@@ -90,5 +89,5 @@ requires:
   Unicode::MapUTF8: '1.09'
   XML::Simple: '2.18'
   jQuery::File::Upload: '0.16'
-version: '2.08'
+version: '2.10'
 x_serialization_backend: 'CPAN::Meta::YAML version 0.018'
